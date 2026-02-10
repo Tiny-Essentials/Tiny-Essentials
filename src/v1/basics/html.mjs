@@ -303,17 +303,23 @@ export async function fetchText(url, allowedMimeTypes, options) {
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Represents the final state and metadata of an attempted image load.
  * @typedef {Object} ImageLoadResult
- * @property {HTMLImageElement} element
- * @property {Event} event
- * @property {string} status
- * @property {boolean} isSuccess
- * @property {number} loadTimeMs
- * @property {Object} dimensions
- * @property {number} dimensions.width
- * @property {number} dimensions.height
- * @property {number} dimensions.naturalWidth
- * @property {number} dimensions.naturalHeight
+ * @property {HTMLImageElement} element The image element instance used for loading.
+ * @property {Event} event The browser event triggered by the final lifecycle state.
+ * @property {ImageLoadStatus} status The specific outcome string of the loading process.
+ * @property {boolean} isSuccess Indicates if the image was successfully loaded without errors.
+ * @property {number} loadTimeMs The total duration in milliseconds from start to finish.
+ * @property {Object} dimensions An object containing the rendered and intrinsic sizes of the image.
+ * @property {number} dimensions.width The current layout width of the image element.
+ * @property {number} dimensions.height The current layout height of the image element.
+ * @property {number} dimensions.naturalWidth The intrinsic width of the image source in pixels.
+ * @property {number} dimensions.naturalHeight The intrinsic height of the image source in pixels.
+ */
+
+/**
+ * Describes the possible resolution states for the image loading attempt.
+ * @typedef {'loaded'|'aborted'} ImageLoadStatus
  */
 
 /**
@@ -346,7 +352,7 @@ export async function loadImage({ url, onLoading, crossOrigin = 'anonymous' }) {
     /**
      * Centralized handler to generate the result object.
      * @param {Event} event
-     * @param {string} status
+     * @param {ImageLoadStatus} status
      * @param {boolean} isSuccess
      */
     const handleResult = (event, status, isSuccess) => {
