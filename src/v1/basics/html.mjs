@@ -132,8 +132,59 @@ export function saveJsonFile(filename, data, spaces = 2) {
  * @property {number} [retries=0] - Number of retry attempts (ignored if signal is provided).
  * @property {Headers|Record<string, *>} [headers={}] - Additional headers.
  * @property {AbortSignal|null} [signal] - External AbortSignal; disables timeout and retries.
- * @property {(loaded: number, total: number) => void} [onProgress] - Track the load progress.
+ * @property {FetchOnProgressResult} [onProgress] - Track the load progress.
  */
+
+/**
+ * Callback function used to report the progress of a data download.
+ *
+ * @callback FetchOnProgressResult
+ * @param {number} loaded - The amount of bytes currently loaded.
+ * @param {number} total - The total amount of bytes to be loaded (0 if unknown).
+ * @returns {void}
+ */
+
+/**
+ * Intercepts a standard Fetch API Response to track the download progress
+ * of its body stream.
+ *
+ * This function returns a new Response object with a monitored ReadableStream,
+ * allowing the provided callback to receive updates on the number of bytes loaded.
+ *
+ * @param {Response} response - The original response object to be tracked.
+ * @param {FetchOnProgressResult} onProgress - The callback function to handle progress events.
+ * @returns {Response} A new Response object with the tracked stream.
+ */
+export function trackFetchProgress(response, onProgress) {
+  if (typeof onProgress !== 'function')
+    throw new TypeError('The "onProgress" argument must be a function.');
+  if (!response.body) return response;
+
+  // Handle Progress Tracking via ReadableStream
+  const contentLength = response.headers.get('content-length');
+  const total = contentLength ? parseInt(contentLength, 10) : 0;
+  let loaded = 0;
+
+  const reader = response.body.getReader();
+  const stream = new ReadableStream({
+    async start(controller) {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        loaded += value.byteLength;
+        onProgress(loaded, total);
+        controller.enqueue(value);
+      }
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: response.headers,
+    status: response.status,
+    statusText: response.statusText,
+  });
+}
 
 /**
  * @param {string} url - The full URL to fetch data from.
@@ -202,32 +253,8 @@ async function fetchTemplate(
       if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
 
       // If onProgress is not provided or body is null, return original response
-      if (!onProgress || !response.body) return response;
-
-      // Handle Progress Tracking via ReadableStream
-      const contentLength = response.headers.get('content-length');
-      const total = contentLength ? parseInt(contentLength, 10) : 0;
-      let loaded = 0;
-
-      const reader = response.body.getReader();
-      const stream = new ReadableStream({
-        async start(controller) {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            loaded += value.byteLength;
-            onProgress(loaded, total);
-            controller.enqueue(value);
-          }
-          controller.close();
-        },
-      });
-
-      return new Response(stream, {
-        headers: response.headers,
-        status: response.status,
-        statusText: response.statusText,
-      });
+      if (!onProgress) return response;
+      return trackFetchProgress(response, onProgress);
     } catch (err) {
       lastError = /** @type {Error} */ (err);
       if (signal) break; // if an external signal came, it does not retry

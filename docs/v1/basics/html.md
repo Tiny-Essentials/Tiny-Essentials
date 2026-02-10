@@ -157,6 +157,20 @@ Loads data from a remote URL using the Fetch API, with support for custom HTTP m
   * `body` *(object)*: Request body. If the value is a plain object, it will be automatically stringified as JSON.
   * `onProgress` *((loaded: number, total: number) => void)*: Track the load progress.
 
+#### `trackFetchProgress(response, onProgress)`
+
+Intercepts a standard Fetch API Response to track the download progress of its body stream.
+
+* **Parameters**:
+
+  * `response` *(Response)*: The original response object to be tracked.
+  * `options` *(FetchOnProgressResult)*: The callback function to handle progress events (loaded and total numbers).
+
+* **Returns**:
+  `Response` — A new Response object with the tracked stream.
+
+---
+
 #### `fetchJson(url, options?)`
 
 Loads and parses a remote JSON file.
