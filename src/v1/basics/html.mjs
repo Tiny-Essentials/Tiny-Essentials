@@ -303,6 +303,92 @@ export async function fetchText(url, allowedMimeTypes, options) {
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
+ * @typedef {Object} ImageLoadResult
+ * @property {HTMLImageElement} element
+ * @property {Event} event
+ * @property {string} status
+ * @property {boolean} isSuccess
+ * @property {number} loadTimeMs
+ * @property {Object} dimensions
+ * @property {number} dimensions.width
+ * @property {number} dimensions.height
+ * @property {number} dimensions.naturalWidth
+ * @property {number} dimensions.naturalHeight
+ */
+
+/**
+ * Loads an image asynchronously, capturing critical lifecycle events.
+ * It normalizes errors and success states into a consistent result structure.
+ *
+ * @param {Object} options
+ * @param {string} options.url
+ * @param {string} [options.crossOrigin="anonymous"]
+ * @param {(event: Event, startTime: number) => void} [options.onLoading]
+ * @returns {Promise<ImageLoadResult>}
+ */
+export async function loadImage({ url, onLoading, crossOrigin = 'anonymous' }) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    let startTime = performance.now();
+
+    img.crossOrigin = crossOrigin;
+
+    /**
+     * Cleans up event listeners to avoid memory leaks.
+     */
+    const cleanup = () => {
+      img.onload = null;
+      img.onerror = null;
+      img.onabort = null;
+      img.onloadstart = null;
+    };
+
+    /**
+     * Centralized handler to generate the result object.
+     * @param {Event} event
+     * @param {string} status
+     * @param {boolean} isSuccess
+     */
+    const handleResult = (event, status, isSuccess) => {
+      const endTime = performance.now();
+      cleanup();
+
+      const result = {
+        element: img,
+        isSuccess,
+        event,
+        status,
+        loadTimeMs: endTime - startTime,
+        dimensions: {
+          width: img.width,
+          height: img.height,
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+        },
+      };
+
+      resolve(result);
+    };
+
+    // Fired when the browser starts looking for the image data.
+    // Crucial for resetting the timer to network start, not just script start.
+    img.onloadstart = (ev) => {
+      startTime = performance.now();
+      if (typeof onLoading === 'function') onLoading(ev, startTime);
+    };
+
+    img.onload = (ev) => handleResult(ev, 'loaded', true);
+    img.onabort = (ev) => handleResult(ev, 'aborted', false);
+    img.onerror = (ev) => reject(ev);
+
+    // Trigger the load
+    img.src = url;
+  });
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+/**
  * Installs a script that toggles CSS classes on a given element
  * based on the page's visibility or focus state, and optionally
  * triggers callbacks on visibility changes.
