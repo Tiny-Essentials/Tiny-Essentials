@@ -155,6 +155,7 @@ Loads data from a remote URL using the Fetch API, with support for custom HTTP m
   * `retries` *(number)*: Number of retry attempts if the request fails. Default is `0`.
   * `headers` *(object)*: Additional headers to include in the request.
   * `body` *(object)*: Request body. If the value is a plain object, it will be automatically stringified as JSON.
+  * `onProgress` *((loaded: number, total: number) => void)*: Track the load progress.
 
 #### `fetchJson(url, options?)`
 

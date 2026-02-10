@@ -132,6 +132,7 @@ export function saveJsonFile(filename, data, spaces = 2) {
  * @property {number} [retries=0] - Number of retry attempts (ignored if signal is provided).
  * @property {Headers|Record<string, *>} [headers={}] - Additional headers.
  * @property {AbortSignal|null} [signal] - External AbortSignal; disables timeout and retries.
+ * @property {(loaded: number, total: number) => void} [onProgress] - Track the load progress.
  */
 
 /**
@@ -142,7 +143,7 @@ export function saveJsonFile(filename, data, spaces = 2) {
  */
 async function fetchTemplate(
   url,
-  { method = 'GET', body, timeout = 0, retries = 0, headers = {}, signal = null } = {},
+  { method = 'GET', body, timeout = 0, retries = 0, headers = {}, signal = null, onProgress } = {},
 ) {
   if (
     typeof url !== 'string' ||
@@ -199,7 +200,34 @@ async function fetchTemplate(
       if (timer) clearTimeout(timer);
 
       if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-      return response;
+
+      // If onProgress is not provided or body is null, return original response
+      if (!onProgress || !response.body) return response;
+
+      // Handle Progress Tracking via ReadableStream
+      const contentLength = response.headers.get('content-length');
+      const total = contentLength ? parseInt(contentLength, 10) : 0;
+      let loaded = 0;
+
+      const reader = response.body.getReader();
+      const stream = new ReadableStream({
+        async start(controller) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            loaded += value.byteLength;
+            onProgress(loaded, total);
+            controller.enqueue(value);
+          }
+          controller.close();
+        },
+      });
+
+      return new Response(stream, {
+        headers: response.headers,
+        status: response.status,
+        statusText: response.statusText,
+      });
     } catch (err) {
       lastError = /** @type {Error} */ (err);
       if (signal) break; // if an external signal came, it does not retry
