@@ -16,10 +16,10 @@
  * @property {number} sizeAdjust - Scale factor for the font size of the numbers relative to the clock size.
  * @property {number} padding - Padding in pixels between the clock edge and the tick marks.
  * @property {number} angleDistance - Distance multiplier (0-1) for placing numbers relative to the radius.
- * @property {number} pwH - Hour tick width as a percentage of clock size.
- * @property {number} phH - Hour tick height as a percentage of clock size.
- * @property {number} pwM - Minute tick width as a percentage of clock size.
- * @property {number} phM - Minute tick height as a percentage of clock size.
+ * @property {number} pwH - Hour tick width as a percentage of clock size (0.0 to 1.0).
+ * @property {number} phH - Hour tick height as a percentage of clock size (0.0 to 1.0).
+ * @property {number} pwM - Minute tick width as a percentage of clock size (0.0 to 1.0).
+ * @property {number} phM - Minute tick height as a percentage of clock size (0.0 to 1.0).
  */
 
 class TinyAnalogClock {
@@ -310,6 +310,10 @@ class TinyAnalogClock {
     update();
   }
 
+  // ==========================================
+  // GETTERS & SETTERS (Full Access)
+  // ==========================================
+
   /**
    * Gets the main HTML element of the clock.
    * @returns {HTMLElement} The clock container.
@@ -332,6 +336,9 @@ class TinyAnalogClock {
     this._renderFace();
   }
 
+  /** * Gets the clock size in pixels.
+   * @returns {number}
+   */
   get size() {
     return this.#config.size;
   }
@@ -351,6 +358,10 @@ class TinyAnalogClock {
     this._applyConfig();
   }
 
+  /**
+   * Gets the skin URL.
+   * @returns {string|null}
+   */
   get skinUrl() {
     return this.#config.skinUrl;
   }
@@ -371,6 +382,10 @@ class TinyAnalogClock {
     this._renderFace();
   }
 
+  /**
+   * Gets the border color.
+   * @returns {string}
+   */
   get borderColor() {
     return this.#config.borderColor;
   }
@@ -391,6 +406,10 @@ class TinyAnalogClock {
     this._renderFace();
   }
 
+  /**
+   * Gets the tick marks color.
+   * @returns {string}
+   */
   get markColor() {
     return this.#config.markColor;
   }
@@ -411,6 +430,10 @@ class TinyAnalogClock {
     this._renderFace();
   }
 
+  /**
+   * Gets the text color.
+   * @returns {string}
+   */
   get textColor() {
     return this.#config.textColor;
   }
@@ -430,8 +453,260 @@ class TinyAnalogClock {
     this._renderFace();
   }
 
+  /**
+   * Gets numbers visibility.
+   * @returns {boolean}
+   */
   get showNumbers() {
     return this.#config.showNumbers;
+  }
+
+  /**
+   * Sets the background color.
+   * @param {string} value
+   */
+  set bgColor(value) {
+    if (typeof value !== 'string' || !value)
+      throw new Error("TinyAnalogClock: 'bgColor' must be a non-empty string.");
+    this.#config.bgColor = value;
+    this._applyConfig();
+  }
+
+  /**
+   * Gets the background color.
+   * @returns {string}
+   */
+  get bgColor() {
+    return this.#config.bgColor;
+  }
+
+  /**
+   * Sets the border thickness in pixels.
+   * @param {number} value
+   */
+  set borderWidth(value) {
+    if (typeof value !== 'number' || value < 0)
+      throw new Error("TinyAnalogClock: 'borderWidth' must be a non-negative number.");
+    this.#config.borderWidth = value;
+    this._applyConfig();
+    this._renderFace(); // Radius changes, so we must re-render face
+  }
+
+  /**
+   * Gets the border thickness.
+   * @returns {number}
+   */
+  get borderWidth() {
+    return this.#config.borderWidth;
+  }
+
+  /**
+   * Sets the hour hand color.
+   * @param {string} value
+   */
+  set hourHandColor(value) {
+    if (typeof value !== 'string' || !value)
+      throw new Error("TinyAnalogClock: 'hourHandColor' must be a non-empty string.");
+    this.#config.hourHandColor = value;
+    this._applyConfig();
+  }
+
+  /**
+   * Gets the hour hand color.
+   * @returns {string}
+   */
+  get hourHandColor() {
+    return this.#config.hourHandColor;
+  }
+
+  /**
+   * Sets the minute hand color.
+   * @param {string} value
+   */
+  set minuteHandColor(value) {
+    if (typeof value !== 'string' || !value)
+      throw new Error("TinyAnalogClock: 'minuteHandColor' must be a non-empty string.");
+    this.#config.minuteHandColor = value;
+    this._applyConfig();
+  }
+
+  /**
+   * Gets the minute hand color.
+   * @returns {string}
+   */
+  get minuteHandColor() {
+    return this.#config.minuteHandColor;
+  }
+
+  /**
+   * Sets the second hand color.
+   * @param {string} value
+   */
+  set secondHandColor(value) {
+    if (typeof value !== 'string' || !value)
+      throw new Error("TinyAnalogClock: 'secondHandColor' must be a non-empty string.");
+    this.#config.secondHandColor = value;
+    this._applyConfig();
+  }
+
+  /**
+   * Gets the second hand color.
+   * @returns {string}
+   */
+  get secondHandColor() {
+    return this.#config.secondHandColor;
+  }
+
+  /**
+   * Toggle second hand visibility.
+   * @param {boolean} value
+   */
+  set showSeconds(value) {
+    if (typeof value !== 'boolean')
+      throw new Error("TinyAnalogClock: 'showSeconds' must be a boolean.");
+    this.#config.showSeconds = value;
+    this._applyConfig();
+  }
+
+  /**
+   * Gets second hand visibility.
+   * @returns {boolean}
+   */
+  get showSeconds() {
+    return this.#config.showSeconds;
+  }
+
+  /**
+   * Sets the font size adjustment factor.
+   * @param {number} value - Positive number.
+   */
+  set sizeAdjust(value) {
+    if (typeof value !== 'number' || value <= 0)
+      throw new Error("TinyAnalogClock: 'sizeAdjust' must be a positive number.");
+    this.#config.sizeAdjust = value;
+    this._renderFace();
+  }
+
+  /**
+   * Gets the font size adjustment factor.
+   * @returns {number}
+   */
+  get sizeAdjust() {
+    return this.#config.sizeAdjust;
+  }
+
+  /**
+   * Sets the padding from edge to ticks.
+   * @param {number} value - Non-negative number in pixels.
+   */
+  set padding(value) {
+    if (typeof value !== 'number' || value < 0)
+      throw new Error("TinyAnalogClock: 'padding' must be a non-negative number.");
+    this.#config.padding = value;
+    this._renderFace();
+  }
+
+  /**
+   * Gets the padding.
+   * @returns {number}
+   */
+  get padding() {
+    return this.#config.padding;
+  }
+
+  /**
+   * Sets the angle distance multiplier for numbers placement.
+   * @param {number} value - Positive number.
+   */
+  set angleDistance(value) {
+    if (typeof value !== 'number' || value <= 0)
+      throw new Error("TinyAnalogClock: 'angleDistance' must be a positive number.");
+    this.#config.angleDistance = value;
+    this._renderFace();
+  }
+
+  /**
+   * Gets the angle distance multiplier.
+   * @returns {number}
+   */
+  get angleDistance() {
+    return this.#config.angleDistance;
+  }
+
+  /**
+   * Sets the Hour tick width percentage.
+   * @param {number} value - Positive number.
+   */
+  set pwH(value) {
+    if (typeof value !== 'number' || value <= 0)
+      throw new Error("TinyAnalogClock: 'pwH' must be a positive number.");
+    this.#config.pwH = value;
+    this._renderFace();
+  }
+
+  /**
+   * Gets the Hour tick width percentage.
+   * @returns {number}
+   */
+  get pwH() {
+    return this.#config.pwH;
+  }
+
+  /**
+   * Sets the Hour tick height percentage.
+   * @param {number} value - Positive number.
+   */
+  set phH(value) {
+    if (typeof value !== 'number' || value <= 0)
+      throw new Error("TinyAnalogClock: 'phH' must be a positive number.");
+    this.#config.phH = value;
+    this._renderFace();
+  }
+
+  /**
+   * Gets the Hour tick height percentage.
+   * @returns {number}
+   */
+  get phH() {
+    return this.#config.phH;
+  }
+
+  /**
+   * Sets the Minute tick width percentage.
+   * @param {number} value - Positive number.
+   */
+  set pwM(value) {
+    if (typeof value !== 'number' || value <= 0)
+      throw new Error("TinyAnalogClock: 'pwM' must be a positive number.");
+    this.#config.pwM = value;
+    this._renderFace();
+  }
+
+  /**
+   * Gets the Minute tick width percentage.
+   * @returns {number}
+   */
+  get pwM() {
+    return this.#config.pwM;
+  }
+
+  /**
+   * Sets the Minute tick height percentage.
+   * @param {number} value - Positive number.
+   */
+  set phM(value) {
+    if (typeof value !== 'number' || value <= 0)
+      throw new Error("TinyAnalogClock: 'phM' must be a positive number.");
+    this.#config.phM = value;
+    this._renderFace();
+  }
+
+  /**
+   * Gets the Minute tick height percentage.
+   * @returns {number}
+   */
+  get phM() {
+    return this.#config.phM;
   }
 
   /**
