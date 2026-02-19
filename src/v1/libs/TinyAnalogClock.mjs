@@ -1,24 +1,25 @@
 /**
+ * Configuration object for the Analog Clock.
  * @typedef {Object} ClockConfig
- * @property {string} bgColor
- * @property {string} borderColor
- * @property {number} borderWidth
- * @property {string} markColor
- * @property {string} hourHandColor
- * @property {string} minuteHandColor
- * @property {string} secondHandColor
- * @property {string} textColor
- * @property {string|null} skinUrl
- * @property {boolean} showNumbers
- * @property {boolean} showSeconds
- * @property {number} size
- * @property {number} sizeAdjust
- * @property {number} padding
- * @property {number} angleDistance
- * @property {number} pwH
- * @property {number} phH
- * @property {number} pwM
- * @property {number} phM
+ * @property {string} bgColor - The background color of the clock face (e.g., '#ffffff', 'rgb(0,0,0)').
+ * @property {string} borderColor - The color of the clock's outer border.
+ * @property {number} borderWidth - The thickness of the outer border in pixels.
+ * @property {string} markColor - The color of the minute/hour tick marks.
+ * @property {string} hourHandColor - The color of the hour hand.
+ * @property {string} minuteHandColor - The color of the minute hand.
+ * @property {string} secondHandColor - The color of the second hand.
+ * @property {string} textColor - The color of the numbers on the clock face.
+ * @property {string|null} skinUrl - The URL of an image to use as the clock face background. Set to null to use bgColor.
+ * @property {boolean} showNumbers - Whether to render the numbers (1-12) on the clock face.
+ * @property {boolean} showSeconds - Whether to display the second hand.
+ * @property {number} size - The total width and height of the clock in pixels.
+ * @property {number} sizeAdjust - Scale factor for the font size of the numbers relative to the clock size.
+ * @property {number} padding - Padding in pixels between the clock edge and the tick marks.
+ * @property {number} angleDistance - Distance multiplier (0-1) for placing numbers relative to the radius.
+ * @property {number} pwH - Hour tick width as a percentage of clock size.
+ * @property {number} phH - Hour tick height as a percentage of clock size.
+ * @property {number} pwM - Minute tick width as a percentage of clock size.
+ * @property {number} phM - Minute tick height as a percentage of clock size.
  */
 
 class TinyAnalogClock {
@@ -34,8 +35,9 @@ class TinyAnalogClock {
   #animationFrame = null;
 
   /**
-   * @constructor
-   * @param {Partial<ClockConfig>} [options]
+   * Creates an instance of TinyAnalogClock.
+   * Initializes the DOM structure and starts the animation loop.
+   * @param {Partial<ClockConfig>} [options] - Optional configuration overrides.
    */
   constructor(options = {}) {
     this.#config = {
@@ -64,13 +66,13 @@ class TinyAnalogClock {
     this.#element = document.createElement('div');
     this.#element.className = 'analog-clock-container';
 
-    // Shadow DOM or scoped style could be used, but inline styles for structure + CSS vars is efficient here
+    // Base styles for the container
     this.#element.style.position = 'relative';
     this.#element.style.borderRadius = '50%';
     this.#element.style.overflow = 'hidden';
     this.#element.style.boxSizing = 'border-box';
 
-    // Layers
+    // 1. Skin Layer (Background Image)
     this.#skinLayer = document.createElement('div');
     this.#skinLayer.style.position = 'absolute';
     this.#skinLayer.style.inset = '0';
@@ -78,12 +80,14 @@ class TinyAnalogClock {
     this.#skinLayer.style.backgroundPosition = 'center';
     this.#skinLayer.style.zIndex = '0';
 
+    // 2. Face Layer (Ticks and Numbers)
     this.#faceLayer = document.createElement('div');
     this.#faceLayer.style.position = 'absolute';
     this.#faceLayer.style.inset = '0';
     this.#faceLayer.style.zIndex = '1';
     this.#faceLayer.style.pointerEvents = 'none';
 
+    // 3. Hands Layer (Hour, Minute, Second hands)
     const handsLayer = document.createElement('div');
     handsLayer.style.position = 'absolute';
     handsLayer.style.inset = '0';
@@ -100,7 +104,7 @@ class TinyAnalogClock {
     this.#element.appendChild(this.#faceLayer);
     this.#element.appendChild(handsLayer);
 
-    // Inject Styles
+    // Inject Styles dynamically to keep the class self-contained
     const style = document.createElement('style');
     style.textContent = `
             .analog-clock-container .hand {
@@ -145,6 +149,7 @@ class TinyAnalogClock {
   }
 
   /**
+   * Applies the current configuration to the DOM elements (colors, sizes, visibility).
    * @private
    */
   _applyConfig() {
@@ -163,34 +168,36 @@ class TinyAnalogClock {
       this.#skinLayer.style.display = 'none';
     }
 
-    // Update hands colors and sizes
     /**
+     * Helper to safely query elements within the clock.
      * @param {string} sel
      * @returns {HTMLDivElement}
      */
     const q = (sel) => {
       const result = this.#element.querySelector(sel);
-      if (!(result instanceof HTMLDivElement)) throw new Error(`${sel} not found.`);
+      if (!(result instanceof HTMLDivElement))
+        throw new Error(`TinyAnalogClock: Element ${sel} not found.`);
       return result;
     };
 
-    // Setup Hands Dimensions relative to size
+    // Hour Hand
     const hHand = q('.hour-hand');
     hHand.style.backgroundColor = c.hourHandColor;
     hHand.style.width = `${c.size * 0.025}px`;
     hHand.style.height = `${c.size * 0.25}px`;
-    // Fix alignment slightly to center the width
-    hHand.style.marginLeft = `${(c.size * 0.025) / -2}px`;
+    hHand.style.marginLeft = `${(c.size * 0.025) / -2}px`; // Center alignment fix
     hHand.style.bottom = '50%';
     hHand.style.left = '50%';
     hHand.style.transformOrigin = 'bottom center';
 
+    // Minute Hand
     const mHand = q('.minute-hand');
     mHand.style.backgroundColor = c.minuteHandColor;
     mHand.style.width = `${c.size * 0.015}px`;
     mHand.style.height = `${c.size * 0.35}px`;
     mHand.style.marginLeft = `${(c.size * 0.015) / -2}px`;
 
+    // Second Hand
     const sHand = q('.second-hand');
     if (c.showSeconds) {
       sHand.style.display = 'block';
@@ -206,6 +213,8 @@ class TinyAnalogClock {
   }
 
   /**
+   * Renders the clock face, including tick marks and numbers, based on the current size and config.
+   * Uses trigonometry to position elements perfectly from the center.
    * @private
    */
   _renderFace() {
@@ -213,7 +222,6 @@ class TinyAnalogClock {
     const radius = this.#config.size / 2 - this.#config.borderWidth;
 
     // 1. Render Ticks (Lines)
-    // We render them starting from center, rotate them, then push them outwards (translateY)
     for (let i = 0; i < 60; i++) {
       const isHour = i % 5 === 0;
       const el = document.createElement('div');
@@ -264,9 +272,12 @@ class TinyAnalogClock {
   }
 
   /**
+   * Starts the RequestAnimationFrame loop to update hand positions.
    * @private
    */
   _startTicker() {
+    if (this.#animationFrame) return;
+
     const update = () => {
       const now = new Date();
       const s = now.getSeconds();
@@ -288,14 +299,8 @@ class TinyAnalogClock {
         return result;
       };
 
-      // Note: Hands are already centered via CSS 'left: 50%'.
-      // We removed translateX(-50%) from JS update loop and put it in CSS/Initial setup
-      // to avoid overwriting it, but rotation overwrites transform property.
-      // So we must include the translate inside the update.
-
-      if (q('.second-hand')) {
+      if (this.#element.querySelector('.second-hand')) {
         q('.second-hand').style.transform = `rotate(${sDeg}deg)`;
-        // Why no translate here? Because margin-left handles the centering now (see _applyConfig)
       }
       q('.minute-hand').style.transform = `rotate(${mDeg}deg)`;
       q('.hour-hand').style.transform = `rotate(${hDeg}deg)`;
@@ -306,49 +311,131 @@ class TinyAnalogClock {
   }
 
   /**
-   * @returns {HTMLElement}
+   * Gets the main HTML element of the clock.
+   * @returns {HTMLElement} The clock container.
    */
   get element() {
     return this.#element;
   }
 
   /**
-   * @param {number} value
+   * Sets the size of the clock.
+   * @param {number} value - The new size in pixels. Must be a positive number.
+   * @throws {Error} If value is not a positive number.
    */
   set size(value) {
+    if (typeof value !== 'number' || value <= 0 || isNaN(value)) {
+      throw new Error(`TinyAnalogClock: 'size' must be a positive number. Received: ${value}`);
+    }
     this.#config.size = value;
     this._applyConfig();
     this._renderFace();
   }
 
+  get size() {
+    return this.#config.size;
+  }
+
   /**
-   * @param {string|null} url
+   * Sets the background image (skin) of the clock.
+   * @param {string|null} url - The URL string of the image, or null to remove the skin.
+   * @throws {Error} If value is not a string or null.
    */
-  set skin(url) {
+  set skinUrl(url) {
+    if (url !== null && typeof url !== 'string') {
+      throw new Error(
+        `TinyAnalogClock: 'skin' must be a URL string or null. Received type: ${typeof url}`,
+      );
+    }
     this.#config.skinUrl = url;
     this._applyConfig();
   }
 
-  /**
-   * @param {string} color
-   */
-  set themeColor(color) {
-    this.#config.borderColor = color;
-    this.#config.markColor = color;
-    this.#config.textColor = color;
-    this._applyConfig();
-    this._renderFace(); // Re-render to apply color to new tick elements
+  get skinUrl() {
+    return this.#config.skinUrl;
   }
 
   /**
-   * @param {boolean} value
+   * Sets the primary border color.
+   * @param {string} color - A valid CSS color string.
+   * @throws {Error} If value is not a non-empty string.
+   */
+  set borderColor(color) {
+    if (typeof color !== 'string' || color.trim() === '') {
+      throw new Error(
+        `TinyAnalogClock: 'borderColor' must be a non-empty string. Received: ${color}`,
+      );
+    }
+    this.#config.borderColor = color;
+    this._applyConfig();
+    this._renderFace();
+  }
+
+  get borderColor() {
+    return this.#config.borderColor;
+  }
+
+  /**
+   * Sets the primary marks color.
+   * @param {string} color - A valid CSS color string.
+   * @throws {Error} If value is not a non-empty string.
+   */
+  set markColor(color) {
+    if (typeof color !== 'string' || color.trim() === '') {
+      throw new Error(
+        `TinyAnalogClock: 'markColor' must be a non-empty string. Received: ${color}`,
+      );
+    }
+    this.#config.markColor = color;
+    this._applyConfig();
+    this._renderFace();
+  }
+
+  get markColor() {
+    return this.#config.markColor;
+  }
+
+  /**
+   * Sets the primary text color.
+   * @param {string} color - A valid CSS color string.
+   * @throws {Error} If value is not a non-empty string.
+   */
+  set textColor(color) {
+    if (typeof color !== 'string' || color.trim() === '') {
+      throw new Error(
+        `TinyAnalogClock: 'textColor' must be a non-empty string. Received: ${color}`,
+      );
+    }
+    this.#config.textColor = color;
+    this._applyConfig();
+    this._renderFace();
+  }
+
+  get textColor() {
+    return this.#config.textColor;
+  }
+
+  /**
+   * Toggles the visibility of numbers on the clock face.
+   * @param {boolean} value - True to show numbers, false to hide.
+   * @throws {Error} If value is not a boolean.
    */
   set showNumbers(value) {
+    if (typeof value !== 'boolean') {
+      throw new Error(
+        `TinyAnalogClock: 'showNumbers' must be a boolean. Received type: ${typeof value}`,
+      );
+    }
     this.#config.showNumbers = value;
     this._renderFace();
   }
 
+  get showNumbers() {
+    return this.#config.showNumbers;
+  }
+
   /**
+   * Destroys the clock instance, stops animations, and removes the element from DOM.
    * @returns {void}
    */
   destroy() {
