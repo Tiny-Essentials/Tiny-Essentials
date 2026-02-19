@@ -1,6 +1,6 @@
 {
   "name": "tiny-essentials",
-  "version": "1.25.0",
+  "version": "1.25.1",
   "description": "Collection of small, essential scripts designed to be used across various projects. These simple utilities are crafted for speed, ease of use, and versatility.",
   "scripts": {
     "test": "npm run test:mjs && npm run test:cjs && npm run test:js",
@@ -247,6 +247,10 @@
     "./libs/TinyAfterScrollWatcher": {
       "require": "./dist/v1/libs/TinyAfterScrollWatcher.cjs",
       "import": "./dist/v1/libs/TinyAfterScrollWatcher.mjs"
+    },
+    "./libs/TinyAnalogClock": {
+      "require": "./dist/v1/libs/TinyAnalogClock.cjs",
+      "import": "./dist/v1/libs/TinyAnalogClock.mjs"
     },
     "./libs/TinyAdvancedRaffle": {
       "require": "./dist/v1/libs/TinyAdvancedRaffle.cjs",

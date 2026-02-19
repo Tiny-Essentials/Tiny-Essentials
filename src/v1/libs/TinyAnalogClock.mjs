@@ -1,3 +1,26 @@
+/**
+ * @typedef {Object} ClockConfig
+ * @property {string} bgColor
+ * @property {string} borderColor
+ * @property {number} borderWidth
+ * @property {string} markColor
+ * @property {string} hourHandColor
+ * @property {string} minuteHandColor
+ * @property {string} secondHandColor
+ * @property {string} textColor
+ * @property {string|null} skinUrl
+ * @property {boolean} showNumbers
+ * @property {boolean} showSeconds
+ * @property {number} size
+ * @property {number} sizeAdjust
+ * @property {number} padding
+ * @property {number} angleDistance
+ * @property {number} pwH
+ * @property {number} phH
+ * @property {number} pwM
+ * @property {number} phM
+ */
+
 class TinyAnalogClock {
   /** @type {HTMLElement} */
   #element;
@@ -5,14 +28,14 @@ class TinyAnalogClock {
   #faceLayer;
   /** @type {HTMLElement} */
   #skinLayer;
-  /** @type {Object<string, any>} */
+  /** @type {ClockConfig} */
   #config;
-  /** @type {number} */
-  #animationFrame;
+  /** @type {number|null} */
+  #animationFrame = null;
 
   /**
    * @constructor
-   * @param {Object} [options]
+   * @param {Partial<ClockConfig>} [options]
    */
   constructor(options = {}) {
     this.#config = {
@@ -38,13 +61,6 @@ class TinyAnalogClock {
       ...options,
     };
 
-    this.#initDom();
-    this._applyConfig();
-    this._renderFace();
-    this._startTicker();
-  }
-
-  #initDom() {
     this.#element = document.createElement('div');
     this.#element.className = 'analog-clock-container';
 
@@ -122,6 +138,10 @@ class TinyAnalogClock {
             }
         `;
     this.#element.appendChild(style);
+
+    this._applyConfig();
+    this._renderFace();
+    this._startTicker();
   }
 
   /**
@@ -144,7 +164,15 @@ class TinyAnalogClock {
     }
 
     // Update hands colors and sizes
-    const q = (sel) => this.#element.querySelector(sel);
+    /**
+     * @param {string} sel
+     * @returns {HTMLDivElement}
+     */
+    const q = (sel) => {
+      const result = this.#element.querySelector(sel);
+      if (!(result instanceof HTMLDivElement)) throw new Error(`${sel} not found.`);
+      return result;
+    };
 
     // Setup Hands Dimensions relative to size
     const hHand = q('.hour-hand');
@@ -250,7 +278,15 @@ class TinyAnalogClock {
       const mDeg = m * 6 + s * 0.1;
       const hDeg = (h % 12) * 30 + m * 0.5;
 
-      const q = (sel) => this.#element.querySelector(sel);
+      /**
+       * @param {string} sel
+       * @returns {HTMLDivElement}
+       */
+      const q = (sel) => {
+        const result = this.#element.querySelector(sel);
+        if (!(result instanceof HTMLDivElement)) throw new Error(`${sel} not found.`);
+        return result;
+      };
 
       // Note: Hands are already centered via CSS 'left: 50%'.
       // We removed translateX(-50%) from JS update loop and put it in CSS/Initial setup
@@ -316,7 +352,10 @@ class TinyAnalogClock {
    * @returns {void}
    */
   destroy() {
-    if (this.#animationFrame) cancelAnimationFrame(this.#animationFrame);
+    if (this.#animationFrame) {
+      cancelAnimationFrame(this.#animationFrame);
+      this.#animationFrame = null;
+    }
     this.#element.remove();
   }
 }
