@@ -141,9 +141,11 @@ import TinySimpleDice from './libs/TinySimpleDice.mjs';
 import TinyElementObserver from './libs/TinyElementObserver.mjs';
 import TinyLoadingScreen from './libs/TinyLoadingScreen.mjs';
 import TinyColorValidator from './libs/TinyColorValidator.mjs';
+import TinyAnalogClock from './libs/TinyAnalogClock.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
+  TinyAnalogClock,
   // TinyHtmlElems,
   TinyColorValidator,
   TinyLoadingScreen,
