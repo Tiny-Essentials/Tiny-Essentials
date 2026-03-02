@@ -1,7 +1,8 @@
 /**
+ * Represents the result of a single text segment comparison.
  * @typedef {Object} DiffResult
- * @property {string} value
- * @property {"normal"|"added"|"deleted"} type
+ * @property {string} value - The actual string content of the segment.
+ * @property {"normal"|"added"|"deleted"} type - The status of the segment relative to the comparison.
  */
 
 /**
@@ -168,29 +169,40 @@ class TinyTextDiffer {
   }
 
   /**
-   * Compares two text strings from the history based on their indices
-   * and returns an array representing the differences.
-   * @param {number} index1
-   * @param {number} index2
-   * @returns {DiffResult[]}
+   * Compares multiple pairs of text strings from the history based on their indices.
+   * Each pair of indices (e.g., index1 and index2) will produce a DiffResult array.
+   * @param {...number} indexes - An even number of indices to be compared in pairs.
+   * @returns {(DiffResult[])[]} An array of DiffResult arrays for each compared pair.
    */
-  compare(index1, index2) {
+  compare(...indexes) {
     this.#checkDestroyed();
 
-    if (index1 === undefined || index2 === undefined) {
-      throw new Error('Both index1 and index2 are required to perform a comparison.');
+    /** @type {number} */
+    const totalIndexes = indexes.length;
+
+    if (totalIndexes === 0 || totalIndexes % 2 !== 0) {
+      throw new Error(
+        'The compare method requires an even number of indices to form comparison pairs.',
+      );
     }
 
-    if (this.#history[index1] === undefined || this.#history[index2] === undefined) {
-      throw new Error('One or both of the provided indices are out of bounds.');
+    /** @type {(DiffResult[])[]} */
+    const results = [];
+
+    for (let i = 0; i < totalIndexes; i += 2) {
+      const i2 = indexes[i + 1];
+      this.#checkIndex(indexes[i]);
+      this.#checkIndex(indexes[i2]);
+
+      /** @type {string} */
+      const str1 = this.#history[indexes[i]];
+      /** @type {string} */
+      const str2 = this.#history[indexes[i2]];
+
+      results.push(this._computeDiff(str1, str2));
     }
 
-    /** @type {string} */
-    const str1 = this.#history[index1];
-    /** @type {string} */
-    const str2 = this.#history[index2];
-
-    return this._computeDiff(str1, str2);
+    return results;
   }
 
   /**
