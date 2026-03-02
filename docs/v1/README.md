@@ -60,6 +60,8 @@ This folder contains the core scripts we have worked on so far. Each file is a m
 - 👀 **[TinyElementObserver](./libs/TinyElementObserver.md)** — A DOM mutation tracking utility built on MutationObserver, with customizable detectors for handling changes, event dispatching, and lifecycle management.  
 - ⏳ **[TinyLoadingScreen](./libs/TinyLoadingScreen.md)** — A lightweight, fully-configurable loading overlay with fade-in/out animations, custom messages (string or HTMLElement), HTML rendering option, and status-change callbacks.
 - 🎨 **[TinyColorValidator](./libs/TinyColorValidator.md)** — A comprehensive CSS color validation and parsing utility supporting HEX, HEXA, RGB, RGBA, HSL, HSLA, HWB, Lab, LCH, standard HTML color names, and special keywords, with automatic type detection and parsing.
+* 📝 **[TinyTextDiffer](./libs/TinyTextDiffer.md)** — A granular text comparison utility using the LCS algorithm to detect additions, deletions, and unchanged segments between multiple history versions, returning a clean, parseable diff structure.
+* 🕒 **[TinyAnalogClock](./libs/TinyAnalogClock.md)** — A lightweight analog clock engine for managing time-based rotations, supporting custom offsets, smooth transitions, and easy binding to CSS variables rendering.
 
 ### 3. **`fileManager/`**
 * 📁 **[Main](./fileManager/main.md)** — A Node.js file/directory utility module with support for JSON, backups, renaming, size analysis, and more.
