@@ -216,6 +216,10 @@
       "require": "./dist/v1/libs/TinyDragger.cjs",
       "import": "./dist/v1/libs/TinyDragger.mjs"
     },
+    "./libs/TinyTextDiffer": {
+      "require": "./dist/v1/libs/TinyTextDiffer.cjs",
+      "import": "./dist/v1/libs/TinyTextDiffer.mjs"
+    },
     "./libs/TinyDragDropDetector": {
       "require": "./dist/v1/libs/TinyDragDropDetector.cjs",
       "import": "./dist/v1/libs/TinyDragDropDetector.mjs"
