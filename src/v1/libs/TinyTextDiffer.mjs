@@ -190,7 +190,8 @@ class TinyTextDiffer {
     const results = [];
 
     for (let i = 0; i < totalIndexes; i += 2) {
-      const i2 = indexes[i + 1];
+      const i2 = i + 1;
+      if (i2 > totalIndexes - 1) continue;
       this.#checkIndex(indexes[i]);
       this.#checkIndex(indexes[i2]);
 
