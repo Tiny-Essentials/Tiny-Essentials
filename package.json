@@ -500,7 +500,7 @@
     "esbuild": "^0.25.5",
     "express": "^5.1.0",
     "lodash": "^4.17.21",
-    "marked": "^16.0.0",
+    "marked": "^17.0.4",
     "node-polyfill-webpack-plugin": "^4.1.0",
     "prettier": "3.6.2",
     "rollup": "^4.40.0",
