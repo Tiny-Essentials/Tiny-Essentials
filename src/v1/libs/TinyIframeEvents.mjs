@@ -42,6 +42,7 @@ const instances = new WeakMap();
  * - Customizable internal event names to avoid collisions.
  * - Symmetrical usage for both parent and iframe.
  * - Queue management for messages sent before the connection is established.
+ * - Auto-reconnects and resets ports if the target iframe is reloaded.
  */
 class TinyIframeEvents {
   #events = new TinyEvents();
@@ -409,13 +410,22 @@ class TinyIframeEvents {
    */
   #initializeConnection() {
     if (this.#selfType === 'parent') {
-      /** @type {MessageChannel} */
-      const channel = new MessageChannel();
-      this.#port = channel.port1;
-      this.#port.onmessage = this._boundPortMessage;
-
       this.#boundSendPort = () => {
         if (this.#isDestroyed) return;
+
+        // Closes any existing port to prevent memory leaks during iframe reloads
+        if (this.#port) {
+          this.#port.close();
+        }
+
+        // Creates a fresh channel for every attempt to prevent clone errors
+        const channel = new MessageChannel();
+        this.#port = channel.port1;
+        this.#port.onmessage = this._boundPortMessage;
+
+        // Resets ready state to require a new ACK
+        this.#ready = false;
+
         this.#targetWindow.postMessage({ type: this.#handshakeEventName }, this.#targetOrigin, [
           channel.port2,
         ]);
