@@ -229,6 +229,12 @@ class TinyIframeEvents {
   /** @type {boolean} */
   #ready = false;
 
+  /** @type {MessagePort | null} */
+  #port = null;
+
+  /** @type {NodeJS.Timeout | null} */
+  #handshakeInterval = null;
+
   /**
    * @typedef {object} IframeEventBase
    * @property {string} eventName - The name of the custom event route.
@@ -288,32 +294,84 @@ class TinyIframeEvents {
     this.#targetWindow = targetIframe?.contentWindow ?? window.parent;
     this.#targetOrigin = targetOrigin ?? window.location.origin;
     this.#selfType = !targetIframe ? 'iframe' : 'parent';
+
     if (instances.has(this.#targetWindow)) throw new Error('Duplicate window reference.');
 
     this._boundOnMessage = this.#onMessage.bind(this);
-    this._boundOnceMessage = this.#onceMessage.bind(this);
+    this._boundHandshake = this.#handleHandshake.bind(this);
 
-    if (
-      this.#targetWindow.document.readyState === 'complete' ||
-      this.#targetWindow.document.readyState === 'interactive'
-    )
-      this.#onceMessage();
-    else {
-      this.#targetWindow.addEventListener('load', this._boundOnceMessage, false);
-      this.#targetWindow.addEventListener('DOMContentLoaded', this._boundOnceMessage, false);
+    window.addEventListener('message', this._boundHandshake, false);
+
+    if (this.#selfType === 'iframe') {
+      this.#requestHandshake();
     }
 
-    window.addEventListener('message', this._boundOnMessage, false);
     instances.set(this.#targetWindow, this);
   }
 
-  /**
-   * Marks the communication as ready and flushes any queued messages.
-   */
-  #onceMessage() {
+  #requestHandshake() {
     if (this.#ready) return;
-    this.#ready = true;
-    this.#flushQueue();
+
+    this.#targetWindow.postMessage({ [this.#secretEventName]: 'iframe-ready' }, this.#targetOrigin);
+
+    this.#handshakeInterval = setInterval(() => {
+      if (!this.#ready) {
+        this.#targetWindow.postMessage(
+          { [this.#secretEventName]: 'iframe-ready' },
+          this.#targetOrigin,
+        );
+      } else if (this.#handshakeInterval) {
+        clearInterval(this.#handshakeInterval);
+        this.#handshakeInterval = null;
+      }
+    }, 100);
+  }
+
+  /**
+   * @param {MessageEvent<any>} event
+   */
+  #handleHandshake(event) {
+    /** @type {any} */
+    const data = event.data;
+    /** @type {MessageEventSource | null} */
+    const source = event.source;
+    /** @type {ReadonlyArray<MessagePort>} */
+    const ports = event.ports;
+
+    if (!isJsonObject(data) || source !== this.#targetWindow) return;
+
+    if (this.#selfType === 'parent' && data[this.#secretEventName] === 'iframe-ready') {
+      if (this.#ready) return;
+
+      /** @type {MessageChannel} */
+      const channel = new MessageChannel();
+      this.#port = channel.port1;
+      this.#port.onmessage = this._boundOnMessage;
+
+      this.#targetWindow.postMessage({ [this.#secretEventName]: 'handshake' }, this.#targetOrigin, [
+        channel.port2,
+      ]);
+
+      this.#ready = true;
+      window.removeEventListener('message', this._boundHandshake);
+      this.#flushQueue();
+    }
+
+    if (this.#selfType === 'iframe' && data[this.#secretEventName] === 'handshake') {
+      if (!ports || ports.length === 0) return;
+
+      this.#port = ports[0];
+      this.#port.onmessage = this._boundOnMessage;
+
+      this.#ready = true;
+      if (this.#handshakeInterval) {
+        clearInterval(this.#handshakeInterval);
+        this.#handshakeInterval = null;
+      }
+
+      window.removeEventListener('message', this._boundHandshake);
+      this.#flushQueue();
+    }
   }
 
   /**
@@ -334,12 +392,13 @@ class TinyIframeEvents {
 
     // Reject if direction is not meant for this side
     if (
+      typeof eventName !== 'string' ||
       (this.#selfType === 'iframe' && direction !== 'iframe') ||
       (this.#selfType === 'parent' && direction !== 'parent')
     )
       return;
 
-    this.#events.emit(/** @type {string} */ (eventName), payload, event);
+    this.#events.emit(eventName, payload, event);
   }
 
   /**
@@ -361,12 +420,12 @@ class TinyIframeEvents {
       direction: this.#selfType === 'parent' ? 'iframe' : 'parent',
     };
 
-    if (!this.#ready) {
+    if (!this.#ready || !this.#port) {
       this.#pendingQueue.push(message);
       return;
     }
 
-    this.#targetWindow.postMessage(message, this.#targetOrigin);
+    this.#port.postMessage(message);
   }
 
   /**
@@ -377,7 +436,7 @@ class TinyIframeEvents {
   #flushQueue() {
     while (this.#pendingQueue.length) {
       const data = this.#pendingQueue.shift();
-      if (data) this.#targetWindow.postMessage(data, this.#targetOrigin);
+      if (data && this.#port) this.#port.postMessage(data);
     }
   }
 
@@ -396,9 +455,19 @@ class TinyIframeEvents {
    */
   destroy() {
     this.#isDestroyed = true;
-    window.removeEventListener('message', this._boundOnMessage);
-    this.#targetWindow.removeEventListener('load', this._boundOnceMessage, false);
-    this.#targetWindow.removeEventListener('DOMContentLoaded', this._boundOnceMessage, false);
+
+    if (this.#handshakeInterval) {
+      clearInterval(this.#handshakeInterval);
+      this.#handshakeInterval = null;
+    }
+
+    window.removeEventListener('message', this._boundHandshake);
+
+    if (this.#port) {
+      this.#port.close();
+      this.#port.onmessage = null;
+    }
+
     this.#events.offAllTypes();
     this.#pendingQueue = [];
     instances.delete(this.#targetWindow);
