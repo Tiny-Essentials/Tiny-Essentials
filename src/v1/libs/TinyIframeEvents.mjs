@@ -234,20 +234,40 @@ class TinyIframeEvents {
   /** @type {Window} */
   #targetWindow;
 
+  get targetWindow() {
+    return this.#targetWindow;
+  }
+
   /** @type {HTMLIFrameElement | undefined} */
   #targetIframeElement;
+
+  get targetIframeElement() {
+    return this.#targetIframeElement;
+  }
 
   /** @type {string} */
   #targetOrigin;
 
+  get targetOrigin() {
+    return this.#targetOrigin;
+  }
+
   /** @type {'iframe' | 'parent'} */
   #selfType;
+
+  get selfType() {
+    return this.#selfType;
+  }
 
   /** @type {boolean} */
   #isDestroyed = false;
 
   /** @type {boolean} */
   #ready = false;
+
+  get ready() {
+    return this.#ready;
+  }
 
   /** @type {MessagePort | null} */
   #port = null;
