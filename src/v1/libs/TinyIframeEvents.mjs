@@ -18,6 +18,7 @@ const instances = new WeakMap();
  * @property {string} [targetOrigin] - The target origin to restrict messages to. Defaults to `window.location.origin`.
  * @property {string} [secretEventName] - Custom internal name used to validate standard routing messages.
  * @property {string} [handshakeEventName] - Custom internal name used for the initial MessageChannel handshake.
+ * @property {string} [readyEventName] - Custom internal name used for the ready event trigger.
  */
 
 /**
@@ -269,6 +270,20 @@ class TinyIframeEvents {
     return this.#ready;
   }
 
+  /**
+   * Executes the provided callback when the secure MessageChannel connection is fully established.
+   * If the connection is already ready, the callback is executed immediately.
+   *
+   * @param {function(): void} handler - The callback function to execute.
+   */
+  onReady(handler) {
+    if (this.#ready) {
+      handler();
+    } else {
+      this.#events.once(this.#readyEventName, handler);
+    }
+  }
+
   /** @type {MessagePort | null} */
   #port = null;
 
@@ -280,6 +295,9 @@ class TinyIframeEvents {
 
   /** @type {string} */
   #handshakeEventName;
+
+  /** @type {string} */
+  #readyEventName;
 
   /** @type {(() => void) | null} */
   #boundSendPort = null;
@@ -295,6 +313,7 @@ class TinyIframeEvents {
     targetOrigin = window.location.origin,
     secretEventName = '__tinyIframeEvent__',
     handshakeEventName = '__tinyIframeHandshake__',
+    readyEventName = '__tinyIframeReady__',
   } = {}) {
     if (
       targetIframe !== undefined &&
@@ -317,6 +336,7 @@ class TinyIframeEvents {
     this.#selfType = !targetIframe ? 'iframe' : 'parent';
     this.#secretEventName = secretEventName;
     this.#handshakeEventName = handshakeEventName;
+    this.#readyEventName = readyEventName;
 
     if (instances.has(this.#targetWindow)) throw new Error('Duplicate window reference.');
 
@@ -363,6 +383,25 @@ class TinyIframeEvents {
     if (typeof name !== 'string')
       throw new TypeError('TinyIframeEvents: handshakeEventName must be a string.');
     this.#handshakeEventName = name;
+  }
+
+  /**
+   * Gets the internal ready event name used when the connection is fully established.
+   * @returns {string}
+   */
+  get readyEventName() {
+    return this.#readyEventName;
+  }
+
+  /**
+   * Sets the internal ready event name.
+   * @param {string} name
+   * @throws {TypeError} If the value is not a string.
+   */
+  set readyEventName(name) {
+    if (typeof name !== 'string')
+      throw new TypeError('TinyIframeEvents: readyEventName must be a string.');
+    this.#readyEventName = name;
   }
 
   /**
@@ -442,12 +481,14 @@ class TinyIframeEvents {
   }
 
   /**
-   * Marks the communication as ready and flushes any queued messages.
+   * Marks the communication as ready, flushes any queued messages,
+   * and triggers the internal ready event for any waiting listeners.
    */
   #markReady() {
     if (this.#ready) return;
     this.#ready = true;
     this.#flushQueue();
+    this.#events.emit(this.#readyEventName);
   }
 
   /**
