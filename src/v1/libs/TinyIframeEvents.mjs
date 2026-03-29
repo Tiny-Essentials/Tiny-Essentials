@@ -12,18 +12,16 @@ const instances = new WeakMap();
  */
 
 /**
- * A flexible event routing system for structured communication
- * between a parent window and its iframe using `postMessage`.
+ * A secure and flexible event routing system for structured communication
+ * between a parent window and its iframe using `MessageChannel`.
  *
- * This class abstracts the complexity of cross-origin and window-type handling,
- * allowing both the iframe and parent to:
- * - Send events with arbitrary payloads
- * - Listen to specific event names
- * - Filter events by origin and source
- * - Work symmetrically from both sides with automatic direction handling
- *
- * Use this class when building applications that require modular, event-driven
- * communication across embedded frames.
+ * This class establishes a secure handshake via `postMessage` and then transfers
+ * a MessagePort to establish a direct, closed communication channel. It allows
+ * both the iframe and parent to:
+ * - Send events with arbitrary payloads securely.
+ * - Listen to specific custom event names.
+ * - Work symmetrically from both sides with automatic handshake handling.
+ * - Prevent eavesdropping on the global window object.
  */
 class TinyIframeEvents {
   #events = new TinyEvents();
@@ -214,25 +212,64 @@ class TinyIframeEvents {
 
   ///////////////////////////////////////////////////
 
-  /** @type {Window} */
+  /** * The target window to communicate with (iframe's contentWindow or window.parent).
+   * @type {Window}
+   */
   #targetWindow;
 
-  /** @type {string} */
+  /**
+   * The target window to communicate with (iframe's contentWindow or window.parent).
+   */
+  get targetWindow() {
+    return this.#targetWindow;
+  }
+
+  /** * The allowed origin for secure communication.
+   * @type {string}
+   */
   #targetOrigin;
 
-  /** @type {string} */
+  get targetOrigin() {
+    return this.#targetOrigin;
+  }
+
+  /** * Indicates whether this instance acts as the 'iframe' or the 'parent'.
+   * @type {string}
+   */
   #selfType;
 
-  /** @type {boolean} */
+  /**
+   * Indicates whether this instance acts as the 'iframe' or the 'parent'.
+   */
+  get selfType() {
+    return this.#selfType;
+  }
+
+  /** * Flag tracking whether the instance has been destroyed.
+   * @type {boolean}
+   */
   #isDestroyed = false;
 
-  /** @type {boolean} */
+  /** * Flag tracking whether the MessageChannel handshake is fully established.
+   * @type {boolean}
+   */
   #ready = false;
 
-  /** @type {MessagePort | null} */
+  /**
+   * Flag tracking whether the MessageChannel handshake is fully established.
+   */
+  get ready() {
+    return this.#ready;
+  }
+
+  /** * The dedicated MessagePort for direct communication.
+   * @type {MessagePort | null}
+   */
   #port = null;
 
-  /** @type {NodeJS.Timeout | null} */
+  /** * Interval reference for the handshake retry loop.
+   * @type {NodeJS.Timeout | null}
+   */
   #handshakeInterval = null;
 
   /**
@@ -243,17 +280,43 @@ class TinyIframeEvents {
    */
 
   /**
-   * Queue of messages emitted before connection is ready
+   * Queue of messages emitted before the connection is completely ready.
    * @type {IframeEventBase[]}
    */
   #pendingQueue = [];
 
-  /** @type {string} Internal message type for routed communication */
-  #secretEventName = '__tinyIframeEvent__';
+  /** * Internal message identifier used to distinguish handshake and routing signals.
+   * @type {string}
+   */
+  #secretEventName;
+
+  /** * The string payload sent to indicate the iframe is ready to connect.
+   * @type {string}
+   */
+  #handshakeReadyEvent;
 
   /**
-   * Gets the internal secret iframe event name.
-   * @returns {string}
+   * The string payload sent to indicate the iframe is ready to connect.
+   */
+  get handshakeReadyEvent() {
+    return this.#handshakeReadyEvent;
+  }
+
+  /** * The string payload sent to confirm the connection and transfer the port.
+   * @type {string}
+   */
+  #handshakeConfirmEvent;
+
+  /**
+   * The string payload sent to confirm the connection and transfer the port.
+   */
+  get handshakeConfirmEvent() {
+    return this.#handshakeConfirmEvent;
+  }
+
+  /**
+   * Gets the internal secret iframe event name used for validation.
+   * @returns {string} The secret event name.
    */
   get secretEventName() {
     return this.#secretEventName;
@@ -261,7 +324,7 @@ class TinyIframeEvents {
 
   /**
    * Sets the internal secret iframe event name.
-   * @param {string} name
+   * @param {string} name - The new secret identifier.
    * @throws {TypeError} If the value is not a string.
    */
   set secretEventName(name) {
@@ -271,14 +334,25 @@ class TinyIframeEvents {
   }
 
   /**
-   * Creates a new TinyIframeEvents instance to manage communication between iframe and parent.
+   * Creates a new TinyIframeEvents instance to manage secure communication.
    * Automatically determines the current context (`iframe` or `parent`) based on the `targetWindow`.
    *
-   * @param {Object} config - Configuration object.
-   * @param {HTMLIFrameElement} [config.targetIframe] - The target window to post messages to. Defaults to `window.parent` (assumes this is inside an iframe).
+   * @param {Object} [config] - Configuration options.
+   * @param {HTMLIFrameElement} [config.targetIframe] - The target iframe to communicate with. If omitted, assumes context is the iframe aiming at `window.parent`.
    * @param {string} [config.targetOrigin] - The target origin to restrict messages to. Defaults to `window.location.origin`.
+   * @param {string} [config.secretEventName] - Custom identifier for internal message routing.
+   * @param {string} [config.handshakeReadyEvent] - Custom string for the ready signal.
+   * @param {string} [config.handshakeConfirmEvent] - Custom string for the confirmation signal.
+   * @throws {TypeError} If provided arguments are of the wrong type.
+   * @throws {Error} If an instance is already managing the provided window.
    */
-  constructor({ targetIframe, targetOrigin } = {}) {
+  constructor({
+    targetIframe,
+    targetOrigin,
+    secretEventName = '__tinyIframeEvent__',
+    handshakeReadyEvent = 'iframe-ready',
+    handshakeConfirmEvent = 'handshake',
+  } = {}) {
     if (
       typeof targetIframe !== 'undefined' &&
       (!(targetIframe instanceof HTMLIFrameElement) || !targetIframe.contentWindow)
@@ -295,6 +369,10 @@ class TinyIframeEvents {
     this.#targetOrigin = targetOrigin ?? window.location.origin;
     this.#selfType = !targetIframe ? 'iframe' : 'parent';
 
+    this.#secretEventName = secretEventName;
+    this.#handshakeReadyEvent = handshakeReadyEvent;
+    this.#handshakeConfirmEvent = handshakeConfirmEvent;
+
     if (instances.has(this.#targetWindow)) throw new Error('Duplicate window reference.');
 
     this._boundOnMessage = this.#onMessage.bind(this);
@@ -309,17 +387,29 @@ class TinyIframeEvents {
     instances.set(this.#targetWindow, this);
   }
 
+  /**
+   * Initiates the handshake process from the iframe side.
+   * It sends a periodic ping to the parent window until the parent responds
+   * with a MessageChannel port.
+   *
+   * @returns {void}
+   */
   #requestHandshake() {
     if (this.#ready) return;
 
-    this.#targetWindow.postMessage({ [this.#secretEventName]: 'iframe-ready' }, this.#targetOrigin);
+    /** @type {() => void} */
+    const sendReadySignal = () => {
+      this.#targetWindow.postMessage(
+        { [this.#secretEventName]: this.#handshakeReadyEvent },
+        this.#targetOrigin,
+      );
+    };
+
+    sendReadySignal();
 
     this.#handshakeInterval = setInterval(() => {
       if (!this.#ready) {
-        this.#targetWindow.postMessage(
-          { [this.#secretEventName]: 'iframe-ready' },
-          this.#targetOrigin,
-        );
+        sendReadySignal();
       } else if (this.#handshakeInterval) {
         clearInterval(this.#handshakeInterval);
         this.#handshakeInterval = null;
@@ -328,7 +418,12 @@ class TinyIframeEvents {
   }
 
   /**
-   * @param {MessageEvent<any>} event
+   * Handles the global message event during the initial handshake phase.
+   * Responsible for creating the MessageChannel in the parent and connecting
+   * the ports on both sides.
+   *
+   * @param {MessageEvent<any>} event - The raw postMessage event.
+   * @returns {void}
    */
   #handleHandshake(event) {
     /** @type {any} */
@@ -340,7 +435,7 @@ class TinyIframeEvents {
 
     if (!isJsonObject(data) || source !== this.#targetWindow) return;
 
-    if (this.#selfType === 'parent' && data[this.#secretEventName] === 'iframe-ready') {
+    if (this.#selfType === 'parent' && data[this.#secretEventName] === this.#handshakeReadyEvent) {
       if (this.#ready) return;
 
       /** @type {MessageChannel} */
@@ -348,16 +443,21 @@ class TinyIframeEvents {
       this.#port = channel.port1;
       this.#port.onmessage = this._boundOnMessage;
 
-      this.#targetWindow.postMessage({ [this.#secretEventName]: 'handshake' }, this.#targetOrigin, [
-        channel.port2,
-      ]);
+      this.#targetWindow.postMessage(
+        { [this.#secretEventName]: this.#handshakeConfirmEvent },
+        this.#targetOrigin,
+        [channel.port2],
+      );
 
       this.#ready = true;
       window.removeEventListener('message', this._boundHandshake);
       this.#flushQueue();
     }
 
-    if (this.#selfType === 'iframe' && data[this.#secretEventName] === 'handshake') {
+    if (
+      this.#selfType === 'iframe' &&
+      data[this.#secretEventName] === this.#handshakeConfirmEvent
+    ) {
       if (!ports || ports.length === 0) return;
 
       this.#port = ports[0];
@@ -375,9 +475,11 @@ class TinyIframeEvents {
   }
 
   /**
-   * Internal handler for the message event. Filters and dispatches incoming messages.
+   * Internal handler for messages received through the dedicated MessagePort.
+   * Filters by origin, validates data structure, and dispatches to listeners.
    *
-   * @param {MessageEvent<any>} event - The message event received via `postMessage`.
+   * @param {MessageEvent<any>} event - The message event received via the port.
+   * @returns {void}
    */
   #onMessage(event) {
     const { data, source } = event;
@@ -402,11 +504,13 @@ class TinyIframeEvents {
   }
 
   /**
-   * Sends an event to the target window.
+   * Sends an event with a payload to the connected window over the secure port.
    *
    * @param {string} eventName - A unique name identifying the event.
-   * @param {*} payload - The data to send with the event. Can be any serializable value.
-   * @throws {Error} If `eventName` is not a string.
+   * @param {*} payload - The data to send with the event. Must be structured-cloneable.
+   * @throws {TypeError} If `eventName` is not a string.
+   * @throws {Error} If the instance has been destroyed.
+   * @returns {void}
    */
   emit(eventName, payload) {
     if (typeof eventName !== 'string') throw new TypeError('Event name must be a string.');
@@ -429,7 +533,8 @@ class TinyIframeEvents {
   }
 
   /**
-   * Sends all pending messages queued before handshake completion.
+   * Empties the pending queue and sends all stored messages through the active port.
+   * Executed automatically once the handshake is successful.
    *
    * @returns {void}
    */
@@ -443,15 +548,18 @@ class TinyIframeEvents {
   /**
    * Checks if the communication instance has been destroyed.
    *
-   * @returns {boolean}
+   * @returns {boolean} True if the instance is destroyed and unusable.
    */
   isDestroyed() {
     return this.#isDestroyed;
   }
 
   /**
-   * Unsubscribes all registered event listeners and removes the message handler.
-   * Call this when the instance is no longer needed to prevent memory leaks.
+   * Destroys the communication channel, closes the MessagePort, stops intervals,
+   * removes event listeners, and clears pending queues.
+   * Call this to prevent memory leaks when the connection is no longer needed.
+   *
+   * @returns {void}
    */
   destroy() {
     this.#isDestroyed = true;
