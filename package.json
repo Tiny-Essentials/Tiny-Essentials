@@ -1,6 +1,6 @@
 {
   "name": "tiny-essentials",
-  "version": "1.25.3",
+  "version": "1.25.4",
   "description": "Collection of small, essential scripts designed to be used across various projects. These simple utilities are crafted for speed, ease of use, and versatility.",
   "scripts": {
     "test": "npm run test:mjs && npm run test:cjs && npm run test:js",
@@ -219,6 +219,10 @@
     "./libs/TinyTextDiffer": {
       "require": "./dist/v1/libs/TinyTextDiffer.cjs",
       "import": "./dist/v1/libs/TinyTextDiffer.mjs"
+    },
+    "./libs/TinyArrayComparator": {
+      "require": "./dist/v1/libs/TinyArrayComparator.cjs",
+      "import": "./dist/v1/libs/TinyArrayComparator.mjs"
     },
     "./libs/TinyDragDropDetector": {
       "require": "./dist/v1/libs/TinyDragDropDetector.cjs",

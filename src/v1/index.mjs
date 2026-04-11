@@ -143,9 +143,11 @@ import TinyLoadingScreen from './libs/TinyLoadingScreen.mjs';
 import TinyColorValidator from './libs/TinyColorValidator.mjs';
 import TinyAnalogClock from './libs/TinyAnalogClock.mjs';
 import TinyTextDiffer from './libs/TinyTextDiffer.mjs';
+import TinyArrayComparator from './libs/TinyArrayComparator.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
+  TinyArrayComparator,
   TinyTextDiffer,
   TinyAnalogClock,
   // TinyHtmlElems,
