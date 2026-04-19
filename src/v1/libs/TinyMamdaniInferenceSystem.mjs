@@ -1,5 +1,5 @@
 /**
- * Utility to calculate fuzzy membership using a trapezoidal shape.
+ * Utility to calculate fuzzy membership using a trapezoidal shape safely.
  * @param {number} value - The input value to check.
  * @param {number} a - Start of the rise.
  * @param {number} b - End of the rise (start of plateau).
@@ -8,14 +8,20 @@
  * @returns {number} Degree of membership [0, 1].
  */
 export const trapezoid = (value, a, b, c, d) => {
-  /** @type {number} - Slope rising from zero to one */
-  const rise = (value - a) / (b - a);
+  // If the value is completely outside the outer bounds, return 0 immediately (Performance optimization)
+  if (value <= a || value >= d) return 0;
+  // If the value is entirely within the plateau, return 1 immediately
+  if (value >= b && value <= c) return 1;
 
-  /** @type {number} - Slope falling from one to zero */
-  const fall = (d - value) / (d - c);
+  /** @type {number} - Safely calculate rising slope */
+  const rise = a === b ? 1 : (value - a) / (b - a);
+
+  /** @type {number} - Safely calculate falling slope */
+  const fall = c === d ? 1 : (d - value) / (d - c);
 
   /** @type {number} - Internal value clamping between 0 and 1 */
   const membership = Math.max(0, Math.min(rise, 1, fall));
+
   return isNaN(membership) ? 0 : membership;
 };
 
