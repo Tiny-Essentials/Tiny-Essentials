@@ -1,4 +1,60 @@
 /**
+ * Internal helper to validate an array of FuzzySets.
+ * @param {FuzzySet[]} sets
+ */
+const validateFuzzySets = (sets) => {
+  if (!Array.isArray(sets)) {
+    throw new TypeError("Parameter 'sets' must be an array.");
+  }
+  if (!sets.every((set) => set instanceof FuzzySet)) {
+    throw new TypeError('All elements in the array must be instances of FuzzySet.');
+  }
+};
+
+/**
+ * Performs defuzzification using the Centroid (Center of Gravity) method.
+ * @param {Object.<string, number>} fuzzyOutput - Results from rule evaluation.
+ * @param {FuzzySet[]} outputSets - The sets defining the output range.
+ * @param {number} [step=0.5] - Resolution of the integral approximation.
+ * @returns {number} The crisp output value.
+ */
+export const defuzzifyCentroid = (fuzzyOutput, outputSets, step = 0.5) => {
+  validateType(fuzzyOutput, 'object', 'defuzzifyCentroid.fuzzyOutput');
+
+  for (const outputName in fuzzyOutput) {
+    validateType(fuzzyOutput[outputName], 'number', `fuzzyOutput['${outputName}']`);
+  }
+
+  validateFuzzySets(outputSets);
+  validateType(step, 'number', 'defuzzifyCentroid.step');
+
+  /** @type {number} - Accumulated weighted area for centroid */
+  let totalAreaWeighted = 0;
+  /** @type {number} - Accumulated total area */
+  let totalArea = 0;
+
+  // Numerical integration (Centroid approximation)
+  for (let i = 0; i <= 100; i += step) {
+    /** @type {number} - Maximum membership found at point x(i) */
+    let maxMembershipAtX = 0;
+
+    outputSets.forEach((set) => {
+      /** @type {number} - Rule strength applied to the output set */
+      const strength = fuzzyOutput[set.name] || 0;
+      /** @type {number} - Cut or scale the output set membership */
+      const membership = Math.min(strength, set.calculateMembership(i));
+
+      maxMembershipAtX = Math.max(maxMembershipAtX, membership);
+    });
+
+    totalAreaWeighted += i * maxMembershipAtX;
+    totalArea += maxMembershipAtX;
+  }
+
+  return totalArea === 0 ? 0 : totalAreaWeighted / totalArea;
+};
+
+/**
  * Utility to calculate fuzzy membership using a trapezoidal shape safely.
  * @param {number} value - The input value to check.
  * @param {number} a - Start of the rise.
@@ -139,26 +195,13 @@ class MamdaniInferenceSystem {
   #variables = new Map();
 
   /**
-   * Internal helper to validate an array of FuzzySets.
-   * @param {FuzzySet[]} sets
-   */
-  #validateFuzzySets(sets) {
-    if (!Array.isArray(sets)) {
-      throw new TypeError("Parameter 'sets' must be an array.");
-    }
-    if (!sets.every((set) => set instanceof FuzzySet)) {
-      throw new TypeError('All elements in the array must be instances of FuzzySet.');
-    }
-  }
-
-  /**
    * Registers a linguistic variable and its sets.
    * @param {string} name - Variable name (e.g., "temperature").
    * @param {FuzzySet[]} sets - Array of fuzzy sets.
    */
   addVariable(name, sets) {
     validateType(name, 'string', 'addVariable.name');
-    this.#validateFuzzySets(sets);
+    validateFuzzySets(sets);
     this.#variables.set(name, sets);
   }
 
@@ -219,49 +262,6 @@ class MamdaniInferenceSystem {
     });
 
     return results;
-  }
-
-  /**
-   * Performs defuzzification using the Centroid (Center of Gravity) method.
-   * @param {Object.<string, number>} fuzzyOutput - Results from rule evaluation.
-   * @param {FuzzySet[]} outputSets - The sets defining the output range.
-   * @param {number} [step=0.5] - Resolution of the integral approximation.
-   * @returns {number} The crisp output value.
-   */
-  defuzzifyCentroid(fuzzyOutput, outputSets, step = 0.5) {
-    validateType(fuzzyOutput, 'object', 'defuzzifyCentroid.fuzzyOutput');
-
-    for (const outputName in fuzzyOutput) {
-      validateType(fuzzyOutput[outputName], 'number', `fuzzyOutput['${outputName}']`);
-    }
-
-    this.#validateFuzzySets(outputSets);
-    validateType(step, 'number', 'defuzzifyCentroid.step');
-
-    /** @type {number} - Accumulated weighted area for centroid */
-    let totalAreaWeighted = 0;
-    /** @type {number} - Accumulated total area */
-    let totalArea = 0;
-
-    // Numerical integration (Centroid approximation)
-    for (let i = 0; i <= 100; i += step) {
-      /** @type {number} - Maximum membership found at point x(i) */
-      let maxMembershipAtX = 0;
-
-      outputSets.forEach((set) => {
-        /** @type {number} - Rule strength applied to the output set */
-        const strength = fuzzyOutput[set.name] || 0;
-        /** @type {number} - Cut or scale the output set membership */
-        const membership = Math.min(strength, set.calculateMembership(i));
-
-        maxMembershipAtX = Math.max(maxMembershipAtX, membership);
-      });
-
-      totalAreaWeighted += i * maxMembershipAtX;
-      totalArea += maxMembershipAtX;
-    }
-
-    return totalArea === 0 ? 0 : totalAreaWeighted / totalArea;
   }
 }
 

@@ -144,12 +144,17 @@ import TinyColorValidator from './libs/TinyColorValidator.mjs';
 import TinyAnalogClock from './libs/TinyAnalogClock.mjs';
 import TinyTextDiffer from './libs/TinyTextDiffer.mjs';
 import TinyArrayComparator from './libs/TinyArrayComparator.mjs';
-import { FuzzySet, MamdaniInferenceSystem, trapezoid } from './libs/TinyMamdaniInferenceSystem.mjs';
+import {
+  FuzzySet,
+  MamdaniInferenceSystem,
+  trapezoid,
+  defuzzifyCentroid,
+} from './libs/TinyMamdaniInferenceSystem.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
-  FuzzySet, 
-  MamdaniInferenceSystem, 
+  FuzzySet,
+  MamdaniInferenceSystem,
   TinyArrayComparator,
   TinyTextDiffer,
   TinyAnalogClock,
@@ -190,6 +195,7 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  defuzzifyCentroid,
   trapezoid,
   diffArrayList,
   diffStrings,

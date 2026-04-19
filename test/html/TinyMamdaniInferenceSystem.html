@@ -144,6 +144,7 @@
       import {
         FuzzySet,
         MamdaniInferenceSystem,
+        defuzzifyCentroid,
       } from './src/v1/libs/TinyMamdaniInferenceSystem.mjs';
 
       // --- DOM Elements ---
@@ -199,7 +200,7 @@
         };
 
         // 3. Defuzzify
-        const precisePower = engine.defuzzifyCentroid(fuzzyOutput, fanPowerSets);
+        const precisePower = defuzzifyCentroid(fuzzyOutput, fanPowerSets);
         defuzzifiedOutput.textContent = `${precisePower.toFixed(2)} %`;
       };
 
@@ -320,7 +321,7 @@
           };
 
           // 6. Defuzzification via Centroid
-          const burnoutRiskIndex = testEngine.defuzzifyCentroid(emotionalOutput, burnoutSets);
+          const burnoutRiskIndex = defuzzifyCentroid(emotionalOutput, burnoutSets);
 
           logTest(`Patient Input -> Stress: ${patientStress}, Fatigue: ${patientFatigue}`);
           logTest(
