@@ -52,7 +52,7 @@ new FuzzySet(name, a, b, c, d)
 * **`a`, `b`, `c`, `d`** (`number`): The coordinates defining the trapezoidal shape.
 
 #### 🧮 Methods
-* **`calculateMembership(x)`**
+* **`calculate(x)`**
   Calculates the membership degree for a specific input using the set's coordinates.
   * **Parameters:** `x` (`number`) - The crisp input value.
   * **Returns:** `number` - Degree of membership `[0, 1]`.

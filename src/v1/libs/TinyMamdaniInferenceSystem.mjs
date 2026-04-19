@@ -42,7 +42,7 @@ export const defuzzifyCentroid = (fuzzyOutput, outputSets, step = 0.5) => {
       /** @type {number} - Rule strength applied to the output set */
       const strength = fuzzyOutput[set.name] || 0;
       /** @type {number} - Cut or scale the output set membership */
-      const membership = Math.min(strength, set.calculateMembership(i));
+      const membership = Math.min(strength, set.calculate(i));
 
       maxMembershipAtX = Math.max(maxMembershipAtX, membership);
     });
@@ -181,8 +181,8 @@ class FuzzySet {
    * @param {number} x - Crisp input.
    * @returns {number}
    */
-  calculateMembership(x) {
-    validateType(x, 'number', 'calculateMembership.x');
+  calculate(x) {
+    validateType(x, 'number', 'calculate.x');
     return FuzzySet.trapezoid(x, this.#a, this.#b, this.#c, this.#d);
   }
 }
@@ -258,7 +258,7 @@ class MamdaniInferenceSystem {
     const results = {};
 
     sets.forEach((set) => {
-      results[set.name] = set.calculateMembership(value);
+      results[set.name] = set.calculate(value);
     });
 
     return results;
