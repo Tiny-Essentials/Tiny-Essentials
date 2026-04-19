@@ -264,6 +264,10 @@
       "require": "./dist/v1/libs/TinyAdvancedRaffle.cjs",
       "import": "./dist/v1/libs/TinyAdvancedRaffle.mjs"
     },
+    "./libs/TinyMamdaniInferenceSystem": {
+      "require": "./dist/v1/libs/TinyMamdaniInferenceSystem.cjs",
+      "import": "./dist/v1/libs/TinyMamdaniInferenceSystem.mjs"
+    },
     "./libs/TinyHtmlElems": {
       "require": "./dist/v1/libs/TinyHtml/index.cjs",
       "import": "./dist/v1/libs/TinyHtml/index.mjs"

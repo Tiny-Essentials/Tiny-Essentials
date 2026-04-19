@@ -61,6 +61,7 @@ const addModule = (version, entry, library, isClass = false) => {
 // Main
 addModule(1, './src/v1/index.mjs', 'TinyEssentials');
 addModule(1, './src/v1/basics/index.mjs', 'TinyBasicsEs');
+addModule(1, './src/v1/libs/TinyMamdaniInferenceSystem.mjs', 'TinyMaInSys');
 addModule(1, './src/v1/build/TinyLevelUp.mjs', 'TinyLevelUp', true);
 addModule(1, './src/v1/build/TinyPromiseQueue.mjs', 'TinyPromiseQueue', true);
 addModule(1, './src/v1/build/ColorSafeStringify.mjs', 'ColorSafeStringify', true);
