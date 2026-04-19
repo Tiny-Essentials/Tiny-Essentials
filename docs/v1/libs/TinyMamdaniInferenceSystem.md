@@ -6,7 +6,7 @@ Welcome to the official documentation for the **Fuzzy Logic Engine**! 🚀 This 
 
 ## 🛠️ Core Utilities
 
-### 📐 `trapezoid(value, a, b, c, d)`
+### 📐 `trapezoid(value, a, b, c, d, optimize = false)`
 A high-performance utility to safely calculate the fuzzy membership degree using a trapezoidal shape. It includes built-in protections against division by zero and short-circuit optimizations.
 
 **Parameters:**
@@ -17,6 +17,7 @@ A high-performance utility to safely calculate the fuzzy membership degree using
 | `b` | `number` | End of the rise / start of plateau (membership = 1). |
 | `c` | `number` | Start of the fall / end of plateau (membership = 1). |
 | `d` | `number` | End of the fall (membership = 0). |
+| `optimize` | `boolean`, optional | Enables performance optimization by skipping math for absolute bounds. Default is `false`. |
 
 **Returns:** * `number` - The degree of membership, safely clamped between `[0, 1]`.
 
@@ -44,20 +45,21 @@ Represents a single linguistic term (e.g., "Cold", "High", "Severe") defined by 
 
 #### ⚙️ Constructor
 ```javascript
-new FuzzySet(name, a, b, c, d)
+new FuzzySet(name, a, b, c, d, optimize = false)
 ```
 
 #### 📦 Properties
 * **`name`** (`string`): The name of the fuzzy set.
 * **`a`, `b`, `c`, `d`** (`number`): The coordinates defining the trapezoidal shape.
+* **`optimize`** (`boolean`): Internal flag to enable calculation optimization for absolute bounds.
 
 #### 🧮 Methods
 * **`calculate(x)`**
-  Calculates the membership degree for a specific input using the set's coordinates.
+  Calculates the membership degree for a specific input using the set's coordinates and optimization flag.
   * **Parameters:** `x` (`number`) - The crisp input value.
   * **Returns:** `number` - Degree of membership `[0, 1]`.
 
-* **`static trapezoid(value, a, b, c, d)`**
+* **`static trapezoid(value, a, b, c, d, optimize = false)`**
   Static wrapper for the global `trapezoid` utility.
 
 ---

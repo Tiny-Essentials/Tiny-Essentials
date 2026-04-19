@@ -61,13 +61,16 @@ export const defuzzifyCentroid = (fuzzyOutput, outputSets, step = 0.5) => {
  * @param {number} b - End of the rise (start of plateau).
  * @param {number} c - Start of the fall (end of plateau).
  * @param {number} d - End of the fall.
+ * @param {boolean} [optimize=false] - Optimizes performance by skipping math for absolute bounds.
  * @returns {number} Degree of membership [0, 1].
  */
-export const trapezoid = (value, a, b, c, d) => {
-  // If the value is completely outside the outer bounds, return 0 immediately (Performance optimization)
-  if (value <= a || value >= d) return 0;
-  // If the value is entirely within the plateau, return 1 immediately
-  if (value >= b && value <= c) return 1;
+export const trapezoid = (value, a, b, c, d, optimize = false) => {
+  if (optimize) {
+    // If the value is completely outside the outer bounds, return 0 immediately
+    if (value <= a || value >= d) return 0;
+    // If the value is entirely within the plateau, return 1 immediately
+    if (value >= b && value <= c) return 1;
+  }
 
   /** @type {number} - Safely calculate rising slope */
   const rise = a === b ? 1 : (value - a) / (b - a);
@@ -104,10 +107,11 @@ class FuzzySet {
    * @param {number} b - End of the rise (start of plateau).
    * @param {number} c - Start of the fall (end of plateau).
    * @param {number} d - End of the fall.
+   * @param {boolean} [optimize=false] - Performance optimization flag.
    * @returns {number} Degree of membership [0, 1].
    */
-  static trapezoid(value, a, b, c, d) {
-    return trapezoid(value, a, b, c, d);
+  static trapezoid(value, a, b, c, d, optimize = false) {
+    return trapezoid(value, a, b, c, d, optimize);
   }
 
   /** @type {string} - Internal name of the fuzzy set */
@@ -120,6 +124,8 @@ class FuzzySet {
   #c = 0;
   /** @type {number} - Internal right foot coordinate */
   #d = 0;
+  /** @type {boolean} - Internal flag to enable calculation optimization */
+  #optimize = false;
 
   get name() {
     return this.#name;
@@ -161,19 +167,29 @@ class FuzzySet {
     this.#d = value;
   }
 
+  get optimize() {
+    return this.#optimize;
+  }
+  set optimize(value) {
+    validateType(value, 'boolean', 'FuzzySet.optimize');
+    this.#optimize = value;
+  }
+
   /**
    * @param {string} name - Name of the set (e.g., "Hot").
    * @param {number} a - Left foot.
    * @param {number} b - Left shoulder.
    * @param {number} c - Right shoulder.
    * @param {number} d - Right feet.
+   * @param {boolean} [optimize=false] - Enables performance optimization.
    */
-  constructor(name, a, b, c, d) {
+  constructor(name, a, b, c, d, optimize = false) {
     this.name = name;
     this.a = a;
     this.b = b;
     this.c = c;
     this.d = d;
+    this.optimize = optimize;
   }
 
   /**
@@ -183,7 +199,7 @@ class FuzzySet {
    */
   calculate(x) {
     validateType(x, 'number', 'calculate.x');
-    return FuzzySet.trapezoid(x, this.#a, this.#b, this.#c, this.#d);
+    return FuzzySet.trapezoid(x, this.#a, this.#b, this.#c, this.#d, this.#optimize);
   }
 }
 
