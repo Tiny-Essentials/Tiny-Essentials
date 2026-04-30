@@ -268,7 +268,32 @@ class MultiFileExtractor {
         };
 
         astPath.traverse({
-          // Tracing dynamic imports (e.g., import('./lazyModule'))
+          // Tracing Static Methods on any Class
+          ClassDeclaration(classPath) {
+            if (req.full) return;
+            classPath.node.body.body.forEach((item) => {
+              const keyName = t.isIdentifier(item.key) ? item.key.name : null;
+              if (
+                keyName &&
+                item.static &&
+                (t.isClassMethod(item) || t.isClassProperty(item)) &&
+                req.names.has(keyName)
+              ) {
+                traverse(
+                  item,
+                  {
+                    Identifier(idPath) {
+                      if (idPath.isReferencedIdentifier() && bindings[idPath.node.name]) {
+                        addToKeep(idPath.node.name);
+                      }
+                    },
+                  },
+                  astPath.scope,
+                  astPath,
+                );
+              }
+            });
+          },
           CallExpression(callPath) {
             if (callPath.node.callee.type === 'Import') {
               const arg = callPath.node.arguments[0];
@@ -334,8 +359,6 @@ class MultiFileExtractor {
                     if (t.isIdentifier(d.id) && (req.full || req.names.has(d.id.name)))
                       addToKeep(d.id.name);
                   });
-                } else if (t.isClassDeclaration(dec) && (req.full || req.names.has(dec.id.name))) {
-                  addToKeep(dec.id.name); // Class Declaration Fix!
                 }
               } else if (expPath.node.specifiers) {
                 expPath.node.specifiers.forEach((spec) => {
@@ -349,24 +372,6 @@ class MultiFileExtractor {
             if (req.full || req.names.has('default')) {
               if (t.isIdentifier(dec)) addToKeep(dec.name);
               else if (dec.id) addToKeep(dec.id.name);
-            } else if (t.isClassDeclaration(dec)) {
-              // Extract static methods to keep
-              dec.body.body.forEach((item) => {
-                if (item.static && t.isClassMethod(item) && req.names.has(item.key.name)) {
-                  traverse(
-                    item,
-                    {
-                      Identifier(idPath) {
-                        if (idPath.isReferencedIdentifier() && bindings[idPath.node.name]) {
-                          addToKeep(idPath.node.name);
-                        }
-                      },
-                    },
-                    astPath.scope,
-                    astPath,
-                  );
-                }
-              });
             }
           },
         });
@@ -424,8 +429,41 @@ class MultiFileExtractor {
       }
     }
 
-    // Phase 2: Surgical Pruning to clear dead code
+    // Phase 2: Surgical Pruning
     if (!req.full) {
+      // Helper function to extract Class Methods AND Class Properties natively
+      const extractStaticMethods = (classNode) => {
+        const newNodes = [];
+        classNode.body.body.forEach((item) => {
+          const keyName = t.isIdentifier(item.key) ? item.key.name : null;
+          if (
+            keyName &&
+            item.static &&
+            (t.isClassMethod(item) || t.isClassProperty(item)) &&
+            req.names.has(keyName)
+          ) {
+            if (t.isClassMethod(item)) {
+              const func = t.functionDeclaration(
+                t.identifier(keyName),
+                item.params,
+                item.body,
+                item.generator,
+                item.async,
+              );
+              if (item.leadingComments) func.leadingComments = item.leadingComments;
+              newNodes.push(t.exportNamedDeclaration(func));
+            } else if (t.isClassProperty(item)) {
+              const variableDec = t.variableDeclaration('const', [
+                t.variableDeclarator(t.identifier(keyName), item.value),
+              ]);
+              if (item.leadingComments) variableDec.leadingComments = item.leadingComments;
+              newNodes.push(t.exportNamedDeclaration(variableDec));
+            }
+          }
+        });
+        return newNodes;
+      };
+
       traverse(ast, {
         Program(astPath) {
           const body = astPath.get('body');
@@ -483,12 +521,17 @@ class MultiFileExtractor {
                     dec.node.declarations = keepers;
                     keep = true;
                   }
-                } else if (
-                  dec &&
-                  dec.isClassDeclaration() &&
-                  (req.names.has(dec.node.id.name) || localKeepNames.has(dec.node.id.name))
-                ) {
-                  keep = true; // Class Declaration Pruning Fix!
+                } else if (dec && dec.isClassDeclaration()) {
+                  if (req.names.has(dec.node.id.name) || localKeepNames.has(dec.node.id.name)) {
+                    keep = true;
+                  } else {
+                    const extractedNodes = extractStaticMethods(dec.node);
+                    if (extractedNodes.length > 0) {
+                      statement.replaceWithMultiple(extractedNodes);
+                      keep = true;
+                      continue;
+                    }
+                  }
                 } else if (statement.node.specifiers && statement.node.specifiers.length > 0) {
                   statement.node.specifiers = statement.node.specifiers.filter(
                     (spec) =>
@@ -507,26 +550,22 @@ class MultiFileExtractor {
               if (req.names.has('default')) {
                 keep = true;
               } else if (t.isClassDeclaration(statement.node.declaration)) {
-                const newNodes = [];
-                statement.node.declaration.body.body.forEach((item) => {
-                  if (item.static && t.isClassMethod(item) && req.names.has(item.key.name)) {
-                    const func = t.functionDeclaration(
-                      t.identifier(item.key.name),
-                      item.params,
-                      item.body,
-                      item.generator,
-                      item.async,
-                    );
-                    if (item.leadingComments) func.leadingComments = item.leadingComments;
-
-                    // A special inner jsDoc is maintained as Babel automatically preserves leading comments!
-                    newNodes.push(t.exportNamedDeclaration(func));
-                  }
-                });
-                if (newNodes.length > 0) {
-                  statement.replaceWithMultiple(newNodes);
+                const extractedNodes = extractStaticMethods(statement.node.declaration);
+                if (extractedNodes.length > 0) {
+                  statement.replaceWithMultiple(extractedNodes);
                   keep = true;
-                  return; // Skip statement.remove()
+                  continue;
+                }
+              }
+            } else if (statement.isClassDeclaration()) {
+              if (localKeepNames.has(statement.node.id.name)) {
+                keep = true;
+              } else {
+                const extractedNodes = extractStaticMethods(statement.node);
+                if (extractedNodes.length > 0) {
+                  statement.replaceWithMultiple(extractedNodes);
+                  keep = true;
+                  continue;
                 }
               }
             } else if (
@@ -542,11 +581,6 @@ class MultiFileExtractor {
                 statement.node.declarations = keepers;
                 keep = true;
               }
-            } else if (
-              statement.isClassDeclaration() &&
-              localKeepNames.has(statement.node.id.name)
-            ) {
-              keep = true; // Local Class Pruning Fix!
             }
 
             if (!keep) statement.remove();
