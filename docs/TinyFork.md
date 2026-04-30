@@ -2,14 +2,13 @@
 
 **The smart, AST-powered tree-shaking extractor for `tiny-essentials`.**
 
-TinyFork is a command-line interface (CLI) designed to extract specific functions, classes, and modules from the `tiny-essentials` library. Instead of forcing you to bundle the entire library into your project, TinyFork performs a deep Abstract Syntax Tree (AST) analysis to cherry-pick exactly what you need, automatically resolving and extracting all necessary local dependencies, imports, and jsDocs without bringing in any dead code. 
+Welcome to TinyFork! This is a friendly command-line interface (CLI) designed to extract specific functions, classes, and modules from the `tiny-essentials` library. Instead of forcing you to bundle the entire library into your project, TinyFork performs a deep Abstract Syntax Tree (AST) analysis to cherry-pick exactly what you need. It automatically resolves and extracts all necessary local dependencies, imports, and jsDocs without bringing in any dead code. 
 
 ## ✨ Key Features
 
 * 🌳 **Deep Tree-Shaking:** Uses `@babel/parser` to deeply trace your code. If you extract one function, TinyFork automatically finds and includes its dependencies (variables, other functions, dynamic imports) while leaving the rest behind.
 * 📁 **Structure Mirroring:** Extracted files are automatically saved maintaining their original folder structure inside your project, preventing naming conflicts and keeping imports clean.
 * 🧩 **Smart Class Extraction:** Can extract static methods from default exported classes and convert them into clean, standalone functions.
-* 🎨 **Full SCSS Support:** Not just for JavaScript! TinyFork parses `.scss` files, resolves `@import`, `@use`, and `@forward` rules (including partials like `_variables.scss`), and bundles them seamlessly.
 * 🔄 **Version Fallback:** Automatically scans for the requested files starting from the latest version down to `v1`. You can also explicitly request a specific version.
 
 ---
@@ -30,7 +29,7 @@ By default, all files are extracted to: `./vendor/tiny-essentials/` at the root 
 ## 📖 Examples & Capabilities
 
 ### 1. Extracting a Full File
-If you want to extract an entire module (JavaScript or SCSS), simply provide the path to the file (without the extension). TinyFork will extract it and automatically trace all of its internal imports!
+If you want to extract an entire JavaScript module, simply provide the path to the file (without the extension). TinyFork will extract it and automatically trace all of its internal imports!
 
 ```bash
 npx tiny-essentials-fork basics/array

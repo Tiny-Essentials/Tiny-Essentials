@@ -83,7 +83,7 @@ async function resolveSourceFile(targetVersion, basePath) {
     throw new Error('Forbidden extraction: Cannot export files from the build directory.');
   }
 
-  const extensions = ['.mjs', '.js', '.scss'];
+  const extensions = ['.mjs', '.js'];
   const startVersion = targetVersion || LATEST_VERSION;
   const endVersion = targetVersion ? targetVersion : 1;
 
@@ -163,49 +163,11 @@ class MultiFileExtractor {
     let resolved = path.resolve(dir, importStr);
 
     if (!path.extname(resolved)) {
-      for (const ext of ['.mjs', '.js', '.scss']) {
+      for (const ext of ['.mjs', '.js']) {
         if (existsSync(resolved + ext)) return resolved + ext;
       }
     }
     return resolved;
-  }
-
-  /**
-   * Specifically resolves SCSS imports, handling partials (e.g. _variables.scss)
-   */
-  resolveScssImport(currentFilePath, importStr) {
-    if (!importStr.startsWith('.')) return null;
-
-    const dir = path.dirname(currentFilePath);
-    const baseName = path.basename(importStr);
-    const dirName = path.dirname(importStr);
-
-    const possiblePaths = [
-      path.resolve(dir, importStr),
-      path.resolve(dir, `${importStr}.scss`),
-      path.resolve(dir, dirName, `_${baseName}.scss`),
-      path.resolve(dir, dirName, `_${baseName}.css`),
-    ];
-
-    for (const p of possiblePaths) {
-      if (existsSync(p)) return p;
-    }
-    return null;
-  }
-
-  /**
-   * Scans SCSS source code for imports and queues them.
-   */
-  parseScssDependencies(filePath, sourceCode, versionDir) {
-    const scssRegex = /@(?:import|use|forward)\s+['"]([^'"]+)['"]/g;
-    let match;
-    while ((match = scssRegex.exec(sourceCode)) !== null) {
-      const importStr = match[1];
-      const resolvedPath = this.resolveScssImport(filePath, importStr);
-      if (resolvedPath) {
-        this.requestExtraction(resolvedPath, [], versionDir);
-      }
-    }
   }
 
   async processQueue() {
@@ -218,16 +180,7 @@ class MultiFileExtractor {
       for (const [filePath, req] of entries) {
         if (this.processedFiles.has(filePath)) continue;
 
-        const ext = path.extname(filePath);
-        let finalCode;
-
-        if (ext === '.scss') {
-          finalCode = await fs.readFile(filePath, 'utf-8');
-          this.parseScssDependencies(filePath, finalCode, req.versionDir);
-        } else {
-          finalCode = await this.parseAndPrune(filePath, req);
-        }
-
+        const finalCode = await this.parseAndPrune(filePath, req);
         this.processedFiles.set(filePath, { code: finalCode, versionDir: req.versionDir });
         processedCount++;
       }
