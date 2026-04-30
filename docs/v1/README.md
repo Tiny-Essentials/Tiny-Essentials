@@ -86,6 +86,14 @@ To get started, navigate to the appropriate directory and explore the files list
 
 ---
 
+## 🍴 TinyFork CLI
+
+Want to extract only specific modules, classes, or functions into your project without carrying the whole library? We built a powerful AST-based CLI specifically for this!
+
+👉 Discover how to use our smart tree-shaking tool by visiting the [**TinyFork CLI Documentation**](../TinyFork.md) for important usage information and commands.
+
+---
+
 ## 📖 More Regex Goodies
 
 Looking for practical regex examples and migration helpers?
