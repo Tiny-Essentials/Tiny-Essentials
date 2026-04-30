@@ -576,8 +576,8 @@ async function runCLI() {
   const rawTargets = args.filter((a) => !a.startsWith('--'));
 
   if (rawTargets.length === 0) {
-    console.error('Usage: npx tiny-fork [--out-dir=custom/path] <target1> [target2] ...');
-    console.error('Example: npx tiny-fork v1/basics/example/func1 v1/ui/button');
+    console.error('Usage: npx tiny-essentials-fork [--out-dir=custom/path] <target1> [target2] ...');
+    console.error('Example: npx tiny-essentials-fork v1/basics/example/func1 v1/lib/TinyHtml');
     process.exit(1);
   }
 

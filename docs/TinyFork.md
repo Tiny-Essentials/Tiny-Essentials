@@ -2,7 +2,14 @@
 
 **The smart, AST-powered tree-shaking extractor for `tiny-essentials`.**
 
-Welcome to TinyFork! This is a friendly command-line interface (CLI) designed to extract specific functions, classes, and modules from the `tiny-essentials` library. Instead of forcing you to bundle the entire library into your project, TinyFork performs a deep Abstract Syntax Tree (AST) analysis to cherry-pick exactly what you need. It automatically resolves and extracts all necessary local dependencies, imports, and jsDocs without bringing in any dead code. 
+Welcome to TinyFork! This is a friendly command-line interface (CLI) designed to extract specific functions, classes, and modules from the `tiny-essentials` library. Instead of forcing you to bundle the entire library into your project, TinyFork performs a deep Abstract Syntax Tree (AST) analysis to cherry-pick exactly what you need. It automatically resolves and extracts all necessary local dependencies, imports, and jsDocs without bringing in any dead code.
+
+### 📦 Prerequisites
+
+Before running TinyFork, make sure you have the required Babel core packages installed in your project so the AST parsing can work its magic:
+```bash
+npm install @babel/core @babel/parser @babel/traverse @babel/generator @babel/types
+```
 
 ## ✨ Key Features
 
