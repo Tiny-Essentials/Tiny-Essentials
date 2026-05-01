@@ -46,17 +46,45 @@ const PATHS = {
  * @property {string[]} functionsToExtract - The specific functions to pull via Babel.
  */
 function parseTarget(rawTarget) {
+  /**
+   * Extracted version from the target string.
+   * @type {number|null}
+   */
   let targetVersion = null;
+
+  /**
+   * The target string without the version prefix.
+   * @type {string}
+   */
   let cleanTarget = rawTarget;
 
+  /**
+   * Regex match result for versioning.
+   * @type {RegExpMatchArray|null}
+   */
   const versionMatch = rawTarget.match(/^v(\d+)\//);
+
   if (versionMatch) {
     targetVersion = parseInt(versionMatch[1], 10);
     cleanTarget = rawTarget.replace(versionMatch[0], '');
   }
 
+  /**
+   * Indicates if specific functions are requested.
+   * @type {boolean}
+   */
   const hasFunctions = cleanTarget.includes(',');
+
+  /**
+   * List of specific function names to extract.
+   * @type {string[]}
+   */
   let functionsToExtract = [];
+
+  /**
+   * The base file path to search for.
+   * @type {string}
+   */
   let basePath = cleanTarget;
 
   if (hasFunctions) {
@@ -83,8 +111,22 @@ async function resolveSourceFile(targetVersion, basePath) {
     throw new Error('Forbidden extraction: Cannot export files from the build directory.');
   }
 
+  /**
+   * Supported file extensions.
+   * @type {string[]}
+   */
   const extensions = ['.mjs', '.js'];
+
+  /**
+   * The starting version for the resolution search.
+   * @type {number}
+   */
   const startVersion = targetVersion || LATEST_VERSION;
+
+  /**
+   * The ending version for the resolution search limit.
+   * @type {number}
+   */
   const endVersion = targetVersion ? targetVersion : 1;
 
   for (let v = startVersion; v >= endVersion; v--) {
@@ -113,6 +155,37 @@ async function resolveSourceFile(targetVersion, basePath) {
   }
 
   throw new Error(`Module not found: ${basePath}`);
+}
+
+/**
+ * Copies the LICENSE file from the project root to the destination vendor directory.
+ *
+ * @param {string} destDir - The final vendor output directory.
+ * @returns {Promise<void>} Resolves when the file is copied (or skipped if missing).
+ */
+async function copyLicense(destDir) {
+  /**
+   * Absolute path to the original LICENSE file.
+   * @type {string}
+   */
+  const licenseSrc = path.join(PATHS.cliRoot, 'LICENSE');
+
+  /**
+   * Absolute path to the destination LICENSE file.
+   * @type {string}
+   */
+  const licenseDest = path.join(destDir, 'LICENSE');
+
+  try {
+    if (existsSync(licenseSrc)) {
+      await fs.copyFile(licenseSrc, licenseDest);
+      console.log('> Copied: LICENSE');
+    } else {
+      console.warn('> Warning: LICENSE file not found in the root directory.');
+    }
+  } catch (error) {
+    console.error(`> Error copying LICENSE: ${error.message}`);
+  }
 }
 
 /**
@@ -569,14 +642,25 @@ class MultiFileExtractor {
 async function runCLI() {
   const args = process.argv.slice(2);
 
+  /**
+   * The explicit output directory argument if passed.
+   * @type {string|undefined}
+   */
   const outDirArg = args.find((a) => a.startsWith('--out-dir='));
+
+  /**
+   * The formatted custom output directory.
+   * @type {string|null}
+   */
   const customOutDir = outDirArg ? outDirArg.split('=')[1] : null;
 
   // Filter out flags to get the raw target strings
   const rawTargets = args.filter((a) => !a.startsWith('--'));
 
   if (rawTargets.length === 0) {
-    console.error('Usage: npx tiny-essentials-fork [--out-dir=custom/path] <target1> [target2] ...');
+    console.error(
+      'Usage: npx tiny-essentials-fork [--out-dir=custom/path] <target1> [target2] ...',
+    );
     console.error('Example: npx tiny-essentials-fork v1/basics/example/func1 v1/lib/TinyHtml');
     process.exit(1);
   }
@@ -598,6 +682,9 @@ async function runCLI() {
 
     console.log(`Starting extraction to: ${finalVendorDir}\n`);
     await extractor.processQueue();
+
+    // Copy the license file explicitly at the very end of processing
+    await copyLicense(finalVendorDir);
   } catch (error) {
     console.error('\nError extracting modules:');
     console.error(error.message);
