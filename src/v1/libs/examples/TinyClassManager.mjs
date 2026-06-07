@@ -1,4 +1,4 @@
-import TinyClassManager from "../TinyClassManager.mjs";
+import TinyClassManager from '../TinyClassManager.mjs';
 
 // ============================================================================
 // Example & Usage Context

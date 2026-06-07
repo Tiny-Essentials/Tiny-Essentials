@@ -1,37 +1,37 @@
 /**
  * @template {new (...args: any[]) => any} TBase
  * @template {new (...args: any[]) => any} TExtended
- * @typedef {Object} ModuleDefinition
- * @property {string} name - The unique identifier for the module (DLC).
- * @property {string[]} [dependencies] - Array of module names required before applying this one.
+ * @typedef {Object} PluginDefinition
+ * @property {string} name - The unique identifier for the plugin.
+ * @property {string[]} [dependencies] - Array of plugin names required before applying this one.
  * @property {function(TBase): TExtended} apply - Function that receives the base class and returns the extended class.
  */
 
 /**
- * Manages the composition of a base class with multiple optional modules (Mixins).
+ * Manages the composition of a base class with multiple optional plugins (Mixins).
  * @template {new (...args: any[]) => any} T
  */
 class TinyClassManager {
   /**
    * @type {Set<string>}
-   * Tracks the names of successfully applied modules to prevent duplication and check dependencies.
+   * Tracks the names of successfully applied plugins to prevent duplication and check dependencies.
    */
-  #appliedModules = new Set();
+  #appliedPlugins = new Set();
 
   /**
-   * Gets the list of modules currently applied to this instance.
-   * @returns {string[]} Array of applied module names.
+   * Gets the list of plugins currently applied to this instance.
+   * @returns {string[]} Array of applied plugin names.
    */
-  get appliedModules() {
-    return [...this.#appliedModules];
+  get appliedPlugins() {
+    return [...this.#appliedPlugins];
   }
 
   /**
    * Gets the total size of the current class chain hierarchy.
-   * @returns {number} The count of applied modules plus the core base.
+   * @returns {number} The count of applied plugins plus the core base.
    */
   get size() {
-    return this.#appliedModules.size + 1;
+    return this.#appliedPlugins.size + 1;
   }
 
   /**
@@ -68,36 +68,37 @@ class TinyClassManager {
   }
 
   /**
-   * Applies a module to the class chain if all conditions are met.
+   * Applies a plugin to the class chain if all conditions are met.
    * @template {new (...args: any[]) => any} R
-   * @param {ModuleDefinition<T, R>} module - The DLC module to be integrated.
+   * @param {PluginDefinition<T, R>} plugin - The plugin module to be integrated.
    * @returns {TinyClassManager<R>} A new manager instance holding the extended class chain.
-   * @throws {Error} Throws if instance is already consumed, module is duplicate, or dependencies are missing.
+   * @throws {Error} Throws if instance is already consumed, plugin is duplicate, or dependencies are missing.
    */
-  use(module) {
+  use(plugin) {
     if (this.#used) throw new Error(`[TinyClassManager] Cannot reuse a consumed manager instance.`);
-    if (this.#appliedModules.has(module.name))
-      throw new Error(`[TinyClassManager] Module conflict: "${module.name}" is already installed.`);
+    if (this.#appliedPlugins.has(plugin.name))
+      throw new Error(`[TinyClassManager] Plugin conflict: "${plugin.name}" is already installed.`);
 
     /**
      * @type {string[]}
      * Extracted dependencies array with fallback for undefined properties.
      */
-    const deps = module.dependencies || [];
+    const deps = plugin.dependencies || [];
 
     for (const dep of deps) {
-      if (!this.#appliedModules.has(dep)) {
+      if (!this.#appliedPlugins.has(dep)) {
         throw new Error(
-          `[TinyClassManager] Missing Dependency: "${module.name}" requires "${dep}" to be installed first.`,
+          `[TinyClassManager] Missing Dependency: "${plugin.name}" requires "${dep}" to be installed first.`,
         );
       }
     }
 
-    const newClassManager = new TinyClassManager(module.apply(this.#currentClass));
-    this.#appliedModules.forEach((name) => newClassManager.#appliedModules.add(name));
-    newClassManager.#appliedModules.add(module.name);
+    const newClassManager = new TinyClassManager(plugin.apply(this.#currentClass));
+    this.#appliedPlugins.forEach((name) => newClassManager.#appliedPlugins.add(name));
+    newClassManager.#appliedPlugins.add(plugin.name);
 
     this.#used = true;
+    this.#appliedPlugins.clear();
     return newClassManager;
   }
 
@@ -110,6 +111,7 @@ class TinyClassManager {
     if (this.#used)
       throw new Error(`[TinyClassManager] Cannot build from an already finalized manager.`);
     this.#used = true;
+    this.#appliedPlugins.clear();
     return this.#currentClass;
   }
 }
