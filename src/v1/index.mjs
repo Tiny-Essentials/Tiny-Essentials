@@ -150,9 +150,11 @@ import {
   trapezoid,
   defuzzifyCentroid,
 } from './libs/TinyMamdaniInferenceSystem.mjs';
+import TinyClassManager from './libs/TinyClassManager.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
+  TinyClassManager,
   FuzzySet,
   MamdaniInferenceSystem,
   TinyArrayComparator,

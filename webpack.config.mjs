@@ -102,5 +102,6 @@ addModule(1, './src/v1/build/TinyColorValidator.mjs', 'TinyColorValidator', true
 addModule(1, './src/v1/build/TinyAnalogClock.mjs', 'TinyAnalogClock', true);
 addModule(1, './src/v1/build/TinyTextDiffer.mjs', 'TinyTextDiffer', true);
 addModule(1, './src/v1/build/TinyArrayComparator.mjs', 'TinyArrayComparator', true);
+addModule(1, './src/v1/build/TinyClassManager.mjs', 'TinyClassManager', true);
 
 export default modules;
