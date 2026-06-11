@@ -91,53 +91,55 @@
       }
 
       /**
-       * @type {import('../TinyClassManager.mjs').PluginDefinition<typeof EntityCore, any>}
+       * @param {typeof EntityCore} Base
        */
-      const Health = {
-        name: 'Health',
-        dependencies: [],
-        apply: (Base) =>
-          class HealthPlugin extends Base {
-            /**
-             * @param {string} id
-             */
-            constructor(id) {
-              super(id);
-              this.hp = 100;
-            }
-            /**
-             * @param {number} amount
-             */
-            takeDamage(amount) {
-              this.hp -= amount;
-            }
-          },
-      };
+      const applyHealth = (Base) =>
+        class HealthPlugin extends Base {
+          static _tinyDepName = 'Health';
+          /** @type {string[]} */
+          static _tinyDeps = [];
+
+          /**
+           * @param {string} id
+           */
+          constructor(id) {
+            super(id);
+            this.hp = 100;
+          }
+          /**
+           * @param {number} amount
+           */
+          takeDamage(amount) {
+            this.hp -= amount;
+          }
+        };
 
       /**
-       * @type {import('../TinyClassManager.mjs').PluginDefinition<any, any>}
+       * @param {ReturnType<typeof applyHealth>} Base
        */
-      const Armor = {
-        name: 'Armor',
-        dependencies: ['Health'],
-        apply: (Base) =>
-          class ArmorPlugin extends Base {
+      const applyArmor = (Base) =>
+        class ArmorPlugin extends Base {
+          static _tinyDepName = 'Armor';
+          static _tinyDeps = ['Health'];
+
+          /**
+           * @param {string} id
+           */
+          constructor(id) {
+            super(id);
+            this.armor = 50;
+          }
+          /**
+           * @param {number} amount
+           */
+          takeDamage(amount) {
             /**
-             * @param {string} id
+             * Reduced damage calculated prior to sending it up the super chain.
              */
-            constructor(id) {
-              super(id);
-              this.armor = 50;
-            }
-            /**
-             * @param {number} amount
-             */
-            takeDamage(amount) {
-              const reducedDamage = Math.max(0, amount - this.armor * 0.1);
-              super.takeDamage(reducedDamage);
-            }
-          },
-      };
+            const reducedDamage = Math.max(0, amount - this.armor * 0.1);
+            super.takeDamage(reducedDamage);
+          }
+        };
 
       // ============================================================================
       // Test Engine
@@ -175,7 +177,7 @@
       /**
        * Executes a single test case safely and captures assertions.
        * @param {string} title - The name of the test.
-       * @param {function(): void} testFn - The function containing the test logic.
+       * @param {function(function(boolean, string): void, function(string): void): void} testFn - The function containing the test logic.
        * @returns {void}
        */
       const runTest = (title, testFn) => {
@@ -200,31 +202,34 @@
           logs.push(`ERROR: ${error.message}`);
         }
 
-        renderResult(title, passed, logs.join('\\n') || 'No logs generated.');
+        renderResult(title, passed, logs.join('\n') || 'No logs generated.');
       };
 
       // ============================================================================
       // Test Cases
       // ============================================================================
 
-      runTest('1. Should successfully apply Health and Armor plugins', (assert, log) => {
-        const CoreManager = new TinyClassManager(EntityCore);
-        const FinalClass = CoreManager.use(Health).use(Armor).build();
+      runTest(
+        '1. Should successfully apply Health and Armor plugins using insert()',
+        (assert, log) => {
+          const CoreManager = new TinyClassManager(EntityCore);
+          const FinalClass = CoreManager.insert(applyHealth).insert(applyArmor).build();
 
-        const entity = new FinalClass('Hero_1');
-        entity.takeDamage(30);
+          const entity = new FinalClass('Hero_1');
+          entity.takeDamage(30);
 
-        assert(entity.hp === 75, 'HP should be reduced by 25 (30 - 5 armor mitigation)');
-        assert(entity.armor === 50, 'Armor should remain 50');
-        log(`Success! Final HP: ${entity.hp}, Final Armor: ${entity.armor}`);
-      });
+          assert(entity.hp === 75, 'HP should be reduced by 25 (30 - 5 armor mitigation)');
+          assert(entity.armor === 50, 'Armor should remain 50');
+          log(`Success! Final HP: ${entity.hp}, Final Armor: ${entity.armor}`);
+        },
+      );
 
       runTest('2. Should throw error when missing a dependency', (assert, log) => {
         const CoreManager = new TinyClassManager(EntityCore);
 
         let caughtError = false;
         try {
-          CoreManager.use(Armor); // Fails because Health is not applied
+          CoreManager.insert(applyArmor); // Fails because Health is not applied
         } catch (err) {
           caughtError = true;
           log(err.message);
@@ -235,11 +240,11 @@
 
       runTest('3. Should throw error when applying duplicate plugins', (assert, log) => {
         const CoreManager = new TinyClassManager(EntityCore);
-        const Step1 = CoreManager.use(Health);
+        const Step1 = CoreManager.insert(applyHealth);
 
         let caughtError = false;
         try {
-          Step1.use(Health); // Fails because Health is already applied
+          Step1.insert(applyHealth); // Fails because Health is already applied
         } catch (err) {
           caughtError = true;
           log(err.message);
@@ -250,11 +255,11 @@
 
       runTest('4. Should block reuse of consumed manager instances', (assert, log) => {
         const CoreManager = new TinyClassManager(EntityCore);
-        CoreManager.use(Health); // Consumes CoreManager
+        CoreManager.insert(applyHealth); // Consumes CoreManager
 
         let caughtError = false;
         try {
-          CoreManager.use(Health); // Try to reuse the old instance
+          CoreManager.insert(applyHealth); // Try to reuse the old instance
         } catch (err) {
           caughtError = true;
           log(err.message);
