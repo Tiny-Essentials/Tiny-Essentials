@@ -1,6 +1,8 @@
+/** @typedef {new (...args: any[]) => any} NewTinyClass */
+
 /**
- * @template {new (...args: any[]) => any} TBase
- * @template {new (...args: any[]) => any} TExtended
+ * @template {NewTinyClass} TBase
+ * @template {NewTinyClass} TExtended
  * @typedef {Object} PluginDefinition
  * @property {string} name - The unique identifier for the plugin.
  * @property {string[]} [dependencies] - Array of plugin names required before applying this one.
@@ -9,9 +11,12 @@
 
 /**
  * Manages the composition of a base class with multiple optional plugins (Mixins).
- * @template {new (...args: any[]) => any} T
+ * @template {NewTinyClass} T
+ * @template {T|NewTinyClass} oldT
  */
 class TinyClassManager {
+  /** @typedef {[...oldT[], T]} AppliedPluginClasses */
+
   /**
    * @type {Set<string>}
    * Tracks the names of successfully applied plugins to prevent duplication and check dependencies.
@@ -23,7 +28,24 @@ class TinyClassManager {
    * @returns {string[]} Array of applied plugin names.
    */
   get appliedPlugins() {
+    if (this.#used) throw new Error(`[TinyClassManager] Cannot get a consumed manager instance.`);
     return [...this.#appliedPlugins];
+  }
+
+  /**
+   * @type {AppliedPluginClasses}
+   * Tracks the classes of successfully applied plugins to prevent duplication and check dependencies.
+   */
+  // @ts-ignore
+  #appliedPluginClasses = [];
+
+  /**
+   * Gets the list of plugin classes currently applied to this instance.
+   * @returns {AppliedPluginClasses} Array of applied plugin classes.
+   */
+  get appliedPluginClasses() {
+    if (this.#used) throw new Error(`[TinyClassManager] Cannot get a consumed manager instance.`);
+    return [...this.#appliedPluginClasses];
   }
 
   /**
@@ -31,7 +53,8 @@ class TinyClassManager {
    * @returns {number} The count of applied plugins plus the core base.
    */
   get size() {
-    return this.#appliedPlugins.size + 1;
+    if (this.#used) throw new Error(`[TinyClassManager] Cannot get a consumed manager instance.`);
+    return this.#appliedPluginClasses.length;
   }
 
   /**
@@ -44,6 +67,7 @@ class TinyClassManager {
    * Holds the current state of the class chain.
    */
   get currentClass() {
+    if (this.#used) throw new Error(`[TinyClassManager] Cannot get a consumed manager instance.`);
     return this.#currentClass;
   }
 
@@ -62,18 +86,24 @@ class TinyClassManager {
   /**
    * Initializes the manager with a core class.
    * @param {T} coreClass - The foundational class to be extended.
+   * @param {oldT[]} [oldClasses=[]]
    */
-  constructor(coreClass) {
+  constructor(
+    coreClass,
+    // @ts-ignore
+    oldClasses = [],
+  ) {
     this.#currentClass = coreClass;
+    this.#appliedPluginClasses = [...oldClasses, coreClass];
   }
 
   /**
    * Internal helper to validate dependencies, check conflicts, and transition state.
-   * @template {new (...args: any[]) => any} R
+   * @template {NewTinyClass} R
    * @param {string} name - The plugin name.
    * @param {string[]} deps - The plugin dependencies.
    * @param {R} ExtendedClass - The newly extended class returned by the apply function.
-   * @returns {TinyClassManager<R>} A new manager instance.
+   * @returns {TinyClassManager<R, T | oldT>} A new manager instance.
    */
   #validateAndTransition(name, deps, ExtendedClass) {
     // Verifies if the current manager has already been consumed to prevent branching.
@@ -91,17 +121,14 @@ class TinyClassManager {
       }
     }
 
-    /**
-     * @type {TinyClassManager<R>}
-     * The next manager instance wrapping the newly extended class chain.
-     */
-    const newClassManager = new TinyClassManager(ExtendedClass);
-
+    const newClassManager = new TinyClassManager(ExtendedClass, this.#appliedPluginClasses);
     this.#appliedPlugins.forEach((appliedName) => newClassManager.#appliedPlugins.add(appliedName));
     newClassManager.#appliedPlugins.add(name);
 
     this.#used = true;
     this.#appliedPlugins.clear();
+    // @ts-ignore
+    this.#appliedPluginClasses = [];
 
     return newClassManager;
   }
@@ -109,9 +136,9 @@ class TinyClassManager {
   /**
    * Applies a plugin to the class chain using a definition object.
    * @deprecated Use {@link insert} instead.
-   * @template {new (...args: any[]) => any} R
+   * @template {NewTinyClass} R
    * @param {PluginDefinition<T, R>} plugin - The plugin module to be integrated.
-   * @returns {TinyClassManager<R>} A new manager instance holding the extended class chain.
+   * @returns {TinyClassManager<R, T | oldT>} A new manager instance holding the extended class chain.
    * @throws {Error} Throws if instance is already consumed, plugin is duplicate, or dependencies are missing.
    */
   use(plugin) {
@@ -133,9 +160,9 @@ class TinyClassManager {
   /**
    * Inserts a plugin directly by passing its apply function.
    * It reads `_tinyDepName` and `_tinyDeps` statically from the returned class.
-   * @template {new (...args: any[]) => any} R
+   * @template {NewTinyClass} R
    * @param {function(T): R} applyFn - Function that receives the base class and returns the extended class.
-   * @returns {TinyClassManager<R>} A new manager instance holding the extended class chain.
+   * @returns {TinyClassManager<R, T | oldT>} A new manager instance holding the extended class chain.
    * @throws {Error} Throws if static properties are missing, instance is consumed, or validation fails.
    */
   insert(applyFn) {
@@ -183,6 +210,8 @@ class TinyClassManager {
       throw new Error(`[TinyClassManager] Cannot build from an already finalized manager.`);
     this.#used = true;
     this.#appliedPlugins.clear();
+    // @ts-ignore
+    this.#appliedPluginClasses = [];
     return this.#currentClass;
   }
 }
