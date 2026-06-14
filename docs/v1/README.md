@@ -8,9 +8,7 @@ Here, you can navigate through different sections of the project. Below are the 
 
 ## 📚 Main Directories
 
-### 1. **`basics/`** 
-
-This folder contains the core scripts we have worked on so far. Each file is a module focused on specific functionality.
+### 1. **`basics/`** This folder contains the core scripts we have worked on so far. Each file is a module focused on specific functionality.
 
 - 📦 **[Array](./basics/array.md)** — A tiny utility for shuffling arrays using the Fisher–Yates algorithm.
 - ⏰ **[Clock](./basics/clock.md)** — A versatile time utility module for calculating and formatting time durations.
@@ -62,6 +60,9 @@ This folder contains the core scripts we have worked on so far. Each file is a m
 - 🎨 **[TinyColorValidator](./libs/TinyColorValidator.md)** — A comprehensive CSS color validation and parsing utility supporting HEX, HEXA, RGB, RGBA, HSL, HSLA, HWB, Lab, LCH, standard HTML color names, and special keywords, with automatic type detection and parsing.
 * 📝 **[TinyTextDiffer](./libs/TinyTextDiffer.md)** — A granular text comparison utility using the LCS algorithm to detect additions, deletions, and unchanged segments between multiple history versions, returning a clean, parseable diff structure.
 * 🕒 **[TinyAnalogClock](./libs/TinyAnalogClock.md)** — A lightweight analog clock engine for managing time-based rotations, supporting custom offsets, smooth transitions, and easy binding to CSS variables rendering.
+* 🔍 **[TinyArrayComparator](./libs/TinyArrayComparator.md)** — A lightweight, highly optimized JavaScript utility class designed to compare two arrays and efficiently detect which items were **added** or **deleted**.
+* 🧠 **[TinyMamdaniInferenceSystem](./libs/TinyMamdaniInferenceSystem.md)** — A implementation of a Mamdani Inference System, allowing you to model logic using trapezoidal membership functions.
+* ⚙️ **[TinyClassManager](./libs/TinyClassManager.md)** — A lightweight, immutable manager designed to linearly compose a base class with multiple modular plugins, featuring automatic dependency verification and duplicate conflict protection.
 
 ### 3. **`fileManager/`**
 * 📁 **[Main](./fileManager/main.md)** — A Node.js file/directory utility module with support for JSON, backups, renaming, size analysis, and more.
@@ -70,9 +71,15 @@ This folder contains the core scripts we have worked on so far. Each file is a m
 
 ## 📚 Tip Directories
 
-### 1. **`libs/`** 
+### 1. **`libs/`** - 🧱 **[TinyHtml](./libs/TinyHtmlTips.md)** — Usage examples and practical tips.
 
-- 🧱 **[TinyHtml](./libs/TinyHtmlTips.md)** — Usage examples and practical tips.
+---
+
+## 🔌 Want to Extend These Libraries?
+
+Did you find a class in our `libs/` that *almost* perfectly fits your needs, but you want to add your own custom features, modules, or plugins to it? 
+
+We highly recommend using **[⚙️ TinyClassManager](./libs/TinyClassManager.md)**! It was specifically built for this purpose. It allows you to safely and cleanly inject your own plugins into our existing classes using a linear mixin architecture, automatically handling dependencies and preventing conflicts without you ever having to touch the original source code.
 
 ---
 
@@ -81,6 +88,14 @@ This folder contains the core scripts we have worked on so far. Each file is a m
 To get started, navigate to the appropriate directory and explore the files listed. Each script includes detailed documentation on how to use the respective functionality.
 
 👉 For a complete overview of all available entry points and modules, please check out the [**exports**](./Exports.md) file. It provides a detailed map of the package’s `exports` and helps you import exactly what you need.
+
+---
+
+## 🍴 TinyFork CLI
+
+Want to extract only specific modules, classes, or functions into your project without carrying the whole library? We built a powerful AST-based CLI specifically for this!
+
+👉 Discover how to use our smart tree-shaking tool by visiting the [**TinyFork CLI Documentation**](../TinyFork.md) for important usage information and commands.
 
 ---
 
