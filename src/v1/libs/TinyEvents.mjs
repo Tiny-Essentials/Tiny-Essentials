@@ -262,6 +262,13 @@ class TinyEvents {
     this.#listeners.clear();
   }
 
+  /**
+   * Removes all event listeners of all types from the element.
+   */
+  removeAllListeners() {
+    return this.offAllTypes();
+  }
+
   /////////////////////////////////////////////
 
   /**
