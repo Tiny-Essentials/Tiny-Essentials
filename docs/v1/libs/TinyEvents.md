@@ -111,7 +111,7 @@ Removes a specific listener from an event.
 
 Removes all listeners for one or more events.
 
-#### `offAllTypes(): void`
+#### `offAllTypes(): void` and `removeAllListeners(): void`
 
 Removes **all listeners** for **all events**.
 
