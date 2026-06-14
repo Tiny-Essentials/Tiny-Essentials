@@ -94,13 +94,13 @@ Feel free to fork, contribute, and create pull requests for improvements! Whethe
 
 ## 📝 License
 
-This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the LGPL-3.0 License - see the [LICENSE](LICENSE) file for details.
 
 ### 💡 Credits
 
 This project was inspired by the need for lightweight, reusable code that can be used across many different kinds of applications. Contributions and suggestions are always appreciated!
 
-> 🧠 **Note**: This documentation was written by [ChatGPT](https://openai.com/chatgpt), an AI assistant developed by OpenAI, based on the project structure and descriptions provided by the repository author.  
+> 🧠 **Note**: This documentation was written by [ChatGPT](https://openai.com/chatgpt) and [Gemini](https://gemini.google.com), AI assistants developed by OpenAI and Google, based on the project structure and descriptions provided by the repository author.  
 > If you find any inaccuracies or need improvements, feel free to contribute or open an issue!
 
 ---
