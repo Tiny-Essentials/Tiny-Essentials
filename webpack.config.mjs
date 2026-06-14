@@ -61,6 +61,7 @@ const addModule = (version, entry, library, isClass = false) => {
 // Main
 addModule(1, './src/v1/index.mjs', 'TinyEssentials');
 addModule(1, './src/v1/basics/index.mjs', 'TinyBasicsEs');
+addModule(1, './src/v1/libs/TinyMamdaniInferenceSystem.mjs', 'TinyMaInSys');
 addModule(1, './src/v1/build/TinyLevelUp.mjs', 'TinyLevelUp', true);
 addModule(1, './src/v1/build/TinyPromiseQueue.mjs', 'TinyPromiseQueue', true);
 addModule(1, './src/v1/build/ColorSafeStringify.mjs', 'ColorSafeStringify', true);
@@ -99,5 +100,8 @@ addModule(1, './src/v1/build/TinyElementObserver.mjs', 'TinyElementObserver', tr
 addModule(1, './src/v1/build/TinyLoadingScreen.mjs', 'TinyLoadingScreen', true);
 addModule(1, './src/v1/build/TinyColorValidator.mjs', 'TinyColorValidator', true);
 addModule(1, './src/v1/build/TinyAnalogClock.mjs', 'TinyAnalogClock', true);
+addModule(1, './src/v1/build/TinyTextDiffer.mjs', 'TinyTextDiffer', true);
+addModule(1, './src/v1/build/TinyArrayComparator.mjs', 'TinyArrayComparator', true);
+addModule(1, './src/v1/build/TinyClassManager.mjs', 'TinyClassManager', true);
 
 export default modules;
