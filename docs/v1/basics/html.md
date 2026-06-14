@@ -155,6 +155,21 @@ Loads data from a remote URL using the Fetch API, with support for custom HTTP m
   * `retries` *(number)*: Number of retry attempts if the request fails. Default is `0`.
   * `headers` *(object)*: Additional headers to include in the request.
   * `body` *(object)*: Request body. If the value is a plain object, it will be automatically stringified as JSON.
+  * `onProgress` *((loaded: number, total: number) => void)*: Track the load progress.
+
+#### `trackFetchProgress(response, onProgress)`
+
+Intercepts a standard Fetch API Response to track the download progress of its body stream.
+
+* **Parameters**:
+
+  * `response` *(Response)*: The original response object to be tracked.
+  * `options` *(FetchOnProgressResult)*: The callback function to handle progress events (loaded and total numbers).
+
+* **Returns**:
+  `Response` — A new Response object with the tracked stream.
+
+---
 
 #### `fetchJson(url, options?)`
 
@@ -374,3 +389,57 @@ stopWatching(); // later
   transition: opacity 0.3s ease;
 }
 ```
+
+---
+
+### 📖 `loadImage(options): Promise<object>`
+
+A robust, asynchronous utility for loading images in the browser. It captures critical lifecycle events and provides a normalized result object, making it much easier to handle image loading states and performance metrics.
+
+#### ✨ Features
+
+* **Asynchronous:** Returns a clean `Promise`.
+* **Performance Tracking:** Automatically calculates the time taken to load the image.
+* **Memory Safe:** Includes a cleanup mechanism for event listeners.
+* **Normalized Output:** Returns consistent data structures for both success and edge cases.
+
+#### 📥 Parameters
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `url` | `string` | **Required** | The source URL of the image. |
+| `crossOrigin` | `string` | `'anonymous'` | The CORS policy for the request. |
+| `onLoading` | `function` | `undefined` | Callback fired when the browser starts the network request. |
+
+#### 📤 Returns
+
+The promise resolves to an object containing:
+
+* **`element`**: `HTMLImageElement` - The actual image object.
+* **`isSuccess`**: `boolean` - True if the image loaded correctly.
+* **`event`**: `Event` - The raw event captured from the browser.
+* **`status`**: `string` - `'loaded'` or `'aborted'`.
+* **`loadTimeMs`**: `number` - Total duration of the request in milliseconds.
+* **`dimensions`**: `Object` - Contains `width`, `height`, `naturalWidth`, and `naturalHeight`.
+
+#### 🧪 Example
+
+```javascript
+import { loadImage } from './html.mjs';
+
+const handleLoading = (event, startTime) => {
+  console.log('Started loading at:', startTime);
+};
+
+const result = await loadImage({
+  url: 'https://example.com/image.png',
+  onLoading: handleLoading,
+  crossOrigin: 'anonymous'
+});
+
+if (result.isSuccess) {
+  console.log(`Image loaded in ${result.loadTimeMs.toFixed(2)}ms`);
+  document.body.appendChild(result.element);
+}
+```
+> **Note:** The utility uses `performance.now()` for high-resolution timestamps, ensuring accurate performance monitoring of your assets.
