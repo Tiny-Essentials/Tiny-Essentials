@@ -1,58 +1,186 @@
-/** @typedef {(groupId: string) => void} OnMemoryExceeded */
-
-/** @typedef {(groupId: string) => void} OnGroupExpired */
+/**
+ * Callback triggered when a group's stored hit history exceeds
+ * the configured memory limit.
+ *
+ * This callback is purely informational and does not block execution.
+ *
+ * @typedef {(groupId: string) => void} OnMemoryExceeded
+ */
 
 /**
- * Class representing a flexible rate limiter per user or group.
+ * Callback triggered when a group is considered expired and removed
+ * during the cleanup process.
  *
- * This rate limiter supports limiting per user or per group by mapping
- * userIds to a common groupId. All users within the same group share
- * rate limits.
+ * This usually happens when the group remains inactive longer than
+ * its configured TTL or the global maxIdle value.
+ *
+ * @typedef {(groupId: string) => void} OnGroupExpired
+ */
+
+/**
+ * A lightweight and flexible rate limiter supporting both user-based
+ * and group-based throttling.
+ *
+ * ## Core Concepts
+ * - Every user belongs to a group.
+ * - If no explicit group is assigned, the user acts as their own group.
+ * - All users within the same group share the same hit history and limits.
+ *
+ * ## Supported Limiting Strategies
+ * - Max number of hits
+ * - Time-based sliding window
+ * - Combination of both
+ *
+ * ## Extra Features
+ * - Per-group TTL (time-to-live)
+ * - Automatic cleanup of inactive groups
+ * - Optional memory cap per group
+ * - Runtime metrics and statistics
+ *
+ * ## Interval Window (Sliding Window) Behavior
+ *
+ * This rate limiter uses a **sliding time window** strategy when `interval`
+ * is configured.
+ *
+ * ### How it works
+ * - Each hit is stored as a timestamp (Date.now()).
+ * - On every new hit and rate check, timestamps older than:
+ *
+ *   `now - interval`
+ *
+ *   are discarded.
+ *
+ * - Only hits that occurred within the last `interval` milliseconds
+ *   are considered valid.
+ *
+ * ### Practical example
+ * If:
+ * - interval = 10_000 (10 seconds)
+ * - maxHits = 5
+ *
+ * Then:
+ * - Any group may perform **up to 5 hits in any rolling 10-second window**.
+ * - The window moves continuously with time.
+ *
+ * This avoids burst issues common in fixed-window rate limiters.
+ *
+ * This class is designed to be deterministic, predictable,
+ * and safe to use in long-running Node.js processes.
  */
 class TinyRateLimiter {
-  /** @type {number|null} */
+  /**
+   * Maximum number of timestamps stored per group.
+   * When exceeded, older entries are discarded.
+   *
+   * `null` means unlimited.
+   *
+   * @type {number|null}
+   */
   #maxMemory = null;
 
-  /** @type {NodeJS.Timeout|null} */
+  /**
+   * Internal timer reference used for periodic cleanup.
+   *
+   * @type {NodeJS.Timeout|null}
+   */
   #cleanupTimer = null;
 
-  /** @type {number|null|undefined} */
+  /**
+   * Maximum number of allowed hits within the interval window.
+   *
+   * If `null`, hit count is not enforced.
+   *
+   * @type {number|null|undefined}
+   */
   #maxHits = null;
 
-  /** @type {number|null|undefined} */
+  /**
+   * Sliding window duration in milliseconds.
+   *
+   * When defined, the rate limiter operates in **sliding window mode**:
+   * only hits that occurred within the last `interval` milliseconds
+   * are considered when evaluating limits.
+   *
+   * If `null`, time-based limiting is disabled and only `maxHits`
+   * (if defined) is used.
+   *
+   * @type {number|null|undefined}
+   */
   #interval = null;
 
-  /** @type {number|null|undefined} */
+  /**
+   * Interval (in milliseconds) at which cleanup runs automatically.
+   *
+   * If `null`, cleanup must be triggered manually.
+   *
+   * @type {number|null|undefined}
+   */
   #cleanupInterval = null;
 
-  /** @type {number|null|undefined} */
+  /**
+   * Maximum allowed inactivity time (in milliseconds)
+   * before a group is considered expired.
+   *
+   * @type {number|null|undefined}
+   */
   #maxIdle = null;
 
-  /** @type {Map<string, number[]>} */
+  /**
+   * Stores hit timestamps per group.
+   *
+   * Key: groupId
+   * Value: array of timestamps (ms)
+   *
+   * @type {Map<string, number[]>}
+   */
   groupData = new Map(); // groupId -> timestamps[]
 
-  /** @type {Map<string, number>} */
+  /**
+   * Stores the timestamp of the most recent activity per group.
+   *
+   * Used for expiration and cleanup logic.
+   *
+   * @type {Map<string, number>}
+   */
   lastSeen = new Map(); // groupId -> timestamp
 
-  /** @type {Map<string, string>} */
+  /**
+   * Maps user IDs to their assigned group IDs.
+   *
+   * @type {Map<string, string>}
+   */
   userToGroup = new Map(); // userId -> groupId
 
-  /** @type {Map<string, boolean>} */
+  /**
+   * Flags whether an ID represents a true group or an implicit user group.
+   *
+   * `true`  → explicit group
+   * `false` → implicit (user acting as group)
+   *
+   * @type {Map<string, boolean>}
+   */
   groupFlags = new Map(); // groupId -> boolean
 
   /**
+   * Per-group TTL (time-to-live) overrides.
+   *
+   * If not defined for a group, `maxIdle` is used instead.
+   *
    * @type {Map<string, number>}
-   * Stores TTL (in ms) for each groupId individually
    */
   groupTTL = new Map();
 
   /**
+   * Callback invoked when a group's memory limit is exceeded.
+   *
    * @type {null|OnMemoryExceeded}
    */
   #onMemoryExceeded = null;
 
   /**
-   * Set the callback to be triggered when a group exceeds its limit
+   * Assign a callback to be notified when a group's stored
+   * hit history exceeds the configured memory limit.
+   *
    * @param {OnMemoryExceeded} callback
    */
   setOnMemoryExceeded(callback) {
@@ -61,13 +189,15 @@ class TinyRateLimiter {
   }
 
   /**
-   * Clear the onMemoryExceeded callback
+   * Removes the memory-exceeded callback.
    */
   clearOnMemoryExceeded() {
     this.#onMemoryExceeded = null;
   }
 
   /**
+   * Callback invoked when a group expires and is removed.
+   *
    * @type {null|OnGroupExpired}
    */
   #onGroupExpired = null;
@@ -86,19 +216,28 @@ class TinyRateLimiter {
   }
 
   /**
-   * Clear the onGroupExpired callback
+   * Removes the group-expiration callback.
    */
   clearOnGroupExpired() {
     this.#onGroupExpired = null;
   }
 
   /**
+   * Creates a new TinyRateLimiter instance.
+   *
+   * At least one of `maxHits` or `interval` must be provided.
+   *
    * @param {Object} options
-   * @param {number|null} [options.maxMemory] - Max memory allowed
-   * @param {number} [options.maxHits] - Max interactions allowed
-   * @param {number} [options.interval] - Time window in milliseconds
-   * @param {number} [options.cleanupInterval] - Interval for automatic cleanup (ms)
-   * @param {number} [options.maxIdle=300000] - Max idle time for a user before being cleaned (ms)
+   * @param {number|null} [options.maxMemory=100000]
+   *   Maximum timestamps stored per group (memory cap).
+   * @param {number} [options.maxHits]
+   *   Maximum number of allowed hits.
+   * @param {number} [options.interval]
+   *   Sliding time window in milliseconds.
+   * @param {number} [options.cleanupInterval]
+   *   Interval (ms) for automatic cleanup execution.
+   * @param {number} [options.maxIdle=300000]
+   *   Maximum inactivity time (ms) before a group expires.
    */
   constructor({ maxHits, interval, cleanupInterval, maxIdle = 300000, maxMemory = 100000 }) {
     /** @param {number|undefined} val */
@@ -193,10 +332,14 @@ class TinyRateLimiter {
   }
 
   /**
-   * Assign a userId to a groupId, with merge if user has existing data.
+   * Assigns a user to a group.
+   *
+   * If the user already has recorded hits, those hits
+   * are merged into the target group.
+   *
    * @param {string} userId
    * @param {string} groupId
-   * @throws {Error} If userId is already assigned to a different group
+   * @throws {Error} If the user belongs to another group
    */
   assignToGroup(userId, groupId) {
     const existingGroup = this.userToGroup.get(userId);
@@ -237,7 +380,11 @@ class TinyRateLimiter {
   }
 
   /**
-   * Get the groupId for a given userId
+   * Resolves the effective group ID for a user.
+   *
+   * If the user is not explicitly assigned to a group,
+   * the user ID itself is treated as the group ID.
+   *
    * @param {string} userId
    * @returns {string}
    */
@@ -246,7 +393,25 @@ class TinyRateLimiter {
   }
 
   /**
-   * Register a hit for a specific user
+   * Registers a hit for a user and applies the sliding window logic.
+   *
+   * ⚠️ **Important usage notice**
+   * This method **must be called before** `isRateLimited(userId)`
+   * in order for rate limit checks to work correctly.
+   *
+   * ### Sliding window cleanup
+   * When `interval` is configured:
+   * - The current timestamp is added to the group's history.
+   * - All timestamps older than `now - interval` are immediately removed.
+   *
+   * This ensures that the stored history always represents
+   * the **current active window**.
+   *
+   * ### Important notes
+   * - Cleanup happens on every hit, not on a fixed schedule.
+   * - The window continuously moves forward in time.
+   * - Memory usage is naturally bounded by time, and optionally by `maxMemory`.
+   *
    * @param {string} userId
    */
   hit(userId) {
@@ -283,7 +448,22 @@ class TinyRateLimiter {
   }
 
   /**
-   * Check if the user (via their group) is currently rate limited
+   * Checks whether a user is currently rate limited.
+   *
+   * ### Evaluation process
+   * When `interval` is defined:
+   * 1. The cutoff time is calculated as:
+   *
+   *    `Date.now() - interval`
+   *
+   * 2. Only hits newer than this cutoff are counted.
+   * 3. If `maxHits` is defined:
+   *    - The group is limited when the count exceeds `maxHits`.
+   * 4. If `maxHits` is not defined:
+   *    - Any hit within the window causes a limited state.
+   *
+   * This guarantees consistent behavior regardless of when hits occur.
+   *
    * @param {string} userId
    * @returns {boolean}
    */
@@ -429,7 +609,11 @@ class TinyRateLimiter {
   }
 
   /**
-   * Get the interval window in milliseconds.
+   * Returns the configured sliding window size in milliseconds.
+   *
+   * This value represents how far back in time hits are considered
+   * valid for rate limiting decisions.
+   *
    * @returns {number}
    */
   getInterval() {

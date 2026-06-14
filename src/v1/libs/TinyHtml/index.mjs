@@ -11,6 +11,19 @@ import TinyHtmlRangeInput from './input/number/TinyHtmlRangeInput.mjs';
 
 //////////////////////////////////////////////////
 
+import TinyHtmlCheckboxInput from './input/check/TinyHtmlCheckboxInput.mjs';
+import TinyHtmlRadioInput from './input/check/TinyHtmlRadioInput.mjs';
+
+//////////////////////////////////////////////////
+
+import TinyHtmlDateInput from './input/date/TinyHtmlDateInput.mjs';
+import TinyHtmlDateTimeInput from './input/date/TinyHtmlDateTimeInput.mjs';
+import TinyHtmlMonthInput from './input/date/TinyHtmlMonthInput.mjs';
+import TinyHtmlTimeInput from './input/date/TinyHtmlTimeInput.mjs';
+import TinyHtmlWeekInput from './input/date/TinyHtmlWeekInput.mjs';
+
+//////////////////////////////////////////////////
+
 import TinyHtmlEmailInput from './input/text/TinyHtmlEmailInput.mjs';
 import TinyHtmlPasswordInput from './input/text/TinyHtmlPasswordInput.mjs';
 import TinyHtmlSearchInput from './input/text/TinyHtmlSearchInput.mjs';
@@ -113,8 +126,22 @@ class TinyHtmlElems {
   static SubmitInput = TinyHtmlSubmitInput;
 
   /////////////////////////////////////////////////////
+
   static NumberInput = TinyHtmlNumberInput;
   static RangerInput = TinyHtmlRangeInput;
+
+  //////////////////////////////////////////////////
+
+  static CheckboxInput = TinyHtmlCheckboxInput;
+  static RadioInput = TinyHtmlRadioInput;
+
+  //////////////////////////////////////////////////
+
+  static DateInput = TinyHtmlDateInput;
+  static DateTimeInput = TinyHtmlDateTimeInput;
+  static MonthInput = TinyHtmlMonthInput;
+  static TimeInput = TinyHtmlTimeInput;
+  static WeekInput = TinyHtmlWeekInput;
 
   //////////////////////////////////////////////////
 
@@ -178,6 +205,18 @@ export {
   TinyHtmlNumberInput,
   TinyHtmlRangeInput,
   //////////////////////////////////////////////////
+
+  TinyHtmlCheckboxInput;
+  TinyHtmlRadioInput;
+
+  //////////////////////////////////////////////////
+
+  TinyHtmlDateInput;
+  TinyHtmlDateTimeInput;
+  TinyHtmlMonthInput;
+  TinyHtmlTimeInput;
+  TinyHtmlWeekInput;
+
   TinyHtmlEmailInput,
   TinyHtmlPasswordInput,
   TinyHtmlSearchInput,
