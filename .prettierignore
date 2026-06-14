@@ -10,3 +10,6 @@ package-lock.json
 LICENSE
 README.md
 *.ini
+
+# Vendor
+vendor

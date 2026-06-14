@@ -132,7 +132,59 @@ export function saveJsonFile(filename, data, spaces = 2) {
  * @property {number} [retries=0] - Number of retry attempts (ignored if signal is provided).
  * @property {Headers|Record<string, *>} [headers={}] - Additional headers.
  * @property {AbortSignal|null} [signal] - External AbortSignal; disables timeout and retries.
+ * @property {FetchOnProgressResult} [onProgress] - Track the load progress.
  */
+
+/**
+ * Callback function used to report the progress of a data download.
+ *
+ * @callback FetchOnProgressResult
+ * @param {number} loaded - The amount of bytes currently loaded.
+ * @param {number} total - The total amount of bytes to be loaded (0 if unknown).
+ * @returns {void}
+ */
+
+/**
+ * Intercepts a standard Fetch API Response to track the download progress
+ * of its body stream.
+ *
+ * This function returns a new Response object with a monitored ReadableStream,
+ * allowing the provided callback to receive updates on the number of bytes loaded.
+ *
+ * @param {Response} response - The original response object to be tracked.
+ * @param {FetchOnProgressResult} onProgress - The callback function to handle progress events.
+ * @returns {Response} A new Response object with the tracked stream.
+ */
+export function trackFetchProgress(response, onProgress) {
+  if (typeof onProgress !== 'function')
+    throw new TypeError('The "onProgress" argument must be a function.');
+  if (!response.body) return response;
+
+  // Handle Progress Tracking via ReadableStream
+  const contentLength = response.headers.get('content-length');
+  const total = contentLength ? parseInt(contentLength, 10) : 0;
+  let loaded = 0;
+
+  const reader = response.body.getReader();
+  const stream = new ReadableStream({
+    async start(controller) {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        loaded += value.byteLength;
+        onProgress(loaded, total);
+        controller.enqueue(value);
+      }
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: response.headers,
+    status: response.status,
+    statusText: response.statusText,
+  });
+}
 
 /**
  * @param {string} url - The full URL to fetch data from.
@@ -142,7 +194,7 @@ export function saveJsonFile(filename, data, spaces = 2) {
  */
 async function fetchTemplate(
   url,
-  { method = 'GET', body, timeout = 0, retries = 0, headers = {}, signal = null } = {},
+  { method = 'GET', body, timeout = 0, retries = 0, headers = {}, signal = null, onProgress } = {},
 ) {
   if (
     typeof url !== 'string' ||
@@ -199,7 +251,10 @@ async function fetchTemplate(
       if (timer) clearTimeout(timer);
 
       if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-      return response;
+
+      // If onProgress is not provided or body is null, return original response
+      if (!onProgress) return response;
+      return trackFetchProgress(response, onProgress);
     } catch (err) {
       lastError = /** @type {Error} */ (err);
       if (signal) break; // if an external signal came, it does not retry
@@ -297,6 +352,98 @@ export async function fetchText(url, allowedMimeTypes, options) {
         return resolve(data);
       })
       .catch(reject);
+  });
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Represents the final state and metadata of an attempted image load.
+ * @typedef {Object} ImageLoadResult
+ * @property {HTMLImageElement} element The image element instance used for loading.
+ * @property {Event} event The browser event triggered by the final lifecycle state.
+ * @property {ImageLoadStatus} status The specific outcome string of the loading process.
+ * @property {boolean} isSuccess Indicates if the image was successfully loaded without errors.
+ * @property {number} loadTimeMs The total duration in milliseconds from start to finish.
+ * @property {Object} dimensions An object containing the rendered and intrinsic sizes of the image.
+ * @property {number} dimensions.width The current layout width of the image element.
+ * @property {number} dimensions.height The current layout height of the image element.
+ * @property {number} dimensions.naturalWidth The intrinsic width of the image source in pixels.
+ * @property {number} dimensions.naturalHeight The intrinsic height of the image source in pixels.
+ */
+
+/**
+ * Describes the possible resolution states for the image loading attempt.
+ * @typedef {'loaded'|'aborted'} ImageLoadStatus
+ */
+
+/**
+ * Loads an image asynchronously, capturing critical lifecycle events.
+ * It normalizes errors and success states into a consistent result structure.
+ *
+ * @param {Object} options
+ * @param {string} options.url
+ * @param {string} [options.crossOrigin="anonymous"]
+ * @param {(event: Event, startTime: number) => void} [options.onLoading]
+ * @returns {Promise<ImageLoadResult>}
+ */
+export async function loadImage({ url, onLoading, crossOrigin = 'anonymous' }) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    let startTime = performance.now();
+
+    img.crossOrigin = crossOrigin;
+
+    /**
+     * Cleans up event listeners to avoid memory leaks.
+     */
+    const cleanup = () => {
+      img.onload = null;
+      img.onerror = null;
+      img.onabort = null;
+      img.onloadstart = null;
+    };
+
+    /**
+     * Centralized handler to generate the result object.
+     * @param {Event} event
+     * @param {ImageLoadStatus} status
+     * @param {boolean} isSuccess
+     */
+    const handleResult = (event, status, isSuccess) => {
+      const endTime = performance.now();
+      cleanup();
+
+      const result = {
+        element: img,
+        isSuccess,
+        event,
+        status,
+        loadTimeMs: endTime - startTime,
+        dimensions: {
+          width: img.width,
+          height: img.height,
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+        },
+      };
+
+      resolve(result);
+    };
+
+    // Fired when the browser starts looking for the image data.
+    // Crucial for resetting the timer to network start, not just script start.
+    img.onloadstart = (ev) => {
+      startTime = performance.now();
+      if (typeof onLoading === 'function') onLoading(ev, startTime);
+    };
+
+    img.onload = (ev) => handleResult(ev, 'loaded', true);
+    img.onabort = (ev) => handleResult(ev, 'aborted', false);
+    img.onerror = (ev) => reject(ev);
+
+    // Trigger the load
+    img.src = url;
   });
 }
 

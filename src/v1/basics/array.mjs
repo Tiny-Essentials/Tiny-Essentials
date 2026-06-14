@@ -6,8 +6,9 @@
  * This implementation ensures a uniform distribution of permutations.
  * Original algorithm source: StackOverflow (link above).
  *
- * @param {any[]} items - The array to shuffle.
- * @returns {any[]} The same array instance, now shuffled in place.
+ * @template {any[]} T
+ * @param {T} items - The array to shuffle.
+ * @returns {T} The same array instance, now shuffled in place.
  */
 export function shuffleArray(items) {
   let currentIndex = items.length,
@@ -29,9 +30,9 @@ export function shuffleArray(items) {
 /**
  * Generates an array with repeated phases according to counts.
  *
- * @param {string[]} phases - Array of phase names, e.g., ['Full', 'Half1', 'Half2', 'New'].
+ * @param {any[]} phases - Array of phase names, e.g., ['Full', 'Half1', 'Half2', 'New'].
  * @param {number[]} counts - Array of integers specifying how many times to repeat each phase, e.g., [4,5,5,4].
- * @returns {string[]} - Flattened array containing phases repeated according to counts, concatenated in order.
+ * @returns {any[]} - Flattened array containing phases repeated according to counts, concatenated in order.
  */
 export function multiplyArrayBlocks(phases, counts) {
   // phases: array de strings, cada fase (ex: ['Full', 'Half1', 'Half2', 'New'])
