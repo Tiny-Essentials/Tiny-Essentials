@@ -35,6 +35,20 @@ class TinyAnalogClock {
   #animationFrame = null;
 
   /**
+   * Retrieves the current date and extracts the specific hour, minute, and second components.
+   * @returns {{ now: Date, s: number, m: number, h: number }}
+   * @private
+   */
+  _getDate() {
+    const now = new Date();
+    const s = now.getSeconds();
+    const m = now.getMinutes();
+    const h = now.getHours();
+
+    return { now, s, m, h };
+  }
+
+  /**
    * Creates an instance of TinyAnalogClock.
    * Initializes the DOM structure and starts the animation loop.
    * @param {Partial<ClockConfig>} [options] - Optional configuration overrides.
@@ -279,10 +293,7 @@ class TinyAnalogClock {
     if (this.#animationFrame) return;
 
     const update = () => {
-      const now = new Date();
-      const s = now.getSeconds();
-      const m = now.getMinutes();
-      const h = now.getHours();
+      const { s, m, h } = this._getDate();
 
       // Calculate degrees
       const sDeg = s * 6;

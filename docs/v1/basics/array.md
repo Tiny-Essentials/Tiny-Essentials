@@ -4,11 +4,11 @@ A minimal and handy module offering a couple of focused utilities for working wi
 
 ---
 
-## `shuffleArray(items: string[]): string[]`
+## `shuffleArray(items: any[]): any[]`
 
 🔄 A tiny utility for shuffling arrays using the good old Fisher–Yates algorithm. Simple, efficient, and perfectly random (as far as JavaScript's `Math.random()` allows, anyway).
 
-- **items** — An array of strings to shuffle.
+- **items** — An array to shuffle.
 - **Returns** — The same array instance, but now shuffled.
 
 
