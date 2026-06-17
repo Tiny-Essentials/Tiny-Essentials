@@ -58,7 +58,9 @@
       <button onclick="editor.insertText('INSERTED')">Insert Text</button>
       <button onclick="editor.deleteSelection()">Delete Selection</button>
       <button onclick="editor.surroundSelection('[', ']')">Surround [ ]</button>
-      <button onclick="editor.transformSelection(s => s.toUpperCase())">Uppercase Selection</button>
+      <button onclick="editor.transformSelection((s) => s.toUpperCase())">
+        Uppercase Selection
+      </button>
       <button id="moveCaretLeft">Move Caret Left</button>
       <button id="moveCaretRight">Move Caret Right</button>
       <button id="expandSelection">Expand by 3 each side</button>

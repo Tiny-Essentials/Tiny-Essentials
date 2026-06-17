@@ -74,7 +74,10 @@
       <h2>Loader in Custom Container</h2>
       <div class="btn-group">
         <button
-          onclick="loader.start('Loading initial data...'); setTimeout(() => loader.stop(), 5000);"
+          onclick="
+            loader.start('Loading initial data...');
+            setTimeout(() => loader.stop(), 5000);
+          "
         >
           Start Global Loader (5s)
         </button>
