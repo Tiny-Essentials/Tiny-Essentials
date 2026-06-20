@@ -1,3 +1,5 @@
+import TinyEvents from './TinyEvents.mjs';
+
 /**
  * @typedef {Object} RadioContent
  * @property {string} id - Unique identifier.
@@ -51,7 +53,7 @@
 /**
  * A deterministic, seed-based radio management system with scheduled adaptations and weighted random generation.
  */
-class TinyRadioFm {
+class TinyRadioFm extends TinyEvents {
   #musicList = [];
   #voiceList = [];
   #customPositions = [];
@@ -77,6 +79,7 @@ class TinyRadioFm {
    * @param {number} [seed=0] - Initial seed for randomness.
    */
   constructor(initialData = null, seed = 0) {
+    super();
     this.#seed = seed;
 
     /**
@@ -115,6 +118,7 @@ class TinyRadioFm {
     }
 
     this.#syncRealTimeState(Date.now());
+    this.emit('contentAdded', { type, data });
   }
 
   /**
@@ -129,8 +133,11 @@ class TinyRadioFm {
       this.#cacheMetadata(payload);
     }
 
-    this.#scheduledTasks.push({ timestamp, action, type, payload });
+    const task = { timestamp, action, type, payload };
+    this.#scheduledTasks.push(task);
     this.#syncRealTimeState(Date.now());
+
+    this.emit('taskScheduled', task);
   }
 
   /**
@@ -148,6 +155,8 @@ class TinyRadioFm {
       (t) => !(t.action === 'add' && t.payload.id === id),
     );
     this.#clearCaches();
+
+    this.emit('contentRemoved', { id });
   }
 
   /**
@@ -157,6 +166,7 @@ class TinyRadioFm {
   setSeed(seed) {
     this.#seed = seed;
     this.#clearCaches();
+    this.emit('seedChanged', { seed });
   }
 
   /**
@@ -166,6 +176,7 @@ class TinyRadioFm {
   setConfig(config) {
     this.#config = { ...this.#config, ...config };
     this.#clearCaches();
+    this.emit('configChanged', { config: this.#config });
   }
 
   /**
@@ -192,7 +203,7 @@ class TinyRadioFm {
 
     /**
      * @inner
-     * @description Clones the radio to a sandbox to predict future mutations without destroying the real present.
+     * Clones the radio to a sandbox to predict future mutations without destroying the real present.
      */
     const virtualSandbox = new TinyRadioFm(JSON.parse(this.exportState()));
     const events = [];
@@ -207,6 +218,7 @@ class TinyRadioFm {
       currentTimeWalker = nextEvent.absoluteEnd;
     }
 
+    this.emit('timelineQueried', { targetDate, limit, resultCount: events.length });
     return events;
   }
 
@@ -242,6 +254,7 @@ class TinyRadioFm {
   importState(json) {
     const data = JSON.parse(json);
     this.#hydrate(data);
+    this.emit('stateImported', { data });
   }
 
   // --- PRIVATE LOGIC ---
@@ -282,7 +295,7 @@ class TinyRadioFm {
 
     /**
      * @inner
-     * @description Weighted Random Selection algorithm ensuring determinism via PRNG.
+     * Weighted Random Selection algorithm ensuring determinism via PRNG.
      */
     const sequence = [];
     const pool = list.map((item) => ({ ...item, weight: item.weight ?? 1 }));
@@ -393,7 +406,7 @@ class TinyRadioFm {
     }
   }
 
-/**
+  /**
    * Orchestrates the overlap checking and finds the closest next event.
    * @param {number} walkerTime
    * @param {number} originalTargetDate
@@ -609,11 +622,12 @@ class TinyRadioFm {
     expiredCps.forEach((cp) => {
       this.#seed += cp.content.id.length;
       listsMutated = true;
+      this.emit('customPositionExpired', { contentId: cp.content.id });
     });
 
     /**
      * @inner
-     * @description Applies scheduled modifications intelligently, establishing new anchor epochs to prevent timeline corruption.
+     * Applies scheduled modifications intelligently, establishing new anchor epochs to prevent timeline corruption.
      */
     if (pendingTasks.length > 0) {
       pendingTasks
@@ -637,6 +651,8 @@ class TinyRadioFm {
           this.#anchorDate = task.timestamp;
           this.#seed += 1; // Adapt timeline
           listsMutated = true;
+
+          this.emit('taskExecuted', task);
         });
     }
 
