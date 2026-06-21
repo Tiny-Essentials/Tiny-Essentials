@@ -22,7 +22,7 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {number} timestamp - The absolute time to execute the action.
  * @property {'add'|'remove'|'move'} action - The type of modification.
  * @property {'music'|'voice'} type - Target playlist.
- * @property {any} payload - Data relative to the action (RadioContent, id, or move config).
+ * @property {ScheduledTaskPayload} payload - Data relative to the action (RadioContent, id, or move config).
  */
 
 /**
@@ -50,24 +50,41 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {number} voiceMax - Maximum amount of voice messages to play.
  */
 
+/** @typedef {RadioContent | string | { id: string, newIndex: number }} ScheduledTaskPayload */
+
+/**
+ * @typedef {(RadioContent & { cycleStart: number; cycleEnd: number; })[]} CycleBlockData
+ */
+
+/**
+ * @typedef {{ items: CycleBlockData; duration: number; }} CycleBlock
+ */
+
 /**
  * A deterministic, seed-based radio management system with scheduled adaptations and weighted random generation.
  */
 class TinyRadioFm extends TinyEvents {
+  /** @type {RadioContent[]} */
   #musicList = [];
+  /** @type {RadioContent[]} */
   #voiceList = [];
+  /** @type {CustomPosition[]} */
   #customPositions = [];
+  /** @type {ScheduledTask[]} */
   #scheduledTasks = [];
+
   #seed = 0;
   #anchorDate = Date.now();
+
+  /** @type {Map<number, CycleBlock>} */
   #cycleCache = new Map();
 
   /** @type {RadioConfig} */
   #config = {
-    mode: 'playlist', // 'playlist' | 'random'
+    mode: 'playlist',
     voiceMode: 'playlist',
     silenceDuration: 0,
-    queryLimit: 100000, // Safety lock
+    queryLimit: 100000,
     voiceAfterMusic: true,
     voiceMin: 0,
     voiceMax: 1,
@@ -98,7 +115,7 @@ class TinyRadioFm extends TinyEvents {
   /**
    * Adds new content instantly to the radio sequence.
    * @param {'music'|'voice'|'custom'} type
-   * @param {Object} data
+   * @param {RadioContent} data
    */
   add(type, data) {
     if (!data.id || !data.duration || typeof data.duration !== 'number') {
@@ -109,10 +126,10 @@ class TinyRadioFm extends TinyEvents {
 
     if (type === 'music') {
       this.#musicList.push(data);
-      this.#clearCaches();
+      this.#cycleCache.clear();
     } else if (type === 'voice') {
       this.#voiceList.push(data);
-      this.#clearCaches();
+      this.#cycleCache.clear();
     } else if (type === 'custom') {
       this.#handleCustomInsertion(data);
     }
@@ -126,13 +143,14 @@ class TinyRadioFm extends TinyEvents {
    * @param {number} timestamp - Epoch timestamp in ms.
    * @param {'add'|'remove'|'move'} action
    * @param {'music'|'voice'} type
-   * @param {RadioContent | string | { id: string, newIndex: number }} payload
+   * @param {ScheduledTaskPayload} payload
    */
   scheduleTask(timestamp, action, type, payload) {
-    if (action === 'add' && payload.id) {
+    if (typeof payload === 'object' && action === 'add' && payload.id) {
       this.#cacheMetadata(payload);
     }
 
+    /** @type {ScheduledTask} */
     const task = { timestamp, action, type, payload };
     this.#scheduledTasks.push(task);
     this.#syncRealTimeState(Date.now());
@@ -145,6 +163,7 @@ class TinyRadioFm extends TinyEvents {
    * @param {string} id
    */
   remove(id) {
+    /** @type {(value: any, index: number, array: any) => unknown} */
     const filterFn = (item) => item.id !== id || (item.content && item.content.id !== id);
     this.#musicList = this.#musicList.filter(filterFn);
     this.#voiceList = this.#voiceList.filter(filterFn);
@@ -152,9 +171,15 @@ class TinyRadioFm extends TinyEvents {
 
     // Also remove from future pending tasks
     this.#scheduledTasks = this.#scheduledTasks.filter(
-      (t) => !(t.action === 'add' && t.payload.id === id),
+      (t) =>
+        !(
+          typeof t === 'object' &&
+          t.action === 'add' &&
+          typeof t.payload === 'object' &&
+          t.payload.id === id
+        ),
     );
-    this.#clearCaches();
+    this.#cycleCache.clear();
 
     this.emit('contentRemoved', { id });
   }
@@ -165,7 +190,7 @@ class TinyRadioFm extends TinyEvents {
    */
   setSeed(seed) {
     this.#seed = seed;
-    this.#clearCaches();
+    this.#cycleCache.clear();
     this.emit('seedChanged', { seed });
   }
 
@@ -175,13 +200,12 @@ class TinyRadioFm extends TinyEvents {
    */
   setConfig(config) {
     this.#config = { ...this.#config, ...config };
-    this.#clearCaches();
+    this.#cycleCache.clear();
     this.emit('configChanged', { config: this.#config });
   }
 
   /**
    * Retrieves the exact event playing right now.
-   * @returns {Object|null}
    */
   getCurrentEvent() {
     const now = Date.now();
@@ -194,7 +218,6 @@ class TinyRadioFm extends TinyEvents {
    * Uses a virtual clone to predict scheduled tasks correctly.
    * @param {number} targetDate
    * @param {number} [limit=10]
-   * @returns {Array<Object>}
    */
   queryTimeline(targetDate, limit = 10) {
     if (limit > this.#config.queryLimit || limit <= 0 || isNaN(limit)) {
@@ -224,7 +247,7 @@ class TinyRadioFm extends TinyEvents {
 
   /**
    * Returns all active custom positions.
-   * @returns {Array<Object>}
+   * @returns {CustomPosition[]}
    */
   searchCustomPositions() {
     this.#syncRealTimeState(Date.now());
@@ -260,18 +283,12 @@ class TinyRadioFm extends TinyEvents {
   // --- PRIVATE LOGIC ---
 
   /**
-   * Invalidate timeline caches if lists or configs mutate.
-   */
-  #clearCaches() {
-    this.#cycleCache.clear();
-  }
-
-  /**
    * Mulberry32 PRNG.
    * @param {number} seed
    * @returns {function(): number}
+   * @private
    */
-  #prng(seed) {
+  _prng(seed) {
     return function () {
       let t = (seed += 0x6d2b79f5);
       t = Math.imul(t ^ (t >>> 15), t | 1);
@@ -282,7 +299,7 @@ class TinyRadioFm extends TinyEvents {
 
   /**
    * Creates a deterministic sequence supporting weighted selection.
-   * @param {any[]} list
+   * @param {RadioContent[]} list
    * @param {number} currentSeed
    * @param {string} mode
    */
@@ -296,10 +313,11 @@ class TinyRadioFm extends TinyEvents {
     /**
      * @inner
      * Weighted Random Selection algorithm ensuring determinism via PRNG.
+     * @type {RadioContent[]}
      */
     const sequence = [];
     const pool = list.map((item) => ({ ...item, weight: item.weight ?? 1 }));
-    const random = this.#prng(currentSeed);
+    const random = this._prng(currentSeed);
 
     while (pool.length > 0) {
       const totalWeight = pool.reduce((sum, item) => sum + item.weight, 0);
@@ -329,15 +347,16 @@ class TinyRadioFm extends TinyEvents {
   /**
    * Generates a block, utilizing loopIndex to apply the `+1` seed rule per cycle.
    * @param {number} loopIndex
-   * @returns {Object}
+   * @returns {CycleBlock}
    */
   #buildCycleBlock(loopIndex) {
     const cycleSeed = this.#seed + loopIndex;
-    const mixRandom = this.#prng(cycleSeed * 10);
+    const mixRandom = this._prng(cycleSeed * 10);
 
     const musicSeq = this.#buildSequence(this.#musicList, cycleSeed + 1, this.#config.mode);
     const voiceSeq = this.#buildSequence(this.#voiceList, cycleSeed + 2, this.#config.voiceMode);
 
+    /** @type {CycleBlockData} */
     const block = [];
     let cycleDuration = 0;
     let voiceCursor = 0;
@@ -374,7 +393,6 @@ class TinyRadioFm extends TinyEvents {
   /**
    * Fast-forwards to find the exact cycle containing the target timestamp.
    * @param {number} targetAbsoluteTime
-   * @returns {Object|null} { block, startTimestamp, loopIndex }
    */
   #locateCycleForTime(targetAbsoluteTime) {
     if (this.#musicList.length === 0) return null;
@@ -635,16 +653,24 @@ class TinyRadioFm extends TinyEvents {
         .forEach((task) => {
           const list = task.type === 'music' ? this.#musicList : this.#voiceList;
 
-          if (task.action === 'add') {
-            list.push(task.payload);
-          } else if (task.action === 'remove') {
-            const idx = list.findIndex((i) => i.id === task.payload);
-            if (idx !== -1) list.splice(idx, 1);
-          } else if (task.action === 'move') {
-            const idx = list.findIndex((i) => i.id === task.payload.id);
-            if (idx !== -1) {
-              const [item] = list.splice(idx, 1);
-              list.splice(task.payload.newIndex, 0, item);
+          if (typeof task === 'object' && typeof task.payload === 'object') {
+            if (task.action === 'add') {
+              // @ts-ignore
+              if (typeof task.payload.newIndex === 'number') throw new Error('Invalid input!');
+              // @ts-ignore
+              list.push(task.payload);
+            } else if (task.action === 'remove') {
+              const idx = list.findIndex((i) => i.id === task.payload);
+              if (idx !== -1) list.splice(idx, 1);
+            } else if (task.action === 'move') {
+              const idx = list.findIndex((i) => i.id === task.payload.id);
+              if (idx !== -1) {
+                // @ts-ignore
+                if (typeof task.payload.newIndex !== 'number') throw new Error('Invalid input!');
+                const [item] = list.splice(idx, 1);
+                // @ts-ignore
+                list.splice(task.payload.newIndex, 0, item);
+              }
             }
           }
 
@@ -657,7 +683,7 @@ class TinyRadioFm extends TinyEvents {
     }
 
     if (listsMutated) {
-      this.#clearCaches();
+      this.#cycleCache.clear();
     }
   }
 
