@@ -18,11 +18,21 @@ import TinyEvents from './TinyEvents.mjs';
  */
 
 /**
+ * @typedef {Object} ScheduledMovePayload
+ * @property {string} id - Content ID to move.
+ * @property {number} newIndex - The target index in the playlist.
+ */
+
+/**
+ * @typedef {RadioContent | string | ScheduledMovePayload} ScheduledTaskPayload
+ */
+
+/**
  * @typedef {Object} ScheduledTask
  * @property {number} timestamp - The absolute time to execute the action.
  * @property {'add'|'remove'|'move'} action - The type of modification.
  * @property {'music'|'voice'} type - Target playlist.
- * @property {ScheduledTaskPayload} payload - Data relative to the action (RadioContent, id, or move config).
+ * @property {ScheduledTaskPayload} payload - Data relative to the action.
  */
 
 /**
@@ -31,12 +41,12 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {string} title - Content title.
  * @property {string} artist - Content artist.
  * @property {number} duration - Total duration of the event.
- * @property {number} start - Start timestamp within the cycle.
- * @property {number} end - End timestamp within the cycle.
+ * @property {number} absoluteStart - Start timestamp within the absolute timeline.
+ * @property {number} absoluteEnd - End timestamp within the absolute timeline.
  * @property {number} elapsedTime - How many ms have passed since the event started.
  * @property {number} remainingTime - How many ms are left until the event ends.
  * @property {number} progress - Percentage of completion (0 to 1).
- * @property {boolean} isCustom - Whether this is a user-defined position.
+ * @property {boolean} isCustom - Whether this is a user-defined custom position.
  */
 
 /**
@@ -50,20 +60,143 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {number} voiceMax - Maximum amount of voice messages to play.
  */
 
-/** @typedef {RadioContent | string | { id: string, newIndex: number }} ScheduledTaskPayload */
-
 /**
- * @typedef {(RadioContent & { cycleStart: number; cycleEnd: number; })[]} CycleBlockData
+ * @typedef {RadioContent & { cycleStart: number; cycleEnd: number; }} CycleBlockData
  */
 
 /**
- * @typedef {{ items: CycleBlockData; duration: number; }} CycleBlock
+ * @typedef {Object} CycleBlock
+ * @property {CycleBlockData[]} items - Items belonging to this cycle.
+ * @property {number} duration - Total duration of the cycle block in ms.
+ */
+
+/**
+ * @typedef {Object} CycleLocation
+ * @property {CycleBlock} block - The located cycle block.
+ * @property {number} startTimestamp - The absolute start time of this cycle.
+ * @property {number} loopIndex - The specific loop iteration index.
+ */
+
+/**
+ * @typedef {Object} ContentMetadata
+ * @property {string} [title] - Manual title override.
+ * @property {string} [artist] - Manual artist override.
+ * @property {number} [weight] - Manual weight override.
+ * @property {string} [id] - Manual ID override.
  */
 
 /**
  * A deterministic, seed-based radio management system with scheduled adaptations and weighted random generation.
+ * @extends TinyEvents
  */
 class TinyRadioFm extends TinyEvents {
+  /**
+   * A Static Factory Method that prepares a RadioContent object by
+   * extracting metadata from an audio source.
+   *
+   * @param {string | HTMLMediaElement} source - A URL string or an existing Audio object.
+   * @param {ContentMetadata} [metadata={}] - Optional manual metadata that overrides automatic extraction.
+   * @returns {Promise<RadioContent>} A promise that resolves to a valid RadioContent object.
+   * @throws {Error} If the source is invalid or cannot be accessed.
+   *
+   * @example
+   * // Usage with URL
+   * const track = await TinyRadioFm.prepareContent('/assets/song.mp3', { title: 'My Song', artist: 'Artist' });
+   * radio.add('music', track);
+   *
+   * @example
+   * // Usage with Audio Object
+   * const audio = new Audio();
+   * audio.src = '/assets/song.mp3';
+   * const track = await TinyRadioFm.prepareContent(audio);
+   * radio.add('music', track);
+   */
+  static async prepareContent(source, metadata = {}) {
+    let audio;
+    let url;
+
+    // 1. Normalize Source
+    if (typeof source === 'string') {
+      url = source;
+      audio = new Audio(url);
+    } else if (source instanceof HTMLMediaElement) {
+      audio = source;
+      url = audio.src;
+    } else {
+      throw new Error('Invalid source type. Expected a URL string or an HTMLMediaElement.');
+    }
+
+    // 2. Wait for audio metadata to be available (Essential for duration)
+    await new Promise((resolve, reject) => {
+      // If already loaded, resolve immediately
+      if (audio.readyState >= 1) resolve(undefined);
+      else {
+        audio.addEventListener('loadedmetadata', resolve, { once: true });
+        audio.addEventListener(
+          'error',
+          () => reject(new Error(`Failed to load audio source: ${url}`)),
+          { once: true },
+        );
+      }
+    });
+
+    // 3. Initialize Base Data
+    const baseData = {
+      id: metadata.id || (await this._generateSimpleHash(url)),
+      title: metadata.title || 'Unknown Track',
+      artist: metadata.artist || 'Unknown Artist',
+      duration: Math.floor(audio.duration * 1000), // Convert to ms for our class
+      url: url,
+      weight: metadata.weight ?? 1,
+    };
+
+    // 4. Automatic Metadata Extraction (ID3 Tags)
+    // We only attempt this if the user didn't manually provide the title/artist.
+    if (!metadata.title || !metadata.artist) {
+      try {
+        const extracted = await this._extractId3Tags(url);
+
+        // Merge: Priority goes to manual metadata > extracted tags > defaults
+        if (!metadata.title && extracted.title) baseData.title = extracted.title;
+        if (!metadata.artist && extracted.artist) baseData.artist = extracted.artist;
+      } catch (err) {
+        // If extraction fails (e.g., library not loaded or no tags), we silently fall back to baseData
+        console.warn(
+          `[TinyRadioFm] Automatic metadata extraction failed for ${url}. Using defaults.`,
+        );
+      }
+    }
+
+    return baseData;
+  }
+
+  /**
+   * Private helper to interface with jsmediatags.
+   * @param {string} url
+   * @returns {Promise<{title?: string, artist?: string}>}
+   * @private
+   */
+  static _extractId3Tags(url) {
+    return new Promise((resolve, reject) => reject(new Error('jsmediatags library not found.')));
+  }
+
+  /**
+   * Internal helper to generate a deterministic ID from a string.
+   * @param {string} str
+   * @returns {Promise<string>}
+   * @private
+   */
+  static async _generateSimpleHash(str) {
+    const msgUint8 = new TextEncoder().encode(str);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    // Return first 8 chars of the hex hash for a clean ID
+    return hashArray
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+      .substring(0, 8);
+  }
+
   /** @type {RadioContent[]} */
   #musicList = [];
   /** @type {RadioContent[]} */
@@ -73,7 +206,9 @@ class TinyRadioFm extends TinyEvents {
   /** @type {ScheduledTask[]} */
   #scheduledTasks = [];
 
+  /** @type {number} */
   #seed = 0;
+  /** @type {number} */
   #anchorDate = Date.now();
 
   /** @type {Map<number, CycleBlock>} */
@@ -89,20 +224,20 @@ class TinyRadioFm extends TinyEvents {
     voiceMin: 0,
     voiceMax: 1,
   };
+
+  /** @type {Map<string, RadioContent & { cachedAt: number; }>} */
   #metadataCache = new Map();
 
   /**
-   * @param {Object|null} initialData - JSON object to initialize the radio.
-   * @param {number} [seed=0] - Initial seed for randomness.
+   * Initializes the radio system.
+   * @param {Object|null} [initialData=null] - JSON object to hydrate the radio state.
+   * @param {number} [seed=0] - Initial seed for deterministic randomness.
    */
   constructor(initialData = null, seed = 0) {
     super();
     this.#seed = seed;
 
-    /**
-     * @inner
-     * Bootstraps the application state ensuring determinism based on the anchor.
-     */
+    // Bootstraps the application state ensuring determinism based on the anchor.
     if (initialData) {
       this.#hydrate(initialData);
     } else {
@@ -114,11 +249,12 @@ class TinyRadioFm extends TinyEvents {
 
   /**
    * Adds new content instantly to the radio sequence.
-   * @param {'music'|'voice'|'custom'} type
-   * @param {RadioContent} data
+   * @param {'music'|'voice'|'custom'} type - The category of the content.
+   * @param {RadioContent & { timestamp?: number }} data - The content payload to insert.
+   * @throws {Error} If the content lacks a valid ID or numerical duration.
    */
   add(type, data) {
-    if (!data.id || !data.duration || typeof data.duration !== 'number') {
+    if (!data.id || typeof data.duration !== 'number') {
       throw new Error('Content must have an ID and a valid numerical duration in milliseconds.');
     }
 
@@ -139,15 +275,15 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Schedules a modification to the base playlists, breaking the timeline seamlessly when activated.
+   * Schedules a modification to the base playlists, seamlessly breaking the timeline when activated.
    * @param {number} timestamp - Epoch timestamp in ms.
-   * @param {'add'|'remove'|'move'} action
-   * @param {'music'|'voice'} type
-   * @param {ScheduledTaskPayload} payload
+   * @param {'add'|'remove'|'move'} action - Action to perform.
+   * @param {'music'|'voice'} type - Target list.
+   * @param {ScheduledTaskPayload} payload - The content, ID, or move configuration.
    */
   scheduleTask(timestamp, action, type, payload) {
-    if (typeof payload === 'object' && action === 'add' && payload.id) {
-      this.#cacheMetadata(payload);
+    if (action === 'add' && typeof payload === 'object' && 'id' in payload) {
+      this.#cacheMetadata(/** @type {RadioContent} */ (payload));
     }
 
     /** @type {ScheduledTask} */
@@ -159,34 +295,34 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Removes content instantly by ID across all active lists and tasks.
-   * @param {string} id
+   * Removes content instantly by ID across all active lists, positions, and future tasks.
+   * @param {string} id - The unique identifier of the content.
    */
   remove(id) {
-    /** @type {(value: any, index: number, array: any) => unknown} */
-    const filterFn = (item) => item.id !== id || (item.content && item.content.id !== id);
+    /**
+     * Filter function to match items against the provided ID.
+     * @type {function(any): boolean}
+     */
+    const filterFn = (item) => item.id !== id && item.content?.id !== id;
+
     this.#musicList = this.#musicList.filter(filterFn);
     this.#voiceList = this.#voiceList.filter(filterFn);
     this.#customPositions = this.#customPositions.filter(filterFn);
 
-    // Also remove from future pending tasks
-    this.#scheduledTasks = this.#scheduledTasks.filter(
-      (t) =>
-        !(
-          typeof t === 'object' &&
-          t.action === 'add' &&
-          typeof t.payload === 'object' &&
-          t.payload.id === id
-        ),
-    );
-    this.#cycleCache.clear();
+    this.#scheduledTasks = this.#scheduledTasks.filter((t) => {
+      if (t.action === 'add' && typeof t.payload === 'object' && 'id' in t.payload) {
+        return t.payload.id !== id;
+      }
+      return t.payload !== id;
+    });
 
+    this.#cycleCache.clear();
     this.emit('contentRemoved', { id });
   }
 
   /**
-   * Sets the core randomness seed.
-   * @param {number} seed
+   * Sets the core randomness seed and clears the current cycle cache.
+   * @param {number} seed - The new seed.
    */
   setSeed(seed) {
     this.#seed = seed;
@@ -195,8 +331,8 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Configures radio modes and limits.
-   * @param {Partial<RadioConfig>} config
+   * Configures radio modes and playback limits.
+   * @param {Partial<RadioConfig>} config - The configuration overrides.
    */
   setConfig(config) {
     this.#config = { ...this.#config, ...config };
@@ -205,7 +341,8 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Retrieves the exact event playing right now.
+   * Retrieves the exact event playing at the current system time.
+   * @returns {RadioEvent|null} The current active event, or null if empty.
    */
   getCurrentEvent() {
     const now = Date.now();
@@ -214,10 +351,12 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Queries the timeline from a specific date forward.
-   * Uses a virtual clone to predict scheduled tasks correctly.
-   * @param {number} targetDate
-   * @param {number} [limit=10]
+   * Queries the timeline from a specific date forward to predict upcoming events.
+   * Uses a virtual clone to predict scheduled tasks accurately without mutating current state.
+   * @param {number} targetDate - The starting epoch timestamp.
+   * @param {number} [limit=10] - Maximum number of upcoming events to resolve.
+   * @returns {RadioEvent[]} Array of resolved upcoming events.
+   * @throws {Error} If the limit exceeds the configured queryLimit or is invalid.
    */
   queryTimeline(targetDate, limit = 10) {
     if (limit > this.#config.queryLimit || limit <= 0 || isNaN(limit)) {
@@ -225,10 +364,12 @@ class TinyRadioFm extends TinyEvents {
     }
 
     /**
-     * @inner
-     * Clones the radio to a sandbox to predict future mutations without destroying the real present.
+     * Virtual instance to sandbox the timeline prediction.
+     * @type {TinyRadioFm}
      */
     const virtualSandbox = new TinyRadioFm(JSON.parse(this.exportState()));
+
+    /** @type {RadioEvent[]} */
     const events = [];
     let currentTimeWalker = targetDate;
 
@@ -246,8 +387,8 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Returns all active custom positions.
-   * @returns {CustomPosition[]}
+   * Returns all active custom positions currently injected into the timeline.
+   * @returns {CustomPosition[]} Shallow copy of custom positions array.
    */
   searchCustomPositions() {
     this.#syncRealTimeState(Date.now());
@@ -255,8 +396,8 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Exports the complete state (including tasks) for sharing.
-   * @returns {string}
+   * Exports the complete state of the radio, including caches and scheduled tasks.
+   * @returns {string} Stringified JSON state.
    */
   exportState() {
     return JSON.stringify({
@@ -271,8 +412,8 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Imports a state.
-   * @param {string} json
+   * Imports a previously exported state, overwriting the current instance.
+   * @param {string} json - Stringified JSON state.
    */
   importState(json) {
     const data = JSON.parse(json);
@@ -283,9 +424,9 @@ class TinyRadioFm extends TinyEvents {
   // --- PRIVATE LOGIC ---
 
   /**
-   * Mulberry32 PRNG.
-   * @param {number} seed
-   * @returns {function(): number}
+   * Mulberry32 Pseudo-Random Number Generator.
+   * @param {number} seed - The initialization seed.
+   * @returns {function(): number} PRNG function returning a float between 0 and 1.
    * @private
    */
   _prng(seed) {
@@ -298,26 +439,28 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Creates a deterministic sequence supporting weighted selection.
-   * @param {RadioContent[]} list
-   * @param {number} currentSeed
-   * @param {string} mode
+   * Creates a deterministic sequence supporting weighted selection based on mode.
+   * @param {RadioContent[]} list - The source list to sequence.
+   * @param {number} currentSeed - Cycle-specific seed.
+   * @param {'playlist'|'random'} mode - Processing mode.
+   * @returns {RadioContent[]} The generated sequence.
    */
   #buildSequence(list, currentSeed, mode) {
     if (list.length === 0) return [];
-
-    if (mode !== 'random') {
-      return [...list]; // Respects manual indexing/moving
-    }
+    if (mode !== 'random') return [...list]; // Respects manual indexing/moving
 
     /**
-     * @inner
-     * Weighted Random Selection algorithm ensuring determinism via PRNG.
+     * Pool of available items for weighted selection.
+     * @type {Array<RadioContent & { weight: number }>}
+     */
+    const pool = list.map((item) => ({ ...item, weight: item.weight ?? 1 }));
+    const random = this._prng(currentSeed);
+
+    /**
+     * The finalized deterministic sequence.
      * @type {RadioContent[]}
      */
     const sequence = [];
-    const pool = list.map((item) => ({ ...item, weight: item.weight ?? 1 }));
-    const random = this._prng(currentSeed);
 
     while (pool.length > 0) {
       const totalWeight = pool.reduce((sum, item) => sum + item.weight, 0);
@@ -345,9 +488,9 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Generates a block, utilizing loopIndex to apply the `+1` seed rule per cycle.
-   * @param {number} loopIndex
-   * @returns {CycleBlock}
+   * Generates a structural block representing a single full cycle of the radio.
+   * @param {number} loopIndex - The current cycle iteration to generate appropriate seeds.
+   * @returns {CycleBlock} The generated cycle block containing sequenced items and total duration.
    */
   #buildCycleBlock(loopIndex) {
     const cycleSeed = this.#seed + loopIndex;
@@ -356,7 +499,10 @@ class TinyRadioFm extends TinyEvents {
     const musicSeq = this.#buildSequence(this.#musicList, cycleSeed + 1, this.#config.mode);
     const voiceSeq = this.#buildSequence(this.#voiceList, cycleSeed + 2, this.#config.voiceMode);
 
-    /** @type {CycleBlockData} */
+    /**
+     * Array containing the positioned items for the current cycle.
+     * @type {CycleBlockData[]}
+     */
     const block = [];
     let cycleDuration = 0;
     let voiceCursor = 0;
@@ -387,12 +533,15 @@ class TinyRadioFm extends TinyEvents {
         }
       }
     }
+
     return { items: block, duration: cycleDuration };
   }
 
   /**
-   * Fast-forwards to find the exact cycle containing the target timestamp.
-   * @param {number} targetAbsoluteTime
+   * Fast-forwards to find the exact cycle encompassing the target absolute timestamp.
+   * @param {number} targetAbsoluteTime - The absolute epoch timestamp to locate.
+   * @returns {CycleLocation|null} The resolved cycle location or null if lists are empty.
+   * @throws {Error} If the loop safety limit is hit.
    */
   #locateCycleForTime(targetAbsoluteTime) {
     if (this.#musicList.length === 0) return null;
@@ -401,8 +550,9 @@ class TinyRadioFm extends TinyEvents {
     let loopIdx = 0;
 
     while (true) {
-      if (loopIdx > this.#config.queryLimit)
+      if (loopIdx > this.#config.queryLimit) {
         throw new Error('Safety limit hit during cycle location.');
+      }
 
       let blockData = this.#cycleCache.get(loopIdx);
       if (!blockData) {
@@ -425,11 +575,15 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Orchestrates the overlap checking and finds the closest next event.
-   * @param {number} walkerTime
-   * @param {number} originalTargetDate
+   * Orchestrates overlap checking to find the absolute closest next event.
+   * @param {number} walkerTime - The internal time cursor during queries.
+   * @param {number} originalTargetDate - The initial requested epoch target.
+   * @returns {RadioEvent|null} The resolved next event.
    */
   #resolveNextEvent(walkerTime, originalTargetDate) {
+    /**
+     * @type {CustomPosition|undefined}
+     */
     const nextCustomPos = this.#customPositions
       .filter((cp) => cp.intendedTimestamp + cp.content.duration > walkerTime)
       .sort((a, b) => a.intendedTimestamp - b.intendedTimestamp)[0];
@@ -453,6 +607,7 @@ class TinyRadioFm extends TinyEvents {
 
     if (customEvent.absoluteStart <= baseEvent.absoluteStart) return customEvent;
 
+    // Truncate base event if an impending custom event overlaps it
     if (customEvent.absoluteStart < baseEvent.absoluteEnd) {
       baseEvent.absoluteEnd = customEvent.absoluteStart;
       baseEvent.duration = baseEvent.absoluteEnd - baseEvent.absoluteStart;
@@ -464,9 +619,10 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Resolves the next base loop event from a given time.
-   * @param {number} walkerTime
-   * @param {number} originalTargetDate
+   * Resolves the next standard loop event bypassing custom interruptions.
+   * @param {number} walkerTime - The internal time cursor.
+   * @param {number} originalTargetDate - The initial requested epoch target.
+   * @returns {RadioEvent|null} The formatted base event.
    */
   #getNextBaseEvent(walkerTime, originalTargetDate) {
     let cycleInfo = this.#locateCycleForTime(walkerTime);
@@ -475,6 +631,7 @@ class TinyRadioFm extends TinyEvents {
     const { block, startTimestamp } = cycleInfo;
     const cycleCurrentTime = walkerTime - startTimestamp;
 
+    /** @type {CycleBlockData|undefined} */
     let nextItem = block.items.find((i) => i.cycleEnd > cycleCurrentTime);
     let absoluteStart;
 
@@ -494,8 +651,10 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * The magic formula to resolve what plays at an exact absolute timestamp.
-   * @param {number} absoluteTime
+   * Calculates exactly what is playing at a specific absolute timestamp.
+   * @param {number} absoluteTime - The target time to inspect.
+   * @param {number} originalQueryTime - Original requested time to calculate elapsed data.
+   * @returns {RadioEvent|null} The active event or null.
    */
   #getEventAtTime(absoluteTime, originalQueryTime) {
     const activeCustom = this.#customPositions.find(
@@ -533,7 +692,12 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Formats the raw data into a readable event structure.
+   * Formats internal block data into standardized external event structures.
+   * @param {CycleBlockData | RadioContent} item - Raw content data.
+   * @param {number} absoluteStart - Event's absolute start epoch.
+   * @param {number} queryTime - Timestamp requested for progress math.
+   * @param {boolean} isCustom - Flag indicating if it is a user injected custom event.
+   * @returns {RadioEvent} Standardized output.
    */
   #formatEvent(item, absoluteStart, queryTime, isCustom) {
     const elapsedTime = queryTime - absoluteStart;
@@ -553,7 +717,8 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Intelligently finds the absolute closest spatial gap to preserving the original metadata.
+   * Safely calculates the best absolute timestamp gap for a custom event without disrupting metadata.
+   * @param {RadioContent & { timestamp?: number }} data - Target data to insert.
    */
   #handleCustomInsertion(data) {
     const originalTarget = data.timestamp || Date.now();
@@ -564,7 +729,7 @@ class TinyRadioFm extends TinyEvents {
     );
 
     let bestSlot = originalTarget;
-    let hasOverlap = activeCps.some(
+    const hasOverlap = activeCps.some(
       (cp) =>
         originalTarget < cp.intendedTimestamp + cp.content.duration &&
         originalTarget + duration > cp.intendedTimestamp,
@@ -572,6 +737,11 @@ class TinyRadioFm extends TinyEvents {
 
     if (hasOverlap) {
       const now = Date.now();
+
+      /**
+       * Contains the valid windows of time available.
+       * @type {Array<{start: number, end: number}>}
+       */
       const gaps = [];
       let currentBoundary = now;
 
@@ -621,8 +791,8 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Synchronizes timeline mutations and scheduled tasks up to a given time boundary.
-   * @param {number} boundaryTime
+   * Processes all pending tasks up to the requested boundary time and shifts internal timelines.
+   * @param {number} boundaryTime - Threshold to apply mutations.
    */
   #syncRealTimeState(boundaryTime) {
     const pendingTasks = this.#scheduledTasks.filter((t) => t.timestamp <= boundaryTime);
@@ -643,41 +813,31 @@ class TinyRadioFm extends TinyEvents {
       this.emit('customPositionExpired', { contentId: cp.content.id });
     });
 
-    /**
-     * @inner
-     * Applies scheduled modifications intelligently, establishing new anchor epochs to prevent timeline corruption.
-     */
+    // Applies scheduled modifications intelligently, establishing new anchor epochs to prevent timeline corruption.
     if (pendingTasks.length > 0) {
       pendingTasks
         .sort((a, b) => a.timestamp - b.timestamp)
         .forEach((task) => {
           const list = task.type === 'music' ? this.#musicList : this.#voiceList;
 
-          if (typeof task === 'object' && typeof task.payload === 'object') {
-            if (task.action === 'add') {
-              // @ts-ignore
-              if (typeof task.payload.newIndex === 'number') throw new Error('Invalid input!');
-              // @ts-ignore
-              list.push(task.payload);
-            } else if (task.action === 'remove') {
-              const idx = list.findIndex((i) => i.id === task.payload);
-              if (idx !== -1) list.splice(idx, 1);
-            } else if (task.action === 'move') {
-              const idx = list.findIndex((i) => i.id === task.payload.id);
-              if (idx !== -1) {
-                // @ts-ignore
-                if (typeof task.payload.newIndex !== 'number') throw new Error('Invalid input!');
-                const [item] = list.splice(idx, 1);
-                // @ts-ignore
-                list.splice(task.payload.newIndex, 0, item);
-              }
+          if (task.action === 'add') {
+            list.push(/** @type {RadioContent} */ (task.payload));
+          } else if (task.action === 'remove') {
+            const payloadId = /** @type {string} */ (task.payload);
+            const idx = list.findIndex((i) => i.id === payloadId);
+            if (idx !== -1) list.splice(idx, 1);
+          } else if (task.action === 'move') {
+            const payloadData = /** @type {ScheduledMovePayload} */ (task.payload);
+            const idx = list.findIndex((i) => i.id === payloadData.id);
+            if (idx !== -1) {
+              const [item] = list.splice(idx, 1);
+              list.splice(payloadData.newIndex, 0, item);
             }
           }
 
           this.#anchorDate = task.timestamp;
           this.#seed += 1; // Adapt timeline
           listsMutated = true;
-
           this.emit('taskExecuted', task);
         });
     }
@@ -687,10 +847,17 @@ class TinyRadioFm extends TinyEvents {
     }
   }
 
-  async #cacheMetadata(data) {
+  /**
+   * Caches track metadata internally.
+   * @param {RadioContent} data - Content configuration.
+   */
+  #cacheMetadata(data) {
     this.#metadataCache.set(data.id, { ...data, cachedAt: Date.now() });
   }
 
+  /**
+   * Hydrates class state from an exported JSON object.
+   */
   #hydrate(data) {
     this.#musicList = data.music || [];
     this.#voiceList = data.voice || [];
