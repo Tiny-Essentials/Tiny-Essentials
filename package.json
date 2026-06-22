@@ -517,7 +517,7 @@
     "@babel/core": "^7.29.0",
     "@babel/generator": "^7.29.1",
     "@babel/node": "^7.29.0",
-    "@babel/parser": "^7.29.2",
+    "@babel/parser": "^8.0.0",
     "@babel/preset-env": "^7.29.2",
     "@babel/traverse": "^7.29.0",
     "@babel/types": "^7.29.0",
