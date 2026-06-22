@@ -151,9 +151,11 @@ import {
   defuzzifyCentroid,
 } from './libs/TinyMamdaniInferenceSystem.mjs';
 import TinyClassManager from './libs/TinyClassManager.mjs';
+import TinyRadioFm from './libs/TinyRadioFm.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
+  TinyRadioFm,
   TinyClassManager,
   FuzzySet,
   MamdaniInferenceSystem,

@@ -40,6 +40,7 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {string} id - Content ID.
  * @property {string} title - Content title.
  * @property {string} artist - Content artist.
+ * @property {string} url - Source URL/Path.
  * @property {number} duration - Total duration of the event.
  * @property {number} absoluteStart - Start timestamp within the absolute timeline.
  * @property {number} absoluteEnd - End timestamp within the absolute timeline.
@@ -83,6 +84,17 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {string} [artist] - Manual artist override.
  * @property {number} [weight] - Manual weight override.
  * @property {string} [id] - Manual ID override.
+ */
+
+/**
+ * @typedef {Object} TinyRadioFmImport
+ * @property {RadioContent[]} music
+ * @property {RadioContent[]} voice
+ * @property {CustomPosition[]} custom
+ * @property {ScheduledTask[]} tasks
+ * @property {number} seed
+ * @property {number} anchorDate
+ * @property {RadioConfig} config
  */
 
 /**
@@ -230,7 +242,7 @@ class TinyRadioFm extends TinyEvents {
 
   /**
    * Initializes the radio system.
-   * @param {Object|null} [initialData=null] - JSON object to hydrate the radio state.
+   * @param {TinyRadioFmImport|null} [initialData=null] - JSON object to hydrate the radio state.
    * @param {number} [seed=0] - Initial seed for deterministic randomness.
    */
   constructor(initialData = null, seed = 0) {
@@ -413,10 +425,11 @@ class TinyRadioFm extends TinyEvents {
 
   /**
    * Imports a previously exported state, overwriting the current instance.
-   * @param {string} json - Stringified JSON state.
+   * @param {string|TinyRadioFmImport} json - JSON state.
    */
   importState(json) {
-    const data = JSON.parse(json);
+    /** @type {TinyRadioFmImport} */
+    const data = typeof json === 'string' ? JSON.parse(json) : json;
     this.#hydrate(data);
     this.emit('stateImported', { data });
   }
@@ -857,6 +870,7 @@ class TinyRadioFm extends TinyEvents {
 
   /**
    * Hydrates class state from an exported JSON object.
+   * @param {TinyRadioFmImport} data
    */
   #hydrate(data) {
     this.#musicList = data.music || [];
