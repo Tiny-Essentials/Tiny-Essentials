@@ -520,7 +520,7 @@
     "@babel/parser": "^7.29.2",
     "@babel/preset-env": "^7.29.2",
     "@babel/traverse": "^7.29.0",
-    "@babel/types": "^7.29.0",
+    "@babel/types": "^8.0.0",
     "@rollup/plugin-commonjs": "^29.0.2",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
