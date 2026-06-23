@@ -51,9 +51,13 @@ import TinyEvents from './TinyEvents.mjs';
  */
 
 /**
+ * @typedef {'playlist'|'random'} RadioModes
+ */
+
+/**
  * @typedef {Object} RadioConfig
- * @property {'playlist'|'random'} mode - Sequence mode for music.
- * @property {'playlist'|'random'} voiceMode - Sequence mode for voices.
+ * @property {RadioModes} mode - Sequence mode for music.
+ * @property {RadioModes} voiceMode - Sequence mode for voices.
  * @property {number} silenceDuration - Gap in ms between tracks.
  * @property {number} queryLimit - Safety lock for max items processed.
  * @property {boolean} voiceAfterMusic - Whether to play voice messages after music tracks.
@@ -455,7 +459,7 @@ class TinyRadioFm extends TinyEvents {
    * Creates a deterministic sequence supporting weighted selection based on mode.
    * @param {RadioContent[]} list - The source list to sequence.
    * @param {number} currentSeed - Cycle-specific seed.
-   * @param {'playlist'|'random'} mode - Processing mode.
+   * @param {RadioModes} mode - Processing mode.
    * @returns {RadioContent[]} The generated sequence.
    */
   #buildSequence(list, currentSeed, mode) {
