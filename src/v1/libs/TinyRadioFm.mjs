@@ -1,7 +1,7 @@
 import TinyEvents from './TinyEvents.mjs';
 
 /**
- * @typedef {Object} RadioContent
+ * @typedef {Object} RadioContentBase
  * @property {string} id - Unique identifier.
  * @property {string} title - Name of the track/message.
  * @property {string} artist - Artist or speaker name.
@@ -107,10 +107,10 @@ import TinyEvents from './TinyEvents.mjs';
  */
 
 /**
- * @typedef {Object} ContentMetadata
  * This metadata structure is modeled after the standard output of the
  * `music-metadata` npm package.
  *
+ * @typedef {Object} ContentMetadata
  * @property {string|null} title - The title of the track.
  * @property {string|null} album - The name of the album.
  * @property {string|null} albumartist - The primary artist of the album.
@@ -124,6 +124,13 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {MusicNumber} disk - Disk information containing the current disk number and total disks.
  * @property {MusicNumber} track - Track information containing the current track number and total tracks.
  * @property {IPicture[]} [picture] - An array of picture objects containing album art.
+ */
+
+/**
+ * The final content object used within the radio system, combining
+ * core playback properties with rich metadata.
+ *
+ * @typedef {RadioContentBase & ContentMetadata} RadioContent
  */
 
 /**
@@ -209,8 +216,8 @@ class TinyRadioFm extends TinyEvents {
         if (!isArray(common.picture))
           throw new Error('Invalid metadata: "picture" must be an array.');
 
-        // Validate Nested Objects (Disk and Track)
         /**
+         * Validate Nested Objects (Disk and Track)
          * @param {MusicNumber|null} [info]
          * @param {string} [name]
          */
@@ -261,7 +268,7 @@ class TinyRadioFm extends TinyEvents {
    * extracting metadata from an audio source.
    *
    * @param {string | HTMLMediaElement} source - A URL string or an existing Audio object.
-   * @param {Partial<ContentMetadata> & { id?: string; weight?: number }} [metadata={}] - Optional manual metadata that overrides automatic extraction.
+   * @param {Partial<RadioContentBase & ContentMetadata> & { id?: string; weight?: number }} [metadata={}] - Optional manual metadata that overrides automatic extraction.
    * @param {ParseContentMetadata} [parseFile] - Private helper to interface with parseFile.
    * @returns {Promise<RadioContent>} A promise that resolves to a valid RadioContent object.
    * @throws {Error} If the source is invalid or cannot be accessed.
@@ -313,25 +320,20 @@ class TinyRadioFm extends TinyEvents {
       }
     });
 
-    // 3. Initialize Base Data
+    // 3. Initialize Base Data (Core properties required for the system)
     const baseData = {
       id: metadata.id || (await TinyRadioFm._generateSimpleHash(url)),
-      title: metadata.title || 'Unknown Track',
-      artist: metadata.artist || 'Unknown Artist',
       duration: Math.floor(audio.duration * 1000), // Convert to ms for our class
       url: url,
       weight: metadata.weight ?? 1,
     };
 
     // 4. Automatic Metadata Extraction (ID3 Tags)
-    // We only attempt this if the user didn't manually provide the title/artist.
+    /** @type {Partial<ContentMetadata>} */
+    let extractedMetadata = {};
     if (!metadata.title || !metadata.artist) {
       try {
-        const extracted = await TinyRadioFm.extractId3Tags(url, parseFile);
-
-        // Merge: Priority goes to manual metadata > extracted tags > defaults
-        if (!metadata.title && extracted.title) baseData.title = extracted.title;
-        if (!metadata.artist && extracted.artist) baseData.artist = extracted.artist;
+        extractedMetadata = await TinyRadioFm.extractId3Tags(url, parseFile);
       } catch (err) {
         // If extraction fails (e.g., library not loaded or no tags), we silently fall back to baseData
         console.error(err);
@@ -341,7 +343,18 @@ class TinyRadioFm extends TinyEvents {
       }
     }
 
-    return baseData;
+    // 5. Final Merge Logic
+    // Priority: Manual Metadata (highest) > Extracted ID3 > Default values
+    const finalContent = {
+      ...baseData,
+      ...extractedMetadata,
+      ...metadata,
+      // Explicitly ensure title and artist are resolved from the hierarchy
+      title: metadata.title || extractedMetadata.title || 'Unknown Track',
+      artist: metadata.artist || extractedMetadata.artist || 'Unknown Artist',
+    };
+
+    return /** @type {RadioContent} */ (finalContent);
   }
 
   /**
