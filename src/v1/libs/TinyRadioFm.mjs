@@ -179,7 +179,10 @@ class TinyRadioFm extends TinyEvents {
     // We only attempt this if the user didn't manually provide the title/artist.
     if (!metadata.title || !metadata.artist) {
       try {
-        const extracted = typeof extractMusicMeta === 'function' ? await extractMusicMeta(url) : { artist: null, title: null };
+        const extracted =
+          typeof extractMusicMeta === 'function'
+            ? await extractMusicMeta(url)
+            : { artist: null, title: null };
 
         // Merge: Priority goes to manual metadata > extracted tags > defaults
         if (!metadata.title && extracted.title) baseData.title = extracted.title;
