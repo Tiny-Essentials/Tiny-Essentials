@@ -112,6 +112,7 @@ class TinyRadioFm extends TinyEvents {
    *
    * @param {string | HTMLMediaElement} source - A URL string or an existing Audio object.
    * @param {ContentMetadata} [metadata={}] - Optional manual metadata that overrides automatic extraction.
+   * @param {(url: string) => Promise<{title?: string, artist?: string}>} [extractId3Tags] - Private helper to interface with jsmediatags.
    * @returns {Promise<RadioContent>} A promise that resolves to a valid RadioContent object.
    * @throws {Error} If the source is invalid or cannot be accessed.
    *
@@ -127,7 +128,13 @@ class TinyRadioFm extends TinyEvents {
    * const track = await TinyRadioFm.prepareContent(audio);
    * radio.add('music', track);
    */
-  static async prepareContent(source, metadata = {}) {
+  static async prepareContent(
+    source,
+    metadata = {},
+    extractId3Tags = (url) => {
+      return new Promise((resolve, reject) => reject(new Error('jsmediatags library not found.')));
+    },
+  ) {
     let audio;
     let url;
 
@@ -158,7 +165,7 @@ class TinyRadioFm extends TinyEvents {
 
     // 3. Initialize Base Data
     const baseData = {
-      id: metadata.id || (await this._generateSimpleHash(url)),
+      id: metadata.id || (await TinyRadioFm._generateSimpleHash(url)),
       title: metadata.title || 'Unknown Track',
       artist: metadata.artist || 'Unknown Artist',
       duration: Math.floor(audio.duration * 1000), // Convert to ms for our class
@@ -170,13 +177,14 @@ class TinyRadioFm extends TinyEvents {
     // We only attempt this if the user didn't manually provide the title/artist.
     if (!metadata.title || !metadata.artist) {
       try {
-        const extracted = await this._extractId3Tags(url);
+        const extracted = typeof extractId3Tags === 'function' ? await extractId3Tags(url) : {};
 
         // Merge: Priority goes to manual metadata > extracted tags > defaults
         if (!metadata.title && extracted.title) baseData.title = extracted.title;
         if (!metadata.artist && extracted.artist) baseData.artist = extracted.artist;
       } catch (err) {
         // If extraction fails (e.g., library not loaded or no tags), we silently fall back to baseData
+        console.error(err);
         console.warn(
           `[TinyRadioFm] Automatic metadata extraction failed for ${url}. Using defaults.`,
         );
@@ -184,16 +192,6 @@ class TinyRadioFm extends TinyEvents {
     }
 
     return baseData;
-  }
-
-  /**
-   * Private helper to interface with jsmediatags.
-   * @param {string} url
-   * @returns {Promise<{title?: string, artist?: string}>}
-   * @private
-   */
-  static _extractId3Tags(url) {
-    return new Promise((resolve, reject) => reject(new Error('jsmediatags library not found.')));
   }
 
   /**
