@@ -83,14 +83,6 @@ import TinyEvents from './TinyEvents.mjs';
  */
 
 /**
- * @typedef {Object} ContentMetadata
- * @property {string|null} title - Manual title override.
- * @property {string|null} artist - Manual artist override.
- * @property {number} [weight] - Manual weight override.
- * @property {string} [id] - Manual ID override.
- */
-
-/**
  * @typedef {Object} TinyRadioFmImport
  * @property {RadioContent[]} music
  * @property {RadioContent[]} voice
@@ -115,7 +107,7 @@ import TinyEvents from './TinyEvents.mjs';
  */
 
 /**
- * @typedef {Object} ExtractedMetadata
+ * @typedef {Object} ContentMetadata
  * This metadata structure is modeled after the standard output of the
  * `music-metadata` npm package.
  *
@@ -138,7 +130,7 @@ import TinyEvents from './TinyEvents.mjs';
  * A promise that resolves to an object containing the extracted metadata.
  * @callback ParseContentMetadata
  * @param {Blob} data
- * @returns {Promise<{ common: Partial<ExtractedMetadata> }>}
+ * @returns {Promise<{ common: Partial<ContentMetadata> }>}
  */
 
 /**
@@ -151,7 +143,7 @@ class TinyRadioFm extends TinyEvents {
    *
    * @param {string} url - The full URL of the audio file to be downloaded.
    * @param {ParseContentMetadata} parseFile - The function used to parse the file data.
-   * @returns {Promise<ExtractedMetadata>} A promise that resolves to an object containing the extracted metadata.
+   * @returns {Promise<ContentMetadata>} A promise that resolves to an object containing the extracted metadata.
    * @throws {TypeError} If the provided `url` is not a string or `parseFile` is not a function.
    * @throws {Error} If the network request fails or the parsing process encounters an error.
    */
@@ -240,7 +232,7 @@ class TinyRadioFm extends TinyEvents {
       validate();
 
       // 5. Return the specific metadata fields requested
-      // We structure the return to match the ExtractedMetadata typedef
+      // We structure the return to match the ContentMetadata typedef
       return {
         title: common?.title ?? null,
         album: common?.album ?? null,
@@ -269,7 +261,7 @@ class TinyRadioFm extends TinyEvents {
    * extracting metadata from an audio source.
    *
    * @param {string | HTMLMediaElement} source - A URL string or an existing Audio object.
-   * @param {ContentMetadata} [metadata={}] - Optional manual metadata that overrides automatic extraction.
+   * @param {Partial<ContentMetadata> & { id?: string; weight?: number }} [metadata={}] - Optional manual metadata that overrides automatic extraction.
    * @param {ParseContentMetadata} [parseFile] - Private helper to interface with parseFile.
    * @returns {Promise<RadioContent>} A promise that resolves to a valid RadioContent object.
    * @throws {Error} If the source is invalid or cannot be accessed.
@@ -288,7 +280,7 @@ class TinyRadioFm extends TinyEvents {
    */
   static async prepareContent(
     source,
-    metadata = { title: null, artist: null },
+    metadata = {},
     parseFile = (url) => {
       return new Promise((resolve, reject) => reject(new Error('parseFile library not found.')));
     },
