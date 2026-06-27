@@ -471,7 +471,6 @@
        * IMPORT: TinyRadioFm
        */
       import { TinyRadioFm } from './src/v1/libs/TinyRadioFm.mjs';
-      import { extractId3Tags } from './src/v1/libs/TinyRadioFm/extractId3Tags.mjs';
       import { parseBlob } from 'https://cdn.jsdelivr.net/npm/music-metadata@11.13.0/+esm';
       window.TinyRadioFm = TinyRadioFm;
 
@@ -565,9 +564,7 @@
           try {
             this.log(`Processing ${file.name}...`);
             const url = URL.createObjectURL(file);
-            const content = await TinyRadioFm.prepareContent(url, {}, (url) =>
-              extractId3Tags(url, parseBlob),
-            );
+            const content = await TinyRadioFm.prepareContent(url, {}, parseBlob);
 
             // If custom, we need to handle the timestamp
             if (type === 'custom') {
