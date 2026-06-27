@@ -190,7 +190,8 @@ class TinyRadioFm extends TinyEvents {
           typeof v === 'string' || v === null || v === undefined;
         const isNumber = (/** @type {number | null | undefined} */ v) =>
           typeof v === 'number' || v === null || v === undefined;
-        const isArray = (/** @type {string[] | IPicture[] | undefined} */ v) => Array.isArray(v);
+        const isArray = (/** @type {string[] | IPicture[] | undefined} */ v) =>
+          Array.isArray(v) || typeof v === 'undefined';
 
         // Validate Primitives
         if (!isString(common.title))
