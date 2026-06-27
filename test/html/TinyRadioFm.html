@@ -4,8 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TinyRadioFm | Professional Test Environment</title>
-    <!-- jsmediatags for ID3 extraction -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
     <style>
       :root {
         --bg-color: #0f172a;
@@ -474,6 +472,7 @@
        */
       import { TinyRadioFm } from './src/v1/libs/TinyRadioFm.mjs';
       import { extractId3Tags } from './src/v1/libs/TinyRadioFm/extractId3Tags.mjs';
+      import { parseBlob } from 'https://cdn.jsdelivr.net/npm/music-metadata@11.13.0/+esm';
       window.TinyRadioFm = TinyRadioFm;
 
       // --- UI Controller ---
@@ -567,7 +566,7 @@
             this.log(`Processing ${file.name}...`);
             const url = URL.createObjectURL(file);
             const content = await TinyRadioFm.prepareContent(url, {}, (url) =>
-              extractId3Tags(url, jsmediatags),
+              extractId3Tags(url, parseBlob),
             );
 
             // If custom, we need to handle the timestamp

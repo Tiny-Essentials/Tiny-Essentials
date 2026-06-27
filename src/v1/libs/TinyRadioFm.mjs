@@ -84,8 +84,8 @@ import TinyEvents from './TinyEvents.mjs';
 
 /**
  * @typedef {Object} ContentMetadata
- * @property {string} [title] - Manual title override.
- * @property {string} [artist] - Manual artist override.
+ * @property {string|null} title - Manual title override.
+ * @property {string|null} artist - Manual artist override.
  * @property {number} [weight] - Manual weight override.
  * @property {string} [id] - Manual ID override.
  */
@@ -101,6 +101,8 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {RadioConfig} config
  */
 
+/** @typedef {import('./TinyRadioFm/extractId3Tags.mjs').ExtractedMetadata} ExtractedMetadata */
+
 /**
  * A deterministic, seed-based radio management system with scheduled adaptations and weighted random generation.
  * @extends TinyEvents
@@ -112,7 +114,7 @@ class TinyRadioFm extends TinyEvents {
    *
    * @param {string | HTMLMediaElement} source - A URL string or an existing Audio object.
    * @param {ContentMetadata} [metadata={}] - Optional manual metadata that overrides automatic extraction.
-   * @param {(url: string) => Promise<{title?: string, artist?: string}>} [extractId3Tags] - Private helper to interface with jsmediatags.
+   * @param {(url: string) => Promise<ExtractedMetadata>} [extractMusicMeta] - Private helper to interface with parseFile.
    * @returns {Promise<RadioContent>} A promise that resolves to a valid RadioContent object.
    * @throws {Error} If the source is invalid or cannot be accessed.
    *
@@ -130,9 +132,9 @@ class TinyRadioFm extends TinyEvents {
    */
   static async prepareContent(
     source,
-    metadata = {},
-    extractId3Tags = (url) => {
-      return new Promise((resolve, reject) => reject(new Error('jsmediatags library not found.')));
+    metadata = { title: null, artist: null },
+    extractMusicMeta = (url) => {
+      return new Promise((resolve, reject) => reject(new Error('parseFile library not found.')));
     },
   ) {
     let audio;
@@ -177,7 +179,7 @@ class TinyRadioFm extends TinyEvents {
     // We only attempt this if the user didn't manually provide the title/artist.
     if (!metadata.title || !metadata.artist) {
       try {
-        const extracted = typeof extractId3Tags === 'function' ? await extractId3Tags(url) : {};
+        const extracted = typeof extractMusicMeta === 'function' ? await extractMusicMeta(url) : { artist: null, title: null };
 
         // Merge: Priority goes to manual metadata > extracted tags > defaults
         if (!metadata.title && extracted.title) baseData.title = extracted.title;
