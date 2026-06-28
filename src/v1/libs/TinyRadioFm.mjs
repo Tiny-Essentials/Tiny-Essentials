@@ -531,9 +531,9 @@ class TinyRadioFm extends TinyEvents {
         artist:
           extractedMetadata.artist ||
           metadata.artist ||
-          typeof TinyRadioFm.#unknownArtist === 'string'
+          (typeof TinyRadioFm.#unknownArtist === 'string'
             ? TinyRadioFm.#unknownArtist
-            : String(TinyRadioFm.#unknownArtist()),
+            : String(TinyRadioFm.#unknownArtist())),
       };
 
       // Notify Success
@@ -609,7 +609,8 @@ class TinyRadioFm extends TinyEvents {
   }
 
   set unknownArtist(value) {
-    if (typeof value !== 'string' && typeof value !== 'function') throw new TypeError('unknownArtist must have an string or function.');
+    if (typeof value !== 'string' && typeof value !== 'function')
+      throw new TypeError('unknownArtist must have an string or function.');
     TinyRadioFm.#unknownArtist = value;
   }
 
