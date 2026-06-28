@@ -249,7 +249,7 @@ class TinyRadioFm extends TinyEvents {
 
       // 4. Complete Validation of the parsed metadata structure
       if (!metadata || typeof metadata.common !== 'object')
-        throw new Error('Invalid metadata: "common" property is missing or not an object.');
+        throw new TypeError('Invalid metadata: "common" property is missing or not an object.');
 
       const common = metadata.common;
 
@@ -267,27 +267,29 @@ class TinyRadioFm extends TinyEvents {
 
         // Validate Primitives
         if (!isString(common.title))
-          throw new Error('Invalid metadata: "title" must be a string or null.');
+          throw new TypeError('Invalid metadata: "title" must be a string or null.');
         if (!isString(common.album))
-          throw new Error('Invalid metadata: "album" must be a string or null.');
+          throw new TypeError('Invalid metadata: "album" must be a string or null.');
         if (!isString(common.albumartist))
-          throw new Error('Invalid metadata: "albumartist" must be a string or null.');
+          throw new TypeError('Invalid metadata: "albumartist" must be a string or null.');
         if (!isString(common.artist))
-          throw new Error('Invalid metadata: "artist" must be a string or null.');
+          throw new TypeError('Invalid metadata: "artist" must be a string or null.');
         if (!isNumber(common.year))
-          throw new Error('Invalid metadata: "year" must be a number or null.');
+          throw new TypeError('Invalid metadata: "year" must be a number or null.');
 
         // Validate Arrays
         if (!isArray(common.albumartists))
-          throw new Error('Invalid metadata: "albumartists" must be an array.');
-        if (!isArray(common.genre)) throw new Error('Invalid metadata: "genre" must be an array.');
-        if (!isArray(common.label)) throw new Error('Invalid metadata: "label" must be an array.');
+          throw new TypeError('Invalid metadata: "albumartists" must be an array.');
+        if (!isArray(common.genre))
+          throw new TypeError('Invalid metadata: "genre" must be an array.');
+        if (!isArray(common.label))
+          throw new TypeError('Invalid metadata: "label" must be an array.');
         if (!isArray(common.composer))
-          throw new Error('Invalid metadata: "composer" must be an array.');
+          throw new TypeError('Invalid metadata: "composer" must be an array.');
         if (!isArray(common.artists))
-          throw new Error('Invalid metadata: "artists" must be an array.');
+          throw new TypeError('Invalid metadata: "artists" must be an array.');
         if (!isArray(common.picture))
-          throw new Error('Invalid metadata: "picture" must be an array.');
+          throw new TypeError('Invalid metadata: "picture" must be an array.');
 
         /**
          * Validate Nested Objects (Disk and Track)
@@ -297,11 +299,11 @@ class TinyRadioFm extends TinyEvents {
         const validateTrackInfo = (info, name) => {
           if (info !== undefined && info !== null) {
             if (!(typeof info === 'object' && info !== null))
-              throw new Error(`Invalid metadata: "${name}" must be an object.`);
+              throw new TypeError(`Invalid metadata: "${name}" must be an object.`);
             if (typeof info.no !== 'number' && info.no !== null)
-              throw new Error(`Invalid metadata: "${name}.no" must be a number or null.`);
+              throw new TypeError(`Invalid metadata: "${name}.no" must be a number or null.`);
             if (typeof info.of !== 'number' && info.of !== null)
-              throw new Error(`Invalid metadata: "${name}.of" must be a number or null.`);
+              throw new TypeError(`Invalid metadata: "${name}.of" must be a number or null.`);
           }
         };
 
@@ -379,7 +381,9 @@ class TinyRadioFm extends TinyEvents {
     source,
     metadata = {},
     parseFile = (url) => {
-      return new Promise((resolve, reject) => reject(new Error('parseFile library not found.')));
+      return new Promise((resolve, reject) =>
+        reject(new TypeError('parseFile library not found.')),
+      );
     },
     callbacks = {},
   ) {
@@ -491,16 +495,14 @@ class TinyRadioFm extends TinyEvents {
       // 4. Automatic Metadata Extraction (ID3 Tags)
       /** @type {Partial<ContentMetadata>} */
       let extractedMetadata = {};
-      if (!metadata.title || !metadata.artist) {
-        notifyProgress('EXTRACTING_ID3');
-        try {
-          extractedMetadata = await TinyRadioFm.extractId3Tags(url, parseFile);
-        } catch (err) {
-          // We treat ID3 failure as a non-fatal error for the whole process,
-          // but we still notify the developer via onError.
-          notifyError(err instanceof Error ? err : new Error('Unknown Error'), 'ID3');
-          console.warn(`[TinyRadioFm] ID3 extraction failed for ${url}. Falling back to filename.`);
-        }
+      notifyProgress('EXTRACTING_ID3');
+      try {
+        extractedMetadata = await TinyRadioFm.extractId3Tags(url, parseFile);
+      } catch (err) {
+        // We treat ID3 failure as a non-fatal error for the whole process,
+        // but we still notify the developer via onError.
+        notifyError(err instanceof Error ? err : new Error('Unknown Error'), 'ID3');
+        console.warn(`[TinyRadioFm] ID3 extraction failed for ${url}. Falling back to filename.`);
       }
 
       /**
@@ -522,11 +524,16 @@ class TinyRadioFm extends TinyEvents {
       // Priority: Manual Metadata (highest) > Extracted ID3 > Default values
       const finalContent = {
         ...baseData,
-        ...extractedMetadata,
         ...metadata,
+        ...extractedMetadata,
         // Explicitly ensure title and artist are resolved from the hierarchy
-        title: metadata.title || extractedMetadata.title || getFallbackTitleFromUrl(url),
-        artist: metadata.artist || extractedMetadata.artist || 'Unknown Artist',
+        title: extractedMetadata.title || metadata.title || getFallbackTitleFromUrl(url),
+        artist:
+          extractedMetadata.artist ||
+          metadata.artist ||
+          typeof TinyRadioFm.#unknownArtist === 'string'
+            ? TinyRadioFm.#unknownArtist
+            : String(TinyRadioFm.#unknownArtist()),
       };
 
       // Notify Success
@@ -592,6 +599,18 @@ class TinyRadioFm extends TinyEvents {
   /** @type {ContentMetadata} */
   static get contentTemplate() {
     return structuredClone(this.#contentTemplate);
+  }
+
+  /** @type {string|(() => string)} */
+  static #unknownArtist = 'Unknown Artist';
+
+  get unknownArtist() {
+    return TinyRadioFm.#unknownArtist;
+  }
+
+  set unknownArtist(value) {
+    if (typeof value !== 'string' && typeof value !== 'function') throw new TypeError('unknownArtist must have an string or function.');
+    TinyRadioFm.#unknownArtist = value;
   }
 
   /** @type {RadioContent[]} */
@@ -690,7 +709,9 @@ class TinyRadioFm extends TinyEvents {
    */
   add(type, data) {
     if (!data.id || typeof data.duration !== 'number') {
-      throw new Error('Content must have an ID and a valid numerical duration in milliseconds.');
+      throw new TypeError(
+        'Content must have an ID and a valid numerical duration in milliseconds.',
+      );
     }
 
     if (type === 'music') {
@@ -788,8 +809,13 @@ class TinyRadioFm extends TinyEvents {
    * @throws {Error} If the limit exceeds the configured queryLimit or is invalid.
    */
   queryTimeline(targetDate, limit = 10) {
-    if (limit > this.#config.queryLimit || limit <= 0 || isNaN(limit)) {
-      throw new Error(`Invalid query limit. Ensure it is > 0 and <= ${this.#config.queryLimit}.`);
+    if (isNaN(limit)) {
+      throw new TypeError(`Invalid query limit value. Ensure it is number value.`);
+    }
+    if (limit > this.#config.queryLimit || limit <= 0) {
+      throw new RangeError(
+        `Invalid query limit. Ensure it is > 0 and <= ${this.#config.queryLimit}.`,
+      );
     }
 
     /**
