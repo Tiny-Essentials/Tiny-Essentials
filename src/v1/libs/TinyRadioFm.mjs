@@ -389,22 +389,80 @@ class TinyRadioFm extends TinyEvents {
       .substring(0, 8);
   }
 
+  /** @type {ContentMetadata} */
+  static #contentTemplate = {
+    title: null,
+    album: null,
+    albumartist: null,
+    albumartists: [],
+    genre: [],
+    label: [],
+    composer: [],
+    year: null,
+    artist: null,
+    artists: [],
+    disk: { no: null, of: null },
+    track: { no: null, of: null },
+    picture: [],
+  };
+  /** @type {ContentMetadata} */
+  static get contentTemplate() {
+    return structuredClone(this.#contentTemplate);
+  }
+
   /** @type {RadioContent[]} */
   #musicList = [];
+  /** @returns {RadioContent[]} */
+  get musicList() {
+    return structuredClone(this.#musicList);
+  }
+
   /** @type {RadioContent[]} */
   #voiceList = [];
+  /** @returns {RadioContent[]} */
+  get voiceList() {
+    return structuredClone(this.#voiceList);
+  }
+
   /** @type {CustomPosition[]} */
   #customPositions = [];
+  /** @returns {CustomPosition[]} */
+  get customPositions() {
+    return structuredClone(this.#customPositions);
+  }
+
   /** @type {ScheduledTask[]} */
   #scheduledTasks = [];
+  /** @returns {ScheduledTask[]} */
+  get scheduledTasks() {
+    return structuredClone(this.#scheduledTasks);
+  }
+
+  /**
+   * Returns a deep clone of the internal all list cache.
+   * @returns {RadioContent[]} A cloned object of the cache.
+   */
+  get allList() {
+    return [...this.musicList, ...this.voiceList];
+  }
 
   /** @type {number} */
   #seed = 0;
+  get seed() {
+    return this.#seed;
+  }
   /** @type {number} */
   #anchorDate = Date.now();
+  get anchorDate() {
+    return this.#anchorDate;
+  }
 
   /** @type {Map<number, CycleBlock>} */
   #cycleCache = new Map();
+  /** @type {Record<number, CycleBlock>} */
+  get cycleCache() {
+    return structuredClone(Object.fromEntries(this.#cycleCache));
+  }
 
   /** @type {RadioConfig} */
   #config = {
@@ -416,17 +474,9 @@ class TinyRadioFm extends TinyEvents {
     voiceMin: 0,
     voiceMax: 1,
   };
-
-  /** @type {Map<string, RadioContent & { cachedAt: number; }>} */
-  #metadataCache = new Map();
-
-  /**
-   * Returns a deep clone of the internal metadata cache.
-   * @returns {Record<string, RadioContent & { cachedAt: number; }>} A cloned object of the cache.
-   */
-  get metadataCache () {
-    // Convert Map to Object and then perform a deep clone
-    return structuredClone(Object.fromEntries(this.#metadataCache));
+  /** @returns {RadioConfig} */
+  get config() {
+    return structuredClone(this.#config);
   }
 
   /**
@@ -459,8 +509,6 @@ class TinyRadioFm extends TinyEvents {
       throw new Error('Content must have an ID and a valid numerical duration in milliseconds.');
     }
 
-    this.#cacheMetadata(data);
-
     if (type === 'music') {
       this.#musicList.push(data);
       this.#cycleCache.clear();
@@ -483,10 +531,6 @@ class TinyRadioFm extends TinyEvents {
    * @param {ScheduledTaskPayload} payload - The content, ID, or move configuration.
    */
   scheduleTask(timestamp, action, type, payload) {
-    if (action === 'add' && typeof payload === 'object' && 'id' in payload) {
-      this.#cacheMetadata(/** @type {RadioContent} */ (payload));
-    }
-
     /** @type {ScheduledTask} */
     const task = { timestamp, action, type, payload };
     this.#scheduledTasks.push(task);
@@ -517,8 +561,6 @@ class TinyRadioFm extends TinyEvents {
       return t.payload !== id;
     });
 
-    // Clean up metadata cache when content is removed
-    this.#metadataCache.delete(id);
     this.#cycleCache.clear();
     this.emit('contentRemoved', { id });
   }
@@ -1012,8 +1054,6 @@ class TinyRadioFm extends TinyEvents {
     let listsMutated = false;
 
     expiredCps.forEach((cp) => {
-      // Remove from metadata cache when custom position expires
-      this.#metadataCache.delete(cp.content.id);
       this.#seed += cp.content.id.length;
       listsMutated = true;
       this.emit('customPositionExpired', { contentId: cp.content.id });
@@ -1051,14 +1091,6 @@ class TinyRadioFm extends TinyEvents {
     if (listsMutated) {
       this.#cycleCache.clear();
     }
-  }
-
-  /**
-   * Caches track metadata internally.
-   * @param {RadioContent} data - Content configuration.
-   */
-  #cacheMetadata(data) {
-    this.#metadataCache.set(data.id, { ...data, cachedAt: Date.now() });
   }
 
   /**
