@@ -343,6 +343,21 @@ class TinyRadioFm extends TinyEvents {
       }
     }
 
+    /**
+     * Extracts a readable filename from a URL without the extension.
+     * @param {string} url
+     * @returns {string}
+     */
+    const getFallbackTitleFromUrl = (url) => {
+      try {
+        // Remove query params or hashes, get the last segment, and strip extension
+        const filename = url.split(/[?#]/)[0].split('/').pop();
+        return (filename ?? '').replace(/\.[^/.]+$/, '') || 'Unknown Track';
+      } catch {
+        return 'Unknown Track';
+      }
+    };
+
     // 5. Final Merge Logic
     // Priority: Manual Metadata (highest) > Extracted ID3 > Default values
     const finalContent = {
@@ -350,7 +365,7 @@ class TinyRadioFm extends TinyEvents {
       ...extractedMetadata,
       ...metadata,
       // Explicitly ensure title and artist are resolved from the hierarchy
-      title: metadata.title || extractedMetadata.title || 'Unknown Track',
+      title: metadata.title || extractedMetadata.title || getFallbackTitleFromUrl(url),
       artist: metadata.artist || extractedMetadata.artist || 'Unknown Artist',
     };
 
@@ -404,6 +419,15 @@ class TinyRadioFm extends TinyEvents {
 
   /** @type {Map<string, RadioContent & { cachedAt: number; }>} */
   #metadataCache = new Map();
+
+  /**
+   * Returns a deep clone of the internal metadata cache.
+   * @returns {Record<string, RadioContent & { cachedAt: number; }>} A cloned object of the cache.
+   */
+  get metadataCache () {
+    // Convert Map to Object and then perform a deep clone
+    return structuredClone(Object.fromEntries(this.#metadataCache));
+  }
 
   /**
    * Initializes the radio system.
@@ -493,6 +517,8 @@ class TinyRadioFm extends TinyEvents {
       return t.payload !== id;
     });
 
+    // Clean up metadata cache when content is removed
+    this.#metadataCache.delete(id);
     this.#cycleCache.clear();
     this.emit('contentRemoved', { id });
   }
@@ -599,8 +625,6 @@ class TinyRadioFm extends TinyEvents {
     this.emit('stateImported', { data });
   }
 
-  // --- PRIVATE LOGIC ---
-
   /**
    * Mulberry32 Pseudo-Random Number Generator.
    * @param {number} seed - The initialization seed.
@@ -615,6 +639,8 @@ class TinyRadioFm extends TinyEvents {
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
   }
+
+  // --- PRIVATE LOGIC ---
 
   /**
    * Creates a deterministic sequence supporting weighted selection based on mode.
@@ -986,6 +1012,8 @@ class TinyRadioFm extends TinyEvents {
     let listsMutated = false;
 
     expiredCps.forEach((cp) => {
+      // Remove from metadata cache when custom position expires
+      this.#metadataCache.delete(cp.content.id);
       this.#seed += cp.content.id.length;
       listsMutated = true;
       this.emit('customPositionExpired', { contentId: cp.content.id });
