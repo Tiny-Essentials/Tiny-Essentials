@@ -612,6 +612,7 @@ class TinyRadioFm extends TinyEvents {
     if (typeof value !== 'string' && typeof value !== 'function')
       throw new TypeError('unknownArtist must have an string or function.');
     TinyRadioFm.#unknownArtist = value;
+    this.emit('unknownArtistChanged', { unknownArtist: value });
   }
 
   /** @type {RadioContent[]} */
@@ -655,6 +656,16 @@ class TinyRadioFm extends TinyEvents {
   get seed() {
     return this.#seed;
   }
+  /**
+   * Sets the core randomness seed and clears the current cycle cache.
+   * @param {number} seed - The new seed.
+   */
+  set seed(seed) {
+    this.#seed = seed;
+    this.#cycleCache.clear();
+    this.emit('seedChanged', { seed });
+  }
+
   /** @type {number} */
   #anchorDate = Date.now();
   get anchorDate() {
@@ -681,6 +692,11 @@ class TinyRadioFm extends TinyEvents {
   /** @returns {RadioConfig} */
   get config() {
     return structuredClone(this.#config);
+  }
+  set config(config) {
+    this.#config = structuredClone(config);
+    this.#cycleCache.clear();
+    this.emit('configChanged', { config: this.config });
   }
 
   /**
@@ -726,7 +742,7 @@ class TinyRadioFm extends TinyEvents {
     }
 
     this.#syncRealTimeState(Date.now());
-    this.emit('contentAdded', { type, data });
+    this.emit('contentAdded', { type, data: structuredClone(data) });
   }
 
   /**
@@ -742,7 +758,7 @@ class TinyRadioFm extends TinyEvents {
     this.#scheduledTasks.push(task);
     this.#syncRealTimeState(Date.now());
 
-    this.emit('taskScheduled', task);
+    this.emit('taskScheduled', structuredClone(task));
   }
 
   /**
@@ -772,23 +788,13 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Sets the core randomness seed and clears the current cycle cache.
-   * @param {number} seed - The new seed.
-   */
-  setSeed(seed) {
-    this.#seed = seed;
-    this.#cycleCache.clear();
-    this.emit('seedChanged', { seed });
-  }
-
-  /**
    * Configures radio modes and playback limits.
    * @param {Partial<RadioConfig>} config - The configuration overrides.
    */
   setConfig(config) {
     this.#config = { ...this.#config, ...config };
     this.#cycleCache.clear();
-    this.emit('configChanged', { config: this.#config });
+    this.emit('configChanged', { config: this.config });
   }
 
   /**
@@ -875,7 +881,7 @@ class TinyRadioFm extends TinyEvents {
     /** @type {TinyRadioFmImport} */
     const data = typeof json === 'string' ? JSON.parse(json) : json;
     this.#hydrate(data);
-    this.emit('stateImported', { data });
+    this.emit('stateImported', { data: structuredClone(data) });
   }
 
   /**
@@ -1295,7 +1301,7 @@ class TinyRadioFm extends TinyEvents {
           this.#anchorDate = task.timestamp;
           this.#seed += 1; // Adapt timeline
           listsMutated = true;
-          this.emit('taskExecuted', task);
+          this.emit('taskExecuted', structuredClone(task));
         });
     }
 

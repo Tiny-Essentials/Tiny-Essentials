@@ -588,7 +588,7 @@
             mode: document.getElementById('cfg-mode').value,
             silenceDuration: parseInt(document.getElementById('cfg-silence').value),
           };
-          this.radio.setSeed(cfg.seed);
+          this.radio.seed = cfg.seed;
           this.radio.setConfig(cfg);
           this.log('Config applied.');
         }
