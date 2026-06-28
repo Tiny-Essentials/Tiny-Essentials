@@ -564,7 +564,11 @@
           try {
             this.log(`Processing ${file.name}...`);
             const url = URL.createObjectURL(file);
-            const content = await TinyRadioFm.prepareContent(url, {}, parseBlob);
+            const content = await TinyRadioFm.prepareContent(url, {}, parseBlob, {
+              onProgress: (p) => console.log(`[${p.stage}] ${p.status}`),
+              onError: (e) =>
+                console.error(`Failed at ${e.stage} for ${e.url}: ${e.error.message}`),
+            });
 
             // If custom, we need to handle the timestamp
             if (type === 'custom') {

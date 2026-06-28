@@ -1,5 +1,7 @@
 import TinyEvents from './TinyEvents.mjs';
 
+//////////////////////////////////////////////////////////////////
+
 /**
  * The core properties required for any content item within the radio system.
  * @typedef {Object} RadioContentBase
@@ -18,6 +20,8 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {number} intendedTimestamp - The absolute Date.now() target.
  * @property {number} originalTimestamp - The timestamp preserved for intelligent repositioning.
  */
+
+//////////////////////////////////////////////////////////////////
 
 /**
  * Data required to relocate an existing item within a playlist.
@@ -39,6 +43,8 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {'music'|'voice'} type - Target playlist.
  * @property {ScheduledTaskPayload} payload - Data relative to the action.
  */
+
+//////////////////////////////////////////////////////////////////
 
 /**
  * A standardized representation of an active or upcoming event in the radio timeline.
@@ -73,6 +79,8 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {number} voiceMax - Maximum amount of voice messages to play.
  */
 
+//////////////////////////////////////////////////////////////////
+
 /**
  * An extension of RadioContent that includes temporal boundaries within a generated cycle.
  * @typedef {RadioContent & { cycleStart: number; cycleEnd: number; }} CycleBlockData
@@ -93,6 +101,8 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {number} loopIndex - The specific loop iteration index.
  */
 
+//////////////////////////////////////////////////////////////////
+
 /**
  * The complete state object used for exporting and importing the radio system.
  * @typedef {Object} TinyRadioFmImport
@@ -104,6 +114,8 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {number} anchorDate
  * @property {RadioConfig} config
  */
+
+//////////////////////////////////////////////////////////////////
 
 /**
  * Represents an image attachment, such as album art.
@@ -154,11 +166,57 @@ import TinyEvents from './TinyEvents.mjs';
  * @returns {Promise<{ common: Partial<ContentMetadata> }>}
  */
 
+//////////////////////////////////////////////////////////////////
+
+/**
+ * @typedef {Object} LoadingProgress
+ * @property {'loading'|'success'} status - The current status of the operation.
+ * @property {LoadingProgressStage} stage - The current execution stage.
+ * @property {string} url - The URL being processed.
+ */
+
+/**
+ * @typedef {'INITIALIZING'|'FETCHING_METADATA'|'EXTRACTING_ID3'|'COMPLETE'} LoadingProgressStage
+ */
+
+/**
+ * @typedef {'INITIALIZING'|'METADATA'|'ID3'|'UNKNOWN'} LoadingErrorStage
+ */
+
+/**
+ * @typedef {Object} LoadingError
+ * @property {Error} error - The original error object.
+ * @property {string} url - The URL that failed.
+ * @property {LoadingErrorStage} stage - The stage where it failed.
+ */
+
+/**
+ * Custom error class to provide detailed context during the content preparation process.
+ * @extends Error
+ */
+class RadioLoadingError extends Error {
+  /**
+   * @param {string} message - Human-readable error message.
+   * @param {string} url - The URL that caused the error.
+   * @param {LoadingErrorStage} stage - The stage where the error occurred.
+   */
+  constructor(message, url, stage) {
+    super(message);
+    this.name = 'RadioLoadingError';
+    this.url = url;
+    this.stage = stage;
+  }
+}
+
+//////////////////////////////////////////////////////////////////
+
 /**
  * A deterministic, seed-based radio management system with scheduled adaptations and weighted random generation.
  * @extends TinyEvents
  */
 class TinyRadioFm extends TinyEvents {
+  static RadioLoadingError = RadioLoadingError;
+
   /**
    * Downloads an audio file from a URL and extracts its ID3/metadata tags.
    *
@@ -284,8 +342,11 @@ class TinyRadioFm extends TinyEvents {
    * @param {string | HTMLMediaElement} source - A URL string or an existing Audio object.
    * @param {Partial<RadioContentBase & ContentMetadata> & { id?: string; weight?: number }} [metadata={}] - Optional manual metadata that overrides automatic extraction.
    * @param {ParseContentMetadata} [parseFile] - Private helper to interface with parseFile.
+   * @param {Object} [callbacks={}] - Callbacks for monitoring the loading process.
+   * @param {(progress: LoadingProgress) => void} [callbacks.onProgress] - Callback triggered on stage changes.
+   * @param {(error: LoadingError) => void} [callbacks.onError] - Callback triggered when a non-fatal or fatal error occurs.
    * @returns {Promise<RadioContent>} A promise that resolves to a valid RadioContent object.
-   * @throws {Error} If the source is invalid or cannot be accessed.
+   * @throws {RadioLoadingError} If the preparation process fails at any stage.
    *
    * @example
    * // Usage with URL
@@ -300,6 +361,18 @@ class TinyRadioFm extends TinyEvents {
    * audio.src = '/assets/song.mp3';
    * const track = await TinyRadioFm.prepareContent(audio, {}, parseBlob);
    * radio.add('music', track);
+   *
+   * @example
+   * // Usage with tracking
+   * const track = await TinyRadioFm.prepareContent(
+   *   '/assets/song.mp3',
+   *   {},
+   *   parseBlob,
+   *   {
+   *     onProgress: (p) => console.log(`[${p.stage}] ${p.status}`),
+   *     onError: (e) => console.error(`Failed at ${e.stage} for ${e.url}: ${e.error.message}`)
+   *   }
+   * );
    */
   static async prepareContent(
     source,
@@ -307,85 +380,150 @@ class TinyRadioFm extends TinyEvents {
     parseFile = (url) => {
       return new Promise((resolve, reject) => reject(new Error('parseFile library not found.')));
     },
+    callbacks = {},
   ) {
+    // Argument Validation
+    if (typeof source !== 'string' && !(source instanceof HTMLMediaElement))
+      throw new TypeError('Source must be a string or an HTMLMediaElement.');
+
+    if (callbacks.onProgress && typeof callbacks.onProgress !== 'function')
+      throw new TypeError('callbacks.onProgress must be a function.');
+    if (callbacks.onError && typeof callbacks.onError !== 'function')
+      throw new TypeError('callbacks.onError must be a function.');
+
+    /** @type {HTMLMediaElement} */
     let audio;
-    let url;
+    /** @type {string} */
+    let url = '';
 
-    // 1. Normalize Source
-    if (typeof source === 'string') {
-      url = source;
-      audio = new Audio(url);
-    } else if (source instanceof HTMLMediaElement) {
-      audio = source;
-      url = audio.src;
-    } else {
-      throw new Error('Invalid source type. Expected a URL string or an HTMLMediaElement.');
-    }
-
-    // 2. Wait for audio metadata to be available (Essential for duration)
-    await new Promise((resolve, reject) => {
-      // If already loaded, resolve immediately
-      if (audio.readyState >= 1) resolve(undefined);
-      else {
-        audio.addEventListener('loadedmetadata', resolve, { once: true });
-        audio.addEventListener(
-          'error',
-          () => reject(new Error(`Failed to load audio source: ${url}`)),
-          { once: true },
-        );
+    const notifyProgress = (/** @type {LoadingProgressStage} */ stage) => {
+      if (callbacks.onProgress) {
+        callbacks.onProgress({
+          status: 'loading',
+          stage,
+          url: url || (source instanceof HTMLMediaElement ? source.src : 'unknown'),
+        });
       }
-    });
-
-    // 3. Initialize Base Data (Core properties required for the system)
-    const baseData = {
-      id: metadata.id || (await TinyRadioFm._generateSimpleHash(url)),
-      duration: Math.floor(audio.duration * 1000), // Convert to ms for our class
-      url: url,
-      weight: metadata.weight ?? 1,
     };
 
-    // 4. Automatic Metadata Extraction (ID3 Tags)
-    /** @type {Partial<ContentMetadata>} */
-    let extractedMetadata = {};
-    if (!metadata.title || !metadata.artist) {
+    const notifyError = (/** @type {Error} */ error, /** @type {LoadingErrorStage} */ stage) => {
+      if (callbacks.onError) {
+        callbacks.onError({
+          error,
+          url: url || (source instanceof HTMLMediaElement ? source.src : 'unknown'),
+          stage,
+        });
+      }
+    };
+
+    try {
+      // 1. Normalize Source
+      notifyProgress('INITIALIZING');
+      if (typeof source === 'string') {
+        url = source;
+        audio = new Audio(url);
+      } else {
+        audio = source;
+        url = audio.src;
+      }
+
+      // 2. Wait for audio metadata to be available
+      notifyProgress('FETCHING_METADATA');
       try {
-        extractedMetadata = await TinyRadioFm.extractId3Tags(url, parseFile);
+        await new Promise((resolve, reject) => {
+          // If already loaded, resolve immediately
+          if (audio.readyState >= 1) resolve(undefined);
+          else {
+            audio.addEventListener('loadedmetadata', resolve, { once: true });
+            audio.addEventListener(
+              'error',
+              () => reject(new Error(`HTMLMediaElement failed to load metadata.`)),
+              { once: true },
+            );
+          }
+        });
       } catch (err) {
-        // If extraction fails (e.g., library not loaded or no tags), we silently fall back to baseData
-        console.error(err);
-        console.warn(
-          `[TinyRadioFm] Automatic metadata extraction failed for ${url}. Using defaults.`,
+        throw new RadioLoadingError(
+          err instanceof Error ? err.message : 'UNKNOWN ERROR',
+          url,
+          'METADATA',
         );
       }
-    }
 
-    /**
-     * Extracts a readable filename from a URL without the extension.
-     * @param {string} url
-     * @returns {string}
-     */
-    const getFallbackTitleFromUrl = (url) => {
-      try {
-        // Remove query params or hashes, get the last segment, and strip extension
-        const filename = url.split(/[?#]/)[0].split('/').pop();
-        return (filename ?? '').replace(/\.[^/.]+$/, '') || 'Unknown Track';
-      } catch {
-        return 'Unknown Track';
+      // 3. Initialize Base Data (Core properties required for the system)
+      const baseData = {
+        id: metadata.id || (await TinyRadioFm._generateSimpleHash(url)),
+        duration: Math.floor(audio.duration * 1000), // Convert to ms for our class
+        url: url,
+        weight: metadata.weight ?? 1,
+      };
+
+      // 4. Automatic Metadata Extraction (ID3 Tags)
+      /** @type {Partial<ContentMetadata>} */
+      let extractedMetadata = {};
+      if (!metadata.title || !metadata.artist) {
+        notifyProgress('EXTRACTING_ID3');
+        try {
+          extractedMetadata = await TinyRadioFm.extractId3Tags(url, parseFile);
+        } catch (err) {
+          // We treat ID3 failure as a non-fatal error for the whole process,
+          // but we still notify the developer via onError.
+          notifyError(err instanceof Error ? err : new Error('Unknown Error'), 'ID3');
+          console.warn(`[TinyRadioFm] ID3 extraction failed for ${url}. Falling back to filename.`);
+        }
       }
-    };
 
-    // 5. Final Merge Logic
-    // Priority: Manual Metadata (highest) > Extracted ID3 > Default values
-    const finalContent = {
-      ...baseData,
-      ...extractedMetadata,
-      ...metadata,
-      // Explicitly ensure title and artist are resolved from the hierarchy
-      title: metadata.title || extractedMetadata.title || getFallbackTitleFromUrl(url),
-      artist: metadata.artist || extractedMetadata.artist || 'Unknown Artist',
-    };
+      /**
+       * Extracts a readable filename from a URL without the extension.
+       * @param {string} url
+       * @returns {string}
+       */
+      const getFallbackTitleFromUrl = (url) => {
+        try {
+          // Remove query params or hashes, get the last segment, and strip extension
+          const filename = url.split(/[?#]/)[0].split('/').pop();
+          return (filename ?? '').replace(/\.[^/.]+$/, '') || 'Unknown Track';
+        } catch {
+          return 'Unknown Track';
+        }
+      };
 
-    return /** @type {RadioContent} */ (finalContent);
+      // 5. Final Merge Logic
+      // Priority: Manual Metadata (highest) > Extracted ID3 > Default values
+      const finalContent = {
+        ...baseData,
+        ...extractedMetadata,
+        ...metadata,
+        // Explicitly ensure title and artist are resolved from the hierarchy
+        title: metadata.title || extractedMetadata.title || getFallbackTitleFromUrl(url),
+        artist: metadata.artist || extractedMetadata.artist || 'Unknown Artist',
+      };
+
+      // Notify Success
+      if (callbacks.onProgress) {
+        callbacks.onProgress({
+          status: 'success',
+          stage: 'COMPLETE',
+          url: url,
+        });
+      }
+
+      return /** @type {RadioContent} */ (finalContent);
+    } catch (err) {
+      // If it's already a RadioLoadingError, re-throw it.
+      // Otherwise, wrap it.
+      if (err instanceof RadioLoadingError) {
+        throw err;
+      } else {
+        const wrappedError = new RadioLoadingError(
+          err instanceof Error ? err.message : 'UNKNOWN ERROR',
+          url,
+          'INITIALIZING',
+        );
+        notifyError(wrappedError, 'INITIALIZING');
+        throw wrappedError;
+      }
+    }
   }
 
   /**
