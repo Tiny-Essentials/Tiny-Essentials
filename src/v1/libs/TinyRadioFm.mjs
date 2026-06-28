@@ -106,13 +106,13 @@ import TinyEvents from './TinyEvents.mjs';
 /**
  * The complete state object used for exporting and importing the radio system.
  * @typedef {Object} TinyRadioFmImport
- * @property {RadioContent[]} music
- * @property {RadioContent[]} voice
- * @property {CustomPosition[]} custom
- * @property {ScheduledTask[]} tasks
- * @property {number} seed
- * @property {number} anchorDate
- * @property {RadioConfig} config
+ * @property {RadioContent[]} music - The music playlist.
+ * @property {RadioContent[]} voice - The voice playlist.
+ * @property {CustomPosition[]} custom - The custom position injections.
+ * @property {ScheduledTask[]} tasks - The pending scheduled tasks.
+ * @property {number} seed - The randomness seed.
+ * @property {number} anchorDate - The timeline anchor timestamp.
+ * @property {RadioConfig} config - The engine configuration.
  */
 
 //////////////////////////////////////////////////////////////////
@@ -162,8 +162,8 @@ import TinyEvents from './TinyEvents.mjs';
 /**
  * A promise that resolves to an object containing the extracted metadata.
  * @callback ParseContentMetadata
- * @param {Blob} data
- * @returns {Promise<{ common: Partial<ContentMetadata> }>}
+ * @param {Blob} data - The raw file blob.
+ * @returns {Promise<{ common: Partial<ContentMetadata> }>} A promise resolving to the common metadata properties.
  */
 
 //////////////////////////////////////////////////////////////////
@@ -661,6 +661,7 @@ class TinyRadioFm extends TinyEvents {
    * @param {number} seed - The new seed.
    */
   set seed(seed) {
+    if (typeof seed !== 'number') throw new TypeError('Seed must be a number.');
     this.#seed = seed;
     this.#cycleCache.clear();
     this.emit('seedChanged', { seed });
@@ -693,19 +694,102 @@ class TinyRadioFm extends TinyEvents {
   get config() {
     return structuredClone(this.#config);
   }
+  /**
+   * Performs a complete replacement of the configuration.
+   * @param {RadioConfig} config - The new full configuration object.
+   * @throws {TypeError|RangeError} If the new configuration is invalid.
+   */
   set config(config) {
+    // Validate the entire object before applying it
+    this.#validateConfig(config);
+
     this.#config = structuredClone(config);
     this.#cycleCache.clear();
     this.emit('configChanged', { config: this.config });
   }
 
   /**
+   * Validates the integrity and logical consistency of a RadioConfig object.
+   *
+   * @param {Partial<RadioConfig> | RadioConfig} config - The configuration object to validate.
+   * @throws {TypeError} If a property has an incorrect type.
+   * @throws {RangeError} If a numeric value is out of allowed bounds or logically inconsistent.
+   */
+  #validateConfig(config) {
+    if (typeof config !== 'object' || config === null) {
+      throw new TypeError('Configuration must be a valid object.');
+    }
+
+    const modes = ['playlist', 'random'];
+
+    // 1. Type and Bounds Validation
+    if (config.mode !== undefined && !modes.includes(config.mode)) {
+      throw new TypeError(`Invalid mode: "${config.mode}". Must be one of: ${modes.join(', ')}.`);
+    }
+
+    if (config.voiceMode !== undefined && !modes.includes(config.voiceMode)) {
+      throw new TypeError(
+        `Invalid voiceMode: "${config.voiceMode}". Must be one of: ${modes.join(', ')}.`,
+      );
+    }
+
+    if (
+      config.silenceDuration !== undefined &&
+      (typeof config.silenceDuration !== 'number' || config.silenceDuration < 0)
+    ) {
+      throw new TypeError('silenceDuration must be a non-negative number.');
+    }
+
+    if (
+      config.queryLimit !== undefined &&
+      (typeof config.queryLimit !== 'number' || config.queryLimit <= 0)
+    ) {
+      throw new TypeError('queryLimit must be a positive number.');
+    }
+
+    if (config.voiceAfterMusic !== undefined && typeof config.voiceAfterMusic !== 'boolean') {
+      throw new TypeError('voiceAfterMusic must be a boolean.');
+    }
+
+    if (
+      config.voiceMin !== undefined &&
+      (typeof config.voiceMin !== 'number' || config.voiceMin < 0)
+    ) {
+      throw new TypeError('voiceMin must be a non-negative number.');
+    }
+
+    if (
+      config.voiceMax !== undefined &&
+      (typeof config.voiceMax !== 'number' || config.voiceMax < 0)
+    ) {
+      throw new TypeError('voiceMax must be a non-negative number.');
+    }
+
+    // 2. Logical Cross-Field Validation
+    // We check these even in partial objects if both keys are present,
+    // or in the full object during the final validation step.
+    const min = config.voiceMin ?? this.#config.voiceMin;
+    const max = config.voiceMax ?? this.#config.voiceMax;
+
+    if (max < min) {
+      throw new RangeError(
+        `Logical error: voiceMax (${max}) cannot be less than voiceMin (${min}).`,
+      );
+    }
+  }
+
+  /**
    * Initializes the radio system.
    * @param {TinyRadioFmImport|null} [initialData=null] - JSON object to hydrate the radio state.
    * @param {number} [seed=0] - Initial seed for deterministic randomness.
+   * @throws {TypeError} If initialData is not an object or null, or if seed is not a number.
    */
   constructor(initialData = null, seed = 0) {
     super();
+    if (initialData !== null && typeof initialData !== 'object')
+      throw new TypeError('initialData must be an object or null.');
+    if (typeof seed !== 'number') throw new TypeError('seed must be a number.');
+
     this.#seed = seed;
 
     // Bootstraps the application state ensuring determinism based on the anchor.
@@ -722,12 +806,15 @@ class TinyRadioFm extends TinyEvents {
    * Adds new content instantly to the radio sequence.
    * @param {'music'|'voice'|'custom'} type - The category of the content.
    * @param {RadioContent & { timestamp?: number }} data - The content payload to insert.
-   * @throws {Error} If the content lacks a valid ID or numerical duration.
+   * @throws {TypeError} If the type is invalid or the data lacks a valid ID and numerical duration.
    */
   add(type, data) {
-    if (!data.id || typeof data.duration !== 'number') {
+    if (!['music', 'voice', 'custom'].includes(type)) {
+      throw new TypeError('Type must be "music", "voice", or "custom".');
+    }
+    if (!data || typeof data.id !== 'string' || typeof data.duration !== 'number') {
       throw new TypeError(
-        'Content must have an ID and a valid numerical duration in milliseconds.',
+        'Content must have a string ID and a valid numerical duration in milliseconds.',
       );
     }
 
@@ -750,9 +837,47 @@ class TinyRadioFm extends TinyEvents {
    * @param {number} timestamp - Epoch timestamp in ms.
    * @param {'add'|'remove'|'move'} action - Action to perform.
    * @param {'music'|'voice'} type - Target list.
-   * @param {ScheduledTaskPayload} payload - The content, ID, or move configuration.
+   * @param {ScheduledTaskPayload} payload - Data relative to the action.
+   * @throws {TypeError} If arguments do not match the required types or action/type constraints.
    */
   scheduleTask(timestamp, action, type, payload) {
+    if (typeof timestamp !== 'number' || isNaN(timestamp))
+      throw new TypeError('timestamp must be a valid number.');
+    if (!['add', 'remove', 'move'].includes(action))
+      throw new TypeError('action must be "add", "remove", or "move".');
+    if (!['music', 'voice'].includes(type)) throw new TypeError('type must be "music" or "voice".');
+
+    // Payload-specific validation based on action
+    if (action === 'add') {
+      if (
+        typeof payload !== 'object' ||
+        payload === null ||
+        typeof payload.id !== 'string' ||
+        // @ts-ignore
+        typeof payload.duration !== 'number'
+      ) {
+        throw new TypeError(
+          'Payload for "add" must be a RadioContent object (id: string, duration: number).',
+        );
+      }
+    } else if (action === 'remove') {
+      if (typeof payload !== 'string') {
+        throw new TypeError('Payload for "remove" must be a string (the content ID).');
+      }
+    } else if (action === 'move') {
+      if (
+        typeof payload !== 'object' ||
+        payload === null ||
+        typeof payload.id !== 'string' ||
+        // @ts-ignore
+        typeof payload.newIndex !== 'number'
+      ) {
+        throw new TypeError(
+          'Payload for "move" must be a ScheduledMovePayload (id: string, newIndex: number).',
+        );
+      }
+    }
+
     /** @type {ScheduledTask} */
     const task = { timestamp, action, type, payload };
     this.#scheduledTasks.push(task);
@@ -764,8 +889,11 @@ class TinyRadioFm extends TinyEvents {
   /**
    * Removes content instantly by ID across all active lists, positions, and future tasks.
    * @param {string} id - The unique identifier of the content.
+   * @throws {TypeError} If the id is not a string.
    */
   remove(id) {
+    if (typeof id !== 'string') throw new TypeError('id must be a string.');
+
     /**
      * Filter function to match items against the provided ID.
      * @type {function(any): boolean}
@@ -777,7 +905,12 @@ class TinyRadioFm extends TinyEvents {
     this.#customPositions = this.#customPositions.filter(filterFn);
 
     this.#scheduledTasks = this.#scheduledTasks.filter((t) => {
-      if (t.action === 'add' && typeof t.payload === 'object' && 'id' in t.payload) {
+      if (
+        t.action === 'add' &&
+        typeof t.payload === 'object' &&
+        t.payload !== null &&
+        'id' in t.payload
+      ) {
         return t.payload.id !== id;
       }
       return t.payload !== id;
@@ -788,11 +921,21 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
-   * Configures radio modes and playback limits.
+   * Performs a partial update of the configuration.
    * @param {Partial<RadioConfig>} config - The configuration overrides.
+   * @throws {TypeError|RangeError} If the provided values or the resulting state is invalid.
    */
   setConfig(config) {
-    this.#config = { ...this.#config, ...config };
+    // First, validate the incoming partial object for basic type correctness
+    this.#validateConfig(config);
+
+    // Create the potential new state
+    const nextConfig = { ...this.#config, ...config };
+
+    // Second, validate the complete resulting state for logical consistency (e.g., min vs max)
+    this.#validateConfig(nextConfig);
+
+    this.#config = nextConfig;
     this.#cycleCache.clear();
     this.emit('configChanged', { config: this.config });
   }
@@ -813,11 +956,12 @@ class TinyRadioFm extends TinyEvents {
    * @param {number} targetDate - The starting epoch timestamp.
    * @param {number} [limit=10] - Maximum number of upcoming events to resolve.
    * @returns {RadioEvent[]} Array of resolved upcoming events.
-   * @throws {Error} If the limit exceeds the configured queryLimit or is invalid.
+   * @throws {TypeError} If limit is not a number.
+   * @throws {RangeError} If the limit exceeds the configured queryLimit or is <= 0.
    */
   queryTimeline(targetDate, limit = 10) {
-    if (isNaN(limit)) {
-      throw new TypeError(`Invalid query limit value. Ensure it is number value.`);
+    if (typeof limit !== 'number' || isNaN(limit)) {
+      throw new TypeError(`Invalid query limit value. Ensure it is a number.`);
     }
     if (limit > this.#config.queryLimit || limit <= 0) {
       throw new RangeError(
@@ -875,11 +1019,24 @@ class TinyRadioFm extends TinyEvents {
 
   /**
    * Imports a previously exported state, overwriting the current instance.
-   * @param {string|TinyRadioFmImport} json - JSON state.
+   * @param {string|TinyRadioFmImport} json - JSON state or object.
+   * @throws {TypeError} If json is not a valid string or object.
    */
   importState(json) {
     /** @type {TinyRadioFmImport} */
-    const data = typeof json === 'string' ? JSON.parse(json) : json;
+    let data;
+    if (typeof json === 'string') {
+      try {
+        data = JSON.parse(json);
+      } catch {
+        throw new TypeError('Provided string is not valid JSON.');
+      }
+    } else if (typeof json === 'object' && json !== null) {
+      data = json;
+    } else {
+      throw new TypeError('Import data must be a valid JSON string or an object.');
+    }
+
     this.#hydrate(data);
     this.emit('stateImported', { data: structuredClone(data) });
   }
