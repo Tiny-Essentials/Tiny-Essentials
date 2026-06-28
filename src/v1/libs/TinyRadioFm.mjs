@@ -172,15 +172,16 @@ import TinyEvents from './TinyEvents.mjs';
  * @typedef {Object} LoadingProgress
  * @property {'loading'|'success'} status - The current status of the operation.
  * @property {LoadingProgressStage} stage - The current execution stage.
+ * @property {ProgressEvent<EventTarget>} [event] - The current loading event.
  * @property {string} url - The URL being processed.
  */
 
 /**
- * @typedef {'INITIALIZING'|'FETCHING_METADATA'|'EXTRACTING_ID3'|'COMPLETE'} LoadingProgressStage
+ * @typedef {'INITIALIZING'|'DOWNLOADING'|'METADATA_LOADED'|'EXTRACTING_ID3'|'COMPLETE'} LoadingProgressStage
  */
 
 /**
- * @typedef {'INITIALIZING'|'METADATA'|'ID3'|'UNKNOWN'} LoadingErrorStage
+ * @typedef {'INITIALIZING'|'DOWNLOADING'|'METADATA'|'ID3'|'UNKNOWN'} LoadingErrorStage
  */
 
 /**
@@ -396,9 +397,14 @@ class TinyRadioFm extends TinyEvents {
     /** @type {string} */
     let url = '';
 
-    const notifyProgress = (/** @type {LoadingProgressStage} */ stage) => {
+    /**
+     * @param {LoadingProgressStage} stage
+     * @param {ProgressEvent<EventTarget>} [event]
+     */
+    const notifyProgress = (stage, event) => {
       if (callbacks.onProgress) {
         callbacks.onProgress({
+          event,
           status: 'loading',
           stage,
           url: url || (source instanceof HTMLMediaElement ? source.src : 'unknown'),
@@ -427,21 +433,45 @@ class TinyRadioFm extends TinyEvents {
         url = audio.src;
       }
 
-      // 2. Wait for audio metadata to be available
-      notifyProgress('FETCHING_METADATA');
+      // 2. Wait for audio metadata and monitor download progress
       try {
         await new Promise((resolve, reject) => {
-          // If already loaded, resolve immediately
-          if (audio.readyState >= 1) resolve(undefined);
-          else {
-            audio.addEventListener('loadedmetadata', resolve, { once: true });
-            audio.addEventListener(
-              'error',
-              () => reject(new Error(`HTMLMediaElement failed to load metadata.`)),
-              { once: true },
-            );
+          /**
+           * Listener for the 'progress' event (detects actual data downloading)
+           * @type {(this: HTMLMediaElement, ev: ProgressEvent<EventTarget>) => any}
+           */
+          const onProgress = (event) => notifyProgress('DOWNLOADING', event);
+
+          // Listener for 'loadedmetadata' (duration is now available)
+          const onMetadata = () => {
+            cleanup();
+            resolve(undefined);
+          };
+
+          // Listener for errors
+          const onError = (/** @type {{ message: any; }} */ err) => {
+            cleanup();
+            reject(new Error(`HTMLMediaElement failed to load: ${err.message || 'Unknown error'}`));
+          };
+
+          const cleanup = () => {
+            audio.removeEventListener('progress', onProgress);
+            audio.removeEventListener('loadedmetadata', onMetadata);
+            audio.removeEventListener('error', onError);
+          };
+
+          audio.addEventListener('progress', onProgress);
+          audio.addEventListener('loadedmetadata', onMetadata);
+          audio.addEventListener('error', onError);
+
+          // If metadata is already there (e.g. cached by browser)
+          if (audio.readyState >= 1) {
+            cleanup();
+            resolve(undefined);
           }
         });
+
+        notifyProgress('METADATA_LOADED');
       } catch (err) {
         throw new RadioLoadingError(
           err instanceof Error ? err.message : 'UNKNOWN ERROR',
