@@ -275,14 +275,16 @@ class TinyRadioFm extends TinyEvents {
    *
    * @example
    * // Usage with URL
-   * const track = await TinyRadioFm.prepareContent('/assets/song.mp3', { title: 'My Song', artist: 'Artist' });
+   * import { parseBlob } from 'music-metadata';
+   * const track = await TinyRadioFm.prepareContent('/assets/song.mp3', { title: 'My Song', artist: 'Artist' }, parseBlob);
    * radio.add('music', track);
    *
    * @example
    * // Usage with Audio Object
+   * import { parseBlob } from 'music-metadata';
    * const audio = new Audio();
    * audio.src = '/assets/song.mp3';
-   * const track = await TinyRadioFm.prepareContent(audio);
+   * const track = await TinyRadioFm.prepareContent(audio, {}, parseBlob);
    * radio.add('music', track);
    */
   static async prepareContent(
