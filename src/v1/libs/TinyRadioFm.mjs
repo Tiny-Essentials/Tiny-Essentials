@@ -1,6 +1,7 @@
 import TinyEvents from './TinyEvents.mjs';
 
 /**
+ * The core properties required for any content item within the radio system.
  * @typedef {Object} RadioContentBase
  * @property {string} id - Unique identifier.
  * @property {string} title - Name of the track/message.
@@ -11,6 +12,7 @@ import TinyEvents from './TinyEvents.mjs';
  */
 
 /**
+ * Represents a content item injected at a specific point in the absolute timeline.
  * @typedef {Object} CustomPosition
  * @property {RadioContent} content - The audio/music content.
  * @property {number} intendedTimestamp - The absolute Date.now() target.
@@ -18,16 +20,19 @@ import TinyEvents from './TinyEvents.mjs';
  */
 
 /**
+ * Data required to relocate an existing item within a playlist.
  * @typedef {Object} ScheduledMovePayload
  * @property {string} id - Content ID to move.
  * @property {number} newIndex - The target index in the playlist.
  */
 
 /**
+ * A union type representing the various data formats a scheduled task payload can take.
  * @typedef {RadioContent | string | ScheduledMovePayload} ScheduledTaskPayload
  */
 
 /**
+ * A scheduled instruction to modify the radio state at a specific point in time.
  * @typedef {Object} ScheduledTask
  * @property {number} timestamp - The absolute time to execute the action.
  * @property {'add'|'remove'|'move'} action - The type of modification.
@@ -36,6 +41,7 @@ import TinyEvents from './TinyEvents.mjs';
  */
 
 /**
+ * A standardized representation of an active or upcoming event in the radio timeline.
  * @typedef {Object} RadioEvent
  * @property {string} id - Content ID.
  * @property {string} title - Content title.
@@ -51,10 +57,12 @@ import TinyEvents from './TinyEvents.mjs';
  */
 
 /**
+ * The available sequence logic modes for playlist playback.
  * @typedef {'playlist'|'random'} RadioModes
  */
 
 /**
+ * Global configuration settings for the radio engine behavior.
  * @typedef {Object} RadioConfig
  * @property {RadioModes} mode - Sequence mode for music.
  * @property {RadioModes} voiceMode - Sequence mode for voices.
@@ -66,16 +74,19 @@ import TinyEvents from './TinyEvents.mjs';
  */
 
 /**
+ * An extension of RadioContent that includes temporal boundaries within a generated cycle.
  * @typedef {RadioContent & { cycleStart: number; cycleEnd: number; }} CycleBlockData
  */
 
 /**
+ * A structural block representing a single full iteration of the radio sequence.
  * @typedef {Object} CycleBlock
  * @property {CycleBlockData[]} items - Items belonging to this cycle.
  * @property {number} duration - Total duration of the cycle block in ms.
  */
 
 /**
+ * Information about the location of a specific cycle within the absolute timeline.
  * @typedef {Object} CycleLocation
  * @property {CycleBlock} block - The located cycle block.
  * @property {number} startTimestamp - The absolute start time of this cycle.
@@ -83,6 +94,7 @@ import TinyEvents from './TinyEvents.mjs';
  */
 
 /**
+ * The complete state object used for exporting and importing the radio system.
  * @typedef {Object} TinyRadioFmImport
  * @property {RadioContent[]} music
  * @property {RadioContent[]} voice
@@ -94,6 +106,7 @@ import TinyEvents from './TinyEvents.mjs';
  */
 
 /**
+ * Represents an image attachment, such as album art.
  * @typedef {Object} IPicture
  * @property {string} format - The MIME type of the image (e.g., 'image/jpeg').
  * @property {Uint8Array} data - The raw binary data of the image.
@@ -103,6 +116,7 @@ import TinyEvents from './TinyEvents.mjs';
  */
 
 /**
+ * A numeric structure representing track or disk indexing.
  * @typedef {{no: number|null, of: number|null}} MusicNumber
  */
 
