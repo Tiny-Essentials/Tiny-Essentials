@@ -677,10 +677,6 @@ class TinyRadioFm extends TinyEvents {
 
   /** @type {Map<number, CycleBlock>} */
   #cycleCache = new Map();
-  /** @type {Record<number, CycleBlock>} */
-  get cycleCache() {
-    return structuredClone(Object.fromEntries(this.#cycleCache));
-  }
 
   /** @type {RadioConfig} */
   #config = {
@@ -691,8 +687,8 @@ class TinyRadioFm extends TinyEvents {
     voiceAfterMusic: true,
     voiceMin: 0,
     voiceMax: 1,
-    musicMaxConsecutive: 0,
-    voiceMaxConsecutive: 0,
+    musicMaxConsecutive: 1,
+    voiceMaxConsecutive: 1,
   };
   /** @returns {RadioConfig} */
   get config() {
@@ -768,14 +764,14 @@ class TinyRadioFm extends TinyEvents {
     ) {
       throw new TypeError('voiceMax must be a non-negative number.');
     }
-    
+
     if (
       config.musicMaxConsecutive !== undefined &&
       (typeof config.musicMaxConsecutive !== 'number' || config.musicMaxConsecutive < 0)
     ) {
       throw new TypeError('musicMaxConsecutive must be a non-negative number.');
     }
-    
+
     if (
       config.voiceMaxConsecutive !== undefined &&
       (typeof config.voiceMaxConsecutive !== 'number' || config.voiceMaxConsecutive < 0)
@@ -1173,8 +1169,18 @@ class TinyRadioFm extends TinyEvents {
     const cycleSeed = this.#seed + loopIndex;
     const mixRandom = this._prng(cycleSeed * 10);
 
-    const musicSeq = this.#buildSequence(this.#musicList, cycleSeed + 1, this.#config.mode, this.#config.musicMaxConsecutive);
-    const voiceSeq = this.#buildSequence(this.#voiceList, cycleSeed + 2, this.#config.voiceMode, this.#config.voiceMaxConsecutive);
+    const musicSeq = this.#buildSequence(
+      this.#musicList,
+      cycleSeed + 1,
+      this.#config.mode,
+      this.#config.musicMaxConsecutive,
+    );
+    const voiceSeq = this.#buildSequence(
+      this.#voiceList,
+      cycleSeed + 2,
+      this.#config.voiceMode,
+      this.#config.voiceMaxConsecutive,
+    );
 
     /**
      * Array containing the positioned items for the current cycle.
