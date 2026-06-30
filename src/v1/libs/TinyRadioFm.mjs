@@ -77,6 +77,8 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {boolean} voiceAfterMusic - Whether to play voice messages after music tracks.
  * @property {number} voiceMin - Minimum amount of voice messages to play if voiceAfterMusic is true.
  * @property {number} voiceMax - Maximum amount of voice messages to play.
+ * @property {number} musicMaxConsecutive - Max times a music track can repeat consecutively (0 = unlimited).
+ * @property {number} voiceMaxConsecutive - Max times a voice track can repeat consecutively (0 = unlimited).
  */
 
 //////////////////////////////////////////////////////////////////
@@ -689,6 +691,8 @@ class TinyRadioFm extends TinyEvents {
     voiceAfterMusic: true,
     voiceMin: 0,
     voiceMax: 1,
+    musicMaxConsecutive: 0,
+    voiceMaxConsecutive: 0,
   };
   /** @returns {RadioConfig} */
   get config() {
@@ -764,10 +768,22 @@ class TinyRadioFm extends TinyEvents {
     ) {
       throw new TypeError('voiceMax must be a non-negative number.');
     }
+    
+    if (
+      config.musicMaxConsecutive !== undefined &&
+      (typeof config.musicMaxConsecutive !== 'number' || config.musicMaxConsecutive < 0)
+    ) {
+      throw new TypeError('musicMaxConsecutive must be a non-negative number.');
+    }
+    
+    if (
+      config.voiceMaxConsecutive !== undefined &&
+      (typeof config.voiceMaxConsecutive !== 'number' || config.voiceMaxConsecutive < 0)
+    ) {
+      throw new TypeError('voiceMaxConsecutive must be a non-negative number.');
+    }
 
     // 2. Logical Cross-Field Validation
-    // We check these even in partial objects if both keys are present,
-    // or in the full object during the final validation step.
     const min = config.voiceMin ?? this.#config.voiceMin;
     const max = config.voiceMax ?? this.#config.voiceMax;
 
@@ -1063,9 +1079,10 @@ class TinyRadioFm extends TinyEvents {
    * @param {RadioContent[]} list - The source list to sequence.
    * @param {number} currentSeed - Cycle-specific seed.
    * @param {RadioModes} mode - Processing mode.
+   * @param {number} [maxConsecutive=0] - Max consecutive repetitions permitted (0 = unlimited).
    * @returns {RadioContent[]} The generated sequence.
    */
-  #buildSequence(list, currentSeed, mode) {
+  #buildSequence(list, currentSeed, mode, maxConsecutive = 0) {
     if (list.length === 0) return [];
     if (mode !== 'random') return [...list]; // Respects manual indexing/moving
 
@@ -1082,25 +1099,65 @@ class TinyRadioFm extends TinyEvents {
      */
     const sequence = [];
 
+    /** @type {string|null} */
+    let lastId = null;
+    let consecutiveCount = 0;
+
     while (pool.length > 0) {
-      const totalWeight = pool.reduce((sum, item) => sum + item.weight, 0);
+      let validPool = pool;
+
+      // If there is a restriction rule and the consecutive limit has been reached
+      if (maxConsecutive > 0 && lastId !== null && consecutiveCount >= maxConsecutive) {
+        // Try filtering the last played to force the rotation
+        validPool = pool.filter((item) => item.id !== lastId);
+
+        // Self-adjustment: If there is nothing left in the urn (small/no diversity playlist),
+        // we revert to the full pool so as not to stagnate the cycle.
+        if (validPool.length === 0) {
+          validPool = pool;
+        }
+      }
+
+      const totalWeight = validPool.reduce((sum, item) => sum + item.weight, 0);
 
       // Safety catch if all weights are 0
       if (totalWeight <= 0) {
-        sequence.push(...pool);
+        sequence.push(...validPool);
         break;
       }
 
       const r = random() * totalWeight;
       let sum = 0;
+      /** @type {RadioContent|null} */
+      let selectedItem = null;
+      let selectedIndex = -1;
 
-      for (let i = 0; i < pool.length; i++) {
-        sum += pool[i].weight;
+      // Run the draw on the valid urn
+      for (let i = 0; i < validPool.length; i++) {
+        sum += validPool[i].weight;
         if (r <= sum) {
-          sequence.push(pool[i]);
-          pool.splice(i, 1);
+          selectedItem = validPool[i];
+          // Find the index in the original pool for correct removal
+          selectedIndex = pool.findIndex((p) => selectedItem && p.id === selectedItem.id);
           break;
         }
+      }
+
+      // Fallback in case of mathematical failure in floating accuracy
+      if (!selectedItem || selectedIndex === -1) {
+        selectedItem = validPool[0];
+        selectedIndex = pool.findIndex((p) => selectedItem && p.id === selectedItem.id);
+      }
+
+      sequence.push(selectedItem);
+      pool.splice(selectedIndex, 1);
+
+      // Update counters to the next loop step
+      if (selectedItem.id === lastId) {
+        consecutiveCount++;
+      } else {
+        lastId = selectedItem.id;
+        consecutiveCount = 1;
       }
     }
 
@@ -1116,8 +1173,8 @@ class TinyRadioFm extends TinyEvents {
     const cycleSeed = this.#seed + loopIndex;
     const mixRandom = this._prng(cycleSeed * 10);
 
-    const musicSeq = this.#buildSequence(this.#musicList, cycleSeed + 1, this.#config.mode);
-    const voiceSeq = this.#buildSequence(this.#voiceList, cycleSeed + 2, this.#config.voiceMode);
+    const musicSeq = this.#buildSequence(this.#musicList, cycleSeed + 1, this.#config.mode, this.#config.musicMaxConsecutive);
+    const voiceSeq = this.#buildSequence(this.#voiceList, cycleSeed + 2, this.#config.voiceMode, this.#config.voiceMaxConsecutive);
 
     /**
      * Array containing the positioned items for the current cycle.
