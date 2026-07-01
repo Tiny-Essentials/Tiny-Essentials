@@ -850,14 +850,16 @@ class TinyRadioFm extends TinyEvents {
    * @param {'add'|'remove'|'move'} action - Action to perform.
    * @param {'music'|'voice'} type - Target list.
    * @param {ScheduledTaskPayload} payload - Data relative to the action.
+   * @param {boolean} [smartQueue=true] - If true, delays the task execution until the end of the content playing at that timestamp.
    * @throws {TypeError} If arguments do not match the required types or action/type constraints.
    */
-  scheduleTask(timestamp, action, type, payload) {
+  scheduleTask(timestamp, action, type, payload, smartQueue = true) {
     if (typeof timestamp !== 'number' || isNaN(timestamp))
       throw new TypeError('timestamp must be a valid number.');
     if (!['add', 'remove', 'move'].includes(action))
       throw new TypeError('action must be "add", "remove", or "move".');
     if (!['music', 'voice'].includes(type)) throw new TypeError('type must be "music" or "voice".');
+    if (typeof smartQueue !== 'boolean') throw new TypeError('smartQueue must be a boolean.');
 
     // Payload-specific validation based on action
     if (action === 'add') {
@@ -890,9 +892,26 @@ class TinyRadioFm extends TinyEvents {
       }
     }
 
+    let finalTimestamp = timestamp;
+
+    // Smart Adjustment Logic (Smart Queue)
+    if (smartQueue) {
+      // Check if there's anything playing exactly on the requested timestamp
+      const eventAtTime = this.#getEventAtTime(timestamp, timestamp);
+
+      // If there is, we set the timing of the task to the exact fraction of milliseconds
+      // in which this event ends before the next audio begins.
+      if (eventAtTime) {
+        finalTimestamp = eventAtTime.absoluteEnd;
+      }
+    }
+
     /** @type {ScheduledTask} */
-    const task = { timestamp, action, type, payload };
+    const task = { timestamp: finalTimestamp, action, type, payload };
     this.#scheduledTasks.push(task);
+
+    // Synchronize the state in real time. If the endTimestamp is in the future,
+    // the task will remain securely pending without breaking the radio.
     this.#syncRealTimeState(Date.now());
 
     this.emit('taskScheduled', structuredClone(task));
