@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TinyRadioFm | Professional Test Environment</title>
+    <title>TinyRadioFm | Test Environment</title>
     <style>
       :root {
         --bg-color: #0f172a;
@@ -48,7 +48,7 @@
 
       main {
         display: grid;
-        grid-template-columns: 350px 1fr 400px;
+        grid-template-columns: 380px 1fr 380px;
         gap: 1px;
         background: var(--border);
         flex: 1;
@@ -128,12 +128,22 @@
         margin-bottom: 1rem;
       }
 
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+      }
+
       label {
         font-size: 0.75rem;
         color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
       }
 
-      input,
+      input[type='text'],
+      input[type='number'],
       select,
       textarea {
         background: var(--bg-color);
@@ -143,6 +153,7 @@
         border-radius: 4px;
         font-family: var(--font-mono);
         font-size: 0.875rem;
+        width: 100%;
       }
 
       /* PLAYER UI */
@@ -220,6 +231,7 @@
         border-bottom: 1px solid #1e293b;
         display: flex;
         gap: 0.5rem;
+        align-items: center;
       }
 
       .log-time {
@@ -227,6 +239,8 @@
       }
       .log-msg {
         color: var(--text-primary);
+        flex: 1;
+        word-break: break-all;
       }
 
       .tag {
@@ -234,6 +248,7 @@
         border-radius: 3px;
         font-size: 10px;
         text-transform: uppercase;
+        font-weight: bold;
       }
       .tag-music {
         background: #1e40af;
@@ -243,6 +258,9 @@
       }
       .tag-custom {
         background: #92400e;
+      }
+      .tag-task {
+        background: #5b21b6;
       }
 
       /* Progress Bar */
@@ -289,7 +307,7 @@
     </header>
 
     <main>
-      <!-- COLUMN 1: CONTROLS -->
+      <!-- COLUMN 1: CONTROLS & CONFIG -->
       <section>
         <div class="card">
           <h2 style="color: var(--accent)">
@@ -299,78 +317,110 @@
             <label>Audio File</label>
             <input type="file" id="file-input" accept="audio/*" />
           </div>
-          <div class="input-group">
-            <label>Category</label>
-            <select id="content-type">
-              <option value="music">Music</option>
-              <option value="voice">Voice</option>
-              <option value="custom">Custom Position</option>
-            </select>
+          <div class="grid-2">
+            <div class="input-group" style="margin-bottom: 0">
+              <label>Category</label>
+              <select id="content-type">
+                <option value="music">Music</option>
+                <option value="voice">Voice</option>
+                <option value="custom">Custom Position</option>
+              </select>
+            </div>
+            <div class="input-group" style="margin-bottom: 0">
+              <label>Custom TS (ms)</label>
+              <input type="number" id="custom-ts" value="0" />
+            </div>
           </div>
-          <div class="input-group">
-            <label>Custom Timestamp (ms) - Only for Custom</label>
-            <input type="number" id="custom-ts" value="0" />
-          </div>
-          <button class="btn btn-primary" id="btn-add" style="width: 100%">Load & Add</button>
+          <button class="btn btn-primary" id="btn-add" style="width: 100%; margin-top: 1rem">
+            Load & Add
+          </button>
         </div>
 
         <div class="card">
           <h2 style="color: var(--warning)">
             <span style="color: var(--warning)">⚙</span> Configuration
           </h2>
+
           <div class="input-group">
-            <label>Random Seed</label>
-            <input type="number" id="cfg-seed" value="12345" />
+            <label>Unknown Artist Fallback</label>
+            <input type="text" id="cfg-unknown-artist" value="Unknown Artist" />
           </div>
-          <div class="input-group">
-            <label>Music Mode</label>
-            <select id="cfg-mode">
-              <option value="playlist">Playlist</option>
-              <option value="random">Random (Weighted)</option>
-            </select>
+
+          <div class="grid-2">
+            <div class="input-group">
+              <label>Seed</label>
+              <input type="number" id="cfg-seed" value="12345" />
+            </div>
+            <div class="input-group">
+              <label>Query Limit</label>
+              <input type="number" id="cfg-queryLimit" value="100000" />
+            </div>
           </div>
-          <div class="input-group">
-            <label>Silence Gap (ms)</label>
-            <input type="number" id="cfg-silence" value="1000" />
+
+          <div class="grid-2">
+            <div class="input-group">
+              <label>Music Mode</label>
+              <select id="cfg-mode">
+                <option value="playlist">Playlist</option>
+                <option value="random">Random</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Voice Mode</label>
+              <select id="cfg-voiceMode">
+                <option value="playlist">Playlist</option>
+                <option value="random">Random</option>
+              </select>
+            </div>
           </div>
+
+          <div class="grid-2">
+            <div class="input-group">
+              <label>Music Max Consec.</label>
+              <input type="number" id="cfg-musicMaxConsecutive" value="1" />
+            </div>
+            <div class="input-group">
+              <label>Voice Max Consec.</label>
+              <input type="number" id="cfg-voiceMaxConsecutive" value="1" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="input-group">
+              <label>Voice Min</label>
+              <input type="number" id="cfg-voiceMin" value="0" />
+            </div>
+            <div class="input-group">
+              <label>Voice Max</label>
+              <input type="number" id="cfg-voiceMax" value="1" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="input-group">
+              <label>Silence Gap (ms)</label>
+              <input type="number" id="cfg-silence" value="1000" />
+            </div>
+            <div class="input-group" style="justify-content: flex-end">
+              <label style="margin-bottom: 0.5rem"
+                ><input type="checkbox" id="cfg-voiceAfterMusic" checked /> Voice After Music</label
+              >
+            </div>
+          </div>
+
           <button class="btn btn-outline" id="btn-apply-cfg" style="width: 100%">
             Apply Config
           </button>
         </div>
-
-        <div class="card">
-          <h2 style="color: var(--danger)">
-            <span style="color: var(--danger)">📅</span> Schedule Task
-          </h2>
-          <div class="input-group">
-            <label>Execution Time (ms from now)</label>
-            <input type="number" id="task-delay" value="5000" />
-          </div>
-          <div class="input-group">
-            <label>Action</label>
-            <select id="task-action">
-              <option value="add">Add (Voice)</option>
-              <option value="remove">Remove (By ID)</option>
-            </select>
-          </div>
-          <div class="input-group">
-            <label>Target ID (for remove)</label>
-            <input type="text" id="task-id" placeholder="e.g. 8a2f1b" />
-          </div>
-          <button class="btn btn-outline" id="btn-schedule" style="width: 100%">
-            Schedule Task
-          </button>
-        </div>
       </section>
 
-      <!-- COLUMN 2: MONITORING & PLAYER -->
+      <!-- COLUMN 2: PLAYER & MANAGEMENT -->
       <section>
         <!-- THE PLAYER CARD -->
         <div class="card" id="player-card">
           <h2 style="color: var(--accent)">
             <span style="color: var(--accent)">▶</span> Live Radio Player
           </h2>
-
           <div id="live-status">
             <div class="status-item">
               <span class="status-label">Now Playing:</span>
@@ -384,15 +434,11 @@
               <span class="status-label">Remaining:</span>
               <span class="status-value" id="st-rem">-</span>
             </div>
-            <div class="progress-container">
-              <div id="progress-bar"></div>
-            </div>
+            <div class="progress-container"><div id="progress-bar"></div></div>
           </div>
-
           <div class="player-controls">
             <button class="btn btn-primary" id="btn-start-engine">Start Engine</button>
-            <button class="btn btn-warning" id="btn-resync">Resync 🔄</button>
-
+            <button class="btn btn-warning" id="btn-resync" title="Resync Audio">🔄</button>
             <div class="volume-control">
               <label>Vol</label>
               <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7" />
@@ -401,60 +447,120 @@
         </div>
 
         <div class="card">
-          <h2 style="color: var(--accent)">🔍 Timeline Query</h2>
-          <div class="input-group">
-            <label>Target Time Offset (ms from now)</label>
-            <input type="number" id="query-offset" value="10000" />
+          <h2 style="color: var(--danger)">
+            <span style="color: var(--danger)">📅</span> Tasks & Direct Management
+          </h2>
+
+          <div class="grid-2">
+            <div class="input-group">
+              <label>Target Timeline</label>
+              <select id="task-type">
+                <option value="music">Music</option>
+                <option value="voice">Voice</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Action</label>
+              <select id="task-action">
+                <option value="add">Add (Mock Data)</option>
+                <option value="remove">Remove</option>
+                <option value="move">Move</option>
+              </select>
+            </div>
           </div>
-          <button class="btn btn-outline" id="btn-query" style="width: 100%">Predict Future</button>
-          <div class="list-container" id="query-results" style="margin-top: 1rem; min-height: 60px">
-            No prediction.
+
+          <div class="grid-2">
+            <div class="input-group">
+              <label>Target ID (Rem/Move)</label>
+              <input type="text" id="task-id" placeholder="ID" />
+            </div>
+            <div class="input-group">
+              <label>New Index (Move)</label>
+              <input type="number" id="task-newIndex" value="0" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="input-group" style="margin-bottom: 0">
+              <label>Delay (ms from now)</label>
+              <input type="number" id="task-delay" value="5000" />
+            </div>
+            <div class="input-group" style="margin-bottom: 0; justify-content: flex-end">
+              <button class="btn btn-outline" id="btn-schedule" style="width: 100%">
+                Schedule
+              </button>
+            </div>
+          </div>
+
+          <hr style="border: 0; border-top: 1px solid var(--border); margin: 1rem 0" />
+
+          <div class="grid-2">
+            <div class="input-group" style="margin-bottom: 0">
+              <input type="text" id="manage-id" placeholder="ID to kill instantly" />
+            </div>
+            <button class="btn btn-danger" id="btn-remove-now">Remove Now</button>
           </div>
         </div>
 
-        <div class="card" style="flex: 1">
-          <h2>📋 Active Playlists</h2>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
-            <div>
-              <label>Music</label>
-              <div class="list-container" id="list-music"></div>
+        <div class="card" style="flex: 1; display: flex; flex-direction: column">
+          <h2>📋 Active State Lists</h2>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; flex: 1">
+            <div style="display: flex; flex-direction: column">
+              <label>Music List</label>
+              <div class="list-container" id="list-music" style="flex: 1; max-height: none"></div>
             </div>
-            <div>
-              <label>Voice/Custom</label>
-              <div class="list-container" id="list-voice"></div>
+            <div style="display: flex; flex-direction: column">
+              <label>Voice / Custom / Tasks</label>
+              <div class="list-container" id="list-others" style="flex: 1; max-height: none"></div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- COLUMN 3: SYSTEM -->
+      <!-- COLUMN 3: SYSTEM & LOGS -->
       <section>
         <div class="card">
-          <h2>💾 State (Base64)</h2>
-          <div class="input-group">
-            <button class="btn btn-primary" id="btn-export" style="width: 100%">Export JSON</button>
+          <h2>🔍 Query Engine</h2>
+          <div class="grid-2">
+            <div class="input-group">
+              <label>Offset (ms)</label>
+              <input type="number" id="query-offset" value="10000" />
+            </div>
+            <div class="input-group" style="justify-content: flex-end">
+              <button class="btn btn-outline" id="btn-query">Predict Future</button>
+            </div>
           </div>
-          <div class="input-group">
-            <button class="btn btn-outline" id="btn-import" style="width: 100%">Import JSON</button>
+          <button
+            class="btn btn-outline"
+            id="btn-search-custom"
+            style="width: 100%; margin-top: 0.5rem"
+          >
+            Search Active Custom Pos.
+          </button>
+
+          <div class="list-container" id="query-results" style="margin-top: 1rem; min-height: 60px">
+            No query results.
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>💾 State Management</h2>
+          <div class="grid-2">
+            <button class="btn btn-primary" id="btn-export">Export State</button>
+            <button class="btn btn-outline" id="btn-import">Import State</button>
             <input type="file" id="import-file" accept=".json" style="display: none" />
           </div>
         </div>
 
-        <div class="card" style="flex: 1">
+        <div class="card" style="flex: 1; display: flex; flex-direction: column">
           <h2>📜 System Logs</h2>
-          <div
-            class="list-container"
-            id="system-logs"
-            style="height: 100%; min-height: 300px"
-          ></div>
+          <div class="list-container" id="system-logs" style="flex: 1; max-height: none"></div>
         </div>
       </section>
     </main>
 
     <script type="module">
-      /**
-       * STUB: TinyEvents
-       */
+      /** STUB: TinyEvents */
       class TinyEvents {
         constructor() {
           this.listeners = {};
@@ -467,9 +573,7 @@
         }
       }
 
-      /**
-       * IMPORT: TinyRadioFm
-       */
+      /** IMPORT: TinyRadioFm */
       import { TinyRadioFm } from './src/v1/libs/TinyRadioFm.mjs';
       import { parseBlob } from 'https://cdn.jsdelivr.net/npm/music-metadata@11.13.0/+esm';
       window.TinyRadioFm = TinyRadioFm;
@@ -483,6 +587,7 @@
           this.isEngineStarted = false;
 
           this.setupEventListeners();
+          this.bindRadioEvents();
           this.startUpdateLoop();
           this.log('Environment Ready. Click "Start Engine" to enable audio.');
         }
@@ -495,8 +600,37 @@
           logs.prepend(entry);
         }
 
+        bindRadioEvents() {
+          this.radio.on('unknownArtistChanged', (d) =>
+            this.log(`Event: unknownArtistChanged -> ${d.unknownArtist}`),
+          );
+          this.radio.on('seedChanged', (d) => this.log(`Event: seedChanged -> ${d.seed}`));
+          this.radio.on('configChanged', (d) => {
+            this.log(`Event: configChanged`);
+            console.log('New Config:', d.config);
+          });
+          this.radio.on('contentAdded', (d) =>
+            this.log(`Event: contentAdded -> [${d.type}] ${d.data.title}`),
+          );
+          this.radio.on('taskScheduled', (d) =>
+            this.log(`Event: taskScheduled -> ${d.action} on ${d.type}`),
+          );
+          this.radio.on('contentRemoved', (d) => this.log(`Event: contentRemoved -> ID ${d.id}`));
+          this.radio.on('timelineQueried', (d) =>
+            this.log(`Event: timelineQueried -> Found ${d.resultCount} items.`),
+          );
+          this.radio.on('stateImported', () => this.log(`Event: stateImported -> Success`));
+          this.radio.on('customPositionExpired', (d) =>
+            this.log(`Event: customPositionExpired -> ID ${d.contentId}`),
+          );
+          this.radio.on('taskExecuted', (d) =>
+            this.log(`Event: taskExecuted -> ${d.action} completed.`),
+          );
+        }
+
         setupEventListeners() {
           // Add Content
+          // Actions
           document
             .getElementById('btn-add')
             .addEventListener('click', () => this.handleAddContent());
@@ -510,9 +644,21 @@
           document
             .getElementById('btn-schedule')
             .addEventListener('click', () => this.handleScheduleTask());
+          document.getElementById('btn-remove-now').addEventListener('click', () => {
+            const id = document.getElementById('manage-id').value;
+            if (id) {
+              this.radio.remove(id);
+              this.updateLists();
+            }
+          });
 
-          // Query
+          // Queries
           document.getElementById('btn-query').addEventListener('click', () => this.handleQuery());
+          document.getElementById('btn-search-custom').addEventListener('click', () => {
+            const pos = this.radio.searchCustomPositions();
+            this.log(`Found ${pos.length} custom positions active. Check DevTools console.`);
+            console.table(pos);
+          });
 
           // State
           document
@@ -525,7 +671,7 @@
             .getElementById('import-file')
             .addEventListener('change', (e) => this.handleImport(e));
 
-          // Player UI
+          // Player Setup
           document
             .getElementById('btn-start-engine')
             .addEventListener('click', () => this.startEngine());
@@ -533,10 +679,6 @@
           document.getElementById('volume-slider').addEventListener('input', (e) => {
             this.audio.volume = e.target.value;
           });
-
-          // Radio Events
-          this.radio.on('contentAdded', (d) => this.log(`Added ${d.type}: ${d.data.title}`));
-          this.radio.on('taskExecuted', (d) => this.log(`Task: ${d.action} on ${d.type}`));
         }
 
         async startEngine() {
@@ -557,7 +699,7 @@
 
         async handleAddContent() {
           const file = document.getElementById('file-input').files[0];
-          if (!file) return alert('Select a file.');
+          if (!file) return alert('Select an audio file.');
           const type = document.getElementById('content-type').value;
           const customTs = parseInt(document.getElementById('custom-ts').value);
 
@@ -570,11 +712,8 @@
                 console.error(`Failed at ${e.stage} for ${e.url}: ${e.error.message}`),
             });
 
-            // If custom, we need to handle the timestamp
-            if (type === 'custom') {
-              content.timestamp = customTs;
-              // Note: The class expects timestamp in the data object for custom insertion
-            }
+            if (type === 'custom') content.timestamp = customTs > 0 ? customTs : Date.now();
+
             this.radio.add(type, content);
             this.updateLists();
           } catch (err) {
@@ -583,45 +722,77 @@
         }
 
         handleApplyConfig() {
-          const cfg = {
-            seed: parseInt(document.getElementById('cfg-seed').value),
-            mode: document.getElementById('cfg-mode').value,
-            silenceDuration: parseInt(document.getElementById('cfg-silence').value),
-          };
-          this.radio.seed = cfg.seed;
-          this.radio.setConfig(cfg);
-          this.log('Config applied.');
+          try {
+            const seed = parseInt(document.getElementById('cfg-seed').value);
+            const unknownArtist = document.getElementById('cfg-unknown-artist').value;
+
+            const cfg = {
+              mode: document.getElementById('cfg-mode').value,
+              voiceMode: document.getElementById('cfg-voiceMode').value,
+              silenceDuration: parseInt(document.getElementById('cfg-silence').value),
+              queryLimit: parseInt(document.getElementById('cfg-queryLimit').value),
+              voiceAfterMusic: document.getElementById('cfg-voiceAfterMusic').checked,
+              voiceMin: parseInt(document.getElementById('cfg-voiceMin').value),
+              voiceMax: parseInt(document.getElementById('cfg-voiceMax').value),
+              musicMaxConsecutive: parseInt(
+                document.getElementById('cfg-musicMaxConsecutive').value,
+              ),
+              voiceMaxConsecutive: parseInt(
+                document.getElementById('cfg-voiceMaxConsecutive').value,
+              ),
+            };
+
+            this.radio.seed = seed;
+            this.radio.unknownArtist = unknownArtist;
+            this.radio.setConfig(cfg);
+          } catch (e) {
+            this.log(`Config Error: ${e.message}`);
+          }
         }
 
         handleScheduleTask() {
-          const delay = parseInt(document.getElementById('task-delay').value);
-          const action = document.getElementById('task-action').value;
-          const targetId = document.getElementById('task-id').value;
-          const timestamp = Date.now() + delay;
+          try {
+            const delay = parseInt(document.getElementById('task-delay').value);
+            const action = document.getElementById('task-action').value;
+            const type = document.getElementById('task-type').value;
+            const targetId = document.getElementById('task-id').value;
+            const newIndex = parseInt(document.getElementById('task-newIndex').value);
+            const timestamp = Date.now() + delay;
 
-          if (action === 'add') {
-            // For testing add, we'll just add a dummy voice message
-            this.radio.scheduleTask(timestamp, 'add', 'voice', {
-              id: 'task-' + Math.random().toString(36).substr(2, 5),
-              title: 'Scheduled Voice',
-              artist: 'System',
-              duration: 5000,
-              url: '',
-            });
-          } else {
-            this.radio.scheduleTask(timestamp, 'remove', 'music', targetId);
+            let payload;
+            if (action === 'add') {
+              payload = {
+                id: 'mock-' + Math.random().toString(36).substr(2, 5),
+                title: 'Mock Scheduled ' + type,
+                artist: 'System',
+                duration: 5000,
+                url: '',
+              };
+            } else if (action === 'remove') {
+              payload = targetId;
+            } else if (action === 'move') {
+              payload = { id: targetId, newIndex: newIndex };
+            }
+
+            this.radio.scheduleTask(timestamp, action, type, payload);
+            this.updateLists();
+          } catch (e) {
+            this.log(`Schedule Error: ${e.message}`);
           }
-          this.log(`Task scheduled (+${delay}ms)`);
         }
 
         handleQuery() {
-          const offset = parseInt(document.getElementById('query-offset').value);
-          const results = this.radio.queryTimeline(Date.now() + offset, 5);
-          const container = document.getElementById('query-results');
-          container.innerHTML = results.length ? '' : 'No upcoming.';
-          results.forEach((ev) => {
-            container.innerHTML += `<div class="log-entry"><span>${ev.title}</span> <span style="color:var(--text-secondary)">@ ${new Date(ev.absoluteStart).toLocaleTimeString()}</span></div>`;
-          });
+          try {
+            const offset = parseInt(document.getElementById('query-offset').value);
+            const results = this.radio.queryTimeline(Date.now() + offset, 30);
+            const container = document.getElementById('query-results');
+            container.innerHTML = results.length ? '' : 'No upcoming.';
+            results.forEach((ev) => {
+              container.innerHTML += `<div class="log-entry"><span>${ev.title}</span> <span style="color:var(--text-secondary)">@ ${new Date(ev.absoluteStart).toLocaleTimeString()}</span></div>`;
+            });
+          } catch (e) {
+            this.log(`Query Error: ${e.message}`);
+          }
         }
 
         // --- PLAYER LOGIC ---
@@ -629,11 +800,9 @@
         resyncAudio() {
           const event = this.radio.getCurrentEvent();
           if (!event) return;
-
           this.log('Resyncing audio to radio timeline...');
           this.audio.currentTime = (event.duration - event.remainingTime) / 1000;
-          // If it was paused, play it
-          if (this.audio.paused) this.audio.play();
+          if (this.audio.paused && this.isEngineStarted) this.audio.play();
         }
 
         syncAudioWithRadio(event) {
@@ -645,72 +814,28 @@
             return;
           }
 
-          // If the track changed
           if (this.currentPlayingId !== event.id) {
-            this.log(`Switching to: ${event.title}`);
             this.currentPlayingId = event.id;
             this.audio.src = event.url;
-            this.audio.play().catch((e) => this.log('Autoplay blocked. Click Start Engine.'));
-          }
-
-          // Drift Correction: If audio is more than 1.5s out of sync with the radio logic,
-          // we don't auto-jump (to avoid annoying the user), but we log it.
-          const expectedTime = (event.duration - event.remainingTime) / 1000;
-          const drift = Math.abs(this.audio.currentTime - expectedTime);
-          if (drift > 1.5 && this.currentPlayingId === event.id) {
-            // We could auto-resync here, but it's better to let the user click the button
-            // to avoid sudden jumps during listening.
+            if (this.isEngineStarted) {
+              this.audio.play().catch((e) => this.log('Autoplay blocked. Click Start Engine.'));
+            }
           }
         }
 
         async handleExport() {
-          this.log('Generating Deep Export...');
-          const state = JSON.parse(this.radio.exportState());
-
-          // Helper to convert URL to Base64
-          const toBase64 = async (url) => {
-            if (!url || url.startsWith('http') || url.startsWith('data:')) return url;
-            try {
-              const resp = await fetch(url);
-              const blob = await resp.blob();
-              return new Promise((res) => {
-                const r = new FileReader();
-                r.onloadend = () => res(r.result);
-                r.readAsDataURL(blob);
-              });
-            } catch (e) {
-              return url;
-            }
-          };
-
-          // Deep traverse and convert
-          const processList = async (list) => {
-            for (let i of list) {
-              if (i.url) i.url = await toBase64(i.url);
-              if (i.content && i.content.url) i.content.url = await toBase64(i.content.url);
-            }
-          };
-
-          await processList(state.music);
-          await processList(state.voice);
-          await processList(state.custom);
-
-          // --- DOWNLOAD LOGIC ---
-          const jsonString = JSON.stringify(state, null, 2);
+          this.log('Generating Export...');
+          const jsonString = this.radio.exportState(); // Simplificado para fins de teste rapido
           const blob = new Blob([jsonString], { type: 'application/json' });
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
-
           link.href = url;
-          link.download = `tinyradiofm-state-${new Date().getTime()}.json`;
-
+          link.download = `tinyradiofm-full-state-${new Date().getTime()}.json`;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
           URL.revokeObjectURL(url);
-          // ----------------------
-
-          this.log('Export complete. File downloaded.');
+          this.log('Export complete.');
         }
 
         handleImport(event) {
@@ -732,23 +857,28 @@
 
         updateLists() {
           const mList = document.getElementById('list-music');
-          const vList = document.getElementById('list-voice');
+          const oList = document.getElementById('list-others');
           mList.innerHTML = '';
-          vList.innerHTML = '';
+          oList.innerHTML = '';
 
-          // We need to access private fields via the public state export for testing
-          const state = JSON.parse(this.radio.exportState());
-          state.music.forEach(
+          this.radio.musicList.forEach(
             (m) =>
-              (mList.innerHTML += `<div class="log-entry"><span class="tag tag-music">M</span> ${m.title}</div>`),
+              (mList.innerHTML += `<div class="log-entry"><span class="tag tag-music">M</span> <div>${m.title}<br><small style="color:var(--text-secondary)">ID: ${m.id}</small></div></div>`),
           );
-          state.voice.forEach(
+
+          this.radio.voiceList.forEach(
             (v) =>
-              (vList.innerHTML += `<div class="log-entry"><span class="tag tag-voice">V</span> ${v.title}</div>`),
+              (oList.innerHTML += `<div class="log-entry"><span class="tag tag-voice">V</span> <div>${v.title}<br><small style="color:var(--text-secondary)">ID: ${v.id}</small></div></div>`),
           );
-          state.custom.forEach(
+
+          this.radio.customPositions.forEach(
             (c) =>
-              (vList.innerHTML += `<div class="log-entry"><span class="tag tag-custom">C</span> ${c.content.title}</div>`),
+              (oList.innerHTML += `<div class="log-entry"><span class="tag tag-custom">C</span> <div>${c.content.title}<br><small style="color:var(--text-secondary)">ID: ${c.content.id} @ ${c.intendedTimestamp}</small></div></div>`),
+          );
+
+          this.radio.scheduledTasks.forEach(
+            (t) =>
+              (oList.innerHTML += `<div class="log-entry"><span class="tag tag-task">T</span> <div>Action: ${t.action} [${t.type}]<br><small style="color:var(--text-secondary)">Exec: ${t.timestamp}</small></div></div>`),
           );
         }
 
