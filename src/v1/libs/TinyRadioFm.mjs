@@ -603,18 +603,29 @@ class TinyRadioFm extends TinyEvents {
     return structuredClone(this.#contentTemplate);
   }
 
+  get size() {
+    return this.#musicList.length + this.#voiceList.length;
+  }
+
+  get musicSize() {
+    return this.#musicList.length;
+  }
+
+  get voiceSize() {
+    return this.#voiceList.length;
+  }
+
   /** @type {string|(() => string)} */
   static #unknownArtist = 'Unknown Artist';
 
-  get unknownArtist() {
+  static get unknownArtist() {
     return TinyRadioFm.#unknownArtist;
   }
 
-  set unknownArtist(value) {
+  static set unknownArtist(value) {
     if (typeof value !== 'string' && typeof value !== 'function')
       throw new TypeError('unknownArtist must have an string or function.');
     TinyRadioFm.#unknownArtist = value;
-    this.emit('unknownArtistChanged', { unknownArtist: value });
   }
 
   /** @type {RadioContent[]} */
