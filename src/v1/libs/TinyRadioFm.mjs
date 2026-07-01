@@ -818,9 +818,10 @@ class TinyRadioFm extends TinyEvents {
    * Adds new content instantly to the radio sequence.
    * @param {'music'|'voice'|'custom'} type - The category of the content.
    * @param {RadioContent & { timestamp?: number }} data - The content payload to insert.
+   * @param {boolean} [smartQueue=true] - If true, delays insertion until the end of the content playing at that timestamp (only affects 'custom').
    * @throws {TypeError} If the type is invalid or the data lacks a valid ID and numerical duration.
    */
-  add(type, data) {
+  add(type, data, smartQueue = true) {
     if (!['music', 'voice', 'custom'].includes(type)) {
       throw new TypeError('Type must be "music", "voice", or "custom".');
     }
@@ -828,6 +829,9 @@ class TinyRadioFm extends TinyEvents {
       throw new TypeError(
         'Content must have a string ID and a valid numerical duration in milliseconds.',
       );
+    }
+    if (typeof smartQueue !== 'boolean') {
+      throw new TypeError('smartQueue must be a boolean.');
     }
 
     if (type === 'music') {
@@ -837,7 +841,7 @@ class TinyRadioFm extends TinyEvents {
       this.#voiceList.push(data);
       this.#cycleCache.clear();
     } else if (type === 'custom') {
-      this.#handleCustomInsertion(data);
+      this.#handleCustomInsertion(data, smartQueue);
     }
 
     this.#syncRealTimeState(Date.now());
@@ -1421,10 +1425,22 @@ class TinyRadioFm extends TinyEvents {
   /**
    * Safely calculates the best absolute timestamp gap for a custom event without disrupting metadata.
    * @param {RadioContent & { timestamp?: number }} data - Target data to insert.
+   * @param {boolean} smartQueue - Adjusts the insertion to the end of the currently playing content.
    */
-  #handleCustomInsertion(data) {
-    const originalTarget = data.timestamp || Date.now();
+  #handleCustomInsertion(data, smartQueue) {
+    let originalTarget = data.timestamp || Date.now();
     const duration = data.duration;
+
+    if (smartQueue) {
+      // Check what is playing at the exact moment of the originalTarget
+      const eventAtTime = this.#getEventAtTime(originalTarget, originalTarget);
+
+      // If there is any content playing (whether music, voice or even other custom),
+      // we push the initial target to the exact millisecond where it ends.
+      if (eventAtTime) {
+        originalTarget = eventAtTime.absoluteEnd;
+      }
+    }
 
     const activeCps = [...this.#customPositions].sort(
       (a, b) => a.intendedTimestamp - b.intendedTimestamp,
@@ -1488,7 +1504,7 @@ class TinyRadioFm extends TinyEvents {
     this.#customPositions.push({
       content: data,
       intendedTimestamp: bestSlot,
-      originalTimestamp: originalTarget,
+      originalTimestamp: data.timestamp || Date.now(),
     });
   }
 
