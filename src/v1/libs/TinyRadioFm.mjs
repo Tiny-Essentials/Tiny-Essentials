@@ -615,6 +615,18 @@ class TinyRadioFm extends TinyEvents {
     return this.#voiceList.length;
   }
 
+  get customPosSize() {
+    return this.#customPositions.length;
+  }
+
+  get tasksSize() {
+    return this.#scheduledTasks.length;
+  }
+
+  get cycleCacheSize() {
+    return this.#cycleCache.size;
+  }
+
   /** @type {string|(() => string)} */
   static #unknownArtist = 'Unknown Artist';
 
