@@ -515,7 +515,7 @@
     "@babel/node": "^8.0.1",
     "@babel/parser": "^8.0.0",
     "@babel/preset-env": "^7.29.2",
-    "@babel/traverse": "^7.29.0",
+    "@babel/traverse": "^8.0.0",
     "@babel/types": "^8.0.0",
     "@rollup/plugin-commonjs": "^29.0.2",
     "@rollup/plugin-json": "^6.1.0",
