@@ -216,6 +216,7 @@ class RadioLoadingError extends Error {
 /**
  * A deterministic, seed-based radio management system with scheduled adaptations and weighted random generation.
  * @extends TinyEvents
+ * @beta
  */
 class TinyRadioFm extends TinyEvents {
   static RadioLoadingError = RadioLoadingError;

@@ -116,10 +116,6 @@
       "require": "./dist/v1/libs/TinyRadioFm.cjs",
       "import": "./dist/v1/libs/TinyRadioFm.mjs"
     },
-    "./libs/TinyRadioFm/extractId3Tags": {
-      "require": "./dist/v1/libs/TinyRadioFm/extractId3Tags.cjs",
-      "import": "./dist/v1/libs/TinyRadioFm/extractId3Tags.mjs"
-    },
     "./libs/UltraRandomMsgGen": {
       "require": "./dist/v1/libs/UltraRandomMsgGen.cjs",
       "import": "./dist/v1/libs/UltraRandomMsgGen.mjs"
