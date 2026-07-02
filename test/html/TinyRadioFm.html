@@ -473,7 +473,9 @@
             <button class="btn btn-warning" id="btn-resync" title="Resync Audio" disabled>
               🔄
             </button>
-            <button class="btn btn-outline" id="btn-mute" title="Mute/Unmute Audio">⏸️</button>
+            <button class="btn btn-outline" id="btn-mute" title="Mute/Unmute Audio" disabled>
+              ⏸️
+            </button>
 
             <div class="volume-control">
               <label>Vol</label>
@@ -769,7 +771,9 @@
 
               // Hides the manual resync and automatically triggers the first sync
               const btnResync = document.getElementById('btn-resync');
+              const btnMute = document.getElementById('btn-mute');
               btnResync.style.display = 'none';
+              btnMute.disabled = false;
 
               this.log('Audio Engine Unlocked.');
               this.resyncAudio();
