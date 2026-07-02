@@ -510,7 +510,7 @@
   "homepage": "https://github.com/Tiny-Essentials/Tiny-Essentials#readme",
   "devDependencies": {
     "@babel/cli": "^8.0.1",
-    "@babel/core": "^7.29.0",
+    "@babel/core": "^8.0.1",
     "@babel/generator": "^8.0.0",
     "@babel/node": "^8.0.1",
     "@babel/parser": "^8.0.0",
