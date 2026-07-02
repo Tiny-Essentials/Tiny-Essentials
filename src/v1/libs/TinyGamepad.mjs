@@ -1265,12 +1265,10 @@ class TinyGamepad {
   mapInput(logicalName, physicalInput) {
     if (typeof logicalName !== 'string' || !logicalName.trim())
       throw new TypeError(`Invalid "logicalName": expected a non-empty string, got ${logicalName}`);
-    if (
-      !(
-        typeof physicalInput === 'string' ||
-        (Array.isArray(physicalInput) && physicalInput.every((p) => typeof p === 'string'))
-      )
-    )
+    if (!(
+      typeof physicalInput === 'string' ||
+      (Array.isArray(physicalInput) && physicalInput.every((p) => typeof p === 'string'))
+    ))
       throw new TypeError(
         `Invalid "physicalInput": expected string or array of strings, got ${JSON.stringify(physicalInput)}`,
       );

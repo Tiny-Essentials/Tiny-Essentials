@@ -5,6 +5,9 @@
   "bin": {
     "tiny-essentials-fork": "./TinyFork.mjs"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "test": "npm run test:mjs && npm run test:cjs && npm run test:js",
     "test:js": "npx babel-node test/index.js",
