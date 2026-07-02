@@ -9,7 +9,8 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "test": "npm run test:mjs && npm run test:cjs",
+    "test": "npm run test:mjs && npm run test:cjs && npm run test:js",
+    "test:js": "node -r @babel/register test/index.js",
     "test:cjs": "node test/index.cjs",
     "test:mjs": "node test/index.mjs",
     "test:mjs:web": "node test/express.mjs",
@@ -517,6 +518,7 @@
     "@babel/node": "^8.0.1",
     "@babel/parser": "^8.0.0",
     "@babel/preset-env": "^8.0.2",
+    "@babel/register": "^8.0.1",
     "@babel/traverse": "^8.0.0",
     "@babel/types": "^8.0.0",
     "@rollup/plugin-commonjs": "^29.0.2",
