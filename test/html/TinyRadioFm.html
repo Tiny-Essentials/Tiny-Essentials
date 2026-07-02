@@ -120,6 +120,10 @@
         background: var(--warning);
         color: var(--bg-color);
       }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
 
       .input-group {
         display: flex;
@@ -170,9 +174,25 @@
         border-left: 4px solid var(--accent);
       }
 
+      .now-playing-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .thumbnail {
+        width: 64px;
+        height: 64px;
+        border-radius: 6px;
+        object-fit: cover;
+        background: var(--bg-color);
+        border: 1px solid var(--border);
+      }
+
       .status-item {
         font-size: 0.875rem;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.15rem;
       }
       .status-label {
         color: var(--text-secondary);
@@ -199,7 +219,7 @@
       .player-controls {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 0.5rem;
         margin-top: 1rem;
       }
 
@@ -208,6 +228,7 @@
         align-items: center;
         gap: 0.5rem;
         flex: 1;
+        margin-left: 0.5rem;
       }
 
       input[type='range'] {
@@ -422,23 +443,38 @@
             <span style="color: var(--accent)">▶</span> Live Radio Player
           </h2>
           <div id="live-status">
-            <div class="status-item">
-              <span class="status-label">Now Playing:</span>
-              <span class="status-value" id="st-title">Idle</span>
+            <div class="now-playing-header">
+              <img
+                id="st-thumb"
+                class="thumbnail"
+                src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 18V5l12-2v13'></path><circle cx='6' cy='18' r='3'></circle><circle cx='18' cy='16' r='3'></circle></svg>"
+              />
+              <div>
+                <div class="status-item">
+                  <span class="status-label">Title:</span>
+                  <span class="status-value" id="st-title">Idle</span>
+                </div>
+                <div class="status-item">
+                  <span class="status-label">Artist:</span>
+                  <span class="status-value" id="st-artist">-</span>
+                </div>
+                <div class="status-item">
+                  <span class="status-label">Rem:</span>
+                  <span class="status-value" id="st-rem">-</span>
+                </div>
+              </div>
             </div>
-            <div class="status-item">
-              <span class="status-label">Artist:</span>
-              <span class="status-value" id="st-artist">-</span>
-            </div>
-            <div class="status-item">
-              <span class="status-label">Remaining:</span>
-              <span class="status-value" id="st-rem">-</span>
-            </div>
+
             <div class="progress-container"><div id="progress-bar"></div></div>
           </div>
+
           <div class="player-controls">
             <button class="btn btn-primary" id="btn-start-engine">Start Engine</button>
-            <button class="btn btn-warning" id="btn-resync" title="Resync Audio">🔄</button>
+            <button class="btn btn-warning" id="btn-resync" title="Resync Audio" disabled>
+              🔄
+            </button>
+            <button class="btn btn-outline" id="btn-mute" title="Mute/Unmute Audio">⏸️</button>
+
             <div class="volume-control">
               <label>Vol</label>
               <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7" />
@@ -585,6 +621,7 @@
           this.audio = document.getElementById('audio-engine');
           this.currentPlayingId = null;
           this.isEngineStarted = false;
+          this.tickCounter = 0; // Used to spaced updates (e.g. Query Engine)
 
           this.setupEventListeners();
           this.bindRadioEvents();
@@ -601,31 +638,53 @@
         }
 
         bindRadioEvents() {
-          this.radio.on('unknownArtistChanged', (d) =>
-            this.log(`Event: unknownArtistChanged -> ${d.unknownArtist}`),
-          );
-          this.radio.on('seedChanged', (d) => this.log(`Event: seedChanged -> ${d.seed}`));
+          // Automatically update the entire interface when data changes
+          const syncUI = () => {
+            this.updateLists();
+            this.handleQuery(); // Ensure that the forecast of the future is updated immediately
+          };
+
+          this.radio.on('unknownArtistChanged', (d) => {
+            this.log(`Event: unknownArtistChanged -> ${d.unknownArtist}`);
+            syncUI();
+          });
+          this.radio.on('seedChanged', (d) => {
+            this.log(`Event: seedChanged -> ${d.seed}`);
+            syncUI();
+          });
           this.radio.on('configChanged', (d) => {
             this.log(`Event: configChanged`);
             console.log('New Config:', d.config);
+            syncUI();
           });
-          this.radio.on('contentAdded', (d) =>
-            this.log(`Event: contentAdded -> [${d.type}] ${d.data.title}`),
-          );
-          this.radio.on('taskScheduled', (d) =>
-            this.log(`Event: taskScheduled -> ${d.action} on ${d.type}`),
-          );
-          this.radio.on('contentRemoved', (d) => this.log(`Event: contentRemoved -> ID ${d.id}`));
-          this.radio.on('timelineQueried', (d) =>
-            this.log(`Event: timelineQueried -> Found ${d.resultCount} items.`),
-          );
-          this.radio.on('stateImported', () => this.log(`Event: stateImported -> Success`));
-          this.radio.on('customPositionExpired', (d) =>
-            this.log(`Event: customPositionExpired -> ID ${d.contentId}`),
-          );
-          this.radio.on('taskExecuted', (d) =>
-            this.log(`Event: taskExecuted -> ${d.action} completed.`),
-          );
+
+          this.radio.on('contentAdded', (d) => {
+            this.log(`Event: contentAdded -> [${d.type}] ${d.data.title}`);
+            syncUI();
+          });
+          this.radio.on('taskScheduled', (d) => {
+            this.log(`Event: taskScheduled -> ${d.action} on ${d.type}`);
+            syncUI();
+          });
+          this.radio.on('contentRemoved', (d) => {
+            this.log(`Event: contentRemoved -> ID ${d.id}`);
+            syncUI();
+          });
+          this.radio.on('taskExecuted', (d) => {
+            this.log(`Event: taskExecuted -> ${d.action} completed.`);
+            syncUI();
+          });
+          this.radio.on('customPositionExpired', (d) => {
+            this.log(`Event: customPositionExpired -> ID ${d.contentId}`);
+            syncUI();
+          });
+
+          this.radio.on('stateImported', () => {
+            this.log(`Event: stateImported -> Success`);
+            syncUI();
+          });
+
+          this.radio.on('timelineQueried', (d) => console.log(`Queried ${d.resultCount} items.`));
         }
 
         setupEventListeners() {
@@ -648,7 +707,6 @@
             const id = document.getElementById('manage-id').value;
             if (id) {
               this.radio.remove(id);
-              this.updateLists();
             }
           });
 
@@ -676,6 +734,22 @@
             .getElementById('btn-start-engine')
             .addEventListener('click', () => this.startEngine());
           document.getElementById('btn-resync').addEventListener('click', () => this.resyncAudio());
+
+          // Mute / Pause logic
+          const btnMute = document.getElementById('btn-mute');
+          btnMute.addEventListener('click', () => {
+            this.audio.muted = !this.audio.muted;
+            if (this.audio.muted) {
+              btnMute.innerText = '▶️';
+              btnMute.classList.add('btn-danger');
+              btnMute.classList.remove('btn-outline');
+            } else {
+              btnMute.innerText = '⏸️';
+              btnMute.classList.remove('btn-danger');
+              btnMute.classList.add('btn-outline');
+            }
+          });
+
           document.getElementById('volume-slider').addEventListener('input', (e) => {
             this.audio.volume = e.target.value;
           });
@@ -688,11 +762,17 @@
             .play()
             .then(() => {
               this.audio.pause();
-              document.getElementById('btn-start-engine').innerText = 'Engine Running';
-              document
-                .getElementById('btn-start-engine')
-                .classList.replace('btn-primary', 'btn-outline');
+              const btnStart = document.getElementById('btn-start-engine');
+              btnStart.innerText = 'Engine Running';
+              btnStart.classList.replace('btn-primary', 'btn-outline');
+              btnStart.disabled = true;
+
+              // Hides the manual resync and automatically triggers the first sync
+              const btnResync = document.getElementById('btn-resync');
+              btnResync.style.display = 'none';
+
               this.log('Audio Engine Unlocked.');
+              this.resyncAudio();
             })
             .catch((e) => this.log('Error starting engine: ' + e.message));
         }
@@ -715,7 +795,6 @@
             if (type === 'custom') content.timestamp = customTs > 0 ? customTs : Date.now();
 
             this.radio.add(type, content);
-            this.updateLists();
           } catch (err) {
             this.log(`Error: ${err.message}`);
           }
@@ -775,7 +854,6 @@
             }
 
             this.radio.scheduleTask(timestamp, action, type, payload);
-            this.updateLists();
           } catch (e) {
             this.log(`Schedule Error: ${e.message}`);
           }
@@ -786,12 +864,12 @@
             const offset = parseInt(document.getElementById('query-offset').value);
             const results = this.radio.queryTimeline(Date.now() + offset, 30);
             const container = document.getElementById('query-results');
-            container.innerHTML = results.length ? '' : 'No upcoming.';
+            container.innerHTML = results.length ? '' : 'No upcoming events generated.';
             results.forEach((ev) => {
               container.innerHTML += `<div class="log-entry"><span>${ev.title}</span> <span style="color:var(--text-secondary)">@ ${new Date(ev.absoluteStart).toLocaleTimeString()}</span></div>`;
             });
           } catch (e) {
-            this.log(`Query Error: ${e.message}`);
+            console.warn(`Query Warning: ${e.message}`); // Using warn to not float UI logs
           }
         }
 
@@ -810,6 +888,7 @@
             if (this.currentPlayingId !== null) {
               this.audio.pause();
               this.currentPlayingId = null;
+              this.resetThumbnail();
             }
             return;
           }
@@ -817,15 +896,52 @@
           if (this.currentPlayingId !== event.id) {
             this.currentPlayingId = event.id;
             this.audio.src = event.url;
+            this.loadThumbnail(event.id);
+
             if (this.isEngineStarted) {
               this.audio.play().catch((e) => this.log('Autoplay blocked. Click Start Engine.'));
             }
           }
         }
 
+        loadThumbnail(id) {
+          const imgEl = document.getElementById('st-thumb');
+
+          // Clears memory if there was a previous thumbnail generated by Blob
+          if (imgEl.dataset.blobUrl) {
+            URL.revokeObjectURL(imgEl.dataset.blobUrl);
+            delete imgEl.dataset.blobUrl;
+          }
+
+          // Search lists for the original content that has the picture array
+          let content = this.radio.allList.find((c) => c.id === id);
+          if (!content) {
+            const cp = this.radio.customPositions.find((c) => c.content.id === id);
+            if (cp) content = cp.content;
+          }
+
+          // If we find a picture extracted by the music-metadata
+          if (content && content.picture && content.picture.length > 0) {
+            const pic = content.picture[0];
+            const blob = new Blob([new Uint8Array(pic.data)], { type: pic.format });
+            const url = URL.createObjectURL(blob);
+            imgEl.src = url;
+            imgEl.dataset.blobUrl = url;
+            imgEl.addEventListener('error', () => this.resetThumbnail());
+          } else {
+            this.resetThumbnail();
+          }
+        }
+
+        resetThumbnail() {
+          const imgEl = document.getElementById('st-thumb');
+          imgEl.src =
+            "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 18V5l12-2v13'></path><circle cx='6' cy='18' r='3'></circle><circle cx='18' cy='16' r='3'></circle></svg>";
+        }
+
         async handleExport() {
           this.log('Generating Export...');
-          const jsonString = this.radio.exportState(); // Simplificado para fins de teste rapido
+          const jsonString = this.radio.exportState();
           const blob = new Blob([jsonString], { type: 'application/json' });
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
@@ -846,7 +962,6 @@
             try {
               const json = JSON.parse(e.target.result);
               this.radio.importState(json);
-              this.updateLists();
               this.log('Import success.');
             } catch (err) {
               this.log(`Import error: ${err.message}`);
@@ -886,6 +1001,12 @@
           setInterval(() => {
             // Clock
             document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+
+            // QueryEngine Autoupdate every 1 second (10 ticks)
+            this.tickCounter++;
+            if (this.tickCounter % 10 === 0) {
+              this.handleQuery();
+            }
 
             // Live Status
             const event = this.radio.getCurrentEvent();
