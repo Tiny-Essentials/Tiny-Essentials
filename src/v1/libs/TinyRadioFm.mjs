@@ -233,6 +233,8 @@ class RadioLoadingError extends Error {
  */
 class TinyRadioFm extends TinyEvents {
   static RadioLoadingError = RadioLoadingError;
+  /** @type {Map<string, number>} */
+  static _blobCounter = new Map();
 
   /**
    * Helper to convert Uint8Array or Base64 string directly into a high performance Blob URL.
@@ -242,10 +244,17 @@ class TinyRadioFm extends TinyEvents {
    * @private
    */
   static _convertToBlobUrl(data, format = 'image/jpeg') {
+    const createBlobCounter = (/** @type {Blob} */ blob) => {
+      const url = URL.createObjectURL(blob);
+      const blobUrlUsage = TinyRadioFm._blobCounter.get(url);
+      TinyRadioFm._blobCounter.set(url, typeof blobUrlUsage === 'number' ? blobUrlUsage + 1 : 1);
+      return url;
+    };
+
     if (data instanceof Uint8Array) {
       // @ts-ignore
       const blob = new Blob([data], { type: format });
-      return URL.createObjectURL(blob);
+      return createBlobCounter(blob);
     } else if (typeof data === 'string' && data.startsWith('data:')) {
       const base64Part = data.split(',')[1];
       const byteString = atob(base64Part);
@@ -254,7 +263,7 @@ class TinyRadioFm extends TinyEvents {
         ab[i] = byteString.charCodeAt(i);
       }
       const blob = new Blob([ab], { type: format });
-      return URL.createObjectURL(blob);
+      return createBlobCounter(blob);
     }
     return typeof data === 'string' ? data : '';
   }
@@ -291,7 +300,10 @@ class TinyRadioFm extends TinyEvents {
     if (content && Array.isArray(content.picture)) {
       content.picture.forEach((pic) => {
         if (typeof pic.data === 'string' && pic.data.startsWith('blob:')) {
-          URL.revokeObjectURL(pic.data);
+          const blobUrlUsage = TinyRadioFm._blobCounter.get(pic.data) ?? 0;
+          if (blobUrlUsage > 1) TinyRadioFm._blobCounter.set(pic.data, blobUrlUsage - 1);
+          else TinyRadioFm._blobCounter.delete(pic.data);
+          if (blobUrlUsage <= 1) URL.revokeObjectURL(pic.data);
         }
       });
     }
