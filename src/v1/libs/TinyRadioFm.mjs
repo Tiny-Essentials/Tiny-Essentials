@@ -1158,6 +1158,7 @@ class TinyRadioFm extends TinyEvents {
       currentTimeWalker = nextEvent.absoluteEnd;
     }
 
+    virtualSandbox.destroy(false);
     this.emit('timelineQueried', { targetDate, limit, resultCount: events.length });
     return events;
   }
@@ -1829,6 +1830,38 @@ class TinyRadioFm extends TinyEvents {
       }
       return task;
     });
+  }
+
+  /**
+   * Destroys the radio instance, releasing all allocated memory (including Blob URLs)
+   * and permanently cleaning all caches, lists and tasks.
+   * @param {boolean} [destroyThumbs=true]
+   */
+  destroy(destroyThumbs = true) {
+    if (destroyThumbs) {
+      this.#musicList.forEach((item) => TinyRadioFm._revokeContentUrls(item));
+      this.#voiceList.forEach((item) => TinyRadioFm._revokeContentUrls(item));
+      this.#customPositions.forEach((cp) => TinyRadioFm._revokeContentUrls(cp.content));
+      this.#scheduledTasks.forEach((task) => {
+        if (
+          task.action === 'add' &&
+          task.payload &&
+          typeof task.payload === 'object' &&
+          'title' in task.payload
+        ) {
+          TinyRadioFm._revokeContentUrls(/** @type {RadioContent} */ (task.payload));
+        }
+      });
+    }
+
+    this.#musicList = [];
+    this.#voiceList = [];
+    this.#customPositions = [];
+    this.#scheduledTasks = [];
+
+    this.#cycleCache.clear();
+    this.emit('destroyed', { timestamp: Date.now() });
+    this.removeAllListeners();
   }
 }
 
