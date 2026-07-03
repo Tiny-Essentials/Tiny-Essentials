@@ -123,7 +123,7 @@ import TinyEvents from './TinyEvents.mjs';
  * Represents an image attachment, such as album art.
  * @typedef {Object} IPicture
  * @property {string} format - The MIME type of the image (e.g., 'image/jpeg').
- * @property {Uint8Array|Buffer|string} data - The raw binary data of the image.
+ * @property {Uint8Array|string} data - The raw binary data of the image.
  * @property {string} [description] - An optional textual description of the image.
  * @property {string} [type] - The specific type of picture (e.g., 'cover', 'front', 'back').
  * @property {string} [name] - The filename associated with the image.
@@ -221,7 +221,6 @@ class RadioLoadingError extends Error {
 class TinyRadioFm extends TinyEvents {
   static RadioLoadingError = RadioLoadingError;
   /** @type {BufferConstructor|null} */
-  static Buffer = typeof Buffer !== 'undefined' ? Buffer : null;
 
   /**
    * Downloads an audio file from a URL and extracts its ID3/metadata tags.
@@ -267,8 +266,14 @@ class TinyRadioFm extends TinyEvents {
           typeof v === 'string' || v === null || v === undefined;
         const isNumber = (/** @type {number | null | undefined} */ v) =>
           typeof v === 'number' || v === null || v === undefined;
-        const isArray = (/** @type {string[] | IPicture[] | undefined} */ v) =>
-          Array.isArray(v) || typeof v === 'undefined';
+        const isArray = (
+          /** @type {string[] | IPicture[] | undefined} */ v,
+          /** @type {(value: any, index: number, array: any[]) => any} */ valueValidator,
+        ) => {
+          if (typeof v === 'undefined') return true;
+          if (Array.isArray(v) && v.every(valueValidator)) return true;
+          return false;
+        };
 
         // Validate Primitives
         if (!isString(common.title))
@@ -283,36 +288,25 @@ class TinyRadioFm extends TinyEvents {
           throw new TypeError('Invalid metadata: "year" must be a number or null.');
 
         // Validate Arrays
-        if (
-          !isArray(common.albumartists) ||
-          !common.albumartists?.every((value) => typeof value === 'string')
-        )
+        if (!isArray(common.albumartists, (value) => typeof value === 'string'))
           throw new TypeError('Invalid metadata: "albumartists" must be an array of string.');
-        if (!isArray(common.genre) || !common.genre?.every((value) => typeof value === 'string'))
+        if (!isArray(common.genre, (value) => typeof value === 'string'))
           throw new TypeError('Invalid metadata: "genre" must be an array of string.');
-        if (!isArray(common.label) || !common.label?.every((value) => typeof value === 'string'))
+        if (!isArray(common.label, (value) => typeof value === 'string'))
           throw new TypeError('Invalid metadata: "label" must be an array of string.');
-        if (
-          !isArray(common.composer) ||
-          !common.composer?.every((value) => typeof value === 'string')
-        )
+        if (!isArray(common.composer, (value) => typeof value === 'string'))
           throw new TypeError('Invalid metadata: "composer" must be an array of string.');
-        if (
-          !isArray(common.artists) ||
-          !common.artists?.every((value) => typeof value === 'string')
-        )
+        if (!isArray(common.artists, (value) => typeof value === 'string'))
           throw new TypeError('Invalid metadata: "artists" must be an array of string.');
         if (
-          !isArray(common.picture) ||
-          !common.picture?.every(
+          !isArray(
+            common.picture,
             (value) =>
               (typeof value.description === 'undefined' || typeof value.description === 'string') &&
               (typeof value.name === 'undefined' || typeof value.name === 'string') &&
               (typeof value.type === 'undefined' || typeof value.type === 'string') &&
               typeof value.format === 'string' &&
-              (value.data instanceof Uint8Array ||
-                typeof value.data === 'string' ||
-                (TinyRadioFm.Buffer && TinyRadioFm.Buffer.isBuffer(value.data))),
+              (value.data instanceof Uint8Array || typeof value.data === 'string'),
           )
         )
           throw new TypeError('Invalid metadata: "picture" must be an array of pictures.');

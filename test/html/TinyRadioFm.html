@@ -931,9 +931,8 @@
           // If we find a picture extracted by the music-metadata
           if (content && content.picture && content.picture.length > 0) {
             const pic = content.picture[0];
-            const blob = new Blob([new Uint8Array(pic.data)], { type: pic.format });
+            const blob = new Blob([pic.data], { type: pic.format });
             const url = URL.createObjectURL(blob);
-            console.log(content, url);
             this.imgEl.src = url;
           } else {
             this.resetThumbnail();

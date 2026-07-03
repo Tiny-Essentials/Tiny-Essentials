@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 // Add modules
 const modules = [];
-const addModule = (version, entry, library, isClass = false) => {
+const addModule = (version, entry, library, isClass = false, extraOps = {}) => {
   const baseConfig = {
     entry,
     output: {
@@ -54,6 +54,7 @@ const addModule = (version, entry, library, isClass = false) => {
         ...baseConfig.optimization,
         minimize: true,
       },
+      ...extraOps,
     },
   );
 };
