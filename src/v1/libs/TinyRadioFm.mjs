@@ -120,13 +120,19 @@ import TinyEvents from './TinyEvents.mjs';
 //////////////////////////////////////////////////////////////////
 
 /**
- * Represents an image attachment, such as album art.
- * @typedef {Object} IPicture
+ * Represents an image attachment template.
+ * @template {Uint8Array|string} PictureData
+ * @typedef {Object} IPictureTemplate
  * @property {string} format - The MIME type of the image (e.g., 'image/jpeg').
- * @property {Uint8Array|string} data - The raw binary data of the image.
+ * @property {PictureData} data - The raw binary data of the image.
  * @property {string} [description] - An optional textual description of the image.
  * @property {string} [type] - The specific type of picture (e.g., 'cover', 'front', 'back').
  * @property {string} [name] - The filename associated with the image.
+ */
+
+/**
+ * Represents an image attachment, such as album art.
+ * @typedef {IPictureTemplate<string>} IPicture
  */
 
 /**
@@ -135,10 +141,10 @@ import TinyEvents from './TinyEvents.mjs';
  */
 
 /**
- * This metadata structure is modeled after the standard output of the
- * `music-metadata` npm package.
+ * This metadata structure is modeled template.
  *
- * @typedef {Object} ContentMetadata
+ * @template {IPictureTemplate<Uint8Array|string>} IPictureContent
+ * @typedef {Object} ContentMetadataTemplate
  * @property {string|null} title - The title of the track.
  * @property {string|null} album - The name of the album.
  * @property {string|null} albumartist - The primary artist of the album.
@@ -151,7 +157,14 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {string[]} artists - An array of artists associated with the track.
  * @property {MusicNumber} disk - Disk information containing the current disk number and total disks.
  * @property {MusicNumber} track - Track information containing the current track number and total tracks.
- * @property {IPicture[]} [picture] - An array of picture objects containing album art.
+ * @property {IPictureContent[]} [picture] - An array of picture objects containing album art.
+ */
+
+/**
+ * This metadata structure is modeled after the standard output of the
+ * `music-metadata` npm package.
+ *
+ * @typedef {ContentMetadataTemplate<IPicture>} ContentMetadata
  */
 
 /**
@@ -165,7 +178,7 @@ import TinyEvents from './TinyEvents.mjs';
  * A promise that resolves to an object containing the extracted metadata.
  * @callback ParseContentMetadata
  * @param {Blob} data - The raw file blob.
- * @returns {Promise<{ common: Partial<ContentMetadata> }>} A promise resolving to the common metadata properties.
+ * @returns {Promise<{ common: Partial<ContentMetadataTemplate<IPictureTemplate<Uint8Array|string>>> }>} A promise resolving to the common metadata properties.
  */
 
 //////////////////////////////////////////////////////////////////
@@ -267,7 +280,7 @@ class TinyRadioFm extends TinyEvents {
         const isNumber = (/** @type {number | null | undefined} */ v) =>
           typeof v === 'number' || v === null || v === undefined;
         const isArray = (
-          /** @type {string[] | IPicture[] | undefined} */ v,
+          /** @type {string[] | IPictureTemplate<string|Uint8Array>[] | undefined} */ v,
           /** @type {(value: any, index: number, array: any[]) => any} */ valueValidator,
         ) => {
           if (typeof v === 'undefined') return true;
@@ -350,7 +363,12 @@ class TinyRadioFm extends TinyEvents {
         track: common?.track
           ? { no: common.track.no, of: common.track.of }
           : { no: null, of: null },
-        picture: common?.picture ?? [],
+        picture:
+          common?.picture?.map((value) => ({
+            ...value,
+            // @ts-ignore
+            data: value.data instanceof Uint8Array ? value.data.toBase64() : value.data,
+          })) ?? [],
       };
     } catch (error) {
       // Re-throwing the error allows the caller to handle specific failure cases
