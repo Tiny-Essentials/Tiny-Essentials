@@ -792,9 +792,17 @@
           const customTs = parseInt(document.getElementById('custom-ts').value);
 
           try {
-            this.log(`Processing ${file.name}...`);
-            const url = URL.createObjectURL(file);
-            const content = await TinyRadioFm.prepareContent(url, {}, parseBlob, {
+            this.log(`Processing ${file.name} to Base64...`);
+
+            // Convert the audio file directly to a Base64 string (Date URL)
+            const base64Url = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result);
+              reader.onerror = () => reject(new Error('Failed to read file as Base64.'));
+              reader.readAsDataURL(file);
+            });
+
+            const content = await TinyRadioFm.prepareContent(base64Url, {}, parseBlob, {
               onProgress: (p) => console.log(`[${p.stage}] ${p.status}`),
               onError: (e) =>
                 console.error(`Failed at ${e.stage} for ${e.url}: ${e.error.message}`),
@@ -909,6 +917,11 @@
             if (this.isEngineStarted) {
               this.audio.play().catch((e) => this.log('Autoplay blocked. Click Start Engine.'));
             }
+          } else if (this.audio.ended && this.isEngineStarted) {
+            // Workaround: Since the radio has one song only, the ID doesn't change, but the audio is over.
+            // We need to get it to play again from scratch!
+            this.audio.currentTime = 0;
+            this.audio.play().catch((e) => this.log('Autoplay blocked. Click Start Engine.'));
           }
         }
 
@@ -931,15 +944,7 @@
           // If we find a picture extracted by the music-metadata
           if (content && content.picture && content.picture.length > 0) {
             const pic = content.picture[0];
-            const picCharacters = atob(pic.data);
-            const picNumbers = new Array(picCharacters.length);
-            for (let i = 0; i < picCharacters.length; i++) {
-              picNumbers[i] = picCharacters.charCodeAt(i);
-            }
-
-            const blob = new Blob([new Uint8Array(picNumbers)], { type: pic.format });
-            const url = URL.createObjectURL(blob);
-            this.imgEl.src = url;
+            this.imgEl.src = pic.data;
           } else {
             this.resetThumbnail();
           }
@@ -953,7 +958,7 @@
 
         async handleExport() {
           this.log('Generating Export...');
-          const jsonString = this.radio.exportState();
+          const jsonString = await this.radio.exportState();
           const blob = new Blob([jsonString], { type: 'application/json' });
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
@@ -974,12 +979,29 @@
             try {
               const json = JSON.parse(e.target.result);
               this.radio.importState(json);
+
+              // Force rebooting of the instance by cleaning the current screening
+              this.currentPlayingId = null;
+              this.audio.pause();
+
               this.log('Import success.');
+
+              // If the audio engine is already on, restart and sync time
+              if (this.isEngineStarted) {
+                const newEvent = this.radio.getCurrentEvent();
+                if (newEvent) {
+                  this.syncAudioWithRadio(newEvent);
+                  this.resyncAudio();
+                }
+              }
             } catch (err) {
               this.log(`Import error: ${err.message}`);
             }
           };
           reader.readAsText(file);
+
+          // Zerate input in case you want to import the same file again later
+          event.target.value = '';
         }
 
         updateLists() {

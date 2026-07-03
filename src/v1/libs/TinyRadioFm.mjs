@@ -233,7 +233,54 @@ class RadioLoadingError extends Error {
  */
 class TinyRadioFm extends TinyEvents {
   static RadioLoadingError = RadioLoadingError;
-  /** @type {BufferConstructor|null} */
+
+  /**
+   * Helper to convert Uint8Array or Base64 string directly into a high performance Blob URL.
+   * @param {Uint8Array|string} data
+   * @param {string} format
+   * @returns {string} The generated Blob URL or original string if already valid.
+   * @private
+   */
+  static _convertToBlobUrl(data, format = 'image/jpeg') {
+    if (data instanceof Uint8Array) {
+      // @ts-ignore
+      const blob = new Blob([data], { type: format });
+      return URL.createObjectURL(blob);
+    } else if (typeof data === 'string' && data.startsWith('data:')) {
+      const base64Part = data.split(',')[1];
+      const byteString = atob(base64Part);
+      const ab = new Uint8Array(byteString.length);
+      for (let i = 0; i < byteString.length; i++) {
+        ab[i] = byteString.charCodeAt(i);
+      }
+      const blob = new Blob([ab], { type: format });
+      return URL.createObjectURL(blob);
+    }
+    return typeof data === 'string' ? data : '';
+  }
+
+  /**
+   * Asynchronous helper to convert a Blob URL back to Base64 (Date URL) at export time.
+   * @param {string} url
+   * @returns {Promise<string>}
+   * @private
+   */
+  static async _blobUrlToBase64(url) {
+    if (typeof url !== 'string' || !url.startsWith('blob:')) return url;
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(String(reader.result));
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      console.warn(`[TinyRadioFm] Failed to convert Blob URL to Base64 on export: ${url}`, e);
+      return url;
+    }
+  }
 
   /**
    * Downloads an audio file from a URL and extracts its ID3/metadata tags.
@@ -366,8 +413,7 @@ class TinyRadioFm extends TinyEvents {
         picture:
           common?.picture?.map((value) => ({
             ...value,
-            // @ts-ignore
-            data: value.data instanceof Uint8Array ? value.data.toBase64() : value.data,
+            data: TinyRadioFm._convertToBlobUrl(value.data, value.format),
           })) ?? [],
       };
     } catch (error) {
@@ -1067,7 +1113,7 @@ class TinyRadioFm extends TinyEvents {
      * Virtual instance to sandbox the timeline prediction.
      * @type {TinyRadioFm}
      */
-    const virtualSandbox = new TinyRadioFm(JSON.parse(this.exportState()));
+    const virtualSandbox = new TinyRadioFm(JSON.parse(this._exportState()));
 
     /** @type {RadioEvent[]} */
     const events = [];
@@ -1096,15 +1142,82 @@ class TinyRadioFm extends TinyEvents {
   }
 
   /**
+   * Process a content list, waiting to convert the images from Blob URL to Base64.
+   * @param {RadioContent[]} list
+   * @returns {Promise<RadioContent[]>}
+   * @private
+   */
+  async _processListForExport(list) {
+    return Promise.all(
+      list.map(async (item) => {
+        const newItem = structuredClone(item);
+        if (newItem.picture && Array.isArray(newItem.picture)) {
+          newItem.picture = await Promise.all(
+            newItem.picture.map(async (pic) => ({
+              ...pic,
+              data: await TinyRadioFm._blobUrlToBase64(pic.data),
+            })),
+          );
+        }
+        return newItem;
+      }),
+    );
+  }
+
+  /**
    * Exports the complete state of the radio, including caches and scheduled tasks.
    * @returns {string} Stringified JSON state.
+   * @private
    */
-  exportState() {
+  _exportState() {
     return JSON.stringify({
       music: this.#musicList,
       voice: this.#voiceList,
       custom: this.#customPositions,
       tasks: this.#scheduledTasks,
+      seed: this.#seed,
+      anchorDate: this.#anchorDate,
+      config: this.#config,
+    });
+  }
+
+  /**
+   * Exports the complete state of the radio, including caches and scheduled tasks.
+   * @returns {Promise<string>} Stringified JSON state.
+   */
+  async exportState() {
+    const processedMusic = await this._processListForExport(this.#musicList);
+    const processedVoice = await this._processListForExport(this.#voiceList);
+
+    const processedCustom = await Promise.all(
+      this.#customPositions.map(async (cp) => {
+        const processedContent = await this._processListForExport([cp.content]);
+        return { ...cp, content: processedContent[0] };
+      }),
+    );
+
+    const processedTasks = await Promise.all(
+      this.#scheduledTasks.map(async (task) => {
+        if (
+          task.action === 'add' &&
+          task.payload &&
+          typeof task.payload === 'object' &&
+          'title' in task.payload
+        ) {
+          const processedPayload = await this._processListForExport([
+            /** @type {RadioContent} */ (task.payload),
+          ]);
+          return { ...task, payload: processedPayload[0] };
+        }
+        return task;
+      }),
+    );
+
+    return JSON.stringify({
+      music: processedMusic,
+      voice: processedVoice,
+      custom: processedCustom,
+      tasks: processedTasks,
       seed: this.#seed,
       anchorDate: this.#anchorDate,
       config: this.#config,
@@ -1629,13 +1742,44 @@ class TinyRadioFm extends TinyEvents {
    * @param {TinyRadioFmImport} data
    */
   #hydrate(data) {
-    this.#musicList = data.music || [];
-    this.#voiceList = data.voice || [];
+    const processListForImport = (/** @type {RadioContent[]} */ list) => {
+      return list.map((item) => {
+        const newItem = { ...item };
+        if (newItem.picture && Array.isArray(newItem.picture)) {
+          newItem.picture = newItem.picture.map((pic) => ({
+            ...pic,
+            data: TinyRadioFm._convertToBlobUrl(pic.data, pic.format),
+          }));
+        }
+        return newItem;
+      });
+    };
+
+    this.#musicList = processListForImport(data.music);
+    this.#voiceList = processListForImport(data.voice);
     this.#seed = data.seed || 0;
     this.#anchorDate = data.anchorDate || Date.now();
     this.#config = { ...this.#config, ...(data.config || {}) };
-    this.#customPositions = data.custom || [];
-    this.#scheduledTasks = data.tasks || [];
+
+    this.#customPositions = data.custom.map((cp) => ({
+      ...cp,
+      content: processListForImport([cp.content])[0],
+    }));
+
+    this.#scheduledTasks = data.tasks.map((task) => {
+      if (
+        task.action === 'add' &&
+        task.payload &&
+        typeof task.payload === 'object' &&
+        'title' in task.payload
+      ) {
+        return {
+          ...task,
+          payload: processListForImport([/** @type {RadioContent} */ (task.payload)])[0],
+        };
+      }
+      return task;
+    });
   }
 }
 
