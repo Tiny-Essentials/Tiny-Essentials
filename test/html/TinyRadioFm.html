@@ -687,6 +687,8 @@
           this.startUpdateLoop();
           this.log('Environment Ready. Click "Start Engine" to enable audio.');
           this.imgEl.addEventListener('error', () => this.resetThumbnail());
+
+          this.syncConfigUI();
         }
 
         log(msg) {
@@ -702,6 +704,7 @@
           const syncUI = () => {
             this.updateLists();
             this.handleQuery(); // Ensure that the forecast of the future is updated immediately
+            this.syncConfigUI(); // Update configuration panels
           };
 
           this.radio.on('unknownArtistChanged', (d) => {
@@ -808,9 +811,57 @@
             }
           });
 
-          document.getElementById('volume-slider').addEventListener('input', (e) => {
-            this.audio.volume = e.target.value;
+          // Volume Configuration and Persistence
+          const volumeSlider = document.getElementById('volume-slider');
+
+          // Try loading the localStorage volume
+          const savedVolume = localStorage.getItem('tinyRadioFm_volume');
+          if (savedVolume !== null) {
+            volumeSlider.value = savedVolume;
+            this.audio.volume = savedVolume;
+          } else {
+            // If you have nothing, set the audio to the default HTML value (0.7)
+            this.audio.volume = volumeSlider.value;
+          }
+
+          // Update audio and save in localStorage
+          volumeSlider.addEventListener('input', (e) => {
+            const newVolume = e.target.value;
+            this.audio.volume = newVolume;
+            localStorage.setItem('tinyRadioFm_volume', newVolume);
           });
+        }
+
+        syncConfigUI() {
+          // Synchronize direct properties
+          if (this.radio.seed !== undefined) {
+            document.getElementById('cfg-seed').value = this.radio.seed;
+          }
+          if (this.radio.unknownArtist !== undefined) {
+            document.getElementById('cfg-unknown-artist').value = this.radio.unknownArtist;
+          }
+
+          // Synchronize options within the config object
+          const cfg = this.radio.config;
+          if (cfg) {
+            if (cfg.mode !== undefined) document.getElementById('cfg-mode').value = cfg.mode;
+            if (cfg.voiceMode !== undefined)
+              document.getElementById('cfg-voiceMode').value = cfg.voiceMode;
+            if (cfg.silenceDuration !== undefined)
+              document.getElementById('cfg-silence').value = cfg.silenceDuration;
+            if (cfg.queryLimit !== undefined)
+              document.getElementById('cfg-queryLimit').value = cfg.queryLimit;
+            if (cfg.voiceAfterMusic !== undefined)
+              document.getElementById('cfg-voiceAfterMusic').checked = cfg.voiceAfterMusic;
+            if (cfg.voiceMin !== undefined)
+              document.getElementById('cfg-voiceMin').value = cfg.voiceMin;
+            if (cfg.voiceMax !== undefined)
+              document.getElementById('cfg-voiceMax').value = cfg.voiceMax;
+            if (cfg.musicMaxConsecutive !== undefined)
+              document.getElementById('cfg-musicMaxConsecutive').value = cfg.musicMaxConsecutive;
+            if (cfg.voiceMaxConsecutive !== undefined)
+              document.getElementById('cfg-voiceMaxConsecutive').value = cfg.voiceMaxConsecutive;
+          }
         }
 
         async startEngine() {
