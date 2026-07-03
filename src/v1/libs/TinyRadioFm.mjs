@@ -77,8 +77,8 @@ import TinyEvents from './TinyEvents.mjs';
  * @property {boolean} voiceAfterMusic - Whether to play voice messages after music tracks.
  * @property {number} voiceMin - Minimum amount of voice messages to play if voiceAfterMusic is true.
  * @property {number} voiceMax - Maximum amount of voice messages to play.
- * @property {number} musicMaxConsecutive - Max times a music track can repeat consecutively (0 = unlimited).
- * @property {number} voiceMaxConsecutive - Max times a voice track can repeat consecutively (0 = unlimited).
+ * @property {number} musicMaxConsecutive - Max times a music track can repeat consecutively (-1 = unlimited, 0 = strictly no repetition).
+ * @property {number} voiceMaxConsecutive - Max times a voice track can repeat consecutively (-1 = unlimited, 0 = strictly no repetition).
  */
 
 //////////////////////////////////////////////////////////////////
@@ -279,6 +279,21 @@ class TinyRadioFm extends TinyEvents {
     } catch (e) {
       console.warn(`[TinyRadioFm] Failed to convert Blob URL to Base64 on export: ${url}`, e);
       return url;
+    }
+  }
+
+  /**
+   * Safely revokes Blob URLs to prevent memory leaks from createObjectURL.
+   * @param {RadioContent} content
+   * @private
+   */
+  static _revokeContentUrls(content) {
+    if (content && Array.isArray(content.picture)) {
+      content.picture.forEach((pic) => {
+        if (typeof pic.data === 'string' && pic.data.startsWith('blob:')) {
+          URL.revokeObjectURL(pic.data);
+        }
+      });
     }
   }
 
@@ -792,8 +807,8 @@ class TinyRadioFm extends TinyEvents {
     voiceAfterMusic: true,
     voiceMin: 0,
     voiceMax: 1,
-    musicMaxConsecutive: 1,
-    voiceMaxConsecutive: 1,
+    musicMaxConsecutive: 0,
+    voiceMaxConsecutive: 0,
   };
   /** @returns {RadioConfig} */
   get config() {
@@ -872,16 +887,16 @@ class TinyRadioFm extends TinyEvents {
 
     if (
       config.musicMaxConsecutive !== undefined &&
-      (typeof config.musicMaxConsecutive !== 'number' || config.musicMaxConsecutive < 0)
+      (typeof config.musicMaxConsecutive !== 'number' || config.musicMaxConsecutive < -1)
     ) {
-      throw new TypeError('musicMaxConsecutive must be a non-negative number.');
+      throw new TypeError('musicMaxConsecutive must be a number >= -1.');
     }
 
     if (
       config.voiceMaxConsecutive !== undefined &&
-      (typeof config.voiceMaxConsecutive !== 'number' || config.voiceMaxConsecutive < 0)
+      (typeof config.voiceMaxConsecutive !== 'number' || config.voiceMaxConsecutive < -1)
     ) {
-      throw new TypeError('voiceMaxConsecutive must be a non-negative number.');
+      throw new TypeError('voiceMaxConsecutive must be a number >= -1.');
     }
 
     // 2. Logical Cross-Field Validation
@@ -1034,6 +1049,17 @@ class TinyRadioFm extends TinyEvents {
   remove(id) {
     if (typeof id !== 'string') throw new TypeError('id must be a string.');
 
+    // Revoke Blob URLs of items being removed to free memory
+    this.#musicList
+      .filter((item) => item.id === id)
+      .forEach((item) => TinyRadioFm._revokeContentUrls(item));
+    this.#voiceList
+      .filter((item) => item.id === id)
+      .forEach((item) => TinyRadioFm._revokeContentUrls(item));
+    this.#customPositions
+      .filter((cp) => cp.content?.id === id)
+      .forEach((cp) => TinyRadioFm._revokeContentUrls(cp.content));
+
     /**
      * Filter function to match items against the provided ID.
      * @type {function(any): boolean}
@@ -1051,7 +1077,11 @@ class TinyRadioFm extends TinyEvents {
         t.payload !== null &&
         'id' in t.payload
       ) {
-        return t.payload.id !== id;
+        if (t.payload.id === id) {
+          TinyRadioFm._revokeContentUrls(/** @type {RadioContent} */ (t.payload));
+          return false;
+        }
+        return true;
       }
       return t.payload !== id;
     });
@@ -1270,7 +1300,7 @@ class TinyRadioFm extends TinyEvents {
    * @param {RadioContent[]} list - The source list to sequence.
    * @param {number} currentSeed - Cycle-specific seed.
    * @param {RadioModes} mode - Processing mode.
-   * @param {number} [maxConsecutive=0] - Max consecutive repetitions permitted (0 = unlimited).
+   * @param {number} [maxConsecutive=0] - Max consecutive repetitions permitted (-1 = unlimited, 0 = strictly no repeat).
    * @returns {RadioContent[]} The generated sequence.
    */
   #buildSequence(list, currentSeed, mode, maxConsecutive = 0) {
@@ -1298,7 +1328,7 @@ class TinyRadioFm extends TinyEvents {
       let validPool = pool;
 
       // If there is a restriction rule and the consecutive limit has been reached
-      if (maxConsecutive > 0 && lastId !== null && consecutiveCount >= maxConsecutive) {
+      if (maxConsecutive !== -1 && lastId !== null && consecutiveCount > maxConsecutive) {
         // Try filtering the last played to force the rotation
         validPool = pool.filter((item) => item.id !== lastId);
 
@@ -1698,6 +1728,7 @@ class TinyRadioFm extends TinyEvents {
     let listsMutated = false;
 
     expiredCps.forEach((cp) => {
+      TinyRadioFm._revokeContentUrls(cp.content); // Free memory!
       this.#seed += cp.content.id.length;
       listsMutated = true;
       this.emit('customPositionExpired', { contentId: cp.content.id });
@@ -1715,7 +1746,10 @@ class TinyRadioFm extends TinyEvents {
           } else if (task.action === 'remove') {
             const payloadId = /** @type {string} */ (task.payload);
             const idx = list.findIndex((i) => i.id === payloadId);
-            if (idx !== -1) list.splice(idx, 1);
+            if (idx !== -1) {
+              const [removedItem] = list.splice(idx, 1);
+              TinyRadioFm._revokeContentUrls(removedItem); // Free memory!
+            }
           } else if (task.action === 'move') {
             const payloadData = /** @type {ScheduledMovePayload} */ (task.payload);
             const idx = list.findIndex((i) => i.id === payloadData.id);
@@ -1742,6 +1776,21 @@ class TinyRadioFm extends TinyEvents {
    * @param {TinyRadioFmImport} data
    */
   #hydrate(data) {
+    // Revoke current blob URLs before overwriting state to prevent memory leaks
+    this.#musicList.forEach((item) => TinyRadioFm._revokeContentUrls(item));
+    this.#voiceList.forEach((item) => TinyRadioFm._revokeContentUrls(item));
+    this.#customPositions.forEach((cp) => TinyRadioFm._revokeContentUrls(cp.content));
+    this.#scheduledTasks.forEach((task) => {
+      if (
+        task.action === 'add' &&
+        task.payload &&
+        typeof task.payload === 'object' &&
+        'title' in task.payload
+      ) {
+        TinyRadioFm._revokeContentUrls(/** @type {RadioContent} */ (task.payload));
+      }
+    });
+
     const processListForImport = (/** @type {RadioContent[]} */ list) => {
       return list.map((item) => {
         const newItem = { ...item };
