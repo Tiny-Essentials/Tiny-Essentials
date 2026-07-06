@@ -529,7 +529,7 @@
             <button class="btn btn-warning" id="btn-resync" title="Resync Audio" disabled>
               🔄
             </button>
-            <button class="btn btn-outline" id="btn-mute" title="Mute/Unmute Audio" disabled>
+            <button class="btn btn-outline" id="btn-mute" title="Mute Audio" disabled>
               ⏸️
             </button>
 
@@ -801,13 +801,16 @@
           btnMute.addEventListener('click', () => {
             this.audio.muted = !this.audio.muted;
             if (this.audio.muted) {
+              btnMute.title = 'Unmute Audio'
               btnMute.innerText = '▶️';
               btnMute.classList.add('btn-danger');
               btnMute.classList.remove('btn-outline');
             } else {
+              btnMute.title = 'Mute Audio';
               btnMute.innerText = '⏸️';
               btnMute.classList.remove('btn-danger');
               btnMute.classList.add('btn-outline');
+              this.resyncAudio();
             }
           });
 
