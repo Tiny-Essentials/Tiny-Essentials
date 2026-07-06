@@ -879,7 +879,7 @@
               // Hides the manual resync and automatically triggers the first sync
               const btnResync = document.getElementById('btn-resync');
               const btnMute = document.getElementById('btn-mute');
-              btnResync.style.display = 'none';
+              btnResync.disabled = false;
               btnMute.disabled = false;
 
               this.log('Audio Engine Unlocked.');
