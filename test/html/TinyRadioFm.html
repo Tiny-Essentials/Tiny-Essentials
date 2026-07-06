@@ -906,7 +906,7 @@
               reader.readAsDataURL(file);
             });
 
-            const content = await TinyRadioFm.prepareContent(base64Url, {}, parseBlob, {
+            const content = await TinyRadioFm.parseContent(base64Url, {}, parseBlob, {
               onProgress: (p) => console.log(`[${p.stage}] ${p.status}`),
               onError: (e) =>
                 console.error(`Failed at ${e.stage} for ${e.url}: ${e.error.message}`),

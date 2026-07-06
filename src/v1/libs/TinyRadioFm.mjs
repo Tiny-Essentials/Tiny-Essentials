@@ -1,7 +1,7 @@
 import {
   blobUrlToBase64,
   convertToBlobUrl,
-  prepareMediaContent,
+  parseMediaMetadata,
   revokeContentUrls,
 } from '../basics/mediaContent.mjs';
 import TinyEvents from './TinyEvents.mjs';
@@ -146,8 +146,8 @@ class TinyRadioFm extends TinyEvents {
    * @returns {Promise<MediaContent>} A promise that resolves to a valid MediaContent object.
    * @throws {MediaLoadingError} If the preparation process fails at any stage.
    */
-  static async prepareContent(source, metadata, parseFile, callbacks) {
-    return prepareMediaContent(source, metadata, parseFile, callbacks, TinyRadioFm.#unknownArtist);
+  static async parseContent(source, metadata, parseFile, callbacks) {
+    return parseMediaMetadata(source, metadata, parseFile, callbacks, TinyRadioFm.#unknownArtist);
   }
 
   /** @type {MediaContentMetadata} */

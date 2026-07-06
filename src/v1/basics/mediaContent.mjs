@@ -368,7 +368,7 @@ export const extractMediaId3Tags = async (url, parseFile) => {
  * @example
  * // Usage with URL
  * import { parseBlob } from 'music-metadata';
- * const track = await prepareMediaContent('/assets/song.mp3', { title: 'My Song', artist: 'Artist' }, parseBlob);
+ * const track = await parseMediaMetadata('/assets/song.mp3', { title: 'My Song', artist: 'Artist' }, parseBlob);
  * radio.add('music', track);
  *
  * @example
@@ -376,12 +376,12 @@ export const extractMediaId3Tags = async (url, parseFile) => {
  * import { parseBlob } from 'music-metadata';
  * const audio = new Audio();
  * audio.src = '/assets/song.mp3';
- * const track = await prepareMediaContent(audio, {}, parseBlob);
+ * const track = await parseMediaMetadata(audio, {}, parseBlob);
  * radio.add('music', track);
  *
  * @example
  * // Usage with tracking
- * const track = await prepareMediaContent(
+ * const track = await parseMediaMetadata(
  *   '/assets/song.mp3',
  *   {},
  *   parseBlob,
@@ -391,7 +391,7 @@ export const extractMediaId3Tags = async (url, parseFile) => {
  *   }
  * );
  */
-export const prepareMediaContent = async (
+export const parseMediaMetadata = async (
   source,
   metadata = {},
   parseFile = (url) => {
