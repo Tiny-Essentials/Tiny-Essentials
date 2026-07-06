@@ -1,22 +1,29 @@
+import {
+  blobUrlToBase64,
+  convertToBlobUrl,
+  prepareMediaContent,
+  revokeContentUrls,
+} from './MediaPlayer/utils.mjs';
 import TinyEvents from './TinyEvents.mjs';
+
+/**
+ * @typedef {import('./MediaPlayer/utils.mjs').MediaContentBase} MediaContentBase
+ * @typedef {import('./MediaPlayer/utils.mjs').MediaContentMetadata} MediaContentMetadata
+ * @typedef {import('./MediaPlayer/utils.mjs').MediaContent} MediaContent
+ * @typedef {import('./MediaPlayer/utils.mjs').IPicture} IPicture
+ * @typedef {import('./MediaPlayer/utils.mjs').MediaNumber} MediaNumber
+ * @typedef {import('./MediaPlayer/utils.mjs').MediaLoadingError} MediaLoadingError
+ * @typedef {import('./MediaPlayer/utils.mjs').LoadingMediaProgress} LoadingMediaProgress
+ * @typedef {import('./MediaPlayer/utils.mjs').ParseMediaContentMetadata} ParseMediaContentMetadata
+ * @typedef {import('./MediaPlayer/utils.mjs').UnknownArtistGetter} UnknownArtistGetter
+ */
 
 //////////////////////////////////////////////////////////////////
 
 /**
- * The core properties required for any content item within the radio system.
- * @typedef {Object} RadioContentBase
- * @property {string} id - Unique identifier.
- * @property {string} title - Name of the track/message.
- * @property {string} artist - Artist or speaker name.
- * @property {number} duration - Duration in milliseconds.
- * @property {string} url - Source URL/Path.
- * @property {number} [weight=1] - Probability multiplier for random selection mode.
- */
-
-/**
  * Represents a content item injected at a specific point in the absolute timeline.
  * @typedef {Object} CustomPosition
- * @property {RadioContent} content - The audio/music content.
+ * @property {MediaContent} content - The audio/music content.
  * @property {number} intendedTimestamp - The absolute Date.now() target.
  * @property {number} originalTimestamp - The timestamp preserved for intelligent repositioning.
  */
@@ -32,7 +39,7 @@ import TinyEvents from './TinyEvents.mjs';
 
 /**
  * A union type representing the various data formats a scheduled task payload can take.
- * @typedef {RadioContent | string | ScheduledMovePayload} ScheduledTaskPayload
+ * @typedef {MediaContent | string | ScheduledMovePayload} ScheduledTaskPayload
  */
 
 /**
@@ -84,8 +91,8 @@ import TinyEvents from './TinyEvents.mjs';
 //////////////////////////////////////////////////////////////////
 
 /**
- * An extension of RadioContent that includes temporal boundaries within a generated cycle.
- * @typedef {RadioContent & { cycleStart: number; cycleEnd: number; }} CycleBlockData
+ * An extension of MediaContent that includes temporal boundaries within a generated cycle.
+ * @typedef {MediaContent & { cycleStart: number; cycleEnd: number; }} CycleBlockData
  */
 
 /**
@@ -108,8 +115,8 @@ import TinyEvents from './TinyEvents.mjs';
 /**
  * The complete state object used for exporting and importing the radio system.
  * @typedef {Object} TinyRadioFmImport
- * @property {RadioContent[]} music - The music playlist.
- * @property {RadioContent[]} voice - The voice playlist.
+ * @property {MediaContent[]} music - The music playlist.
+ * @property {MediaContent[]} voice - The voice playlist.
  * @property {CustomPosition[]} custom - The custom position injections.
  * @property {ScheduledTask[]} tasks - The pending scheduled tasks.
  * @property {number} seed - The randomness seed.
@@ -120,578 +127,29 @@ import TinyEvents from './TinyEvents.mjs';
 //////////////////////////////////////////////////////////////////
 
 /**
- * Represents an image attachment template.
- * @template {Uint8Array|string} PictureData
- * @typedef {Object} IPictureTemplate
- * @property {string} format - The MIME type of the image (e.g., 'image/jpeg').
- * @property {PictureData} data - The raw binary data of the image.
- * @property {string} [description] - An optional textual description of the image.
- * @property {string} [type] - The specific type of picture (e.g., 'cover', 'front', 'back').
- * @property {string} [name] - The filename associated with the image.
- */
-
-/**
- * Represents an image attachment, such as album art.
- * @typedef {IPictureTemplate<string>} IPicture
- */
-
-/**
- * A numeric structure representing track or disk indexing.
- * @typedef {{no: number|null, of: number|null}} MusicNumber
- */
-
-/**
- * This metadata structure is modeled template.
- *
- * @template {IPictureTemplate<Uint8Array|string>} IPictureContent
- * @typedef {Object} ContentMetadataTemplate
- * @property {string|null} title - The title of the track.
- * @property {string|null} album - The name of the album.
- * @property {string|null} albumartist - The primary artist of the album.
- * @property {string[]} albumartists - An array of artists associated with the album.
- * @property {string[]} genre - An array of genres associated with the track.
- * @property {string[]} label - The record label.
- * @property {string[]} composer - The composer of the track.
- * @property {number|null} year - The release year.
- * @property {string|null} artist - The primary artist of the track.
- * @property {string[]} artists - An array of artists associated with the track.
- * @property {MusicNumber} disk - Disk information containing the current disk number and total disks.
- * @property {MusicNumber} track - Track information containing the current track number and total tracks.
- * @property {IPictureContent[]} [picture] - An array of picture objects containing album art.
- */
-
-/**
- * This metadata structure is modeled after the standard output of the
- * `music-metadata` npm package.
- *
- * @typedef {ContentMetadataTemplate<IPicture>} ContentMetadata
- */
-
-/**
- * The final content object used within the radio system, combining
- * core playback properties with rich metadata.
- *
- * @typedef {RadioContentBase & ContentMetadata} RadioContent
- */
-
-/**
- * A promise that resolves to an object containing the extracted metadata.
- * @callback ParseContentMetadata
- * @param {Blob} data - The raw file blob.
- * @returns {Promise<{ common: Partial<ContentMetadataTemplate<IPictureTemplate<Uint8Array|string>>> }>} A promise resolving to the common metadata properties.
- */
-
-//////////////////////////////////////////////////////////////////
-
-/**
- * @typedef {Object} LoadingProgress
- * @property {'loading'|'success'} status - The current status of the operation.
- * @property {LoadingProgressStage} stage - The current execution stage.
- * @property {ProgressEvent<EventTarget>} [event] - The current loading event.
- * @property {string} url - The URL being processed.
- */
-
-/**
- * @typedef {'INITIALIZING'|'DOWNLOADING'|'METADATA_LOADED'|'EXTRACTING_ID3'|'COMPLETE'} LoadingProgressStage
- */
-
-/**
- * @typedef {'INITIALIZING'|'DOWNLOADING'|'METADATA'|'ID3'|'UNKNOWN'} LoadingErrorStage
- */
-
-/**
- * @typedef {Object} LoadingError
- * @property {Error} error - The original error object.
- * @property {string} url - The URL that failed.
- * @property {LoadingErrorStage} stage - The stage where it failed.
- */
-
-/**
- * Custom error class to provide detailed context during the content preparation process.
- * @extends Error
- */
-class RadioLoadingError extends Error {
-  /**
-   * @param {string} message - Human-readable error message.
-   * @param {string} url - The URL that caused the error.
-   * @param {LoadingErrorStage} stage - The stage where the error occurred.
-   */
-  constructor(message, url, stage) {
-    super(message);
-    this.name = 'RadioLoadingError';
-    this.url = url;
-    this.stage = stage;
-  }
-}
-
-//////////////////////////////////////////////////////////////////
-
-/**
  * A deterministic, seed-based radio management system with scheduled adaptations and weighted random generation.
  * @extends TinyEvents
  * @beta
  */
 class TinyRadioFm extends TinyEvents {
-  static RadioLoadingError = RadioLoadingError;
-  /** @type {Map<string, number>} */
-  static _blobCounter = new Map();
-
   /**
-   * Helper to convert Uint8Array or Base64 string directly into a high performance Blob URL.
-   * @param {Uint8Array|string} data
-   * @param {string} format
-   * @returns {string} The generated Blob URL or original string if already valid.
-   * @private
-   */
-  static _convertToBlobUrl(data, format = 'image/jpeg') {
-    const createBlobCounter = (/** @type {Blob} */ blob) => {
-      const url = URL.createObjectURL(blob);
-      const blobUrlUsage = TinyRadioFm._blobCounter.get(url);
-      TinyRadioFm._blobCounter.set(url, typeof blobUrlUsage === 'number' ? blobUrlUsage + 1 : 1);
-      return url;
-    };
-
-    if (data instanceof Uint8Array) {
-      // @ts-ignore
-      const blob = new Blob([data], { type: format });
-      return createBlobCounter(blob);
-    } else if (typeof data === 'string' && data.startsWith('data:')) {
-      const base64Part = data.split(',')[1];
-      const byteString = atob(base64Part);
-      const ab = new Uint8Array(byteString.length);
-      for (let i = 0; i < byteString.length; i++) {
-        ab[i] = byteString.charCodeAt(i);
-      }
-      const blob = new Blob([ab], { type: format });
-      return createBlobCounter(blob);
-    }
-    return typeof data === 'string' ? data : '';
-  }
-
-  /**
-   * Asynchronous helper to convert a Blob URL back to Base64 (Date URL) at export time.
-   * @param {string} url
-   * @returns {Promise<string>}
-   * @private
-   */
-  static async _blobUrlToBase64(url) {
-    if (typeof url !== 'string' || !url.startsWith('blob:')) return url;
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      return await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(String(reader.result));
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } catch (e) {
-      console.warn(`[TinyRadioFm] Failed to convert Blob URL to Base64 on export: ${url}`, e);
-      return url;
-    }
-  }
-
-  /**
-   * Safely revokes Blob URLs to prevent memory leaks from createObjectURL.
-   * @param {RadioContent} content
-   * @private
-   */
-  static _revokeContentUrls(content) {
-    if (content && Array.isArray(content.picture)) {
-      content.picture.forEach((pic) => {
-        if (typeof pic.data === 'string' && pic.data.startsWith('blob:')) {
-          const blobUrlUsage = TinyRadioFm._blobCounter.get(pic.data) ?? 0;
-          if (blobUrlUsage > 1) TinyRadioFm._blobCounter.set(pic.data, blobUrlUsage - 1);
-          else TinyRadioFm._blobCounter.delete(pic.data);
-          if (blobUrlUsage <= 1) URL.revokeObjectURL(pic.data);
-        }
-      });
-    }
-  }
-
-  /**
-   * Downloads an audio file from a URL and extracts its ID3/metadata tags.
-   *
-   * @param {string} url - The full URL of the audio file to be downloaded.
-   * @param {ParseContentMetadata} parseFile - The function used to parse the file data.
-   * @returns {Promise<ContentMetadata>} A promise that resolves to an object containing the extracted metadata.
-   * @throws {TypeError} If the provided `url` is not a string or `parseFile` is not a function.
-   * @throws {Error} If the network request fails or the parsing process encounters an error.
-   */
-  static async extractId3Tags(url, parseFile) {
-    // Argument Validation
-    if (typeof url !== 'string')
-      throw new TypeError(`Expected url to be a string, but received ${typeof url}.`);
-    if (typeof parseFile !== 'function')
-      throw new TypeError(`Expected parseFile to be a function, but received ${typeof parseFile}.`);
-
-    try {
-      // 1. Download the file from the provided URL
-      const response = await fetch(url);
-
-      if (!response.ok)
-        throw new Error(`Failed to fetch audio file: ${response.status} ${response.statusText}`);
-
-      // 2. Convert the response into a Blob so the parser can read it
-      const blob = await response.blob();
-
-      // 3. Use the provided parser function on the Blob
-      const metadata = await parseFile(blob);
-
-      // 4. Complete Validation of the parsed metadata structure
-      if (!metadata || typeof metadata.common !== 'object')
-        throw new TypeError('Invalid metadata: "common" property is missing or not an object.');
-
-      const common = metadata.common;
-
-      /**
-       * Internal helper to validate types within the 'common' object.
-       * This ensures that if a property is present, it matches the expected type.
-       */
-      const validate = () => {
-        const isString = (/** @type {string | null | undefined} */ v) =>
-          typeof v === 'string' || v === null || v === undefined;
-        const isNumber = (/** @type {number | null | undefined} */ v) =>
-          typeof v === 'number' || v === null || v === undefined;
-        const isArray = (
-          /** @type {string[] | IPictureTemplate<string|Uint8Array>[] | undefined} */ v,
-          /** @type {(value: any, index: number, array: any[]) => any} */ valueValidator,
-        ) => {
-          if (typeof v === 'undefined') return true;
-          if (Array.isArray(v) && v.every(valueValidator)) return true;
-          return false;
-        };
-
-        // Validate Primitives
-        if (!isString(common.title))
-          throw new TypeError('Invalid metadata: "title" must be a string or null.');
-        if (!isString(common.album))
-          throw new TypeError('Invalid metadata: "album" must be a string or null.');
-        if (!isString(common.albumartist))
-          throw new TypeError('Invalid metadata: "albumartist" must be a string or null.');
-        if (!isString(common.artist))
-          throw new TypeError('Invalid metadata: "artist" must be a string or null.');
-        if (!isNumber(common.year))
-          throw new TypeError('Invalid metadata: "year" must be a number or null.');
-
-        // Validate Arrays
-        if (!isArray(common.albumartists, (value) => typeof value === 'string'))
-          throw new TypeError('Invalid metadata: "albumartists" must be an array of string.');
-        if (!isArray(common.genre, (value) => typeof value === 'string'))
-          throw new TypeError('Invalid metadata: "genre" must be an array of string.');
-        if (!isArray(common.label, (value) => typeof value === 'string'))
-          throw new TypeError('Invalid metadata: "label" must be an array of string.');
-        if (!isArray(common.composer, (value) => typeof value === 'string'))
-          throw new TypeError('Invalid metadata: "composer" must be an array of string.');
-        if (!isArray(common.artists, (value) => typeof value === 'string'))
-          throw new TypeError('Invalid metadata: "artists" must be an array of string.');
-        if (
-          !isArray(
-            common.picture,
-            (value) =>
-              (typeof value.description === 'undefined' || typeof value.description === 'string') &&
-              (typeof value.name === 'undefined' || typeof value.name === 'string') &&
-              (typeof value.type === 'undefined' || typeof value.type === 'string') &&
-              typeof value.format === 'string' &&
-              (value.data instanceof Uint8Array || typeof value.data === 'string'),
-          )
-        )
-          throw new TypeError('Invalid metadata: "picture" must be an array of pictures.');
-
-        /**
-         * Validate Nested Objects (Disk and Track)
-         * @param {MusicNumber|null} [info]
-         * @param {string} [name]
-         */
-        const validateTrackInfo = (info, name) => {
-          if (info !== undefined && info !== null) {
-            if (!(typeof info === 'object' && info !== null))
-              throw new TypeError(`Invalid metadata: "${name}" must be an object.`);
-            if (typeof info.no !== 'number' && info.no !== null)
-              throw new TypeError(`Invalid metadata: "${name}.no" must be a number or null.`);
-            if (typeof info.of !== 'number' && info.of !== null)
-              throw new TypeError(`Invalid metadata: "${name}.of" must be a number or null.`);
-          }
-        };
-
-        validateTrackInfo(common.disk, 'disk');
-        validateTrackInfo(common.track, 'track');
-      };
-
-      validate();
-
-      // 5. Return the specific metadata fields requested
-      // We structure the return to match the ContentMetadata typedef
-      return {
-        title: common?.title ?? null,
-        album: common?.album ?? null,
-        albumartist: common?.albumartist ?? null,
-        albumartists: common?.albumartists ?? [],
-        genre: common?.genre ?? [],
-        label: common?.label ?? [],
-        composer: common?.composer ?? [],
-        year: common?.year ?? null,
-        artist: common?.artist ?? null,
-        artists: common?.artists ?? [],
-        disk: common?.disk ? { no: common.disk.no, of: common.disk.of } : { no: null, of: null },
-        track: common?.track
-          ? { no: common.track.no, of: common.track.of }
-          : { no: null, of: null },
-        picture:
-          common?.picture?.map((value) => ({
-            ...value,
-            data: TinyRadioFm._convertToBlobUrl(value.data, value.format),
-          })) ?? [],
-      };
-    } catch (error) {
-      // Re-throwing the error allows the caller to handle specific failure cases
-      throw error;
-    }
-  }
-
-  /**
-   * A Static Factory Method that prepares a RadioContent object by
+   * A Static Factory Method that prepares a MediaContent object by
    * extracting metadata from an audio source.
    *
    * @param {string | HTMLMediaElement} source - A URL string or an existing Audio object.
-   * @param {Partial<RadioContentBase & ContentMetadata> & { id?: string; weight?: number }} [metadata={}] - Optional manual metadata that overrides automatic extraction.
-   * @param {ParseContentMetadata} [parseFile] - Private helper to interface with parseFile.
+   * @param {Partial<MediaContentBase & MediaContentMetadata> & { id?: string; weight?: number }} [metadata={}] - Optional manual metadata that overrides automatic extraction.
+   * @param {ParseMediaContentMetadata} [parseFile] - Private helper to interface with parseFile.
    * @param {Object} [callbacks={}] - Callbacks for monitoring the loading process.
-   * @param {(progress: LoadingProgress) => void} [callbacks.onProgress] - Callback triggered on stage changes.
-   * @param {(error: LoadingError) => void} [callbacks.onError] - Callback triggered when a non-fatal or fatal error occurs.
-   * @returns {Promise<RadioContent>} A promise that resolves to a valid RadioContent object.
-   * @throws {RadioLoadingError} If the preparation process fails at any stage.
-   *
-   * @example
-   * // Usage with URL
-   * import { parseBlob } from 'music-metadata';
-   * const track = await TinyRadioFm.prepareContent('/assets/song.mp3', { title: 'My Song', artist: 'Artist' }, parseBlob);
-   * radio.add('music', track);
-   *
-   * @example
-   * // Usage with Audio Object
-   * import { parseBlob } from 'music-metadata';
-   * const audio = new Audio();
-   * audio.src = '/assets/song.mp3';
-   * const track = await TinyRadioFm.prepareContent(audio, {}, parseBlob);
-   * radio.add('music', track);
-   *
-   * @example
-   * // Usage with tracking
-   * const track = await TinyRadioFm.prepareContent(
-   *   '/assets/song.mp3',
-   *   {},
-   *   parseBlob,
-   *   {
-   *     onProgress: (p) => console.log(`[${p.stage}] ${p.status}`),
-   *     onError: (e) => console.error(`Failed at ${e.stage} for ${e.url}: ${e.error.message}`)
-   *   }
-   * );
+   * @param {(progress: LoadingMediaProgress) => void} [callbacks.onProgress] - Callback triggered on stage changes.
+   * @param {(error: MediaLoadingError) => void} [callbacks.onError] - Callback triggered when a non-fatal or fatal error occurs.
+   * @returns {Promise<MediaContent>} A promise that resolves to a valid MediaContent object.
+   * @throws {AudioLoadingError} If the preparation process fails at any stage.
    */
-  static async prepareContent(
-    source,
-    metadata = {},
-    parseFile = (url) => {
-      return new Promise((resolve, reject) =>
-        reject(new TypeError('parseFile library not found.')),
-      );
-    },
-    callbacks = {},
-  ) {
-    // Argument Validation
-    if (typeof source !== 'string' && !(source instanceof HTMLMediaElement))
-      throw new TypeError('Source must be a string or an HTMLMediaElement.');
-
-    if (callbacks.onProgress && typeof callbacks.onProgress !== 'function')
-      throw new TypeError('callbacks.onProgress must be a function.');
-    if (callbacks.onError && typeof callbacks.onError !== 'function')
-      throw new TypeError('callbacks.onError must be a function.');
-
-    /** @type {HTMLMediaElement} */
-    let audio;
-    /** @type {string} */
-    let url = '';
-
-    /**
-     * @param {LoadingProgressStage} stage
-     * @param {ProgressEvent<EventTarget>} [event]
-     */
-    const notifyProgress = (stage, event) => {
-      if (callbacks.onProgress) {
-        callbacks.onProgress({
-          event,
-          status: 'loading',
-          stage,
-          url: url || (source instanceof HTMLMediaElement ? source.src : 'unknown'),
-        });
-      }
-    };
-
-    const notifyError = (/** @type {Error} */ error, /** @type {LoadingErrorStage} */ stage) => {
-      if (callbacks.onError) {
-        callbacks.onError({
-          error,
-          url: url || (source instanceof HTMLMediaElement ? source.src : 'unknown'),
-          stage,
-        });
-      }
-    };
-
-    try {
-      // 1. Normalize Source
-      notifyProgress('INITIALIZING');
-      if (typeof source === 'string') {
-        url = source;
-        audio = new Audio(url);
-      } else {
-        audio = source;
-        url = audio.src;
-      }
-
-      // 2. Wait for audio metadata and monitor download progress
-      try {
-        await new Promise((resolve, reject) => {
-          /**
-           * Listener for the 'progress' event (detects actual data downloading)
-           * @type {(this: HTMLMediaElement, ev: ProgressEvent<EventTarget>) => any}
-           */
-          const onProgress = (event) => notifyProgress('DOWNLOADING', event);
-
-          // Listener for 'loadedmetadata' (duration is now available)
-          const onMetadata = () => {
-            cleanup();
-            resolve(undefined);
-          };
-
-          // Listener for errors
-          const onError = (/** @type {{ message: any; }} */ err) => {
-            cleanup();
-            reject(new Error(`HTMLMediaElement failed to load: ${err.message || 'Unknown error'}`));
-          };
-
-          const cleanup = () => {
-            audio.removeEventListener('progress', onProgress);
-            audio.removeEventListener('loadedmetadata', onMetadata);
-            audio.removeEventListener('error', onError);
-          };
-
-          audio.addEventListener('progress', onProgress);
-          audio.addEventListener('loadedmetadata', onMetadata);
-          audio.addEventListener('error', onError);
-
-          // If metadata is already there (e.g. cached by browser)
-          if (audio.readyState >= 1) {
-            cleanup();
-            resolve(undefined);
-          }
-        });
-
-        notifyProgress('METADATA_LOADED');
-      } catch (err) {
-        throw new RadioLoadingError(
-          err instanceof Error ? err.message : 'UNKNOWN ERROR',
-          url,
-          'METADATA',
-        );
-      }
-
-      // 3. Initialize Base Data (Core properties required for the system)
-      const baseData = {
-        id: metadata.id || (await TinyRadioFm._generateSimpleHash(url)),
-        duration: Math.floor(audio.duration * 1000), // Convert to ms for our class
-        url: url,
-        weight: metadata.weight ?? 1,
-      };
-
-      // 4. Automatic Metadata Extraction (ID3 Tags)
-      /** @type {Partial<ContentMetadata>} */
-      let extractedMetadata = {};
-      notifyProgress('EXTRACTING_ID3');
-      try {
-        extractedMetadata = await TinyRadioFm.extractId3Tags(url, parseFile);
-      } catch (err) {
-        // We treat ID3 failure as a non-fatal error for the whole process,
-        // but we still notify the developer via onError.
-        notifyError(err instanceof Error ? err : new Error('Unknown Error'), 'ID3');
-        console.warn(`[TinyRadioFm] ID3 extraction failed for ${url}. Falling back to filename.`);
-      }
-
-      /**
-       * Extracts a readable filename from a URL without the extension.
-       * @param {string} url
-       * @returns {string}
-       */
-      const getFallbackTitleFromUrl = (url) => {
-        try {
-          // Remove query params or hashes, get the last segment, and strip extension
-          const filename = url.split(/[?#]/)[0].split('/').pop();
-          return (filename ?? '').replace(/\.[^/.]+$/, '') || 'Unknown Track';
-        } catch {
-          return 'Unknown Track';
-        }
-      };
-
-      // 5. Final Merge Logic
-      // Priority: Manual Metadata (highest) > Extracted ID3 > Default values
-      const finalContent = {
-        ...baseData,
-        ...metadata,
-        ...extractedMetadata,
-        // Explicitly ensure title and artist are resolved from the hierarchy
-        title: extractedMetadata.title || metadata.title || getFallbackTitleFromUrl(url),
-        artist:
-          extractedMetadata.artist ||
-          metadata.artist ||
-          (typeof TinyRadioFm.#unknownArtist === 'string'
-            ? TinyRadioFm.#unknownArtist
-            : String(TinyRadioFm.#unknownArtist())),
-      };
-
-      // Notify Success
-      if (callbacks.onProgress) {
-        callbacks.onProgress({
-          status: 'success',
-          stage: 'COMPLETE',
-          url: url,
-        });
-      }
-
-      return /** @type {RadioContent} */ (finalContent);
-    } catch (err) {
-      // If it's already a RadioLoadingError, re-throw it.
-      // Otherwise, wrap it.
-      if (err instanceof RadioLoadingError) {
-        throw err;
-      } else {
-        const wrappedError = new RadioLoadingError(
-          err instanceof Error ? err.message : 'UNKNOWN ERROR',
-          url,
-          'INITIALIZING',
-        );
-        notifyError(wrappedError, 'INITIALIZING');
-        throw wrappedError;
-      }
-    }
+  static async prepareContent(source, metadata, parseFile, callbacks) {
+    return prepareMediaContent(source, metadata, parseFile, callbacks, TinyRadioFm.#unknownArtist);
   }
 
-  /**
-   * Internal helper to generate a deterministic ID from a string.
-   * @param {string} str
-   * @returns {Promise<string>}
-   * @private
-   */
-  static async _generateSimpleHash(str) {
-    const msgUint8 = new TextEncoder().encode(str);
-    const hashBuffer = await crypto.subtle.digest('SHA-1', msgUint8);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    // Return first 8 chars of the hex hash for a clean ID
-    return hashArray
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('')
-      .substring(0, 8);
-  }
-
-  /** @type {ContentMetadata} */
+  /** @type {MediaContentMetadata} */
   static #contentTemplate = {
     title: null,
     album: null,
@@ -707,7 +165,7 @@ class TinyRadioFm extends TinyEvents {
     track: { no: null, of: null },
     picture: [],
   };
-  /** @type {ContentMetadata} */
+  /** @type {MediaContentMetadata} */
   static get contentTemplate() {
     return structuredClone(this.#contentTemplate);
   }
@@ -736,7 +194,7 @@ class TinyRadioFm extends TinyEvents {
     return this.#cycleCache.size;
   }
 
-  /** @type {string|(() => string)} */
+  /** @type {UnknownArtistGetter} */
   static #unknownArtist = 'Unknown Artist';
 
   static get unknownArtist() {
@@ -749,16 +207,16 @@ class TinyRadioFm extends TinyEvents {
     TinyRadioFm.#unknownArtist = value;
   }
 
-  /** @type {RadioContent[]} */
+  /** @type {MediaContent[]} */
   #musicList = [];
-  /** @returns {RadioContent[]} */
+  /** @returns {MediaContent[]} */
   get musicList() {
     return structuredClone(this.#musicList);
   }
 
-  /** @type {RadioContent[]} */
+  /** @type {MediaContent[]} */
   #voiceList = [];
-  /** @returns {RadioContent[]} */
+  /** @returns {MediaContent[]} */
   get voiceList() {
     return structuredClone(this.#voiceList);
   }
@@ -779,7 +237,7 @@ class TinyRadioFm extends TinyEvents {
 
   /**
    * Returns a deep clone of the internal all list cache.
-   * @returns {RadioContent[]} A cloned object of the cache.
+   * @returns {MediaContent[]} A cloned object of the cache.
    */
   get allList() {
     return [...this.musicList, ...this.voiceList];
@@ -949,7 +407,7 @@ class TinyRadioFm extends TinyEvents {
   /**
    * Adds new content instantly to the radio sequence.
    * @param {'music'|'voice'|'custom'} type - The category of the content.
-   * @param {RadioContent & { timestamp?: number }} data - The content payload to insert.
+   * @param {MediaContent & { timestamp?: number }} data - The content payload to insert.
    * @param {boolean} [smartQueue=true] - If true, delays insertion until the end of the content playing at that timestamp (only affects 'custom').
    * @throws {TypeError} If the type is invalid or the data lacks a valid ID and numerical duration.
    */
@@ -1007,7 +465,7 @@ class TinyRadioFm extends TinyEvents {
         typeof payload.duration !== 'number'
       ) {
         throw new TypeError(
-          'Payload for "add" must be a RadioContent object (id: string, duration: number).',
+          'Payload for "add" must be a MediaContent object (id: string, duration: number).',
         );
       }
     } else if (action === 'remove') {
@@ -1062,15 +520,11 @@ class TinyRadioFm extends TinyEvents {
     if (typeof id !== 'string') throw new TypeError('id must be a string.');
 
     // Revoke Blob URLs of items being removed to free memory
-    this.#musicList
-      .filter((item) => item.id === id)
-      .forEach((item) => TinyRadioFm._revokeContentUrls(item));
-    this.#voiceList
-      .filter((item) => item.id === id)
-      .forEach((item) => TinyRadioFm._revokeContentUrls(item));
+    this.#musicList.filter((item) => item.id === id).forEach((item) => revokeContentUrls(item));
+    this.#voiceList.filter((item) => item.id === id).forEach((item) => revokeContentUrls(item));
     this.#customPositions
       .filter((cp) => cp.content?.id === id)
-      .forEach((cp) => TinyRadioFm._revokeContentUrls(cp.content));
+      .forEach((cp) => revokeContentUrls(cp.content));
 
     /**
      * Filter function to match items against the provided ID.
@@ -1090,7 +544,7 @@ class TinyRadioFm extends TinyEvents {
         'id' in t.payload
       ) {
         if (t.payload.id === id) {
-          TinyRadioFm._revokeContentUrls(/** @type {RadioContent} */ (t.payload));
+          revokeContentUrls(/** @type {MediaContent} */ (t.payload));
           return false;
         }
         return true;
@@ -1186,8 +640,8 @@ class TinyRadioFm extends TinyEvents {
 
   /**
    * Process a content list, waiting to convert the images from Blob URL to Base64.
-   * @param {RadioContent[]} list
-   * @returns {Promise<RadioContent[]>}
+   * @param {MediaContent[]} list
+   * @returns {Promise<MediaContent[]>}
    * @private
    */
   async _processListForExport(list) {
@@ -1198,7 +652,7 @@ class TinyRadioFm extends TinyEvents {
           newItem.picture = await Promise.all(
             newItem.picture.map(async (pic) => ({
               ...pic,
-              data: await TinyRadioFm._blobUrlToBase64(pic.data),
+              data: await blobUrlToBase64(pic.data),
             })),
           );
         }
@@ -1248,7 +702,7 @@ class TinyRadioFm extends TinyEvents {
           'title' in task.payload
         ) {
           const processedPayload = await this._processListForExport([
-            /** @type {RadioContent} */ (task.payload),
+            /** @type {MediaContent} */ (task.payload),
           ]);
           return { ...task, payload: processedPayload[0] };
         }
@@ -1310,11 +764,11 @@ class TinyRadioFm extends TinyEvents {
 
   /**
    * Creates a deterministic sequence supporting weighted selection based on mode.
-   * @param {RadioContent[]} list - The source list to sequence.
+   * @param {MediaContent[]} list - The source list to sequence.
    * @param {number} currentSeed - Cycle-specific seed.
    * @param {RadioModes} mode - Processing mode.
    * @param {number} [maxConsecutive=0] - Max consecutive repetitions permitted (-1 = unlimited, 0 = strictly no repeat).
-   * @returns {RadioContent[]} The generated sequence.
+   * @returns {MediaContent[]} The generated sequence.
    */
   #buildSequence(list, currentSeed, mode, maxConsecutive = 0) {
     if (list.length === 0) return [];
@@ -1322,14 +776,14 @@ class TinyRadioFm extends TinyEvents {
 
     /**
      * Pool of available items for weighted selection.
-     * @type {Array<RadioContent & { weight: number }>}
+     * @type {Array<MediaContent & { weight: number }>}
      */
     const pool = list.map((item) => ({ ...item, weight: item.weight ?? 1 }));
     const random = this._prng(currentSeed);
 
     /**
      * The finalized deterministic sequence.
-     * @type {RadioContent[]}
+     * @type {MediaContent[]}
      */
     const sequence = [];
 
@@ -1362,7 +816,7 @@ class TinyRadioFm extends TinyEvents {
 
       const r = random() * totalWeight;
       let sum = 0;
-      /** @type {RadioContent|null} */
+      /** @type {MediaContent|null} */
       let selectedItem = null;
       let selectedIndex = -1;
 
@@ -1614,7 +1068,7 @@ class TinyRadioFm extends TinyEvents {
 
   /**
    * Formats internal block data into standardized external event structures.
-   * @param {CycleBlockData | RadioContent} item - Raw content data.
+   * @param {CycleBlockData | MediaContent} item - Raw content data.
    * @param {number} absoluteStart - Event's absolute start epoch.
    * @param {number} queryTime - Timestamp requested for progress math.
    * @param {boolean} isCustom - Flag indicating if it is a user injected custom event.
@@ -1639,7 +1093,7 @@ class TinyRadioFm extends TinyEvents {
 
   /**
    * Safely calculates the best absolute timestamp gap for a custom event without disrupting metadata.
-   * @param {RadioContent & { timestamp?: number }} data - Target data to insert.
+   * @param {MediaContent & { timestamp?: number }} data - Target data to insert.
    * @param {boolean} smartQueue - Adjusts the insertion to the end of the currently playing content.
    */
   #handleCustomInsertion(data, smartQueue) {
@@ -1741,7 +1195,7 @@ class TinyRadioFm extends TinyEvents {
     let listsMutated = false;
 
     expiredCps.forEach((cp) => {
-      TinyRadioFm._revokeContentUrls(cp.content); // Free memory!
+      revokeContentUrls(cp.content); // Free memory!
       this.#seed += cp.content.id.length;
       listsMutated = true;
       this.emit('customPositionExpired', { contentId: cp.content.id });
@@ -1755,13 +1209,13 @@ class TinyRadioFm extends TinyEvents {
           const list = task.type === 'music' ? this.#musicList : this.#voiceList;
 
           if (task.action === 'add') {
-            list.push(/** @type {RadioContent} */ (task.payload));
+            list.push(/** @type {MediaContent} */ (task.payload));
           } else if (task.action === 'remove') {
             const payloadId = /** @type {string} */ (task.payload);
             const idx = list.findIndex((i) => i.id === payloadId);
             if (idx !== -1) {
               const [removedItem] = list.splice(idx, 1);
-              TinyRadioFm._revokeContentUrls(removedItem); // Free memory!
+              revokeContentUrls(removedItem); // Free memory!
             }
           } else if (task.action === 'move') {
             const payloadData = /** @type {ScheduledMovePayload} */ (task.payload);
@@ -1790,9 +1244,9 @@ class TinyRadioFm extends TinyEvents {
    */
   #hydrate(data) {
     // Revoke current blob URLs before overwriting state to prevent memory leaks
-    this.#musicList.forEach((item) => TinyRadioFm._revokeContentUrls(item));
-    this.#voiceList.forEach((item) => TinyRadioFm._revokeContentUrls(item));
-    this.#customPositions.forEach((cp) => TinyRadioFm._revokeContentUrls(cp.content));
+    this.#musicList.forEach((item) => revokeContentUrls(item));
+    this.#voiceList.forEach((item) => revokeContentUrls(item));
+    this.#customPositions.forEach((cp) => revokeContentUrls(cp.content));
     this.#scheduledTasks.forEach((task) => {
       if (
         task.action === 'add' &&
@@ -1800,17 +1254,17 @@ class TinyRadioFm extends TinyEvents {
         typeof task.payload === 'object' &&
         'title' in task.payload
       ) {
-        TinyRadioFm._revokeContentUrls(/** @type {RadioContent} */ (task.payload));
+        revokeContentUrls(/** @type {MediaContent} */ (task.payload));
       }
     });
 
-    const processListForImport = (/** @type {RadioContent[]} */ list) => {
+    const processListForImport = (/** @type {MediaContent[]} */ list) => {
       return list.map((item) => {
         const newItem = { ...item };
         if (newItem.picture && Array.isArray(newItem.picture)) {
           newItem.picture = newItem.picture.map((pic) => ({
             ...pic,
-            data: TinyRadioFm._convertToBlobUrl(pic.data, pic.format),
+            data: convertToBlobUrl(pic.data, pic.format),
           }));
         }
         return newItem;
@@ -1837,7 +1291,7 @@ class TinyRadioFm extends TinyEvents {
       ) {
         return {
           ...task,
-          payload: processListForImport([/** @type {RadioContent} */ (task.payload)])[0],
+          payload: processListForImport([/** @type {MediaContent} */ (task.payload)])[0],
         };
       }
       return task;
@@ -1851,9 +1305,9 @@ class TinyRadioFm extends TinyEvents {
    */
   destroy(destroyThumbs = true) {
     if (destroyThumbs) {
-      this.#musicList.forEach((item) => TinyRadioFm._revokeContentUrls(item));
-      this.#voiceList.forEach((item) => TinyRadioFm._revokeContentUrls(item));
-      this.#customPositions.forEach((cp) => TinyRadioFm._revokeContentUrls(cp.content));
+      this.#musicList.forEach((item) => revokeContentUrls(item));
+      this.#voiceList.forEach((item) => revokeContentUrls(item));
+      this.#customPositions.forEach((cp) => revokeContentUrls(cp.content));
       this.#scheduledTasks.forEach((task) => {
         if (
           task.action === 'add' &&
@@ -1861,7 +1315,7 @@ class TinyRadioFm extends TinyEvents {
           typeof task.payload === 'object' &&
           'title' in task.payload
         ) {
-          TinyRadioFm._revokeContentUrls(/** @type {RadioContent} */ (task.payload));
+          revokeContentUrls(/** @type {MediaContent} */ (task.payload));
         }
       });
     }

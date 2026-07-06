@@ -529,9 +529,7 @@
             <button class="btn btn-warning" id="btn-resync" title="Resync Audio" disabled>
               🔄
             </button>
-            <button class="btn btn-outline" id="btn-mute" title="Mute Audio" disabled>
-              ⏸️
-            </button>
+            <button class="btn btn-outline" id="btn-mute" title="Mute Audio" disabled>⏸️</button>
 
             <div class="volume-control">
               <label>Vol</label>
@@ -801,7 +799,7 @@
           btnMute.addEventListener('click', () => {
             this.audio.muted = !this.audio.muted;
             if (this.audio.muted) {
-              btnMute.title = 'Unmute Audio'
+              btnMute.title = 'Unmute Audio';
               btnMute.innerText = '▶️';
               btnMute.classList.add('btn-danger');
               btnMute.classList.remove('btn-outline');
