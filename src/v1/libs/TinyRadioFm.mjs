@@ -3,19 +3,20 @@ import {
   convertToBlobUrl,
   prepareMediaContent,
   revokeContentUrls,
-} from './MediaPlayer/utils.mjs';
+} from '../basics/mediaContent.mjs';
 import TinyEvents from './TinyEvents.mjs';
 
 /**
- * @typedef {import('./MediaPlayer/utils.mjs').MediaContentBase} MediaContentBase
- * @typedef {import('./MediaPlayer/utils.mjs').MediaContentMetadata} MediaContentMetadata
- * @typedef {import('./MediaPlayer/utils.mjs').MediaContent} MediaContent
- * @typedef {import('./MediaPlayer/utils.mjs').IPicture} IPicture
- * @typedef {import('./MediaPlayer/utils.mjs').MediaNumber} MediaNumber
- * @typedef {import('./MediaPlayer/utils.mjs').MediaLoadingError} MediaLoadingError
- * @typedef {import('./MediaPlayer/utils.mjs').LoadingMediaProgress} LoadingMediaProgress
- * @typedef {import('./MediaPlayer/utils.mjs').ParseMediaContentMetadata} ParseMediaContentMetadata
- * @typedef {import('./MediaPlayer/utils.mjs').UnknownArtistGetter} UnknownArtistGetter
+ * @typedef {import('../basics/mediaContent.mjs').MediaContentBase} MediaContentBase
+ * @typedef {import('../basics/mediaContent.mjs').MediaContentMetadata} MediaContentMetadata
+ * @typedef {import('../basics/mediaContent.mjs').MediaContent} MediaContent
+ * @typedef {import('../basics/mediaContent.mjs').IPicture} IPicture
+ * @typedef {import('../basics/mediaContent.mjs').MediaNumber} MediaNumber
+ * @typedef {import('../basics/mediaContent.mjs').MediaLoadingError} MediaLoadingError
+ * @typedef {import('../basics/mediaContent.mjs').MediaLoadingErrorData} MediaLoadingErrorData
+ * @typedef {import('../basics/mediaContent.mjs').LoadingMediaProgress} LoadingMediaProgress
+ * @typedef {import('../basics/mediaContent.mjs').ParseMediaContentMetadata} ParseMediaContentMetadata
+ * @typedef {import('../basics/mediaContent.mjs').UnknownArtistGetter} UnknownArtistGetter
  */
 
 //////////////////////////////////////////////////////////////////
@@ -141,9 +142,9 @@ class TinyRadioFm extends TinyEvents {
    * @param {ParseMediaContentMetadata} [parseFile] - Private helper to interface with parseFile.
    * @param {Object} [callbacks={}] - Callbacks for monitoring the loading process.
    * @param {(progress: LoadingMediaProgress) => void} [callbacks.onProgress] - Callback triggered on stage changes.
-   * @param {(error: MediaLoadingError) => void} [callbacks.onError] - Callback triggered when a non-fatal or fatal error occurs.
+   * @param {(error: MediaLoadingErrorData) => void} [callbacks.onError] - Callback triggered when a non-fatal or fatal error occurs.
    * @returns {Promise<MediaContent>} A promise that resolves to a valid MediaContent object.
-   * @throws {AudioLoadingError} If the preparation process fails at any stage.
+   * @throws {MediaLoadingError} If the preparation process fails at any stage.
    */
   static async prepareContent(source, metadata, parseFile, callbacks) {
     return prepareMediaContent(source, metadata, parseFile, callbacks, TinyRadioFm.#unknownArtist);
