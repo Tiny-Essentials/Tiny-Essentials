@@ -94,7 +94,7 @@
  */
 
 /**
- * @typedef {Object} MediaLoadingError
+ * @typedef {Object} MediaLoadingErrorData
  * @property {Error} error - The original error object.
  * @property {string} url - The URL that failed.
  * @property {LoadingErrorStage} stage - The stage where it failed.
@@ -109,7 +109,7 @@ export const _blobCounter = new Map();
  * Custom error class to provide detailed context during the content preparation process.
  * @extends Error
  */
-export class AudioLoadingError extends Error {
+export class MediaLoadingError extends Error {
   /**
    * @param {string} message - Human-readable error message.
    * @param {string} url - The URL that caused the error.
@@ -117,7 +117,7 @@ export class AudioLoadingError extends Error {
    */
   constructor(message, url, stage) {
     super(message);
-    this.name = 'AudioLoadingError';
+    this.name = 'MediaLoadingError';
     this.url = url;
     this.stage = stage;
   }
@@ -222,7 +222,7 @@ export const revokeContentUrls = (content) => {
  * @throws {TypeError} If the provided `url` is not a string or `parseFile` is not a function.
  * @throws {Error} If the network request fails or the parsing process encounters an error.
  */
-export const extractAudioId3Tags = async (url, parseFile) => {
+export const extractMediaId3Tags = async (url, parseFile) => {
   // Argument Validation
   if (typeof url !== 'string')
     throw new TypeError(`Expected url to be a string, but received ${typeof url}.`);
@@ -360,10 +360,10 @@ export const extractAudioId3Tags = async (url, parseFile) => {
  * @param {ParseMediaContentMetadata} [parseFile] - Private helper to interface with parseFile.
  * @param {Object} [callbacks={}] - Callbacks for monitoring the loading process.
  * @param {(progress: LoadingMediaProgress) => void} [callbacks.onProgress] - Callback triggered on stage changes.
- * @param {(error: MediaLoadingError) => void} [callbacks.onError] - Callback triggered when a non-fatal or fatal error occurs.
+ * @param {(error: MediaLoadingErrorData) => void} [callbacks.onError] - Callback triggered when a non-fatal or fatal error occurs.
  * @param {UnknownArtistGetter} unknownArtist
  * @returns {Promise<MediaContent>} A promise that resolves to a valid MediaContent object.
- * @throws {AudioLoadingError} If the preparation process fails at any stage.
+ * @throws {MediaLoadingError} If the preparation process fails at any stage.
  *
  * @example
  * // Usage with URL
@@ -490,7 +490,7 @@ export const prepareMediaContent = async (
 
       notifyProgress('METADATA_LOADED');
     } catch (err) {
-      throw new AudioLoadingError(
+      throw new MediaLoadingError(
         err instanceof Error ? err.message : 'UNKNOWN ERROR',
         url,
         'METADATA',
@@ -510,7 +510,7 @@ export const prepareMediaContent = async (
     let extractedMetadata = {};
     notifyProgress('EXTRACTING_ID3');
     try {
-      extractedMetadata = await extractAudioId3Tags(url, parseFile);
+      extractedMetadata = await extractMediaId3Tags(url, parseFile);
     } catch (err) {
       // We treat ID3 failure as a non-fatal error for the whole process,
       // but we still notify the developer via onError.
@@ -558,12 +558,12 @@ export const prepareMediaContent = async (
 
     return /** @type {MediaContent} */ (finalContent);
   } catch (err) {
-    // If it's already a AudioLoadingError, re-throw it.
+    // If it's already a MediaLoadingError, re-throw it.
     // Otherwise, wrap it.
-    if (err instanceof AudioLoadingError) {
+    if (err instanceof MediaLoadingError) {
       throw err;
     } else {
-      const wrappedError = new AudioLoadingError(
+      const wrappedError = new MediaLoadingError(
         err instanceof Error ? err.message : 'UNKNOWN ERROR',
         url,
         'INITIALIZING',
