@@ -384,7 +384,7 @@ export const extractMediaId3Tags = async (url, parseFile) => {
  * // Usage with tracking
  * const track = await parseMediaMetadata(
  *   '/assets/song.mp3',
- *   {}, 
+ *   {},
  *   {},
  *   parseBlob,
  *   {

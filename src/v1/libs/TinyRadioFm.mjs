@@ -148,7 +148,14 @@ class TinyRadioFm extends TinyEvents {
    * @throws {MediaLoadingError} If the preparation process fails at any stage.
    */
   static async parseContent(source, defaultMetadata, metadata, parseFile, callbacks) {
-    return parseMediaMetadata(source, defaultMetadata, metadata, parseFile, callbacks, TinyRadioFm.#unknownArtist);
+    return parseMediaMetadata(
+      source,
+      defaultMetadata,
+      metadata,
+      parseFile,
+      callbacks,
+      TinyRadioFm.#unknownArtist,
+    );
   }
 
   /** @type {MediaContentMetadata} */
