@@ -241,20 +241,25 @@ export const revokeContentUrls = (content) => {
 };
 
 /**
- * Helper to validate types within the media content metadata object.
- * This ensures that if a property is present, it matches the expected type.
- * @param {Partial<ContentMetadataTemplate<IPictureTemplate<string | Uint8Array<ArrayBufferLike>>>>} common
+ * Central logic of metadata validation.
+ * @param {Partial<ContentMetadataTemplate<IPictureTemplate<string | Uint8Array<ArrayBufferLike>>>>} common - The object to be validated.
+ * @param {boolean} isPartial - If true, properties can be undefined.
  */
-export const valMediaContentMetadata = (common) => {
+const validateMediaContent = (common, isPartial) => {
+  // Helper to check if the property can be ignored in partial mode
+  const isUndefinedAllowed = (/** @type {any} */ v) => isPartial && typeof v === 'undefined';
+
   const isString = (/** @type {string | null | undefined} */ v) =>
-    typeof v === 'string' || v === null || v === undefined;
-  const isNumber = (/** @type {number | null | undefined} */ v) =>
-    typeof v === 'number' || v === null || v === undefined;
+    isUndefinedAllowed(v) || typeof v === 'string' || v === null;
+
+  const isNumber = (/** @type {number | null | undefined}} */ v) =>
+    isUndefinedAllowed(v) || typeof v === 'number' || v === null;
+
   const isArray = (
     /** @type {string[] | IPictureTemplate<string|Uint8Array>[] | undefined} */ v,
     /** @type {(value: any, index: number, array: any[]) => any} */ valueValidator,
   ) => {
-    if (typeof v === 'undefined') return true;
+    if (isUndefinedAllowed(v)) return true;
     if (Array.isArray(v) && v.every(valueValidator)) return true;
     return false;
   };
@@ -301,19 +306,37 @@ export const valMediaContentMetadata = (common) => {
    * @param {string} [name]
    */
   const validateTrackInfo = (info, name) => {
-    if (info !== undefined && info !== null) {
-      if (!(typeof info === 'object' && info !== null))
-        throw new TypeError(`Invalid metadata: "${name}" must be an object.`);
-      if (typeof info.no !== 'number' && info.no !== null)
-        throw new TypeError(`Invalid metadata: "${name}.no" must be a number or null.`);
-      if (typeof info.of !== 'number' && info.of !== null)
-        throw new TypeError(`Invalid metadata: "${name}.of" must be a number or null.`);
+    if (isUndefinedAllowed(info)) return; // Ignores if partial
+
+    if (info === undefined || info === null) {
+      throw new TypeError(`Invalid metadata: "${name}" is required.`);
     }
+
+    if (typeof info !== 'object')
+      throw new TypeError(`Invalid metadata: "${name}" must be an object or null.`);
+    if (typeof info.no !== 'number' && info.no !== null)
+      throw new TypeError(`Invalid metadata: "${name}.no" must be a number or null.`);
+    if (typeof info.of !== 'number' && info.of !== null)
+      throw new TypeError(`Invalid metadata: "${name}.of" must be a number or null.`);
   };
 
   validateTrackInfo(common.disk, 'disk');
   validateTrackInfo(common.track, 'track');
 };
+
+/**
+ * Helper to validate types within the media content metadata object.
+ * This ensures that if a property is present, it matches the expected type.
+ * @param {ContentMetadataTemplate<IPictureTemplate<string | Uint8Array<ArrayBufferLike>>>} common
+ */
+export const valMediaContentMetadata = (common) => validateMediaContent(common, false);
+
+/**
+ * Helper to validate types within the media content metadata object.
+ * Allows the absence of properties (useful for updates/patch).
+ * @param {Partial<ContentMetadataTemplate<IPictureTemplate<string | Uint8Array<ArrayBufferLike>>>>} common
+ */
+export const valMediaContentMetadataPartial = (common) => validateMediaContent(common, true);
 
 /**
  * Downloads an audio file from a URL and extracts its ID3/metadata tags.
@@ -349,7 +372,7 @@ export const extractMediaId3Tags = async (url, parseFile) => {
       throw new TypeError('Invalid metadata: "common" property is missing or not an object.');
 
     const common = metadata.common;
-    valMediaContentMetadata(common);
+    valMediaContentMetadataPartial(common);
 
     // 5. Return the specific metadata fields requested
     // We structure the return to match the MediaContentMetadata typedef

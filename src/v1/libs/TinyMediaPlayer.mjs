@@ -257,6 +257,7 @@ class TinyMediaPlayer {
       throw new TypeError('Playlist must be an array of MediaContent objects.');
     }
 
+    value.forEach((value) => valMediaContentMetadata(value));
     const wasPlaying = this.#isPlaying;
     let oldAdapter = null;
 
@@ -694,7 +695,6 @@ class TinyMediaPlayer {
           nextIndex = 0;
         } else {
           // End of playlist, stop playing
-          this.#currentIndex = 0;
           return;
         }
       }
@@ -722,7 +722,6 @@ class TinyMediaPlayer {
           prevIndex = this.#playlist.length - 1;
         } else {
           // End of playlist, stop playing
-          this.#currentIndex = 0;
           return;
         }
       }

@@ -411,6 +411,7 @@
 
       // Initialize Player and Adapter
       const player = new TinyMediaPlayer({ persistVolume: false });
+      window.player = player;
       const htmlAdapter = new HtmlAudioAdapter();
       player.registerAdapter('html5_audio', htmlAdapter);
 
