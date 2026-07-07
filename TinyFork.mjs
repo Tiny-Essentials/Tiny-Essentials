@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import fs from 'fs/promises';
+import { copyFile, readFile, mkdir, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import parser from '@babel/parser';
+import { parse } from '@babel/parser';
 import _traverse from '@babel/traverse';
 import _generate from '@babel/generator';
 import * as t from '@babel/types';
@@ -178,7 +178,7 @@ async function copyLicense(destDir) {
 
   try {
     if (existsSync(licenseSrc)) {
-      await fs.copyFile(licenseSrc, licenseDest);
+      await copyFile(licenseSrc, licenseDest);
       console.log('> Copied: LICENSE');
     } else {
       console.warn('> Warning: LICENSE file not found in the root directory.');
@@ -270,8 +270,8 @@ class MultiFileExtractor {
    * @returns {Promise<string>} The minified and formatted generated source code.
    */
   async parseAndPrune(filePath, req) {
-    const sourceCode = await fs.readFile(filePath, 'utf-8');
-    const ast = parser.parse(sourceCode, { sourceType: 'module', plugins: ['classProperties'] });
+    const sourceCode = await readFile(filePath, 'utf-8');
+    const ast = parse(sourceCode, { sourceType: 'module', plugins: ['classProperties'] });
 
     const localKeepNames = new Set();
     const requiredImports = new Map();
@@ -627,8 +627,8 @@ class MultiFileExtractor {
       const relativeToVersion = path.relative(data.versionDir, filePath);
       const destPath = path.join(this.outDir, relativeToVersion);
 
-      await fs.mkdir(path.dirname(destPath), { recursive: true });
-      await fs.writeFile(destPath, data.code, 'utf-8');
+      await mkdir(path.dirname(destPath), { recursive: true });
+      await writeFile(destPath, data.code, 'utf-8');
       console.log(`> Created: ${relativeToVersion}`);
       filesSaved++;
     }
