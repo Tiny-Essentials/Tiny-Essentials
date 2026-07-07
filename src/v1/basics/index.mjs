@@ -64,9 +64,14 @@ import {
   getElsCollDirDepth,
   getElsCollDetails,
 } from './collision.mjs';
-import { extractMediaId3Tags, parseMediaMetadata } from './mediaContent.mjs';
+import {
+  extractMediaId3Tags,
+  parseMediaMetadata,
+  valMediaContentMetadata,
+} from './mediaContent.mjs';
 
 export {
+  valMediaContentMetadata,
   parseMediaMetadata,
   extractMediaId3Tags,
   diffStrings,

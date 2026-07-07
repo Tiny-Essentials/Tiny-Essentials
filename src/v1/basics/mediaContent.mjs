@@ -231,6 +231,81 @@ export const revokeContentUrls = (content) => {
 };
 
 /**
+ * Helper to validate types within the media content metadata object.
+ * This ensures that if a property is present, it matches the expected type.
+ * @param {Partial<ContentMetadataTemplate<IPictureTemplate<string | Uint8Array<ArrayBufferLike>>>>} common
+ */
+export const valMediaContentMetadata = (common) => {
+  const isString = (/** @type {string | null | undefined} */ v) =>
+    typeof v === 'string' || v === null || v === undefined;
+  const isNumber = (/** @type {number | null | undefined} */ v) =>
+    typeof v === 'number' || v === null || v === undefined;
+  const isArray = (
+    /** @type {string[] | IPictureTemplate<string|Uint8Array>[] | undefined} */ v,
+    /** @type {(value: any, index: number, array: any[]) => any} */ valueValidator,
+  ) => {
+    if (typeof v === 'undefined') return true;
+    if (Array.isArray(v) && v.every(valueValidator)) return true;
+    return false;
+  };
+
+  // Validate Primitives
+  if (!isString(common.title))
+    throw new TypeError('Invalid metadata: "title" must be a string or null.');
+  if (!isString(common.album))
+    throw new TypeError('Invalid metadata: "album" must be a string or null.');
+  if (!isString(common.albumartist))
+    throw new TypeError('Invalid metadata: "albumartist" must be a string or null.');
+  if (!isString(common.artist))
+    throw new TypeError('Invalid metadata: "artist" must be a string or null.');
+  if (!isNumber(common.year))
+    throw new TypeError('Invalid metadata: "year" must be a number or null.');
+
+  // Validate Arrays
+  if (!isArray(common.albumartists, (value) => typeof value === 'string'))
+    throw new TypeError('Invalid metadata: "albumartists" must be an array of string.');
+  if (!isArray(common.genre, (value) => typeof value === 'string'))
+    throw new TypeError('Invalid metadata: "genre" must be an array of string.');
+  if (!isArray(common.label, (value) => typeof value === 'string'))
+    throw new TypeError('Invalid metadata: "label" must be an array of string.');
+  if (!isArray(common.composer, (value) => typeof value === 'string'))
+    throw new TypeError('Invalid metadata: "composer" must be an array of string.');
+  if (!isArray(common.artists, (value) => typeof value === 'string'))
+    throw new TypeError('Invalid metadata: "artists" must be an array of string.');
+  if (
+    !isArray(
+      common.picture,
+      (value) =>
+        (typeof value.description === 'undefined' || typeof value.description === 'string') &&
+        (typeof value.name === 'undefined' || typeof value.name === 'string') &&
+        (typeof value.type === 'undefined' || typeof value.type === 'string') &&
+        typeof value.format === 'string' &&
+        (value.data instanceof Uint8Array || typeof value.data === 'string'),
+    )
+  )
+    throw new TypeError('Invalid metadata: "picture" must be an array of pictures.');
+
+  /**
+   * Validate Nested Objects (Disk and Track)
+   * @param {MediaNumber|null} [info]
+   * @param {string} [name]
+   */
+  const validateTrackInfo = (info, name) => {
+    if (info !== undefined && info !== null) {
+      if (!(typeof info === 'object' && info !== null))
+        throw new TypeError(`Invalid metadata: "${name}" must be an object.`);
+      if (typeof info.no !== 'number' && info.no !== null)
+        throw new TypeError(`Invalid metadata: "${name}.no" must be a number or null.`);
+      if (typeof info.of !== 'number' && info.of !== null)
+        throw new TypeError(`Invalid metadata: "${name}.of" must be a number or null.`);
+    }
+  };
+
+  validateTrackInfo(common.disk, 'disk');
+  validateTrackInfo(common.track, 'track');
+};
+
+/**
  * Downloads an audio file from a URL and extracts its ID3/metadata tags.
  *
  * @param {string} url - The full URL of the audio file to be downloaded.
@@ -265,81 +340,7 @@ export const extractMediaId3Tags = async (url, parseFile) => {
 
     const common = metadata.common;
 
-    /**
-     * Internal helper to validate types within the 'common' object.
-     * This ensures that if a property is present, it matches the expected type.
-     */
-    const validate = () => {
-      const isString = (/** @type {string | null | undefined} */ v) =>
-        typeof v === 'string' || v === null || v === undefined;
-      const isNumber = (/** @type {number | null | undefined} */ v) =>
-        typeof v === 'number' || v === null || v === undefined;
-      const isArray = (
-        /** @type {string[] | IPictureTemplate<string|Uint8Array>[] | undefined} */ v,
-        /** @type {(value: any, index: number, array: any[]) => any} */ valueValidator,
-      ) => {
-        if (typeof v === 'undefined') return true;
-        if (Array.isArray(v) && v.every(valueValidator)) return true;
-        return false;
-      };
-
-      // Validate Primitives
-      if (!isString(common.title))
-        throw new TypeError('Invalid metadata: "title" must be a string or null.');
-      if (!isString(common.album))
-        throw new TypeError('Invalid metadata: "album" must be a string or null.');
-      if (!isString(common.albumartist))
-        throw new TypeError('Invalid metadata: "albumartist" must be a string or null.');
-      if (!isString(common.artist))
-        throw new TypeError('Invalid metadata: "artist" must be a string or null.');
-      if (!isNumber(common.year))
-        throw new TypeError('Invalid metadata: "year" must be a number or null.');
-
-      // Validate Arrays
-      if (!isArray(common.albumartists, (value) => typeof value === 'string'))
-        throw new TypeError('Invalid metadata: "albumartists" must be an array of string.');
-      if (!isArray(common.genre, (value) => typeof value === 'string'))
-        throw new TypeError('Invalid metadata: "genre" must be an array of string.');
-      if (!isArray(common.label, (value) => typeof value === 'string'))
-        throw new TypeError('Invalid metadata: "label" must be an array of string.');
-      if (!isArray(common.composer, (value) => typeof value === 'string'))
-        throw new TypeError('Invalid metadata: "composer" must be an array of string.');
-      if (!isArray(common.artists, (value) => typeof value === 'string'))
-        throw new TypeError('Invalid metadata: "artists" must be an array of string.');
-      if (
-        !isArray(
-          common.picture,
-          (value) =>
-            (typeof value.description === 'undefined' || typeof value.description === 'string') &&
-            (typeof value.name === 'undefined' || typeof value.name === 'string') &&
-            (typeof value.type === 'undefined' || typeof value.type === 'string') &&
-            typeof value.format === 'string' &&
-            (value.data instanceof Uint8Array || typeof value.data === 'string'),
-        )
-      )
-        throw new TypeError('Invalid metadata: "picture" must be an array of pictures.');
-
-      /**
-       * Validate Nested Objects (Disk and Track)
-       * @param {MediaNumber|null} [info]
-       * @param {string} [name]
-       */
-      const validateTrackInfo = (info, name) => {
-        if (info !== undefined && info !== null) {
-          if (!(typeof info === 'object' && info !== null))
-            throw new TypeError(`Invalid metadata: "${name}" must be an object.`);
-          if (typeof info.no !== 'number' && info.no !== null)
-            throw new TypeError(`Invalid metadata: "${name}.no" must be a number or null.`);
-          if (typeof info.of !== 'number' && info.of !== null)
-            throw new TypeError(`Invalid metadata: "${name}.of" must be a number or null.`);
-        }
-      };
-
-      validateTrackInfo(common.disk, 'disk');
-      validateTrackInfo(common.track, 'track');
-    };
-
-    validate();
+    valMediaContentMetadata(common);
 
     // 5. Return the specific metadata fields requested
     // We structure the return to match the MediaContentMetadata typedef
