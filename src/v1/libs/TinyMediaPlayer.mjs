@@ -247,17 +247,22 @@ class TinyMediaPlayer extends TinyEvents {
   // ==========================================
 
   /**
-   * Calculates a random index based on the weighted probability of each track.
+   * Calculates a random index based on the weighted probability of each track,
+   * strictly excluding the currently active track to prevent immediate repetition.
    * @returns {number} The selected index.
+   * @private
    */
-  #getWeightedRandomIndex() {
+  _getWeightedRandomIndex() {
     if (this.#playlist.length === 0) return -1;
     if (this.#playlist.length === 1) return 0;
 
     let totalWeight = 0;
 
-    // Calculate total sum of all weights
-    for (const track of this.#playlist) {
+    // Calculate total sum of all weights, skipping the current track
+    for (let i = 0; i < this.#playlist.length; i++) {
+      if (i === this.#currentIndex) continue;
+
+      const track = this.#playlist[i];
       const weight = typeof track.weight === 'number' && track.weight > 0 ? track.weight : 1;
       totalWeight += weight;
     }
@@ -265,8 +270,10 @@ class TinyMediaPlayer extends TinyEvents {
     // Pick a random number between 0 and totalWeight
     let randomThreshold = Math.random() * totalWeight;
 
-    // Find the track that corresponds to this threshold
+    // Find the track that corresponds to this threshold, skipping the current track
     for (let i = 0; i < this.#playlist.length; i++) {
+      if (i === this.#currentIndex) continue;
+
       const track = this.#playlist[i];
       const weight = typeof track.weight === 'number' && track.weight > 0 ? track.weight : 1;
 
@@ -277,7 +284,7 @@ class TinyMediaPlayer extends TinyEvents {
     }
 
     // Fallback in case of floating point inaccuracies
-    return this.#playlist.length - 1;
+    return this.#currentIndex === this.#playlist.length - 1 ? 0 : this.#playlist.length - 1;
   }
 
   // ==========================================
@@ -746,7 +753,7 @@ class TinyMediaPlayer extends TinyEvents {
     }
 
     if (this.#isRandom) {
-      this.#currentIndex = this.#getWeightedRandomIndex();
+      this.#currentIndex = this._getWeightedRandomIndex();
     } else {
       let nextIndex = this.#currentIndex + 1;
       if (nextIndex >= this.#playlist.length) {
@@ -774,7 +781,7 @@ class TinyMediaPlayer extends TinyEvents {
     await this.stop();
 
     if (this.#isRandom) {
-      this.#currentIndex = this.#getWeightedRandomIndex();
+      this.#currentIndex = this._getWeightedRandomIndex();
     } else {
       let prevIndex = this.#currentIndex - 1;
       if (prevIndex < 0) {
