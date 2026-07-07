@@ -9,6 +9,13 @@ import '../basics/mediaContent.mjs';
  */
 
 /**
+ * Configuration options for initializing the UniversalMediaPlayer.
+ * @typedef {Object} TinyMediaPlayerOptions
+ * @property {boolean} [persistVolume=false] - Whether to automatically save the volume in localStorage.
+ * @property {string} [volumeStorageKey='universal_media_player_volume'] - The specific key name used for localStorage cache.
+ */
+
+/**
  * Interface definition for a Media Provider Adapter.
  * All specific API wrappers must extend and implement this class.
  * @abstract
@@ -70,6 +77,15 @@ class BaseMediaAdapter {
   getCurrentTime() {
     throw new Error('Method "getCurrentTime" must be implemented by the subclass.');
   }
+
+  /**
+   * Sets the playback volume for the underlying API.
+   * @param {number} volume - The volume level from 0.0 to 1.0.
+   * @returns {void}
+   */
+  setVolume(volume) {
+    throw new Error('Method "setVolume" must be implemented by the subclass.');
+  }
 }
 
 /**
@@ -95,6 +111,65 @@ class TinyMediaPlayer {
 
   /** @type {boolean} */
   #isPlaying = false;
+
+  /** @type {number} */
+  #volume = 1.0;
+
+  /** @type {boolean} */
+  #persistVolume;
+
+  /** @type {string} */
+  #volumeStorageKey;
+
+  /**
+   * @param {TinyMediaPlayerOptions} [options={}] - Configuration parameters for the player.
+   */
+  constructor(options = {}) {
+    // Volume configuration
+    this.#persistVolume = Boolean(options.persistVolume);
+    this.#volumeStorageKey =
+      typeof options.volumeStorageKey === 'string'
+        ? options.volumeStorageKey
+        : 'tiny_media_player_volume';
+
+    if (this.#persistVolume) this.#loadVolumeFromStorage();
+  }
+
+  // ==========================================
+  // STORAGE HELPERS
+  // ==========================================
+
+  /**
+   * Attempts to load the volume state from localStorage safely.
+   */
+  #loadVolumeFromStorage() {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const storedValue = window.localStorage.getItem(this.#volumeStorageKey);
+        if (storedValue !== null) {
+          const parsedVolume = parseFloat(storedValue);
+          if (!isNaN(parsedVolume) && parsedVolume >= 0 && parsedVolume <= 1) {
+            this.#volume = parsedVolume;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[UniversalMediaPlayer] Failed to read volume from localStorage.', error);
+    }
+  }
+
+  /**
+   * Attempts to save the current volume state to localStorage safely.
+   */
+  #saveVolumeToStorage() {
+    try {
+      if (this.#persistVolume && typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(this.#volumeStorageKey, this.#volume.toString());
+      }
+    } catch (error) {
+      console.warn('[UniversalMediaPlayer] Failed to save volume to localStorage.', error);
+    }
+  }
 
   // ==========================================
   // GETTERS & STRICT SETTERS
@@ -157,6 +232,86 @@ class TinyMediaPlayer {
   /** @returns {boolean} True if media is actively playing. */
   get isPlaying() {
     return this.#isPlaying;
+  }
+
+  /** @returns {number} The current volume level (0.0 to 1.0). */
+  get volume() {
+    return this.#volume;
+  }
+
+  /**
+   * @param {number} value - The volume level to set.
+   * @throws {TypeError} If the value is not a number.
+   * @throws {RangeError} If the value is outside the 0.0 to 1.0 range.
+   */
+  set volume(value) {
+    if (typeof value !== 'number')
+      throw new TypeError('Volume must be a number.');
+    if (value < 0 || value > 1) 
+      throw new RangeError('Volume must be tightly constrained between 0.0 and 1.0.');
+    
+    this.#volume = value;
+    this.#saveVolumeToStorage();
+
+    // Immediately apply the new volume if a track is active
+    if (this.#currentIndex !== -1 && this.#playlist.length > 0) {
+      try {
+        const adapter = this.#getActiveAdapter();
+        if (adapter) adapter.setVolume(this.#volume);
+      } catch (error) {
+        // Fails silently if no compatible adapter is found while just adjusting volume
+      }
+    }
+  }
+
+  /** @returns {boolean} Whether the volume cache is currently enabled. */
+  get persistVolume() {
+    return this.#persistVolume;
+  }
+
+  /**
+   * @param {boolean} value - True to save volume dynamically to localStorage.
+   * @throws {TypeError} If the value is not a boolean.
+   */
+  set persistVolume(value) {
+    if (typeof value !== 'boolean') {
+      throw new TypeError('Persist volume parameter must be a boolean.');
+    }
+    this.#persistVolume = value;
+    if (value) {
+      this.#saveVolumeToStorage();
+    }
+  }
+
+  /** @returns {string} The localStorage key used for volume caching. */
+  get volumeStorageKey() {
+    return this.#volumeStorageKey;
+  }
+
+  /**
+   * @param {string} value - The custom storage key string.
+   * @throws {TypeError} If the value is not a string or is empty.
+   */
+  set volumeStorageKey(value) {
+    if (typeof value !== 'string') {
+      throw new TypeError('Volume storage key must be a string.');
+    }
+    if (value.trim() === '') {
+      throw new TypeError('Volume storage key cannot be an empty string.');
+    }
+
+    const previousKey = this.#volumeStorageKey;
+    this.#volumeStorageKey = value;
+
+    // Migrate the cache to the new key if persistence is active
+    try {
+      if (this.#persistVolume && typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem(previousKey);
+        this.#saveVolumeToStorage();
+      }
+    } catch (error) {
+      console.warn('[UniversalMediaPlayer] Failed to migrate volume storage key.', error);
+    }
   }
 
   // ==========================================
@@ -235,6 +390,9 @@ class TinyMediaPlayer {
   async play() {
     const adapter = this.#getActiveAdapter();
     if (!adapter) return;
+
+    // Ensure the adapter aligns with the global volume before playing
+    adapter.setVolume(this.#volume);
 
     await adapter.play(this.#playlist[this.#currentIndex]);
     this.#isPlaying = true;
