@@ -158,67 +158,115 @@ class TinyRadioFm extends TinyEvents {
     );
   }
 
-  /** @type {UnknownArtistGetter} */
+  /**
+   * @type {UnknownArtistGetter}
+   * The default identifier or function used when an artist cannot be determined.
+   */
   static #unknownArtist = 'Unknown Artist';
 
+  /**
+   * Gets the current value used to represent unknown artists.
+   * @returns {UnknownArtistGetter}
+   */
   static get unknownArtist() {
     return TinyRadioFm.#unknownArtist;
   }
 
+  /**
+   * Sets the value used to represent unknown artists.
+   * @param {UnknownArtistGetter} value - A string or a function that returns a string.
+   * @throws {TypeError} If the value is neither a string nor a function.
+   */
   static set unknownArtist(value) {
     if (typeof value !== 'string' && typeof value !== 'function')
       throw new TypeError('unknownArtist must have an string or function.');
     TinyRadioFm.#unknownArtist = value;
   }
 
+  /**
+   * Gets the total count of all content items (music and voice) in the system.
+   * @returns {number}
+   */
   get size() {
     return this.#musicList.length + this.#voiceList.length;
   }
 
+  /**
+   * Gets the total number of items in the music playlist.
+   * @returns {number}
+   */
   get musicSize() {
     return this.#musicList.length;
   }
 
+  /**
+   * Gets the total number of items in the voice playlist.
+   * @returns {number}
+   */
   get voiceSize() {
     return this.#voiceList.length;
   }
 
+  /**
+   * Gets the number of active custom position injections.
+   * @returns {number}
+   */
   get customPosSize() {
     return this.#customPositions.length;
   }
 
+  /**
+   * Gets the number of pending scheduled tasks.
+   * @returns {number}
+   */
   get tasksSize() {
     return this.#scheduledTasks.length;
   }
 
+  /**
+   * Gets the number of items currently stored in the cycle cache.
+   * @returns {number}
+   */
   get cycleCacheSize() {
     return this.#cycleCache.size;
   }
 
   /** @type {MediaContent[]} */
   #musicList = [];
-  /** @returns {MediaContent[]} */
+  /**
+   * Gets a deep clone of the music playlist.
+   * @returns {MediaContent[]}
+   */
   get musicList() {
     return structuredClone(this.#musicList);
   }
 
   /** @type {MediaContent[]} */
   #voiceList = [];
-  /** @returns {MediaContent[]} */
+  /**
+   * Gets a deep clone of the voice playlist.
+   * @returns {MediaContent[]}
+   */
   get voiceList() {
     return structuredClone(this.#voiceList);
   }
 
   /** @type {CustomPosition[]} */
   #customPositions = [];
-  /** @returns {CustomPosition[]} */
+  /**
+   * Gets a deep clone of the custom position injections.
+   * @returns {CustomPosition[]}
+   */
   get customPositions() {
     return structuredClone(this.#customPositions);
   }
 
   /** @type {ScheduledTask[]} */
   #scheduledTasks = [];
-  /** @returns {ScheduledTask[]} */
+  /**
+   * Gets a deep clone of the scheduled tasks.
+   * @returns {ScheduledTask[]}
+   */
   get scheduledTasks() {
     return structuredClone(this.#scheduledTasks);
   }
@@ -233,6 +281,10 @@ class TinyRadioFm extends TinyEvents {
 
   /** @type {number} */
   #seed = 0;
+  /**
+   * Gets the current randomness seed.
+   * @returns {number}
+   */
   get seed() {
     return this.#seed;
   }
@@ -249,6 +301,10 @@ class TinyRadioFm extends TinyEvents {
 
   /** @type {number} */
   #anchorDate = Date.now();
+  /**
+   * Gets the absolute timestamp used as the timeline anchor.
+   * @returns {number}
+   */
   get anchorDate() {
     return this.#anchorDate;
   }
@@ -268,7 +324,10 @@ class TinyRadioFm extends TinyEvents {
     musicMaxConsecutive: 0,
     voiceMaxConsecutive: 0,
   };
-  /** @returns {RadioConfig} */
+  /**
+   * Gets a deep clone of the current radio configuration.
+   * @returns {RadioConfig}
+   */
   get config() {
     return structuredClone(this.#config);
   }

@@ -339,7 +339,6 @@ export const extractMediaId3Tags = async (url, parseFile) => {
       throw new TypeError('Invalid metadata: "common" property is missing or not an object.');
 
     const common = metadata.common;
-
     valMediaContentMetadata(common);
 
     // 5. Return the specific metadata fields requested
