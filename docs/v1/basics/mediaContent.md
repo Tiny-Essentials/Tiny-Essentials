@@ -90,6 +90,7 @@ Downloads an audio file and uses a provided parser to extract its internal metad
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `source` | `string \| HTMLMediaElement` | The audio source (URL or Audio object). |
+| `defaultMetadata` | `Partial<MediaContent>` | Default data for the metadata. |
 | `metadata` | `Partial<MediaContent>` | Manual overrides for the metadata. |
 | `parseFile` | `ParseMediaContentMetadata` | The library function used to parse the file. |
 | `callbacks` | `Object` | Contains `onProgress` and `onError` listeners. |

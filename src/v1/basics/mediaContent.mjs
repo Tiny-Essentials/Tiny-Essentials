@@ -356,6 +356,7 @@ export const extractMediaId3Tags = async (url, parseFile) => {
  * extracting metadata from an audio source.
  *
  * @param {string | HTMLMediaElement} source - A URL string or an existing Audio object.
+ * @param {Partial<MediaContentBase & MediaContentMetadata> & { id?: string; weight?: number }} [defaultMetadata={}] - Optional default metadata that overrides automatic extraction.
  * @param {Partial<MediaContentBase & MediaContentMetadata> & { id?: string; weight?: number }} [metadata={}] - Optional manual metadata that overrides automatic extraction.
  * @param {ParseMediaContentMetadata} [parseFile] - Private helper to interface with parseFile.
  * @param {Object} [callbacks={}] - Callbacks for monitoring the loading process.
@@ -368,7 +369,7 @@ export const extractMediaId3Tags = async (url, parseFile) => {
  * @example
  * // Usage with URL
  * import { parseBlob } from 'music-metadata';
- * const track = await parseMediaMetadata('/assets/song.mp3', { title: 'My Song', artist: 'Artist' }, parseBlob);
+ * const track = await parseMediaMetadata('/assets/song.mp3', {}, { title: 'My Song', artist: 'Artist' }, parseBlob);
  * media.add('music', track);
  *
  * @example
@@ -376,13 +377,14 @@ export const extractMediaId3Tags = async (url, parseFile) => {
  * import { parseBlob } from 'music-metadata';
  * const audio = new Audio();
  * audio.src = '/assets/song.mp3';
- * const track = await parseMediaMetadata(audio, {}, parseBlob);
+ * const track = await parseMediaMetadata(audio, {}, {}, parseBlob);
  * media.add('music', track);
  *
  * @example
  * // Usage with tracking
  * const track = await parseMediaMetadata(
  *   '/assets/song.mp3',
+ *   {}, 
  *   {},
  *   parseBlob,
  *   {
@@ -393,6 +395,7 @@ export const extractMediaId3Tags = async (url, parseFile) => {
  */
 export const parseMediaMetadata = async (
   source,
+  defaultMetadata = {},
   metadata = {},
   parseFile = (url) => {
     return new Promise((resolve, reject) => reject(new TypeError('parseFile library not found.')));
@@ -537,8 +540,9 @@ export const parseMediaMetadata = async (
     // Priority: Manual Metadata (highest) > Extracted ID3 > Default values
     const finalContent = {
       ...baseData,
-      ...metadata,
+      ...defaultMetadata,
       ...extractedMetadata,
+      ...metadata,
       // Explicitly ensure title and artist are resolved from the hierarchy
       title: extractedMetadata.title || metadata.title || getFallbackTitleFromUrl(url),
       artist:

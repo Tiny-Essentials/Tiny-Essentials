@@ -138,6 +138,7 @@ class TinyRadioFm extends TinyEvents {
    * extracting metadata from an audio source.
    *
    * @param {string | HTMLMediaElement} source - A URL string or an existing Audio object.
+   * @param {Partial<MediaContentBase & MediaContentMetadata> & { id?: string; weight?: number }} [defaultMetadata={}] - Optional default metadata that overrides automatic extraction.
    * @param {Partial<MediaContentBase & MediaContentMetadata> & { id?: string; weight?: number }} [metadata={}] - Optional manual metadata that overrides automatic extraction.
    * @param {ParseMediaContentMetadata} [parseFile] - Private helper to interface with parseFile.
    * @param {Object} [callbacks={}] - Callbacks for monitoring the loading process.
@@ -146,8 +147,8 @@ class TinyRadioFm extends TinyEvents {
    * @returns {Promise<MediaContent>} A promise that resolves to a valid MediaContent object.
    * @throws {MediaLoadingError} If the preparation process fails at any stage.
    */
-  static async parseContent(source, metadata, parseFile, callbacks) {
-    return parseMediaMetadata(source, metadata, parseFile, callbacks, TinyRadioFm.#unknownArtist);
+  static async parseContent(source, defaultMetadata, metadata, parseFile, callbacks) {
+    return parseMediaMetadata(source, defaultMetadata, metadata, parseFile, callbacks, TinyRadioFm.#unknownArtist);
   }
 
   /** @type {MediaContentMetadata} */
