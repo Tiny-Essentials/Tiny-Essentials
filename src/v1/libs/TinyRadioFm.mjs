@@ -158,25 +158,17 @@ class TinyRadioFm extends TinyEvents {
     );
   }
 
-  /** @type {MediaContentMetadata} */
-  static #contentTemplate = {
-    title: null,
-    album: null,
-    albumartist: null,
-    albumartists: [],
-    genre: [],
-    label: [],
-    composer: [],
-    year: null,
-    artist: null,
-    artists: [],
-    disk: { no: null, of: null },
-    track: { no: null, of: null },
-    picture: [],
-  };
-  /** @type {MediaContentMetadata} */
-  static get contentTemplate() {
-    return structuredClone(this.#contentTemplate);
+  /** @type {UnknownArtistGetter} */
+  static #unknownArtist = 'Unknown Artist';
+
+  static get unknownArtist() {
+    return TinyRadioFm.#unknownArtist;
+  }
+
+  static set unknownArtist(value) {
+    if (typeof value !== 'string' && typeof value !== 'function')
+      throw new TypeError('unknownArtist must have an string or function.');
+    TinyRadioFm.#unknownArtist = value;
   }
 
   get size() {
@@ -201,19 +193,6 @@ class TinyRadioFm extends TinyEvents {
 
   get cycleCacheSize() {
     return this.#cycleCache.size;
-  }
-
-  /** @type {UnknownArtistGetter} */
-  static #unknownArtist = 'Unknown Artist';
-
-  static get unknownArtist() {
-    return TinyRadioFm.#unknownArtist;
-  }
-
-  static set unknownArtist(value) {
-    if (typeof value !== 'string' && typeof value !== 'function')
-      throw new TypeError('unknownArtist must have an string or function.');
-    TinyRadioFm.#unknownArtist = value;
   }
 
   /** @type {MediaContent[]} */

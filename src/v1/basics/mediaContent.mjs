@@ -105,6 +105,23 @@
 /** @type {Map<string, number>} */
 export const _blobCounter = new Map();
 
+/** @returns {MediaContentMetadata} */
+export const getMediaContentTemplate = () => ({
+  title: null,
+  album: null,
+  albumartist: null,
+  albumartists: [],
+  genre: [],
+  label: [],
+  composer: [],
+  year: null,
+  artist: null,
+  artists: [],
+  disk: { no: null, of: null },
+  track: { no: null, of: null },
+  picture: [],
+});
+
 /**
  * Custom error class to provide detailed context during the content preparation process.
  * @extends Error
