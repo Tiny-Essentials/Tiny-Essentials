@@ -1,7 +1,5 @@
 /**
  * @typedef {Object} DragAndDropOptions
- * @property {HTMLElement} [target=document.body] - The DOM element where drag listeners will be attached. Defaults to `document.body` if `fullscreen` is true or no target is provided.
- * @property {boolean} [fullscreen=true] - If true, listeners are attached to the entire page (`document.body`). If false, the `target` must be specified.
  * @property {string} [hoverClass="dnd-hover"] - CSS class applied to the target element while files are being dragged over it.
  * @property {(files: FileList, event: DragEvent) => void} [onDrop] - Callback function executed when files are dropped onto the target.
  * @property {(event: DragEvent) => void} [onEnter] - Optional callback triggered when dragging enters the target area.
@@ -15,13 +13,11 @@
  * It handles the drag lifecycle (enter, over, leave, drop) and provides hooks for developers to handle file uploads or UI changes.
  *
  * @class
+ * @template {HTMLElement} HTMLTarget
  */
 class TinyDragDropDetector {
-  /** @type {HTMLElement} */
+  /** @type {HTMLTarget} */
   #target;
-
-  /** @type {boolean} */
-  #fullscreen;
 
   /** @type {string} */
   #hoverClass;
@@ -44,31 +40,19 @@ class TinyDragDropDetector {
   /**
    * Creates a new instance of TinyDragDropDetector to handle drag-and-drop file detection.
    *
-   * @param {DragAndDropOptions} [options={}] - Configuration options for the detector.
+   * @param {HTMLTarget} target - The DOM element where drag listeners will be attached.
+   * @param {DragAndDropOptions} options - Configuration options for the detector.
    * @throws {TypeError} If `target` is not an HTMLElement.
-   * @throws {TypeError} If `fullscreen` is not a boolean.
    * @throws {TypeError} If `hoverClass` is not a string.
    * @throws {TypeError} If `onDrop` is defined but not a function.
    * @throws {TypeError} If `onEnter` is defined but not a function.
    * @throws {TypeError} If `onLeave` is defined but not a function.
    */
-  constructor(options = {}) {
-    const {
-      target,
-      fullscreen = true,
-      hoverClass = 'dnd-hover',
-      onDrop,
-      onEnter,
-      onLeave,
-    } = options;
-
-    // Validate fullscreen
-    if (typeof fullscreen !== 'boolean')
-      throw new TypeError('The "fullscreen" option must be a boolean.');
+  constructor(target, options) {
+    const { hoverClass = 'dnd-hover', onDrop, onEnter, onLeave } = options;
 
     // Validate target
-    const resolvedTarget = fullscreen ? document.body : target || document.body;
-    if (!(resolvedTarget instanceof HTMLElement))
+    if (!(target instanceof HTMLElement))
       throw new TypeError('The "target" option must be an instance of HTMLElement.');
 
     // Validate hoverClass
@@ -88,8 +72,7 @@ class TinyDragDropDetector {
       throw new TypeError('The "onLeave" option must be a function.');
 
     // Store properties
-    this.#target = resolvedTarget;
-    this.#fullscreen = fullscreen;
+    this.#target = target;
     this.#hoverClass = hoverClass;
 
     this.#onDropCallback = onDrop || (() => {});
@@ -110,7 +93,7 @@ class TinyDragDropDetector {
 
   /**
    * Returns the current target DOM element where the listeners are attached.
-   * @returns {HTMLElement}
+   * @returns {HTMLTarget}
    */
   getTarget() {
     return this.#target;
@@ -122,14 +105,6 @@ class TinyDragDropDetector {
    */
   getHoverClass() {
     return this.#hoverClass;
-  }
-
-  /**
-   * Indicates whether the detector is operating in fullscreen mode.
-   * @returns {boolean}
-   */
-  isFullScreen() {
-    return this.#fullscreen;
   }
 
   /**

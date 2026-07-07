@@ -767,32 +767,6 @@ Finds elements by tag name in a namespace (defaults to XHTML).
 
 ## 🔍 Element Observer
 
-### ⚡ `autoStartElemObserver`
-
-A **flag** that determines whether the internal element observer should automatically start when some library code initializes.
-
-* **Type** 🔘 — `boolean`
-* **Default** 🏁 — `true`
-
-#### 📥 Getter
-
-```js
-TinyHtml.autoStartElemObserver; // returns true or false
-```
-
-Returns the current state of the auto-start flag.
-
-#### 📤 Setter
-
-```js
-TinyHtml.autoStartElemObserver = false;
-```
-
-Updates the flag.
-⚠️ Throws a `TypeError` if the value is not a boolean.
-
----
-
 ### 👀 `tinyObserver`
 
 The internal **[`TinyElementObserver`](./TinyElementObserver.md)** instance used by TinyHtml to track DOM changes.
@@ -856,9 +830,6 @@ document.addEventListener('tinyhtml.stylechanged', (e) => {
 document.addEventListener('tinyhtml.classchanged', (e) => {
   console.log('🏷️ Class changed:', e.detail);
 });
-
-// Disable auto-start (if needed)
-TinyHtml.autoStartElemObserver = false;
 
 // Manually start the observer
 TinyHtml.tinyObserver.start();

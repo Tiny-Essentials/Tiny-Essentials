@@ -22,14 +22,13 @@ type ElementDetectorsFn = (
 ## 🔹 Constructor
 
 ```ts
-new TinyElementObserver({
-  el?: Element,
+new TinyElementObserver(el, {
   initDetectors?: Array<[string, ElementDetectorsFn]>,
   initCfg?: MutationObserverInit
 })
 ```
 
-* **`el`** *(optional)* → Initial element to observe 🏷️
+* **`el`** → Initial element to observe 🏷️
 * **`initDetectors`** *(optional)* → Array of detectors to register on creation 🎛️
 * **`initCfg`** *(optional)* → Initial `MutationObserverInit` configuration ⚙️
 
@@ -39,7 +38,6 @@ new TinyElementObserver({
 
 | Property    | Type                                  | Description                                               |
 | ----------- | ------------------------------------- | --------------------------------------------------------- |
-| `el`        | `Element \| undefined`                | The DOM element being observed. Can only be set once. 🏗️ |
 | `settings`  | `MutationObserverInit`                | Observer configuration object. 🔧                         |
 | `observer`  | `MutationObserver \| null`            | Internal observer instance.                               |
 | `detectors` | `Array<[string, ElementDetectorsFn]>` | List of registered detectors.                             |
@@ -85,8 +83,7 @@ const logDetector = (mutation, index, mutations) => {
 };
 
 // Create instance
-const observer = new TinyElementObserver({
-  el: document.querySelector('#target'),
+const observer = new TinyElementObserver(document.querySelector('#target'), {
   initDetectors: [['logger', logDetector]],
   initCfg: { childList: true, subtree: true }
 });

@@ -14,33 +14,18 @@
  * A utility class for tracking DOM element mutations.
  * It leverages the native MutationObserver API, providing a higher-level abstraction
  * with a system of configurable detectors that can dispatch custom events or run custom logic.
+ * @template {Element} HTMLElement
  */
 class TinyElementObserver {
-  /** @type {Element|undefined} */
+  /** @type {HTMLElement} */
   #el;
 
   /**
    * Get the current element being observed.
-   * @returns {Element|undefined} The DOM element being tracked, or `undefined` if none is set.
+   * @returns {HTMLElement} The DOM element being tracked, or `undefined` if none is set.
    */
   get el() {
     return this.#el;
-  }
-
-  /**
-   * Set the target element to be observed.
-   * Can only be set once.
-   *
-   * @param {Element|undefined} el - The DOM element to observe.
-   * @throws {Error} If the element is already defined.
-   * @throws {TypeError} If the provided value is not an Element.
-   */
-  set el(el) {
-    if (this.#el)
-      throw new Error('The observed element has already been set and cannot be reassigned.');
-    if (typeof el !== 'undefined' && !(el instanceof Element))
-      throw new TypeError('The observed element must be a valid DOM Element.');
-    this.#el = el;
   }
 
   /**
@@ -138,13 +123,13 @@ class TinyElementObserver {
   /**
    * Create a new TinyElementObserver instance.
    *
+   * @param {HTMLElement} el - Set the target element to be observed.
    * @param {Object} [settings={}] - Configuration object.
-   * @param {Element} [settings.el] - Optional DOM element to observe from the start.
    * @param {Array<[string, ElementDetectorsFn]>} [settings.initDetectors=[]] - Optional initial detectors to register.
    * @param {MutationObserverInit} [settings.initCfg] - Optional MutationObserver configuration.
    */
-  constructor({ el, initDetectors = [], initCfg = {} } = {}) {
-    this.el = el;
+  constructor(el, { initDetectors = [], initCfg = {} } = {}) {
+    this.#el = el;
     if (initDetectors.length) this.detectors = initDetectors;
     if (initCfg) this.settings = initCfg;
   }

@@ -665,10 +665,20 @@
         }
       }
 
+      import { TinyDragDropDetector } from './src/v1/libs/TinyDragDropDetector.mjs';
       /** IMPORT: TinyRadioFm */
       import { TinyRadioFm } from './src/v1/libs/TinyRadioFm.mjs';
       import { parseBlob } from 'https://cdn.jsdelivr.net/npm/music-metadata@11.13.0/+esm';
       window.TinyRadioFm = TinyRadioFm;
+      window.TinyDragDropDetector = TinyDragDropDetector;
+
+      const draggerDetector = new TinyDragDropDetector(document.body, {
+        fullscreen: true,
+        onDrop: console.log,
+        onEnter: console.log,
+        onLeave: console.log,
+      });
+      window.draggerDetector = draggerDetector;
 
       // --- UI Controller ---
       class TestEnvironment {

@@ -2,28 +2,42 @@
  * A predicate function used to determine whether an item should be included in the filtered results.
  * Works similarly to the callback function of `Array.prototype.filter`.
  *
+ * @template {any} ArrayItem
  * @callback GetFilter
- * @param {any} value - The current element being processed in the array.
+ * @param {ArrayItem} value - The current element being processed in the array.
  * @param {number} index - The index of the current element within the array.
- * @param {any[]} array - The full array being processed.
+ * @param {ArrayItem[]} array - The full array being processed.
  * @returns {boolean} Returns `true` to include the element in the results, or `false` to exclude it.
+ */
+
+/**
+ * @template {any} ArrayItem
+ * @typedef {Object} GetterResult
+ * @property {ArrayItem[]} items - The subset of items for the requested page.
+ * @property {number} page - The current (validated) page number.
+ * @property {number} perPage - Number of items per page used in the calculation.
+ * @property {number} totalItems - Total number of items in the filtered data.
+ * @property {number} totalPages - Total number of pages available.
+ * @property {boolean} hasPrev - Whether a previous page exists.
+ * @property {boolean} hasNext - Whether a next page exists.
  */
 
 /**
  * A encapsulated wrapper for array pagination.
  * Provides methods to retrieve paginated results with metadata,
  * while keeping the source array safe from direct modifications.
+ * @template {any} ArrayItem
  */
 class TinyArrayPaginator {
   /**
    * Internal storage for the paginated data source.
-   * @type {any[]|Set<any>}
+   * @type {ArrayItem[]|Set<ArrayItem>}
    */
   #data;
 
   /**
    * Gets current stored array.
-   * @returns {any[]|Set<any>}
+   * @returns {ArrayItem[]|Set<ArrayItem>}
    */
   get data() {
     return this.#data;
@@ -31,7 +45,7 @@ class TinyArrayPaginator {
 
   /**
    * Replaces the current data array.
-   * @param {any[]|Set<any>} value - The new array to be used as the data source.
+   * @param {ArrayItem[]|Set<ArrayItem>} value - The new array to be used as the data source.
    * @throws {TypeError} If the provided value is not an array.
    */
   set data(value) {
@@ -50,7 +64,7 @@ class TinyArrayPaginator {
 
   /**
    * Creates a new paginator instance for the given data array.
-   * @param {any[]|Set<any>} data - The array to be paginated.
+   * @param {ArrayItem[]|Set<ArrayItem>} data - The array to be paginated.
    * @throws {TypeError} If the provided data is not an array.
    */
   constructor(data) {
@@ -64,18 +78,10 @@ class TinyArrayPaginator {
    * @param {Object} settings
    * @param {number} settings.page - The page number (1-based index).
    * @param {number} settings.perPage - Items per page.
-   * @param {Record<string, any> | GetFilter} [settings.filter=null] - Filtering criteria:
+   * @param {Record<string, ArrayItem|RegExp> | GetFilter<ArrayItem>} [settings.filter=null] - Filtering criteria:
    *   - Object: key-value pairs for exact match, substring match, or RegExp
    *   - Function: custom filter function returning true for items to include
-   * @returns {{
-   *   items: any[],            // The subset of items for the requested page.
-   *   page: number,            // The current (validated) page number.
-   *   perPage: number,         // Number of items per page used in the calculation.
-   *   totalItems: number,      // Total number of items in the filtered data.
-   *   totalPages: number,      // Total number of pages available.
-   *   hasPrev: boolean,        // Whether a previous page exists.
-   *   hasNext: boolean         // Whether a next page exists.
-   * }}
+   * @returns {GetterResult<ArrayItem>}
    */
   get({ page, perPage, filter }) {
     if (!Number.isInteger(page) || page < 1)
@@ -92,6 +98,7 @@ class TinyArrayPaginator {
       } else if (typeof filter === 'object') {
         dataToUse = data.filter((item) =>
           Object.entries(filter).every(([key, value]) => {
+            // @ts-ignore
             const v = item[key];
             if (value instanceof RegExp) return value.test(v);
             return v === value;

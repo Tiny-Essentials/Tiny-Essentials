@@ -358,15 +358,15 @@ scroller._listenLoadEvents(imgElement);
 
 ## 🧱 DOM and Element Accessors
 
-### 🎯 `target`
+### 🎯 `targetElement`
 
 Returns the internal scroll container element being monitored.
 
 ```js
-const container = scroller.target;
+const container = scroller.targetElement;
 ```
 
-* 🔙 Returns the target DOM element (or `window` if in window mode).
+* 🔙 Returns the target DOM element.
 
 ### 🕵️‍♀️ `getOldSize(el)`
 

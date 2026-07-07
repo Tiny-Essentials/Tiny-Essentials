@@ -14,6 +14,7 @@ import { isJsonObject } from '../basics/objChecker.mjs';
  * TinyDragger enables drag-and-drop functionality for a DOM element.
  * It supports jail boundaries, optional collision detection, vibration feedback,
  * automatic reverting, proxy dragging, and event dispatching.
+ * @template {HTMLElement} HTMLTarget
  */
 class TinyDragger {
   static Utils = { ...TinyCollision, TinyHtml };
@@ -47,7 +48,7 @@ class TinyDragger {
   /** @type {HTMLElement|null} */
   #jail = null;
 
-  /** @type {HTMLElement} */
+  /** @type {HTMLTarget} */
   #target;
 
   #dragHiddenClass = 'drag-hidden';
@@ -61,7 +62,7 @@ class TinyDragger {
   /** @typedef {(event: TouchEvent) => void} TouchDragEvent */
 
   /**
-   * @param {HTMLElement|TinyHtml<any>} targetElement - The element to make draggable.
+   * @param {HTMLTarget} targetElement - The element to make draggable.
    * @param {Object} [options={}] - Configuration options.
    * @param {HTMLElement} [options.jail] - Optional container to restrict dragging within.
    * @param {boolean} [options.mirrorElem=true] - Use a visual clone instead of dragging the original element.
@@ -81,11 +82,10 @@ class TinyDragger {
    * @throws {Error} If any option has an invalid type.
    */
   constructor(targetElement, options = {}) {
-    const targetElem = !(targetElement instanceof TinyHtml) ? targetElement : targetElement.get(0);
-    if (!(targetElem instanceof HTMLElement))
+    if (!(targetElement instanceof HTMLElement))
       throw new Error('TinyDragger requires a valid target HTMLElement to initialize.');
 
-    this.#target = targetElem;
+    this.#target = targetElement;
 
     // === Validations ===
     if (options.jail !== undefined && !(options.jail instanceof HTMLElement))

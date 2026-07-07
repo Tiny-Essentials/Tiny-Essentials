@@ -44,6 +44,7 @@ import TinyEvents from './TinyEvents.mjs';
  * - Handles media element load events (e.g. `<img>`, `<iframe>`, `<video>`) to prevent sudden scroll jumps
  *
  * This class is **not framework-dependent** and works with vanilla DOM elements and the window object.
+ * @template {Element|Window} HTMLTarget
  */
 class TinySmartScroller {
   static Utils = { ...TinyCollision, TinyHtml };
@@ -300,6 +301,9 @@ class TinySmartScroller {
   #attributeFilter;
 
   /** @type {Element} */
+  #targetElement;
+
+  /** @type {HTMLTarget} */
   #target;
 
   /** @type {Set<NodeSizesEvent>} */
@@ -309,7 +313,7 @@ class TinySmartScroller {
    * Creates a new instance of TinySmartScroller, attaching scroll and resize observers to manage
    * automatic scroll behaviors, layout shift correction, and visibility tracking.
    *
-   * @param {Element|Window} target - The scroll container to monitor. Can be an element or `window`.
+   * @param {HTMLTarget} target - The scroll container to monitor. Can be an element or `window`.
    * @param {Object} [options={}] - Optional settings to configure scroll behavior.
    * @param {number} [options.extraScrollBoundary=0] - Extra margin in pixels to extend scroll boundary detection.
    * @param {boolean} [options.autoScrollBottom=true] - Whether to auto-scroll to bottom on layout updates.
@@ -333,7 +337,11 @@ class TinySmartScroller {
     } = {},
   ) {
     // === target ===
-    if (!(target instanceof Element || target === window))
+    if (!(
+      target instanceof Element ||
+      // @ts-ignore
+      target === window
+    ))
       throw new TypeError(
         `TinySmartScroller: 'target' must be a DOM Element or 'window', but got ${typeof target}`,
       );
@@ -376,7 +384,8 @@ class TinySmartScroller {
       );
 
     // Start values
-    this.#target = target instanceof Window ? document.documentElement : target;
+    this.#target = target;
+    this.#targetElement = target instanceof Window ? document.documentElement : target;
     this.#useWindow = target instanceof Window;
     this.#autoScrollBottom = autoScrollBottom;
     this.#observeMutations = observeMutations;
@@ -394,14 +403,14 @@ class TinySmartScroller {
       clearTimeout(timeout);
       timeout = setTimeout(() => this._onScroll(), this.#debounceTime);
     };
-    (this.#useWindow ? window : this.#target).addEventListener('scroll', this.#handler, {
+    (this.#useWindow ? window : this.#targetElement).addEventListener('scroll', this.#handler, {
       passive: true,
     });
 
     // Mutations
     if (this.#observeMutations) {
       this._observeMutations();
-      this._observeResizes(this.#target.children);
+      this._observeResizes(this.#targetElement.children);
     }
 
     this._scrollDataUpdater();
@@ -587,11 +596,11 @@ class TinySmartScroller {
    */
   _scrollDataUpdater() {
     const results = new Map();
-    this.#target.querySelectorAll(this.#querySelector || '*').forEach((target) => {
+    this.#targetElement.querySelectorAll(this.#querySelector || '*').forEach((target) => {
       const oldIsVisible = this.#newVisibles.get(target) ?? false;
       this.#oldVisibles.set(target, oldIsVisible);
 
-      const isVisible = TinyHtml.isInContainer(this.#target, target);
+      const isVisible = TinyHtml.isInContainer(this.#targetElement, target);
       this.#newVisibles.set(target, isVisible);
 
       results.set(target, { oldIsVisible, isVisible });
@@ -606,7 +615,7 @@ class TinySmartScroller {
     if (this.#destroyed) return;
     // Get values
     const scrollCache = this._scrollDataUpdater();
-    const el = this.#target;
+    const el = this.#targetElement;
     const scrollTop = el.scrollTop;
     const scrollHeight = el.scrollHeight;
     const clientHeight = el.clientHeight;
@@ -670,13 +679,15 @@ class TinySmartScroller {
       throw new TypeError('_fixScroll: targets must be an array of Elements');
 
     // Get Scroll data
-    const prevScrollHeight = this.#target.scrollHeight;
-    const prevScrollTop = this.#target.scrollTop;
+    const prevScrollHeight = this.#targetElement.scrollHeight;
+    const prevScrollTop = this.#targetElement.scrollTop;
     const prevBottomOffset =
-      this.#target.scrollHeight - this.#target.scrollTop - this.#target.clientHeight;
+      this.#targetElement.scrollHeight -
+      this.#targetElement.scrollTop -
+      this.#targetElement.clientHeight;
 
     // Get new size
-    const newScrollHeight = this.#target.scrollHeight;
+    const newScrollHeight = this.#targetElement.scrollHeight;
     const heightDelta = newScrollHeight - prevScrollHeight;
 
     /** @type {() => NodeSizes} */
@@ -724,7 +735,7 @@ class TinySmartScroller {
     // Fix scroll size
     if (
       this.#elemOldAmount > 0 &&
-      TinyHtml.hasScroll(this.#target).v &&
+      TinyHtml.hasScroll(this.#targetElement).v &&
       this.#autoScrollBottom &&
       this.#preserveScrollOnLayoutShift &&
       !this.#isAtBottom &&
@@ -732,9 +743,9 @@ class TinySmartScroller {
     ) {
       const scrollSize = calculateScrollSize();
       // Complete
-      this.#target.scrollTop = prevScrollTop + heightDelta + scrollSize.height;
+      this.#targetElement.scrollTop = prevScrollTop + heightDelta + scrollSize.height;
       if (scrollSize.width > 0)
-        this.#target.scrollLeft = this.#target.scrollLeft + scrollSize.width;
+        this.#targetElement.scrollLeft = this.#targetElement.scrollLeft + scrollSize.width;
     }
 
     // Normal stuff
@@ -743,8 +754,8 @@ class TinySmartScroller {
       this.scrollToBottom();
     } else if (!this.#autoScrollBottom && !this.#isAtBottom) {
       calculateScrollSize();
-      this.#target.scrollTop =
-        this.#target.scrollHeight - this.#target.clientHeight - prevBottomOffset;
+      this.#targetElement.scrollTop =
+        this.#targetElement.scrollHeight - this.#targetElement.clientHeight - prevBottomOffset;
     }
   }
   /**
@@ -755,7 +766,7 @@ class TinySmartScroller {
       if (this.#destroyed) return;
       this._scrollDataUpdater();
       this.#elemOldAmount = this.#elemAmount;
-      this.#elemAmount = this.#target.childElementCount;
+      this.#elemAmount = this.#targetElement.childElementCount;
 
       mutations.forEach((mutation) => {
         mutation.addedNodes.forEach((node) => {
@@ -776,7 +787,7 @@ class TinySmartScroller {
     });
 
     // Install observer
-    this.#mutationObserver.observe(this.#target, {
+    this.#mutationObserver.observe(this.#targetElement, {
       childList: true,
       subtree: true,
       attributes: true,
@@ -849,13 +860,15 @@ class TinySmartScroller {
     });
   }
 
-  /**
-   * Returns the internal scroll container element being monitored.
-   *
-   * @returns {Element} The DOM element used as the scroll container target.
-   */
   get target() {
     return this.#target;
+  }
+
+  /**
+   * Returns the internal scroll container element being monitored.
+   */
+  get targetElement() {
+    return this.#targetElement;
   }
 
   /**
@@ -951,14 +964,14 @@ class TinySmartScroller {
    * Forces the scroll position to move to the very bottom of the target.
    */
   scrollToBottom() {
-    this.#target.scrollTop = this.#target.scrollHeight;
+    this.#targetElement.scrollTop = this.#targetElement.scrollHeight;
   }
 
   /**
    * Forces the scroll position to move to the very top of the target.
    */
   scrollToTop() {
-    this.#target.scrollTop = 0;
+    this.#targetElement.scrollTop = 0;
   }
 
   /**
@@ -1144,7 +1157,7 @@ class TinySmartScroller {
     }
 
     // Removes scroll listener
-    const target = this.#useWindow ? window : this.#target;
+    const target = this.#useWindow ? window : this.#targetElement;
     if (this.#handler) target.removeEventListener('scroll', this.#handler);
 
     // Clean the WeakMaps

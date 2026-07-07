@@ -12,16 +12,25 @@
 /**
  * A scroll tracker that queues functions to be executed
  * after the user stops scrolling a specific element or the window.
+ * @template {Element|Window} ScrollElement
  */
 class TinyAfterScrollWatcher {
-  /** @type {Element|Window} */
+  /** @type {ScrollElement} */
   #scrollTarget;
+
+  get scrollTarget() {
+    return this.#scrollTarget;
+  }
 
   /** @type {null|NodeJS.Timeout} */
   #lastScrollTime = null;
 
   /** @type {FnData[]} */
   #afterScrollQueue = [];
+
+  get afterScrollQueueSize() {
+    return this.#afterScrollQueue.length;
+  }
 
   /** @type {number} */
   #inactivityTime = 100;
@@ -35,13 +44,17 @@ class TinyAfterScrollWatcher {
   /** @type {boolean} */
   #destroyed = false;
 
+  get destroyed() {
+    return this.#destroyed;
+  }
+
   /**
-   * @param {Element|Window} scrollTarget - The element or window to track scrolling on
+   * @param {ScrollElement} scrollTarget - The element or window to track scrolling on
    * @param {number} [inactivityTime=100] - Time in milliseconds to wait after scroll ends before executing the queue
    * @throws {TypeError} If scrollTarget is not a valid Element or Window
    * @throws {TypeError} If inactivityTime is not a positive number
    */
-  constructor(scrollTarget = window, inactivityTime = 100) {
+  constructor(scrollTarget, inactivityTime = 100) {
     if (!(scrollTarget instanceof Element) && !(scrollTarget instanceof Window))
       throw new TypeError('scrollTarget must be an Element or the Window object.');
     this.#scrollTarget = scrollTarget;

@@ -45,7 +45,7 @@
 
 /**
  * This metadata structure is modeled after the standard output of the
- * `music-metadata` npm package.
+ * `music-metadata@11.13.0` npm package.
  *
  * @typedef {ContentMetadataTemplate<IPicture>} MediaContentMetadata
  */

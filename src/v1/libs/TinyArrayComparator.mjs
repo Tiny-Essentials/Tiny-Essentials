@@ -4,19 +4,22 @@
  */
 
 /**
+ * @template {any} ArrayItem
  * @typedef {Object} InternalState
  * Holds the internal tracking variables during the comparison process.
- * @property {Map<string, any>} oldItemsMap - A map storing the hash as the key and the original item as the value.
- * @property {AffectedItems} affectedItems - The final array that collects added or deleted items.
+ * @property {Map<string, ArrayItem>} oldItemsMap - A map storing the hash as the key and the original item as the value.
+ * @property {AffectedItems<ArrayItem>} affectedItems - The final array that collects added or deleted items.
  */
 
 /**
  * The final array that collects added or deleted items.
- * @typedef {Array<{item: any, status: 'added'|'deleted'}>} AffectedItems
+ * @template {any} ArrayItem
+ * @typedef {Array<{item: ArrayItem, status: 'added'|'deleted'}>} AffectedItems
  */
 
 /**
  * Compares two arrays efficiently by hashing their items to detect additions and deletions.
+ * @template {any} ArrayItem
  */
 class TinyArrayComparator {
   /**
@@ -39,13 +42,13 @@ class TinyArrayComparator {
 
   /**
    * Internal storage for the base array.
-   * @type {any[]}
+   * @type {ArrayItem[]}
    */
   #oldArray = [];
 
   /**
    * Gets the current base array used for comparisons.
-   * @returns {any[]} The current initial state of the array.
+   * @returns {ArrayItem[]} The current initial state of the array.
    */
   get oldArray() {
     return this.#oldArray;
@@ -53,7 +56,7 @@ class TinyArrayComparator {
 
   /**
    * Sets a new base array for future comparisons.
-   * @param {Array<any>} oldArray - The initial state of the array.
+   * @param {ArrayItem[]} oldArray - The initial state of the array.
    * @throws {TypeError} Throws an error if the provided value is not an array.
    */
   set oldArray(oldArray) {
@@ -64,7 +67,7 @@ class TinyArrayComparator {
 
   /**
    * Initializes the comparator with an optional base array.
-   * @param {Array<any>} [oldArray] - The initial state of the array to be stored.
+   * @param {ArrayItem[]} [oldArray] - The initial state of the array to be stored.
    */
   constructor(oldArray) {
     if (typeof oldArray !== 'undefined') this.oldArray = oldArray;
@@ -72,7 +75,7 @@ class TinyArrayComparator {
 
   /**
    * Proxy to generates a hash converted to a string.
-   * @param {any} item - The item to be hashed (can be an object, array, string, or number).
+   * @param {ArrayItem} item - The item to be hashed (can be an object, array, string, or number).
    * @returns {string} The unique hash representing the item's value.
    * @private
    */
@@ -83,15 +86,15 @@ class TinyArrayComparator {
   /**
    * Compares the stored older array with a newer array and identifies missing or new items.
    *
-   * @param {Array<any>} newArray - The modified state of the array.
-   * @returns {AffectedItems} An array containing the affected items and their status.
+   * @param {ArrayItem[]} newArray - The modified state of the array.
+   * @returns {AffectedItems<ArrayItem>} An array containing the affected items and their status.
    * @throws {TypeError} Throws an error if the provided value is not an array.
    */
   compare(newArray) {
     if (!Array.isArray(newArray))
       throw new TypeError('The provided newArray must be a valid Array.');
 
-    /** @type {InternalState} */
+    /** @type {InternalState<ArrayItem>} */
     const state = {
       oldItemsMap: new Map(),
       affectedItems: [],
