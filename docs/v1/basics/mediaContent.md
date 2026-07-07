@@ -16,6 +16,7 @@ These definitions ensure type safety and provide a clear blueprint for how media
 | `MediaContentBase` | The essential properties: `id`, `title`, `artist`, `duration`, `url`, and `weight`. |
 | `MediaContentMetadata` | Rich metadata modeled after `music-metadata`. Includes `album`, `genre`, `year`, `track` info, etc. |
 | `MediaNumber` | A structure for indexing: `{ no: number \| null, of: number \| null }`. |
+| `UnknownArtistGetter` | A type that can be a `string` or a function returning a `string`. |
 
 ### 🖼️ Image & Picture Types
 
@@ -48,24 +49,23 @@ Used to provide specific context when something goes wrong during the media prep
 
 ## 🛠️ Utility Functions
 
-### `generateSimpleHash`
-Generates a deterministic 8-character ID from a string using SHA-1.
-*   **Input:** `str: string`
-*   **Returns:** `Promise<string>`
+### Factory & Validation
 
-### `convertToBlobUrl`
-Converts `Uint8Array` or Base64 strings into high-performance Blob URLs. It also tracks usage to prevent memory leaks.
-*   **Input:** `data: Uint8Array | string`, `format?: string`
-*   **Returns:** `string` (The Blob URL)
+| Function | Description |
+| :--- | :--- |
+| `getMediaContentBase` | Returns a fresh, empty `MediaContentBase` object. |
+| `getMediaContentMetadata` | Returns a fresh, empty `MediaContentMetadata` object. |
+| `valMediaContentMetadata` | Performs strict validation on a full `MediaContentMetadata` object. |
+| `valMediaContentMetadataPartial` | Performs validation on a partial metadata object (useful for patches/updates). |
 
-### `blobUrlToBase64`
-Converts a `blob:` URL back into a Base64 Data URL. Useful for exporting data.
-*   **Input:** `url: string`
-*   **Returns:** `Promise<string>`
+### Data & Memory Management
 
-### `revokeContentUrls`
-Safely cleans up memory by revoking Blob URLs associated with a `MediaContent` object. **Call this when media is no longer needed!** 🧹
-*   **Input:** `content: MediaContent`
+| Function | Description |
+| :--- | :--- |
+| `generateSimpleHash` | Generates a deterministic 8-character ID from a string using SHA-1. |
+| `convertToBlobUrl` | Converts `Uint8Array` or Base64 strings into high-performance Blob URLs. It also tracks usage to prevent memory leaks. |
+| `blobUrlToBase64` | Converts a `blob:` URL back into a Base64 Data URL. Useful for exporting data. |
+| `revokeContentUrls` | Safely cleans up memory by revoking Blob URLs associated with a `MediaContent` object. **Call this when media is no longer needed!** 🧹 |
 
 ---
 
@@ -91,20 +91,22 @@ Downloads an audio file and uses a provided parser to extract its internal metad
 | :--- | :--- | :--- |
 | `source` | `string \| HTMLMediaElement` | The audio source (URL or Audio object). |
 | `defaultMetadata` | `Partial<MediaContent>` | Default data for the metadata. |
-| `metadata` | `Partial<MediaContent>` | Manual overrides for the metadata. |
+| `metadata` | `Partial<MediaContent>` | Manual overrides for the metadata (highest priority). |
 | `parseFile` | `ParseMediaContentMetadata` | The library function used to parse the file. |
 | `callbacks` | `Object` | Contains `onProgress` and `onError` listeners. |
 | `unknownArtist` | `UnknownArtistGetter` | Logic to determine the artist if none is found. |
 
 #### 💡 Usage Examples
 
-**1. Using a simple URL:**
+**1. Using a simple URL with manual overrides:**
 ```javascript
 import { parseMediaMetadata } from './mediaContent.mjs';
 import { parseBlob } from 'music-metadata';
 
+// Note: We pass empty objects for default/manual if we want to jump straight to the parser
 const track = await parseMediaMetadata(
   '/assets/song.mp3', 
+  {}, 
   { title: 'Manual Override' }, 
   parseBlob
 );
@@ -118,6 +120,7 @@ const audio = new Audio('/assets/song.mp3');
 
 const track = await parseMediaMetadata(
   audio,
+  {},
   {},
   parseBlob,
   {
