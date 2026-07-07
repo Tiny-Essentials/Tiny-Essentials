@@ -115,6 +115,7 @@ import {
   getElsCollDirDepth,
   getElsCollDetails,
 } from './basics/collision.mjs';
+import { extractMediaId3Tags, parseMediaMetadata } from './basics/mediaContent.mjs';
 import TinyHtml from './libs/TinyHtml.mjs';
 import TinyAfterScrollWatcher from './libs/TinyAfterScrollWatcher.mjs';
 import UltraRandomMsgGen from './libs/UltraRandomMsgGen.mjs';
@@ -199,6 +200,8 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  parseMediaMetadata,
+  extractMediaId3Tags,
   defuzzifyCentroid,
   trapezoid,
   diffArrayList,

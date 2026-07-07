@@ -60,6 +60,10 @@
       "require": "./dist/v1/basics/index.cjs",
       "import": "./dist/v1/basics/index.mjs"
     },
+    "./basics/mediaContent": {
+      "require": "./dist/v1/basics/mediaContent.cjs",
+      "import": "./dist/v1/basics/mediaContent.mjs"
+    },
     "./basics/array": {
       "require": "./dist/v1/basics/array.cjs",
       "import": "./dist/v1/basics/array.mjs"
