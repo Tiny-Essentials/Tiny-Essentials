@@ -51,7 +51,7 @@
  */
 
 /**
- * The core properties required for any content item within the radio system.
+ * The core properties required for any content item within the media system.
  * @typedef {Object} MediaContentBase
  * @property {string} id - Unique identifier.
  * @property {string} title - Name of the track/message.
@@ -62,7 +62,7 @@
  */
 
 /**
- * The final content object used within the radio system, combining
+ * The final content object used within the media, combining
  * core playback properties with rich metadata.
  *
  * @typedef {MediaContentBase & MediaContentMetadata} MediaContent
@@ -369,7 +369,7 @@ export const extractMediaId3Tags = async (url, parseFile) => {
  * // Usage with URL
  * import { parseBlob } from 'music-metadata';
  * const track = await parseMediaMetadata('/assets/song.mp3', { title: 'My Song', artist: 'Artist' }, parseBlob);
- * radio.add('music', track);
+ * media.add('music', track);
  *
  * @example
  * // Usage with Audio Object
@@ -377,7 +377,7 @@ export const extractMediaId3Tags = async (url, parseFile) => {
  * const audio = new Audio();
  * audio.src = '/assets/song.mp3';
  * const track = await parseMediaMetadata(audio, {}, parseBlob);
- * radio.add('music', track);
+ * media.add('music', track);
  *
  * @example
  * // Usage with tracking
