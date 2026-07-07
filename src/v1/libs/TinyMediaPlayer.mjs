@@ -1,7 +1,18 @@
-import '../basics/mediaContent.mjs';
+import {
+  getMediaContentBase,
+  getMediaContentMetadata,
+  parseMediaMetadata,
+  valMediaContentMetadata,
+} from '../basics/mediaContent.mjs';
 
 /**
  * @typedef {import('../basics/mediaContent.mjs').MediaContent} MediaContent
+ * @typedef {import('../basics/mediaContent.mjs').MediaContentBase} MediaContentBase
+ * @typedef {import('../basics/mediaContent.mjs').MediaContentMetadata} MediaContentMetadata
+ * @typedef {import('../basics/mediaContent.mjs').ParseMediaContentMetadata} ParseMediaContentMetadata
+ * @typedef {import('../basics/mediaContent.mjs').LoadingMediaProgress} LoadingMediaProgress
+ * @typedef {import('../basics/mediaContent.mjs').MediaLoadingErrorData} MediaLoadingErrorData
+ * @typedef {import('../basics/mediaContent.mjs').UnknownArtistGetter} UnknownArtistGetter
  */
 
 /**
@@ -89,10 +100,67 @@ class BaseMediaAdapter {
 }
 
 /**
+ * Represents a search match containing the media object and its exact playlist index.
+ * @typedef {Object} SearchResult
+ * @property {MediaContent} track - The matched media content.
+ * @property {number} index - The current index of the track in the playlist.
+ */
+
+/**
  * A universal media player manager capable of orchestrating multiple API adapters.
  */
 class TinyMediaPlayer {
   static BaseMediaAdapter = BaseMediaAdapter;
+
+  /**
+   * @type {UnknownArtistGetter}
+   * The default identifier or function used when an artist cannot be determined.
+   */
+  static #unknownArtist = 'Unknown Artist';
+
+  /**
+   * Gets the current value used to represent unknown artists.
+   * @returns {UnknownArtistGetter}
+   */
+  static get unknownArtist() {
+    return TinyMediaPlayer.#unknownArtist;
+  }
+
+  /**
+   * Sets the value used to represent unknown artists.
+   * @param {UnknownArtistGetter} value - A string or a function that returns a string.
+   * @throws {TypeError} If the value is neither a string nor a function.
+   */
+  static set unknownArtist(value) {
+    if (typeof value !== 'string' && typeof value !== 'function')
+      throw new TypeError('unknownArtist must have an string or function.');
+    TinyMediaPlayer.#unknownArtist = value;
+  }
+
+  /**
+   * A Static Factory Method that prepares a MediaContent object by
+   * extracting metadata from an audio source.
+   *
+   * @param {string | HTMLMediaElement} source - A URL string or an existing Audio object.
+   * @param {Partial<MediaContentBase & MediaContentMetadata> & { id?: string; weight?: number }} [defaultMetadata={}] - Optional default metadata that overrides automatic extraction.
+   * @param {Partial<MediaContentBase & MediaContentMetadata> & { id?: string; weight?: number }} [metadata={}] - Optional manual metadata that overrides automatic extraction.
+   * @param {ParseMediaContentMetadata} [parseFile] - Private helper to interface with parseFile.
+   * @param {Object} [callbacks={}] - Callbacks for monitoring the loading process.
+   * @param {(progress: LoadingMediaProgress) => void} [callbacks.onProgress] - Callback triggered on stage changes.
+   * @param {(error: MediaLoadingErrorData) => void} [callbacks.onError] - Callback triggered when a non-fatal or fatal error occurs.
+   * @returns {Promise<MediaContent>} A promise that resolves to a valid MediaContent object.
+   * @throws {MediaLoadingError} If the preparation process fails at any stage.
+   */
+  static async parseContent(source, defaultMetadata, metadata, parseFile, callbacks) {
+    return parseMediaMetadata(
+      source,
+      defaultMetadata,
+      metadata,
+      parseFile,
+      callbacks,
+      TinyMediaPlayer.#unknownArtist,
+    );
+  }
 
   /** @type {Map<string, BaseMediaAdapter>} */
   #adapters = new Map();
@@ -154,7 +222,7 @@ class TinyMediaPlayer {
         }
       }
     } catch (error) {
-      console.warn('[UniversalMediaPlayer] Failed to read volume from localStorage.', error);
+      console.warn('[TinyMediaPlayer] Failed to read volume from localStorage.', error);
     }
   }
 
@@ -167,7 +235,7 @@ class TinyMediaPlayer {
         window.localStorage.setItem(this.#volumeStorageKey, this.#volume.toString());
       }
     } catch (error) {
-      console.warn('[UniversalMediaPlayer] Failed to save volume to localStorage.', error);
+      console.warn('[TinyMediaPlayer] Failed to save volume to localStorage.', error);
     }
   }
 
@@ -309,7 +377,7 @@ class TinyMediaPlayer {
         this.#saveVolumeToStorage();
       }
     } catch (error) {
-      console.warn('[UniversalMediaPlayer] Failed to migrate volume storage key.', error);
+      console.warn('[TinyMediaPlayer] Failed to migrate volume storage key.', error);
     }
   }
 
@@ -357,16 +425,122 @@ class TinyMediaPlayer {
   /**
    * Adds a new item to the end of the playlist.
    * @param {MediaContent} content - The structured media content object.
+   * @returns {number} The new length of the playlist.
    * @throws {TypeError} If content is invalid or missing required base properties.
    */
   addTrack(content) {
-    if (!content || typeof content !== 'object' || typeof content.url !== 'string') {
+    if (!content || typeof content !== 'object' || typeof content.url !== 'string')
       throw new TypeError('Track content must be a valid MediaContent object containing a URL.');
-    }
-    this.#playlist.push(content);
+    /** @type {MediaContent} */
+    const newContent = { ...getMediaContentBase(), ...getMediaContentMetadata(), ...content };
+    valMediaContentMetadata(newContent);
+
+    const newLength = this.#playlist.push(newContent);
     if (this.#currentIndex === -1) {
       this.#currentIndex = 0;
     }
+    return newLength;
+  }
+
+  /**
+   * Checks if a track exists at the specified index.
+   * @param {number} index - The target index.
+   * @returns {boolean} True if the track exists, false otherwise.
+   * @throws {TypeError} If the index is not a number.
+   */
+  existsTrack(index) {
+    if (typeof index !== 'number') {
+      throw new TypeError('Index must be a number.');
+    }
+    return index >= 0 && index < this.#playlist.length;
+  }
+
+  /**
+   * Retrieves the track at the specified index.
+   * @param {number} index - The target index.
+   * @returns {MediaContent} The media content object.
+   * @throws {TypeError} If the index is not a number.
+   * @throws {RangeError} If the index is out of bounds.
+   */
+  getTrack(index) {
+    if (typeof index !== 'number') {
+      throw new TypeError('Index must be a number.');
+    }
+    if (!this.existsTrack(index)) {
+      throw new RangeError(`Index ${index} is out of bounds for the current playlist.`);
+    }
+    return this.#playlist[index];
+  }
+
+  /**
+   * Removes the track at the specified index and manages playback state accordingly.
+   * @param {number} index - The index of the track to remove.
+   * @returns {Promise<void>}
+   * @throws {TypeError} If the index is not a number.
+   * @throws {RangeError} If the index is out of bounds.
+   */
+  async removeTrack(index) {
+    if (typeof index !== 'number') {
+      throw new TypeError('Index must be a number.');
+    }
+    if (!this.existsTrack(index)) {
+      throw new RangeError(`Index ${index} is out of bounds for the current playlist.`);
+    }
+
+    if (index === this.#currentIndex) {
+      // Stop the current track if it is the one being removed
+      await this.stop();
+      this.#playlist.splice(index, 1);
+
+      if (this.#playlist.length === 0) {
+        this.#currentIndex = -1;
+      } else if (this.#currentIndex >= this.#playlist.length) {
+        // If we removed the last item and others exist, reset index safely
+        this.#currentIndex = 0;
+      }
+    } else {
+      this.#playlist.splice(index, 1);
+      // Correct the current index offset if a track before it was removed
+      if (index < this.#currentIndex) {
+        this.#currentIndex -= 1;
+      }
+    }
+  }
+
+  /**
+   * Searches the playlist for tracks matching a string query or a custom evaluation function.
+   * @param {string | function(MediaContent): boolean} query - The search string (checked against title, artist, album) or a callback returning a boolean.
+   * @returns {SearchResult[]} An array containing the matched tracks and their corresponding indices.
+   * @throws {TypeError} If the query is neither a string nor a function.
+   */
+  searchTrack(query) {
+    if (typeof query !== 'string' && typeof query !== 'function') {
+      throw new TypeError('Search query must be a string or a boolean evaluation function.');
+    }
+
+    const results = [];
+
+    for (let i = 0; i < this.#playlist.length; i++) {
+      const track = this.#playlist[i];
+      let isMatch = false;
+
+      if (typeof query === 'function') {
+        isMatch = Boolean(query(track));
+      } else {
+        const lowerQuery = query.toLowerCase();
+        const titleMatch = track.title && track.title.toLowerCase().includes(lowerQuery);
+        const artistMatch = track.artist && track.artist.toLowerCase().includes(lowerQuery);
+        const albumMatch = track.album && track.album.toLowerCase().includes(lowerQuery);
+
+        isMatch = Boolean(titleMatch || artistMatch || albumMatch);
+      }
+
+      if (isMatch) {
+        results.push({ track, index: i });
+      }
+    }
+
+    return results;
   }
 
   /**
@@ -445,7 +619,7 @@ class TinyMediaPlayer {
           nextIndex = 0;
         } else {
           // End of playlist, stop playing
-          this.#currentIndex = -1;
+          this.#currentIndex = 0;
           return;
         }
       }

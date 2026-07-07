@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TinyMediaPlayer - Professional QA Environment</title>
+    <style>
+      /* * CSS Color Variables & Theming
+       * Architecture structured for easy dark/light mode switching.
+       */
+      :root {
+        /* Used as the primary background color for the entire page */
+        --bg-base: #121212;
+
+        /* Used for the background of individual control panels and cards */
+        --bg-panel: #1e1e1e;
+
+        /* Used for the primary text color (headings, main labels) */
+        --text-main: #ffffff;
+
+        /* Used for secondary, less emphasized text (logs, descriptions) */
+        --text-muted: #a0a0a0;
+
+        /* Used for primary interactive elements like active buttons and sliders */
+        --accent-primary: #3b82f6;
+
+        /* Used for the hover state of primary interactive elements */
+        --accent-hover: #2563eb;
+
+        /* Used for structural dividers and input borders */
+        --border-color: #333333;
+
+        /* Used for error messages in the console log */
+        --error-color: #ef4444;
+
+        /* Used for success messages in the console log */
+        --success-color: #10b981;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg-base);
+        color: var(--text-main);
+        padding: 2rem;
+        line-height: 1.5;
+      }
+
+      header {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1rem;
+      }
+
+      header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+      }
+
+      .panel {
+        background-color: var(--bg-panel);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+      }
+
+      .panel h2 {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+        color: var(--accent-primary);
+      }
+
+      .control-group {
+        margin-bottom: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .control-row {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      label {
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      input[type='text'],
+      input[type='number'],
+      select {
+        width: 100%;
+        padding: 0.5rem;
+        background-color: var(--bg-base);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        border-radius: 4px;
+      }
+
+      button {
+        padding: 0.5rem 1rem;
+        background-color: var(--accent-primary);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background-color 0.2s ease;
+      }
+
+      button:hover {
+        background-color: var(--accent-hover);
+      }
+
+      button:disabled {
+        background-color: var(--border-color);
+        color: var(--text-muted);
+        cursor: not-allowed;
+      }
+
+      .btn-danger {
+        background-color: var(--error-color);
+      }
+      .btn-danger:hover {
+        background-color: #dc2626;
+      }
+
+      .status-box {
+        background-color: var(--bg-base);
+        border: 1px solid var(--border-color);
+        padding: 1rem;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        height: 150px;
+        overflow-y: auto;
+        color: var(--success-color);
+        white-space: pre-wrap;
+      }
+
+      .playlist-view {
+        background-color: var(--bg-base);
+        border: 1px solid var(--border-color);
+        padding: 0.5rem;
+        border-radius: 4px;
+        min-height: 100px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .playlist-item {
+        padding: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.9rem;
+        display: flex;
+        justify-content: space-between;
+      }
+      .playlist-item.active {
+        color: var(--accent-primary);
+        font-weight: bold;
+        border-left: 3px solid var(--accent-primary);
+      }
+      .playlist-item:last-child {
+        border-bottom: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>TinyMediaPlayer - System Verification Dashboard</h1>
+      <p style="color: var(--text-muted)">
+        Professional testing environment for the universal media wrapper.
+      </p>
+    </header>
+
+    <main class="dashboard-grid">
+      <div class="left-col">
+        <section class="panel" style="margin-bottom: 2rem">
+          <h2>1. Playback Controls</h2>
+          <div class="control-row" style="margin-bottom: 1rem">
+            <button id="btn-play">Play</button>
+            <button id="btn-pause">Pause</button>
+            <button id="btn-stop">Stop</button>
+            <button id="btn-prev">Prev</button>
+            <button id="btn-next">Next</button>
+          </div>
+
+          <div class="control-group">
+            <label for="seek-input">Seek to Timeline (ms):</label>
+            <div class="control-row">
+              <input type="number" id="seek-input" value="15000" min="0" />
+              <button id="btn-seek">Seek</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label for="step-input">Step Timeline Forward/Backward (ms):</label>
+            <div class="control-row">
+              <input type="number" id="step-input" value="5000" />
+              <button id="btn-step">Apply Step</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>2. State & Settings Management</h2>
+          <div class="control-group">
+            <label for="volume-slider">Global Volume:</label>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" />
+          </div>
+
+          <div class="control-row" style="margin-bottom: 1rem">
+            <div class="control-group" style="flex: 1">
+              <label for="loop-select">Loop Mode:</label>
+              <select id="loop-select">
+                <option value="NONE">NONE</option>
+                <option value="TRACK">TRACK</option>
+                <option value="PLAYLIST">PLAYLIST</option>
+              </select>
+            </div>
+            <div class="control-group" style="flex: 1">
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 0.5rem;
+                  height: 100%;
+                  margin-top: 1rem;
+                "
+              >
+                <input type="checkbox" id="random-checkbox" />
+                Enable Random Mode
+              </label>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem">
+              <input type="checkbox" id="persist-volume-checkbox" />
+              Persist Volume in localStorage
+            </label>
+            <input
+              type="text"
+              id="storage-key-input"
+              placeholder="Volume Storage Key"
+              value="tiny_media_player_volume"
+              style="margin-top: 0.5rem"
+            />
+            <button id="btn-update-storage" style="margin-top: 0.5rem">Update Storage Key</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="right-col">
+        <section class="panel" style="margin-bottom: 2rem">
+          <h2>3. Playlist Management</h2>
+          <div class="control-group">
+            <label>Add New Track:</label>
+            <input
+              type="text"
+              id="track-url"
+              placeholder="Media URL (e.g., https://.../audio.mp3)"
+              value="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3"
+            />
+            <input
+              type="text"
+              id="track-title"
+              placeholder="Track Title"
+              value="T-Rex Roar (MDN Sample)"
+            />
+            <div class="control-row" style="margin-top: 0.5rem">
+              <button id="btn-add-track">Add to Playlist</button>
+              <button id="btn-clear-playlist" class="btn-danger">Clear Playlist</button>
+            </div>
+          </div>
+
+          <div class="control-group" style="margin-top: 1.5rem">
+            <label>Current Playlist:</label>
+            <div id="playlist-view" class="playlist-view"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>4. System Logs & Active State</h2>
+          <div id="system-logs" class="status-box"></div>
+        </section>
+      </div>
+    </main>
+
+    <script type="module">
+      import { TinyMediaPlayer } from './src/v1/libs/TinyMediaPlayer.mjs';
+
+      /**
+       * Concrete implementation of the BaseMediaAdapter using HTML5 Audio.
+       * This allows us to actually play audio files within the browser.
+       */
+      class HtmlAudioAdapter extends TinyMediaPlayer.BaseMediaAdapter {
+        #audioElement;
+
+        constructor() {
+          super();
+          this.#audioElement = new Audio();
+        }
+
+        canHandle(content) {
+          if (!content || typeof content !== 'object') {
+            throw new TypeError('Content must be a valid object.');
+          }
+          return (
+            typeof content.url === 'string' &&
+            (content.url.startsWith('http') || content.url.startsWith('blob:'))
+          );
+        }
+
+        async play(content) {
+          if (typeof content?.url !== 'string') throw new TypeError('Valid media URL required.');
+
+          if (this.#audioElement.src !== content.url) {
+            this.#audioElement.src = content.url;
+            this.#audioElement.load();
+          }
+          await this.#audioElement.play();
+        }
+
+        async pause() {
+          this.#audioElement.pause();
+        }
+
+        async stop() {
+          this.#audioElement.pause();
+          this.#audioElement.currentTime = 0;
+        }
+
+        async seek(timeMs) {
+          if (typeof timeMs !== 'number') throw new TypeError('Seek time must be a number.');
+          this.#audioElement.currentTime = timeMs / 1000;
+        }
+
+        getCurrentTime() {
+          return Math.floor(this.#audioElement.currentTime * 1000);
+        }
+
+        setVolume(volume) {
+          if (typeof volume !== 'number' || volume < 0 || volume > 1) {
+            throw new RangeError('Volume must be between 0.0 and 1.0');
+          }
+          this.#audioElement.volume = volume;
+        }
+
+        // Exposing the element to easily bind the 'ended' event in testing
+        get audioElement() {
+          return this.#audioElement;
+        }
+      }
+
+      // Initialize Player and Adapter
+      const player = new TinyMediaPlayer({ persistVolume: false });
+      const htmlAdapter = new HtmlAudioAdapter();
+      player.registerAdapter('html5_audio', htmlAdapter);
+
+      // DOM Elements setup
+      const logsContainer = document.getElementById('system-logs');
+      const playlistView = document.getElementById('playlist-view');
+      const volumeSlider = document.getElementById('volume-slider');
+
+      /**
+       * Logger utility.
+       * @param {string} message
+       */
+      const logMsg = (message) => {
+        const time = new Date().toLocaleTimeString();
+        logsContainer.textContent = `[${time}] ${message}\n` + logsContainer.textContent;
+      };
+
+      /**
+       * Renders the playlist array to the UI.
+       */
+      const renderPlaylist = () => {
+        playlistView.innerHTML = '';
+        const list = player.playlist;
+        if (list.length === 0) {
+          playlistView.innerHTML =
+            '<div style="color: var(--text-muted); padding: 0.5rem;">Playlist is empty.</div>';
+          return;
+        }
+
+        list.forEach((track, index) => {
+          const div = document.createElement('div');
+          div.className = `playlist-item ${player.currentIndex === index ? 'active' : ''}`;
+          div.innerHTML = `<span>${index + 1}. ${track.title}</span> <span style="font-size: 0.8rem; color: var(--text-muted)">${track.id}</span>`;
+          playlistView.appendChild(div);
+        });
+      };
+
+      /**
+       * Updates UI inputs to match the current class state.
+       */
+      const syncUIWithState = () => {
+        volumeSlider.value = player.volume;
+        document.getElementById('loop-select').value = player.loopMode;
+        document.getElementById('random-checkbox').checked = player.isRandom;
+        document.getElementById('persist-volume-checkbox').checked = player.persistVolume;
+        document.getElementById('storage-key-input').value = player.volumeStorageKey;
+        renderPlaylist();
+      };
+
+      // Bind Audio Ended Event to trigger next() automatically for testing
+      htmlAdapter.audioElement.addEventListener('ended', async () => {
+        logMsg('Track ended naturally. Invoking player.next()');
+        await player.next();
+        renderPlaylist();
+      });
+
+      // ==========================================
+      // EVENT LISTENERS
+      // ==========================================
+
+      // Playback Controls
+      document.getElementById('btn-play').addEventListener('click', async () => {
+        try {
+          await player.play();
+          logMsg(`Playing track index: ${player.currentIndex}`);
+        } catch (error) {
+          logMsg(`ERROR: ${error.message}`);
+        }
+      });
+
+      document.getElementById('btn-pause').addEventListener('click', async () => {
+        await player.pause();
+        logMsg('Playback paused.');
+      });
+
+      document.getElementById('btn-stop').addEventListener('click', async () => {
+        await player.stop();
+        logMsg('Playback stopped.');
+      });
+
+      document.getElementById('btn-next').addEventListener('click', async () => {
+        await player.next();
+        logMsg(`Skipped to next. Current index: ${player.currentIndex}`);
+        renderPlaylist();
+      });
+
+      document.getElementById('btn-prev').addEventListener('click', async () => {
+        await player.prev();
+        logMsg(`Returned to previous. Current index: ${player.currentIndex}`);
+        renderPlaylist();
+      });
+
+      document.getElementById('btn-seek').addEventListener('click', async () => {
+        const timeMs = parseInt(document.getElementById('seek-input').value, 10);
+        try {
+          await player.seek(timeMs);
+          logMsg(`Seeked to ${timeMs}ms.`);
+        } catch (error) {
+          logMsg(`ERROR: ${error.message}`);
+        }
+      });
+
+      document.getElementById('btn-step').addEventListener('click', async () => {
+        const stepMs = parseInt(document.getElementById('step-input').value, 10);
+        try {
+          await player.step(stepMs);
+          logMsg(`Stepped timeline by ${stepMs}ms.`);
+        } catch (error) {
+          logMsg(`ERROR: ${error.message}`);
+        }
+      });
+
+      // State Controls
+      volumeSlider.addEventListener('input', (e) => {
+        try {
+          player.volume = parseFloat(e.target.value);
+          logMsg(`Volume set to: ${player.volume.toFixed(2)}`);
+        } catch (error) {
+          logMsg(`ERROR: ${error.message}`);
+        }
+      });
+
+      document.getElementById('loop-select').addEventListener('change', (e) => {
+        player.loopMode = e.target.value;
+        logMsg(`Loop mode changed to: ${player.loopMode}`);
+      });
+
+      document.getElementById('random-checkbox').addEventListener('change', (e) => {
+        player.isRandom = e.target.checked;
+        logMsg(`Random mode is now: ${player.isRandom}`);
+      });
+
+      document.getElementById('persist-volume-checkbox').addEventListener('change', (e) => {
+        player.persistVolume = e.target.checked;
+        logMsg(`Persist Volume changed to: ${player.persistVolume}`);
+      });
+
+      document.getElementById('btn-update-storage').addEventListener('click', () => {
+        try {
+          const newKey = document.getElementById('storage-key-input').value;
+          player.volumeStorageKey = newKey;
+          logMsg(`Storage key updated to: ${newKey}`);
+        } catch (error) {
+          logMsg(`ERROR: ${error.message}`);
+        }
+      });
+
+      // Playlist Controls
+      document.getElementById('btn-add-track').addEventListener('click', () => {
+        const url = document.getElementById('track-url').value;
+        const title = document.getElementById('track-title').value;
+
+        try {
+          // Creating a mock MediaContent object
+          const content = {
+            id: `track_${Date.now()}`,
+            url: url,
+            title: title || 'Unknown Title',
+            artist: 'Unknown Artist',
+            duration: 0,
+          };
+          player.addTrack(content);
+          logMsg(`Added track: ${title}`);
+          renderPlaylist();
+        } catch (error) {
+          logMsg(`ERROR: ${error.message}`);
+        }
+      });
+
+      document.getElementById('btn-clear-playlist').addEventListener('click', async () => {
+        await player.clearPlaylist();
+        logMsg('Playlist cleared and playback stopped.');
+        renderPlaylist();
+      });
+
+      // Initial Render
+      syncUIWithState();
+      logMsg('System initialized successfully. Ready for QA testing.');
+    </script>
+  </body>
+</html>

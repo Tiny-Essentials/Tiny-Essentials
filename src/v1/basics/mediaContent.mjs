@@ -105,8 +105,18 @@
 /** @type {Map<string, number>} */
 export const _blobCounter = new Map();
 
+/** @returns {MediaContentBase} */
+export const getMediaContentBase = () => ({
+  id: '',
+  title: '',
+  artist: '',
+  url: '',
+  duration: 0,
+  weight: 1,
+});
+
 /** @returns {MediaContentMetadata} */
-export const getMediaContentTemplate = () => ({
+export const getMediaContentMetadata = () => ({
   title: null,
   album: null,
   albumartist: null,
