@@ -63,6 +63,7 @@ Here, you can navigate through different sections of the project. Below are the 
 * 🕒 **[TinyAnalogClock](./libs/TinyAnalogClock.md)** — A lightweight analog clock engine for managing time-based rotations, supporting custom offsets, smooth transitions, and easy binding to CSS variables rendering.
 * 🔍 **[TinyArrayComparator](./libs/TinyArrayComparator.md)** — A lightweight, highly optimized JavaScript utility class designed to compare two arrays and efficiently detect which items were **added** or **deleted**.
 * 🧠 **[TinyMamdaniInferenceSystem](./libs/TinyMamdaniInferenceSystem.md)** — A implementation of a Mamdani Inference System, allowing you to model logic using trapezoidal membership functions.
+* ⏯️ **[TinyMediaPlayer](./libs/TinyMediaPlayer.md)** — A universal media player architecture utilizing an adapter pattern to orchestrate multiple platform APIs, featuring robust playlist management, playback controls, and weighted random selection.
 
 ### 2.1. **`libs/TinyClassManager`**
 
