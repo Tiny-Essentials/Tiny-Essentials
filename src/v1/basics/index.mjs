@@ -68,10 +68,12 @@ import {
   extractMediaId3Tags,
   parseMediaMetadata,
   valMediaContentMetadata,
+  valMediaContentMetadataPartial,
 } from './mediaContent.mjs';
 
 export {
   valMediaContentMetadata,
+  valMediaContentMetadataPartial,
   parseMediaMetadata,
   extractMediaId3Tags,
   diffStrings,
