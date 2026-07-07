@@ -116,6 +116,10 @@
       "require": "./dist/v1/libs/ColorSafeStringify.cjs",
       "import": "./dist/v1/libs/ColorSafeStringify.mjs"
     },
+    "./libs/TinyMediaPlayer": {
+      "require": "./dist/v1/libs/TinyMediaPlayer.cjs",
+      "import": "./dist/v1/libs/TinyMediaPlayer.mjs"
+    },
     "./libs/TinyRadioFm": {
       "require": "./dist/v1/libs/TinyRadioFm.cjs",
       "import": "./dist/v1/libs/TinyRadioFm.mjs"

@@ -153,9 +153,11 @@ import {
 } from './libs/TinyMamdaniInferenceSystem.mjs';
 import TinyClassManager from './libs/TinyClassManager.mjs';
 import TinyRadioFm from './libs/TinyRadioFm.mjs';
+import TinyMediaPlayer from './libs/TinyMediaPlayer.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
+  TinyMediaPlayer,
   TinyRadioFm,
   TinyClassManager,
   FuzzySet,

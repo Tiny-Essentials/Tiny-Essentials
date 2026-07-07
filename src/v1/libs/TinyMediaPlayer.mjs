@@ -245,11 +245,10 @@ class TinyMediaPlayer {
    * @throws {RangeError} If the value is outside the 0.0 to 1.0 range.
    */
   set volume(value) {
-    if (typeof value !== 'number')
-      throw new TypeError('Volume must be a number.');
-    if (value < 0 || value > 1) 
+    if (typeof value !== 'number') throw new TypeError('Volume must be a number.');
+    if (value < 0 || value > 1)
       throw new RangeError('Volume must be tightly constrained between 0.0 and 1.0.');
-    
+
     this.#volume = value;
     this.#saveVolumeToStorage();
 
