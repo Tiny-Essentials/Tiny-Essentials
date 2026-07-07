@@ -256,12 +256,87 @@ class TinyMediaPlayer {
     if (!Array.isArray(value)) {
       throw new TypeError('Playlist must be an array of MediaContent objects.');
     }
+
+    const wasPlaying = this.#isPlaying;
+    let oldAdapter = null;
+
+    // Capture the active adapter before making structural changes
+    if (this.#currentIndex !== -1 && this.#playlist.length > 0) {
+      try {
+        oldAdapter = this.#getActiveAdapter();
+      } catch (error) {
+        // Ignore if no compatible adapter was found for the old content
+      }
+    }
+
     this.#playlist = value;
+
+    // Validation to correct currentIndex ensuring it aligns with the new playlist limits
+    if (this.#playlist.length === 0) {
+      this.#currentIndex = -1;
+    } else if (this.#currentIndex >= this.#playlist.length) {
+      this.#currentIndex = 0; // Reset to start if out of bounds
+    } else if (this.#currentIndex === -1) {
+      this.#currentIndex = 0; // Auto-select first item if previously empty
+    }
+
+    // Immediately adapt to the new state if it was playing
+    if (wasPlaying) {
+      (async () => {
+        try {
+          if (oldAdapter) await oldAdapter.stop();
+          if (this.#currentIndex !== -1) await this.play();
+        } catch (error) {
+          console.warn('[TinyMediaPlayer] Background transition error on playlist update:', error);
+        }
+      })();
+    }
   }
 
   /** @returns {number} The current active index in the playlist. */
   get currentIndex() {
     return this.#currentIndex;
+  }
+
+  /**
+   * @param {number} value - The index to set as current.
+   * @throws {TypeError} If the value is not a number.
+   * @throws {RangeError} If the index is out of the playlist bounds (unless -1 for empty).
+   */
+  set currentIndex(value) {
+    if (typeof value !== 'number') {
+      throw new TypeError('Current index must be a number.');
+    }
+    if (value < -1 || (value >= this.#playlist.length && this.#playlist.length > 0)) {
+      throw new RangeError(`Index ${value} is out of bounds for the current playlist.`);
+    }
+
+    if (this.#currentIndex === value) return; // Optimization: do nothing if index is the same
+
+    const wasPlaying = this.#isPlaying;
+    let oldAdapter = null;
+
+    if (this.#currentIndex !== -1 && this.#playlist.length > 0) {
+      try {
+        oldAdapter = this.#getActiveAdapter();
+      } catch (error) {
+        // Ignore
+      }
+    }
+
+    this.#currentIndex = value;
+
+    // Automatically correct the audio output to match the new current index
+    if (wasPlaying) {
+      (async () => {
+        try {
+          if (oldAdapter) await oldAdapter.stop();
+          if (this.#currentIndex !== -1) await this.play();
+        } catch (error) {
+          console.warn('[TinyMediaPlayer] Background transition error on index update:', error);
+        }
+      })();
+    }
   }
 
   /** @returns {LoopModeType} The current loop configuration. */
@@ -326,7 +401,7 @@ class TinyMediaPlayer {
         const adapter = this.#getActiveAdapter();
         if (adapter) adapter.setVolume(this.#volume);
       } catch (error) {
-        // Fails silently if no compatible adapter is found while just adjusting volume
+        // Fails silently if just adjusting volume on invalid content
       }
     }
   }
@@ -646,7 +721,9 @@ class TinyMediaPlayer {
         if (this.#loopMode === 'PLAYLIST') {
           prevIndex = this.#playlist.length - 1;
         } else {
-          prevIndex = 0;
+          // End of playlist, stop playing
+          this.#currentIndex = 0;
+          return;
         }
       }
       this.#currentIndex = prevIndex;

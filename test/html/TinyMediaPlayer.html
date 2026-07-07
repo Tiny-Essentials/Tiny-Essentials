@@ -138,6 +138,11 @@
         background-color: #dc2626;
       }
 
+      .btn-small {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+      }
+
       .status-box {
         background-color: var(--bg-base);
         border: 1px solid var(--border-color);
@@ -145,7 +150,7 @@
         border-radius: 4px;
         font-family: monospace;
         font-size: 0.9rem;
-        height: 150px;
+        height: 250px;
         overflow-y: auto;
         color: var(--success-color);
         white-space: pre-wrap;
@@ -167,6 +172,7 @@
         font-size: 0.9rem;
         display: flex;
         justify-content: space-between;
+        align-items: center;
       }
       .playlist-item.active {
         color: var(--accent-primary);
@@ -287,6 +293,44 @@
             </div>
           </div>
 
+          <hr style="border-color: var(--border-color); margin: 1rem 0" />
+
+          <div class="control-group">
+            <label>Search Tracks:</label>
+            <div class="control-row">
+              <input type="text" id="search-track-input" placeholder="Search by title, artist..." />
+              <button id="btn-search-track">Search</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label>Inspect Track by Index:</label>
+            <div class="control-row">
+              <input
+                type="number"
+                id="get-track-index"
+                placeholder="Index (e.g., 0)"
+                min="0"
+                value="0"
+              />
+              <button id="btn-get-track">Check & Get</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label>Remove Track by Index:</label>
+            <div class="control-row">
+              <input
+                type="number"
+                id="remove-track-index"
+                placeholder="Index (e.g., 0)"
+                min="0"
+                value="0"
+              />
+              <button id="btn-remove-track" class="btn-danger">Remove Track</button>
+            </div>
+          </div>
+
           <div class="control-group" style="margin-top: 1.5rem">
             <label>Current Playlist:</label>
             <div id="playlist-view" class="playlist-view"></div>
@@ -305,7 +349,6 @@
 
       /**
        * Concrete implementation of the BaseMediaAdapter using HTML5 Audio.
-       * This allows us to actually play audio files within the browser.
        */
       class HtmlAudioAdapter extends TinyMediaPlayer.BaseMediaAdapter {
         #audioElement;
@@ -386,7 +429,7 @@
       };
 
       /**
-       * Renders the playlist array to the UI.
+       * Renders the playlist array to the UI and attaches dynamic event listeners.
        */
       const renderPlaylist = () => {
         playlistView.innerHTML = '';
@@ -400,8 +443,31 @@
         list.forEach((track, index) => {
           const div = document.createElement('div');
           div.className = `playlist-item ${player.currentIndex === index ? 'active' : ''}`;
-          div.innerHTML = `<span>${index + 1}. ${track.title}</span> <span style="font-size: 0.8rem; color: var(--text-muted)">${track.id}</span>`;
+
+          div.innerHTML = `
+            <div>
+              <span>${index}. ${track.title}</span> 
+              <br/>
+              <span style="font-size: 0.8rem; color: var(--text-muted)">ID: ${track.id}</span>
+            </div>
+            <button class="btn-danger btn-small remove-btn" data-index="${index}">Remove</button>
+          `;
           playlistView.appendChild(div);
+        });
+
+        // Attach listeners for dynamic remove buttons
+        const removeButtons = document.querySelectorAll('.remove-btn');
+        removeButtons.forEach((btn) => {
+          btn.addEventListener('click', async (e) => {
+            const index = parseInt(e.target.getAttribute('data-index'), 10);
+            try {
+              await player.removeTrack(index);
+              logMsg(`Removed track at index: ${index} (via list button).`);
+              renderPlaylist();
+            } catch (error) {
+              logMsg(`ERROR: ${error.message}`);
+            }
+          });
         });
       };
 
@@ -541,6 +607,58 @@
         await player.clearPlaylist();
         logMsg('Playlist cleared and playback stopped.');
         renderPlaylist();
+      });
+
+      // Search, Inspect & Remove Controls
+      document.getElementById('btn-search-track').addEventListener('click', () => {
+        const query = document.getElementById('search-track-input').value;
+        if (!query) {
+          logMsg('Please enter a search query.');
+          return;
+        }
+
+        try {
+          const results = player.searchTrack(query);
+          if (results.length === 0) {
+            logMsg(`Search: No tracks found matching "${query}".`);
+          } else {
+            logMsg(`Search found ${results.length} match(es):`);
+            results.forEach((res) => {
+              logMsg(` - Index ${res.index}: ${res.track.title}`);
+            });
+          }
+        } catch (error) {
+          logMsg(`ERROR: ${error.message}`);
+        }
+      });
+
+      document.getElementById('btn-get-track').addEventListener('click', () => {
+        const indexValue = document.getElementById('get-track-index').value;
+        const index = parseInt(indexValue, 10);
+
+        try {
+          if (player.existsTrack(index)) {
+            const track = player.getTrack(index);
+            logMsg(`Track at index ${index} exists. Title: ${track.title}`);
+          } else {
+            logMsg(`Track at index ${index} does not exist in the current playlist.`);
+          }
+        } catch (error) {
+          logMsg(`ERROR: ${error.message}`);
+        }
+      });
+
+      // EXPLICIT REMOVE TRACK CONTROL
+      document.getElementById('btn-remove-track').addEventListener('click', async () => {
+        const indexValue = document.getElementById('remove-track-index').value;
+        const index = parseInt(indexValue, 10);
+        try {
+          await player.removeTrack(index);
+          logMsg(`Successfully removed track at index ${index} (via input field).`);
+          renderPlaylist();
+        } catch (error) {
+          logMsg(`ERROR: ${error.message}`);
+        }
       });
 
       // Initial Render
