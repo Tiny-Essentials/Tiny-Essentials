@@ -1,3 +1,5 @@
+import TinyEvents from './TinyEvents.mjs';
+
 import {
   getMediaContentBase,
   getMediaContentMetadata,
@@ -109,7 +111,7 @@ class BaseMediaAdapter {
 /**
  * A universal media player manager capable of orchestrating multiple API adapters.
  */
-class TinyMediaPlayer {
+class TinyMediaPlayer extends TinyEvents {
   static BaseMediaAdapter = BaseMediaAdapter;
 
   /**
@@ -193,6 +195,7 @@ class TinyMediaPlayer {
    * @param {TinyMediaPlayerOptions} [options={}] - Configuration parameters for the player.
    */
   constructor(options = {}) {
+    super();
     // Volume configuration
     this.#persistVolume = Boolean(options.persistVolume);
     this.#volumeStorageKey =
@@ -240,6 +243,44 @@ class TinyMediaPlayer {
   }
 
   // ==========================================
+  // INTERNAL HELPERS
+  // ==========================================
+
+  /**
+   * Calculates a random index based on the weighted probability of each track.
+   * @returns {number} The selected index.
+   */
+  #getWeightedRandomIndex() {
+    if (this.#playlist.length === 0) return -1;
+    if (this.#playlist.length === 1) return 0;
+
+    let totalWeight = 0;
+
+    // Calculate total sum of all weights
+    for (const track of this.#playlist) {
+      const weight = typeof track.weight === 'number' && track.weight > 0 ? track.weight : 1;
+      totalWeight += weight;
+    }
+
+    // Pick a random number between 0 and totalWeight
+    let randomThreshold = Math.random() * totalWeight;
+
+    // Find the track that corresponds to this threshold
+    for (let i = 0; i < this.#playlist.length; i++) {
+      const track = this.#playlist[i];
+      const weight = typeof track.weight === 'number' && track.weight > 0 ? track.weight : 1;
+
+      if (randomThreshold < weight) {
+        return i;
+      }
+      randomThreshold -= weight;
+    }
+
+    // Fallback in case of floating point inaccuracies
+    return this.#playlist.length - 1;
+  }
+
+  // ==========================================
   // GETTERS & STRICT SETTERS
   // ==========================================
 
@@ -257,7 +298,7 @@ class TinyMediaPlayer {
       throw new TypeError('Playlist must be an array of MediaContent objects.');
     }
 
-    value.forEach((value) => valMediaContentMetadata(value));
+    value.forEach((val) => valMediaContentMetadata(val));
     const wasPlaying = this.#isPlaying;
     let oldAdapter = null;
 
@@ -271,6 +312,7 @@ class TinyMediaPlayer {
     }
 
     this.#playlist = value;
+    this.emit('playlistUpdate', this.playlist);
 
     // Validation to correct currentIndex ensuring it aligns with the new playlist limits
     if (this.#playlist.length === 0) {
@@ -280,6 +322,8 @@ class TinyMediaPlayer {
     } else if (this.#currentIndex === -1) {
       this.#currentIndex = 0; // Auto-select first item if previously empty
     }
+
+    this.emit('trackChange', this.#currentIndex);
 
     // Immediately adapt to the new state if it was playing
     if (wasPlaying) {
@@ -326,6 +370,7 @@ class TinyMediaPlayer {
     }
 
     this.#currentIndex = value;
+    this.emit('trackChange', this.#currentIndex);
 
     // Automatically correct the audio output to match the new current index
     if (wasPlaying) {
@@ -355,6 +400,7 @@ class TinyMediaPlayer {
       throw new TypeError(`Loop mode must be one of: ${validModes.join(', ')}.`);
     }
     this.#loopMode = value;
+    this.emit('loopModeChange', this.#loopMode);
   }
 
   /** @returns {boolean} The current random mode status. */
@@ -371,6 +417,7 @@ class TinyMediaPlayer {
       throw new TypeError('Random mode state must be a boolean.');
     }
     this.#isRandom = value;
+    this.emit('randomModeChange', this.#isRandom);
   }
 
   /** @returns {boolean} True if media is actively playing. */
@@ -395,6 +442,7 @@ class TinyMediaPlayer {
 
     this.#volume = value;
     this.#saveVolumeToStorage();
+    this.emit('volumeChange', this.#volume);
 
     // Immediately apply the new volume if a track is active
     if (this.#currentIndex !== -1 && this.#playlist.length > 0) {
@@ -507,6 +555,7 @@ class TinyMediaPlayer {
   addTrack(content) {
     if (!content || typeof content !== 'object' || typeof content.url !== 'string')
       throw new TypeError('Track content must be a valid MediaContent object containing a URL.');
+
     /** @type {MediaContent} */
     const newContent = { ...getMediaContentBase(), ...getMediaContentMetadata(), ...content };
     valMediaContentMetadata(newContent);
@@ -514,7 +563,9 @@ class TinyMediaPlayer {
     const newLength = this.#playlist.push(newContent);
     if (this.#currentIndex === -1) {
       this.#currentIndex = 0;
+      this.emit('trackChange', this.#currentIndex);
     }
+    this.emit('playlistUpdate', this.playlist);
     return newLength;
   }
 
@@ -574,13 +625,17 @@ class TinyMediaPlayer {
         // If we removed the last item and others exist, reset index safely
         this.#currentIndex = 0;
       }
+      this.emit('trackChange', this.#currentIndex);
     } else {
       this.#playlist.splice(index, 1);
       // Correct the current index offset if a track before it was removed
       if (index < this.#currentIndex) {
         this.#currentIndex -= 1;
+        // Current track didn't change, just its index shifted
+        this.emit('trackChange', this.#currentIndex);
       }
     }
+    this.emit('playlistUpdate', this.playlist);
   }
 
   /**
@@ -626,6 +681,8 @@ class TinyMediaPlayer {
     await this.stop();
     this.#playlist = [];
     this.#currentIndex = -1;
+    this.emit('playlistUpdate', this.playlist);
+    this.emit('trackChange', this.#currentIndex);
   }
 
   // ==========================================
@@ -642,9 +699,9 @@ class TinyMediaPlayer {
 
     // Ensure the adapter aligns with the global volume before playing
     adapter.setVolume(this.#volume);
-
     await adapter.play(this.#playlist[this.#currentIndex]);
     this.#isPlaying = true;
+    this.emit('play', this.#currentIndex);
   }
 
   /**
@@ -657,6 +714,7 @@ class TinyMediaPlayer {
 
     await adapter.pause();
     this.#isPlaying = false;
+    this.emit('pause', this.#currentIndex);
   }
 
   /**
@@ -669,6 +727,7 @@ class TinyMediaPlayer {
 
     await adapter.stop();
     this.#isPlaying = false;
+    this.emit('stop', this.#currentIndex);
   }
 
   /**
@@ -687,7 +746,7 @@ class TinyMediaPlayer {
     }
 
     if (this.#isRandom) {
-      this.#currentIndex = Math.floor(Math.random() * this.#playlist.length);
+      this.#currentIndex = this.#getWeightedRandomIndex();
     } else {
       let nextIndex = this.#currentIndex + 1;
       if (nextIndex >= this.#playlist.length) {
@@ -701,6 +760,7 @@ class TinyMediaPlayer {
       this.#currentIndex = nextIndex;
     }
 
+    this.emit('trackChange', this.#currentIndex);
     await this.play();
   }
 
@@ -714,7 +774,7 @@ class TinyMediaPlayer {
     await this.stop();
 
     if (this.#isRandom) {
-      this.#currentIndex = Math.floor(Math.random() * this.#playlist.length);
+      this.#currentIndex = this.#getWeightedRandomIndex();
     } else {
       let prevIndex = this.#currentIndex - 1;
       if (prevIndex < 0) {
@@ -728,6 +788,7 @@ class TinyMediaPlayer {
       this.#currentIndex = prevIndex;
     }
 
+    this.emit('trackChange', this.#currentIndex);
     await this.play();
   }
 
@@ -749,6 +810,7 @@ class TinyMediaPlayer {
     const adapter = this.#getActiveAdapter();
     if (adapter) {
       await adapter.seek(timeMs);
+      this.emit('seek', timeMs);
     }
   }
 
