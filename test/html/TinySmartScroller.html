@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TinySmartScroller Test Page</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "events": "https://esm.sh/events@3.3.0"
+        }
+      }
+    </script>
     <script type="module">
       import { fetchBlob, fetchJson, readBase64Blob } from './src/v1/basics/html.mjs';
       import { TinyDomReadyManager } from './src/v1/libs/TinyDomReadyManager.mjs';
