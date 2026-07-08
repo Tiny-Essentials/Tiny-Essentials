@@ -1,4 +1,4 @@
-import TinyEvents from './TinyEvents.mjs';
+import { EventEmitter } from 'events';
 
 /**
  * Defines the available normalization strategies for probability weight calculations.
@@ -116,206 +116,7 @@ import TinyEvents from './TinyEvents.mjs';
  *
  * @class
  */
-class TinyAdvancedRaffle {
-  #events = new TinyEvents();
-
-  /**
-   * Emits an event, triggering all registered handlers for that event.
-   *
-   * @param {string|string[]} event - The event name to emit.
-   * @param {...any} payload - Optional data to pass to each handler.
-   * @returns {boolean[]} True if any listeners were called, false otherwise.
-   */
-  #emit(event, ...payload) {
-    return this.#events.emit(event, ...payload);
-  }
-
-  /**
-   * Enables or disables throwing an error when the maximum number of listeners is exceeded.
-   *
-   * @param {boolean} shouldThrow - If true, an error will be thrown when the max is exceeded.
-   */
-  setThrowOnMaxListeners(shouldThrow) {
-    return this.#events.setThrowOnMaxListeners(shouldThrow);
-  }
-
-  /**
-   * Checks whether an error will be thrown when the max listener limit is exceeded.
-   *
-   * @returns {boolean} True if an error will be thrown, false if only a warning is shown.
-   */
-  getThrowOnMaxListeners() {
-    return this.#events.getThrowOnMaxListeners();
-  }
-
-  /////////////////////////////////////////////////////////////
-
-  /**
-   * Adds a listener to the beginning of the listeners array for the specified event.
-   *
-   * @param {string|string[]} event - Event name.
-   * @param {handler} handler - The callback function.
-   */
-  prependListener(event, handler) {
-    return this.#events.prependListener(event, handler);
-  }
-
-  /**
-   * Adds a one-time listener to the beginning of the listeners array for the specified event.
-   *
-   * @param {string|string[]} event - Event name.
-   * @param {handler} handler - The callback function.
-   * @returns {handler[]} - The wrapped handler used internally.
-   */
-  prependListenerOnce(event, handler) {
-    return this.#events.prependListenerOnce(event, handler);
-  }
-
-  //////////////////////////////////////////////////////////////////////
-
-  /**
-   * Adds a event listener.
-   *
-   * @param {string|string[]} event - Event name, such as 'onScrollBoundary' or 'onAutoScroll'.
-   * @param {handler} handler - Callback function to be called when event fires.
-   */
-  appendListener(event, handler) {
-    return this.#events.appendListener(event, handler);
-  }
-
-  /**
-   * Registers an event listener that runs only once, then is removed.
-   *
-   * @param {string|string[]} event - Event name, such as 'onScrollBoundary' or 'onAutoScroll'.
-   * @param {handler} handler - The callback function to run on event.
-   * @returns {handler[]} - The wrapped version of the handler.
-   */
-  appendListenerOnce(event, handler) {
-    return this.#events.appendListenerOnce(event, handler);
-  }
-
-  /**
-   * Adds a event listener.
-   *
-   * @param {string|string[]} event - Event name, such as 'onScrollBoundary' or 'onAutoScroll'.
-   * @param {handler} handler - Callback function to be called when event fires.
-   */
-  on(event, handler) {
-    return this.#events.on(event, handler);
-  }
-
-  /**
-   * Registers an event listener that runs only once, then is removed.
-   *
-   * @param {string|string[]} event - Event name, such as 'onScrollBoundary' or 'onAutoScroll'.
-   * @param {handler} handler - The callback function to run on event.
-   * @returns {handler[]} - The wrapped version of the handler.
-   */
-  once(event, handler) {
-    return this.#events.once(event, handler);
-  }
-
-  ////////////////////////////////////////////////////////////////////
-
-  /**
-   * Removes a previously registered event listener.
-   *
-   * @param {string|string[]} event - The name of the event to remove the handler from.
-   * @param {handler} handler - The specific callback function to remove.
-   */
-  off(event, handler) {
-    return this.#events.off(event, handler);
-  }
-
-  /**
-   * Removes all event listeners of a specific type from the element.
-   *
-   * @param {string|string[]} event - The event type to remove (e.g. 'onScrollBoundary').
-   */
-  offAll(event) {
-    return this.#events.offAll(event);
-  }
-
-  /**
-   * Removes all event listeners of all types from the element.
-   */
-  offAllTypes() {
-    return this.#events.offAllTypes();
-  }
-
-  ////////////////////////////////////////////////////////////
-
-  /**
-   * Returns the number of listeners for a given event.
-   *
-   * @param {string} event - The name of the event.
-   * @returns {number} Number of listeners for the event.
-   */
-  listenerCount(event) {
-    return this.#events.listenerCount(event);
-  }
-
-  /**
-   * Returns a copy of the array of listeners for the specified event.
-   *
-   * @param {string} event - The name of the event.
-   * @returns {handler[]} Array of listener functions.
-   */
-  listeners(event) {
-    return this.#events.listeners(event);
-  }
-
-  /**
-   * Returns a copy of the array of listeners for the specified event.
-   *
-   * @param {string} event - The name of the event.
-   * @returns {handler[]} Array of listener functions.
-   */
-  onceListeners(event) {
-    return this.#events.onceListeners(event);
-  }
-
-  /**
-   * Returns a copy of the internal listeners array for the specified event,
-   * including wrapper functions like those used by `.once()`.
-   * @param {string | symbol} event - The event name.
-   * @returns {handler[]} An array of raw listener functions.
-   */
-  allListeners(event) {
-    return this.#events.allListeners(event);
-  }
-
-  /**
-   * Returns an array of event names for which there are registered listeners.
-   *
-   * @returns {string[]} Array of registered event names.
-   */
-  eventNames() {
-    return this.#events.eventNames();
-  }
-
-  //////////////////////////////////////////////////////
-
-  /**
-   * Sets the maximum number of listeners per event before a warning is shown.
-   *
-   * @param {number} n - The maximum number of listeners.
-   */
-  setMaxListeners(n) {
-    return this.#events.setMaxListeners(n);
-  }
-
-  /**
-   * Gets the maximum number of listeners allowed per event.
-   *
-   * @returns {number} The maximum number of listeners.
-   */
-  getMaxListeners() {
-    return this.#events.getMaxListeners();
-  }
-
-  ///////////////////////////////////////////////////
-
+class TinyAdvancedRaffle extends EventEmitter {
   /**
    * Whether this instance has been destroyed.
    * @type {boolean}
@@ -680,6 +481,7 @@ class TinyAdvancedRaffle {
    * @param {Normalization} [opts.normalization='relative'] - Probability normalization mode.
    */
   constructor(opts = {}) {
+    super();
     const { rng = null, seed = null, normalization = 'relative' } = opts;
     this.#normalization = normalization;
     this.#seed = seed;
@@ -756,7 +558,7 @@ class TinyAdvancedRaffle {
     this.#items.set(id, entry);
     // Register in groups map
     for (const g of groups) this._ensureGroup(g).add(id);
-    this.#emit('itemAdded', entry);
+    this.emit('itemAdded', entry);
     return entry;
   }
 
@@ -776,7 +578,7 @@ class TinyAdvancedRaffle {
       if (s) s.delete(id);
     }
     this.#items.delete(id);
-    this.#emit('itemRemoved', id);
+    this.emit('itemRemoved', id);
     this.resetFreq(id);
     this.resetPity(id);
     return true;
@@ -797,7 +599,7 @@ class TinyAdvancedRaffle {
     const it = this.#items.get(id);
     if (!it) throw new Error('Item not found');
     it.baseWeight = Math.max(0, Number(weight) || 0);
-    this.#emit('weightChanged', { id, weight: it.baseWeight });
+    this.emit('weightChanged', { id, weight: it.baseWeight });
   }
 
   /**
@@ -1347,7 +1149,7 @@ class TinyAdvancedRaffle {
     const item = this.#items.get(chosen.id);
     if (!item) return null;
     const result = { id: item.id, label: item.label, meta: { ...item.meta }, prob: chosen.p };
-    this.#emit('draw', result);
+    this.emit('draw', result);
 
     // add frequence
     if (result) this.#freq.set(result.id, (this.#freq.get(result.id) || 0) + 1);

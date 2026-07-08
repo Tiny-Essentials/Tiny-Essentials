@@ -1,10 +1,10 @@
+import { EventEmitter } from 'events';
 import {
   blobUrlToBase64,
   convertToBlobUrl,
   parseMediaMetadata,
   revokeContentUrls,
 } from '../basics/mediaContent.mjs';
-import TinyEvents from './TinyEvents.mjs';
 
 /**
  * @typedef {import('../basics/mediaContent.mjs').MediaContentBase} MediaContentBase
@@ -129,10 +129,9 @@ import TinyEvents from './TinyEvents.mjs';
 
 /**
  * A deterministic, seed-based radio management system with scheduled adaptations and weighted random generation.
- * @extends TinyEvents
  * @beta
  */
-class TinyRadioFm extends TinyEvents {
+class TinyRadioFm extends EventEmitter {
   /**
    * A Static Factory Method that prepares a MediaContent object by
    * extracting metadata from an audio source.

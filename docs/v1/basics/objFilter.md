@@ -12,7 +12,7 @@ Whether you’re validating inputs, writing schema validators, or building tools
 
 ## Features
 
-- ✅ Precise type detection (`undefined`, `null`, `array`, `buffer`, `date`, etc.)
+- ✅ Precise type detection (`undefined`, `null`, `array`, `date`, etc.)
 - ➕ Custom type extensions with ordering
 - 🔄 Reorder type checking priority
 - 🔍 Safe and predictable type checks

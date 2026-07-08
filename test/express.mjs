@@ -241,11 +241,6 @@ for (const src of sources) {
 }
 
 // Instalar modulos externos
-/** @type {Record<string, string[]>} */
-const importsToRemove = {
-  buffer: ['Buffer'],
-};
-
 /** @type {(modNames: string[], globalNames: string[], globalResults: string[]) => import('express').Application} */
 const installNodeModules = (modNames, globalNames, globalResults) => async (req, res, next) => {
   try {
@@ -319,6 +314,7 @@ app.get(
 app.use(express.static(publicDir));
 app.use(express.static(imgDir));
 app.use(express.static(errorsDir));
+app.use('/node_modules', express.static(path.join(__dirname, '../node_modules')));
 
 // ---------------------
 // Catch 404 and forward to error handler

@@ -30,11 +30,11 @@ const events = new TinyNewWinEvents({
   targetOrigin: window.location.origin
 });
 
-events.on('user:reply', (payload) => {
+events.on('win:user:reply', (payload) => {
   console.log('📩 From popup:', payload);
 });
 
-events.emit('init:data', { id: 123 });
+events.winEmit('init:data', { id: 123 });
 ```
 
 ---
@@ -46,11 +46,11 @@ import TinyNewWinEvents from './TinyNewWinEvents.mjs';
 
 const events = new TinyNewWinEvents();
 
-events.on('init:data', (payload) => {
+events.on('win:init:data', (payload) => {
   console.log('📦 Init payload from main window:', payload);
 });
 
-events.emit('user:reply', { msg: '👋 Hello from popup!' });
+events.winEmit('user:reply', { msg: '👋 Hello from popup!' });
 ```
 
 ---
@@ -74,7 +74,7 @@ Creates a new communication instance.
 
 ---
 
-### `emit(route, payload)`
+### `winEmit(route, payload)`
 
 Sends a message on a specific route.
 
@@ -89,10 +89,10 @@ Sends a message on a specific route.
 
 ### `on(route, handler)`
 
-Registers a callback for a specific route.
+Registers a callback for a specific route (using `win:` to external events).
 
 ```js
-events.on('data:sync', (payload, event) => {
+events.on('win:data:sync', (payload, event) => {
   console.log(payload, event.origin);
 });
 ```
@@ -159,7 +159,6 @@ Destroys the instance, cleans up all resources:
 | Concept         | Purpose                                     |
 | --------------- | ------------------------------------------- |
 | `postMessage`   | Core transport for messaging                |
-| `TinyEvents`    | Internal event emitter and listener manager |
 | `__TNE_READY__` | Handshake trigger message type              |
 | `__TNE_ROUTE__` | Route-based message delivery type           |
 
@@ -180,7 +179,7 @@ type handler = (
 
 ## 🛡️ Safety and Validation
 
-* 💥 Throws if `emit()` is called after `.destroy()`
+* 💥 Throws if `winEmit()` is called after `.destroy()`
 * 💣 Throws if the popup was opened with `_blank` name
 * ✅ Only communicates with expected `targetOrigin`
 * 🧼 Automatically detects closed windows and emits `WINDOW_REF_CLOSED`

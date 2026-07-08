@@ -1,6 +1,6 @@
 {
   "name": "tiny-essentials",
-  "version": "1.27.1",
+  "version": "1.28.0",
   "description": "Collection of small, essential scripts designed to be used across various projects. These simple utilities are crafted for speed, ease of use, and versatility.",
   "bin": {
     "tiny-essentials-fork": "./TinyFork.mjs"
@@ -91,6 +91,10 @@
     "./basics/objFilter": {
       "require": "./dist/v1/basics/objFilter.cjs",
       "import": "./dist/v1/basics/objFilter.mjs"
+    },
+    "./basics/extendObjType/Buffer": {
+      "require": "./dist/v1/basics/extendObjType/Buffer.mjs.cjs",
+      "import": "./dist/v1/basics/extendObjType/Buffer.mjs.mjs"
     },
     "./basics/simpleMath": {
       "require": "./dist/v1/basics/simpleMath.cjs",
@@ -219,10 +223,6 @@
     "./libs/TinyGamepad": {
       "require": "./dist/v1/libs/TinyGamepad.cjs",
       "import": "./dist/v1/libs/TinyGamepad.mjs"
-    },
-    "./libs/TinyEvents": {
-      "require": "./dist/v1/libs/TinyEvents.cjs",
-      "import": "./dist/v1/libs/TinyEvents.mjs"
     },
     "./libs/TinyElementObserver": {
       "require": "./dist/v1/libs/TinyElementObserver.cjs",
@@ -535,6 +535,7 @@
     "@types/node": "^26.1.0",
     "@types/node-fetch": "^2.6.12",
     "babel-preset-es2015": "^6.24.1",
+    "buffer": "^6.0.3",
     "esbuild": "^0.28.1",
     "express": "^5.1.0",
     "lodash": "^4.17.21",

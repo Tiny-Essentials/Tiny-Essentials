@@ -1,4 +1,4 @@
-import TinyEvents from './TinyEvents.mjs';
+import { EventEmitter } from 'events';
 
 /**
  * Stores polling intervals associated with window references.
@@ -24,195 +24,7 @@ const pollClosedInterval = new WeakMap();
  *
  * @class
  */
-class TinyNewWinEvents {
-  #events = new TinyEvents();
-
-  /**
-   * Enables or disables throwing an error when the maximum number of listeners is exceeded.
-   *
-   * @param {boolean} shouldThrow - If true, an error will be thrown when the max is exceeded.
-   */
-  setThrowOnMaxListeners(shouldThrow) {
-    return this.#events.setThrowOnMaxListeners(shouldThrow);
-  }
-
-  /**
-   * Checks whether an error will be thrown when the max listener limit is exceeded.
-   *
-   * @returns {boolean} True if an error will be thrown, false if only a warning is shown.
-   */
-  getThrowOnMaxListeners() {
-    return this.#events.getThrowOnMaxListeners();
-  }
-
-  /////////////////////////////////////////////////////////////
-
-  /**
-   * Adds a listener to the beginning of the listeners array for the specified event.
-   *
-   * @param {string|string[]} event - Event name.
-   * @param {handler} handler - The callback function.
-   */
-  prependListener(event, handler) {
-    return this.#events.prependListener(event, handler);
-  }
-
-  /**
-   * Adds a one-time listener to the beginning of the listeners array for the specified event.
-   *
-   * @param {string|string[]} event - Event name.
-   * @param {handler} handler - The callback function.
-   * @returns {handler[]} - The wrapped handler used internally.
-   */
-  prependListenerOnce(event, handler) {
-    return this.#events.prependListenerOnce(event, handler);
-  }
-
-  //////////////////////////////////////////////////////////////////////
-
-  /**
-   * Adds a event listener.
-   *
-   * @param {string|string[]} event - Event name, such as 'onScrollBoundary' or 'onAutoScroll'.
-   * @param {handler} handler - Callback function to be called when event fires.
-   */
-  appendListener(event, handler) {
-    return this.#events.appendListener(event, handler);
-  }
-
-  /**
-   * Registers an event listener that runs only once, then is removed.
-   *
-   * @param {string|string[]} event - Event name, such as 'onScrollBoundary' or 'onAutoScroll'.
-   * @param {handler} handler - The callback function to run on event.
-   * @returns {handler[]} - The wrapped version of the handler.
-   */
-  appendListenerOnce(event, handler) {
-    return this.#events.appendListenerOnce(event, handler);
-  }
-
-  /**
-   * Adds a event listener.
-   *
-   * @param {string|string[]} event - Event name, such as 'onScrollBoundary' or 'onAutoScroll'.
-   * @param {handler} handler - Callback function to be called when event fires.
-   */
-  on(event, handler) {
-    return this.#events.on(event, handler);
-  }
-
-  /**
-   * Registers an event listener that runs only once, then is removed.
-   *
-   * @param {string|string[]} event - Event name, such as 'onScrollBoundary' or 'onAutoScroll'.
-   * @param {handler} handler - The callback function to run on event.
-   * @returns {handler[]} - The wrapped version of the handler.
-   */
-  once(event, handler) {
-    return this.#events.once(event, handler);
-  }
-
-  ////////////////////////////////////////////////////////////////////
-
-  /**
-   * Removes a previously registered event listener.
-   *
-   * @param {string|string[]} event - The name of the event to remove the handler from.
-   * @param {handler} handler - The specific callback function to remove.
-   */
-  off(event, handler) {
-    return this.#events.off(event, handler);
-  }
-
-  /**
-   * Removes all event listeners of a specific type from the element.
-   *
-   * @param {string|string[]} event - The event type to remove (e.g. 'onScrollBoundary').
-   */
-  offAll(event) {
-    return this.#events.offAll(event);
-  }
-
-  /**
-   * Removes all event listeners of all types from the element.
-   */
-  offAllTypes() {
-    return this.#events.offAllTypes();
-  }
-
-  ////////////////////////////////////////////////////////////
-
-  /**
-   * Returns the number of listeners for a given event.
-   *
-   * @param {string} event - The name of the event.
-   * @returns {number} Number of listeners for the event.
-   */
-  listenerCount(event) {
-    return this.#events.listenerCount(event);
-  }
-
-  /**
-   * Returns a copy of the array of listeners for the specified event.
-   *
-   * @param {string} event - The name of the event.
-   * @returns {handler[]} Array of listener functions.
-   */
-  listeners(event) {
-    return this.#events.listeners(event);
-  }
-
-  /**
-   * Returns a copy of the array of listeners for the specified event.
-   *
-   * @param {string} event - The name of the event.
-   * @returns {handler[]} Array of listener functions.
-   */
-  onceListeners(event) {
-    return this.#events.onceListeners(event);
-  }
-
-  /**
-   * Returns a copy of the internal listeners array for the specified event,
-   * including wrapper functions like those used by `.once()`.
-   * @param {string | symbol} event - The event name.
-   * @returns {handler[]} An array of raw listener functions.
-   */
-  allListeners(event) {
-    return this.#events.allListeners(event);
-  }
-
-  /**
-   * Returns an array of event names for which there are registered listeners.
-   *
-   * @returns {string[]} Array of registered event names.
-   */
-  eventNames() {
-    return this.#events.eventNames();
-  }
-
-  //////////////////////////////////////////////////////
-
-  /**
-   * Sets the maximum number of listeners per event before a warning is shown.
-   *
-   * @param {number} n - The maximum number of listeners.
-   */
-  setMaxListeners(n) {
-    return this.#events.setMaxListeners(n);
-  }
-
-  /**
-   * Gets the maximum number of listeners allowed per event.
-   *
-   * @returns {number} The maximum number of listeners.
-   */
-  getMaxListeners() {
-    return this.#events.getMaxListeners();
-  }
-
-  ///////////////////////////////////////////////////
-
+class TinyNewWinEvents extends EventEmitter {
   /** @type {Window|null} Reference to the opened or parent window */
   #windowRef;
 
@@ -289,6 +101,7 @@ class TinyNewWinEvents {
    * @throws {Error} If the window reference is invalid or already being tracked.
    */
   constructor({ targetOrigin, url, name, features } = {}) {
+    super();
     if (typeof name === 'string' && name === '_blank')
       throw new Error(
         'TinyNewWinEvents: The window name "_blank" is not supported. Please use a custom name to allow tracking.',
@@ -348,7 +161,7 @@ class TinyNewWinEvents {
       return;
     }
 
-    if (type === this.#routeEventName) this.#events.emit(route, payload, event);
+    if (type === this.#routeEventName) this.emit(`win:${route}`, payload, event);
   }
 
   /**
@@ -361,7 +174,7 @@ class TinyNewWinEvents {
       const data = this.#pendingQueue.shift();
       if (data) {
         const { route, payload } = data;
-        this.emit(route, payload);
+        this.winEmit(route, payload);
       }
     }
   }
@@ -399,7 +212,7 @@ class TinyNewWinEvents {
    * @throws {Error} If the instance is already destroyed.
    * @returns {void}
    */
-  emit(route, payload) {
+  winEmit(route, payload) {
     if (typeof route !== 'string') throw new TypeError('Event name must be a string.');
     if (this.isDestroyed()) throw new Error('Cannot emit: instance has been destroyed.');
     if (!this.#ready) {
@@ -427,7 +240,7 @@ class TinyNewWinEvents {
     if (!this.#windowRef || this.#pollClosedInterval) return;
     this.#pollClosedInterval = setInterval(() => {
       if (this.#windowRef?.closed) {
-        this.#events.emit('WINDOW_REF_CLOSED');
+        this.emit('WINDOW_REF_CLOSED');
         this.destroy();
       }
     }, 500);
@@ -441,7 +254,7 @@ class TinyNewWinEvents {
    * @returns {void}
    */
   onClose(callback) {
-    return this.#events.on('WINDOW_REF_CLOSED', callback);
+    this.on('WINDOW_REF_CLOSED', callback);
   }
 
   /**
@@ -451,7 +264,7 @@ class TinyNewWinEvents {
    * @returns {void}
    */
   offClose(callback) {
-    return this.#events.off('WINDOW_REF_CLOSED', callback);
+    this.off('WINDOW_REF_CLOSED', callback);
   }
 
   /**
@@ -479,7 +292,7 @@ class TinyNewWinEvents {
     this.#pendingQueue = [];
     this.#ready = false;
     this.#windowRef = null;
-    this.#events.offAllTypes();
+    this.removeAllListeners();
   }
 }
 

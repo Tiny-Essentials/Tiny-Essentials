@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <title>Main Window</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "events": "https://esm.sh/events@3.3.0"
+        }
+      }
+    </script>
   </head>
   <body>
     <h1>Main Window</h1>
@@ -20,7 +27,7 @@
       document.querySelector('#open').addEventListener('click', () => {
         window.conn = new TinyNewWinEvents({ url: 'child.html', name: 'pudding' });
 
-        window.conn.on('pong', (payload) => {
+        window.conn.on('win:pong', (payload) => {
           log('Received pong: ' + JSON.stringify(payload));
         });
 
@@ -31,7 +38,7 @@
 
       document.querySelector('#send').addEventListener('click', () => {
         if (window.conn) {
-          window.conn.emit('ping', { from: 'main', time: Date.now() });
+          window.conn.winEmit('ping', { from: 'main', time: Date.now() });
           log('Sent ping to child');
         } else {
           log('Connection not established.');

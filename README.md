@@ -59,6 +59,7 @@ Check out the full documentation here:
 - 🖥️ [**tiny-server-essentials**](https://github.com/Tiny-Essentials/Tiny-Server-Essentials) — Node.js server utilities.
 - 🪟 [**tiny-electron-essentials**](https://github.com/Tiny-Essentials/Tiny-Electron-Essentials) — Essential tools for Electron apps.
 - 🗃️ [**puddysql**](https://github.com/Tiny-Essentials/PuddySQL) — Smart SQL engine for structured data, tags, and advanced queries.
+- 📢 [**my-tiny-events**](https://github.com/Tiny-Essentials/My-Tiny-Events) — A event emitter system for JavaScript, inspired by Node.js EventEmitter with support for multi-event handling and listener management.
 
 ---
 

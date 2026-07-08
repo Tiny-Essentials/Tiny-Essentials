@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <title>Child Window</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "events": "https://esm.sh/events@3.3.0"
+        }
+      }
+    </script>
   </head>
   <body>
     <h1>Child Window</h1>
@@ -18,9 +25,9 @@
 
       window.conn = new TinyNewWinEvents();
 
-      conn.on('ping', (payload) => {
+      conn.on('win:ping', (payload) => {
         log('Received ping: ' + JSON.stringify(payload));
-        conn.emit('pong', { from: 'child', receivedAt: Date.now() });
+        conn.winEmit('pong', { from: 'child', receivedAt: Date.now() });
       });
 
       conn.onClose(() => {

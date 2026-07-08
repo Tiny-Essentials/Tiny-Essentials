@@ -82,7 +82,6 @@ addModule(1, './src/v1/build/TinyTextRangeEditor.mjs', 'TinyTextRangeEditor', tr
 addModule(1, './src/v1/build/TinyClipboard.mjs', 'TinyClipboard', true);
 addModule(1, './src/v1/build/TinyColorConverter.mjs', 'TinyColorConverter', true);
 addModule(1, './src/v1/build/TinyTimeout.mjs', 'TinyTimeout', true);
-addModule(1, './src/v1/build/TinyEvents.mjs', 'TinyEvents', true);
 addModule(1, './src/v1/build/TinyLocalStorage.mjs', 'TinyLocalStorage', true);
 addModule(1, './src/v1/build/TinyIframeEvents.mjs', 'TinyIframeEvents', true);
 addModule(1, './src/v1/build/TinyNewWinEvents.mjs', 'TinyNewWinEvents', true);

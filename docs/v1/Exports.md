@@ -98,7 +98,6 @@ Each library can be imported separately:
   * `libs/TinyI18`
   * `libs/TinyLevelUp`
   * `libs/TinyGamepad`
-  * `libs/TinyEvents`
   * `libs/TinyElementObserver`
   * `libs/TinyDragger`
   * `libs/TinyDragDropDetector`

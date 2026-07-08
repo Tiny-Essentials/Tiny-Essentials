@@ -36,14 +36,14 @@ const parentEvents = new TinyIframeEvents({
 
 // You can safely emit before the iframe is ready. 
 // It will be queued and sent automatically!
-parentEvents.emit('hello:iframe', { text: '👋 From parent!' });
+parentEvents.winEmit('hello:iframe', { text: '👋 From parent!' });
 
 // Wait for the secure channel to be fully established
 parentEvents.onReady(() => {
   console.log('✅ Secure connection established with iframe!');
 });
 
-parentEvents.on('reply:fromIframe', (data, event) => {
+parentEvents.on('win:reply:fromIframe', (data, event) => {
   console.log('📨 Received from iframe:', data, event);
 });
 ```
@@ -62,10 +62,10 @@ const iframeEvents = new TinyIframeEvents({
 
 iframeEvents.onReady(() => {
   console.log('✅ Secure connection established with parent!');
-  iframeEvents.emit('reply:fromIframe', { text: '🙋‍♀️ Hi parent!' });
+  iframeEvents.winEmit('reply:fromIframe', { text: '🙋‍♀️ Hi parent!' });
 });
 
-iframeEvents.on('hello:iframe', (data, event) => {
+iframeEvents.on('win:hello:iframe', (data, event) => {
   console.log('📥 Message from parent:', data);
 });
 ```
@@ -102,7 +102,7 @@ iframeEvents.onReady(() => {
 
 ---
 
-### `emit(eventName, payload)`
+### `winEmit(eventName, payload)`
 
 Sends a message to the target frame through the secure port. If the port is not ready yet, the message is queued.
 
@@ -119,10 +119,10 @@ Sends a message to the target frame through the secure port. If the port is not 
 
 ### `on(eventName, handler)`
 
-Registers a listener for a specific event.
+Registers a listener for a specific event (using `win:` to external events).
 
 ```js
-iframeEvents.on('my:event', (payload, event) => {
+iframeEvents.on('win:my:event', (payload, event) => {
   // Access data via `payload`
 });
 ```
@@ -162,7 +162,7 @@ if (events.isDestroyed()) {
 
 This class internally wraps:
 * `MessageChannel` and `MessagePort` for isolated communication.
-* A minimal event router: `TinyEvents`.
+* A minimal event router.
 
 ---
 

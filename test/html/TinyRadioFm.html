@@ -652,19 +652,6 @@
     </main>
 
     <script type="module">
-      /** STUB: TinyEvents */
-      class TinyEvents {
-        constructor() {
-          this.listeners = {};
-        }
-        on(event, cb) {
-          (this.listeners[event] = this.listeners[event] || []).push(cb);
-        }
-        emit(event, data) {
-          (this.listeners[event] || []).forEach((cb) => cb(data));
-        }
-      }
-
       import { TinyDragDropDetector } from './src/v1/libs/TinyDragDropDetector.mjs';
       /** IMPORT: TinyRadioFm */
       import { TinyRadioFm } from './src/v1/libs/TinyRadioFm.mjs';

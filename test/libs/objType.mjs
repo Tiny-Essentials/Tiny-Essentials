@@ -31,7 +31,6 @@ const typeTests = [
   ['symbol', Symbol('sym'), '⚙️'],
   ['function', () => {}, '🛠️'],
   ['array', [], '📦'],
-  ['buffer', Buffer.from('hello'), '📄'],
   ['date', new Date(), '📅'],
   ['regexp', /abc/, '🔍'],
   ['map', new Map(), '🗺️'],

@@ -1,5 +1,5 @@
+import { EventEmitter } from 'events';
 import { isJsonObject } from '../basics/objChecker.mjs';
-import TinyEvents from './TinyEvents.mjs';
 
 /** @type {Map<any, EncodeFn>} */
 const customEncoders = new Map();
@@ -82,7 +82,7 @@ const customTypesFreezed = new Set([
  * - Type-specific `set` and `get` methods (`setDate`, `getBool`, etc.)
  * - `getValue()` to retrieve any structure regardless of type
  * - Auto-encoding/decoding with support for custom types via `registerJsonType`
- * - Built-in event system (`TinyEvents`) to listen for changes
+ * - Built-in event system to listen for changes
  * - Optional fallback values on decoding errors
  *
  * Supports registering and unregistering custom types via:
@@ -91,208 +91,7 @@ const customTypesFreezed = new Set([
  *
  * This class is suitable for applications that require structured persistence in the browser.
  */
-class TinyLocalStorage {
-  /** @typedef {import('./TinyEvents.mjs').handler} handler */
-
-  #events = new TinyEvents();
-
-  /**
-   * Enables or disables throwing an error when the maximum number of listeners is exceeded.
-   *
-   * @param {boolean} shouldThrow - If true, an error will be thrown when the max is exceeded.
-   */
-  setThrowOnMaxListeners(shouldThrow) {
-    return this.#events.setThrowOnMaxListeners(shouldThrow);
-  }
-
-  /**
-   * Checks whether an error will be thrown when the max listener limit is exceeded.
-   *
-   * @returns {boolean} True if an error will be thrown, false if only a warning is shown.
-   */
-  getThrowOnMaxListeners() {
-    return this.#events.getThrowOnMaxListeners();
-  }
-
-  /////////////////////////////////////////////////////////////
-
-  /**
-   * Adds a listener to the beginning of the listeners array for the specified event.
-   *
-   * @param {string|string[]} event - Event name.
-   * @param {handler} handler - The callback function.
-   */
-  prependListener(event, handler) {
-    return this.#events.prependListener(event, handler);
-  }
-
-  /**
-   * Adds a one-time listener to the beginning of the listeners array for the specified event.
-   *
-   * @param {string|string[]} event - Event name.
-   * @param {handler} handler - The callback function.
-   * @returns {handler[]} - The wrapped handler used internally.
-   */
-  prependListenerOnce(event, handler) {
-    return this.#events.prependListenerOnce(event, handler);
-  }
-
-  //////////////////////////////////////////////////////////////////////
-
-  /**
-   * Adds a event listener.
-   *
-   * @param {string|string[]} event - Event name, such as 'onScrollBoundary' or 'onAutoScroll'.
-   * @param {handler} handler - Callback function to be called when event fires.
-   */
-  appendListener(event, handler) {
-    return this.#events.appendListener(event, handler);
-  }
-
-  /**
-   * Registers an event listener that runs only once, then is removed.
-   *
-   * @param {string|string[]} event - Event name, such as 'onScrollBoundary' or 'onAutoScroll'.
-   * @param {handler} handler - The callback function to run on event.
-   * @returns {handler[]} - The wrapped version of the handler.
-   */
-  appendListenerOnce(event, handler) {
-    return this.#events.appendListenerOnce(event, handler);
-  }
-
-  /**
-   * Adds a event listener.
-   *
-   * @param {string|string[]} event - Event name, such as 'onScrollBoundary' or 'onAutoScroll'.
-   * @param {handler} handler - Callback function to be called when event fires.
-   */
-  on(event, handler) {
-    return this.#events.on(event, handler);
-  }
-
-  /**
-   * Registers an event listener that runs only once, then is removed.
-   *
-   * @param {string|string[]} event - Event name, such as 'onScrollBoundary' or 'onAutoScroll'.
-   * @param {handler} handler - The callback function to run on event.
-   * @returns {handler[]} - The wrapped version of the handler.
-   */
-  once(event, handler) {
-    return this.#events.once(event, handler);
-  }
-
-  ////////////////////////////////////////////////////////////////////
-
-  /**
-   * Removes a previously registered event listener.
-   *
-   * @param {string|string[]} event - The name of the event to remove the handler from.
-   * @param {handler} handler - The specific callback function to remove.
-   */
-  off(event, handler) {
-    return this.#events.off(event, handler);
-  }
-
-  /**
-   * Removes all event listeners of a specific type from the element.
-   *
-   * @param {string|string[]} event - The event type to remove (e.g. 'onScrollBoundary').
-   */
-  offAll(event) {
-    return this.#events.offAll(event);
-  }
-
-  /**
-   * Removes all event listeners of all types from the element.
-   */
-  offAllTypes() {
-    return this.#events.offAllTypes();
-  }
-
-  ////////////////////////////////////////////////////////////
-
-  /**
-   * Returns the number of listeners for a given event.
-   *
-   * @param {string} event - The name of the event.
-   * @returns {number} Number of listeners for the event.
-   */
-  listenerCount(event) {
-    return this.#events.listenerCount(event);
-  }
-
-  /**
-   * Returns a copy of the array of listeners for the specified event.
-   *
-   * @param {string} event - The name of the event.
-   * @returns {handler[]} Array of listener functions.
-   */
-  listeners(event) {
-    return this.#events.listeners(event);
-  }
-
-  /**
-   * Returns a copy of the array of listeners for the specified event.
-   *
-   * @param {string} event - The name of the event.
-   * @returns {handler[]} Array of listener functions.
-   */
-  onceListeners(event) {
-    return this.#events.onceListeners(event);
-  }
-
-  /**
-   * Returns a copy of the internal listeners array for the specified event,
-   * including wrapper functions like those used by `.once()`.
-   * @param {string | symbol} event - The event name.
-   * @returns {handler[]} An array of raw listener functions.
-   */
-  allListeners(event) {
-    return this.#events.allListeners(event);
-  }
-
-  /**
-   * Returns an array of event names for which there are registered listeners.
-   *
-   * @returns {string[]} Array of registered event names.
-   */
-  eventNames() {
-    return this.#events.eventNames();
-  }
-
-  //////////////////////////////////////////////////////
-
-  /**
-   * Emits an event, triggering all registered handlers for that event.
-   *
-   * @param {string} event - The event name to emit.
-   * @param {...any} payload - Optional data to pass to each handler.
-   * @returns {boolean[]} True if any listeners were called, false otherwise.
-   */
-  emit(event, ...payload) {
-    return this.#events.emit(event, ...payload);
-  }
-
-  /**
-   * Sets the maximum number of listeners per event before a warning is shown.
-   *
-   * @param {number} n - The maximum number of listeners.
-   */
-  setMaxListeners(n) {
-    return this.#events.setMaxListeners(n);
-  }
-
-  /**
-   * Gets the maximum number of listeners allowed per event.
-   *
-   * @returns {number} The maximum number of listeners.
-   */
-  getMaxListeners() {
-    return this.#events.getMaxListeners();
-  }
-
-  ///////////////////////////////////////////////////
-
+class TinyLocalStorage extends EventEmitter {
   /**
    * Checks whether a JSON-serializable type is already registered.
    *
@@ -434,6 +233,7 @@ class TinyLocalStorage {
    * @param {string} [dbName] - Unique database name.
    */
   constructor(dbName) {
+    super();
     if (typeof dbName !== 'undefined' && typeof dbName !== 'string')
       throw new TypeError('TinyLocalStorage: dbName must be a string if provided.');
     if (typeof dbName === 'string') this.#dbKey = `LSDB::${dbName}`;
@@ -893,7 +693,7 @@ class TinyLocalStorage {
    */
   destroy() {
     window.removeEventListener('storage', this.#storageEvent);
-    this.#events.offAllTypes();
+    this.removeAllListeners();
   }
 }
 

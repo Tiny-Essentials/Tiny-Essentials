@@ -1,6 +1,6 @@
 # 📦 TinyLocalStorage
 
-Tiny wrapper for `localStorage` with full support for complex structures like `Map`, `Set`, `Date`, `RegExp`, `BigInt`, and even custom types. Offers a type-safe interface and a powerful event system via `TinyEvents`.
+Tiny wrapper for `localStorage` with full support for complex structures like `Map`, `Set`, `Date`, `RegExp`, `BigInt`, and even custom types. Offers a type-safe interface and a powerful event system.
 
 ---
 
@@ -27,7 +27,7 @@ console.log(storage.getDate('today') instanceof Date); // true
 * ✅ Store & restore `Map`, `Set`, `Date`, `RegExp`, `BigInt`, `Symbol`, `null`, `undefined`.
 * ✅ Custom type encoding and decoding system.
 * ✅ Type-safe methods for string, number and boolean.
-* ✅ Built-in event system (`TinyEvents`) with optional native `storage` listener.
+* ✅ Built-in event system with optional native `storage` listener.
 * ✅ Optional fallback when decoding fails.
 
 ---
@@ -344,7 +344,7 @@ Returns `true` if the type has both encoder and decoder registered, otherwise `f
 
 ---
 
-## 🔥 Events (via TinyEvents)
+## 🔥 Events
 
 ### Built-in Events
 

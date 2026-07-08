@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer';
 import { countObj, isJsonObject } from './objChecker.mjs';
 
 export { countObj, isJsonObject };
@@ -244,16 +243,6 @@ extendObjType([
     (val) => Array.isArray(val),
   ],
 ]);
-
-if (!isBrowser) {
-  extendObjType([
-    [
-      'buffer',
-      /** @param {*} val @returns {val is Buffer} */
-      (val) => typeof Buffer !== 'undefined' && Buffer.isBuffer(val),
-    ],
-  ]);
-}
 
 if (isBrowser) {
   extendObjType([

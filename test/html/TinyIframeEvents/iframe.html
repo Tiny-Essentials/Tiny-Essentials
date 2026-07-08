@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <title>Iframe Page</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "events": "https://esm.sh/events@3.3.0"
+        }
+      }
+    </script>
     <style>
       body {
         background: #eef;
@@ -26,14 +33,14 @@
 
       // Envia mensagem ao parent
       document.getElementById('sendToParent').onclick = () => {
-        events.emit('hello:fromIframe', {
+        events.winEmit('hello:fromIframe', {
           timestamp: new Date().toISOString(),
           content: 'Oi parent!',
         });
       };
 
       // Ouve evento do parent
-      events.on('hello:fromParent', (payload, meta) => {
+      events.on('win:hello:fromParent', (payload, meta) => {
         log('📨 Received from parent:', payload);
         console.log('iframe', payload, meta);
       });

@@ -1,4 +1,4 @@
-import TinyEvents from './TinyEvents.mjs';
+import { EventEmitter } from 'events';
 
 import {
   getMediaContentBase,
@@ -111,7 +111,7 @@ class BaseMediaAdapter {
 /**
  * A universal media player manager capable of orchestrating multiple API adapters.
  */
-class TinyMediaPlayer extends TinyEvents {
+class TinyMediaPlayer extends EventEmitter {
   static BaseMediaAdapter = BaseMediaAdapter;
 
   /**
