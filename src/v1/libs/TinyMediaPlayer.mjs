@@ -6,6 +6,9 @@ import {
   parseMediaMetadata,
   valMediaContentMetadata,
 } from '../basics/mediaContent.mjs';
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyMediaPlayer');
 
 /**
  * @typedef {import('../basics/mediaContent.mjs').MediaContent} MediaContent
@@ -164,6 +167,13 @@ class TinyMediaPlayer extends EventEmitter {
     );
   }
 
+  /** @type {boolean} */
+  #destroyed = false;
+
+  get destroyed() {
+    return this.#destroyed;
+  }
+
   /** @type {Map<string, BaseMediaAdapter>} */
   #adapters = new Map();
 
@@ -301,6 +311,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @throws {TypeError} If the value is not an array.
    */
   set playlist(value) {
+    checkDestroy(this.#destroyed);
     if (!Array.isArray(value)) {
       throw new TypeError('Playlist must be an array of MediaContent objects.');
     }
@@ -356,6 +367,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @throws {RangeError} If the index is out of the playlist bounds (unless -1 for empty).
    */
   set currentIndex(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number') {
       throw new TypeError('Current index must be a number.');
     }
@@ -402,6 +414,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @throws {TypeError} If the value is not a valid LoopModeType.
    */
   set loopMode(value) {
+    checkDestroy(this.#destroyed);
     const validModes = ['NONE', 'TRACK', 'PLAYLIST'];
     if (!validModes.includes(value)) {
       throw new TypeError(`Loop mode must be one of: ${validModes.join(', ')}.`);
@@ -420,6 +433,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @throws {TypeError} If the value is not a boolean.
    */
   set isRandom(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'boolean') {
       throw new TypeError('Random mode state must be a boolean.');
     }
@@ -443,6 +457,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @throws {RangeError} If the value is outside the 0.0 to 1.0 range.
    */
   set volume(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number') throw new TypeError('Volume must be a number.');
     if (value < 0 || value > 1)
       throw new RangeError('Volume must be tightly constrained between 0.0 and 1.0.');
@@ -472,6 +487,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @throws {TypeError} If the value is not a boolean.
    */
   set persistVolume(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'boolean') {
       throw new TypeError('Persist volume parameter must be a boolean.');
     }
@@ -491,6 +507,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @throws {TypeError} If the value is not a string or is empty.
    */
   set volumeStorageKey(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'string') {
       throw new TypeError('Volume storage key must be a string.');
     }
@@ -523,6 +540,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @throws {TypeError} If id is not a string or adapter is invalid.
    */
   registerAdapter(id, adapter) {
+    checkDestroy(this.#destroyed);
     if (typeof id !== 'string') {
       throw new TypeError('Adapter ID must be a string.');
     }
@@ -560,6 +578,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @throws {TypeError} If content is invalid or missing required base properties.
    */
   addTrack(content) {
+    checkDestroy(this.#destroyed);
     if (!content || typeof content !== 'object' || typeof content.url !== 'string')
       throw new TypeError('Track content must be a valid MediaContent object containing a URL.');
 
@@ -583,6 +602,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @throws {TypeError} If the index is not a number.
    */
   existsTrack(index) {
+    checkDestroy(this.#destroyed);
     if (typeof index !== 'number') {
       throw new TypeError('Index must be a number.');
     }
@@ -597,6 +617,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @throws {RangeError} If the index is out of bounds.
    */
   getTrack(index) {
+    checkDestroy(this.#destroyed);
     if (typeof index !== 'number') {
       throw new TypeError('Index must be a number.');
     }
@@ -614,6 +635,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @throws {RangeError} If the index is out of bounds.
    */
   async removeTrack(index) {
+    checkDestroy(this.#destroyed);
     if (typeof index !== 'number') {
       throw new TypeError('Index must be a number.');
     }
@@ -652,6 +674,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @throws {TypeError} If the query is neither a string nor a function.
    */
   searchTrack(query) {
+    checkDestroy(this.#destroyed);
     if (typeof query !== 'string' && typeof query !== 'function') {
       throw new TypeError('Search query must be a string or a boolean evaluation function.');
     }
@@ -685,6 +708,7 @@ class TinyMediaPlayer extends EventEmitter {
    * Clears the entire playlist and stops playback.
    */
   async clearPlaylist() {
+    checkDestroy(this.#destroyed);
     await this.stop();
     this.#playlist = [];
     this.#currentIndex = -1;
@@ -701,6 +725,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @returns {Promise<void>}
    */
   async play() {
+    checkDestroy(this.#destroyed);
     const adapter = this.#getActiveAdapter();
     if (!adapter) return;
 
@@ -716,6 +741,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @returns {Promise<void>}
    */
   async pause() {
+    checkDestroy(this.#destroyed);
     const adapter = this.#getActiveAdapter();
     if (!adapter) return;
 
@@ -729,6 +755,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @returns {Promise<void>}
    */
   async stop() {
+    checkDestroy(this.#destroyed);
     const adapter = this.#getActiveAdapter();
     if (!adapter) return;
 
@@ -742,6 +769,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @returns {Promise<void>}
    */
   async next() {
+    checkDestroy(this.#destroyed);
     if (this.#playlist.length === 0) return;
 
     await this.stop();
@@ -776,6 +804,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @returns {Promise<void>}
    */
   async prev() {
+    checkDestroy(this.#destroyed);
     if (this.#playlist.length === 0) return;
 
     await this.stop();
@@ -807,6 +836,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @returns {Promise<void>}
    */
   async seek(timeMs) {
+    checkDestroy(this.#destroyed);
     if (typeof timeMs !== 'number') {
       throw new TypeError('Seek time must be a number in milliseconds.');
     }
@@ -828,6 +858,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @returns {Promise<void>}
    */
   async step(stepMs) {
+    checkDestroy(this.#destroyed);
     if (typeof stepMs !== 'number') {
       throw new TypeError('Step amount must be a number in milliseconds.');
     }
@@ -842,6 +873,39 @@ class TinyMediaPlayer extends EventEmitter {
     if (targetTime < 0) targetTime = 0;
 
     await this.seek(targetTime);
+  }
+
+  /**
+   * Safely destroys the TinyMediaPlayer instance.
+   * This method stops active playback, clears the internal playlist,
+   * removes all registered media adapters, and detaches all event listeners
+   * to ensure proper garbage collection and prevent memory leaks.
+   *
+   * @returns {Promise<void>} A promise that resolves when the destruction sequence is complete.
+   */
+  async destroy() {
+    if (this.#destroyed) return;
+
+    // 1. Stop current playback if active to halt media processes
+    try {
+      if (this.#isPlaying) {
+        await this.stop();
+      }
+    } catch (error) {
+      console.warn('[TinyMediaPlayer] Non-fatal error during playback termination:', error);
+    }
+
+    // 2. Clear internal state variables
+    this.#playlist = [];
+    this.#currentIndex = -1;
+    this.#isPlaying = false;
+
+    // 3. Clear all registered API adapters
+    this.#adapters.clear();
+
+    // 4. Remove all event listeners inherited from EventEmitter
+    this.removeAllListeners();
+    this.#destroyed = true;
   }
 }
 

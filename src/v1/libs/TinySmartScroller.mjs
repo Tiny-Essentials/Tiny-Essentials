@@ -1,6 +1,9 @@
 import { EventEmitter } from 'events';
 import TinyHtml from './TinyHtml.mjs';
 import * as TinyCollision from '../basics/collision.mjs';
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinySmartScroller');
 
 /**
  * Represents the dimensions of a DOM element.
@@ -244,6 +247,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {NodeSizesEvent} The added size difference callback.
    */
   addSimpleOnHeight(filter) {
+    checkDestroy(this.#destroyed);
     if (!Array.isArray(filter))
       throw new TypeError('addSimpleOnHeight(filter): filter must be an array of tag names');
     const result = this.getSimpleOnHeight(filter);
@@ -266,6 +270,7 @@ class TinySmartScroller extends EventEmitter {
    * @param {string} tag - The tag name to add (e.g., 'IMG').
    */
   addLoadTag(tag) {
+    checkDestroy(this.#destroyed);
     if (typeof tag !== 'string') throw new TypeError('addLoadTag(tag): tag must be a string');
     this.#loadTags.add(tag.toUpperCase());
   }
@@ -276,6 +281,7 @@ class TinySmartScroller extends EventEmitter {
    * @param {string} tag - The tag name to remove.
    */
   removeLoadTag(tag) {
+    checkDestroy(this.#destroyed);
     if (typeof tag !== 'string') throw new TypeError('removeLoadTag(tag): tag must be a string');
     this.#loadTags.delete(tag.toUpperCase());
   }
@@ -298,6 +304,7 @@ class TinySmartScroller extends EventEmitter {
    * @throws {TypeError} If `addDefault` is not a boolean.
    */
   resetLoadTags(addDefault = false) {
+    checkDestroy(this.#destroyed);
     if (typeof addDefault !== 'boolean')
       throw new TypeError('resetLoadTags(addDefault): addDefault must be a boolean');
     this.#loadTags.clear();
@@ -322,6 +329,7 @@ class TinySmartScroller extends EventEmitter {
    * @param {string} attr - The attribute name to add.
    */
   addAttributeFilter(attr) {
+    checkDestroy(this.#destroyed);
     if (typeof attr !== 'string')
       throw new TypeError('addAttributeFilter(attr): attr must be a string');
     this.#attributeFilter.add(attr);
@@ -333,6 +341,7 @@ class TinySmartScroller extends EventEmitter {
    * @param {string} attr - The attribute name to remove.
    */
   removeAttributeFilter(attr) {
+    checkDestroy(this.#destroyed);
     if (typeof attr !== 'string')
       throw new TypeError('removeAttributeFilter(attr): attr must be a string');
     this.#attributeFilter.delete(attr);
@@ -358,6 +367,7 @@ class TinySmartScroller extends EventEmitter {
    * @throws {TypeError} If `addDefault` is not a boolean.
    */
   resetAttributeFilters(addDefault = false) {
+    checkDestroy(this.#destroyed);
     if (typeof addDefault !== 'boolean')
       throw new TypeError('resetAttributeFilters(addDefault): addDefault must be a boolean');
     this.#attributeFilter.clear();
@@ -373,7 +383,7 @@ class TinySmartScroller extends EventEmitter {
    * @param {NodeSizesEvent} handler - Function that compares old and new sizes.
    */
   onSize(handler) {
-    if (this.#destroyed) return;
+    checkDestroy(this.#destroyed);
     if (typeof handler !== 'function')
       throw new TypeError('onSize(handler): handler must be a function');
     this.#sizeFilter.add(handler);
@@ -385,7 +395,7 @@ class TinySmartScroller extends EventEmitter {
    * @param {NodeSizesEvent} handler - The handler function to remove.
    */
   offSize(handler) {
-    if (this.#destroyed) return;
+    checkDestroy(this.#destroyed);
     if (typeof handler !== 'function')
       throw new TypeError('offSize(handler): handler must be a function');
     this.#sizeFilter.delete(handler);
@@ -739,6 +749,7 @@ class TinySmartScroller extends EventEmitter {
    * @param {number} value - Pixels of additional margin to use.
    */
   setExtraScrollBoundary(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number' || Number.isNaN(value))
       throw new TypeError('setExtraScrollBoundary(value): value must be a valid number');
     this.#extraScrollBoundary = value;
@@ -944,7 +955,6 @@ class TinySmartScroller extends EventEmitter {
    */
   destroy() {
     if (this.#destroyed) return;
-    this.#destroyed = true;
 
     // Disconnects MutationObserver
     if (this.#mutationObserver) {
@@ -974,6 +984,7 @@ class TinySmartScroller extends EventEmitter {
     this.removeAllListeners();
     this.#sizeFilter.clear();
     this.#loadTags.clear();
+    this.#destroyed = true;
   }
 }
 

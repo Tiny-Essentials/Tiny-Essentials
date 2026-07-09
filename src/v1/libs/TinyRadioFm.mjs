@@ -5,6 +5,9 @@ import {
   parseMediaMetadata,
   revokeContentUrls,
 } from '../basics/mediaContent.mjs';
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyRadioFm');
 
 /**
  * @typedef {import('../basics/mediaContent.mjs').MediaContentBase} MediaContentBase
@@ -182,6 +185,13 @@ class TinyRadioFm extends EventEmitter {
     TinyRadioFm.#unknownArtist = value;
   }
 
+  /** @type {boolean} */
+  #destroyed = false;
+
+  get destroyed() {
+    return this.#destroyed;
+  }
+
   /**
    * Gets the total count of all content items (music and voice) in the system.
    * @returns {number}
@@ -292,6 +302,7 @@ class TinyRadioFm extends EventEmitter {
    * @param {number} seed - The new seed.
    */
   set seed(seed) {
+    checkDestroy(this.#destroyed);
     if (typeof seed !== 'number') throw new TypeError('Seed must be a number.');
     this.#seed = seed;
     this.#cycleCache.clear();
@@ -336,6 +347,7 @@ class TinyRadioFm extends EventEmitter {
    * @throws {TypeError|RangeError} If the new configuration is invalid.
    */
   set config(config) {
+    checkDestroy(this.#destroyed);
     // Validate the entire object before applying it
     this.#validateConfig(config);
 
@@ -458,6 +470,7 @@ class TinyRadioFm extends EventEmitter {
    * @throws {TypeError} If the type is invalid or the data lacks a valid ID and numerical duration.
    */
   add(type, data, smartQueue = true) {
+    checkDestroy(this.#destroyed);
     if (!['music', 'voice', 'custom'].includes(type)) {
       throw new TypeError('Type must be "music", "voice", or "custom".');
     }
@@ -494,6 +507,7 @@ class TinyRadioFm extends EventEmitter {
    * @throws {TypeError} If arguments do not match the required types or action/type constraints.
    */
   scheduleTask(timestamp, action, type, payload, smartQueue = true) {
+    checkDestroy(this.#destroyed);
     if (typeof timestamp !== 'number' || isNaN(timestamp))
       throw new TypeError('timestamp must be a valid number.');
     if (!['add', 'remove', 'move'].includes(action))
@@ -563,6 +577,7 @@ class TinyRadioFm extends EventEmitter {
    * @throws {TypeError} If the id is not a string.
    */
   remove(id) {
+    checkDestroy(this.#destroyed);
     if (typeof id !== 'string') throw new TypeError('id must be a string.');
 
     // Revoke Blob URLs of items being removed to free memory
@@ -608,6 +623,7 @@ class TinyRadioFm extends EventEmitter {
    * @throws {TypeError|RangeError} If the provided values or the resulting state is invalid.
    */
   setConfig(config) {
+    checkDestroy(this.#destroyed);
     // First, validate the incoming partial object for basic type correctness
     this.#validateConfig(config);
 
@@ -627,6 +643,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {RadioEvent|null} The current active event, or null if empty.
    */
   getCurrentEvent() {
+    checkDestroy(this.#destroyed);
     const now = Date.now();
     this.#syncRealTimeState(now);
     return this.#getEventAtTime(now, now);
@@ -642,6 +659,7 @@ class TinyRadioFm extends EventEmitter {
    * @throws {RangeError} If the limit exceeds the configured queryLimit or is <= 0.
    */
   queryTimeline(targetDate, limit = 10) {
+    checkDestroy(this.#destroyed);
     if (typeof limit !== 'number' || isNaN(limit)) {
       throw new TypeError(`Invalid query limit value. Ensure it is a number.`);
     }
@@ -680,6 +698,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {CustomPosition[]} Shallow copy of custom positions array.
    */
   searchCustomPositions() {
+    checkDestroy(this.#destroyed);
     this.#syncRealTimeState(Date.now());
     return [...this.#customPositions];
   }
@@ -729,6 +748,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {Promise<string>} Stringified JSON state.
    */
   async exportState() {
+    checkDestroy(this.#destroyed);
     const processedMusic = await this._processListForExport(this.#musicList);
     const processedVoice = await this._processListForExport(this.#voiceList);
 
@@ -773,6 +793,7 @@ class TinyRadioFm extends EventEmitter {
    * @throws {TypeError} If json is not a valid string or object.
    */
   importState(json) {
+    checkDestroy(this.#destroyed);
     /** @type {TinyRadioFmImport} */
     let data;
     if (typeof json === 'string') {
@@ -1350,6 +1371,8 @@ class TinyRadioFm extends EventEmitter {
    * @param {boolean} [destroyThumbs=true]
    */
   destroy(destroyThumbs = true) {
+    if (this.#destroyed) return;
+
     if (destroyThumbs) {
       this.#musicList.forEach((item) => revokeContentUrls(item));
       this.#voiceList.forEach((item) => revokeContentUrls(item));
@@ -1374,6 +1397,7 @@ class TinyRadioFm extends EventEmitter {
     this.#cycleCache.clear();
     this.emit('destroyed', { timestamp: Date.now() });
     this.removeAllListeners();
+    this.#destroyed = true;
   }
 }
 

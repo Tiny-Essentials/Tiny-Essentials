@@ -1,3 +1,7 @@
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyAfterScrollWatcher');
+
 /**
  * @typedef {(() => void)} FnData - Function with no arguments and no return value
  */
@@ -87,6 +91,7 @@ class TinyAfterScrollWatcher {
    * @throws {Error} If value is not a positive number
    */
   set inactivityTime(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number' || value <= 0 || !Number.isFinite(value))
       throw new Error('inactivityTime must be a positive number in milliseconds.');
     this.#inactivityTime = value;
@@ -118,6 +123,7 @@ class TinyAfterScrollWatcher {
    * @throws {TypeError} If the argument is not a function.
    */
   doAfterScroll(fn) {
+    checkDestroy(this.#destroyed);
     if (typeof fn !== 'function') throw new TypeError('Argument must be a function.');
     this.lastScrollTime = Date.now();
     this.#afterScrollQueue.push(fn);
@@ -131,6 +137,7 @@ class TinyAfterScrollWatcher {
    * @throws {TypeError} If the argument is not a function.
    */
   onStop(fn) {
+    checkDestroy(this.#destroyed);
     if (typeof fn !== 'function') throw new TypeError('Argument must be a function.');
     this.#onStopListeners.add(fn);
   }
@@ -142,6 +149,7 @@ class TinyAfterScrollWatcher {
    * @throws {TypeError} If the argument is not a function.
    */
   offStop(fn) {
+    checkDestroy(this.#destroyed);
     if (typeof fn !== 'function') throw new TypeError('Argument must be a function.');
     this.#onStopListeners.delete(fn);
   }
@@ -153,6 +161,7 @@ class TinyAfterScrollWatcher {
    * @throws {TypeError} If the argument is not a function.
    */
   onScroll(fn) {
+    checkDestroy(this.#destroyed);
     if (typeof fn !== 'function') throw new TypeError('Argument must be a function.');
     this.#scrollTarget.addEventListener('scroll', fn);
     this.#externalScrollListeners.add(fn);
@@ -165,6 +174,7 @@ class TinyAfterScrollWatcher {
    * @throws {TypeError} If the argument is not a function.
    */
   offScroll(fn) {
+    checkDestroy(this.#destroyed);
     if (typeof fn !== 'function') throw new TypeError('Argument must be a function.');
     if (this.#externalScrollListeners.has(fn)) {
       this.#scrollTarget.removeEventListener('scroll', fn);
@@ -177,7 +187,6 @@ class TinyAfterScrollWatcher {
    */
   destroy() {
     if (this.#destroyed) return;
-    this.#destroyed = true;
 
     this.#scrollTarget.removeEventListener('scroll', this._checkTimer);
     for (const fn of this.#externalScrollListeners)
@@ -185,6 +194,7 @@ class TinyAfterScrollWatcher {
 
     this.#externalScrollListeners.clear();
     this.#onStopListeners.clear();
+    this.#destroyed = true;
   }
 }
 

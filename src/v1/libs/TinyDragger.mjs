@@ -1,6 +1,9 @@
 import TinyHtml from './TinyHtml.mjs';
 import * as TinyCollision from '../basics/collision.mjs';
 import { isJsonObject } from '../basics/objChecker.mjs';
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyDragger');
 
 /**
  * @typedef {Object} VibrationPatterns
@@ -194,7 +197,7 @@ class TinyDragger {
    * Enables the drag functionality.
    */
   enable() {
-    this.#checkDestroy();
+    checkDestroy(this.#destroyed);
     if (this.#jail) this.#jail.classList.add(this.#classJailDragDisabled);
     this.#enabled = true;
   }
@@ -203,6 +206,7 @@ class TinyDragger {
    * Disables the drag functionality.
    */
   disable() {
+    checkDestroy(this.#destroyed);
     if (this.#jail) this.#jail.classList.remove(this.#classJailDragDisabled);
     this.#enabled = false;
   }
@@ -213,7 +217,7 @@ class TinyDragger {
    * @throws {Error} If the element is not a valid HTMLElement.
    */
   addCollidable(element) {
-    this.#checkDestroy();
+    checkDestroy(this.#destroyed);
     if (!(element instanceof HTMLElement))
       throw new Error('addCollidable expects an HTMLElement as argument.');
     if (!this.#collidables.includes(element)) this.#collidables.push(element);
@@ -225,7 +229,7 @@ class TinyDragger {
    * @throws {Error} If the element is not a valid HTMLElement.
    */
   removeCollidable(element) {
-    this.#checkDestroy();
+    checkDestroy(this.#destroyed);
     if (!(element instanceof HTMLElement))
       throw new Error('removeCollidable expects an HTMLElement as argument.');
     this.#collidables = this.#collidables.filter((el) => el !== element);
@@ -246,7 +250,7 @@ class TinyDragger {
     collidePattern = false,
     movePattern = false,
   } = {}) {
-    this.#checkDestroy();
+    checkDestroy(this.#destroyed);
 
     /** @param {any} value */
     const isValidPattern = (value) =>
@@ -273,7 +277,7 @@ class TinyDragger {
    * Disables all vibration feedback.
    */
   disableVibration() {
-    this.#checkDestroy();
+    checkDestroy(this.#destroyed);
     this.#vibration = { start: false, end: false, collide: false, move: false };
   }
 
@@ -284,7 +288,7 @@ class TinyDragger {
    * @throws {Error} If event is not a MouseEvent or Touch with clientX/clientY.
    */
   getOffset(event) {
-    this.#checkDestroy();
+    checkDestroy(this.#destroyed);
     if (
       (!(event instanceof MouseEvent) && !(event instanceof Touch)) ||
       typeof event.clientX !== 'number' ||
@@ -390,6 +394,7 @@ class TinyDragger {
    * @param {MouseEvent|Touch} event - The drag event.
    */
   checkDragCollision(event) {
+    checkDestroy(this.#destroyed);
     const { collidedElements } = this.execCollision(event);
     const first = collidedElements[0] || null;
 
@@ -466,6 +471,7 @@ class TinyDragger {
    * @returns {{ inJail: boolean; collidedElements: (HTMLElement | null)[] }}
    */
   execCollision(event) {
+    checkDestroy(this.#destroyed);
     if (this.#destroyed || !this.#dragProxy) return { inJail: false, collidedElements: [] };
 
     let collidedElements = [];
@@ -594,7 +600,7 @@ class TinyDragger {
    * @throws {Error} If the input is not a valid DOMRect with numeric bounds.
    */
   getAllCollidedElementsByRect(rect) {
-    this.#checkDestroy();
+    checkDestroy(this.#destroyed);
     if (
       !(rect instanceof DOMRect) ||
       typeof rect.left !== 'number' ||
@@ -613,7 +619,7 @@ class TinyDragger {
    * @throws {Error} If rect is not a DOMRect with valid numeric properties.
    */
   getCollidedElementByRect(rect) {
-    this.#checkDestroy();
+    checkDestroy(this.#destroyed);
     if (
       !(rect instanceof DOMRect) ||
       typeof rect.left !== 'number' ||
@@ -644,7 +650,7 @@ class TinyDragger {
    * @returns {HTMLElement[]} The collided element or null.
    */
   getAllCollidedElements(x, y) {
-    this.#checkDestroy();
+    checkDestroy(this.#destroyed);
     if (typeof x !== 'number' || typeof y !== 'number')
       throw new Error('getCollidedElement expects numeric x and y coordinates.');
     return this.#collidables.filter((el) => this.#getCollidedElement(el, x, y));
@@ -657,7 +663,7 @@ class TinyDragger {
    * @returns {HTMLElement|null} The collided element or null.
    */
   getCollidedElement(x, y) {
-    this.#checkDestroy();
+    checkDestroy(this.#destroyed);
     if (typeof x !== 'number' || typeof y !== 'number')
       throw new Error('getCollidedElement expects numeric x and y coordinates.');
     return this.#collidables.find((el) => this.#getCollidedElement(el, x, y)) || null;
@@ -693,6 +699,7 @@ class TinyDragger {
    * @param {boolean} value
    */
   setLockInsideJail(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'boolean') throw new Error('lockInsideJail must be a boolean.');
     this.#lockInsideJail = value;
   }
@@ -710,6 +717,7 @@ class TinyDragger {
    * @param {boolean} value
    */
   setRevertOnDrop(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'boolean') throw new Error('revertOnDrop must be a boolean.');
     this.#revertOnDrop = value;
   }
@@ -727,6 +735,7 @@ class TinyDragger {
    * @param {boolean} value
    */
   setCollisionByMouse(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'boolean') throw new Error('collisionByMouse must be a boolean.');
     this.#collisionByMouse = value;
   }
@@ -744,6 +753,7 @@ class TinyDragger {
    * @param {boolean} value
    */
   setDropInJailOnly(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'boolean') throw new Error('dropInJailOnly must be a boolean.');
     this.#dropInJailOnly = value;
   }
@@ -761,6 +771,7 @@ class TinyDragger {
    * @param {number} newZIndex
    */
   setDefaultZIndex(newZIndex) {
+    checkDestroy(this.#destroyed);
     if (typeof newZIndex !== 'number' || !Number.isFinite(newZIndex))
       throw new TypeError('Z-index must be a finite number.');
     this.#defaultZIndex = newZIndex;
@@ -779,6 +790,7 @@ class TinyDragger {
    * @param {boolean} useMirror
    */
   setMirrorEnabled(useMirror) {
+    checkDestroy(this.#destroyed);
     if (typeof useMirror !== 'boolean') throw new TypeError('Mirror setting must be a boolean.');
 
     this.#mirrorElem = useMirror;
@@ -918,15 +930,6 @@ class TinyDragger {
    */
   isEnabled() {
     return this.#enabled;
-  }
-
-  /**
-   * Internal method to verify if the instance has been destroyed.
-   * Throws an error if any operation is attempted after destruction.
-   */
-  #checkDestroy() {
-    if (this.#destroyed)
-      throw new Error('This TinyDragger instance has been destroyed and can no longer be used.');
   }
 
   /**

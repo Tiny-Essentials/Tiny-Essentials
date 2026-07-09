@@ -1,3 +1,7 @@
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyTextDiffer');
+
 /**
  * Represents the result of a single text segment comparison.
  * @typedef {Object} DiffResult
@@ -29,6 +33,7 @@ class TinyTextDiffer {
    * @param {string[]} history
    */
   set history(history) {
+    checkDestroy(this.#destroyed);
     if (!Array.isArray(history)) {
       throw new TypeError('History data must be provided as an array.');
     }
@@ -53,16 +58,6 @@ class TinyTextDiffer {
    */
   constructor(history = []) {
     this.history = history;
-  }
-
-  /**
-   * @throws {Error}
-   * @returns {void}
-   */
-  #checkDestroyed() {
-    if (this.#destroyed) {
-      throw new Error('Cannot perform operations on a destroyed TinyTextDiffer instance.');
-    }
   }
 
   /**
@@ -93,7 +88,7 @@ class TinyTextDiffer {
    * @returns {string}
    */
   get(index) {
-    this.#checkDestroyed();
+    checkDestroy(this.#destroyed);
     this.#checkIndex(index);
     if (typeof this.#history[index] === 'undefined') {
       throw new Error(`No text version found at index ${index}.`);
@@ -107,7 +102,7 @@ class TinyTextDiffer {
    * @returns {boolean}
    */
   has(index) {
-    this.#checkDestroyed();
+    checkDestroy(this.#destroyed);
     this.#checkIndex(index);
     return typeof this.#history[index] !== 'undefined';
   }
@@ -118,7 +113,7 @@ class TinyTextDiffer {
    * @returns {void}
    */
   add(text) {
-    this.#checkDestroyed();
+    checkDestroy(this.#destroyed);
     this.#checkText(text);
     this.#history.push(text);
   }
@@ -128,7 +123,7 @@ class TinyTextDiffer {
    * @returns {string | undefined}
    */
   remove() {
-    this.#checkDestroyed();
+    checkDestroy(this.#destroyed);
     return this.#history.pop();
   }
 
@@ -139,7 +134,7 @@ class TinyTextDiffer {
    * @returns {void}
    */
   addAt(index, text) {
-    this.#checkDestroyed();
+    checkDestroy(this.#destroyed);
     this.#checkIndex(index);
     this.#checkText(text);
     this.#history.splice(index, 0, text);
@@ -151,7 +146,7 @@ class TinyTextDiffer {
    * @returns {boolean}
    */
   removeAt(index) {
-    this.#checkDestroyed();
+    checkDestroy(this.#destroyed);
     this.#checkIndex(index);
     const oldSize = this.#history.length;
     this.#history.splice(index, 1);
@@ -164,7 +159,7 @@ class TinyTextDiffer {
    * @returns {void}
    */
   clear() {
-    this.#checkDestroyed();
+    checkDestroy(this.#destroyed);
     this.#history = [];
   }
 
@@ -175,7 +170,7 @@ class TinyTextDiffer {
    * @returns {(DiffResult[])[]} An array of DiffResult arrays for each compared pair.
    */
   compare(...indexes) {
-    this.#checkDestroyed();
+    checkDestroy(this.#destroyed);
 
     /** @type {number} */
     const totalIndexes = indexes.length;
