@@ -33,26 +33,48 @@ const typeValidator = {
  * If no index is provided, the type is inserted just before 'object' (if it exists), or at the end.
  *
  * @param {ExtendObjType|ExtendObjTypeArray} newItems
- *        - New type validators to be added.
+ * - New type validators to be added.
  * @param {number} [index] - Optional. Position at which to insert each new type. Ignored if the type already exists.
  * @returns {string[]} - A list of successfully added type names.
  *
  * @example
  * extendObjType({
- *   htmlElement2: val => typeof HTMLElement !== 'undefined' && val instanceof HTMLElement
+ * htmlElement2: val => typeof HTMLElement !== 'undefined' && val instanceof HTMLElement
  * });
  *
  * @example
  * extendObjType([
- *   ['alpha', val => typeof val === 'string'],
- *   ['beta', val => Array.isArray(val)]
+ * ['alpha', val => typeof val === 'string'],
+ * ['beta', val => Array.isArray(val)]
  * ]);
  */
 export function extendObjType(newItems, index) {
+  if (typeof newItems !== 'object' || newItems === null) {
+    throw new TypeError("Argument 'newItems' must be an object or an array.");
+  }
+
+  if (typeof index !== 'undefined' && typeof index !== 'number') {
+    throw new TypeError("Argument 'index' must be a number.");
+  }
+
   const added = [];
 
   const entries = Array.isArray(newItems) ? newItems : Object.entries(newItems);
-  for (const [key, fn] of entries) {
+
+  for (const entry of entries) {
+    if (!Array.isArray(entry) || entry.length < 2) {
+      throw new TypeError("Each item in 'newItems' array must be a [key, function] pair.");
+    }
+
+    const [key, fn] = entry;
+
+    if (typeof key !== 'string') {
+      throw new TypeError('Validator key must be a string.');
+    }
+    if (typeof fn !== 'function') {
+      throw new TypeError(`Validator for key '${key}' must be a function.`);
+    }
+
     if (!typeValidator.items.hasOwnProperty(key)) {
       // @ts-ignore
       typeValidator.items[key] = fn;
@@ -86,10 +108,17 @@ export function extendObjType(newItems, index) {
  *
  * @example
  * reorderObjTypeOrder([
- *   'string', 'number', 'array', 'object'
+ * 'string', 'number', 'array', 'object'
  * ]);
  */
 export function reorderObjTypeOrder(newOrder) {
+  if (!Array.isArray(newOrder)) {
+    throw new TypeError("Argument 'newOrder' must be an array of strings.");
+  }
+  if (!newOrder.every((item) => typeof item === 'string')) {
+    throw new TypeError("All elements in 'newOrder' must be strings.");
+  }
+
   const currentOrder = [...typeValidator.order]; // shallow clone
 
   // All keys in newOrder must exist in currentOrder
@@ -147,7 +176,7 @@ const getType = (val) => {
  * @param {*} obj - The object to check or identify.
  * @param {string} [type] - Optional. If provided, checks whether the object matches this type (e.g., "object", "array", "string").
  * @returns {boolean|string|null} - Returns `true` if the type matches, `false` if not,
- *                                   the type string if no type is provided, or `null` if the object is `undefined`.
+ * the type string if no type is provided, or `null` if the object is `undefined`.
  *
  * @example
  * objType([], 'array'); // true
@@ -157,6 +186,10 @@ const getType = (val) => {
  */
 export function objType(obj, type) {
   if (typeof obj === 'undefined') return null;
+  if (typeof type !== 'undefined' && typeof type !== 'string') {
+    throw new TypeError("Argument 'type' must be a string.");
+  }
+
   const result = getType(obj);
   if (typeof type === 'string') return result === type.toLowerCase();
   return result;

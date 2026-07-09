@@ -2,20 +2,22 @@
  * Counts the number of elements in an array or the number of properties in an object.
  *
  * @param {Array<*>|Record<string | number | symbol, any>} obj - The array or object to count.
- * @returns {number} - The count of items (array elements or object keys), or `0` if the input is neither an array nor an object.
+ * @returns {number} - The count of items (array elements or object keys).
+ * @throws {TypeError} If the input is neither an array nor a pure object.
  *
  * @example
  * countObj([1, 2, 3]); // 3
  * countObj({ a: 1, b: 2 }); // 2
- * countObj('not an object'); // 0
+ * countObj('not an object'); // Throws TypeError
  */
 export function countObj(obj) {
+  if (!Array.isArray(obj) && !isJsonObject(obj))
+    throw new TypeError('Argument must be either an Array or a pure JSON Object.');
+
   // Is Array
   if (Array.isArray(obj)) return obj.length;
   // Object
-  if (isJsonObject(obj)) return Object.keys(obj).length;
-  // Nothing
-  return 0;
+  return Object.keys(obj).length;
 }
 
 /**

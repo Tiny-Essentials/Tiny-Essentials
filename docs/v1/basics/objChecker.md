@@ -15,7 +15,7 @@ Returns the number of elements in an array or the number of keys in an object.
 ```js
 countObj([1, 2, 3]);       // 3
 countObj({ a: 1, b: 2 });  // 2
-countObj('hi');            // 0
+countObj('hi');            // Throws TypeError
 ```
 
 ---

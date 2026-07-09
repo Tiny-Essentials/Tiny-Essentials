@@ -11,6 +11,10 @@
  * @returns {T} The same array instance, now shuffled in place.
  */
 export function shuffleArray(items) {
+  if (!Array.isArray(items)) {
+    throw new TypeError("Argument 'items' must be an array.");
+  }
+
   let currentIndex = items.length,
     randomIndex;
 
@@ -35,11 +39,23 @@ export function shuffleArray(items) {
  * @returns {any[]} - Flattened array containing phases repeated according to counts, concatenated in order.
  */
 export function multiplyArrayBlocks(phases, counts) {
-  // phases: array de strings, cada fase (ex: ['Full', 'Half1', 'Half2', 'New'])
-  // counts: array de inteiros, quantas vezes repetir cada fase (ex: [4,5,5,4])
+  if (!Array.isArray(phases)) {
+    throw new TypeError("Argument 'phases' must be an array.");
+  }
+  if (!Array.isArray(counts)) {
+    throw new TypeError("Argument 'counts' must be an array.");
+  }
+
+  if (phases.length !== counts.length) {
+    throw new RangeError("The 'phases' and 'counts' arrays must have the same length.");
+  }
 
   const result = [];
   for (let i = 0; i < phases.length; i++) {
+    if (typeof counts[i] !== 'number' || Number.isNaN(counts[i])) {
+      throw new TypeError(`Element at counts[${i}] must be a valid number.`);
+    }
+
     for (let j = 0; j < counts[i]; j++) {
       result.push(phases[i]);
     }
@@ -53,6 +69,13 @@ export function multiplyArrayBlocks(phases, counts) {
  * @param {any[]} newItems
  */
 export function diffArrayList(oldItems, newItems) {
+  if (!Array.isArray(oldItems)) {
+    throw new TypeError("Argument 'oldItems' must be an array.");
+  }
+  if (!Array.isArray(newItems)) {
+    throw new TypeError("Argument 'newItems' must be an array.");
+  }
+
   const removed = oldItems.filter((c) => !newItems.includes(c));
   const added = newItems.filter((c) => !oldItems.includes(c));
   return { added, removed };
@@ -74,6 +97,13 @@ export function diffArrayList(oldItems, newItems) {
  * arr.sort(arraySortPositions('pos', true)); // Descending: [{pos: 3}, {pos: 2}, {pos: 1}]
  */
 export function arraySortPositions(item, isReverse = false) {
+  if (typeof item !== 'string') {
+    throw new TypeError("Argument 'item' must be a string.");
+  }
+  if (typeof isReverse !== 'boolean') {
+    throw new TypeError("Argument 'isReverse' must be a boolean.");
+  }
+
   if (!isReverse) {
     return function (a, b) {
       return a[item] < b[item] ? -1 : a[item] > b[item] ? 1 : 0;

@@ -4,15 +4,25 @@
  * @param {string} str - The input string to perform replacements on.
  * @param {RegExp} regex - The regular expression to match substrings for replacement.
  * @param {Function} asyncFn - An asynchronous function that returns a replacement for each match.
- *                             It receives the same arguments as a standard `replace` callback.
+ * It receives the same arguments as a standard `replace` callback.
  * @returns {Promise<string>} The resulting string with all async replacements applied.
  *
  * @example
  * await asyncReplace("Hello @user1 and @user2!", /@\w+/g, async (mention) => {
- *   return await getUserNameFromMention(mention);
+ * return await getUserNameFromMention(mention);
  * });
  */
 export async function asyncReplace(str, regex, asyncFn) {
+  if (typeof str !== 'string') {
+    throw new TypeError(`Expected a string for 'str', but received ${typeof str}`);
+  }
+  if (!(regex instanceof RegExp)) {
+    throw new TypeError(`Expected a RegExp for 'regex', but received ${typeof regex}`);
+  }
+  if (typeof asyncFn !== 'function') {
+    throw new TypeError(`Expected a function for 'asyncFn', but received ${typeof asyncFn}`);
+  }
+
   /**
    * @type {any[]}
    */
@@ -40,6 +50,10 @@ export async function asyncReplace(str, regex, asyncFn) {
  * @returns {string} The string converted to title case.
  */
 export function toTitleCase(str) {
+  if (typeof str !== 'string') {
+    throw new TypeError(`Expected a string for 'str', but received ${typeof str}`);
+  }
+
   return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 }
 
@@ -53,6 +67,10 @@ export function toTitleCase(str) {
  * @returns {string} The string converted to title case with the first letter in lowercase.
  */
 export function toTitleCaseLowerFirst(str) {
+  if (typeof str !== 'string') {
+    throw new TypeError(`Expected a string for 'str', but received ${typeof str}`);
+  }
+
   const titleCased = str.replace(
     /\w\S*/g,
     (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(),
@@ -99,6 +117,15 @@ export function addAiMarkerShortcut({ key = 'a', className = 'detect-made-by-ai'
       '[AiMarkerShortcut] Environment does not support the DOM. This function must be run in a browser.',
     );
 
+  if (typeof key !== 'string') {
+    throw new TypeError(`Expected a string for 'config.key', but received ${typeof key}`);
+  }
+  if (typeof className !== 'string') {
+    throw new TypeError(
+      `Expected a string for 'config.className', but received ${typeof className}`,
+    );
+  }
+
   /** @type {(this: Document, ev: KeyboardEvent) => any} */
   const keydownEvent = function (event) {
     if (event.ctrlKey && event.altKey && event.key.toLowerCase() === key) {
@@ -126,7 +153,7 @@ export function addAiMarkerShortcut({ key = 'a', className = 'detect-made-by-ai'
  * @param {string} text - The input text to be trimmed.
  * @param {number} limit - The maximum number of characters allowed.
  * @param {number} [safeCutZone=0.6] - A decimal between 0 and 1 representing the minimal acceptable position
- *                                     (as a fraction of `limit`) to cut at a space. Defaults to 0.6.
+ * (as a fraction of `limit`) to cut at a space. Defaults to 0.6.
  * @returns {string} - The trimmed text, possibly ending with an ellipsis ("...").
  * @throws {TypeError} - Throws if `text` is not a string.
  * @throws {TypeError} - Throws if `limit` is not a positive integer.
@@ -165,6 +192,17 @@ export function safeTextTrim(text, limit, safeCutZone = 0.6) {
  * @param {Record<string,string>} newStrings
  */
 export function diffStrings(oldStrings, newStrings) {
+  if (typeof oldStrings !== 'object' || oldStrings === null || Array.isArray(oldStrings)) {
+    throw new TypeError(
+      `Expected an object for 'oldStrings', but received ${oldStrings === null ? 'null' : typeof oldStrings}`,
+    );
+  }
+  if (typeof newStrings !== 'object' || newStrings === null || Array.isArray(newStrings)) {
+    throw new TypeError(
+      `Expected an object for 'newStrings', but received ${newStrings === null ? 'null' : typeof newStrings}`,
+    );
+  }
+
   /** @type {Record<string,Record<string,string|Record<string,string>>>}} */
   const changes = { added: {}, removed: {}, modified: {} };
 
