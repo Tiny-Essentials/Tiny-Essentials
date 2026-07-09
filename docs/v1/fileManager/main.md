@@ -221,7 +221,7 @@ renameFilePadNumbers('./screenshots', 4, ['.jpg']);
 ## 📦 More Example Use
 
 ```js
-import { readJsonFile, writeJsonFile, listFiles, backupFile } from './utils/files.js';
+import { readJsonFile, writeJsonFile, listFiles, backupFile } from 'tiny-essentials/fileManager';
 
 const data = readJsonFile('./config/settings.json');
 data.debug = false;
