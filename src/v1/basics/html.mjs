@@ -5,14 +5,28 @@ import { isJsonObject } from './objChecker.mjs';
 /**
  * Reads the contents of a file using the specified FileReader method.
  *
- * @param {File} file - The file to be read.
+ * @param {File|Blob} file - The file to be read.
  * @param {'readAsArrayBuffer'|'readAsDataURL'|'readAsText'|'readAsBinaryString'} method -
- *   The FileReader method to use for reading the file.
+ * The FileReader method to use for reading the file.
  * @returns {Promise<any>} - A promise that resolves with the file content, according to the chosen method.
+ * @throws {TypeError} - If arguments don't match expected types.
  * @throws {Error} - If an unexpected error occurs while handling the result.
  * @throws {DOMException} - If the FileReader encounters an error while reading the file.
  */
 export function readFileBlob(file, method) {
+  if (!(file instanceof Blob)) {
+    return Promise.reject(
+      new TypeError('The "file" argument must be an instance of Blob or File.'),
+    );
+  }
+
+  const validMethods = ['readAsArrayBuffer', 'readAsDataURL', 'readAsText', 'readAsBinaryString'];
+  if (typeof method !== 'string' || !validMethods.includes(method)) {
+    return Promise.reject(
+      new TypeError(`The "method" argument must be one of: ${validMethods.join(', ')}.`),
+    );
+  }
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -34,9 +48,9 @@ export function readFileBlob(file, method) {
  *
  * Performs strict validation to ensure the result is a valid Base64 string or a proper data URL.
  *
- * @param {File} file - The file to be read.
+ * @param {File|Blob} file - The file to be read.
  * @param {boolean|string} [isDataUrl=false] - If true, returns a full data URL; if false, returns only the Base64 string;
- *   if a string is passed, it is used as the MIME type in the data URL.
+ * if a string is passed, it is used as the MIME type in the data URL.
  * @returns {Promise<string>} - A promise that resolves with the Base64 string or data URL.
  *
  * @throws {TypeError} - If the result is not a string or if `isDataUrl` is not a valid type.
@@ -44,9 +58,18 @@ export function readFileBlob(file, method) {
  * @throws {DOMException} - If the FileReader fails to read the file.
  */
 export function readBase64Blob(file, isDataUrl = false) {
+  // Validação do argumento 'file'
+  if (!(file instanceof Blob)) {
+    return Promise.reject(
+      new TypeError('The "file" argument must be an instance of Blob or File.'),
+    );
+  }
+
+  if (typeof isDataUrl !== 'string' && typeof isDataUrl !== 'boolean') {
+    return Promise.reject(new TypeError('The isDataUrl parameter must be a boolean or a string.'));
+  }
+
   return new Promise((resolve, reject) => {
-    if (typeof isDataUrl !== 'string' && typeof isDataUrl !== 'boolean')
-      reject(new TypeError('The isDataUrl parameter must be a boolean or a string.'));
     readFileBlob(file, 'readAsDataURL')
       .then(
         /**
@@ -78,7 +101,7 @@ export function readBase64Blob(file, isDataUrl = false) {
  *
  * Performs several checks to ensure the file contains valid, parsable JSON data.
  *
- * @param {File} file - The file to be read. It must contain valid JSON as plain text.
+ * @param {File|Blob} file - The file to be read. It must contain valid JSON as plain text.
  * @returns {Promise<Record<string|number|symbol, any>|any[]>} - A promise that resolves with the parsed JSON object.
  *
  * @throws {SyntaxError} - If the file content is not valid JSON syntax.
@@ -87,6 +110,12 @@ export function readBase64Blob(file, isDataUrl = false) {
  * @throws {DOMException} - If the FileReader fails to read the file.
  */
 export function readJsonBlob(file) {
+  if (!(file instanceof Blob)) {
+    return Promise.reject(
+      new TypeError('The "file" argument must be an instance of Blob or File.'),
+    );
+  }
+
   return new Promise((resolve, reject) =>
     readFileBlob(file, 'readAsText')
       .then((data) => {
@@ -107,8 +136,16 @@ export function readJsonBlob(file) {
  * @param {string} filename
  * @param {any} data
  * @param {number} [spaces=2]
+ * @throws {TypeError} - If arguments do not match expected types.
  */
 export function saveJsonFile(filename, data, spaces = 2) {
+  if (typeof filename !== 'string') {
+    throw new TypeError('The "filename" argument must be a string.');
+  }
+  if (typeof spaces !== 'number' || !Number.isInteger(spaces) || spaces < 0) {
+    throw new TypeError('The "spaces" argument must be a non-negative integer.');
+  }
+
   const json = JSON.stringify(data, null, spaces);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -156,6 +193,9 @@ export function saveJsonFile(filename, data, spaces = 2) {
  * @returns {Response} A new Response object with the tracked stream.
  */
 export function trackFetchProgress(response, onProgress) {
+  if (!(response instanceof Response)) {
+    throw new TypeError('The "response" argument must be an instance of Response.');
+  }
   if (typeof onProgress !== 'function')
     throw new TypeError('The "onProgress" argument must be a function.');
   if (!response.body) return response;
@@ -192,10 +232,21 @@ export function trackFetchProgress(response, onProgress) {
  * @returns {Promise<Response>} Result data.
  * @throws {Error} Throws if fetch fails, times out.
  */
-async function fetchTemplate(
-  url,
-  { method = 'GET', body, timeout = 0, retries = 0, headers = {}, signal = null, onProgress } = {},
-) {
+async function fetchTemplate(url, options = {}) {
+  if (options !== null && typeof options !== 'object') {
+    throw new TypeError('The "options" argument must be an object.');
+  }
+
+  const {
+    method = 'GET',
+    body,
+    timeout = 0,
+    retries = 0,
+    headers = {},
+    signal = null,
+    onProgress,
+  } = options;
+
   if (
     typeof url !== 'string' ||
     (!url.startsWith('../') &&
@@ -208,6 +259,18 @@ async function fetchTemplate(
 
   if (typeof method !== 'string' || !method.trim())
     throw new Error('Invalid method: must be a non-empty string.');
+
+  if (headers !== null && typeof headers !== 'object') {
+    throw new TypeError('The "headers" option must be an object.');
+  }
+
+  if (signal !== null && !(signal instanceof AbortSignal)) {
+    throw new TypeError('The "signal" option must be an instance of AbortSignal.');
+  }
+
+  if (onProgress !== undefined && typeof onProgress !== 'function') {
+    throw new TypeError('The "onProgress" option must be a function.');
+  }
 
   if (!signal) {
     if (
@@ -277,6 +340,13 @@ async function fetchTemplate(
  * @throws {Error} Throws if fetch fails, times out, or returns invalid JSON.
  */
 export async function fetchJson(url, options) {
+  if (typeof url !== 'string') {
+    return Promise.reject(new TypeError('The "url" argument must be a string.'));
+  }
+  if (options !== undefined && (options === null || typeof options !== 'object')) {
+    return Promise.reject(new TypeError('The "options" argument must be an object.'));
+  }
+
   return new Promise((resolve, reject) => {
     fetchTemplate(url, options)
       .then(async (res) => {
@@ -299,12 +369,24 @@ export async function fetchJson(url, options) {
  * Loads a remote file as a Blob using Fetch API.
  *
  * @param {string} url - The full URL to fetch the file from.
- * @param {FetchTemplateOptions} [options] - Optional fetch options.
  * @param {string[]} [allowedMimeTypes] - Optional list of accepted MIME types (e.g., ['image/jpeg']).
+ * @param {FetchTemplateOptions} [options] - Optional fetch options.
  * @returns {Promise<Blob>} - The fetched file as a Blob.
  * @throws {Error} Throws if fetch fails, response is not ok, or MIME type is not allowed.
  */
 export async function fetchBlob(url, allowedMimeTypes, options) {
+  if (typeof url !== 'string') {
+    return Promise.reject(new TypeError('The "url" argument must be a string.'));
+  }
+  if (allowedMimeTypes !== undefined && !Array.isArray(allowedMimeTypes)) {
+    return Promise.reject(
+      new TypeError('The "allowedMimeTypes" argument must be an array of strings.'),
+    );
+  }
+  if (options !== undefined && (options === null || typeof options !== 'object')) {
+    return Promise.reject(new TypeError('The "options" argument must be an object.'));
+  }
+
   return new Promise((resolve, reject) => {
     fetchTemplate(url, options)
       .then(async (res) => {
@@ -329,12 +411,24 @@ export async function fetchBlob(url, allowedMimeTypes, options) {
  * Loads a remote file as a text using Fetch API.
  *
  * @param {string} url - The full URL to fetch the file from.
- * @param {FetchTemplateOptions} [options] - Optional fetch options.
  * @param {string[]} [allowedMimeTypes] - Optional list of accepted MIME types (e.g., ['image/jpeg']).
+ * @param {FetchTemplateOptions} [options] - Optional fetch options.
  * @returns {Promise<string>} - The fetched file as a text.
  * @throws {Error} Throws if fetch fails, response is not ok, or MIME type is not allowed.
  */
 export async function fetchText(url, allowedMimeTypes, options) {
+  if (typeof url !== 'string') {
+    return Promise.reject(new TypeError('The "url" argument must be a string.'));
+  }
+  if (allowedMimeTypes !== undefined && !Array.isArray(allowedMimeTypes)) {
+    return Promise.reject(
+      new TypeError('The "allowedMimeTypes" argument must be an array of strings.'),
+    );
+  }
+  if (options !== undefined && (options === null || typeof options !== 'object')) {
+    return Promise.reject(new TypeError('The "options" argument must be an object.'));
+  }
+
   return new Promise((resolve, reject) => {
     fetchTemplate(url, options)
       .then(async (res) => {
@@ -387,7 +481,23 @@ export async function fetchText(url, allowedMimeTypes, options) {
  * @param {(event: Event, startTime: number) => void} [options.onLoading]
  * @returns {Promise<ImageLoadResult>}
  */
-export async function loadImage({ url, onLoading, crossOrigin = 'anonymous' }) {
+export async function loadImage(options) {
+  if (options === null || typeof options !== 'object') {
+    return Promise.reject(new TypeError('The "options" argument must be an object.'));
+  }
+
+  const { url, onLoading, crossOrigin = 'anonymous' } = options;
+
+  if (typeof url !== 'string') {
+    return Promise.reject(new TypeError('The "url" option must be a string.'));
+  }
+  if (typeof crossOrigin !== 'string') {
+    return Promise.reject(new TypeError('The "crossOrigin" option must be a string.'));
+  }
+  if (onLoading !== undefined && typeof onLoading !== 'function') {
+    return Promise.reject(new TypeError('The "onLoading" option must be a function.'));
+  }
+
   return new Promise((resolve, reject) => {
     const img = new Image();
     let startTime = performance.now();
@@ -463,13 +573,19 @@ export async function loadImage({ url, onLoading, crossOrigin = 'anonymous' }) {
  * @returns {() => void} Function that removes all installed event listeners.
  * @throws {TypeError} If any provided setting is invalid.
  */
-export function installWindowHiddenScript({
-  element = document.body,
-  hiddenClass = 'windowHidden',
-  visibleClass = 'windowVisible',
-  onVisible,
-  onHidden,
-} = {}) {
+export function installWindowHiddenScript(settings = {}) {
+  if (settings === null || typeof settings !== 'object') {
+    throw new TypeError('The "settings" argument must be an object.');
+  }
+
+  const {
+    element = document.body,
+    hiddenClass = 'windowHidden',
+    visibleClass = 'windowVisible',
+    onVisible,
+    onHidden,
+  } = settings;
+
   if (!(element instanceof Element))
     throw new TypeError(`"element" must be an instance of Element.`);
   if (typeof hiddenClass !== 'string') throw new TypeError(`"hiddenClass" must be a string.`);

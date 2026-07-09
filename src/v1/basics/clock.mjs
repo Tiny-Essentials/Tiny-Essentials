@@ -2,11 +2,25 @@
  * Calculates the time duration between the current time and a given time offset.
  *
  * @param {Date} timeData - The target time as a Date object.
- * @param {string} [durationType='asSeconds'] - The type of duration to return. Can be 'asMilliseconds', 'asSeconds', 'asMinutes', 'asHours', 'asDays'.
+ * @param {'asMilliseconds'|'asSeconds'|'asMinutes'|'asHours'|'asDays'} [durationType='asSeconds'] - The type of duration to return.
  * @param {Date|null} [now=null] - The current time as a Date object. Defaults to the current date and time if not provided.
  * @returns {number|null} The calculated duration in the specified unit, or `null` if `timeData` is not provided.
  */
 export function getTimeDuration(timeData = new Date(), durationType = 'asSeconds', now = null) {
+  if (!(timeData instanceof Date)) {
+    throw new TypeError("The 'timeData' argument must be an instance of Date.");
+  }
+  if (typeof durationType !== 'string') {
+    throw new TypeError("The 'durationType' argument must be a string.");
+  }
+  const validDurationTypes = ['asMilliseconds', 'asSeconds', 'asMinutes', 'asHours', 'asDays'];
+  if (!validDurationTypes.includes(durationType)) {
+    throw new RangeError(`The 'durationType' must be one of: ${validDurationTypes.join(', ')}.`);
+  }
+  if (now !== null && !(now instanceof Date)) {
+    throw new TypeError("The 'now' argument must be an instance of Date or null.");
+  }
+
   if (timeData instanceof Date) {
     const currentTime = now instanceof Date ? now : new Date();
     /** @type {number} */
@@ -41,9 +55,21 @@ export function getTimeDuration(timeData = new Date(), durationType = 'asSeconds
  * @returns {string} The formatted timer string.
  */
 export function formatCustomTimer(totalSeconds, level = 'seconds', format = '{time}') {
-  totalSeconds = Math.max(0, Math.floor(totalSeconds));
-
+  if (typeof totalSeconds !== 'number' || Number.isNaN(totalSeconds)) {
+    throw new TypeError("The 'totalSeconds' argument must be a valid number.");
+  }
+  if (typeof level !== 'string') {
+    throw new TypeError("The 'level' argument must be a string.");
+  }
   const levels = ['seconds', 'minutes', 'hours', 'days', 'months', 'years'];
+  if (!levels.includes(level)) {
+    throw new RangeError(`The 'level' must be one of: ${levels.join(', ')}.`);
+  }
+  if (typeof format !== 'string') {
+    throw new TypeError("The 'format' argument must be a string.");
+  }
+
+  totalSeconds = Math.max(0, Math.floor(totalSeconds));
   const index = levels.indexOf(level);
 
   const include = {
@@ -57,13 +83,13 @@ export function formatCustomTimer(totalSeconds, level = 'seconds', format = '{ti
 
   /**
    * @type {{
-   *   years: number|NaN,
-   *   months: number|NaN,
-   *   days: number|NaN,
-   *   hours: number|NaN,
-   *   minutes: number|NaN,
-   *   seconds: number|NaN,
-   *   total: number|NaN
+   * years: number|NaN,
+   * months: number|NaN,
+   * days: number|NaN,
+   * hours: number|NaN,
+   * minutes: number|NaN,
+   * seconds: number|NaN,
+   * total: number|NaN
    * }}
    */
   const parts = {
@@ -143,14 +169,14 @@ export function formatCustomTimer(totalSeconds, level = 'seconds', format = '{ti
   }
 
   // Calculate total
-  const totalMap = {
+  /** const totalMap = {
     seconds: include.seconds ? totalSeconds : NaN,
     minutes: include.minutes ? totalSeconds / 60 : NaN,
     hours: include.hours ? totalSeconds / 3600 : NaN,
     days: include.days ? totalSeconds / 86400 : NaN,
     months: include.months ? parts.years * 12 + parts.months + (parts.days || 0) / 30 : NaN,
     years: include.years ? parts.years + (parts.months || 0) / 12 + (parts.days || 0) / 365 : NaN,
-  };
+  }; */
 
   parts.total = +totalSeconds.toFixed(2).replace(/\.00$/, '');
 
@@ -194,6 +220,9 @@ export function formatCustomTimer(totalSeconds, level = 'seconds', format = '{ti
  * @returns {string} The formatted timer string in "HH:MM:SS" format.
  */
 export function formatTimer(seconds) {
+  if (typeof seconds !== 'number' || Number.isNaN(seconds)) {
+    throw new TypeError("The 'seconds' argument must be a valid number.");
+  }
   return formatCustomTimer(seconds, 'hours', '{hours}:{minutes}:{seconds}');
 }
 
@@ -206,6 +235,9 @@ export function formatTimer(seconds) {
  * @returns {string} The formatted timer string in "Xd HH:MM:SS" format.
  */
 export function formatDayTimer(seconds) {
+  if (typeof seconds !== 'number' || Number.isNaN(seconds)) {
+    throw new TypeError("The 'seconds' argument must be a valid number.");
+  }
   return formatCustomTimer(seconds, 'days', '{days}d {hours}:{minutes}:{seconds}');
 }
 
@@ -215,20 +247,29 @@ export function formatDayTimer(seconds) {
  * @param {number} totalMs - The total duration in milliseconds.
  * @param {'milliseconds'|'seconds'|'minutes'|'hours'|'days'|'months'|'years'} [level='milliseconds'] - The highest level to calculate and display.
  * @returns {{
- *   years: number|NaN,
- *   months: number|NaN,
- *   days: number|NaN,
- *   hours: number|NaN,
- *   minutes: number|NaN,
- *   seconds: number|NaN,
- *   milliseconds: number|NaN,
- *   total: number|NaN
+ * years: number|NaN,
+ * months: number|NaN,
+ * days: number|NaN,
+ * hours: number|NaN,
+ * minutes: number|NaN,
+ * seconds: number|NaN,
+ * milliseconds: number|NaN,
+ * total: number|NaN
  * }}
  */
 export function breakdownDuration(totalMs, level = 'milliseconds') {
-  totalMs = Math.max(0, Math.floor(totalMs));
-
+  if (typeof totalMs !== 'number' || Number.isNaN(totalMs)) {
+    throw new TypeError("The 'totalMs' argument must be a valid number.");
+  }
+  if (typeof level !== 'string') {
+    throw new TypeError("The 'level' argument must be a string.");
+  }
   const levels = ['milliseconds', 'seconds', 'minutes', 'hours', 'days', 'months', 'years'];
+  if (!levels.includes(level)) {
+    throw new RangeError(`The 'level' must be one of: ${levels.join(', ')}.`);
+  }
+
+  totalMs = Math.max(0, Math.floor(totalMs));
   const index = levels.indexOf(level);
 
   const include = {
@@ -324,7 +365,7 @@ export function breakdownDuration(totalMs, level = 'milliseconds') {
   }
 
   // Totals
-  const totalMap = {
+  /** const totalMap = {
     milliseconds: include.milliseconds ? totalMs : NaN,
     seconds: include.seconds ? totalMs / 1000 : NaN,
     minutes: include.minutes ? totalMs / 60000 : NaN,
@@ -332,7 +373,7 @@ export function breakdownDuration(totalMs, level = 'milliseconds') {
     days: include.days ? totalMs / 86400000 : NaN,
     months: include.months ? parts.years * 12 + parts.months + (parts.days || 0) / 30 : NaN,
     years: include.years ? parts.years + (parts.months || 0) / 12 + (parts.days || 0) / 365 : NaN,
-  };
+  }; */
 
   parts.total = +totalMs;
 

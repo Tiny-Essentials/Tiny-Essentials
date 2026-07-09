@@ -102,6 +102,28 @@
 
 //////////////////////////////////////////////////////////////////
 
+const checkString = (/** @type {string} */ val, /** @type {string} */ name) => {
+  if (typeof val !== 'string')
+    throw new TypeError(`Expected "${name}" to be a string, but received ${typeof val}.`);
+};
+const checkFunction = (
+  /** @type {Function} */ val,
+  /** @type {string} */ name,
+) => {
+  if (typeof val !== 'function')
+    throw new TypeError(`Expected "${name}" to be a function, but received ${typeof val}.`);
+};
+const checkObject = (
+  /** @type {Object<string, any> | null} */ val,
+  /** @type {string} */ name,
+) => {
+  if (typeof val !== 'object' || val === null || Array.isArray(val)) {
+    throw new TypeError(
+      `Expected "${name}" to be a plain object, but received ${val === null ? 'null' : Array.isArray(val) ? 'array' : typeof val}.`,
+    );
+  }
+};
+
 /** @type {Map<string, number>} */
 export const _blobCounter = new Map();
 
@@ -143,6 +165,11 @@ export class MediaLoadingError extends Error {
    * @param {LoadingErrorStage} stage - The stage where the error occurred.
    */
   constructor(message, url, stage) {
+    checkString(message, 'message');
+    checkString(url, 'url');
+    if (typeof stage !== 'string')
+      throw new TypeError(`Expected "stage" to be a string, but received ${typeof stage}.`);
+
     super(message);
     this.name = 'MediaLoadingError';
     this.url = url;
@@ -157,6 +184,8 @@ export class MediaLoadingError extends Error {
  * @private
  */
 export const generateSimpleHash = async (str) => {
+  checkString(str, 'str');
+
   const msgUint8 = new TextEncoder().encode(str);
   const hashBuffer = await crypto.subtle.digest('SHA-1', msgUint8);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -175,6 +204,13 @@ export const generateSimpleHash = async (str) => {
  * @private
  */
 export const convertToBlobUrl = (data, format = 'image/jpeg') => {
+  if (!(data instanceof Uint8Array) && typeof data !== 'string') {
+    throw new TypeError(
+      `Expected "data" to be an instance of Uint8Array or a string, but received ${typeof data}.`,
+    );
+  }
+  checkString(format, 'format');
+
   const createBlobCounter = (/** @type {Blob} */ blob) => {
     const url = URL.createObjectURL(blob);
     const blobUrlUsage = _blobCounter.get(url);
@@ -206,7 +242,9 @@ export const convertToBlobUrl = (data, format = 'image/jpeg') => {
  * @private
  */
 export const blobUrlToBase64 = async (url) => {
-  if (typeof url !== 'string' || !url.startsWith('blob:')) return url;
+  checkString(url, 'url');
+
+  if (!url.startsWith('blob:')) return url;
   try {
     const response = await fetch(url);
     const blob = await response.blob();
@@ -228,6 +266,8 @@ export const blobUrlToBase64 = async (url) => {
  * @private
  */
 export const revokeContentUrls = (content) => {
+  checkObject(content, 'content');
+
   if (content && Array.isArray(content.picture)) {
     content.picture.forEach((pic) => {
       if (typeof pic.data === 'string' && pic.data.startsWith('blob:')) {
@@ -246,7 +286,9 @@ export const revokeContentUrls = (content) => {
  * @param {boolean} isPartial - If true, properties can be undefined.
  */
 const validateMediaContent = (common, isPartial) => {
-  // Helper to check if the property can be ignored in partial mode
+  checkObject(common, 'common');
+  if (typeof isPartial !== 'boolean') throw new TypeError('Expected "isPartial" to be a boolean.');
+
   const isUndefinedAllowed = (/** @type {any} */ v) => isPartial && typeof v === 'undefined';
 
   const isString = (/** @type {string | null | undefined} */ v) =>
@@ -291,6 +333,8 @@ const validateMediaContent = (common, isPartial) => {
     !isArray(
       common.picture,
       (value) =>
+        value &&
+        typeof value === 'object' &&
         (typeof value.description === 'undefined' || typeof value.description === 'string') &&
         (typeof value.name === 'undefined' || typeof value.name === 'string') &&
         (typeof value.type === 'undefined' || typeof value.type === 'string') &&
@@ -349,10 +393,8 @@ export const valMediaContentMetadataPartial = (common) => validateMediaContent(c
  */
 export const extractMediaId3Tags = async (url, parseFile) => {
   // Argument Validation
-  if (typeof url !== 'string')
-    throw new TypeError(`Expected url to be a string, but received ${typeof url}.`);
-  if (typeof parseFile !== 'function')
-    throw new TypeError(`Expected parseFile to be a function, but received ${typeof parseFile}.`);
+  checkString(url, 'url');
+  checkFunction(parseFile, 'parseFile');
 
   try {
     // 1. Download the file from the provided URL
@@ -457,10 +499,19 @@ export const parseMediaMetadata = async (
   if (typeof source !== 'string' && !(source instanceof HTMLMediaElement))
     throw new TypeError('Source must be a string or an HTMLMediaElement.');
 
+  checkObject(defaultMetadata, 'defaultMetadata');
+  checkObject(metadata, 'metadata');
+  checkFunction(parseFile, 'parseFile');
+  checkObject(callbacks, 'callbacks');
+
   if (callbacks.onProgress && typeof callbacks.onProgress !== 'function')
     throw new TypeError('callbacks.onProgress must be a function.');
   if (callbacks.onError && typeof callbacks.onError !== 'function')
     throw new TypeError('callbacks.onError must be a function.');
+
+  if (typeof unknownArtist !== 'string' && typeof unknownArtist !== 'function') {
+    throw new TypeError('unknownArtist must be a string or a function returning a string.');
+  }
 
   /** @type {HTMLMediaElement} */
   let audio;
