@@ -1,3 +1,7 @@
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('UltraRandomMsgGen');
+
 const defaultWords = [
   'lorem',
   'ipsum',
@@ -459,8 +463,23 @@ class UltraRandomMsgGen {
     this.#defaultTemplates = [...value];
   }
 
+  /**
+   * Tracks whether the instance has been destroyed.
+   * @type {boolean}
+   */
+  #destroyed = false;
+
+  /**
+   * Gets the current destruction status of the instance.
+   *
+   * @returns {boolean} True if the instance is destroyed, false otherwise.
+   */
+  get destroyed() {
+    return this.#destroyed;
+  }
+
   /** @type {MsgGenConfig} */
-  config = {
+  #config = {
     minLength: 10,
     maxLength: 300,
     readable: true,
@@ -485,6 +504,16 @@ class UltraRandomMsgGen {
       emojiChance: 0.3, // 30% chance per line
     },
   };
+
+  get config () {
+    return structuredClone(this.#config);
+  }
+
+  #symbols = '!@#$%^&*()-_=+[]{}|;:,.<>?/\\~'.split('');
+
+  get symbols () {
+    return structuredClone(this.#symbols);
+  }
 
   /**
    * Creates an instance of UltraRandomMsgGen.
@@ -516,8 +545,6 @@ class UltraRandomMsgGen {
    * @param {number} [config.line.emojiChance=0.3] - Probability (0–1) of placing emoji per line.
    */
   constructor(config = {}) {
-    this.symbols = '!@#$%^&*()-_=+[]{}|;:,.<>?/\\~'.split('');
-
     const {
       minLength,
       maxLength,
@@ -646,14 +673,14 @@ class UltraRandomMsgGen {
       }
     }
 
-    this.config.emojiSet = [...UltraRandomMsgGen.#defaultEmojis];
-    this.config.wordSet = [...UltraRandomMsgGen.#defaultWords];
+    this.#config.emojiSet = [...UltraRandomMsgGen.#defaultEmojis];
+    this.#config.wordSet = [...UltraRandomMsgGen.#defaultWords];
 
-    this.config.grammar.templates = [...UltraRandomMsgGen.#defaultTemplates];
-    this.config.grammar.nouns = [...UltraRandomMsgGen.#defaultNouns];
-    this.config.grammar.verbs = [...UltraRandomMsgGen.#defaultVerbs];
-    this.config.grammar.adjectives = [...UltraRandomMsgGen.#defaultAdjectives];
-    Object.assign(this.config, config);
+    this.#config.grammar.templates = [...UltraRandomMsgGen.#defaultTemplates];
+    this.#config.grammar.nouns = [...UltraRandomMsgGen.#defaultNouns];
+    this.#config.grammar.verbs = [...UltraRandomMsgGen.#defaultVerbs];
+    this.#config.grammar.adjectives = [...UltraRandomMsgGen.#defaultAdjectives];
+    Object.assign(this.#config, config);
   }
 
   /**
@@ -662,7 +689,8 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   configure(newConfig = {}) {
-    Object.assign(this.config, newConfig);
+    checkDestroy(this.#destroyed);
+    Object.assign(this.#config, newConfig);
     return this;
   }
 
@@ -672,7 +700,8 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   setGrammarTemplates(...templates) {
-    this.config.grammar.templates = templates.flat();
+    checkDestroy(this.#destroyed);
+    this.#config.grammar.templates = templates.flat();
     return this;
   }
 
@@ -682,7 +711,8 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   addGrammarTemplates(...templates) {
-    this.config.grammar.templates.push(...templates.flat());
+    checkDestroy(this.#destroyed);
+    this.#config.grammar.templates.push(...templates.flat());
     return this;
   }
 
@@ -692,7 +722,8 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   setGrammarNouns(...nouns) {
-    this.config.grammar.nouns = nouns.flat();
+    checkDestroy(this.#destroyed);
+    this.#config.grammar.nouns = nouns.flat();
     return this;
   }
 
@@ -702,7 +733,8 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   addGrammarNouns(...nouns) {
-    this.config.grammar.nouns.push(...nouns.flat());
+    checkDestroy(this.#destroyed);
+    this.#config.grammar.nouns.push(...nouns.flat());
     return this;
   }
 
@@ -712,7 +744,8 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   setGrammarVerbs(...verbs) {
-    this.config.grammar.verbs = verbs.flat();
+    checkDestroy(this.#destroyed);
+    this.#config.grammar.verbs = verbs.flat();
     return this;
   }
 
@@ -722,7 +755,8 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   addGrammarVerbs(...verbs) {
-    this.config.grammar.verbs.push(...verbs.flat());
+    checkDestroy(this.#destroyed);
+    this.#config.grammar.verbs.push(...verbs.flat());
     return this;
   }
 
@@ -732,7 +766,8 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   setGrammarAdjectives(...adjectives) {
-    this.config.grammar.adjectives = adjectives.flat();
+    checkDestroy(this.#destroyed);
+    this.#config.grammar.adjectives = adjectives.flat();
     return this;
   }
 
@@ -742,7 +777,8 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   addGrammarAdjectives(...adjectives) {
-    this.config.grammar.adjectives.push(...adjectives.flat());
+    checkDestroy(this.#destroyed);
+    this.#config.grammar.adjectives.push(...adjectives.flat());
     return this;
   }
 
@@ -752,8 +788,11 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   removeGrammarTemplates(...templates) {
+    checkDestroy(this.#destroyed);
     const removeSet = new Set(templates.flat());
-    this.config.grammar.templates = this.config.grammar.templates.filter((t) => !removeSet.has(t));
+    this.#config.grammar.templates = this.#config.grammar.templates.filter(
+      (t) => !removeSet.has(t),
+    );
     return this;
   }
 
@@ -763,8 +802,9 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   removeGrammarNouns(...nouns) {
+    checkDestroy(this.#destroyed);
     const removeSet = new Set(nouns.flat());
-    this.config.grammar.nouns = this.config.grammar.nouns.filter((n) => !removeSet.has(n));
+    this.#config.grammar.nouns = this.#config.grammar.nouns.filter((n) => !removeSet.has(n));
     return this;
   }
 
@@ -774,8 +814,9 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   removeGrammarVerbs(...verbs) {
+    checkDestroy(this.#destroyed);
     const removeSet = new Set(verbs.flat());
-    this.config.grammar.verbs = this.config.grammar.verbs.filter((v) => !removeSet.has(v));
+    this.#config.grammar.verbs = this.#config.grammar.verbs.filter((v) => !removeSet.has(v));
     return this;
   }
 
@@ -785,8 +826,9 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   removeGrammarAdjectives(...adjectives) {
+    checkDestroy(this.#destroyed);
     const removeSet = new Set(adjectives.flat());
-    this.config.grammar.adjectives = this.config.grammar.adjectives.filter(
+    this.#config.grammar.adjectives = this.#config.grammar.adjectives.filter(
       (a) => !removeSet.has(a),
     );
     return this;
@@ -798,7 +840,8 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   setWords(...words) {
-    this.config.wordSet = words.flat();
+    checkDestroy(this.#destroyed);
+    this.#config.wordSet = words.flat();
     return this;
   }
 
@@ -808,7 +851,8 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   addWords(...words) {
-    this.config.wordSet.push(...words.flat());
+    checkDestroy(this.#destroyed);
+    this.#config.wordSet.push(...words.flat());
     return this;
   }
 
@@ -818,8 +862,9 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   removeWords(...words) {
+    checkDestroy(this.#destroyed);
     const removeSet = new Set(words.flat());
-    this.config.wordSet = this.config.wordSet.filter((word) => !removeSet.has(word));
+    this.#config.wordSet = this.#config.wordSet.filter((word) => !removeSet.has(word));
     return this;
   }
 
@@ -829,7 +874,8 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   setEmojis(...emojis) {
-    this.config.emojiSet = emojis.flat();
+    checkDestroy(this.#destroyed);
+    this.#config.emojiSet = emojis.flat();
     return this;
   }
 
@@ -839,7 +885,8 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   addEmojis(...emojis) {
-    this.config.emojiSet.push(...emojis.flat());
+    checkDestroy(this.#destroyed);
+    this.#config.emojiSet.push(...emojis.flat());
     return this;
   }
 
@@ -849,8 +896,9 @@ class UltraRandomMsgGen {
    * @returns {this} - The instance for chaining.
    */
   removeEmojis(...emojis) {
+    checkDestroy(this.#destroyed);
     const removeSet = new Set(emojis.flat());
-    this.config.emojiSet = this.config.emojiSet.filter((emoji) => !removeSet.has(emoji));
+    this.#config.emojiSet = this.#config.emojiSet.filter((emoji) => !removeSet.has(emoji));
     return this;
   }
 
@@ -879,7 +927,7 @@ class UltraRandomMsgGen {
       readable,
       mode,
       emojiPlacement,
-    } = this.config;
+    } = this.#config;
 
     if (mode === 'natural') {
       return this._generateNaturalSentence();
@@ -900,7 +948,7 @@ class UltraRandomMsgGen {
     }
 
     if (includeSymbols) {
-      pools.push(this._getRandomItem(this.symbols));
+      pools.push(this._getRandomItem(this.#symbols));
     }
 
     if (emojiPlacement === 'inline' && useEmojis && emojiSet.length) {
@@ -916,7 +964,7 @@ class UltraRandomMsgGen {
    * @returns {string} - A generated sentence.
    */
   _generateNaturalSentence() {
-    const { templates, nouns, verbs, adjectives } = this.config.grammar;
+    const { templates, nouns, verbs, adjectives } = this.#config.grammar;
 
     let template = this._getRandomItem(templates);
 
@@ -935,7 +983,7 @@ class UltraRandomMsgGen {
    */
   _generateLine(targetLength, seenWords) {
     const { allowWeirdSpacing, repeatWords, readable, emojiSet, useEmojis, emojiPlacement, line } =
-      this.config;
+      this.#config;
 
     const parts = [];
     seenWords ??= new Set();
@@ -976,7 +1024,7 @@ class UltraRandomMsgGen {
    * @returns {string[]} - Array of lines that form the paragraph.
    */
   _generateParagraphLines(totalLength) {
-    const { line } = this.config;
+    const { line } = this.#config;
     const lines = [];
     const seenWords = new Set();
     let currentTotal = 0;
@@ -1001,7 +1049,8 @@ class UltraRandomMsgGen {
    * @returns {string} - A full generated message.
    */
   generate() {
-    const { minLength, maxLength, paragraphs } = this.config;
+    checkDestroy(this.#destroyed);
+    const { minLength, maxLength, paragraphs } = this.#config;
 
     const totalLength = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
 
@@ -1020,6 +1069,33 @@ class UltraRandomMsgGen {
     }
 
     return this._generateParagraphLines(totalLength).join('\n');
+  }
+
+  /**
+   * Safely destroys the instance by clearing references to aid garbage collection.
+   * Once destroyed, the instance cannot be used to generate new messages.
+   *
+   * @throws {Error} If the instance has already been destroyed.
+   * @returns {void}
+   */
+  destroy() {
+    if (this.destroyed) {
+      throw new Error('This instance of UltraRandomMsgGen has already been destroyed.');
+    }
+
+    // Clear primary memory references
+    this.#symbols = [];
+
+    this.#config.emojiSet = [];
+    this.#config.wordSet = [];
+
+    this.#config.grammar.templates = [];
+    this.#config.grammar.nouns = [];
+    this.#config.grammar.verbs = [];
+    this.#config.grammar.adjectives = [];
+
+    // Lock the instance
+    this.#destroyed = true;
   }
 }
 
