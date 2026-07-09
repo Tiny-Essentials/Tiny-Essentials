@@ -21,7 +21,7 @@ It uses the **Longest Common Subsequence (LCS)** algorithm to ensure that change
 Since this is an ES Module, you can simply import it into your project:
 
 ```javascript
-import TinyTextDiffer from './TinyTextDiffer.js';
+import TinyTextDiffer from 'tiny-essentials/libs/TinyTextDiffer';
 
 const differ = new TinyTextDiffer(["Initial text", "Updated text!"]);
 

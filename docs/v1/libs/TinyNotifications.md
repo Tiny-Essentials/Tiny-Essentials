@@ -164,7 +164,7 @@ Set or retrieve the default click handler for all notifications.
 ## 📦 Example
 
 ```js
-import TinyNotifications from './TinyNotifications.js';
+import TinyNotifications from 'tiny-essentials/libs/TinyNotifications';
 
 const notify = new TinyNotifications({
   audio: '/sounds/ping.mp3',

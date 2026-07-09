@@ -15,7 +15,7 @@ A minimal and handy module offering a couple of focused utilities for working wi
 ### 🚀 Usage
 
 ```js
-import { shuffleArray } from './array.mjs';
+import { shuffleArray } from 'tiny-essentials/basics/array';
 
 const fruits = ['apple', 'banana', 'cherry', 'date'];
 shuffleArray(fruits);

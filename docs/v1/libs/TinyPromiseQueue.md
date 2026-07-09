@@ -108,7 +108,7 @@ Cancels a scheduled delay and removes the task from the queue. Adds the ID to a 
 ## Usage Example 💻
 
 ```js
-import { TinyPromiseQueue } from './TinyPromiseQueue';
+import { TinyPromiseQueue } from 'tiny-essentials/libs/TinyPromiseQueue';
 
 const queue = new TinyPromiseQueue();
 
@@ -142,7 +142,7 @@ setTimeout(() => {
 ```
 
 ```js
-import { TinyPromiseQueue } from './TinyPromiseQueue';
+import { TinyPromiseQueue } from 'tiny-essentials/libs/TinyPromiseQueue';
 
 const queue = new TinyPromiseQueue();
 await new Promise((resolve) => {

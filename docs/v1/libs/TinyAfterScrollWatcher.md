@@ -19,7 +19,7 @@ Perfect for optimizing logic that should only run **after** the user has finishe
 ## 📦 Import
 
 ```js
-import TinyAfterScrollWatcher from './TinyAfterScrollWatcher.mjs';
+import TinyAfterScrollWatcher from 'tiny-essentials/libs/TinyAfterScrollWatcher';
 ```
 
 ---

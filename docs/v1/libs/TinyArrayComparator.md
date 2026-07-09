@@ -18,7 +18,7 @@ A lightweight, highly optimized JavaScript utility class designed to compare two
 Since this project uses modern ES6 modules, simply import it into your working file.
 
 ```javascript
-import TinyArrayComparator from './TinyArrayComparator.js';
+import TinyArrayComparator from 'tiny-essentials/libs/TinyArrayComparator';
 ```
 
 ### 2. Prepare Your Arrays

@@ -17,7 +17,7 @@ A lightweight JavaScript utility for automatically resizing `<textarea>` element
 ## 🚀 Usage
 
 ```js
-import TinyTextarea from './TinyTextarea.js';
+import TinyTextarea from 'tiny-essentials/libs/TinyTextarea';
 
 const textarea = document.querySelector('textarea');
 

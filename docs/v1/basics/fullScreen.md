@@ -167,7 +167,7 @@ import {
   isFullScreenMode,
   onFullScreenChange,
   offFullScreenChange,
-} from './fullScreen';
+} from 'tiny-essentials/basics/fullScreen';
 
 async function toggleFullscreen() {
   if (isFullScreenMode()) {

@@ -100,7 +100,7 @@ Downloads an audio file and uses a provided parser to extract its internal metad
 
 **1. Using a simple URL with manual overrides:**
 ```javascript
-import { parseMediaMetadata } from './mediaContent.mjs';
+import { parseMediaMetadata } from 'tiny-essentials/basics/mediaContent';
 import { parseBlob } from 'music-metadata';
 
 // Note: We pass empty objects for default/manual if we want to jump straight to the parser

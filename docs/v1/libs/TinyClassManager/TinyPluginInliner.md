@@ -55,7 +55,7 @@ This is the file that uses the `TinyClassManager` to compose your final class.
 
 ```javascript
 // src/main.mjs
-import TinyClassManager from './libs/TinyClassManager.mjs';
+import TinyClassManager from 'tiny-essentials/libs/TinyClassManager';
 import { LoggerPlugin } from './plugins/LoggerPlugin.mjs';
 
 class BaseUser {}
@@ -72,7 +72,7 @@ export default User;
 Create a build script (e.g., `build.mjs`) to trigger the process.
 
 ```javascript
-import TinyPluginInliner from './libs/TinyClassManager/TinyPluginInliner.mjs';
+import TinyPluginInliner from 'tiny-essentials/libs/TinyClassManager/TinyPluginInliner';
 
 const builder = new TinyPluginInliner({
   entryPoint: 'src/main.mjs',

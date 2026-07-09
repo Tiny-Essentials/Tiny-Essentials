@@ -317,7 +317,7 @@ Perfect for UI states like dimming, pausing animations, or showing "away" status
 #### 🧪 Usage
 
 ```js
-import { installWindowHiddenScript } from 'tiny-essentials';
+import { installWindowHiddenScript } from 'tiny-essentials/basics/html';
 
 const uninstall = installWindowHiddenScript({
   element: document.getElementById('app'),
@@ -425,7 +425,7 @@ The promise resolves to an object containing:
 #### 🧪 Example
 
 ```javascript
-import { loadImage } from './html.mjs';
+import { loadImage } from 'tiny-essentials/basics/html';
 
 const handleLoading = (event, startTime) => {
   console.log('Started loading at:', startTime);

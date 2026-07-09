@@ -75,7 +75,7 @@ new TinyElementObserver(el, {
 ## 🔹 Example Usage
 
 ```js
-import TinyElementObserver from './TinyElementObserver.js';
+import TinyElementObserver from 'tiny-essentials/libs/TinyElementObserver';
 
 // Define a detector
 const logDetector = (mutation, index, mutations) => {

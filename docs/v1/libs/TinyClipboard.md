@@ -192,7 +192,7 @@ Gets the current function used for copying blobs.
 ## 🧠 Usage Example
 
 ```ts
-import TinyClipboard from './TinyClipboard.js';
+import TinyClipboard from 'tiny-essentials/libs/TinyClipboard';
 
 const clipboard = new TinyClipboard();
 

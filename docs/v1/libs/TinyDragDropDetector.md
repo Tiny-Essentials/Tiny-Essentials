@@ -18,7 +18,7 @@ A lightweight JavaScript utility for detecting drag-and-drop file operations on 
 ## 🔧 Usage Example
 
 ```javascript
-import TinyDragDropDetector from './TinyDragDropDetector.js';
+import TinyDragDropDetector from 'tiny-essentials/libs/TinyDragDropDetector';
 
 const dnd = new TinyDragDropDetector({
   target: document.getElementById('drop-area'),

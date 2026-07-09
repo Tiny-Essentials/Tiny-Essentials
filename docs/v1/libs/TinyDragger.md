@@ -22,7 +22,7 @@ It supports visual proxies, jail boundaries, collision detection, vibration feed
 ## 📦 Installation
 
 ```js
-import TinyDragger from './TinyDragger.js';
+import TinyDragger from 'tiny-essentials/libs/TinyDragger';
 ```
 
 ---

@@ -23,7 +23,7 @@ This module abstracts the complexity of cross-origin communication by establishi
 ### In the parent:
 
 ```js
-import TinyIframeEvents from './TinyIframeEvents.mjs';
+import TinyIframeEvents from 'tiny-essentials/libs/TinyIframeEvents';
 
 const iframe = document.querySelector('iframe');
 
@@ -53,7 +53,7 @@ parentEvents.on('win:reply:fromIframe', (data, event) => {
 ### In the iframe:
 
 ```js
-import TinyIframeEvents from './TinyIframeEvents.mjs';
+import TinyIframeEvents from 'tiny-essentials/libs/TinyIframeEvents';
 
 const iframeEvents = new TinyIframeEvents({
   // Make sure these match the parent's config if you changed them!
