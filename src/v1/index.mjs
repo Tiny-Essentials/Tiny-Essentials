@@ -1,5 +1,10 @@
 import TinyLevelUp from './libs/TinyLevelUp.mjs';
-import { diffArrayList, shuffleArray, arraySortPositions } from './basics/array.mjs';
+import {
+  diffArrayList,
+  shuffleArray,
+  arraySortPositions,
+  multiplyArrayBlocks,
+} from './basics/array.mjs';
 import {
   breakdownDuration,
   formatCustomTimer,
@@ -206,6 +211,7 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  multiplyArrayBlocks,
   createCheckDestroyed,
   valMediaContentMetadata,
   valMediaContentMetadataPartial,

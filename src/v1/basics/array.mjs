@@ -84,7 +84,7 @@ export function diffArrayList(oldItems, newItems) {
 /**
  * Generates a comparator function to sort an array of objects by a given key.
  *
- * @param {string} item - The object key to sort by.
+ * @param {string|null} [item] - The object key to sort by.
  * @param {boolean} [isReverse=false] - If `true`, the sorting will be in descending order.
  * @returns {(a: Object<string|number, *>, b: Object<string|number, *>) => number} Comparator function compatible with Array.prototype.sort().
  *
@@ -97,8 +97,8 @@ export function diffArrayList(oldItems, newItems) {
  * arr.sort(arraySortPositions('pos', true)); // Descending: [{pos: 3}, {pos: 2}, {pos: 1}]
  */
 export function arraySortPositions(item, isReverse = false) {
-  if (typeof item !== 'string') {
-    throw new TypeError("Argument 'item' must be a string.");
+  if (item !== undefined && item !== null && typeof item !== 'string') {
+    throw new TypeError("Argument 'item' must be a string or null.");
   }
   if (typeof isReverse !== 'boolean') {
     throw new TypeError("Argument 'isReverse' must be a boolean.");
@@ -106,11 +106,19 @@ export function arraySortPositions(item, isReverse = false) {
 
   if (!isReverse) {
     return function (a, b) {
-      return a[item] < b[item] ? -1 : a[item] > b[item] ? 1 : 0;
+      return (item ? a[item] : a) < (item ? b[item] : b)
+        ? -1
+        : (item ? a[item] : a) > (item ? b[item] : b)
+          ? 1
+          : 0;
     };
   } else {
     return function (a, b) {
-      return a[item] > b[item] ? -1 : a[item] < b[item] ? 1 : 0;
+      return (item ? a[item] : a) > (item ? b[item] : b)
+        ? -1
+        : (item ? a[item] : a) < (item ? b[item] : b)
+          ? 1
+          : 0;
     };
   }
 }

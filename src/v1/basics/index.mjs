@@ -1,4 +1,4 @@
-import { diffArrayList, shuffleArray, arraySortPositions } from './array.mjs';
+import { diffArrayList, shuffleArray, arraySortPositions, multiplyArrayBlocks } from './array.mjs';
 import {
   breakdownDuration,
   formatCustomTimer,
@@ -72,6 +72,7 @@ import {
 } from './mediaContent.mjs';
 
 export {
+  multiplyArrayBlocks,
   valMediaContentMetadata,
   valMediaContentMetadataPartial,
   parseMediaMetadata,

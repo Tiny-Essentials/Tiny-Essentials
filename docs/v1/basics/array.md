@@ -37,7 +37,7 @@ You can find the original discussion here:
 ### 📌 Function Signature
 
 ```js
-arraySortPositions(item: string, isReverse?: boolean): (a: Object<string|number, *>, b: Object<string|number, *>) => number
+arraySortPositions(item?: string, isReverse?: boolean): (a: Object<string|number, *>, b: Object<string|number, *>) => number
 ```
 
 ### 🧠 Parameters

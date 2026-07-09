@@ -106,17 +106,11 @@ const checkString = (/** @type {string} */ val, /** @type {string} */ name) => {
   if (typeof val !== 'string')
     throw new TypeError(`Expected "${name}" to be a string, but received ${typeof val}.`);
 };
-const checkFunction = (
-  /** @type {Function} */ val,
-  /** @type {string} */ name,
-) => {
+const checkFunction = (/** @type {Function} */ val, /** @type {string} */ name) => {
   if (typeof val !== 'function')
     throw new TypeError(`Expected "${name}" to be a function, but received ${typeof val}.`);
 };
-const checkObject = (
-  /** @type {Object<string, any> | null} */ val,
-  /** @type {string} */ name,
-) => {
+const checkObject = (/** @type {Object<string, any> | null} */ val, /** @type {string} */ name) => {
   if (typeof val !== 'object' || val === null || Array.isArray(val)) {
     throw new TypeError(
       `Expected "${name}" to be a plain object, but received ${val === null ? 'null' : Array.isArray(val) ? 'array' : typeof val}.`,
