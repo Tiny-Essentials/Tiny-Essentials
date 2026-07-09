@@ -201,7 +201,6 @@ export const generateSimpleHash = async (str) => {
  * @param {Uint8Array|string} data
  * @param {string} format
  * @returns {string} The generated Blob URL or original string if already valid.
- * @private
  */
 export const convertToBlobUrl = (data, format = 'image/jpeg') => {
   if (!(data instanceof Uint8Array) && typeof data !== 'string') {
@@ -239,7 +238,6 @@ export const convertToBlobUrl = (data, format = 'image/jpeg') => {
  * Asynchronous helper to convert a Blob URL back to Base64 (Date URL) at export time.
  * @param {string} url
  * @returns {Promise<string>}
- * @private
  */
 export const blobUrlToBase64 = async (url) => {
   checkString(url, 'url');
@@ -263,7 +261,6 @@ export const blobUrlToBase64 = async (url) => {
 /**
  * Safely revokes Blob URLs to prevent memory leaks from createObjectURL.
  * @param {MediaContent} content
- * @private
  */
 export const revokeContentUrls = (content) => {
   checkObject(content, 'content');
