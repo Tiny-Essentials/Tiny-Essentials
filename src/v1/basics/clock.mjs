@@ -21,28 +21,24 @@ export function getTimeDuration(timeData = new Date(), durationType = 'asSeconds
     throw new TypeError("The 'now' argument must be an instance of Date or null.");
   }
 
-  if (timeData instanceof Date) {
-    const currentTime = now instanceof Date ? now : new Date();
-    /** @type {number} */
-    const diffMs = timeData.getTime() - currentTime.getTime();
+  const currentTime = now instanceof Date ? now : new Date();
+  /** @type {number} */
+  const diffMs = timeData.getTime() - currentTime.getTime();
 
-    switch (durationType) {
-      case 'asMilliseconds':
-        return diffMs;
-      case 'asSeconds':
-        return diffMs / 1000;
-      case 'asMinutes':
-        return diffMs / (1000 * 60);
-      case 'asHours':
-        return diffMs / (1000 * 60 * 60);
-      case 'asDays':
-        return diffMs / (1000 * 60 * 60 * 24);
-      default:
-        return diffMs / 1000; // default to seconds
-    }
+  switch (durationType) {
+    case 'asMilliseconds':
+      return diffMs;
+    case 'asSeconds':
+      return diffMs / 1000;
+    case 'asMinutes':
+      return diffMs / (1000 * 60);
+    case 'asHours':
+      return diffMs / (1000 * 60 * 60);
+    case 'asDays':
+      return diffMs / (1000 * 60 * 60 * 24);
+    default:
+      return diffMs / 1000; // default to seconds
   }
-
-  return null;
 }
 
 /**
