@@ -70,6 +70,9 @@ class TinyAfterScrollWatcher {
     this.#inactivityTime = inactivityTime;
   }
 
+  /**
+   * @private
+   */
   _checkTimer = () => {
     if (this.#lastScrollTime) clearTimeout(this.#lastScrollTime);
     this.#lastScrollTime = setTimeout(() => {

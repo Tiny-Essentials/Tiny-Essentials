@@ -92,6 +92,7 @@ class TinyColorConverter {
    * @param {'rgb'|'hex'|'hsl'} [type='rgb'] - The format of the colors returned: `'rgb'`, `'hex'`, or `'hsl'`.
    * @param {boolean} [pastel=false] - If true, generates pastel tones by adjusting the intensity and offset.
    * @returns {Array<RgbResult|HexResult|HslResult>} An array of color values in the selected format:
+   * @private
    */
   static _rca(len, type, pastel) {
     let eq1 = 127;

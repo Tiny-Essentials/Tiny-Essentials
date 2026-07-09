@@ -1060,6 +1060,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @param {Map<string, number>} weights - Map of item IDs to their weights.
    * @returns {Array<{id: string, weight: number, p: number, cumulative: number}>} Distribution array.
    * @throws {TypeError} If `weights` is not a Map.
+   * @private
    */
   _weightsToDistribution(weights) {
     if (!(weights instanceof Map))
@@ -1422,6 +1423,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @param {number} seed - Seed value for PRNG (integer).
    * @returns {RngGenerator} A function that returns a pseudo-random number in [0, 1).
    * @throws {TypeError} If `seed` is not a finite number.
+   * @private
    */
   _makeSeededRng(seed) {
     if (typeof seed !== 'number' || !Number.isFinite(seed))

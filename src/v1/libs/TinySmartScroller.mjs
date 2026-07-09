@@ -410,6 +410,7 @@ class TinySmartScroller extends EventEmitter {
    * Checks which elements inside the target are currently visible and updates internal maps.
    *
    * @returns {Map<Element, { oldIsVisible: boolean; isVisible: boolean }>} Visibility comparison results.
+   * @private
    */
   _scrollDataUpdater() {
     const results = new Map();
@@ -427,6 +428,7 @@ class TinySmartScroller extends EventEmitter {
 
   /**
    * Handles scroll events, calculates position-related statuses, and emits appropriate events.
+   * @private
    */
   _onScroll() {
     if (this.#destroyed) return;
@@ -488,6 +490,7 @@ class TinySmartScroller extends EventEmitter {
    * Attempts to correct the scroll position when layout shifts happen, preserving the user position if needed.
    *
    * @param {Element[]} [targets=[]] - List of elements involved in the size change.
+   * @private
    */
   _fixScroll(targets = []) {
     if (this.#destroyed) return;
@@ -577,6 +580,7 @@ class TinySmartScroller extends EventEmitter {
   }
   /**
    * Sets up a MutationObserver to watch for DOM changes and react accordingly to maintain scroll consistency.
+   * @private
    */
   _observeMutations() {
     this.#mutationObserver = new MutationObserver((mutations) => {
@@ -617,6 +621,7 @@ class TinySmartScroller extends EventEmitter {
    * Adds a ResizeObserver to monitor elements' size changes and trigger layout adjustments.
    *
    * @param {NodeListOf<Element>|Element[]|HTMLCollection} elements - Elements to observe.
+   * @private
    */
   _observeResizes(elements) {
     // Add resize observer
@@ -657,6 +662,7 @@ class TinySmartScroller extends EventEmitter {
    * Listens for media/content load events (e.g., images, iframes, videos) to trigger scroll updates.
    *
    * @param {NodeListOf<Element>|Element} elements - Target element(s) to listen on.
+   * @private
    */
   _listenLoadEvents(elements) {
     if (this.#destroyed) return;

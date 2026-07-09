@@ -163,6 +163,7 @@ class TinyClipboard {
    * @param {string|null} [mimeFormat=null] - MIME type or prefix.
    * @param {boolean} [fixValue=false] - If true, exact match on MIME type.
    * @returns {Promise<Blob|string|Array<Blob|string>|null>} A promise resolving with matching data.
+   * @private
    */
   _readData(index = 0, type = null, mimeFormat = null, fixValue = false) {
     return new Promise((resolve, reject) => {
@@ -324,6 +325,7 @@ class TinyClipboard {
    *
    * @param {number|null} index - Index of the item to retrieve or null to get all.
    * @returns {Promise<ClipboardItem|ClipboardItems|null>} A promise resolving with a clipboard item or array of items.
+   * @private
    */
   _read(index) {
     return new Promise((resolve, reject) => {

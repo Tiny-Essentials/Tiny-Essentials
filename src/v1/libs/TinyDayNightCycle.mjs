@@ -1232,6 +1232,7 @@ class TinyDayNightCycle {
    * @param {number} min - Minimum value.
    * @param {number} max - Maximum value.
    * @returns {number} - A random integer between min and max.
+   * @private
    */
   _randomInRange(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
