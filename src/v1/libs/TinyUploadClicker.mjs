@@ -53,6 +53,21 @@ import { isJsonObject } from '../index.mjs';
  * uploader.destroy();
  */
 class TinyUploadClicker {
+  /**
+   * Tracks whether the instance has been destroyed.
+   * @type {boolean}
+   */
+  #destroyed = false;
+
+  /**
+   * Gets the current destruction status of the instance.
+   *
+   * @returns {boolean} True if the instance is destroyed, false otherwise.
+   */
+  get destroyed() {
+    return this.#destroyed;
+  }
+
   /** @type {UploaderConfig} */
   #config;
 
@@ -201,6 +216,7 @@ class TinyUploadClicker {
    * Cleans up all internal elements and event listeners, removing created inputs and breaking references.
    */
   destroy() {
+    if (this.destroyed) return;
     for (const trigger of this.#triggerElements) {
       if (!(trigger instanceof HTMLElement)) return;
       trigger.removeEventListener('click', this.#boundClick);
@@ -212,6 +228,9 @@ class TinyUploadClicker {
     }
 
     this.#triggerElements = [];
+
+    // Lock the instance
+    this.#destroyed = true;
   }
 }
 

@@ -1,5 +1,8 @@
 import { EventEmitter } from 'events';
 import { isJsonObject } from '../basics/objChecker.mjs';
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyIframeEvents');
 
 /** @type {WeakMap<Window, TinyIframeEvents>} */
 const instances = new WeakMap();
@@ -49,6 +52,7 @@ class TinyIframeEvents extends EventEmitter {
   #targetWindow;
 
   get targetWindow() {
+    checkDestroy(this.#isDestroyed);
     return this.#targetWindow;
   }
 
@@ -56,6 +60,7 @@ class TinyIframeEvents extends EventEmitter {
   #targetIframeElement;
 
   get targetIframeElement() {
+    checkDestroy(this.#isDestroyed);
     return this.#targetIframeElement;
   }
 
@@ -63,6 +68,7 @@ class TinyIframeEvents extends EventEmitter {
   #targetOrigin;
 
   get targetOrigin() {
+    checkDestroy(this.#isDestroyed);
     return this.#targetOrigin;
   }
 
@@ -70,6 +76,7 @@ class TinyIframeEvents extends EventEmitter {
   #selfType;
 
   get selfType() {
+    checkDestroy(this.#isDestroyed);
     return this.#selfType;
   }
 
@@ -80,6 +87,7 @@ class TinyIframeEvents extends EventEmitter {
   #ready = false;
 
   get ready() {
+    checkDestroy(this.#isDestroyed);
     return this.#ready;
   }
 
@@ -90,6 +98,7 @@ class TinyIframeEvents extends EventEmitter {
    * @param {function(): void} handler - The callback function to execute.
    */
   onReady(handler) {
+    checkDestroy(this.#isDestroyed);
     if (this.#ready) {
       handler();
     } else {
@@ -166,6 +175,7 @@ class TinyIframeEvents extends EventEmitter {
    * @returns {string}
    */
   get secretEventName() {
+    checkDestroy(this.#isDestroyed);
     return this.#secretEventName;
   }
 
@@ -175,6 +185,7 @@ class TinyIframeEvents extends EventEmitter {
    * @throws {TypeError} If the value is not a string.
    */
   set secretEventName(name) {
+    checkDestroy(this.#isDestroyed);
     if (typeof name !== 'string')
       throw new TypeError('TinyIframeEvents: secretEventName must be a string.');
     this.#secretEventName = name;
@@ -185,6 +196,7 @@ class TinyIframeEvents extends EventEmitter {
    * @returns {string}
    */
   get handshakeEventName() {
+    checkDestroy(this.#isDestroyed);
     return this.#handshakeEventName;
   }
 
@@ -194,6 +206,7 @@ class TinyIframeEvents extends EventEmitter {
    * @throws {TypeError} If the value is not a string.
    */
   set handshakeEventName(name) {
+    checkDestroy(this.#isDestroyed);
     if (typeof name !== 'string')
       throw new TypeError('TinyIframeEvents: handshakeEventName must be a string.');
     this.#handshakeEventName = name;
@@ -204,6 +217,7 @@ class TinyIframeEvents extends EventEmitter {
    * @returns {string}
    */
   get readyEventName() {
+    checkDestroy(this.#isDestroyed);
     return this.#readyEventName;
   }
 
@@ -213,6 +227,7 @@ class TinyIframeEvents extends EventEmitter {
    * @throws {TypeError} If the value is not a string.
    */
   set readyEventName(name) {
+    checkDestroy(this.#isDestroyed);
     if (typeof name !== 'string')
       throw new TypeError('TinyIframeEvents: readyEventName must be a string.');
     this.#readyEventName = name;
@@ -337,6 +352,7 @@ class TinyIframeEvents extends EventEmitter {
    * @throws {Error} If instance has been destroyed.
    */
   winEmit(eventName, payload) {
+    checkDestroy(this.#isDestroyed);
     if (typeof eventName !== 'string') throw new TypeError('Event name must be a string.');
     if (this.#isDestroyed) throw new Error('Cannot emit: instance has been destroyed.');
 
@@ -370,7 +386,7 @@ class TinyIframeEvents extends EventEmitter {
    * Call this when the instance is no longer needed to prevent memory leaks.
    */
   destroy() {
-    this.#isDestroyed = true;
+    if (this.#isDestroyed) return;
     this.#ready = false;
 
     window.removeEventListener('message', this._boundWindowMessage);
@@ -387,6 +403,7 @@ class TinyIframeEvents extends EventEmitter {
     this.removeAllListeners();
     this.#pendingQueue = [];
     instances.delete(this.#targetWindow);
+    this.#isDestroyed = true;
   }
 }
 

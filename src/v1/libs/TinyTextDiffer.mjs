@@ -20,11 +20,16 @@ class TinyTextDiffer {
   /** @type {boolean} */
   #destroyed = false;
 
+  get destroyed() {
+    return this.#destroyed;
+  }
+
   /**
    * Retrieves a shallow copy of the current history array.
    * @returns {string[]}
    */
   get history() {
+    checkDestroy(this.#destroyed);
     return [...this.#history];
   }
 
@@ -49,6 +54,7 @@ class TinyTextDiffer {
    * @returns {number}
    */
   get size() {
+    checkDestroy(this.#destroyed);
     return this.#history.length;
   }
 

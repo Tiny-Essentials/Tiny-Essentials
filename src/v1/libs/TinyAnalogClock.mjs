@@ -1,3 +1,7 @@
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyAnalogClock');
+
 /**
  * Configuration object for the Analog Clock.
  * @typedef {Object} ClockConfig
@@ -33,6 +37,21 @@ class TinyAnalogClock {
   #config;
   /** @type {number|null} */
   #animationFrame = null;
+
+  /**
+   * Tracks whether the instance has been destroyed.
+   * @type {boolean}
+   */
+  #destroyed = false;
+
+  /**
+   * Gets the current destruction status of the instance.
+   *
+   * @returns {boolean} True if the instance is destroyed, false otherwise.
+   */
+  get destroyed() {
+    return this.#destroyed;
+  }
 
   /**
    * Retrieves the current date and extracts the specific hour, minute, and second components.
@@ -330,6 +349,7 @@ class TinyAnalogClock {
    * @returns {HTMLElement} The clock container.
    */
   get element() {
+    checkDestroy(this.#destroyed);
     return this.#element;
   }
 
@@ -339,6 +359,7 @@ class TinyAnalogClock {
    * @throws {Error} If value is not a positive number.
    */
   set size(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number' || value <= 0 || isNaN(value)) {
       throw new Error(`TinyAnalogClock: 'size' must be a positive number. Received: ${value}`);
     }
@@ -351,6 +372,7 @@ class TinyAnalogClock {
    * @returns {number}
    */
   get size() {
+    checkDestroy(this.#destroyed);
     return this.#config.size;
   }
 
@@ -360,6 +382,7 @@ class TinyAnalogClock {
    * @throws {Error} If value is not a string or null.
    */
   set skinUrl(url) {
+    checkDestroy(this.#destroyed);
     if (url !== null && typeof url !== 'string') {
       throw new Error(
         `TinyAnalogClock: 'skin' must be a URL string or null. Received type: ${typeof url}`,
@@ -374,6 +397,7 @@ class TinyAnalogClock {
    * @returns {string|null}
    */
   get skinUrl() {
+    checkDestroy(this.#destroyed);
     return this.#config.skinUrl;
   }
 
@@ -383,6 +407,7 @@ class TinyAnalogClock {
    * @throws {Error} If value is not a non-empty string.
    */
   set borderColor(color) {
+    checkDestroy(this.#destroyed);
     if (typeof color !== 'string' || color.trim() === '') {
       throw new Error(
         `TinyAnalogClock: 'borderColor' must be a non-empty string. Received: ${color}`,
@@ -398,6 +423,7 @@ class TinyAnalogClock {
    * @returns {string}
    */
   get borderColor() {
+    checkDestroy(this.#destroyed);
     return this.#config.borderColor;
   }
 
@@ -407,6 +433,7 @@ class TinyAnalogClock {
    * @throws {Error} If value is not a non-empty string.
    */
   set markColor(color) {
+    checkDestroy(this.#destroyed);
     if (typeof color !== 'string' || color.trim() === '') {
       throw new Error(
         `TinyAnalogClock: 'markColor' must be a non-empty string. Received: ${color}`,
@@ -422,6 +449,7 @@ class TinyAnalogClock {
    * @returns {string}
    */
   get markColor() {
+    checkDestroy(this.#destroyed);
     return this.#config.markColor;
   }
 
@@ -431,6 +459,7 @@ class TinyAnalogClock {
    * @throws {Error} If value is not a non-empty string.
    */
   set textColor(color) {
+    checkDestroy(this.#destroyed);
     if (typeof color !== 'string' || color.trim() === '') {
       throw new Error(
         `TinyAnalogClock: 'textColor' must be a non-empty string. Received: ${color}`,
@@ -446,6 +475,7 @@ class TinyAnalogClock {
    * @returns {string}
    */
   get textColor() {
+    checkDestroy(this.#destroyed);
     return this.#config.textColor;
   }
 
@@ -455,6 +485,7 @@ class TinyAnalogClock {
    * @throws {Error} If value is not a boolean.
    */
   set showNumbers(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'boolean') {
       throw new Error(
         `TinyAnalogClock: 'showNumbers' must be a boolean. Received type: ${typeof value}`,
@@ -469,6 +500,7 @@ class TinyAnalogClock {
    * @returns {boolean}
    */
   get showNumbers() {
+    checkDestroy(this.#destroyed);
     return this.#config.showNumbers;
   }
 
@@ -477,6 +509,7 @@ class TinyAnalogClock {
    * @param {string} value
    */
   set bgColor(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'string' || !value)
       throw new Error("TinyAnalogClock: 'bgColor' must be a non-empty string.");
     this.#config.bgColor = value;
@@ -488,6 +521,7 @@ class TinyAnalogClock {
    * @returns {string}
    */
   get bgColor() {
+    checkDestroy(this.#destroyed);
     return this.#config.bgColor;
   }
 
@@ -496,6 +530,7 @@ class TinyAnalogClock {
    * @param {number} value
    */
   set borderWidth(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number' || value < 0)
       throw new Error("TinyAnalogClock: 'borderWidth' must be a non-negative number.");
     this.#config.borderWidth = value;
@@ -508,6 +543,7 @@ class TinyAnalogClock {
    * @returns {number}
    */
   get borderWidth() {
+    checkDestroy(this.#destroyed);
     return this.#config.borderWidth;
   }
 
@@ -516,6 +552,7 @@ class TinyAnalogClock {
    * @param {string} value
    */
   set hourHandColor(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'string' || !value)
       throw new Error("TinyAnalogClock: 'hourHandColor' must be a non-empty string.");
     this.#config.hourHandColor = value;
@@ -527,6 +564,7 @@ class TinyAnalogClock {
    * @returns {string}
    */
   get hourHandColor() {
+    checkDestroy(this.#destroyed);
     return this.#config.hourHandColor;
   }
 
@@ -535,6 +573,7 @@ class TinyAnalogClock {
    * @param {string} value
    */
   set minuteHandColor(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'string' || !value)
       throw new Error("TinyAnalogClock: 'minuteHandColor' must be a non-empty string.");
     this.#config.minuteHandColor = value;
@@ -546,6 +585,7 @@ class TinyAnalogClock {
    * @returns {string}
    */
   get minuteHandColor() {
+    checkDestroy(this.#destroyed);
     return this.#config.minuteHandColor;
   }
 
@@ -554,6 +594,7 @@ class TinyAnalogClock {
    * @param {string} value
    */
   set secondHandColor(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'string' || !value)
       throw new Error("TinyAnalogClock: 'secondHandColor' must be a non-empty string.");
     this.#config.secondHandColor = value;
@@ -565,6 +606,7 @@ class TinyAnalogClock {
    * @returns {string}
    */
   get secondHandColor() {
+    checkDestroy(this.#destroyed);
     return this.#config.secondHandColor;
   }
 
@@ -573,6 +615,7 @@ class TinyAnalogClock {
    * @param {boolean} value
    */
   set showSeconds(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'boolean')
       throw new Error("TinyAnalogClock: 'showSeconds' must be a boolean.");
     this.#config.showSeconds = value;
@@ -584,6 +627,7 @@ class TinyAnalogClock {
    * @returns {boolean}
    */
   get showSeconds() {
+    checkDestroy(this.#destroyed);
     return this.#config.showSeconds;
   }
 
@@ -592,6 +636,7 @@ class TinyAnalogClock {
    * @param {number} value - Positive number.
    */
   set sizeAdjust(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number' || value <= 0)
       throw new Error("TinyAnalogClock: 'sizeAdjust' must be a positive number.");
     this.#config.sizeAdjust = value;
@@ -603,6 +648,7 @@ class TinyAnalogClock {
    * @returns {number}
    */
   get sizeAdjust() {
+    checkDestroy(this.#destroyed);
     return this.#config.sizeAdjust;
   }
 
@@ -611,6 +657,7 @@ class TinyAnalogClock {
    * @param {number} value - Non-negative number in pixels.
    */
   set padding(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number' || value < 0)
       throw new Error("TinyAnalogClock: 'padding' must be a non-negative number.");
     this.#config.padding = value;
@@ -622,6 +669,7 @@ class TinyAnalogClock {
    * @returns {number}
    */
   get padding() {
+    checkDestroy(this.#destroyed);
     return this.#config.padding;
   }
 
@@ -630,6 +678,7 @@ class TinyAnalogClock {
    * @param {number} value - Positive number.
    */
   set angleDistance(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number' || value <= 0)
       throw new Error("TinyAnalogClock: 'angleDistance' must be a positive number.");
     this.#config.angleDistance = value;
@@ -641,6 +690,7 @@ class TinyAnalogClock {
    * @returns {number}
    */
   get angleDistance() {
+    checkDestroy(this.#destroyed);
     return this.#config.angleDistance;
   }
 
@@ -649,6 +699,7 @@ class TinyAnalogClock {
    * @param {number} value - Positive number.
    */
   set pwH(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number' || value <= 0)
       throw new Error("TinyAnalogClock: 'pwH' must be a positive number.");
     this.#config.pwH = value;
@@ -660,6 +711,7 @@ class TinyAnalogClock {
    * @returns {number}
    */
   get pwH() {
+    checkDestroy(this.#destroyed);
     return this.#config.pwH;
   }
 
@@ -668,6 +720,7 @@ class TinyAnalogClock {
    * @param {number} value - Positive number.
    */
   set phH(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number' || value <= 0)
       throw new Error("TinyAnalogClock: 'phH' must be a positive number.");
     this.#config.phH = value;
@@ -679,6 +732,7 @@ class TinyAnalogClock {
    * @returns {number}
    */
   get phH() {
+    checkDestroy(this.#destroyed);
     return this.#config.phH;
   }
 
@@ -687,6 +741,7 @@ class TinyAnalogClock {
    * @param {number} value - Positive number.
    */
   set pwM(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number' || value <= 0)
       throw new Error("TinyAnalogClock: 'pwM' must be a positive number.");
     this.#config.pwM = value;
@@ -698,6 +753,7 @@ class TinyAnalogClock {
    * @returns {number}
    */
   get pwM() {
+    checkDestroy(this.#destroyed);
     return this.#config.pwM;
   }
 
@@ -706,6 +762,7 @@ class TinyAnalogClock {
    * @param {number} value - Positive number.
    */
   set phM(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number' || value <= 0)
       throw new Error("TinyAnalogClock: 'phM' must be a positive number.");
     this.#config.phM = value;
@@ -717,6 +774,7 @@ class TinyAnalogClock {
    * @returns {number}
    */
   get phM() {
+    checkDestroy(this.#destroyed);
     return this.#config.phM;
   }
 
@@ -725,11 +783,13 @@ class TinyAnalogClock {
    * @returns {void}
    */
   destroy() {
+    if (this.#destroyed) return;
     if (this.#animationFrame) {
       cancelAnimationFrame(this.#animationFrame);
       this.#animationFrame = null;
     }
     this.#element.remove();
+    this.#destroyed = true;
   }
 }
 

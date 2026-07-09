@@ -55,6 +55,33 @@ const defaultEmojis = [
   '🎮',
   '🥓',
   '🍮',
+  '🍬',
+  '🍓',
+  '🍒',
+  '🥝',
+  '🥑',
+  '🍄',
+  '🌊',
+  '☁️',
+  '🌟',
+  '🌙',
+  '🧚',
+  '🐾',
+  '🐥',
+  '🐼',
+  '🐨',
+  '🐳',
+  '✨',
+  '🧁',
+  '🌸',
+  '🍃',
+  '💎',
+  '🎐',
+  '🎀',
+  '🫧',
+  '☄️',
+  '🛸',
+  '🔮',
 ];
 
 const defaultNouns = [
@@ -249,6 +276,16 @@ const defaultTemplates = [
   'Do {noun}s have feelings? Asking for a {adj} friend.',
   'I trusted the {noun} and all I got was a glitter-covered sock.',
   'Plot twist: the {adj} {noun} was inside us all along.',
+
+  // ✨ Magical/Dreamy (New Category)
+  'In the glow of the {adj} moon, the {noun} began to {verb}.',
+  'A sprinkle of {adj} dust made the {noun} {verb} through the air.',
+  'The {noun} whispered a {adj} secret that made everyone {verb}.',
+  'Everything felt {adj} and {adj}, especially when the {noun} {verb}ed.',
+
+  // 🌀 Chaos/Glitch (New Category)
+  'The {noun} is {verb}ing! The {noun} is {verb}ing! AAAAA!',
+  'Glitch in the {noun}: the {adj} {noun} just {verb}ed out of existence.',
 
   // Mini cute explosions and chaos
   'The {adj} {noun} {verb} and {verb} all over the {adj} {noun}!',
@@ -505,13 +542,15 @@ class UltraRandomMsgGen {
     },
   };
 
-  get config () {
+  get config() {
+    checkDestroy(this.#destroyed);
     return structuredClone(this.#config);
   }
 
   #symbols = '!@#$%^&*()-_=+[]{}|;:,.<>?/\\~'.split('');
 
-  get symbols () {
+  get symbols() {
+    checkDestroy(this.#destroyed);
     return structuredClone(this.#symbols);
   }
 
@@ -1079,9 +1118,7 @@ class UltraRandomMsgGen {
    * @returns {void}
    */
   destroy() {
-    if (this.destroyed) {
-      throw new Error('This instance of UltraRandomMsgGen has already been destroyed.');
-    }
+    if (this.destroyed) return;
 
     // Clear primary memory references
     this.#symbols = [];

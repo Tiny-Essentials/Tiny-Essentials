@@ -683,6 +683,7 @@ class TinyDragger {
    * @returns {boolean}
    */
   getDragging() {
+    checkDestroy(this.#destroyed);
     return this.#dragging;
   }
 
@@ -691,6 +692,7 @@ class TinyDragger {
    * @returns {boolean}
    */
   getLockInsideJail() {
+    checkDestroy(this.#destroyed);
     return this.#lockInsideJail;
   }
 
@@ -709,6 +711,7 @@ class TinyDragger {
    * @returns {boolean}
    */
   getRevertOnDrop() {
+    checkDestroy(this.#destroyed);
     return this.#revertOnDrop;
   }
 
@@ -727,6 +730,7 @@ class TinyDragger {
    * @returns {boolean}
    */
   getCollisionByMouse() {
+    checkDestroy(this.#destroyed);
     return this.#collisionByMouse;
   }
 
@@ -745,6 +749,7 @@ class TinyDragger {
    * @returns {boolean}
    */
   getDropInJailOnly() {
+    checkDestroy(this.#destroyed);
     return this.#dropInJailOnly;
   }
 
@@ -763,6 +768,7 @@ class TinyDragger {
    * @returns {number}
    */
   getDefaultZIndex() {
+    checkDestroy(this.#destroyed);
     return this.#defaultZIndex;
   }
 
@@ -782,6 +788,7 @@ class TinyDragger {
    * @returns {boolean}
    */
   isMirrorEnabled() {
+    checkDestroy(this.#destroyed);
     return this.#mirrorElem;
   }
 
@@ -801,6 +808,7 @@ class TinyDragger {
    * @returns {HTMLElement}
    */
   getTarget() {
+    checkDestroy(this.#destroyed);
     return this.#target;
   }
 
@@ -809,6 +817,7 @@ class TinyDragger {
    * @returns {HTMLElement|null}
    */
   getJail() {
+    checkDestroy(this.#destroyed);
     return this.#jail;
   }
 
@@ -817,6 +826,7 @@ class TinyDragger {
    * @returns {HTMLElement|null}
    */
   getDragProxy() {
+    checkDestroy(this.#destroyed);
     return this.#dragProxy;
   }
 
@@ -825,6 +835,7 @@ class TinyDragger {
    * @returns {HTMLElement|null}
    */
   getLastCollision() {
+    checkDestroy(this.#destroyed);
     return this.#lastCollision;
   }
 
@@ -833,6 +844,7 @@ class TinyDragger {
    * @returns {HTMLElement[]}
    */
   getCollidables() {
+    checkDestroy(this.#destroyed);
     return [...this.#collidables];
   }
 
@@ -841,6 +853,7 @@ class TinyDragger {
    * @returns {string}
    */
   getDragHiddenClass() {
+    checkDestroy(this.#destroyed);
     return this.#dragHiddenClass;
   }
 
@@ -849,6 +862,7 @@ class TinyDragger {
    * @returns {string}
    */
   getClassDragging() {
+    checkDestroy(this.#destroyed);
     return this.#classDragging;
   }
 
@@ -857,6 +871,7 @@ class TinyDragger {
    * @returns {string}
    */
   getClassBodyDragging() {
+    checkDestroy(this.#destroyed);
     return this.#classBodyDragging;
   }
 
@@ -865,6 +880,7 @@ class TinyDragger {
    * @returns {string}
    */
   getClassJailDragging() {
+    checkDestroy(this.#destroyed);
     return this.#classJailDragging;
   }
 
@@ -873,6 +889,7 @@ class TinyDragger {
    * @returns {string}
    */
   getClassJailDragDisabled() {
+    checkDestroy(this.#destroyed);
     return this.#classJailDragDisabled;
   }
 
@@ -881,6 +898,7 @@ class TinyDragger {
    * @returns {string}
    */
   getClassDragCollision() {
+    checkDestroy(this.#destroyed);
     return this.#classDragCollision;
   }
 
@@ -889,6 +907,7 @@ class TinyDragger {
    * @returns {VibrationPatterns}
    */
   getVibrations() {
+    checkDestroy(this.#destroyed);
     return { ...this.#vibration };
   }
 
@@ -897,6 +916,7 @@ class TinyDragger {
    * @returns {number[]|boolean}
    */
   getStartVibration() {
+    checkDestroy(this.#destroyed);
     return this.#vibration.start;
   }
 
@@ -905,6 +925,7 @@ class TinyDragger {
    * @returns {number[]|boolean}
    */
   getEndVibration() {
+    checkDestroy(this.#destroyed);
     return this.#vibration.end;
   }
 
@@ -913,6 +934,7 @@ class TinyDragger {
    * @returns {number[]|boolean}
    */
   getCollideVibration() {
+    checkDestroy(this.#destroyed);
     return this.#vibration.collide;
   }
 
@@ -921,6 +943,7 @@ class TinyDragger {
    * @returns {number[]|boolean}
    */
   getMoveVibration() {
+    checkDestroy(this.#destroyed);
     return this.#vibration.move;
   }
 
@@ -929,6 +952,7 @@ class TinyDragger {
    * @returns {boolean}
    */
   isEnabled() {
+    checkDestroy(this.#destroyed);
     return this.#enabled;
   }
 

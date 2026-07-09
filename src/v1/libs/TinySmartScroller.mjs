@@ -228,6 +228,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {NodeSizesEvent} A function that compares previous and current height, returning height delta.
    */
   getSimpleOnHeight(filter = []) {
+    checkDestroy(this.#destroyed);
     if (!Array.isArray(filter))
       throw new TypeError('getSimpleOnHeight(filter): filter must be an array of tag names');
     return (elem, sizes, amounts) => {
@@ -261,6 +262,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {string[]} Array of tag names.
    */
   getLoadTags() {
+    checkDestroy(this.#destroyed);
     return Array.from(this.#loadTags);
   }
 
@@ -293,6 +295,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean} True if the tag is being tracked.
    */
   hasLoadTag(tag) {
+    checkDestroy(this.#destroyed);
     if (typeof tag !== 'string') throw new TypeError('hasLoadTag(tag): tag must be a string');
     return this.#loadTags.has(tag.toUpperCase());
   }
@@ -320,6 +323,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {string[]} Array of attribute names.
    */
   getAttributeFilters() {
+    checkDestroy(this.#destroyed);
     return Array.from(this.#attributeFilter);
   }
 
@@ -354,6 +358,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean} True if the attribute is being filtered.
    */
   hasAttributeFilter(attr) {
+    checkDestroy(this.#destroyed);
     if (typeof attr !== 'string')
       throw new TypeError('hasAttributeFilter(attr): attr must be a string');
     return this.#attributeFilter.has(attr);
@@ -690,6 +695,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {NodeSizes|null} The old size, or undefined.
    */
   getOldSize(el) {
+    checkDestroy(this.#destroyed);
     return this.#oldSizes.get(el) ?? null;
   }
 
@@ -700,6 +706,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {NodeSizes|null} The new size, or undefined.
    */
   getNewSize(el) {
+    checkDestroy(this.#destroyed);
     return this.#newSizes.get(el) ?? null;
   }
 
@@ -710,6 +717,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean} True if visible, false if not, or undefined if not tracked.
    */
   wasVisible(el) {
+    checkDestroy(this.#destroyed);
     return this.#oldVisibles.get(el) ?? false;
   }
 
@@ -720,6 +728,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean} True if visible, false if not, or undefined if not tracked.
    */
   isVisible(el) {
+    checkDestroy(this.#destroyed);
     return this.#newVisibles.get(el) ?? false;
   }
 
@@ -730,6 +739,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean} Visibility state from the previous timed check.
    */
   wasTimedVisible(el) {
+    checkDestroy(this.#destroyed);
     return this.#oldVisiblesByTime.get(el) ?? false;
   }
 
@@ -740,6 +750,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean} Visibility state from the current timed check.
    */
   isTimedVisible(el) {
+    checkDestroy(this.#destroyed);
     return this.#newVisiblesByTime.get(el) ?? false;
   }
 
@@ -761,6 +772,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {number}
    */
   getExtraScrollBoundary() {
+    checkDestroy(this.#destroyed);
     return this.#extraScrollBoundary;
   }
 
@@ -770,6 +782,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {number}
    */
   getLastKnownScrollBottomOffset() {
+    checkDestroy(this.#destroyed);
     return this.#lastKnownScrollBottomOffset;
   }
 
@@ -777,6 +790,7 @@ class TinySmartScroller extends EventEmitter {
    * Forces the scroll position to move to the very bottom of the target.
    */
   scrollToBottom() {
+    checkDestroy(this.#destroyed);
     this.#targetElement.scrollTop = this.#targetElement.scrollHeight;
   }
 
@@ -784,6 +798,7 @@ class TinySmartScroller extends EventEmitter {
    * Forces the scroll position to move to the very top of the target.
    */
   scrollToTop() {
+    checkDestroy(this.#destroyed);
     this.#targetElement.scrollTop = 0;
   }
 
@@ -793,6 +808,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean}
    */
   isAtCustomBottom() {
+    checkDestroy(this.#destroyed);
     return this.#isAtCustomBottom;
   }
 
@@ -802,6 +818,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean}
    */
   isAtCustomTop() {
+    checkDestroy(this.#destroyed);
     return this.#isAtCustomTop;
   }
 
@@ -811,6 +828,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean}
    */
   isAtBottom() {
+    checkDestroy(this.#destroyed);
     return this.#isAtBottom;
   }
 
@@ -820,6 +838,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean}
    */
   isAtTop() {
+    checkDestroy(this.#destroyed);
     return this.#isAtTop;
   }
 
@@ -829,6 +848,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean}
    */
   isPastAtBottom() {
+    checkDestroy(this.#destroyed);
     return this.#isPastAtBottom;
   }
 
@@ -838,6 +858,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean}
    */
   isPastAtTop() {
+    checkDestroy(this.#destroyed);
     return this.#isPastAtTop;
   }
 
@@ -847,6 +868,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean}
    */
   isPastAtCustomTop() {
+    checkDestroy(this.#destroyed);
     return this.#isPastAtCustomTop;
   }
 
@@ -856,6 +878,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean}
    */
   isPastAtCustomBottom() {
+    checkDestroy(this.#destroyed);
     return this.#isPastAtCustomBottom;
   }
 
@@ -865,6 +888,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean}
    */
   isScrollPaused() {
+    checkDestroy(this.#destroyed);
     return this.#scrollPaused;
   }
 
@@ -874,6 +898,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean} True if the scroll target is window, false otherwise.
    */
   isWindow() {
+    checkDestroy(this.#destroyed);
     return this.#useWindow;
   }
 
@@ -892,6 +917,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean} True if auto-scroll is active, false otherwise.
    */
   getAutoScrollBottom() {
+    checkDestroy(this.#destroyed);
     return this.#autoScrollBottom;
   }
 
@@ -901,6 +927,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean} True if mutation observation is active, false otherwise.
    */
   getObserveMutations() {
+    checkDestroy(this.#destroyed);
     return this.#observeMutations;
   }
 
@@ -910,6 +937,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {boolean} True if scroll preservation is active, false otherwise.
    */
   getPreserveScrollOnLayoutShift() {
+    checkDestroy(this.#destroyed);
     return this.#preserveScrollOnLayoutShift;
   }
 
@@ -919,6 +947,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {number} Debounce delay time.
    */
   getDebounceTime() {
+    checkDestroy(this.#destroyed);
     return this.#debounceTime;
   }
 
@@ -928,6 +957,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {number} Current count of matching elements.
    */
   getElemAmount() {
+    checkDestroy(this.#destroyed);
     return this.#elemAmount;
   }
 
@@ -937,6 +967,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {number} Previous count of matching elements.
    */
   getPrevElemAmount() {
+    checkDestroy(this.#destroyed);
     return this.#elemOldAmount;
   }
 
@@ -946,6 +977,7 @@ class TinySmartScroller extends EventEmitter {
    * @returns {string} The CSS selector string, or an empty string if none was provided.
    */
   getQuerySelector() {
+    checkDestroy(this.#destroyed);
     return this.#querySelector;
   }
 

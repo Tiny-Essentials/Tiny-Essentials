@@ -28,6 +28,21 @@
  * @beta
  */
 class TinyTextarea {
+  /**
+   * Tracks whether the instance has been destroyed.
+   * @type {boolean}
+   */
+  #destroyed = false;
+
+  /**
+   * Gets the current destruction status of the instance.
+   *
+   * @returns {boolean} True if the instance is destroyed, false otherwise.
+   */
+  get destroyed() {
+    return this.#destroyed;
+  }
+
   #lineHeight;
   #maxRows;
   #extraHeight;
@@ -221,7 +236,11 @@ class TinyTextarea {
    * Cleans up internal listeners and disables dynamic behavior.
    */
   destroy() {
+    if (this.destroyed) return;
     this.#textarea.removeEventListener('input', this._handleInput);
+
+    // Lock the instance
+    this.#destroyed = true;
   }
 }
 

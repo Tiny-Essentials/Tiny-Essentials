@@ -1,3 +1,7 @@
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyRateLimiter');
+
 /**
  * Callback triggered when a group's stored hit history exceeds
  * the configured memory limit.
@@ -68,6 +72,21 @@
  * and safe to use in long-running Node.js processes.
  */
 class TinyRateLimiter {
+  /**
+   * Tracks whether the instance has been destroyed.
+   * @type {boolean}
+   */
+  #destroyed = false;
+
+  /**
+   * Gets the current destruction status of the instance.
+   *
+   * @returns {boolean} True if the instance is destroyed, false otherwise.
+   */
+  get destroyed() {
+    return this.#destroyed;
+  }
+
   /**
    * Maximum number of timestamps stored per group.
    * When exceeded, older entries are discarded.
@@ -184,6 +203,7 @@ class TinyRateLimiter {
    * @param {OnMemoryExceeded} callback
    */
   setOnMemoryExceeded(callback) {
+    checkDestroy(this.#destroyed);
     if (typeof callback !== 'function') throw new Error('onMemoryExceeded must be a function');
     this.#onMemoryExceeded = callback;
   }
@@ -192,6 +212,7 @@ class TinyRateLimiter {
    * Removes the memory-exceeded callback.
    */
   clearOnMemoryExceeded() {
+    checkDestroy(this.#destroyed);
     this.#onMemoryExceeded = null;
   }
 
@@ -211,6 +232,7 @@ class TinyRateLimiter {
    * @param {OnGroupExpired} callback - A function that receives the expired groupId.
    */
   setOnGroupExpired(callback) {
+    checkDestroy(this.#destroyed);
     if (typeof callback !== 'function') throw new Error('onGroupExpired must be a function');
     this.#onGroupExpired = callback;
   }
@@ -219,6 +241,7 @@ class TinyRateLimiter {
    * Removes the group-expiration callback.
    */
   clearOnGroupExpired() {
+    checkDestroy(this.#destroyed);
     this.#onGroupExpired = null;
   }
 
@@ -283,6 +306,7 @@ class TinyRateLimiter {
    * @returns {boolean}
    */
   isGroupId(id) {
+    checkDestroy(this.#destroyed);
     const result = this.groupFlags.get(id);
     return typeof result === 'boolean' ? result : false;
   }
@@ -293,6 +317,7 @@ class TinyRateLimiter {
    * @returns {string[]}
    */
   getUsersInGroup(groupId) {
+    checkDestroy(this.#destroyed);
     const users = [];
     for (const [userId, assignedGroup] of this.userToGroup.entries()) {
       if (assignedGroup === groupId) {
@@ -309,6 +334,7 @@ class TinyRateLimiter {
    * @param {number} ttl
    */
   setGroupTTL(groupId, ttl) {
+    checkDestroy(this.#destroyed);
     if (typeof ttl !== 'number' || !Number.isFinite(ttl) || ttl <= 0)
       throw new Error('TTL must be a positive number in milliseconds');
     this.groupTTL.set(groupId, ttl);
@@ -320,6 +346,7 @@ class TinyRateLimiter {
    * @returns {number|null}
    */
   getGroupTTL(groupId) {
+    checkDestroy(this.#destroyed);
     return this.groupTTL.get(groupId) ?? null;
   }
 
@@ -328,6 +355,7 @@ class TinyRateLimiter {
    * @param {string} groupId
    */
   deleteGroupTTL(groupId) {
+    checkDestroy(this.#destroyed);
     this.groupTTL.delete(groupId);
   }
 
@@ -342,6 +370,7 @@ class TinyRateLimiter {
    * @throws {Error} If the user belongs to another group
    */
   assignToGroup(userId, groupId) {
+    checkDestroy(this.#destroyed);
     const existingGroup = this.userToGroup.get(userId);
     if (existingGroup && existingGroup !== groupId)
       throw new Error(`User ${userId} is already assigned to group ${existingGroup}`);
@@ -389,6 +418,7 @@ class TinyRateLimiter {
    * @returns {string}
    */
   getGroupId(userId) {
+    checkDestroy(this.#destroyed);
     return this.userToGroup.get(userId) || userId; // fallback: use userId as own group
   }
 
@@ -415,6 +445,7 @@ class TinyRateLimiter {
    * @param {string} userId
    */
   hit(userId) {
+    checkDestroy(this.#destroyed);
     const groupId = this.getGroupId(userId);
     const now = Date.now();
 
@@ -468,6 +499,7 @@ class TinyRateLimiter {
    * @returns {boolean}
    */
   isRateLimited(userId) {
+    checkDestroy(this.#destroyed);
     const groupId = this.getGroupId(userId);
     if (!this.groupData.has(groupId)) return false;
 
@@ -499,6 +531,7 @@ class TinyRateLimiter {
    * @param {string} groupId
    */
   resetGroup(groupId) {
+    checkDestroy(this.#destroyed);
     this.groupFlags.delete(groupId);
     this.groupData.delete(groupId);
     this.lastSeen.delete(groupId);
@@ -510,6 +543,7 @@ class TinyRateLimiter {
    * @param {string} userId
    */
   resetUserGroup(userId) {
+    checkDestroy(this.#destroyed);
     this.userToGroup.delete(userId);
   }
 
@@ -519,6 +553,7 @@ class TinyRateLimiter {
    * @param {number[]} timestamps
    */
   setData(groupId, timestamps) {
+    checkDestroy(this.#destroyed);
     if (!Array.isArray(timestamps)) throw new Error('timestamps must be an array of numbers.');
     for (const t of timestamps) {
       if (typeof t !== 'number' || !Number.isFinite(t)) {
@@ -536,6 +571,7 @@ class TinyRateLimiter {
    * @returns {boolean}
    */
   hasData(groupId) {
+    checkDestroy(this.#destroyed);
     return this.groupData.has(groupId);
   }
 
@@ -545,6 +581,7 @@ class TinyRateLimiter {
    * @returns {number[]}
    */
   getData(groupId) {
+    checkDestroy(this.#destroyed);
     return this.groupData.get(groupId) || [];
   }
 
@@ -553,6 +590,7 @@ class TinyRateLimiter {
    * @returns {number}
    */
   getMaxIdle() {
+    checkDestroy(this.#destroyed);
     if (typeof this.#maxIdle !== 'number' || !Number.isFinite(this.#maxIdle) || this.#maxIdle < 0) {
       throw new Error("'maxIdle' must be a non-negative finite number.");
     }
@@ -564,6 +602,7 @@ class TinyRateLimiter {
    * @param {number} ms
    */
   setMaxIdle(ms) {
+    checkDestroy(this.#destroyed);
     if (typeof ms !== 'number' || !Number.isFinite(ms) || ms < 0) {
       throw new Error("'maxIdle' must be a non-negative finite number.");
     }
@@ -597,6 +636,7 @@ class TinyRateLimiter {
    * @returns {string[]}
    */
   getActiveGroups() {
+    checkDestroy(this.#destroyed);
     return Array.from(this.groupData.keys());
   }
 
@@ -605,6 +645,7 @@ class TinyRateLimiter {
    * @returns {Record<string, string>}
    */
   getAllUserMappings() {
+    checkDestroy(this.#destroyed);
     return Object.fromEntries(this.userToGroup);
   }
 
@@ -617,6 +658,7 @@ class TinyRateLimiter {
    * @returns {number}
    */
   getInterval() {
+    checkDestroy(this.#destroyed);
     if (typeof this.#interval !== 'number' || !Number.isFinite(this.#interval)) {
       throw new Error("'interval' is not a valid finite number.");
     }
@@ -628,6 +670,7 @@ class TinyRateLimiter {
    * @returns {number}
    */
   getMaxHits() {
+    checkDestroy(this.#destroyed);
     if (typeof this.#maxHits !== 'number' || !Number.isFinite(this.#maxHits)) {
       throw new Error("'maxHits' is not a valid finite number.");
     }
@@ -640,6 +683,7 @@ class TinyRateLimiter {
    * @returns {number}
    */
   getTotalHits(groupId) {
+    checkDestroy(this.#destroyed);
     const history = this.groupData.get(groupId);
     return Array.isArray(history) ? history.length : 0;
   }
@@ -650,6 +694,7 @@ class TinyRateLimiter {
    * @returns {number|null}
    */
   getLastHit(groupId) {
+    checkDestroy(this.#destroyed);
     const history = this.groupData.get(groupId);
     return history?.length ? history[history.length - 1] : null;
   }
@@ -660,6 +705,7 @@ class TinyRateLimiter {
    * @returns {number|null}
    */
   getTimeSinceLastHit(groupId) {
+    checkDestroy(this.#destroyed);
     const last = this.getLastHit(groupId);
     return last !== null ? Date.now() - last : null;
   }
@@ -685,6 +731,7 @@ class TinyRateLimiter {
    * @returns {number|null}
    */
   getAverageHitSpacing(groupId) {
+    checkDestroy(this.#destroyed);
     return this._calculateAverageSpacing(this.groupData.get(groupId));
   }
 
@@ -699,6 +746,7 @@ class TinyRateLimiter {
    * }}
    */
   getMetrics(groupId) {
+    checkDestroy(this.#destroyed);
     const history = this.groupData.get(groupId);
 
     if (!Array.isArray(history) || history.length === 0) {
@@ -727,6 +775,7 @@ class TinyRateLimiter {
    * Destroy the rate limiter, stopping cleanup and clearing data
    */
   destroy() {
+    if (this.destroyed) return;
     if (this.#cleanupTimer) clearInterval(this.#cleanupTimer);
     this._cleanup();
     this.groupData.clear();
@@ -734,6 +783,9 @@ class TinyRateLimiter {
     this.userToGroup.clear();
     this.groupTTL.clear();
     this.groupFlags.clear();
+
+    // Lock the instance
+    this.#destroyed = true;
   }
 }
 

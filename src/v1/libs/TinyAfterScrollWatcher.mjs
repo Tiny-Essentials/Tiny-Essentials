@@ -23,6 +23,7 @@ class TinyAfterScrollWatcher {
   #scrollTarget;
 
   get scrollTarget() {
+    checkDestroy(this.#destroyed);
     return this.#scrollTarget;
   }
 
@@ -33,6 +34,7 @@ class TinyAfterScrollWatcher {
   #afterScrollQueue = [];
 
   get afterScrollQueueSize() {
+    checkDestroy(this.#destroyed);
     return this.#afterScrollQueue.length;
   }
 
@@ -81,6 +83,7 @@ class TinyAfterScrollWatcher {
    * @returns {number}
    */
   get inactivityTime() {
+    checkDestroy(this.#destroyed);
     return this.#inactivityTime;
   }
 

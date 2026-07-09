@@ -1,3 +1,7 @@
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyToastNotify');
+
 /**
  * A callback function used to manually close a notification.
  * Passed as a second argument to `onClick` handlers, allowing programmatic dismissal of the toast.
@@ -49,6 +53,21 @@ class TinyToastNotify {
   #container;
 
   /**
+   * Tracks whether the instance has been destroyed.
+   * @type {boolean}
+   */
+  #destroyed = false;
+
+  /**
+   * Gets the current destruction status of the instance.
+   *
+   * @returns {boolean} True if the instance is destroyed, false otherwise.
+   */
+  get destroyed() {
+    return this.#destroyed;
+  }
+
+  /**
    * @param {'top'|'bottom'} y - 'top' or 'bottom'
    * @param {'right'|'left'|'center'} x - 'right', 'left', or 'center'
    * @param {number} baseDuration - Base display time in ms
@@ -92,6 +111,7 @@ class TinyToastNotify {
    * @throws {Error} If the container is not a valid HTMLElement.
    */
   getContainer() {
+    checkDestroy(this.#destroyed);
     if (!(this.#container instanceof HTMLElement))
       throw new Error('Container is not a valid HTMLElement.');
     return this.#container;
@@ -147,6 +167,7 @@ class TinyToastNotify {
    * @returns {'top'|'bottom'} The vertical direction of the notification container.
    */
   getY() {
+    checkDestroy(this.#destroyed);
     return this.#y;
   }
 
@@ -158,6 +179,7 @@ class TinyToastNotify {
    * @throws {Error} If the value is invalid.
    */
   setY(value) {
+    checkDestroy(this.#destroyed);
     this.#validateY(value);
     const container = this.getContainer();
     container.classList.remove(this.#y);
@@ -172,6 +194,7 @@ class TinyToastNotify {
    * @returns {'left'|'right'|'center'} The horizontal direction of the notification container.
    */
   getX() {
+    checkDestroy(this.#destroyed);
     return this.#x;
   }
 
@@ -183,6 +206,7 @@ class TinyToastNotify {
    * @throws {Error} If the value is invalid.
    */
   setX(value) {
+    checkDestroy(this.#destroyed);
     this.#validateX(value);
     const container = this.getContainer();
     container.classList.remove(this.#x);
@@ -197,6 +221,7 @@ class TinyToastNotify {
    * @returns {number} Base time (in milliseconds) that a notification stays on screen.
    */
   getBaseDuration() {
+    checkDestroy(this.#destroyed);
     return this.#baseDuration;
   }
 
@@ -207,6 +232,7 @@ class TinyToastNotify {
    * @throws {Error} If the value is not a valid non-negative finite number.
    */
   setBaseDuration(value) {
+    checkDestroy(this.#destroyed);
     this.#validateTiming(value, 'baseDuration');
     this.#baseDuration = value;
   }
@@ -217,6 +243,7 @@ class TinyToastNotify {
    * @returns {number} Extra time (in milliseconds) per character in the notification.
    */
   getExtraPerChar() {
+    checkDestroy(this.#destroyed);
     return this.#extraPerChar;
   }
 
@@ -227,6 +254,7 @@ class TinyToastNotify {
    * @throws {Error} If the value is not a valid non-negative finite number.
    */
   setExtraPerChar(value) {
+    checkDestroy(this.#destroyed);
     this.#validateTiming(value, 'extraPerChar');
     this.#extraPerChar = value;
   }
@@ -237,6 +265,7 @@ class TinyToastNotify {
    * @returns {number} Time (in milliseconds) used for fade-out transition.
    */
   getFadeOutDuration() {
+    checkDestroy(this.#destroyed);
     return this.#fadeOutDuration;
   }
 
@@ -247,6 +276,7 @@ class TinyToastNotify {
    * @throws {Error} If the value is not a valid non-negative finite number.
    */
   setFadeOutDuration(value) {
+    checkDestroy(this.#destroyed);
     this.#validateTiming(value, 'fadeOutDuration');
     this.#fadeOutDuration = value;
   }
@@ -265,6 +295,7 @@ class TinyToastNotify {
    * @param {NotifyData} data
    */
   show(data) {
+    checkDestroy(this.#destroyed);
     let message = '';
     let title = '';
     let onClick = null;
@@ -382,6 +413,7 @@ class TinyToastNotify {
    * @returns {void}
    */
   destroy() {
+    if (this.#destroyed) return;
     if (!(this.#container instanceof HTMLElement)) return;
 
     // Remove all child notifications
@@ -394,6 +426,9 @@ class TinyToastNotify {
 
     // Optional: Clean internal references (safe practice)
     this.#container = null;
+
+    // Lock the instance
+    this.#destroyed = true;
   }
 }
 

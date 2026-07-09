@@ -303,6 +303,7 @@ class TinyMediaPlayer extends EventEmitter {
 
   /** @returns {MediaContent[]} A shallow copy of the current playlist. */
   get playlist() {
+    checkDestroy(this.#destroyed);
     return [...this.#playlist];
   }
 
@@ -358,6 +359,7 @@ class TinyMediaPlayer extends EventEmitter {
 
   /** @returns {number} The current active index in the playlist. */
   get currentIndex() {
+    checkDestroy(this.#destroyed);
     return this.#currentIndex;
   }
 
@@ -406,6 +408,7 @@ class TinyMediaPlayer extends EventEmitter {
 
   /** @returns {LoopModeType} The current loop configuration. */
   get loopMode() {
+    checkDestroy(this.#destroyed);
     return this.#loopMode;
   }
 
@@ -425,6 +428,7 @@ class TinyMediaPlayer extends EventEmitter {
 
   /** @returns {boolean} The current random mode status. */
   get isRandom() {
+    checkDestroy(this.#destroyed);
     return this.#isRandom;
   }
 
@@ -443,11 +447,13 @@ class TinyMediaPlayer extends EventEmitter {
 
   /** @returns {boolean} True if media is actively playing. */
   get isPlaying() {
+    checkDestroy(this.#destroyed);
     return this.#isPlaying;
   }
 
   /** @returns {number} The current volume level (0.0 to 1.0). */
   get volume() {
+    checkDestroy(this.#destroyed);
     return this.#volume;
   }
 
@@ -479,6 +485,7 @@ class TinyMediaPlayer extends EventEmitter {
 
   /** @returns {boolean} Whether the volume cache is currently enabled. */
   get persistVolume() {
+    checkDestroy(this.#destroyed);
     return this.#persistVolume;
   }
 
@@ -499,6 +506,7 @@ class TinyMediaPlayer extends EventEmitter {
 
   /** @returns {string} The localStorage key used for volume caching. */
   get volumeStorageKey() {
+    checkDestroy(this.#destroyed);
     return this.#volumeStorageKey;
   }
 

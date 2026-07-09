@@ -1,4 +1,7 @@
 import { EventEmitter } from 'events';
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyNewWinEvents');
 
 /**
  * Stores polling intervals associated with window references.
@@ -50,10 +53,26 @@ class TinyNewWinEvents extends EventEmitter {
   #routeEventName = '__TNE_ROUTE__';
 
   /**
+   * Tracks whether the instance has been destroyed.
+   * @type {boolean}
+   */
+  #destroyed = false;
+
+  /**
+   * Gets the current destruction status of the instance.
+   *
+   * @returns {boolean} True if the instance is destroyed, false otherwise.
+   */
+  get destroyed() {
+    return this.#destroyed;
+  }
+
+  /**
    * Gets the internal handshake event name.
    * @returns {string}
    */
   get readyEventName() {
+    checkDestroy(this.#destroyed);
     return this.#readyEventName;
   }
 
@@ -63,6 +82,7 @@ class TinyNewWinEvents extends EventEmitter {
    * @throws {TypeError} If the value is not a string.
    */
   set readyEventName(name) {
+    checkDestroy(this.#destroyed);
     if (typeof name !== 'string')
       throw new TypeError('TinyNewWinEvents: readyEventName must be a string.');
     this.#readyEventName = name;
@@ -73,6 +93,7 @@ class TinyNewWinEvents extends EventEmitter {
    * @returns {string}
    */
   get routeEventName() {
+    checkDestroy(this.#destroyed);
     return this.#routeEventName;
   }
 
@@ -82,6 +103,7 @@ class TinyNewWinEvents extends EventEmitter {
    * @throws {TypeError} If the value is not a string.
    */
   set routeEventName(name) {
+    checkDestroy(this.#destroyed);
     if (typeof name !== 'string')
       throw new TypeError('TinyNewWinEvents: routeEventName must be a string.');
     this.#routeEventName = name;
@@ -140,6 +162,7 @@ class TinyNewWinEvents extends EventEmitter {
    * @returns {Window|null}
    */
   getWin() {
+    checkDestroy(this.#destroyed);
     return this.#windowRef;
   }
 
@@ -198,6 +221,7 @@ class TinyNewWinEvents extends EventEmitter {
    * @returns {void}
    */
   close() {
+    checkDestroy(this.#destroyed);
     if (!this.#isHost) throw new Error('Only host can close the window.');
     if (this.#windowRef && !this.#windowRef.closed) this.#windowRef.close();
   }
@@ -213,6 +237,7 @@ class TinyNewWinEvents extends EventEmitter {
    * @returns {void}
    */
   winEmit(route, payload) {
+    checkDestroy(this.#destroyed);
     if (typeof route !== 'string') throw new TypeError('Event name must be a string.');
     if (this.isDestroyed()) throw new Error('Cannot emit: instance has been destroyed.');
     if (!this.#ready) {
@@ -228,6 +253,7 @@ class TinyNewWinEvents extends EventEmitter {
    * @returns {boolean}
    */
   isConnected() {
+    checkDestroy(this.#destroyed);
     return this.#ready && this.#windowRef && !this.#windowRef.closed ? true : false;
   }
 
@@ -254,6 +280,7 @@ class TinyNewWinEvents extends EventEmitter {
    * @returns {void}
    */
   onClose(callback) {
+    checkDestroy(this.#destroyed);
     this.on('WINDOW_REF_CLOSED', callback);
   }
 
@@ -264,6 +291,7 @@ class TinyNewWinEvents extends EventEmitter {
    * @returns {void}
    */
   offClose(callback) {
+    checkDestroy(this.#destroyed);
     this.off('WINDOW_REF_CLOSED', callback);
   }
 
@@ -293,6 +321,7 @@ class TinyNewWinEvents extends EventEmitter {
     this.#ready = false;
     this.#windowRef = null;
     this.removeAllListeners();
+    this.#destroyed = true;
   }
 }
 

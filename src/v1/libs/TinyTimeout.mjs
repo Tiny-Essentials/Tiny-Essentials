@@ -1,3 +1,7 @@
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyTimeout');
+
 /**
  * A utility class to manage dynamically adjusted timeouts based on how often
  * each unique ID is triggered. Also provides polling support for asynchronous conditions.
@@ -55,6 +59,7 @@ class TinyTimeout {
    * @returns {boolean}
    */
   getAllowAutoConfigChange() {
+    checkDestroy(this.#isDestroyed);
     return this.#allowAutoConfigChange;
   }
 
@@ -64,6 +69,7 @@ class TinyTimeout {
    * @returns {number}
    */
   getCooldownWatcherTime() {
+    checkDestroy(this.#isDestroyed);
     return this.#cooldownWatcherTime;
   }
 
@@ -73,6 +79,7 @@ class TinyTimeout {
    * @param {boolean} value
    */
   setAllowAutoConfigChange(value) {
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'boolean') throw new TypeError(`Expected 'value' to be a boolean.`);
     this.#allowAutoConfigChange = value;
   }
@@ -84,6 +91,7 @@ class TinyTimeout {
    * @param {number} value
    */
   setCooldownWatcherTime(value) {
+    checkDestroy(this.#isDestroyed);
     if (this.#isDestroyed) throw new Error('TinyTimeout has been destroyed.');
     if (!Number.isFinite(value) || value <= 0)
       throw new TypeError(`Expected 'value' to be a positive number.`);
@@ -111,6 +119,7 @@ class TinyTimeout {
    * @throws {Error} Throws if the instance has been destroyed or arguments are invalid.
    */
   set(id, callback, value, limit = null) {
+    checkDestroy(this.#isDestroyed);
     if (this.#isDestroyed) throw new Error('TinyTimeout has been destroyed.');
     if (typeof id !== 'string' || id.trim() === '')
       throw new TypeError(`Expected 'id' to be a non-empty string.`);
@@ -168,6 +177,7 @@ class TinyTimeout {
    * @throws {Error} If the instance is destroyed or arguments are invalid.
    */
   waitForTrue(getValue, checkInterval = 100) {
+    checkDestroy(this.#isDestroyed);
     if (this.#isDestroyed) throw new Error('TinyTimeout has been destroyed.');
     if (typeof getValue !== 'function')
       throw new TypeError(`Expected 'getValue' to be a function.`);
@@ -182,10 +192,10 @@ class TinyTimeout {
    */
   destroy() {
     if (this.#isDestroyed) return;
-    this.#isDestroyed = true;
     if (this.#cooldownWatcher) clearInterval(this.#cooldownWatcher);
     this.#cooldownWatcher = null;
     this.#timeoutFixer.clear();
+    this.#isDestroyed = true;
   }
 }
 

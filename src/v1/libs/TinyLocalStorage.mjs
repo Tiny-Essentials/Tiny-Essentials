@@ -1,5 +1,8 @@
 import { EventEmitter } from 'events';
 import { isJsonObject } from '../basics/objChecker.mjs';
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyLocalStorage');
 
 /** @type {Map<any, EncodeFn>} */
 const customEncoders = new Map();
@@ -214,6 +217,21 @@ class TinyLocalStorage extends EventEmitter {
 
   //////////////////////////////////////////////////////
 
+  /**
+   * Tracks whether the instance has been destroyed.
+   * @type {boolean}
+   */
+  #destroyed = false;
+
+  /**
+   * Gets the current destruction status of the instance.
+   *
+   * @returns {boolean} True if the instance is destroyed, false otherwise.
+   */
+  get destroyed() {
+    return this.#destroyed;
+  }
+
   /** @type {Storage} */
   #localStorage = window.localStorage;
 
@@ -265,6 +283,7 @@ class TinyLocalStorage extends EventEmitter {
    * @throws {TypeError} If `onUpgrade` is not a function.
    */
   updateStorageVersion(version, onUpgrade) {
+    checkDestroy(this.#destroyed);
     if (typeof this.#dbKey !== 'string')
       throw new Error(
         'TinyLocalStorage: Database key is not initialized. Set a valid dbName in the constructor.',
@@ -297,6 +316,7 @@ class TinyLocalStorage extends EventEmitter {
    * @returns {string|null} The database key, or null if not set.
    */
   getDbKey() {
+    checkDestroy(this.#destroyed);
     return this.#dbKey;
   }
 
@@ -306,6 +326,7 @@ class TinyLocalStorage extends EventEmitter {
    * @returns {number} The current version number.
    */
   getVersion() {
+    checkDestroy(this.#destroyed);
     return this.#version;
   }
 
@@ -315,6 +336,7 @@ class TinyLocalStorage extends EventEmitter {
    * @param {Storage} localstorage - A valid Storage object (localStorage or sessionStorage).
    */
   setLocalStorage(localstorage) {
+    checkDestroy(this.#destroyed);
     if (!(localstorage instanceof Storage))
       throw new TypeError('Argument must be a valid instance of Storage.');
     this.#localStorage = localstorage;
@@ -326,6 +348,7 @@ class TinyLocalStorage extends EventEmitter {
    * @returns {boolean} True if `localStorage` exists, false otherwise.
    */
   localStorageExists() {
+    checkDestroy(this.#destroyed);
     return this.#localStorage instanceof Storage;
   }
 
@@ -351,6 +374,7 @@ class TinyLocalStorage extends EventEmitter {
    * @param {LocalStorageJsonValue} data - The data to be serialized and stored.
    */
   setJson(name, data) {
+    checkDestroy(this.#destroyed);
     this.#isProtectedDbKey(name);
     if (
       !isJsonObject(data) &&
@@ -413,6 +437,7 @@ class TinyLocalStorage extends EventEmitter {
    * @returns {LocalStorageJsonValue|null} The parsed object or fallback.
    */
   getJson(name, defaultData) {
+    checkDestroy(this.#destroyed);
     const { decoded, fallback } = this.#getJson(name, defaultData);
     if (
       decoded instanceof Map ||
@@ -430,6 +455,7 @@ class TinyLocalStorage extends EventEmitter {
    * @param {Date} data
    */
   setDate(name, data) {
+    checkDestroy(this.#destroyed);
     this.#isProtectedDbKey(name);
     if (!(data instanceof Date)) throw new TypeError('Value must be a Date.');
     const encoded = this.#setJson(name, data);
@@ -443,6 +469,7 @@ class TinyLocalStorage extends EventEmitter {
    * @returns {Date|null}
    */
   getDate(name) {
+    checkDestroy(this.#destroyed);
     const value = this.#getJson(name).decoded;
     return value instanceof Date ? value : null;
   }
@@ -453,6 +480,7 @@ class TinyLocalStorage extends EventEmitter {
    * @param {RegExp} data
    */
   setRegExp(name, data) {
+    checkDestroy(this.#destroyed);
     this.#isProtectedDbKey(name);
     if (!(data instanceof RegExp)) throw new TypeError('Value must be a RegExp.');
     const encoded = this.#setJson(name, data);
@@ -466,6 +494,7 @@ class TinyLocalStorage extends EventEmitter {
    * @returns {RegExp|null}
    */
   getRegExp(name) {
+    checkDestroy(this.#destroyed);
     const value = this.#getJson(name).decoded;
     return value instanceof RegExp ? value : null;
   }
@@ -476,6 +505,7 @@ class TinyLocalStorage extends EventEmitter {
    * @param {bigint} data
    */
   setBigInt(name, data) {
+    checkDestroy(this.#destroyed);
     this.#isProtectedDbKey(name);
     if (typeof data !== 'bigint') throw new TypeError('Value must be a BigInt.');
     const encoded = this.#setJson(name, data);
@@ -489,6 +519,7 @@ class TinyLocalStorage extends EventEmitter {
    * @returns {bigint|null}
    */
   getBigInt(name) {
+    checkDestroy(this.#destroyed);
     const value = this.#getJson(name).decoded;
     return typeof value === 'bigint' ? value : null;
   }
@@ -500,6 +531,7 @@ class TinyLocalStorage extends EventEmitter {
    * @param {symbol} data
    */
   setSymbol(name, data) {
+    checkDestroy(this.#destroyed);
     this.#isProtectedDbKey(name);
     if (typeof data !== 'symbol') throw new TypeError('Value must be a Symbol.');
     const encoded = this.#setJson(name, data);
@@ -513,6 +545,7 @@ class TinyLocalStorage extends EventEmitter {
    * @returns {symbol|null}
    */
   getSymbol(name) {
+    checkDestroy(this.#destroyed);
     const value = this.#getJson(name).decoded;
     return typeof value === 'symbol' ? value : null;
   }
@@ -524,6 +557,7 @@ class TinyLocalStorage extends EventEmitter {
    * @returns {any} The stored value or null if not found.
    */
   getValue(name) {
+    checkDestroy(this.#destroyed);
     return this.#getJson(name).decoded ?? null;
   }
 
@@ -534,6 +568,7 @@ class TinyLocalStorage extends EventEmitter {
    * @param {any} data - The data to store.
    */
   setItem(name, data) {
+    checkDestroy(this.#destroyed);
     this.#isProtectedDbKey(name);
     if (typeof name !== 'string' || !name.length)
       throw new TypeError('Key must be a non-empty string.');
@@ -548,6 +583,7 @@ class TinyLocalStorage extends EventEmitter {
    * @returns {string|null} The stored value or null if not found.
    */
   getItem(name) {
+    checkDestroy(this.#destroyed);
     if (typeof name !== 'string' || !name.length)
       throw new TypeError('Key must be a non-empty string.');
     return this.#localStorage.getItem(name);
@@ -560,6 +596,7 @@ class TinyLocalStorage extends EventEmitter {
    * @param {string} data - The string to store.
    */
   setString(name, data) {
+    checkDestroy(this.#destroyed);
     this.#isProtectedDbKey(name);
     if (typeof name !== 'string' || !name.length)
       throw new TypeError('Key must be a non-empty string.');
@@ -582,6 +619,7 @@ class TinyLocalStorage extends EventEmitter {
    * @returns {string|null} The string if valid, or null.
    */
   getString(name) {
+    checkDestroy(this.#destroyed);
     if (typeof name !== 'string' || !name.length)
       throw new TypeError('Key must be a non-empty string.');
     let value = this.#localStorage.getItem(name);
@@ -605,6 +643,7 @@ class TinyLocalStorage extends EventEmitter {
    * @param {number} data - The number to store.
    */
   setNumber(name, data) {
+    checkDestroy(this.#destroyed);
     this.#isProtectedDbKey(name);
     if (typeof name !== 'string' || !name.length)
       throw new TypeError('Key must be a non-empty string.');
@@ -620,6 +659,7 @@ class TinyLocalStorage extends EventEmitter {
    * @returns {number|null} The number or null if invalid.
    */
   getNumber(name) {
+    checkDestroy(this.#destroyed);
     if (typeof name !== 'string' || !name.length)
       throw new TypeError('Key must be a non-empty string.');
 
@@ -640,6 +680,7 @@ class TinyLocalStorage extends EventEmitter {
    * @param {boolean} data - The boolean value to store.
    */
   setBool(name, data) {
+    checkDestroy(this.#destroyed);
     this.#isProtectedDbKey(name);
     if (typeof name !== 'string' || !name.length)
       throw new TypeError('Key must be a non-empty string.');
@@ -655,6 +696,7 @@ class TinyLocalStorage extends EventEmitter {
    * @returns {boolean|null} The boolean or null if invalid.
    */
   getBool(name) {
+    checkDestroy(this.#destroyed);
     if (typeof name !== 'string' || !name.length)
       throw new TypeError('Key must be a non-empty string.');
 
@@ -674,6 +716,7 @@ class TinyLocalStorage extends EventEmitter {
    * @param {string} name - The key to remove.
    */
   removeItem(name) {
+    checkDestroy(this.#destroyed);
     if (typeof name !== 'string' || !name.length)
       throw new TypeError('Key must be a non-empty string.');
 
@@ -685,6 +728,7 @@ class TinyLocalStorage extends EventEmitter {
    * Clears all data from `localStorage`.
    */
   clearLocalStorage() {
+    checkDestroy(this.#destroyed);
     return this.#localStorage.clear();
   }
 
@@ -692,8 +736,12 @@ class TinyLocalStorage extends EventEmitter {
    * Destroys the storage instance by removing the storage event listener.
    */
   destroy() {
+    if (this.#destroyed) return;
     window.removeEventListener('storage', this.#storageEvent);
     this.removeAllListeners();
+
+    // Lock the instance
+    this.#destroyed = true;
   }
 }
 

@@ -1,3 +1,7 @@
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyGamepad');
+
 /**
  * @typedef {Object} KeyStatus
  * Describes the status of a key or button.
@@ -1217,6 +1221,7 @@ class TinyGamepad {
    *   - `gp`: the Gamepad object (only if the input source is a gamepad).
    */
   awaitInputMapping({ timeout = 10000, eventName = 'MappingInput', canMove = false } = {}) {
+    checkDestroy(this.#isDestroyed);
     return new Promise((resolve, reject) => {
       // Argument validation
       if (typeof timeout !== 'number' || Number.isNaN(timeout) || timeout < 0)
@@ -1263,6 +1268,7 @@ class TinyGamepad {
    * @param {string|string[]} physicalInput
    */
   mapInput(logicalName, physicalInput) {
+    checkDestroy(this.#isDestroyed);
     if (typeof logicalName !== 'string' || !logicalName.trim())
       throw new TypeError(`Invalid "logicalName": expected a non-empty string, got ${logicalName}`);
     if (!(
@@ -1280,6 +1286,7 @@ class TinyGamepad {
    * @param {string} logicalName
    */
   unmapInput(logicalName) {
+    checkDestroy(this.#isDestroyed);
     if (typeof logicalName !== 'string' || !logicalName.trim())
       throw new TypeError(`Invalid "logicalName": expected a non-empty string, got ${logicalName}`);
     this.#inputMap.delete(logicalName);
@@ -1291,6 +1298,7 @@ class TinyGamepad {
    * @returns {boolean}
    */
   hasMappedInput(logicalName) {
+    checkDestroy(this.#isDestroyed);
     if (typeof logicalName !== 'string' || !logicalName.trim())
       throw new TypeError(`Invalid "logicalName": expected a non-empty string, got ${logicalName}`);
     return this.#inputMap.has(logicalName);
@@ -1302,6 +1310,7 @@ class TinyGamepad {
    * @returns {string | string[]}
    */
   getMappedInput(logicalName) {
+    checkDestroy(this.#isDestroyed);
     if (typeof logicalName !== 'string' || !logicalName.trim())
       throw new TypeError(`Invalid "logicalName": expected a non-empty string, got ${logicalName}`);
     const result = this.#inputMap.get(logicalName);
@@ -1313,6 +1322,7 @@ class TinyGamepad {
    * Clears all mappings for all logical inputs.
    */
   clearMapInputs() {
+    checkDestroy(this.#isDestroyed);
     this.#inputMap.clear();
   }
 
@@ -1324,6 +1334,7 @@ class TinyGamepad {
    * @param {InputSequenceCallback} callback - Function to invoke when the sequence is fully held
    */
   registerInputSequence(sequence, callback) {
+    checkDestroy(this.#isDestroyed);
     if (!Array.isArray(sequence) || !sequence.every((s) => typeof s === 'string'))
       throw new TypeError(
         `'sequence' must be an array of strings, got: ${JSON.stringify(sequence)}`,
@@ -1340,6 +1351,7 @@ class TinyGamepad {
    * @param {string[]} sequence - The sequence to remove from detection
    */
   unregisterInputSequence(sequence) {
+    checkDestroy(this.#isDestroyed);
     if (!Array.isArray(sequence) || !sequence.every((s) => typeof s === 'string'))
       throw new TypeError(
         `'sequence' must be an array of strings, got: ${JSON.stringify(sequence)}`,
@@ -1352,6 +1364,7 @@ class TinyGamepad {
    * Removes all registered input sequences.
    */
   unregisterAllInputSequences() {
+    checkDestroy(this.#isDestroyed);
     this.#inputSequences.clear();
   }
 
@@ -1361,6 +1374,7 @@ class TinyGamepad {
    * @returns {boolean}
    */
   hasInputSequence(sequence) {
+    checkDestroy(this.#isDestroyed);
     if (!Array.isArray(sequence) || !sequence.every((s) => typeof s === 'string'))
       throw new TypeError(
         `'sequence' must be an array of strings, got: ${JSON.stringify(sequence)}`,
@@ -1377,6 +1391,7 @@ class TinyGamepad {
    * @param {InputSequenceCallback} callback - Function to invoke when the sequence is fully held
    */
   registerKeySequence(sequence, callback) {
+    checkDestroy(this.#isDestroyed);
     if (!Array.isArray(sequence) || !sequence.every((s) => typeof s === 'string'))
       throw new TypeError(
         `'sequence' must be an array of strings, got: ${JSON.stringify(sequence)}`,
@@ -1393,6 +1408,7 @@ class TinyGamepad {
    * @param {string[]} sequence - The sequence to remove from detection
    */
   unregisterKeySequence(sequence) {
+    checkDestroy(this.#isDestroyed);
     if (!Array.isArray(sequence) || !sequence.every((s) => typeof s === 'string'))
       throw new TypeError(
         `'sequence' must be an array of strings, got: ${JSON.stringify(sequence)}`,
@@ -1405,6 +1421,7 @@ class TinyGamepad {
    * Removes all registered input sequences.
    */
   unregisterAllKeySequences() {
+    checkDestroy(this.#isDestroyed);
     this.#keySequences.clear();
   }
 
@@ -1414,6 +1431,7 @@ class TinyGamepad {
    * @returns {boolean}
    */
   hasKeySequence(sequence) {
+    checkDestroy(this.#isDestroyed);
     if (!Array.isArray(sequence) || !sequence.every((s) => typeof s === 'string'))
       throw new TypeError(
         `'sequence' must be an array of strings, got: ${JSON.stringify(sequence)}`,
@@ -1428,6 +1446,7 @@ class TinyGamepad {
    * Renew the currently held combo logical keys.
    */
   renewComboMapped() {
+    checkDestroy(this.#isDestroyed);
     if (this.#intervalComboKeys) {
       clearTimeout(this.#intervalComboKeys);
       this.#intervalComboKeys = setTimeout(() => this.resetComboMapped(), this.#timeoutComboKeys);
@@ -1438,6 +1457,7 @@ class TinyGamepad {
    * Resets the currently held key combo logical inputs.
    */
   resetComboMapped() {
+    checkDestroy(this.#isDestroyed);
     if (this.#intervalComboKeys) clearTimeout(this.#intervalComboKeys);
     this.#comboKeys = [];
     this.#intervalComboKeys = null;
@@ -1453,6 +1473,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   onMappedKeyStart(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onTemplate('', callback, 'mapped-key-start');
   }
 
@@ -1462,6 +1483,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   onceMappedKeyStart(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onceTemplate('', callback, 'mapped-key-start');
   }
 
@@ -1470,6 +1492,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   prependMappedKeyStart(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#prependTemplate('', callback, 'mapped-key-start');
   }
 
@@ -1478,6 +1501,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   offMappedKeyStart(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#offTemplate('', callback, 'mapped-key-start');
   }
 
@@ -1485,6 +1509,7 @@ class TinyGamepad {
    * Removes all callbacks from the "mapped-key-start" event.
    */
   offAllMappedKeyStart() {
+    checkDestroy(this.#isDestroyed);
     this.#callbacks.delete('mapped-key-start');
   }
 
@@ -1495,6 +1520,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   onMappedKeyEnd(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onTemplate('', callback, 'mapped-key-end');
   }
 
@@ -1504,6 +1530,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   onceMappedKeyEnd(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onceTemplate('', callback, 'mapped-key-end');
   }
 
@@ -1512,6 +1539,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   prependMappedKeyEnd(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#prependTemplate('', callback, 'mapped-key-end');
   }
 
@@ -1520,6 +1548,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   offMappedKeyEnd(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#offTemplate('', callback, 'mapped-key-end');
   }
 
@@ -1527,6 +1556,7 @@ class TinyGamepad {
    * Removes all callbacks from the "mapped-key-end" event.
    */
   offAllMappedKeyEnd() {
+    checkDestroy(this.#isDestroyed);
     this.#callbacks.delete('mapped-key-end');
   }
 
@@ -1537,6 +1567,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   onMappedInputStart(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onTemplate('', callback, 'mapped-input-start');
   }
 
@@ -1546,6 +1577,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   onceMappedInputStart(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onceTemplate('', callback, 'mapped-input-start');
   }
 
@@ -1554,6 +1586,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   prependMappedInputStart(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#prependTemplate('', callback, 'mapped-input-start');
   }
 
@@ -1562,6 +1595,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   offMappedInputStart(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#offTemplate('', callback, 'mapped-input-start');
   }
 
@@ -1569,6 +1603,7 @@ class TinyGamepad {
    * Removes all callbacks from the "mapped-input-start" event.
    */
   offAllMappedInputStart() {
+    checkDestroy(this.#isDestroyed);
     this.#callbacks.delete('mapped-input-start');
   }
 
@@ -1579,6 +1614,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   onMappedInputEnd(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onTemplate('', callback, 'mapped-input-end');
   }
 
@@ -1588,6 +1624,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   onceMappedInputEnd(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onceTemplate('', callback, 'mapped-input-end');
   }
 
@@ -1596,6 +1633,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   prependMappedInputEnd(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#prependTemplate('', callback, 'mapped-input-end');
   }
 
@@ -1604,6 +1642,7 @@ class TinyGamepad {
    * @param {MappedInputCallback} callback
    */
   offMappedInputEnd(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#offTemplate('', callback, 'mapped-input-end');
   }
 
@@ -1611,6 +1650,7 @@ class TinyGamepad {
    * Removes all callbacks from the "mapped-input-end" event.
    */
   offAllMappedInputEnd() {
+    checkDestroy(this.#isDestroyed);
     this.#callbacks.delete('mapped-input-end');
   }
 
@@ -1622,6 +1662,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   onInput(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onTemplate(logicalName, callback, 'input-{logicalName}');
   }
 
@@ -1632,6 +1673,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   onceInput(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onceTemplate(logicalName, callback, 'input-{logicalName}');
   }
 
@@ -1641,6 +1683,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   prependInput(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#prependTemplate(logicalName, callback, 'input-{logicalName}');
   }
 
@@ -1650,6 +1693,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   offInput(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#offTemplate(logicalName, callback, 'input-{logicalName}');
   }
 
@@ -1661,6 +1705,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   onInputStart(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onTemplate(logicalName, callback, 'input-down-{logicalName}');
   }
 
@@ -1670,6 +1715,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   onceInputStart(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onceTemplate(logicalName, callback, 'input-down-{logicalName}');
   }
 
@@ -1679,6 +1725,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   prependInputStart(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#prependTemplate(logicalName, callback, 'input-down-{logicalName}');
   }
 
@@ -1688,6 +1735,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   offInputStart(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#offTemplate(logicalName, callback, 'input-down-{logicalName}');
   }
 
@@ -1699,6 +1747,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   onInputEnd(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onTemplate(logicalName, callback, 'input-up-{logicalName}');
   }
 
@@ -1708,6 +1757,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   onceInputEnd(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onceTemplate(logicalName, callback, 'input-up-{logicalName}');
   }
 
@@ -1717,6 +1767,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   prependInputEnd(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#prependTemplate(logicalName, callback, 'input-up-{logicalName}');
   }
 
@@ -1726,6 +1777,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   offInputEnd(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#offTemplate(logicalName, callback, 'input-up-{logicalName}');
   }
 
@@ -1737,6 +1789,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   onInputHold(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onTemplate(logicalName, callback, 'input-hold-{logicalName}');
   }
 
@@ -1746,6 +1799,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   onceInputHold(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onceTemplate(logicalName, callback, 'input-hold-{logicalName}');
   }
 
@@ -1755,6 +1809,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   prependInputHold(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#prependTemplate(logicalName, callback, 'input-hold-{logicalName}');
   }
 
@@ -1764,6 +1819,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   offInputHold(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#offTemplate(logicalName, callback, 'input-hold-{logicalName}');
   }
 
@@ -1775,6 +1831,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   onInputChange(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onTemplate(logicalName, callback, 'input-change-{logicalName}');
   }
 
@@ -1784,6 +1841,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   onceInputChange(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onceTemplate(logicalName, callback, 'input-change-{logicalName}');
   }
 
@@ -1793,6 +1851,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   prependInputChange(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#prependTemplate(logicalName, callback, 'input-change-{logicalName}');
   }
 
@@ -1802,6 +1861,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   offInputChange(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#offTemplate(logicalName, callback, 'input-change-{logicalName}');
   }
 
@@ -1813,6 +1873,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   onInputMove(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onTemplate(logicalName, callback, 'input-move-{logicalName}');
   }
 
@@ -1822,6 +1883,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   onceInputMove(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onceTemplate(logicalName, callback, 'input-move-{logicalName}');
   }
 
@@ -1831,6 +1893,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   prependInputMove(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#prependTemplate(logicalName, callback, 'input-move-{logicalName}');
   }
 
@@ -1840,6 +1903,7 @@ class TinyGamepad {
    * @param {PayloadCallback} callback
    */
   offInputMove(logicalName, callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#offTemplate(logicalName, callback, 'input-move-{logicalName}');
   }
 
@@ -1852,6 +1916,7 @@ class TinyGamepad {
    * @returns {Function[]}
    */
   getCalls(logicalName, type = 'all') {
+    checkDestroy(this.#isDestroyed);
     if (typeof logicalName !== 'string' || logicalName.trim() === '')
       throw new TypeError(`"logicalName" must be a non-empty string, received ${logicalName}`);
     const validTypes = ['all', 'start', 'end', 'hold', 'change', 'move'];
@@ -1876,6 +1941,7 @@ class TinyGamepad {
    * @param {'all'| 'start' | 'end' | 'hold' | 'change' | 'move'} [type='all']
    */
   offAllInputs(logicalName, type = 'all') {
+    checkDestroy(this.#isDestroyed);
     if (typeof logicalName !== 'string' || logicalName.trim() === '')
       throw new TypeError(`"logicalName" must be a non-empty string, received ${logicalName}`);
     const validTypes = ['all', 'start', 'end', 'hold', 'change', 'move'];
@@ -1899,6 +1965,7 @@ class TinyGamepad {
    * @returns {number}
    */
   getCallSize(logicalName, type = 'all') {
+    checkDestroy(this.#isDestroyed);
     if (typeof logicalName !== 'string' || logicalName.trim() === '')
       throw new TypeError(`"logicalName" must be a non-empty string, received ${logicalName}`);
     const validTypes = ['all', 'start', 'end', 'hold', 'change', 'move'];
@@ -1944,6 +2011,7 @@ class TinyGamepad {
    * @returns {{ type: GamepadHapticEffectType; params: GamepadEffectParameters; }} The default haptic effect settings.
    */
   get defaultHapticEffect() {
+    checkDestroy(this.#isDestroyed);
     return {
       type: this.#defaultHapticEffect.type,
       params: { ...this.#defaultHapticEffect.params },
@@ -1956,6 +2024,7 @@ class TinyGamepad {
    * @param {GamepadEffectParameters} params - Effect parameters.
    */
   setDefaultHapticEffect(type, params) {
+    checkDestroy(this.#isDestroyed);
     if (typeof type !== 'string')
       throw new TypeError(
         `"type" must be a valid GamepadHapticEffectType string, received ${type}`,
@@ -1971,6 +2040,7 @@ class TinyGamepad {
    * @returns {boolean}
    */
   hasHapticEffect() {
+    checkDestroy(this.#isDestroyed);
     const gp = this.#connectedGamepad;
     if (!gp) return false;
     const vibrationActuator = gp.vibrationActuator;
@@ -1985,6 +2055,7 @@ class TinyGamepad {
    * @returns {Promise<GamepadHapticsResult>}
    */
   vibrate(params, type) {
+    checkDestroy(this.#isDestroyed);
     if (params !== undefined && (typeof params !== 'object' || params === null))
       throw new TypeError(`"params" must be an object if provided, received ${params}`);
     if (type !== undefined && typeof type !== 'string')
@@ -2009,6 +2080,7 @@ class TinyGamepad {
    * @param {string} id
    */
   ignoreId(id) {
+    checkDestroy(this.#isDestroyed);
     if (typeof id !== 'string' || id.trim() === '')
       throw new TypeError(`"id" must be a non-empty string, received ${id}`);
     this.#ignoreIds.add(id);
@@ -2019,6 +2091,7 @@ class TinyGamepad {
    * @param {string} id
    */
   unignoreId(id) {
+    checkDestroy(this.#isDestroyed);
     if (typeof id !== 'string' || id.trim() === '')
       throw new TypeError(`"id" must be a non-empty string, received ${id}`);
     this.#ignoreIds.delete(id);
@@ -2029,6 +2102,7 @@ class TinyGamepad {
    * @param {ConnectionCallback} callback
    */
   onConnected(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onTemplate('', callback, 'connected');
   }
 
@@ -2038,6 +2112,7 @@ class TinyGamepad {
    * @param {ConnectionCallback} callback
    */
   onceConnected(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onceTemplate('', callback, 'connected');
   }
 
@@ -2046,6 +2121,7 @@ class TinyGamepad {
    * @param {ConnectionCallback} callback
    */
   prependConnected(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#prependTemplate('', callback, 'connected');
   }
 
@@ -2054,6 +2130,7 @@ class TinyGamepad {
    * @param {ConnectionCallback} callback
    */
   offConnected(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#offTemplate('', callback, 'connected');
   }
 
@@ -2061,6 +2138,7 @@ class TinyGamepad {
    * Removes all callbacks from the "connected" event.
    */
   offAllConnected() {
+    checkDestroy(this.#isDestroyed);
     this.#callbacks.delete('connected');
   }
 
@@ -2069,6 +2147,7 @@ class TinyGamepad {
    * @param {ConnectionCallback} callback
    */
   onDisconnected(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onTemplate('', callback, 'disconnected');
   }
 
@@ -2078,6 +2157,7 @@ class TinyGamepad {
    * @param {ConnectionCallback} callback
    */
   onceDisconnected(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#onceTemplate('', callback, 'disconnected');
   }
 
@@ -2086,6 +2166,7 @@ class TinyGamepad {
    * @param {ConnectionCallback} callback
    */
   prependDisconnected(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#prependTemplate('', callback, 'disconnected');
   }
 
@@ -2094,6 +2175,7 @@ class TinyGamepad {
    * @param {ConnectionCallback} callback
    */
   offDisconnected(callback) {
+    checkDestroy(this.#isDestroyed);
     return this.#offTemplate('', callback, 'disconnected');
   }
 
@@ -2101,6 +2183,7 @@ class TinyGamepad {
    * Removes all callbacks from the "disconnected" event.
    */
   offAllDisconnected() {
+    checkDestroy(this.#isDestroyed);
     this.#callbacks.delete('disconnected');
   }
 
@@ -2111,6 +2194,7 @@ class TinyGamepad {
    * @returns {boolean}
    */
   hasGamepad() {
+    checkDestroy(this.#isDestroyed);
     return this.#connectedGamepad instanceof Gamepad;
   }
 
@@ -2120,6 +2204,7 @@ class TinyGamepad {
    * @returns {Gamepad}
    */
   getGamepad() {
+    checkDestroy(this.#isDestroyed);
     if (!this.#connectedGamepad) throw new Error('No gamepad is currently connected.');
     return this.#connectedGamepad;
   }
@@ -2130,6 +2215,7 @@ class TinyGamepad {
    * @returns {boolean} True if a last state exists for the specified button index; otherwise, false.
    */
   hasLastButtonState(index) {
+    checkDestroy(this.#isDestroyed);
     if (!this.#lastButtonStates[index]) return false;
     return true;
   }
@@ -2142,6 +2228,7 @@ class TinyGamepad {
    * @throws {Error} If no last state exists for the specified button index.
    */
   getLastButtonState(index) {
+    checkDestroy(this.#isDestroyed);
     if (!this.#lastButtonStates[index])
       throw new Error(`No last button state found for index ${index}`);
     return { ...this.#lastButtonStates[index] };
@@ -2155,6 +2242,7 @@ class TinyGamepad {
    * @returns {ExportedConfig} The current configuration snapshot.
    */
   exportConfig() {
+    checkDestroy(this.#isDestroyed);
     return {
       expectedId: this.#expectedId,
       ignoreIds: Array.from(this.#ignoreIds),
@@ -2173,6 +2261,7 @@ class TinyGamepad {
    * or if any property has an incorrect type.
    */
   importConfig(json) {
+    checkDestroy(this.#isDestroyed);
     if (typeof json !== 'string' && (typeof json !== 'object' || json === null))
       throw new TypeError(`"json" must be a string or a non-null object, received: ${json}`);
 
@@ -2220,6 +2309,7 @@ class TinyGamepad {
    * @returns {MappedInputCallback[]}
    */
   get mappedKeyStartCalls() {
+    checkDestroy(this.#isDestroyed);
     /** @type {MappedInputCallback[]} */
     // @ts-ignore
     const list = this.#callbacks.get('mapped-key-start');
@@ -2231,6 +2321,7 @@ class TinyGamepad {
    * @returns {MappedInputCallback[]}
    */
   get mappedKeyEndCalls() {
+    checkDestroy(this.#isDestroyed);
     /** @type {MappedInputCallback[]} */
     // @ts-ignore
     const list = this.#callbacks.get('mapped-key-end');
@@ -2244,6 +2335,7 @@ class TinyGamepad {
    * @returns {string[]}
    */
   get comboMappedKeys() {
+    checkDestroy(this.#isDestroyed);
     return [...this.#comboKeys];
   }
 
@@ -2252,6 +2344,7 @@ class TinyGamepad {
    * @returns {string[]}
    */
   get comboMappedInputs() {
+    checkDestroy(this.#isDestroyed);
     return [...this.#comboInputs];
   }
 
@@ -2262,6 +2355,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get keySequenceSize() {
+    checkDestroy(this.#isDestroyed);
     return this.#keySequences.size;
   }
 
@@ -2270,6 +2364,7 @@ class TinyGamepad {
    * @returns {InputSequenceCallback[]}
    */
   get keySequences() {
+    checkDestroy(this.#isDestroyed);
     const result = [];
     for (const [, data] of this.#keySequences.entries()) result.push(data.callback);
     return result;
@@ -2280,6 +2375,7 @@ class TinyGamepad {
    * @returns {string[]}
    */
   get activeMappedKeys() {
+    checkDestroy(this.#isDestroyed);
     return [...this.#activeMappedKeys];
   }
 
@@ -2290,6 +2386,7 @@ class TinyGamepad {
    * @returns {MappedInputCallback[]}
    */
   get mappedInputStartCalls() {
+    checkDestroy(this.#isDestroyed);
     /** @type {MappedInputCallback[]} */
     // @ts-ignore
     const list = this.#callbacks.get('mapped-input-start');
@@ -2301,6 +2398,7 @@ class TinyGamepad {
    * @returns {MappedInputCallback[]}
    */
   get mappedInputEndCalls() {
+    checkDestroy(this.#isDestroyed);
     /** @type {MappedInputCallback[]} */
     // @ts-ignore
     const list = this.#callbacks.get('mapped-input-end');
@@ -2314,6 +2412,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get inputSequenceSize() {
+    checkDestroy(this.#isDestroyed);
     return this.#inputSequences.size;
   }
 
@@ -2322,6 +2421,7 @@ class TinyGamepad {
    * @returns {InputSequenceCallback[]}
    */
   get inputSequences() {
+    checkDestroy(this.#isDestroyed);
     const result = [];
     for (const [, data] of this.#inputSequences.entries()) result.push(data.callback);
     return result;
@@ -2332,6 +2432,7 @@ class TinyGamepad {
    * @returns {string[]}
    */
   get activeMappedInputs() {
+    checkDestroy(this.#isDestroyed);
     return [...this.#activeMappedInputs];
   }
 
@@ -2342,6 +2443,7 @@ class TinyGamepad {
    * @returns {{ [logicalName: string]: string | string[] }}
    */
   get mappedInputs() {
+    checkDestroy(this.#isDestroyed);
     /** @type {{ [logicalName: string]: string | string[] }} */
     const result = {};
     for (const [logicalName, physicalInput] of this.#inputMap.entries()) {
@@ -2355,6 +2457,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get mappedInputSize() {
+    checkDestroy(this.#isDestroyed);
     return this.#inputMap.size;
   }
 
@@ -2365,6 +2468,7 @@ class TinyGamepad {
    * @returns {ConnectionCallback[]}
    */
   get connectedCalls() {
+    checkDestroy(this.#isDestroyed);
     /** @type {ConnectionCallback[]} */
     // @ts-ignore
     const list = this.#callbacks.get('connected');
@@ -2376,6 +2480,7 @@ class TinyGamepad {
    * @returns {ConnectionCallback[]}
    */
   get disconnectedCalls() {
+    checkDestroy(this.#isDestroyed);
     /** @type {ConnectionCallback[]} */
     // @ts-ignore
     const list = this.#callbacks.get('disconnected');
@@ -2389,6 +2494,7 @@ class TinyGamepad {
    * @returns {string[]}
    */
   get ignoredDeviceIds() {
+    checkDestroy(this.#isDestroyed);
     return [...this.#ignoreIds];
   }
 
@@ -2397,6 +2503,7 @@ class TinyGamepad {
    * @returns {string[]}
    */
   get heldKeys() {
+    checkDestroy(this.#isDestroyed);
     return [...this.#heldKeys];
   }
 
@@ -2407,6 +2514,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get eventsSize() {
+    checkDestroy(this.#isDestroyed);
     let total = 0;
     this.#callbacks.forEach((values) => {
       total += values.length;
@@ -2419,6 +2527,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get callSize() {
+    checkDestroy(this.#isDestroyed);
     return this.#callbacks.size;
   }
 
@@ -2427,6 +2536,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get connectedCallSize() {
+    checkDestroy(this.#isDestroyed);
     const list = this.#callbacks.get('connected');
     return Array.isArray(list) ? list.length : 0;
   }
@@ -2436,6 +2546,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get disconnectedCallSize() {
+    checkDestroy(this.#isDestroyed);
     const list = this.#callbacks.get('disconnected');
     return Array.isArray(list) ? list.length : 0;
   }
@@ -2445,6 +2556,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get mappedKeyStartCallSize() {
+    checkDestroy(this.#isDestroyed);
     const list = this.#callbacks.get('mapped-key-start');
     return Array.isArray(list) ? list.length : 0;
   }
@@ -2454,6 +2566,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get mappedKeyEndCallSize() {
+    checkDestroy(this.#isDestroyed);
     const list = this.#callbacks.get('mapped-key-end');
     return Array.isArray(list) ? list.length : 0;
   }
@@ -2463,6 +2576,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get mappedInputStartCallSize() {
+    checkDestroy(this.#isDestroyed);
     const list = this.#callbacks.get('mapped-input-start');
     return Array.isArray(list) ? list.length : 0;
   }
@@ -2472,6 +2586,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get mappedInputEndCallSize() {
+    checkDestroy(this.#isDestroyed);
     const list = this.#callbacks.get('mapped-input-end');
     return Array.isArray(list) ? list.length : 0;
   }
@@ -2484,6 +2599,7 @@ class TinyGamepad {
    * @returns {KeyStatus[]} An array of button states from the last poll.
    */
   get lastButtonStates() {
+    checkDestroy(this.#isDestroyed);
     /** @type {KeyStatus[]} */
     const results = [];
     this.#lastButtonStates.forEach((value) => {
@@ -2498,6 +2614,7 @@ class TinyGamepad {
    * @returns {number[]} An array of axis values from the last poll.
    */
   get lastAxes() {
+    checkDestroy(this.#isDestroyed);
     return [...this.#lastAxes];
   }
 
@@ -2508,6 +2625,7 @@ class TinyGamepad {
    * @returns {InputMode}
    */
   get inputMode() {
+    checkDestroy(this.#isDestroyed);
     return this.#inputMode;
   }
 
@@ -2516,6 +2634,7 @@ class TinyGamepad {
    * @returns {Window|Element}
    */
   get elementBase() {
+    checkDestroy(this.#isDestroyed);
     return this.#elementBase;
   }
 
@@ -2524,6 +2643,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get timeComboInputs() {
+    checkDestroy(this.#isDestroyed);
     return this.#timeComboInputs;
   }
 
@@ -2532,6 +2652,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get timeComboKeys() {
+    checkDestroy(this.#isDestroyed);
     return this.#timeComboKeys;
   }
 
@@ -2540,6 +2661,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get timeMappedInputs() {
+    checkDestroy(this.#isDestroyed);
     return this.#timeMappedInputs;
   }
 
@@ -2548,6 +2670,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get timeoutComboKeys() {
+    checkDestroy(this.#isDestroyed);
     return this.#timeoutComboKeys;
   }
 
@@ -2557,6 +2680,7 @@ class TinyGamepad {
    * @param {number} value
    */
   set timeoutComboKeys(value) {
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number' || value < 0 || !Number.isFinite(value))
       throw new TypeError('Timeout combo keys must be a non-negative finite number.');
     this.#timeoutComboKeys = value;
@@ -2571,6 +2695,7 @@ class TinyGamepad {
    * @returns {number} The current axis activity sensitivity (between 0 and 1).
    */
   get axisActiveSensitivity() {
+    checkDestroy(this.#isDestroyed);
     return this.#axisActiveSensitivity;
   }
 
@@ -2584,6 +2709,7 @@ class TinyGamepad {
    * @param {number} value - The new sensitivity value between 0 and 1.
    */
   set axisActiveSensitivity(value) {
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number' || value < 0 || value > 1)
       throw new RangeError('Axis sensitivity must be a number between 0 and 1.');
     this.#axisActiveSensitivity = value;
@@ -2594,6 +2720,7 @@ class TinyGamepad {
    * @returns {number}
    */
   get deadZone() {
+    checkDestroy(this.#isDestroyed);
     return this.#deadZone;
   }
 
@@ -2603,6 +2730,7 @@ class TinyGamepad {
    * @param {number} value
    */
   set deadZone(value) {
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number' || value < 0 || value > 1)
       throw new RangeError('Dead zone must be a number between 0 and 1.');
     this.#deadZone = value;
@@ -2613,6 +2741,7 @@ class TinyGamepad {
    * @returns {string|null}
    */
   get expectedId() {
+    checkDestroy(this.#isDestroyed);
     return this.#expectedId;
   }
 
@@ -2621,6 +2750,7 @@ class TinyGamepad {
    * @returns {string}
    */
   set expectedId(value) {
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'string') throw new TypeError('Expected device id be a string.');
     this.#expectedId = value;
   }
@@ -2641,7 +2771,6 @@ class TinyGamepad {
    */
   destroy() {
     if (this.#isDestroyed) return;
-    this.#isDestroyed = true;
 
     if (this.#animationFrame) cancelAnimationFrame(this.#animationFrame);
     if (this.#mouseKeyboardHoldLoop) cancelAnimationFrame(this.#mouseKeyboardHoldLoop);
@@ -2680,6 +2809,7 @@ class TinyGamepad {
     this.#expectedId = null;
     this.#allowMouse = false;
     this.#timeMappedInputs = 0;
+    this.#isDestroyed = true;
   }
 }
 

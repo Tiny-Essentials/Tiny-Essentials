@@ -197,6 +197,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {number}
    */
   get size() {
+    checkDestroy(this.#destroyed);
     return this.#musicList.length + this.#voiceList.length;
   }
 
@@ -205,6 +206,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {number}
    */
   get musicSize() {
+    checkDestroy(this.#destroyed);
     return this.#musicList.length;
   }
 
@@ -213,6 +215,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {number}
    */
   get voiceSize() {
+    checkDestroy(this.#destroyed);
     return this.#voiceList.length;
   }
 
@@ -221,6 +224,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {number}
    */
   get customPosSize() {
+    checkDestroy(this.#destroyed);
     return this.#customPositions.length;
   }
 
@@ -229,6 +233,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {number}
    */
   get tasksSize() {
+    checkDestroy(this.#destroyed);
     return this.#scheduledTasks.length;
   }
 
@@ -237,6 +242,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {number}
    */
   get cycleCacheSize() {
+    checkDestroy(this.#destroyed);
     return this.#cycleCache.size;
   }
 
@@ -247,6 +253,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {MediaContent[]}
    */
   get musicList() {
+    checkDestroy(this.#destroyed);
     return structuredClone(this.#musicList);
   }
 
@@ -257,6 +264,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {MediaContent[]}
    */
   get voiceList() {
+    checkDestroy(this.#destroyed);
     return structuredClone(this.#voiceList);
   }
 
@@ -267,6 +275,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {CustomPosition[]}
    */
   get customPositions() {
+    checkDestroy(this.#destroyed);
     return structuredClone(this.#customPositions);
   }
 
@@ -277,6 +286,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {ScheduledTask[]}
    */
   get scheduledTasks() {
+    checkDestroy(this.#destroyed);
     return structuredClone(this.#scheduledTasks);
   }
 
@@ -285,6 +295,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {MediaContent[]} A cloned object of the cache.
    */
   get allList() {
+    checkDestroy(this.#destroyed);
     return [...this.musicList, ...this.voiceList];
   }
 
@@ -295,6 +306,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {number}
    */
   get seed() {
+    checkDestroy(this.#destroyed);
     return this.#seed;
   }
   /**
@@ -316,6 +328,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {number}
    */
   get anchorDate() {
+    checkDestroy(this.#destroyed);
     return this.#anchorDate;
   }
 
@@ -339,6 +352,7 @@ class TinyRadioFm extends EventEmitter {
    * @returns {RadioConfig}
    */
   get config() {
+    checkDestroy(this.#destroyed);
     return structuredClone(this.#config);
   }
   /**

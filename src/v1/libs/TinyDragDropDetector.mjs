@@ -1,3 +1,7 @@
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyDragDropDetector');
+
 /**
  * @typedef {Object} DragAndDropOptions
  * @property {string} [hoverClass="dnd-hover"] - CSS class applied to the target element while files are being dragged over it.
@@ -36,6 +40,21 @@ class TinyDragDropDetector {
 
   /** @type {boolean} */
   #bound;
+
+  /**
+   * Tracks whether the instance has been destroyed.
+   * @type {boolean}
+   */
+  #destroyed = false;
+
+  /**
+   * Gets the current destruction status of the instance.
+   *
+   * @returns {boolean} True if the instance is destroyed, false otherwise.
+   */
+  get destroyed() {
+    return this.#destroyed;
+  }
 
   /**
    * Creates a new instance of TinyDragDropDetector to handle drag-and-drop file detection.
@@ -96,6 +115,7 @@ class TinyDragDropDetector {
    * @returns {HTMLTarget}
    */
   getTarget() {
+    checkDestroy(this.#destroyed);
     return this.#target;
   }
 
@@ -104,6 +124,7 @@ class TinyDragDropDetector {
    * @returns {string}
    */
   getHoverClass() {
+    checkDestroy(this.#destroyed);
     return this.#hoverClass;
   }
 
@@ -112,6 +133,7 @@ class TinyDragDropDetector {
    * @returns {boolean}
    */
   isDragging() {
+    checkDestroy(this.#destroyed);
     return this.#isDragging;
   }
 
@@ -120,6 +142,7 @@ class TinyDragDropDetector {
    * @returns {boolean}
    */
   bound() {
+    checkDestroy(this.#destroyed);
     return this.#bound;
   }
 
@@ -232,9 +255,11 @@ class TinyDragDropDetector {
    * @returns {void}
    */
   destroy() {
+    if (this.#destroyed) return;
     this.#unbindEvents();
     const target = this.getTarget();
     target.classList.remove(this.#hoverClass);
+    this.#destroyed = true;
   }
 }
 

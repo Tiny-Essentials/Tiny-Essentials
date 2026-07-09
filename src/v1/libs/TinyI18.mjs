@@ -1,6 +1,9 @@
 import { readFile, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join as pathJoin } from 'path';
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyI18');
 
 /**
  * Supported operating modes for TinyI18.
@@ -166,6 +169,21 @@ class TinyI18 {
     await writeFile(output, JSON.stringify(merged, null, spaces), 'utf-8');
   }
 
+  /**
+   * Tracks whether the instance has been destroyed.
+   * @type {boolean}
+   */
+  #destroyed = false;
+
+  /**
+   * Gets the current destruction status of the instance.
+   *
+   * @returns {boolean} True if the instance is destroyed, false otherwise.
+   */
+  get destroyed() {
+    return this.#destroyed;
+  }
+
   /** @type {ModeTypes} */
   #mode;
   /** @type {LocaleCode} */
@@ -195,6 +213,7 @@ class TinyI18 {
    * @returns {LocaleCode|null}
    */
   get currentLocale() {
+    checkDestroy(this.#destroyed);
     return this.#currentLocale;
   }
 
@@ -204,6 +223,7 @@ class TinyI18 {
    * @type {LocaleCode}
    */
   get defaultLocale() {
+    checkDestroy(this.#destroyed);
     return this.#defaultLocale;
   }
 
@@ -214,6 +234,7 @@ class TinyI18 {
    * @type {ModeTypes}
    */
   get mode() {
+    checkDestroy(this.#destroyed);
     return this.#mode;
   }
 
@@ -224,6 +245,7 @@ class TinyI18 {
    * @type {boolean}
    */
   get strict() {
+    checkDestroy(this.#destroyed);
     return this.#strict;
   }
 
@@ -234,6 +256,7 @@ class TinyI18 {
    * @type {string|null}
    */
   get basePath() {
+    checkDestroy(this.#destroyed);
     return this.#basePath;
   }
 
@@ -242,6 +265,7 @@ class TinyI18 {
    * @returns {StatLocale[]}
    */
   get stats() {
+    checkDestroy(this.#destroyed);
     const locales = [];
     for (const loc of this.#stringTables.keys()) locales.push(this.getStatsForLocale(loc));
     return locales;
@@ -253,6 +277,7 @@ class TinyI18 {
    * @returns {Record<string, Dict>}
    */
   get stringTables() {
+    checkDestroy(this.#destroyed);
     /** @type {Record<string, Dict>} */
     const obj = {};
     for (const [locale, dict] of this.#stringTables.entries()) {
@@ -267,6 +292,7 @@ class TinyI18 {
    * @returns {Record<string, PatternEntry[]>}
    */
   get patternTables() {
+    checkDestroy(this.#destroyed);
     /** @type {Record<string, PatternEntry[]>} */
     const obj = {};
     for (const [locale, arr] of this.#patternTables.entries()) {
@@ -285,6 +311,7 @@ class TinyI18 {
    * @returns {Record<string, HelperCallback>}
    */
   get helpers() {
+    checkDestroy(this.#destroyed);
     /** @type {Record<string, HelperCallback>} */
     const obj = {};
     for (const [name, fn] of this.#helpers.entries()) {
@@ -299,6 +326,7 @@ class TinyI18 {
    * @returns {Record<string, RegExp>}
    */
   get regexCache() {
+    checkDestroy(this.#destroyed);
     /** @type {Record<string, RegExp>} */
     const obj = {};
     for (const [key, re] of this.#regexCache.entries()) {
@@ -763,6 +791,7 @@ class TinyI18 {
    * management is always controlled via the API instead of direct access.
    */
   clearRegexCache() {
+    checkDestroy(this.#destroyed);
     this.#regexCache.clear();
   }
 
@@ -772,6 +801,7 @@ class TinyI18 {
    * @param {HelperCallback} fn
    */
   registerHelper(name, fn) {
+    checkDestroy(this.#destroyed);
     if (typeof name !== 'string' || !name)
       throw new TypeError('registerHelper: "name" must be non-empty string');
     if (typeof fn !== 'function') throw new TypeError('registerHelper: "fn" must be a function');
@@ -787,6 +817,7 @@ class TinyI18 {
    * @returns {boolean} `true` if the helper was removed, `false` if it was not found.
    */
   unregisterHelper(name) {
+    checkDestroy(this.#destroyed);
     if (typeof name !== 'string' || !name)
       throw new TypeError('unregisterHelper: "name" must be non-empty string');
     return this.#helpers.delete(name);
@@ -798,6 +829,7 @@ class TinyI18 {
    * @param {Dict} data
    */
   loadLocaleLocal(locale, data) {
+    checkDestroy(this.#destroyed);
     if (this.#mode !== 'local')
       throw new TypeError('loadLocaleLocal is only available in "local" mode');
     this.#ingestLocale(locale, data);
@@ -809,6 +841,7 @@ class TinyI18 {
    * @param {LocaleCode|null} locale - null -> keep only default
    */
   async setLocale(locale) {
+    checkDestroy(this.#destroyed);
     if (locale !== null && (typeof locale !== 'string' || !locale))
       throw new TypeError('setLocale: "locale" must be string or null');
 
@@ -854,6 +887,7 @@ class TinyI18 {
    * @returns {any}
    */
   get(key, params = undefined, options = undefined) {
+    checkDestroy(this.#destroyed);
     if (typeof key !== 'string' || !key)
       throw new TypeError('get: "key" must be a non-empty string');
 
@@ -889,6 +923,7 @@ class TinyI18 {
    * @returns {any}
    */
   resolveByPattern(key, options) {
+    checkDestroy(this.#destroyed);
     if (typeof key !== 'string' || !key)
       throw new TypeError('get: "key" must be a non-empty string');
     const { locale: forceLocale } = options || {};
@@ -906,6 +941,7 @@ class TinyI18 {
    * Selected locale becomes null.
    */
   resetToDefaultOnly() {
+    checkDestroy(this.#destroyed);
     if (this.#mode === 'file') {
       for (const loc of Array.from(this.#stringTables.keys())) {
         if (loc !== this.#defaultLocale) {
@@ -923,6 +959,7 @@ class TinyI18 {
    * @throws {Error} If the locale is not registered.
    */
   getStatsForLocale(locale) {
+    checkDestroy(this.#destroyed);
     if (typeof locale !== 'string' || !locale)
       throw new TypeError('getStatsForLocale: "locale" must be a non-empty string');
     if (!this.#stringTables.has(locale))
@@ -938,6 +975,30 @@ class TinyI18 {
       isDefault: locale === this.#defaultLocale,
       isCurrent: locale === this.#currentLocale,
     };
+  }
+
+  /**
+   * Destroys the TinyI18 instance, clearing all internal maps and references
+   * to free up memory. Once destroyed, the instance cannot be reused.
+   *
+   * @throws {Error} If the instance has already been destroyed.
+   * @returns {void}
+   */
+  destroy() {
+    if (this.#destroyed) return;
+
+    // Clear all internal maps to release memory
+    this.#stringTables.clear();
+    this.#patternTables.clear();
+    this.#helpers.clear();
+    this.#regexCache.clear();
+
+    // Reset locale and path configurations
+    this.#currentLocale = null;
+    this.#basePath = null;
+
+    // Mark the instance as destroyed
+    this.#destroyed = true;
   }
 }
 

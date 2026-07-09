@@ -1,3 +1,7 @@
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyNotifyCenter');
+
 /**
  * Represents a single notification entry.
  *
@@ -107,6 +111,21 @@ class TinyNotifyCenter {
     document.body.insertAdjacentHTML(where, TinyNotifyCenter.getTemplate());
   }
 
+  /**
+   * Tracks whether the instance has been destroyed.
+   * @type {boolean}
+   */
+  #destroyed = false;
+
+  /**
+   * Gets the current destruction status of the instance.
+   *
+   * @returns {boolean} True if the instance is destroyed, false otherwise.
+   */
+  get destroyed() {
+    return this.#destroyed;
+  }
+
   /** @type {HTMLElement} */
   #center;
   /** @type {HTMLElement} */
@@ -204,6 +223,7 @@ class TinyNotifyCenter {
    * @param {boolean} value
    */
   setMarkAllAsReadOnClose(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'boolean')
       throw new TypeError(`Expected boolean for markAllAsReadOnClose, got ${typeof value}`);
     this.#markAllAsReadOnClose = value;
@@ -214,6 +234,7 @@ class TinyNotifyCenter {
    * @param {number} ms
    */
   setRemoveDelay(ms) {
+    checkDestroy(this.#destroyed);
     if (typeof ms !== 'number') throw new Error(`NotificationCenter: "ms" must be an number.`);
     this.#removeDelay = ms;
   }
@@ -224,6 +245,7 @@ class TinyNotifyCenter {
    * @returns {'text' | 'html' | null}
    */
   getItemMode(index) {
+    checkDestroy(this.#destroyed);
     const item = this.getItem(index);
     return item ? this.#modes.get(item) : null;
   }
@@ -234,6 +256,7 @@ class TinyNotifyCenter {
    * @returns {HTMLElement}
    */
   getItem(index) {
+    checkDestroy(this.#destroyed);
     const element = this.#list.children.item(index);
     if (!(element instanceof HTMLElement))
       throw new Error(`NotificationCenter: "item" must be an HTMLElement. Got: ${element}`);
@@ -246,6 +269,7 @@ class TinyNotifyCenter {
    * @returns {boolean}
    */
   hasItem(index) {
+    checkDestroy(this.#destroyed);
     return index >= 0 && index < this.#list.children.length;
   }
 
@@ -254,6 +278,7 @@ class TinyNotifyCenter {
    * @param {number|HTMLElement} index
    */
   markAsRead(index) {
+    checkDestroy(this.#destroyed);
     const item = index instanceof HTMLElement ? index : this.getItem(index);
     if (item.classList.contains('unread')) {
       item.classList.remove('unread');
@@ -268,6 +293,7 @@ class TinyNotifyCenter {
    * @param {'text'|'html'} [mode='text'] - How to treat the message content.
    */
   add(message, mode = 'text') {
+    checkDestroy(this.#destroyed);
     const item = document.createElement('div');
     item.className = 'item unread';
 
@@ -349,6 +375,7 @@ class TinyNotifyCenter {
    * @param {number} index
    */
   remove(index) {
+    checkDestroy(this.#destroyed);
     const item = this.getItem(index);
     this.#removeItem(item);
   }
@@ -357,6 +384,7 @@ class TinyNotifyCenter {
    * Clear all notifications safely.
    */
   clear() {
+    checkDestroy(this.#destroyed);
     let needAgain = true;
     while (needAgain) {
       needAgain = false;
@@ -374,6 +402,7 @@ class TinyNotifyCenter {
    * Open the notify center.
    */
   open() {
+    checkDestroy(this.#destroyed);
     this.#overlay.classList.remove('hidden');
     this.#center.classList.add('open');
   }
@@ -382,6 +411,7 @@ class TinyNotifyCenter {
    * Close the notify center.
    */
   close() {
+    checkDestroy(this.#destroyed);
     this.#overlay.classList.add('hidden');
     this.#center.classList.remove('open');
     if (this.#markAllAsReadOnClose) {
@@ -396,6 +426,7 @@ class TinyNotifyCenter {
    * Toggle open/close state.
    */
   toggle() {
+    checkDestroy(this.#destroyed);
     if (this.#center.classList.contains('open')) this.close();
     else this.open();
   }
@@ -404,6 +435,7 @@ class TinyNotifyCenter {
    * Recalculate the number of notifications based on the actual DOM list.
    */
   recount() {
+    checkDestroy(this.#destroyed);
     const count = this.#list.querySelectorAll('.item.unread').length;
     this.#updateCount(count);
   }
@@ -425,6 +457,7 @@ class TinyNotifyCenter {
    * @returns {void}
    */
   destroy() {
+    if (this.#destroyed) return;
     // Remove event listeners
     this.#button?.removeEventListener('click', this.toggle);
     this.#center?.querySelector('.close')?.removeEventListener('click', this.close);
@@ -446,6 +479,9 @@ class TinyNotifyCenter {
     // this.#overlay = null;
     this.#count = 0;
     this.#modes = new WeakMap();
+
+    // Lock the instance
+    this.#destroyed = true;
   }
 }
 

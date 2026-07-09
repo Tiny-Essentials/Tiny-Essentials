@@ -1,3 +1,7 @@
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyElementObserver');
+
 /**
  * Callback type used for element mutation detectors.
  *
@@ -17,6 +21,21 @@
  * @template {Element} HTMLElement
  */
 class TinyElementObserver {
+  /**
+   * Tracks whether the instance has been destroyed.
+   * @type {boolean}
+   */
+  #destroyed = false;
+
+  /**
+   * Gets the current destruction status of the instance.
+   *
+   * @returns {boolean} True if the instance is destroyed, false otherwise.
+   */
+  get destroyed() {
+    return this.#destroyed;
+  }
+
   /** @type {HTMLElement} */
   #el;
 
@@ -25,6 +44,7 @@ class TinyElementObserver {
    * @returns {HTMLElement} The DOM element being tracked, or `undefined` if none is set.
    */
   get el() {
+    checkDestroy(this.#destroyed);
     return this.#el;
   }
 
@@ -40,6 +60,7 @@ class TinyElementObserver {
    * @returns {MutationObserverInit}
    */
   get settings() {
+    checkDestroy(this.#destroyed);
     return this.#settings;
   }
 
@@ -48,6 +69,7 @@ class TinyElementObserver {
    * @param {MutationObserverInit} settings
    */
   set settings(settings) {
+    checkDestroy(this.#destroyed);
     if (typeof settings !== 'object' || settings === null)
       throw new TypeError('settings must be a non-null object.');
     this.#settings = settings;
@@ -64,6 +86,7 @@ class TinyElementObserver {
    * @returns {MutationObserver|null}
    */
   get observer() {
+    checkDestroy(this.#destroyed);
     return this.#observer;
   }
 
@@ -82,6 +105,7 @@ class TinyElementObserver {
    * @returns {Array<[string, ElementDetectorsFn]>}
    */
   get detectors() {
+    checkDestroy(this.#destroyed);
     return this.#detectors.map((item) => [item[0], item[1]]);
   }
 
@@ -90,6 +114,7 @@ class TinyElementObserver {
    * @param {Array<[string, ElementDetectorsFn]>} detectors
    */
   set detectors(detectors) {
+    checkDestroy(this.#destroyed);
     if (!Array.isArray(detectors)) throw new TypeError('detectors must be an array.');
 
     /** @type {Array<[string, ElementDetectorsFn]>} */
@@ -108,6 +133,7 @@ class TinyElementObserver {
    * @returns {boolean}
    */
   get isActive() {
+    checkDestroy(this.#destroyed);
     return !!this.#observer;
   }
 
@@ -117,6 +143,7 @@ class TinyElementObserver {
    * @returns {number} Total count of detectors.
    */
   get size() {
+    checkDestroy(this.#destroyed);
     return this.#detectors.length;
   }
 
@@ -140,6 +167,7 @@ class TinyElementObserver {
    * until new detectors are added again.
    */
   clear() {
+    checkDestroy(this.#destroyed);
     this.#detectors = [];
   }
 
@@ -149,6 +177,7 @@ class TinyElementObserver {
    * @throws {Error} If no element has been set to observe.
    */
   start() {
+    checkDestroy(this.#destroyed);
     if (!this.#el) throw new Error('Cannot start observation: no target element has been set.');
     if (this.#observer) return;
     this.#observer = new MutationObserver((mutations) => {
@@ -164,6 +193,7 @@ class TinyElementObserver {
    * Stop tracking changes.
    */
   stop() {
+    checkDestroy(this.#destroyed);
     if (!this.#observer) return;
     this.#observer.disconnect();
     this.#observer = null;
@@ -177,6 +207,7 @@ class TinyElementObserver {
    * @param {ElementDetectorsFn} handler
    */
   add(name, handler) {
+    checkDestroy(this.#destroyed);
     this.#validateDetector(name, handler);
     this.#detectors.push([name, handler]);
   }
@@ -187,6 +218,7 @@ class TinyElementObserver {
    * @param {ElementDetectorsFn} handler
    */
   insertAtStart(name, handler) {
+    checkDestroy(this.#destroyed);
     this.#validateDetector(name, handler);
     this.#detectors.unshift([name, handler]);
   }
@@ -199,6 +231,7 @@ class TinyElementObserver {
    * @param {'before'|'after'} position - Position relative to the index
    */
   insertAt(index, name, handler, position = 'after') {
+    checkDestroy(this.#destroyed);
     this.#validateDetector(name, handler);
     if (typeof index !== 'number' || index < 0 || index >= this.#detectors.length)
       throw new RangeError('Invalid index for insertDetectorAt.');
@@ -211,6 +244,7 @@ class TinyElementObserver {
    * @param {number} index
    */
   removeAt(index) {
+    checkDestroy(this.#destroyed);
     if (typeof index !== 'number' || index < 0 || index >= this.#detectors.length)
       throw new RangeError('Invalid index for removeDetectorAt.');
     this.#detectors.splice(index, 1);
@@ -223,6 +257,7 @@ class TinyElementObserver {
    * @param {number} after - Number of items after the index to remove
    */
   removeAround(index, before = 0, after = 0) {
+    checkDestroy(this.#destroyed);
     if (typeof index !== 'number' || index < 0 || index >= this.#detectors.length)
       throw new RangeError('Invalid index for removeDetectorsAround.');
     const start = Math.max(0, index - before);
@@ -236,6 +271,7 @@ class TinyElementObserver {
    * @returns {boolean}
    */
   isIndexUsed(index) {
+    checkDestroy(this.#destroyed);
     return index >= 0 && index < this.#detectors.length;
   }
 
@@ -245,6 +281,7 @@ class TinyElementObserver {
    * @returns {boolean}
    */
   hasHandler(handler) {
+    checkDestroy(this.#destroyed);
     if (typeof handler !== 'function') throw new TypeError('Handler must be a function.');
     return this.#detectors.some(([_, fn]) => fn === handler);
   }
@@ -267,8 +304,10 @@ class TinyElementObserver {
    * leaving the instance unusable until reconfigured.
    */
   destroy() {
+    if (this.#destroyed) return;
     this.stop();
     this.clear();
+    this.#destroyed = true;
   }
 }
 

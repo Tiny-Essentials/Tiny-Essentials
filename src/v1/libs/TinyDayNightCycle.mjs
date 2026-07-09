@@ -1,3 +1,7 @@
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyDayNightCycle');
+
 /**
  * Represents a mapping of weather type names to their selected values.
  * Each key is the name of a weather type, and the value is either:
@@ -242,6 +246,7 @@ class TinyDayNightCycle {
    * @returns {number}
    */
   get daySize() {
+    checkDestroy(this.#isDestroyed);
     return this.#daySize;
   }
 
@@ -250,6 +255,7 @@ class TinyDayNightCycle {
    * @returns {boolean}
    */
   get autoSizeAdjuste() {
+    checkDestroy(this.#isDestroyed);
     return this.#autoSizeAdjuste;
   }
 
@@ -259,6 +265,7 @@ class TinyDayNightCycle {
    * @throws {TypeError} If `value` is not a boolean.
    */
   set autoSizeAdjuste(value) {
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'boolean') throw new TypeError('autoSizeAdjuste must be a boolean.');
     this.#autoSizeAdjuste = value;
   }
@@ -270,6 +277,7 @@ class TinyDayNightCycle {
    * @throws {Error} If `value` is not a positive finite number.
    */
   set daySize(value) {
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0)
       throw new Error('daySize must be a positive finite number.');
 
@@ -288,6 +296,7 @@ class TinyDayNightCycle {
    * @returns {number}
    */
   get hourSize() {
+    checkDestroy(this.#isDestroyed);
     return this.#hourSize;
   }
 
@@ -298,6 +307,7 @@ class TinyDayNightCycle {
    * @throws {Error} If `value` is not a positive finite number.
    */
   set hourSize(value) {
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0)
       throw new Error('hourSize must be a positive finite number.');
 
@@ -316,6 +326,7 @@ class TinyDayNightCycle {
    * @returns {number}
    */
   get minuteSize() {
+    checkDestroy(this.#isDestroyed);
     return this.#minuteSize;
   }
 
@@ -326,6 +337,7 @@ class TinyDayNightCycle {
    * @throws {Error} If `value` is not a positive finite number.
    */
   set minuteSize(value) {
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0)
       throw new Error('minuteSize must be a positive finite number.');
 
@@ -352,6 +364,7 @@ class TinyDayNightCycle {
    * @returns {number} Current seconds (0 to 86399).
    */
   get currentSeconds() {
+    checkDestroy(this.#isDestroyed);
     return this.#currentSeconds;
   }
 
@@ -363,7 +376,7 @@ class TinyDayNightCycle {
    * @throws {RangeError} If the value is outside the valid range.
    */
   set currentSeconds(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number' || !Number.isFinite(value))
       throw new TypeError(`currentSeconds must be a finite number, received ${typeof value}`);
     if (value < 0 || value >= this.#daySize)
@@ -378,6 +391,7 @@ class TinyDayNightCycle {
    * @returns {number} Current minutes (0 to 1439).
    */
   get currentMinutes() {
+    checkDestroy(this.#isDestroyed);
     return this.#currentMinutes;
   }
 
@@ -389,7 +403,7 @@ class TinyDayNightCycle {
    * @throws {RangeError} If the value is outside the valid range.
    */
   set currentMinutes(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number' || !Number.isFinite(value))
       throw new TypeError(`currentMinutes must be a finite number, received ${typeof value}`);
     if (value < 0 || value >= 1440)
@@ -405,6 +419,7 @@ class TinyDayNightCycle {
    * @returns {number} Current hours (0 to less than 24).
    */
   get currentHours() {
+    checkDestroy(this.#isDestroyed);
     return this.#currentHours;
   }
 
@@ -417,7 +432,7 @@ class TinyDayNightCycle {
    * @throws {RangeError} If the value is outside the valid range.
    */
   set currentHours(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number' || !Number.isFinite(value))
       throw new TypeError(`currentHours must be a finite number, received ${typeof value}`);
     if (value < 0 || value >= 24)
@@ -432,6 +447,7 @@ class TinyDayNightCycle {
    * @returns {MoonData[]} Array of moons including their name, current phase index, phase name, and cycle length.
    */
   get moons() {
+    checkDestroy(this.#isDestroyed);
     return this.#moons.map((moon) => this.getMoon(moon));
   }
 
@@ -440,41 +456,49 @@ class TinyDayNightCycle {
    * @returns {string[]} Array of season names.
    */
   get seasons() {
+    checkDestroy(this.#isDestroyed);
     return Array.from(this.#seasons.keys());
   }
 
   /** @returns {number} Hour at which day starts (0-23). */
   get dayStart() {
+    checkDestroy(this.#isDestroyed);
     return this.#dayStart;
   }
 
   /** @returns {number} Hour at which night starts (0-23). */
   get nightStart() {
+    checkDestroy(this.#isDestroyed);
     return this.#nightStart;
   }
 
   /** @returns {SelectedWeather} Currently active weather types or nulls if none. */
   get weather() {
+    checkDestroy(this.#isDestroyed);
     return { ...this.#weather };
   }
 
   /** @returns {string} Currently active season name. */
   get currentSeason() {
+    checkDestroy(this.#isDestroyed);
     return this.#currentSeason;
   }
 
   /** @returns {number} Current day of the month. */
   get currentDay() {
+    checkDestroy(this.#isDestroyed);
     return this.#currentDay;
   }
 
   /** @returns {number} Current month number. */
   get currentMonth() {
+    checkDestroy(this.#isDestroyed);
     return this.#currentMonth;
   }
 
   /** @returns {number} Current year count. */
   get currentYear() {
+    checkDestroy(this.#isDestroyed);
     return this.#currentYear;
   }
 
@@ -484,6 +508,7 @@ class TinyDayNightCycle {
    * @returns {number[]} Object mapping month number to days.
    */
   get monthDays() {
+    checkDestroy(this.#isDestroyed);
     return [...this.#monthDays];
   }
 
@@ -492,11 +517,13 @@ class TinyDayNightCycle {
    * @returns {{min: number, max: number}} Object with min and max weather duration.
    */
   get weatherDuration() {
+    checkDestroy(this.#isDestroyed);
     return { ...this.#weatherDuration };
   }
 
   /** @returns {number} Minutes left until current weather expires. */
   get weatherTimeLeft() {
+    checkDestroy(this.#isDestroyed);
     return this.#weatherTimeLeft;
   }
 
@@ -506,7 +533,7 @@ class TinyDayNightCycle {
    * @throws {TypeError} If value is not a number.
    */
   set dayStart(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number' || value < 1)
       throw new TypeError(`dayStart must be a positive non-zero number, received ${typeof value}`);
     this.#dayStart = value;
@@ -518,7 +545,7 @@ class TinyDayNightCycle {
    * @throws {TypeError} If value is not a number.
    */
   set nightStart(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number' || value < 1)
       throw new TypeError(
         `nightStart must be a positive non-zero number, received ${typeof value}`,
@@ -532,7 +559,7 @@ class TinyDayNightCycle {
    * @throws {TypeError} If value is not a string or null.
    */
   set weather(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (
       typeof value !== 'object' ||
       value === null ||
@@ -550,7 +577,7 @@ class TinyDayNightCycle {
    * @throws {TypeError} If value is not a string or not a configured season.
    */
   set currentSeason(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'string' || !this.#seasons.has(value)) {
       throw new TypeError(
         `currentSeason must be one of ${Array.from(this.#seasons)
@@ -567,7 +594,7 @@ class TinyDayNightCycle {
    * @throws {TypeError} If value is not a number.
    */
   set currentDay(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number' || value < 1 || value > this.#monthDays[this.#currentMonth - 1])
       throw new TypeError(`currentDay must be a valid day number, received ${typeof value}`);
     this.#currentDay = value;
@@ -579,7 +606,7 @@ class TinyDayNightCycle {
    * @throws {TypeError} If value is not a number.
    */
   set currentMonth(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number' || typeof this.#monthDays[value - 1] !== 'number')
       throw new TypeError(`currentMonth must be a valid month number, received ${typeof value}`);
     this.#currentMonth = value;
@@ -591,7 +618,7 @@ class TinyDayNightCycle {
    * @throws {TypeError} If value is not a number.
    */
   set currentYear(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number' || value < 1)
       throw new TypeError(
         `currentYear must be a positive number non-zero, received ${typeof value}`,
@@ -605,7 +632,7 @@ class TinyDayNightCycle {
    * @param {number[]} value - An object where keys are month numbers and values are the number of days.
    */
   set monthDays(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (!Array.isArray(value)) throw new TypeError(`monthDays must be a array`);
     if (!value.every((n) => typeof n === 'number'))
       throw new TypeError(`monthDays must have number values`);
@@ -618,7 +645,7 @@ class TinyDayNightCycle {
    * @throws {TypeError} If value or its min/max are invalid.
    */
   set weatherDuration(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'object' || value === null)
       throw new TypeError(`weatherDuration must be a non-null object`);
     if (typeof value.min !== 'number' || typeof value.max !== 'number')
@@ -632,7 +659,7 @@ class TinyDayNightCycle {
    * @throws {TypeError} If value is not a number.
    */
   set weatherTimeLeft(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'number')
       throw new TypeError(`weatherTimeLeft must be a number, received ${typeof value}`);
     this.#weatherTimeLeft = value;
@@ -644,6 +671,7 @@ class TinyDayNightCycle {
    * @returns {WeatherCfgs} Deep copy of the weather configuration.
    */
   get weatherConfig() {
+    checkDestroy(this.#isDestroyed);
     /** @type {Record<string, WeatherCfg>} */
     const hours = {};
     /** @type {Record<string, WeatherCfg>} */
@@ -670,7 +698,7 @@ class TinyDayNightCycle {
    * @throws {TypeError} If the provided value is not a valid object or contains invalid data types.
    */
   set weatherConfig(config) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof config !== 'object' || config === null)
       throw new TypeError(`weatherConfig must be a non-null object, received ${config}`);
 
@@ -748,7 +776,7 @@ class TinyDayNightCycle {
    * @throws {TypeError} If `name` is not a string or `values` is not an array of numbers.
    */
   addSeason(name, values) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof name !== 'string')
       throw new TypeError(`Season name must be a string, received ${typeof name}`);
     if (!Array.isArray(values) || !values.every((v) => typeof v === 'number'))
@@ -763,7 +791,7 @@ class TinyDayNightCycle {
    * @throws {TypeError} If `name` is not a string.
    */
   removeSeason(name) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof name !== 'string')
       throw new TypeError(`Season name must be a string, received ${typeof name}`);
     this.#seasons.delete(name);
@@ -778,6 +806,7 @@ class TinyDayNightCycle {
    * @throws {TypeError} If `name` is not a string.
    */
   hasSeason(name) {
+    checkDestroy(this.#isDestroyed);
     if (typeof name !== 'string')
       throw new TypeError(`Season name must be a string, received ${typeof name}`);
     return this.#seasons.has(name);
@@ -792,6 +821,7 @@ class TinyDayNightCycle {
    * @throws {Error} If the season does not exist.
    */
   getSeason(name) {
+    checkDestroy(this.#isDestroyed);
     if (typeof name !== 'string')
       throw new TypeError(`Season name must be a string, received ${typeof name}`);
     const result = this.#seasons.get(name);
@@ -809,7 +839,7 @@ class TinyDayNightCycle {
    * @param {number} [settings.second=0] - 0 to 59
    */
   setTime({ hour = 0, minute = 0, second = 0 }) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     this.currentSeconds =
       (hour * this.#hourSize + minute * this.#minuteSize + second) % this.#daySize;
   }
@@ -822,7 +852,7 @@ class TinyDayNightCycle {
    * @param {number} [settings.seconds=0]
    */
   addTime({ hours = 0, minutes = 0, seconds = 0 }) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     let total = this.currentSeconds + hours * this.#hourSize + minutes * this.#minuteSize + seconds;
 
     while (total >= this.#daySize) {
@@ -856,6 +886,7 @@ class TinyDayNightCycle {
    * }} An object containing the hour, minute, second, and the formatted time string.
    */
   getTime({ withSeconds = false, hourSize = this.#hourSize, minuteSize = this.#minuteSize } = {}) {
+    checkDestroy(this.#isDestroyed);
     const hour = Math.floor(this.currentSeconds / hourSize);
     const minute = Math.floor((this.currentSeconds % hourSize) / minuteSize);
     const second = this.currentSeconds % minuteSize;
@@ -877,6 +908,7 @@ class TinyDayNightCycle {
    * @returns {boolean} True if current time is day, false otherwise.
    */
   isDay() {
+    checkDestroy(this.#isDestroyed);
     if (this.#dayStart < this.#nightStart) {
       return (
         this.#currentMinutes >= this.#dayStart * this.#minuteSize &&
@@ -949,7 +981,7 @@ class TinyDayNightCycle {
    * @returns {number} Time until target hour, in the specified unit.
    */
   timeUntil(targetHour, unit) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     const targetSeconds = targetHour * this.#hourSize; // 1 hour = 3600 seconds
     let diffSeconds = targetSeconds - this.#currentSeconds;
     if (diffSeconds <= 0) diffSeconds += this.#daySize; // 24h = 86400 seconds (wrap to next day)
@@ -970,7 +1002,7 @@ class TinyDayNightCycle {
    * @param {"day"|"night"} phase - The phase to set the time to.
    */
   setTo(phase) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (phase === 'day') this.setTime({ hour: this.#dayStart });
     else if (phase === 'night') this.setTime({ hour: this.#nightStart });
   }
@@ -984,7 +1016,7 @@ class TinyDayNightCycle {
    * @param {number} [amount=1] - Number of days to move forward.
    */
   nextDay(amount = 1) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     for (let i = 0; i < amount; i++) {
       this.#currentDay++;
       const monthDays = this.#monthDays[this.#currentMonth - 1];
@@ -1010,7 +1042,7 @@ class TinyDayNightCycle {
    * @param {number} [amount=1] - Number of days to move backward.
    */
   prevDay(amount = 1) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     for (let i = 0; i < amount; i++) {
       this.#currentDay--;
       if (this.#currentDay < 1) {
@@ -1030,7 +1062,7 @@ class TinyDayNightCycle {
    * Updates the current season based on the month.
    */
   updateSeason() {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     this.#seasons.forEach((seasonMonths, name) => {
       if (seasonMonths.includes(this.#currentMonth)) this.#currentSeason = name;
     });
@@ -1044,7 +1076,7 @@ class TinyDayNightCycle {
    * An object defining default probabilities, time-based probabilities, day/night differences, and seasonal probabilities.
    */
   setWeatherConfig(config) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     this.#weatherConfig = { ...this.#weatherConfig, ...config };
   }
 
@@ -1054,7 +1086,7 @@ class TinyDayNightCycle {
    * @param {number} maxMinutes - Maximum duration in minutes.
    */
   setWeatherDuration(minMinutes, maxMinutes) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     this.#weatherDuration.min = minMinutes;
     this.#weatherDuration.max = maxMinutes;
   }
@@ -1065,7 +1097,7 @@ class TinyDayNightCycle {
    * @param {number} minutesPassed - Number of in-game minutes passed since last update.
    */
   updateWeatherTimer(minutesPassed) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     this.#weatherTimeLeft -= minutesPassed;
     if (this.#weatherTimeLeft <= 0) {
       this.chooseNewWeather();
@@ -1080,7 +1112,7 @@ class TinyDayNightCycle {
    * @param {number|null} [settings.duration=null] - Duration in minutes. If null, a random duration is used.
    */
   forceWeather({ where = 'main', type, duration = null }) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     const weather = this.#weather;
     weather[where] = type;
     this.weather = weather;
@@ -1103,7 +1135,7 @@ class TinyDayNightCycle {
    * @returns {string|null} - The selected weather type, or null if none selected.
    */
   chooseNewWeather({ customWeather, where = 'main' } = {}) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     /** @type {WeatherData} */
     let probabilities = {};
 
@@ -1216,7 +1248,7 @@ class TinyDayNightCycle {
    * @returns {number} - The moon index.
    */
   addMoon(name, cycleLength, phaseNames, startingPhase = 0) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     const length = Math.max(1, cycleLength);
     this.#moons.push({
       name,
@@ -1232,7 +1264,7 @@ class TinyDayNightCycle {
    * @param {string} name
    */
   removeMoon(name) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     this.#moons = this.#moons.filter((m) => m.name !== name);
   }
 
@@ -1259,7 +1291,7 @@ class TinyDayNightCycle {
    * @throws {RangeError} If the moonIndex is invalid.
    */
   advanceMoon(moonIndex, days = 1) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     const moon = this.#moons[moonIndex];
     if (!moon) throw new RangeError(`No moon found at index ${moonIndex}`);
     moon.currentPhase = (moon.currentPhase + days) % moon.cycleLength;
@@ -1272,7 +1304,7 @@ class TinyDayNightCycle {
    * @throws {RangeError} If the moonIndex is invalid.
    */
   rewindMoon(moonIndex, days = 1) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     const moon = this.#moons[moonIndex];
     if (!moon) throw new RangeError(`No moon found at index ${moonIndex}`);
     moon.currentPhase = (moon.currentPhase - days + moon.cycleLength) % moon.cycleLength;
@@ -1285,6 +1317,7 @@ class TinyDayNightCycle {
    * @returns {boolean} `true` if a moon exists at the given index, otherwise `false`.
    */
   moonExists(index) {
+    checkDestroy(this.#isDestroyed);
     if (!this.#moons[index]) return false;
     return true;
   }
@@ -1299,6 +1332,7 @@ class TinyDayNightCycle {
    * @throws {Error} If `index` is a `MoonRaw` object but required properties are missing or invalid.
    */
   getMoon(index) {
+    checkDestroy(this.#isDestroyed);
     let moon;
 
     if (typeof index === 'number') {
@@ -1325,16 +1359,6 @@ class TinyDayNightCycle {
         : String(moon.currentPhase),
       cycleLength: moon.cycleLength,
     };
-  }
-
-  /**
-   * Checks if the instance has been destroyed and throws an error if so.
-   * @private
-   * @throws {Error} If the instance has already been destroyed.
-   */
-  _checkDestroyed() {
-    if (this.#isDestroyed)
-      throw new Error('This instance has been destroyed and can no longer be used.');
   }
 
   /**

@@ -1,4 +1,7 @@
 import { EventEmitter } from 'events';
+import { createCheckDestroyed } from './utils.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyAdvancedRaffle');
 
 /**
  * Defines the available normalization strategies for probability weight calculations.
@@ -214,6 +217,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {Record<string, number>} - Object with item IDs as keys and their respective draw counts.
    */
   get freq() {
+    checkDestroy(this.#isDestroyed);
     return Object.fromEntries(this.#freq);
   }
 
@@ -222,6 +226,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {number} Total count of items.
    */
   get size() {
+    checkDestroy(this.#isDestroyed);
     return this.#items.size;
   }
 
@@ -230,6 +235,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {Normalization} Current normalization mode.
    */
   get normalization() {
+    checkDestroy(this.#isDestroyed);
     return this.#normalization;
   }
 
@@ -239,7 +245,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If value is not a non-empty string.
    */
   set normalization(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'string' || !value.trim()) {
       throw new TypeError(
         "normalization must be a non-empty string (e.g., 'relative', 'softmax').",
@@ -253,6 +259,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {number|null} Current seed or `null` if RNG is not seeded.
    */
   get seed() {
+    checkDestroy(this.#isDestroyed);
     return this.#seed;
   }
 
@@ -262,7 +269,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If not `null` or a finite number.
    */
   set seed(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (value !== null && (typeof value !== 'number' || !Number.isFinite(value)))
       throw new TypeError('seed must be a finite number or null.');
     this.#seed = value;
@@ -274,6 +281,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {WeightsCallback[]} Array of registered global modifier functions.
    */
   get globalModifiers() {
+    checkDestroy(this.#isDestroyed);
     return [...this.#globalModifiers];
   }
 
@@ -283,7 +291,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If not an array of functions.
    */
   set globalModifiers(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (!Array.isArray(value) || !value.every((fn) => typeof fn === 'function'))
       throw new TypeError('globalModifiers must be an array of functions (WeightsCallback).');
     this.#globalModifiers = value;
@@ -294,6 +302,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {TempModifier[]} Array of temporary modifier entries.
    */
   get temporaryModifiers() {
+    checkDestroy(this.#isDestroyed);
     return [...this.#temporaryModifiers];
   }
 
@@ -303,7 +312,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If structure is invalid.
    */
   set temporaryModifiers(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (
       !Array.isArray(value) ||
       !value.every(
@@ -321,6 +330,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {WeightsCallback[]} Array of conditional rule functions.
    */
   get conditionalRules() {
+    checkDestroy(this.#isDestroyed);
     return [...this.#conditionalRules];
   }
 
@@ -330,7 +340,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If not an array of functions.
    */
   set conditionalRules(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (!Array.isArray(value) || !value.every((fn) => typeof fn === 'function'))
       throw new TypeError('conditionalRules must be an array of functions (WeightsCallback).');
     this.#conditionalRules = value;
@@ -341,6 +351,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {Record<string, Pity>} Object keyed by system name.
    */
   get pitySystems() {
+    checkDestroy(this.#isDestroyed);
     return Object.fromEntries(this.#pitySystems);
   }
 
@@ -350,7 +361,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If structure is invalid.
    */
   set pitySystems(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (
       !(value instanceof Map) ||
       ![...value.values()].every(
@@ -372,6 +383,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {string[]} Array of item IDs excluded from draws.
    */
   get exclusions() {
+    checkDestroy(this.#isDestroyed);
     return Array.from(this.#exclusions);
   }
 
@@ -381,7 +393,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If not a Set of strings.
    */
   set exclusions(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (!(value instanceof Set) || ![...value].every((v) => typeof v === 'string'))
       throw new TypeError('exclusions must be a Set<string>.');
     this.#exclusions = value;
@@ -392,6 +404,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {Record<string, string[]>} Object where each key is a group name and value is an array of item IDs.
    */
   get groups() {
+    checkDestroy(this.#isDestroyed);
     /** @type {Record<string, string[]>} */
     const groups = {};
     this.#groups.forEach((value, key) => (groups[key] = Array.from(value)));
@@ -404,7 +417,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If not a valid Map<string, Set<string>>.
    */
   set groups(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (
       !(value instanceof Map) ||
       ![...value.values()].every(
@@ -420,6 +433,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {RngGenerator} Function returning a floating-point number in [0, 1).
    */
   get rng() {
+    checkDestroy(this.#isDestroyed);
     return this.#rng;
   }
 
@@ -429,7 +443,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If not a valid function.
    */
   set rng(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'function' || typeof value() !== 'number')
       throw new TypeError('rng must be a function returning a number (RngGenerator).');
     this.#rng = value;
@@ -440,6 +454,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {Record<string, ItemDataGetter>} Object keyed by item ID.
    */
   get items() {
+    checkDestroy(this.#isDestroyed);
     /** @type {Record<string, ItemDataGetter>} */
     const items = {};
     this.#items.forEach((value, key) => {
@@ -454,7 +469,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If structure is invalid.
    */
   set items(value) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (
       !(value instanceof Map) ||
       ![...value.values()].every(
@@ -491,16 +506,6 @@ class TinyAdvancedRaffle extends EventEmitter {
     this.#seed = seed ?? null;
   }
 
-  /**
-   * Checks if the instance has been destroyed and throws an error if so.
-   * @private
-   * @throws {Error} If the instance has already been destroyed.
-   */
-  _checkDestroyed() {
-    if (this.#isDestroyed)
-      throw new Error('This instance has been destroyed and can no longer be used.');
-  }
-
   /* ===========================
      Public: Item management
      =========================== */
@@ -512,6 +517,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `itemId` is not a string.
    */
   hasItem(itemId) {
+    checkDestroy(this.#isDestroyed);
     if (typeof itemId !== 'string') throw new TypeError('itemId must be a string');
     return this.#items.has(itemId);
   }
@@ -528,7 +534,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If any parameter has an invalid type.
    */
   addItem(id, opts = {}) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof id !== 'string' || !id.trim()) throw new TypeError('id must be a non-empty string');
     if (typeof opts !== 'object' || opts === null) throw new TypeError('opts must be an object');
     let { weight = 1, label = id, meta = {}, groups = [] } = opts;
@@ -569,7 +575,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If id is not a string.
    */
   removeItem(id) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof id !== 'string' || !id.trim()) throw new TypeError('id must be a non-empty string');
     const it = this.#items.get(id);
     if (!it) return false;
@@ -592,7 +598,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If weight is invalid.
    */
   setBaseWeight(id, weight) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof id !== 'string' || !id.trim()) throw new TypeError('id must be a non-empty string');
     if (typeof weight !== 'number' || !Number.isFinite(weight) || weight < 0)
       throw new TypeError('weight must be a non-negative number');
@@ -609,6 +615,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If id is not a string.
    */
   getItem(id) {
+    checkDestroy(this.#isDestroyed);
     if (typeof id !== 'string' || !id.trim()) throw new TypeError('id must be a non-empty string');
     return this.#items.get(id) ?? null;
   }
@@ -618,6 +625,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {ItemData[]} Array of cloned item objects.
    */
   listItems() {
+    checkDestroy(this.#isDestroyed);
     return Array.from(this.#items.values()).map((i) => ({ ...i }));
   }
 
@@ -625,7 +633,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * Clear all items from the system.
    */
   clearList() {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     this.#items.clear();
     this.clearFreqs();
     this.clearPities();
@@ -642,6 +650,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `fn` is not a function.
    */
   hasGlobalModifier(fn) {
+    checkDestroy(this.#isDestroyed);
     if (typeof fn !== 'function') throw new TypeError('fn must be a function');
     return this.#globalModifiers.includes(fn);
   }
@@ -653,7 +662,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `fn` is not a function.
    */
   addGlobalModifier(fn) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof fn !== 'function') throw new TypeError('fn must be a function');
     this.#globalModifiers.push(fn);
   }
@@ -664,7 +673,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `fn` is not a function.
    */
   removeGlobalModifier(fn) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof fn !== 'function') throw new TypeError('fn must be a function');
     this.#globalModifiers = this.#globalModifiers.filter((x) => x !== fn);
   }
@@ -676,6 +685,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `fn` is not a function.
    */
   hasTemporaryModifier(fn) {
+    checkDestroy(this.#isDestroyed);
     if (typeof fn !== 'function') throw new TypeError('fn must be a function');
     return this.#temporaryModifiers.some((mod) => mod.fn === fn);
   }
@@ -689,7 +699,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `uses` is not a number.
    */
   addTemporaryModifier(fn, uses = 1) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof fn !== 'function') throw new TypeError('fn must be a function');
     if (typeof uses !== 'number' || Number.isNaN(uses))
       throw new TypeError('uses must be a number');
@@ -704,7 +714,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `fn` is not a function.
    */
   removeTemporaryModifier(fn) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof fn !== 'function') throw new TypeError('fn must be a function');
     const originalLength = this.#temporaryModifiers.length;
     this.#temporaryModifiers = this.#temporaryModifiers.filter((mod) => mod.fn !== fn);
@@ -718,6 +728,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `ruleFn` is not a function.
    */
   hasConditionalRule(ruleFn) {
+    checkDestroy(this.#isDestroyed);
     if (typeof ruleFn !== 'function') throw new TypeError('ruleFn must be a function');
     return this.#conditionalRules.includes(ruleFn);
   }
@@ -730,7 +741,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `ruleFn` is not a function.
    */
   addConditionalRule(ruleFn) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof ruleFn !== 'function') throw new TypeError('ruleFn must be a function');
     this.#conditionalRules.push(ruleFn);
   }
@@ -743,7 +754,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `ruleFn` is not a function.
    */
   removeConditionalRule(ruleFn) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof ruleFn !== 'function') throw new TypeError('ruleFn must be a function');
     const originalLength = this.#conditionalRules.length;
     this.#conditionalRules = this.#conditionalRules.filter((fn) => fn !== ruleFn);
@@ -761,6 +772,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `itemId` is not a string.
    */
   hasPity(itemId) {
+    checkDestroy(this.#isDestroyed);
     if (typeof itemId !== 'string') throw new TypeError('itemId must be a string');
     return this.#pitySystems.has(itemId);
   }
@@ -777,7 +789,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If parameters are invalid.
    */
   configurePity(itemId, cfg) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (!this.#items.has(itemId)) throw new Error('Item not found');
     if (typeof cfg !== 'object' || cfg === null) throw new TypeError('cfg must be an object');
     const { threshold, increment, cap = Infinity } = cfg;
@@ -801,7 +813,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If itemId is not a string.
    */
   resetPity(itemId) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof itemId !== 'string' || !itemId.trim())
       throw new TypeError('itemId must be a non-empty string');
     const p = this.#pitySystems.get(itemId);
@@ -815,7 +827,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * Remove all pity configurations.
    */
   clearPities() {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     this.#pitySystems.clear();
   }
 
@@ -830,6 +842,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `itemId` is not a string.
    */
   hasExclusion(itemId) {
+    checkDestroy(this.#isDestroyed);
     if (typeof itemId !== 'string') throw new TypeError('itemId must be a string');
     return this.#exclusions.has(itemId);
   }
@@ -840,7 +853,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `itemId` is not a string.
    */
   excludeItem(itemId) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof itemId !== 'string') throw new TypeError('itemId must be a string');
     this.#exclusions.add(itemId);
   }
@@ -851,7 +864,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `itemId` is not a string.
    */
   includeItem(itemId) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof itemId !== 'string') throw new TypeError('itemId must be a string');
     this.#exclusions.delete(itemId);
   }
@@ -864,7 +877,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @private
    */
   _ensureGroup(name) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof name !== 'string') throw new TypeError('name must be a string');
     let group = this.#groups.get(name);
     if (!group) {
@@ -882,6 +895,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If parameters are not strings.
    */
   hasInGroup(itemId, groupName) {
+    checkDestroy(this.#isDestroyed);
     if (typeof itemId !== 'string' || typeof groupName !== 'string')
       throw new TypeError('itemId and groupName must be strings');
     const group = this.#groups.get(groupName);
@@ -896,7 +910,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If parameters are not strings.
    */
   addToGroup(itemId, groupName) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof itemId !== 'string' || typeof groupName !== 'string')
       throw new TypeError('itemId and groupName must be strings');
     const it = this.#items.get(itemId);
@@ -912,7 +926,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If parameters are not strings.
    */
   removeFromGroup(itemId, groupName) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof itemId !== 'string' || typeof groupName !== 'string')
       throw new TypeError('itemId and groupName must be strings');
     const g = this.#groups.get(groupName);
@@ -930,7 +944,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * Effectively resets the internal frequency map to an empty state.
    */
   clearFreqs() {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     this.#freq.clear();
   }
 
@@ -942,7 +956,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `itemId` is not a string.
    */
   resetFreq(itemId) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof itemId !== 'string') throw new TypeError('itemId must be a string');
     this.#freq.delete(itemId);
   }
@@ -957,7 +971,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `context` is provided but is not an object.
    */
   computeEffectiveWeights(context = {}) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof context !== 'object' || context === null)
       throw new TypeError(
         `computeEffectiveWeights: parameter 'context' must be a non-null object, got ${typeof context}`,
@@ -1048,7 +1062,6 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `weights` is not a Map.
    */
   _weightsToDistribution(weights) {
-    this._checkDestroyed();
     if (!(weights instanceof Map))
       throw new TypeError(
         `_weightsToDistribution: parameter 'weights' must be a Map, got ${typeof weights}`,
@@ -1102,7 +1115,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `opts` is not an object.
    */
   drawOne(opts = {}) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof opts !== 'object' || opts === null)
       throw new TypeError(
         `drawOne: parameter 'opts' must be a non-null object, got ${typeof opts}`,
@@ -1164,7 +1177,6 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @private
    */
   _consumeTemporaryModifiers() {
-    this._checkDestroyed();
     for (let i = this.#temporaryModifiers.length - 1; i >= 0; --i) {
       const t = this.#temporaryModifiers[i];
       t.uses -= 1;
@@ -1186,7 +1198,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `opts` is not an object.
    */
   drawMany(count = 1, opts = {}) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (!Number.isInteger(count) || count <= 0)
       throw new TypeError(`drawMany: parameter 'count' must be a positive integer, got ${count}`);
     if (typeof opts !== 'object' || opts === null)
@@ -1269,7 +1281,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {ExportedJson} Exported configuration object.
    */
   exportToJson() {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     const data = {
       items: Array.from(this.#items.values()).map((it) => ({
         id: it.id,
@@ -1296,7 +1308,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `data.seed` is not a number, null, or undefined.
    */
   loadFromJson(data) {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     if (typeof data !== 'object' || data === null)
       throw new TypeError('data must be a non-null object');
     if (!Array.isArray(data.items) || !Array.isArray(data.pity) || !Array.isArray(data.exclusions))
@@ -1350,7 +1362,7 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @returns {TinyAdvancedRaffle} A new cloned instance, fully independent from the original.
    */
   clone() {
-    this._checkDestroyed();
+    checkDestroy(this.#isDestroyed);
     const cloneInstance = new TinyAdvancedRaffle();
 
     // Primitive values
@@ -1412,7 +1424,6 @@ class TinyAdvancedRaffle extends EventEmitter {
    * @throws {TypeError} If `seed` is not a finite number.
    */
   _makeSeededRng(seed) {
-    this._checkDestroyed();
     if (typeof seed !== 'number' || !Number.isFinite(seed))
       throw new TypeError('seed must be a finite number');
     // mulberry32
@@ -1432,7 +1443,6 @@ class TinyAdvancedRaffle extends EventEmitter {
    */
   destroy() {
     if (this.#isDestroyed) return;
-    this.#isDestroyed = true;
 
     // Clear all Maps and Sets
     this.#pitySystems.clear();
@@ -1448,6 +1458,8 @@ class TinyAdvancedRaffle extends EventEmitter {
 
     // Nullify core references
     this.#seed = null;
+
+    this.#isDestroyed = true;
   }
 }
 
