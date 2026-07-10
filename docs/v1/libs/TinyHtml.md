@@ -782,7 +782,7 @@ It is configured to observe the **document root element** (`document.documentEle
   * 🎨 **Style Detector (`tinyStyleEvent`)**
     Detects changes to inline styles (`style` attribute).
 
-    * Compares old vs new styles using `diffStrings`.
+    * Compares old vs new styles using `diffObjList`.
     * Dispatches:
 
       ```js

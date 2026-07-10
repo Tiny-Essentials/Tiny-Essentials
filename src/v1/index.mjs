@@ -42,6 +42,7 @@ import {
 import {
   addAiMarkerShortcut,
   diffStrings,
+  diffObjList,
   safeTextTrim,
   toTitleCase,
   toTitleCaseLowerFirst,
@@ -221,6 +222,7 @@ export {
   trapezoid,
   diffArrayList,
   diffStrings,
+  diffObjList,
   breakdownDuration,
   calculateMarketcap,
   compareMarketcap,

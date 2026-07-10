@@ -202,14 +202,14 @@ export function safeTextTrim(text, limit, safeCutZone = 0.6) {
  */
 
 /**
- * Diff two string objects.
+ * Diff two objects.
  * @template {Record<string, any>} CompareValue1
  * @template {Record<string, any>} CompareValue2
  * @param {CompareValue1} oldStrings - The original/old object for comparison.
  * @param {CompareValue2} newStrings - The new object for comparison.
  * @returns {DiffStringsData<CompareValue1 & CompareValue2>} An object containing what was added, removed, and modified.
  */
-export function diffStrings(oldStrings, newStrings) {
+export function diffObjList(oldStrings, newStrings) {
   if (typeof oldStrings !== 'object' || oldStrings === null || Array.isArray(oldStrings)) {
     throw new TypeError(
       `Expected an object for 'oldStrings', but received ${oldStrings === null ? 'null' : typeof oldStrings}`,
@@ -228,7 +228,7 @@ export function diffStrings(oldStrings, newStrings) {
   for (const prop in oldStrings) {
     if (!(prop in newStrings)) {
       changes.removed[prop] = oldStrings[prop];
-    // @ts-ignore
+      // @ts-ignore
     } else if (oldStrings[prop] !== newStrings[prop]) {
       changes.modified[prop] = { old: oldStrings[prop], new: newStrings[prop] };
     }
@@ -243,3 +243,14 @@ export function diffStrings(oldStrings, newStrings) {
 
   return changes;
 }
+
+/**
+ * Diff two objects.
+ * @template {Record<string, any>} CompareValue1
+ * @template {Record<string, any>} CompareValue2
+ * @param {CompareValue1} oldStrings - The original/old object for comparison.
+ * @param {CompareValue2} newStrings - The new object for comparison.
+ * @returns {DiffStringsData<CompareValue1 & CompareValue2>} An object containing what was added, removed, and modified.
+ * @deprecated Function rename! Use {@link diffObjList} instead.
+ */
+export const diffStrings = diffObjList;

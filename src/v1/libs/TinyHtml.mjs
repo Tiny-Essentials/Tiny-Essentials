@@ -1,5 +1,5 @@
 import { diffArrayList } from '../basics/array.mjs';
-import { diffStrings } from '../basics/text.mjs';
+import { diffObjList } from '../basics/text.mjs';
 import * as TinyCollision from '../basics/collision.mjs';
 import TinyElementObserver from './TinyElementObserver.mjs';
 
@@ -499,7 +499,7 @@ class TinyHtml {
                 const oldStyles = TinyHtml.parseStyle(oldVal);
                 const newStyles = TinyHtml.parseStyle(newVal);
 
-                const changes = diffStrings(oldStyles, newStyles);
+                const changes = diffObjList(oldStyles, newStyles);
 
                 if (
                   Object.keys(changes.added).length ||

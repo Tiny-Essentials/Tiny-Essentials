@@ -162,7 +162,7 @@ console.log(safeTextTrim(longText, 30));
 
 ---
 
-## 🔎 `diffStrings(oldStrings, newStrings)`
+## 🔎 `diffObjList(oldStrings, newStrings)`
 
 Compares two **style objects** and identifies which properties were **added**, **removed**, or **modified**.
 
@@ -177,7 +177,7 @@ Compares two **style objects** and identifies which properties were **added**, *
 **Example:**
 
 ```js
-diffStrings(
+diffObjList(
   { color: 'red', display: 'block' },
   { color: 'blue', visibility: 'hidden' }
 );

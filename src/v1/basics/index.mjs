@@ -39,6 +39,7 @@ import {
 import {
   addAiMarkerShortcut,
   diffStrings,
+  diffObjList,
   safeTextTrim,
   toTitleCase,
   toTitleCaseLowerFirst,
@@ -78,6 +79,7 @@ export {
   parseMediaMetadata,
   extractMediaId3Tags,
   diffStrings,
+  diffObjList,
   diffArrayList,
   breakdownDuration,
   calculateMarketcap,
