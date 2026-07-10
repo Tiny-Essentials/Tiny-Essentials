@@ -34,9 +34,10 @@ export function shuffleArray(items) {
 /**
  * Generates an array with repeated phases according to counts.
  *
- * @param {any[]} phases - Array of phase names, e.g., ['Full', 'Half1', 'Half2', 'New'].
+ * @template {any} BlockValue
+ * @param {BlockValue[]} phases - Array of phase names, e.g., ['Full', 'Half1', 'Half2', 'New'].
  * @param {number[]} counts - Array of integers specifying how many times to repeat each phase, e.g., [4,5,5,4].
- * @returns {any[]} - Flattened array containing phases repeated according to counts, concatenated in order.
+ * @returns {BlockValue[]} - Flattened array containing phases repeated according to counts, concatenated in order.
  */
 export function multiplyArrayBlocks(phases, counts) {
   if (!Array.isArray(phases)) {
