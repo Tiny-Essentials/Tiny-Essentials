@@ -243,27 +243,3 @@ export function diffStrings(oldStrings, newStrings) {
 
   return changes;
 }
-
-/*
-import { useEffect } from "react";
-
-function KeyPressHandler() {
-    useEffect(() => {
-        const handleKeyDown = (event) => {
-            if (event.ctrlKey && event.altKey && event.key.toLowerCase() === "a") {
-                event.preventDefault();
-                document.body.classList.toggle("detect-made-by-ai");
-            }
-        };
-        
-        document.addEventListener("keydown", handleKeyDown);
-        return () => {
-            document.removeEventListener("keydown", handleKeyDown);
-        };
-    }, []);
-
-    return null;
-}
-
-export default KeyPressHandler;
-*/
