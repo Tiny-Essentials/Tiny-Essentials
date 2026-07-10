@@ -84,6 +84,10 @@
       "require": "./dist/v1/basics/html.cjs",
       "import": "./dist/v1/basics/html.mjs"
     },
+    "./basics/deprecated/html": {
+      "require": "./dist/v1/basics/deprecated/html.cjs",
+      "import": "./dist/v1/basics/deprecated/html.mjs"
+    },
     "./basics/objChecker": {
       "require": "./dist/v1/basics/objChecker.cjs",
       "import": "./dist/v1/basics/objChecker.mjs"

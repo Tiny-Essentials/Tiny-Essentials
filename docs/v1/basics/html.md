@@ -140,24 +140,7 @@ const data = { name: 'Yasmin', type: 'dev' };
 saveJsonFile('yasmin.json', data);
 ```
 
-### 🌐 `fetchTemplate(...)`
-
-Loads data from a remote URL using the Fetch API, with support for custom HTTP methods, retries, timeouts, headers, and even external abort controllers.
-
-#### 📥 Parameters
-
-* `url` *(string)*: The full URL to fetch from (must start with `http://`, `https://`, `/`, `./`, or `../`).
-* `options` *(object)* *(optional)*:
-
-  * `signal` *(`AbortSignal` | `null`)*: Custom abort signal.
-  * `method` *(string)*: The HTTP method to use (e.g., `GET`, `POST`, `PUT`, `DELETE`, etc.).
-  * `timeout` *(number)*: Request timeout in milliseconds. Default is `0` (no timeout).
-  * `retries` *(number)*: Number of retry attempts if the request fails. Default is `0`.
-  * `headers` *(object)*: Additional headers to include in the request.
-  * `body` *(object)*: Request body. If the value is a plain object, it will be automatically stringified as JSON.
-  * `onProgress` *((loaded: number, total: number) => void)*: Track the load progress.
-
-#### `trackFetchProgress(response, onProgress)`
+#### `trackFetchProgress(response, onProgress, returnResponse?)`
 
 Intercepts a standard Fetch API Response to track the download progress of its body stream.
 
@@ -171,14 +154,15 @@ Intercepts a standard Fetch API Response to track the download progress of its b
 
 ---
 
-#### `fetchJson(url, options?)`
+#### `fetchJson(url, options?, onProgress?)`
 
 Loads and parses a remote JSON file.
 
 * **Parameters**:
 
   * `url` *(string)*: URL to fetch the JSON from.
-  * `options` *(object)* *(optional)*: Same structure as `fetchTemplate`.
+  * `options` *(object)* *(optional)*: Same structure as `fetch`.
+  * `onProgress` *(callback)* *(optional)*: Same structure as `FetchOnProgressResult`.
 
 * **Returns**:
   `Promise<any[] | Record<string | number | symbol, unknown>>` — The parsed JSON data.
@@ -190,7 +174,7 @@ Loads and parses a remote JSON file.
 
 ---
 
-#### `fetchBlob(url, allowedMimeTypes?, options?)`
+#### `fetchBlob(url, allowedMimeTypes?, options?, onProgress?)`
 
 Loads a remote file as a Blob object.
 
@@ -198,7 +182,8 @@ Loads a remote file as a Blob object.
 
   * `url` *(string)*: URL of the remote file.
   * `allowedMimeTypes` *(string\[])* *(optional)*: List of accepted MIME types.
-  * `options` *(object)* *(optional)*: Same structure as `fetchTemplate`.
+  * `options` *(object)* *(optional)*: Same structure as `fetch`.
+  * `onProgress` *(callback)* *(optional)*: Same structure as `FetchOnProgressResult`.
 
 * **Returns**:
   `Promise<Blob>`
@@ -210,7 +195,7 @@ Loads a remote file as a Blob object.
 
 ---
 
-#### `fetchText(url, allowedMimeTypes?, options?)`
+#### `fetchText(url, allowedMimeTypes?, options?, onProgress?)`
 
 Loads a remote file as **plain text** using the Fetch API.
 
@@ -218,7 +203,8 @@ Loads a remote file as **plain text** using the Fetch API.
 
   * `url` *(string)*: Full URL of the file to fetch.
   * `allowedMimeTypes` *(string\[])* *(optional)*: List of accepted MIME types (e.g., `['text/plain']`).
-  * `options` *(object)* *(optional)*: Same structure as `fetchTemplate`.
+  * `options` *(object)* *(optional)*: Same structure as `fetch`.
+  * `onProgress` *(callback)* *(optional)*: Same structure as `FetchOnProgressResult`.
 
 * **Returns**:
   `Promise<string>` — The content of the file as a text string.
