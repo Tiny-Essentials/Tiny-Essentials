@@ -65,9 +65,18 @@ export function multiplyArrayBlocks(phases, counts) {
 }
 
 /**
+ * @template T
+ * @typedef {Object} DiffArrayListData
+ * @property {T[]} added - Items that only exist in the new array.
+ * @property {T[]} removed - Items that only existed in the old array.
+ */
+
+/**
  * Diff two class lists.
- * @param {any[]} oldItems
- * @param {any[]} newItems
+ * @template T
+ * @param {T[]} oldItems - The original/old array for comparison.
+ * @param {T[]} newItems - The new array for comparison.
+ * @returns {DiffArrayListData<T>} An object containing arrays of added and removed items.
  */
 export function diffArrayList(oldItems, newItems) {
   if (!Array.isArray(oldItems)) {
