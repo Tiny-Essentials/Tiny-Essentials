@@ -187,9 +187,27 @@ export function safeTextTrim(text, limit, safeCutZone = 0.6) {
 }
 
 /**
+ * @template {Record<string, any>} CompareValue
+ * @typedef {Object} DiffStringsModifiedValue
+ * @property {CompareValue[keyof CompareValue]} old - The value before the modification.
+ * @property {CompareValue[keyof CompareValue]} new - The new value after the modification.
+ */
+
+/**
+ * @template {Record<string, any>} CompareValue
+ * @typedef {Object} DiffStringsData
+ * @property {Partial<CompareValue>} added - Properties that only exist in the new object.
+ * @property {Partial<CompareValue>} removed - Properties that only existed in the old object.
+ * @property {Partial<Record<keyof CompareValue, DiffStringsModifiedValue<CompareValue>>>} modified - Properties that changed, containing their old and new values.
+ */
+
+/**
  * Diff two string objects.
- * @param {Record<string,string>} oldStrings
- * @param {Record<string,string>} newStrings
+ * @template {Record<string, any>} CompareValue1
+ * @template {Record<string, any>} CompareValue2
+ * @param {CompareValue1} oldStrings - The original/old object for comparison.
+ * @param {CompareValue2} newStrings - The new object for comparison.
+ * @returns {DiffStringsData<CompareValue1 & CompareValue2>} An object containing what was added, removed, and modified.
  */
 export function diffStrings(oldStrings, newStrings) {
   if (typeof oldStrings !== 'object' || oldStrings === null || Array.isArray(oldStrings)) {
@@ -203,13 +221,14 @@ export function diffStrings(oldStrings, newStrings) {
     );
   }
 
-  /** @type {Record<string,Record<string,string|Record<string,string>>>}} */
+  /** @type {DiffStringsData<CompareValue1 & CompareValue2>} */
   const changes = { added: {}, removed: {}, modified: {} };
 
   // detect removed and modified
   for (const prop in oldStrings) {
     if (!(prop in newStrings)) {
       changes.removed[prop] = oldStrings[prop];
+    // @ts-ignore
     } else if (oldStrings[prop] !== newStrings[prop]) {
       changes.modified[prop] = { old: oldStrings[prop], new: newStrings[prop] };
     }

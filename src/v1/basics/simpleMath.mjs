@@ -132,7 +132,7 @@ export function getAge(timeData = 0, now = null) {
  *
  * @param {number} bytes - The number of bytes to format. Must be a non-negative number.
  * @param {number|null} [decimals=null] - The number of decimal places to include in the result. Defaults to null. If negative, it will be treated as 0. If null, no rounding is applied.
- * @param {string|null} [maxUnit=null] - Optional unit limit. If provided, restricts conversion to this unit at most (e.g., 'MB' prevents conversion to 'GB' or higher). Must be one of: 'Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'.
+ * @param {'Bytes'|'KB'|'MB'|'GB'|'TB'|'PB'|'EB'|'ZB'|'YB'|null} [maxUnit=null] - Optional unit limit. If provided, restricts conversion to this unit at most (e.g., 'MB' prevents conversion to 'GB' or higher).
  * @returns {FormattedByteResult} An object with the converted value and its corresponding unit. Returns nulls if input is invalid.
  *
  * @example
@@ -199,7 +199,11 @@ export function genFibonacciSeq({
   length = 10,
   combiner = (a, b) => a + b,
 } = {}) {
-  if (!Array.isArray(baseValues) || baseValues.length !== 2) {
+  if (
+    !Array.isArray(baseValues) ||
+    baseValues.length !== 2 ||
+    !baseValues.every((value) => typeof value === 'number')
+  ) {
     throw new Error('baseValues must be an array of exactly two numbers.');
   }
   if (typeof length !== 'number' || !Number.isInteger(length)) {
