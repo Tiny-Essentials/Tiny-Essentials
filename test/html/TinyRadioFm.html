@@ -870,6 +870,7 @@
         }
 
         async startEngine() {
+          if (this.isEngineStarted || !this.currentPlayingId) return;
           this.isEngineStarted = true;
           // Play a silent buffer or just unlock audio context
           this.audio
