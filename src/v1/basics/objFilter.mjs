@@ -272,9 +272,9 @@ extendObjType([
   ],
   [
     'array',
-    /** 
+    /**
      * @template {any} Value
-     * @param {*} val @returns {val is Value[]} 
+     * @param {*} val @returns {val is Value[]}
      */
     (val) => Array.isArray(val),
   ],
@@ -303,24 +303,24 @@ extendObjType([
   ],
   [
     'map',
-    /** 
+    /**
      * @template {any} Key
      * @template {any} Value
-     * @param {*} val @returns {val is Map<Key, Value>} 
+     * @param {*} val @returns {val is Map<Key, Value>}
      */
     (val) => val instanceof Map,
   ],
   [
     'set',
-    /** 
+    /**
      * @template {any} Value
-     * @param {*} val @returns {val is Set<Value>} 
+     * @param {*} val @returns {val is Set<Value>}
      */
     (val) => val instanceof Set,
   ],
   [
     'weakmap',
-    /** 
+    /**
      * @template {WeakKey} Key
      * @template {any} Value
      * @param {*} val @returns {val is WeakMap<Key, Value>}
@@ -329,15 +329,15 @@ extendObjType([
   ],
   [
     'weakset',
-    /** 
+    /**
      * @template {WeakKey} Value
-     * @param {*} val @returns {val is WeakSet<Value>} 
+     * @param {*} val @returns {val is WeakSet<Value>}
      */
     (val) => val instanceof WeakSet,
   ],
   [
     'promise',
-    /** 
+    /**
      * @template {any} Value
      * @param {*} val @returns {val is Promise<Value>}
      */
@@ -358,10 +358,10 @@ if (isBrowser) {
 extendObjType([
   [
     'object',
-    /** 
+    /**
      * @template {string | number | symbol} Key
      * @template {any} Value
-     * @param {*} val @returns {val is Record<Key, Value>} 
+     * @param {*} val @returns {val is Record<Key, Value>}
      */
     (val) => isJsonObject(val),
   ],

@@ -391,7 +391,6 @@ class TinyHtml {
    * Enables or disables debug output.
    * @param {boolean} value True to enable debug output; false to disable.
    * @throws {TypeError} Thrown if the provided value is not a boolean.
-   * @returns {void}
    */
   static set elemDebug(value) {
     if (typeof value !== 'boolean') throw new TypeError('Expected a boolean value for elemDebug');
@@ -599,7 +598,7 @@ class TinyHtml {
    *
    * @param {string} url - The URL of the HTML file.
    * @param {RequestInit} [ops] - Optional fetch configuration (e.g., method, headers, cache, etc).
-   * @returns {Promise<TinyHtml<TinyElement|Text>[]>} A promise that resolves with the TinyHtml instances.
+   * Returns the promise that resolves with the TinyHtml instances.
    */
   static async fetchHtmlTinyElems(url, ops) {
     const nodes = await TinyHtml.fetchHtmlNodes(url, ops);
@@ -1652,7 +1651,7 @@ class TinyHtml {
    * of the input form.
    *
    * @param {TinyElement|Text|(TinyElement|Text)[]} elems - A single element or an array of elements (DOM or TinyHtml).
-   * @returns {TinyHtml<TinyElement|Text>[]} An array of TinyHtml instances corresponding to the input elements.
+   * Returns the array of TinyHtml instances corresponding to the input elements.
    */
   static toTinyElm(elems) {
     /** @param {(TinyElement|Text)[]} item */
