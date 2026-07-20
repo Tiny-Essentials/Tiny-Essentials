@@ -92,14 +92,17 @@
  */
 
 /**
+ * Defines the specific execution stages of a successful loading process.
  * @typedef {'INITIALIZING'|'DOWNLOADING'|'METADATA_LOADED'|'EXTRACTING_ID3'|'COMPLETE'} LoadingProgressStage
  */
 
 /**
+ * Defines the specific stages where a loading error might occur.
  * @typedef {'INITIALIZING'|'DOWNLOADING'|'METADATA'|'ID3'|'UNKNOWN'} LoadingErrorStage
  */
 
 /**
+ * A data structure containing details about a media loading error.
  * @typedef {Object} MediaLoadingErrorData
  * @property {Error} error - The original error object.
  * @property {string} url - The URL that failed.
