@@ -109,14 +109,19 @@
 //////////////////////////////////////////////////////////////////
 
 const checkString = (/** @type {string} */ val, /** @type {string} */ name) => {
+  if (typeof name !== 'string') throw new TypeError('Expected "name" to be a string.');
   if (typeof val !== 'string')
     throw new TypeError(`Expected "${name}" to be a string, but received ${typeof val}.`);
 };
+
 const checkFunction = (/** @type {Function} */ val, /** @type {string} */ name) => {
+  if (typeof name !== 'string') throw new TypeError('Expected "name" to be a string.');
   if (typeof val !== 'function')
     throw new TypeError(`Expected "${name}" to be a function, but received ${typeof val}.`);
 };
+
 const checkObject = (/** @type {Object<string, any> | null} */ val, /** @type {string} */ name) => {
+  if (typeof name !== 'string') throw new TypeError('Expected "name" to be a string.');
   if (typeof val !== 'object' || val === null || Array.isArray(val)) {
     throw new TypeError(
       `Expected "${name}" to be a plain object, but received ${val === null ? 'null' : Array.isArray(val) ? 'array' : typeof val}.`,
@@ -299,6 +304,7 @@ const validateMediaContent = (common, isPartial) => {
     /** @type {string[] | IPictureTemplate<string|Uint8Array>[] | undefined} */ v,
     /** @type {(value: any, index: number, array: any[]) => any} */ valueValidator,
   ) => {
+    checkFunction(valueValidator, 'valueValidator');
     if (isUndefinedAllowed(v)) return true;
     if (Array.isArray(v) && v.every(valueValidator)) return true;
     return false;
@@ -344,10 +350,11 @@ const validateMediaContent = (common, isPartial) => {
 
   /**
    * Validate Nested Objects (Disk and Track)
+   * @param {string} name
    * @param {MediaNumber|null} [info]
-   * @param {string} [name]
    */
-  const validateTrackInfo = (info, name) => {
+  const validateTrackInfo = (name, info) => {
+    checkString(name, 'name');
     if (isUndefinedAllowed(info)) return; // Ignores if partial
 
     if (info === undefined || info === null) {
@@ -362,8 +369,8 @@ const validateMediaContent = (common, isPartial) => {
       throw new TypeError(`Invalid metadata: "${name}.of" must be a number or null.`);
   };
 
-  validateTrackInfo(common.disk, 'disk');
-  validateTrackInfo(common.track, 'track');
+  validateTrackInfo('disk', common.disk);
+  validateTrackInfo('track', common.track);
 };
 
 /**
@@ -371,14 +378,20 @@ const validateMediaContent = (common, isPartial) => {
  * This ensures that if a property is present, it matches the expected type.
  * @param {ContentMetadataTemplate<IPictureTemplate<string | Uint8Array<ArrayBufferLike>>>} common
  */
-export const valMediaContentMetadata = (common) => validateMediaContent(common, false);
+export const valMediaContentMetadata = (common) => {
+  checkObject(common, 'common');
+  return validateMediaContent(common, false);
+};
 
 /**
  * Helper to validate types within the media content metadata object.
  * Allows the absence of properties (useful for updates/patch).
  * @param {Partial<ContentMetadataTemplate<IPictureTemplate<string | Uint8Array<ArrayBufferLike>>>>} common
  */
-export const valMediaContentMetadataPartial = (common) => validateMediaContent(common, true);
+export const valMediaContentMetadataPartial = (common) => {
+  checkObject(common, 'common');
+  return validateMediaContent(common, true);
+};
 
 /**
  * Downloads an audio file from a URL and extracts its ID3/metadata tags.
@@ -488,7 +501,8 @@ export const parseMediaMetadata = async (
   source,
   defaultMetadata = {},
   metadata = {},
-  parseFile = (url) => {
+  parseFile = (data) => {
+    if (!(data instanceof Blob)) throw new TypeError('Expected "data" to be a Blob.');
     return new Promise((resolve, reject) => reject(new TypeError('parseFile library not found.')));
   },
   callbacks = {},
@@ -522,6 +536,11 @@ export const parseMediaMetadata = async (
    * @param {ProgressEvent<EventTarget>} [event]
    */
   const notifyProgress = (stage, event) => {
+    checkString(stage, 'stage');
+    if (event !== undefined && !(event instanceof Event)) {
+      throw new TypeError('Expected "event" to be an Event or undefined.');
+    }
+
     if (callbacks.onProgress) {
       callbacks.onProgress({
         event,
@@ -533,6 +552,9 @@ export const parseMediaMetadata = async (
   };
 
   const notifyError = (/** @type {Error} */ error, /** @type {LoadingErrorStage} */ stage) => {
+    if (!(error instanceof Error)) throw new TypeError('Expected "error" to be an Error.');
+    checkString(stage, 'stage'); // Adicionado
+
     if (callbacks.onError) {
       callbacks.onError({
         error,
@@ -627,6 +649,7 @@ export const parseMediaMetadata = async (
      * @returns {string}
      */
     const getFallbackTitleFromUrl = (url) => {
+      checkString(url, 'url');
       try {
         // Remove query params or hashes, get the last segment, and strip extension
         const filename = url.split(/[?#]/)[0].split('/').pop();
