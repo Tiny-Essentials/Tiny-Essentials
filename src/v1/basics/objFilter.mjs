@@ -359,9 +359,8 @@ extendObjType([
   [
     'object',
     /**
-     * @template {string | number | symbol} Key
-     * @template {any} Value
-     * @param {*} val @returns {val is Record<Key, Value>}
+     * @template {Record<string | number | symbol, any>} Value
+     * @param {*} val @returns {val is Value}
      */
     (val) => isJsonObject(val),
   ],
