@@ -57,7 +57,6 @@ class TinyHtmlImage extends TinyHtmlTemplate {
    * @param {number} [config.height] - Height of the image in pixels.
    * @param {string|string[]|Set<string>} [config.tags=[]] - Initial CSS classes to apply.
    * @param {string} [config.mainClass=""] - Main CSS class applied to the element.
-   * @param {string|string[]|boolean} [config.attributionsrc] - Attribution source; may be a string, array of strings, or `true/false`.
    * @param {"anonymous"|"use-credentials"} [config.crossorigin] - Cross-origin policy for loading the image.
    * @param {"sync"|"async"|"auto"} [config.decoding] - Decoding mode for the image.
    * @param {string} [config.elementtiming] - Name used for performance timing attribution.
@@ -77,7 +76,6 @@ class TinyHtmlImage extends TinyHtmlTemplate {
     tags = [],
     mainClass = '',
     // fetchMode = TinyHtmlImage.#defaultFetchMode,
-    attributionsrc,
     crossorigin,
     decoding,
     elementtiming,
@@ -97,7 +95,6 @@ class TinyHtmlImage extends TinyHtmlTemplate {
     if (alt !== undefined) this.alt = alt;
     if (width !== undefined) this.setWidth(width);
     if (height !== undefined) this.setHeight(height);
-    if (attributionsrc !== undefined) this.attributionsrc = attributionsrc;
     if (crossorigin !== undefined) this.crossorigin = crossorigin;
     if (decoding !== undefined) this.decoding = decoding;
     if (elementtiming !== undefined) this.elementtiming = elementtiming;
@@ -136,31 +133,6 @@ class TinyHtmlImage extends TinyHtmlTemplate {
   /** @returns {string|null} */
   get alt() {
     return this.attrString('alt');
-  }
-
-  /** @param {string|string[]|boolean} value */
-  set attributionsrc(value) {
-    if (typeof value === 'boolean') {
-      if (value) this.addProp('attributionsrc');
-      else this.removeProp('attributionsrc');
-      return;
-    }
-    if (typeof value === 'string') {
-      this.setAttr('attributionsrc', value);
-      return;
-    }
-    if (Array.isArray(value)) {
-      this.setAttr('attributionsrc', value.join(','));
-      return;
-    }
-    throw new TypeError(
-      'TinyImage: "attributionsrc" must be a boolean, string, or array of strings.',
-    );
-  }
-
-  /** @returns {string|null} */
-  get attributionsrc() {
-    return this.attrString('attributionsrc');
   }
 
   /** @param {'anonymous'|'use-credentials'} value */

@@ -20,7 +20,7 @@ class TinyHtmlButtonInput extends TinyHtmlInput {
    * @param {string} [config.placeholder] - Placeholder text (non-standard for buttons).
    * @param {string} [config.popovertarget] - The ID of the target popover.
    * @param {"show"|"hide"|"toggle"} [config.popovertargetaction] - The action applied to the popover.
-   * @param {string|number} [config.value="Button"] - The label displayed on the button.
+   * @param {string} [config.value="Button"] - The label displayed on the button.
    * @param {boolean} [config.readonly=false] - Whether the input is read-only.
    * @param {boolean} [config.required=false] - Whether the input is required.
    * @param {string|string[]|Set<string>} [config.tags=[]] - Initial CSS classes.
@@ -45,10 +45,10 @@ class TinyHtmlButtonInput extends TinyHtmlInput {
     if (popovertargetaction !== undefined) this.popovertargetaction = popovertargetaction;
   }
 
-  /** @param {string|number} value */
+  /** @param {string} value */
   set value(value) {
     if (typeof value !== 'string' && typeof value !== 'number')
-      throw new TypeError('TinyHtmlButtonInput: "value" must be a string or number.');
+      throw new TypeError('TinyHtmlButtonInput: "value" must be a string.');
     this.setAttr('value', String(value));
   }
 

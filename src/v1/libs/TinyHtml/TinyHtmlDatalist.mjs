@@ -1,6 +1,10 @@
 import TinyHtmlTemplate from './TinyHtmlTemplate.mjs';
 
 /**
+ * @typedef {{value: string, label?: string}} DatalistOption
+ */
+
+/**
  * TinyHtmlDatalist is a helper class for creating and managing <datalist> elements.
  * A <datalist> provides predefined options for <input> elements via the `list` attribute.
  *
@@ -23,7 +27,7 @@ class TinyHtmlDatalist extends TinyHtmlTemplate {
    * @param {string} [config.id] - The unique identifier for the datalist (to be linked with <input list="...">).
    * @param {string|string[]|Set<string>} [config.tags=[]] - Initial CSS classes.
    * @param {string} [config.mainClass=""] - Main CSS class.
-   * @param {Array<{value: string, label?: string}>} [config.options=[]] - Initial <option> elements.
+   * @param {Array<DatalistOption>} [config.options=[]] - Initial <option> elements.
    */
   constructor({ id, tags = [], mainClass = '', options = [] } = {}) {
     super(document.createElement('datalist'), tags, mainClass);
@@ -32,7 +36,7 @@ class TinyHtmlDatalist extends TinyHtmlTemplate {
     if (options !== undefined) this.options = options;
   }
 
-  /** @param {Array<{value: string, label?: string}>} options */
+  /** @param {Array<DatalistOption>} options */
   set options(options) {
     if (!Array.isArray(options)) {
       throw new TypeError('TinyHtmlDatalist: "options" must be an array.');
@@ -44,13 +48,13 @@ class TinyHtmlDatalist extends TinyHtmlTemplate {
     }
   }
 
-  /** @returns {Array<{value: string, label: string|null}>} */
+  /** @returns {Array<DatalistOption>} */
   get options() {
     return Array.from(this.el.children)
       .filter((child) => child instanceof HTMLOptionElement)
       .map((opt) => ({
         value: opt.value,
-        label: opt.label || null,
+        label: opt.label,
       }));
   }
 

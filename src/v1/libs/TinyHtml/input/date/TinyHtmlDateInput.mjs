@@ -1,6 +1,22 @@
 import TinyHtmlInput from '../../TinyHtmlInput.mjs';
 
 /**
+ * Validator to ensure the correct HTML5 date format (YYYY-MM-DD) and whether it is a real date.
+ * @param {string} str
+ * @returns {boolean}
+ */
+const isValidDateString = (str) => {
+  if (typeof str !== 'string') return false;
+  if (str.length < 1) return true;
+  const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+  if (!dateRegex.test(str)) return false;
+
+  // Checks if the date is real in the calendar (e.g. blocks 2025-02-30)
+  const date = new Date(str);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === str;
+};
+
+/**
  * TinyHtmlDateInput is a helper class for managing `<input type="date">` elements.
  * It provides validation and safe access to standard attributes such as `value`, `min`, `max`, `step`,
  * as well as common attributes like `name`, `placeholder`, `readonly`, `required`, etc.
@@ -21,7 +37,7 @@ class TinyHtmlDateInput extends TinyHtmlInput {
    * @param {string} [config.value] - Initial date value in `YYYY-MM-DD` format.
    * @param {string} [config.min] - Minimum allowed date (in `YYYY-MM-DD` format).
    * @param {string} [config.max] - Maximum allowed date (in `YYYY-MM-DD` format).
-   * @param {number|string} [config.step] - Step value in days (number) or "any".
+   * @param {number|'any'} [config.step] - Step value in days (number) or "any".
    * @param {string} [config.name] - The name of the input.
    * @param {string} [config.placeholder] - Placeholder text.
    * @param {string} [config.autocomplete] - Autocomplete hint (e.g., "on", "off", "bday").
@@ -59,21 +75,12 @@ class TinyHtmlDateInput extends TinyHtmlInput {
     this.required = required;
   }
 
-  /** @param {string|Date} value */
+  /** @param {string} value */
   set value(value) {
-    if (typeof value !== 'string' && !(value instanceof Date))
+    if (!isValidDateString(value))
       throw new TypeError(
-        'TinyHtmlDateInput: "value" must be a string in YYYY-MM-DD format or date.',
+        'TinyHtmlDateInput: "value" must be a valid real date string in YYYY-MM-DD format.',
       );
-    if (value instanceof Date) {
-      const year = value.getFullYear();
-      const month = String(value.getMonth() + 1).padStart(2, '0');
-      const day = String(value.getDate()).padStart(2, '0');
-
-      const formatted = `${year}-${month}-${day}`;
-      this.setVal(formatted);
-      return;
-    }
     this.setVal(value);
   }
 
@@ -84,8 +91,10 @@ class TinyHtmlDateInput extends TinyHtmlInput {
 
   /** @param {string} min */
   set min(min) {
-    if (typeof min !== 'string')
-      throw new TypeError('TinyHtmlDateInput: "min" must be a string in YYYY-MM-DD format.');
+    if (!isValidDateString(min))
+      throw new TypeError(
+        'TinyHtmlDateInput: "min" must be a valid real date string in YYYY-MM-DD format.',
+      );
     this.setAttr('min', min);
   }
 
@@ -96,8 +105,10 @@ class TinyHtmlDateInput extends TinyHtmlInput {
 
   /** @param {string} max */
   set max(max) {
-    if (typeof max !== 'string')
-      throw new TypeError('TinyHtmlDateInput: "max" must be a string in YYYY-MM-DD format.');
+    if (!isValidDateString(max))
+      throw new TypeError(
+        'TinyHtmlDateInput: "max" must be a valid real date string in YYYY-MM-DD format.',
+      );
     this.setAttr('max', max);
   }
 
@@ -106,16 +117,18 @@ class TinyHtmlDateInput extends TinyHtmlInput {
     return this.attrString('max');
   }
 
-  /** @param {number|string} step */
+  /** @param {number|'any'} step */
   set step(step) {
     if (!(typeof step === 'number' && step > 0) && step !== 'any')
       throw new TypeError('TinyHtmlDateInput: "step" must be a positive number or "any".');
     this.setAttr('step', step);
   }
 
-  /** @returns {string|null} */
+  /** @returns {number|'any'|null} */
   get step() {
-    return this.attrString('step');
+    const value = this.attrString('step');
+    if (value === null || value === 'any') return value;
+    return parseFloat(value);
   }
 
   /** @param {string} name */

@@ -17,8 +17,8 @@ class TinyHtmlColorInput extends TinyHtmlInput {
   /**
    * Creates a new TinyHtmlColorInput instance.
    * @param {Object} config - Configuration object.
-   * @param {string|number} [config.value="#000000"] - Initial color value.
-   * @param {string|number} [config.alpha] - Alpha (transparency) value.
+   * @param {string} [config.value="#000000"] - Initial color value.
+   * @param {number} [config.alpha] - Alpha (transparency) value.
    * @param {string} [config.placeholder] - Placeholder text.
    * @param {string} [config.name] - Name of the input.
    * @param {string} [config.autocomplete] - Autocomplete hint (e.g., "on", "off", "email").
@@ -55,10 +55,10 @@ class TinyHtmlColorInput extends TinyHtmlInput {
     this.required = required;
   }
 
-  /** @param {string|number} value */
+  /** @param {string} value */
   set value(value) {
     if (typeof value !== 'string' && typeof value !== 'number')
-      throw new TypeError('TinyHtmlColorInput: "value" must be a string or number.');
+      throw new TypeError('TinyHtmlColorInput: "value" must be a string.');
     this.setAttr('value', String(value));
   }
 
@@ -67,16 +67,17 @@ class TinyHtmlColorInput extends TinyHtmlInput {
     return this.attrString('value');
   }
 
-  /** @param {string|number} alpha */
+  /** @param {number} alpha */
   set alpha(alpha) {
     if (typeof alpha !== 'string' && typeof alpha !== 'number')
-      throw new TypeError('TinyHtmlColorInput: "alpha" must be a string or number.');
+      throw new TypeError('TinyHtmlColorInput: "alpha" must be a number.');
     this.setAttr('alpha', String(alpha));
   }
 
-  /** @returns {string|null} */
+  /** @returns {number|null} */
   get alpha() {
-    return this.attrString('alpha');
+    const value = this.attrString('alpha');
+    return typeof value === 'string' ? parseFloat(value) : value;
   }
 
   /** @param {string} list */

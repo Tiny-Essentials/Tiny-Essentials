@@ -17,7 +17,7 @@ class TinyHtmlResetInput extends TinyHtmlInput {
   /**
    * Creates a new TinyHtmlResetInput instance.
    * @param {Object} config - Configuration object.
-   * @param {string|number} [config.value] - The initial value of the reset button.
+   * @param {string} [config.value] - The initial value of the reset button.
    * @param {string} [config.name] - The name of the control.
    * @param {string} [config.placeholder] - Placeholder text (non-standard but supported).
    * @param {boolean} [config.readonly=false] - Whether the input is read-only.
@@ -44,7 +44,7 @@ class TinyHtmlResetInput extends TinyHtmlInput {
   /** @param {string|number} value */
   set value(value) {
     if (typeof value !== 'string' && typeof value !== 'number')
-      throw new TypeError('TinyHtmlResetInput: "value" must be a string or number.');
+      throw new TypeError('TinyHtmlResetInput: "value" must be a string.');
     this.setAttr('value', value);
   }
 

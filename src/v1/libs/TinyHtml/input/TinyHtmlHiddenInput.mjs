@@ -18,7 +18,7 @@ class TinyHtmlHiddenInput extends TinyHtmlInput {
   /**
    * Creates a new TinyHtmlHiddenInput instance.
    * @param {Object} config - Configuration object.
-   * @param {string|number} [config.value] - Initial value of the input.
+   * @param {string} [config.value] - Initial value of the input.
    * @param {string} [config.name] - The name of the control.
    * @param {string} [config.autocomplete] - Autocomplete hint (e.g., "on", "off", "email").
    * @param {string} [config.dirname] - Directionality field name (for text-based inputs).
@@ -47,10 +47,10 @@ class TinyHtmlHiddenInput extends TinyHtmlInput {
     this.required = required;
   }
 
-  /** @param {string|number} value */
+  /** @param {string} value */
   set value(value) {
-    if (typeof value !== 'string' && typeof value !== 'number')
-      throw new TypeError('TinyHtmlHiddenInput: "value" must be a string or number.');
+    if (typeof value !== 'string')
+      throw new TypeError('TinyHtmlHiddenInput: "value" must be a string.');
     this.setAttr('value', String(value));
   }
 

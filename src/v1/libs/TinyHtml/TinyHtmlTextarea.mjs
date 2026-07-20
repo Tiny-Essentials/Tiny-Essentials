@@ -25,7 +25,7 @@ class TinyHtmlTextarea extends TinyHtmlTemplate {
    * @param {string} [config.placeholder] - Placeholder text.
    * @param {'none'|'sentences'|'words'|'characters'|'on'|'off'} [config.autocapitalize] - Controls automatic capitalization.
    * @param {string} [config.autocomplete] - Autocomplete behavior ("on", "off", or token list).
-   * @param {'on'|'off'|boolean} [config.autocorrect] - Autocorrect behavior ("on" or "off").
+   * @param {boolean} [config.autocorrect] - Autocorrect behavior ("on" or "off").
    * @param {boolean} [config.autofocus=false] - Whether the textarea should autofocus on load.
    * @param {string} [config.dirname] - Directionality of submitted text.
    * @param {boolean} [config.disabled=false] - Whether the textarea is disabled.
@@ -35,7 +35,7 @@ class TinyHtmlTextarea extends TinyHtmlTemplate {
    * @param {string} [config.name] - The name of the control.
    * @param {boolean} [config.readonly=false] - Whether the textarea is read-only.
    * @param {boolean} [config.required=false] - Whether the textarea is required.
-   * @param {true|false|"true"|"false"|"default"} [config.spellcheck] - Spellcheck behavior.
+   * @param {boolean|"default"} [config.spellcheck] - Spellcheck behavior.
    * @param {"hard"|"soft"|"off"} [config.wrap] - Wrapping behavior.
    * @param {string|string[]|Set<string>} [config.tags=[]] - Initial CSS classes.
    * @param {string} [config.mainClass=''] - Main CSS class.
@@ -175,15 +175,12 @@ class TinyHtmlTextarea extends TinyHtmlTemplate {
     return this.attrString('autocomplete');
   }
 
-  /** @param {'on'|'off'|boolean} autocorrect */
+  /** @param {boolean} autocorrect */
   set autocorrect(autocorrect) {
-    if (typeof autocorrect === 'boolean') {
-      this.setAttr('autocorrect', autocorrect ? 'on' : 'off');
-      return;
-    }
-    if (!['on', 'off'].includes(autocorrect))
-      throw new TypeError('TinyTextarea: "autocorrect" must be "on" or "off".');
-    this.setAttr('autocorrect', autocorrect);
+    if (typeof autocorrect !== 'boolean')
+      throw new TypeError('TinyTextarea: "autocorrect" must be "true" or "false".');
+    this.setAttr('autocorrect', autocorrect ? 'on' : 'off');
+    return;
   }
 
   /** @returns {boolean|null} */
@@ -300,16 +297,18 @@ class TinyHtmlTextarea extends TinyHtmlTemplate {
     return this.hasProp('required');
   }
 
-  /** @param {'true'|'false'|boolean|'default'} spellcheck */
+  /** @param {boolean|'default'} spellcheck */
   set spellcheck(spellcheck) {
-    if (![true, false, 'true', 'false', 'default'].includes(spellcheck))
+    if (![true, false, 'default'].includes(spellcheck))
       throw new TypeError('TinyTextarea: "spellcheck" must be "true", "false" or "default".');
-    this.setAttr('spellcheck', spellcheck);
+    this.setAttr('spellcheck', typeof spellcheck === 'boolean' ? String(spellcheck) : spellcheck);
   }
 
-  /** @returns {string|null} */
+  /** @returns {boolean|'default'|null} */
   get spellcheck() {
-    return this.attrString('spellcheck');
+    const value = this.attrString('spellcheck');
+    if (typeof value === 'boolean' || value === 'default') return value;
+    return null;
   }
 
   /** @param {'hard'|'soft'|'off'} wrap */

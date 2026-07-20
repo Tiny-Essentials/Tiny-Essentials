@@ -17,14 +17,13 @@ class TinyHtmlScript extends TinyHtmlTemplate {
    * @param {string|string[]|Set<string>} [config.tags=[]] - Initial CSS classes.
    * @param {string} [config.mainClass=""] - Main CSS class.
    * @param {string} [config.content=""] - Inline script content (ignored if src is provided).
-   * @param {string|string[]} [config.blocking] - Space-separated list of blocking tokens (currently only "render").
+   * @param {string[]} [config.blocking] - Space-separated list of blocking tokens (currently only "render").
    * @param {"anonymous" | "use-credentials"} [config.crossorigin] - CORS setting ("anonymous" or "use-credentials").
    * @param {"auto"|"high"|"low"} [config.fetchpriority="auto"] - Fetch priority.
    * @param {string} [config.integrity] - Subresource integrity hash (only valid with src).
    * @param {boolean} [config.nomodule=false] - Whether to prevent execution in browsers supporting modules.
    * @param {string} [config.nonce] - Cryptographic nonce for CSP.
    * @param {string} [config.referrerpolicy] - Referrer policy.
-   * @param {boolean|string|string[]} [config.attributionsrc] - Boolean or list of URLs for attribution reporting.
    */
   constructor({
     src,
@@ -41,7 +40,6 @@ class TinyHtmlScript extends TinyHtmlTemplate {
     nomodule = false,
     nonce,
     referrerpolicy,
-    attributionsrc,
   } = {}) {
     super(document.createElement('script'), tags, mainClass);
 
@@ -56,7 +54,6 @@ class TinyHtmlScript extends TinyHtmlTemplate {
     this.nomodule = nomodule;
     if (nonce !== undefined) this.nonce = nonce;
     if (referrerpolicy !== undefined) this.referrerpolicy = referrerpolicy;
-    if (attributionsrc !== undefined) this.attributionsrc = attributionsrc;
 
     if (!src && content) this.content = content;
   }
@@ -105,13 +102,12 @@ class TinyHtmlScript extends TinyHtmlTemplate {
     return this.hasProp('defer');
   }
 
-  /** @param {string|string[]} blocking */
+  /** @param {string[]} blocking */
   set blocking(blocking) {
-    const values = Array.isArray(blocking) ? blocking : String(blocking).trim().split(/\s+/);
-    for (const v of values) {
+    for (const v of blocking) {
       if (v !== 'render') throw new Error(`TinyHtmlScript: invalid blocking token "${v}".`);
     }
-    this.setAttr('blocking', values.join(' '));
+    this.setAttr('blocking', blocking.join(' '));
   }
   /** @returns {string[]|null} */
   get blocking() {
@@ -183,28 +179,6 @@ class TinyHtmlScript extends TinyHtmlTemplate {
   /** @returns {string|null} */
   get referrerpolicy() {
     return this.attrString('referrerpolicy');
-  }
-
-  /** @param {boolean|string|string[]} attributionsrc */
-  set attributionsrc(attributionsrc) {
-    if (attributionsrc === true) {
-      this.addProp('attributionsrc');
-    } else if (typeof attributionsrc === 'string') {
-      this.setAttr('attributionsrc', attributionsrc);
-    } else if (
-      Array.isArray(attributionsrc) &&
-      attributionsrc.every((v) => typeof v === 'string')
-    ) {
-      this.setAttr('attributionsrc', attributionsrc.join(' '));
-    } else {
-      throw new TypeError('TinyHtmlScript: "attributionsrc" must be boolean, string, or string[].');
-    }
-  }
-  /** @returns {boolean|string[]|null} */
-  get attributionsrc() {
-    if (this.hasProp('attributionsrc')) return true;
-    const val = this.attrString('attributionsrc');
-    return val ? val.split(/\s+/) : null;
   }
 
   /** @param {string} code */

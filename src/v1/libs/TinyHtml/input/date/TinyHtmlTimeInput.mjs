@@ -1,6 +1,16 @@
 import TinyHtmlInput from '../../TinyHtmlInput.mjs';
 
 /**
+ * Validator to ensure the correct HTML5 time format (HH:MM or HH:MM:SS or HH:MM:SS.mmm)
+ * @param {string} str
+ * @returns {boolean}
+ */
+const isValidTimeString = (str) => {
+  const timeRegex = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d(\.\d{1,3})?)?$/;
+  return typeof str === 'string' && (str.length < 1 || timeRegex.test(str));
+};
+
+/**
  * TinyHtmlTimeInput is a helper class for managing `<input type="time">` elements.
  * It provides validated getters and setters for all relevant attributes such as
  * value, min, max, step, autocomplete, and more.
@@ -22,7 +32,7 @@ class TinyHtmlTimeInput extends TinyHtmlInput {
    * @param {string} [config.value] - Initial time value in "HH:MM" format.
    * @param {string} [config.min] - Minimum allowed time (e.g., "08:00").
    * @param {string} [config.max] - Maximum allowed time (e.g., "18:00").
-   * @param {number|string} [config.step] - Granularity in seconds (or "any").
+   * @param {number|'any'} [config.step] - Granularity in seconds (or "any").
    * @param {string} [config.name] - The name of the control.
    * @param {string} [config.placeholder] - Placeholder text.
    * @param {string} [config.autocomplete] - Autocomplete hint ("on", "off", or token list).
@@ -62,18 +72,12 @@ class TinyHtmlTimeInput extends TinyHtmlInput {
     this.required = required;
   }
 
-  /** @param {string|Date|number} value */
+  /** @param {string} value */
   set value(value) {
-    if (typeof value !== 'string' && typeof value !== 'number' && !(value instanceof Date))
-      throw new TypeError('TinyHtmlTimeInput: "value" must be a string or date.');
-    if (value instanceof Date) {
-      const hours = String(value.getHours()).padStart(2, '0');
-      const minutes = String(value.getMinutes()).padStart(2, '0');
-
-      const formatted = `${hours}:${minutes}`;
-      this.setVal(formatted);
-      return;
-    }
+    if (!isValidTimeString(value))
+      throw new TypeError(
+        'TinyHtmlTimeInput: "value" must be a valid time string (HH:MM or HH:MM:SS).',
+      );
     this.setVal(value);
   }
 
@@ -84,7 +88,10 @@ class TinyHtmlTimeInput extends TinyHtmlInput {
 
   /** @param {string} min */
   set min(min) {
-    if (typeof min !== 'string') throw new TypeError('TinyHtmlTimeInput: "min" must be a string.');
+    if (!isValidTimeString(min))
+      throw new TypeError(
+        'TinyHtmlTimeInput: "min" must be a valid time string (HH:MM or HH:MM:SS).',
+      );
     this.setAttr('min', min);
   }
 
@@ -95,7 +102,10 @@ class TinyHtmlTimeInput extends TinyHtmlInput {
 
   /** @param {string} max */
   set max(max) {
-    if (typeof max !== 'string') throw new TypeError('TinyHtmlTimeInput: "max" must be a string.');
+    if (!isValidTimeString(max))
+      throw new TypeError(
+        'TinyHtmlTimeInput: "max" must be a valid time string (HH:MM or HH:MM:SS).',
+      );
     this.setAttr('max', max);
   }
 
@@ -104,21 +114,18 @@ class TinyHtmlTimeInput extends TinyHtmlInput {
     return this.attrString('max');
   }
 
-  /** @param {number|string} step */
+  /** @param {number|'any'} step */
   set step(step) {
-    if (typeof step === 'number') {
-      if (!Number.isFinite(step) || step <= 0)
-        throw new TypeError('TinyHtmlTimeInput: "step" must be a positive number or "any".');
-      this.setAttr('step', String(step));
-      return;
-    }
-    if (step !== 'any') throw new TypeError('TinyHtmlTimeInput: "step" must be a number or "any".');
+    if (!(typeof step === 'number' && step > 0) && step !== 'any')
+      throw new TypeError('TinyHtmlTimeInput: "step" must be a positive number or "any".');
     this.setAttr('step', step);
   }
 
-  /** @returns {string|null} */
+  /** @returns {number|'any'|null} */
   get step() {
-    return this.attrString('step');
+    const value = this.attrString('step');
+    if (value === null || value === 'any') return value;
+    return parseFloat(value);
   }
 
   /** @param {string} list */

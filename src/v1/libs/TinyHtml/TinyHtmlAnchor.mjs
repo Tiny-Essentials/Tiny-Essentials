@@ -25,10 +25,9 @@ class TinyHtmlAnchor extends TinyHtmlTemplate {
    * @param {string} [config.target] - Target attribute.
    * @param {string} [config.rel] - Relationship of the linked resource.
    * @param {string} [config.hreflang] - Language of the linked resource.
-   * @param {string|string[]} [config.ping] - URLs to send pings to.
+   * @param {string} [config.ping] - URLs to send pings to.
    * @param {'no-referrer'|'no-referrer-when-downgrade'|'origin'|'origin-when-cross-origin'|'same-origin'|'strict-origin'|'strict-origin-when-cross-origin'|'unsafe-url'} [config.referrerpolicy] - Referrer policy.
    * @param {string} [config.type] - MIME type of the linked resource.
-   * @param {boolean|string|string[]} [config.attributionsrc] - Enables Attribution Reporting.
    * @param {string|boolean} [config.download] - Download filename (or boolean to enable).
    * @param {boolean} [config.allowHtml=false] - Whether to allow HTML inside the link.
    * @param {string|string[]|Set<string>} [config.tags=[]] - Initial CSS classes.
@@ -44,7 +43,6 @@ class TinyHtmlAnchor extends TinyHtmlTemplate {
     ping,
     referrerpolicy,
     type,
-    attributionsrc,
     download,
     allowHtml = false,
     tags = [],
@@ -62,7 +60,6 @@ class TinyHtmlAnchor extends TinyHtmlTemplate {
     if (ping !== undefined) this.ping = ping;
     if (referrerpolicy !== undefined) this.referrerpolicy = referrerpolicy;
     if (type !== undefined) this.type = type;
-    if (attributionsrc !== undefined) this.attributionsrc = attributionsrc;
     if (download !== undefined) this.download = download;
 
     if (typeof allowHtml !== 'boolean')
@@ -114,9 +111,8 @@ class TinyHtmlAnchor extends TinyHtmlTemplate {
     return this.attrString('hreflang');
   }
 
-  /** @param {string|string[]} ping */
+  /** @param {string} ping */
   set ping(ping) {
-    if (Array.isArray(ping)) ping = ping.join(' ');
     if (typeof ping !== 'string')
       throw new TypeError('TinyHtmlAnchor: "ping" must be a string or string[].');
     this.setAttr('ping', ping);
@@ -156,25 +152,6 @@ class TinyHtmlAnchor extends TinyHtmlTemplate {
   /** @returns {string|null} */
   get type() {
     return this.attrString('type');
-  }
-
-  /** @param {boolean|string|string[]} attributionsrc */
-  set attributionsrc(attributionsrc) {
-    if (attributionsrc === true) {
-      this.addProp('attributionsrc');
-    } else if (typeof attributionsrc === 'string') {
-      this.setAttr('attributionsrc', attributionsrc);
-    } else if (Array.isArray(attributionsrc)) {
-      this.setAttr('attributionsrc', attributionsrc.join(' '));
-    } else {
-      throw new TypeError(
-        'TinyHtmlAnchor: "attributionsrc" must be a boolean, string, or string[].',
-      );
-    }
-  }
-  /** @returns {string|null} */
-  get attributionsrc() {
-    return this.attrString('attributionsrc');
   }
 
   /** @param {string|boolean} download */

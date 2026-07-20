@@ -18,7 +18,7 @@ class TinyHtmlSubmitInput extends TinyHtmlInput {
   /**
    * Creates a new TinyHtmlSubmitInput instance.
    * @param {Object} config - Configuration object.
-   * @param {string|number} [config.value] - Initial value (button label).
+   * @param {string} [config.value] - Initial value (button label).
    * @param {string} [config.name] - Name of the input control.
    * @param {string} [config.placeholder] - Placeholder text (not common for submit inputs).
    * @param {'application/x-www-form-urlencoded'|'multipart/form-data'|'text/plain'} [config.formenctype] - Form encoding type.
@@ -56,7 +56,7 @@ class TinyHtmlSubmitInput extends TinyHtmlInput {
     if (formtarget !== undefined) this.formtarget = formtarget;
   }
 
-  /** @param {string|number} value */
+  /** @param {string} value */
   set value(value) {
     if (typeof value !== 'string' && typeof value !== 'number')
       throw new TypeError('TinyHtmlSubmitInput: "value" must be a string or number.');

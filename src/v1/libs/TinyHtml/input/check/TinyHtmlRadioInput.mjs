@@ -22,7 +22,7 @@ class TinyHtmlRadioInput extends TinyHtmlInput {
    * Creates a new TinyHtmlRadioInput instance.
    * @param {Object} config - Configuration object.
    * @param {string} config.name - Radio group name (required).
-   * @param {string|number} [config.value] - Value for this radio option.
+   * @param {string} [config.value] - Value for this radio option.
    * @param {boolean} [config.checked=false] - Whether this radio is selected.
    * @param {boolean} [config.readonly=false] - Whether the input is readonly.
    * @param {boolean} [config.required=false] - Whether the input is required.
@@ -60,7 +60,7 @@ class TinyHtmlRadioInput extends TinyHtmlInput {
     this.required = required;
   }
 
-  /** @param {string|number} value */
+  /** @param {string} value */
   set value(value) {
     if (typeof value !== 'string' && typeof value !== 'number') {
       throw new TypeError('TinyHtmlRadioInput: "value" must be a string or number.');

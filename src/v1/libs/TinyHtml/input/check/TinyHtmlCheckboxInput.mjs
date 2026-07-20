@@ -18,7 +18,7 @@ class TinyHtmlCheckboxInput extends TinyHtmlInput {
    * @param {Object} config - Configuration object.
    * @param {boolean} [config.checked=false] - Whether the checkbox is checked.
    * @param {string} config.name - Input name attribute.
-   * @param {string|number} [config.value] - Input value when checked.
+   * @param {string} [config.value] - Input value when checked.
    * @param {boolean} [config.readonly=false] - Whether the checkbox is readonly.
    * @param {boolean} [config.required=false] - Whether the checkbox is required.
    * @param {string|string[]|Set<string>} [config.tags=[]] - Initial CSS classes.
@@ -57,10 +57,10 @@ class TinyHtmlCheckboxInput extends TinyHtmlInput {
     return this.hasProp('checked');
   }
 
-  /** @param {string|number} value */
+  /** @param {string} value */
   set value(value) {
     if (typeof value !== 'string' && typeof value !== 'number') {
-      throw new TypeError('TinyHtmlCheckboxInput: "value" must be a string or number.');
+      throw new TypeError('TinyHtmlCheckboxInput: "value" must be a string.');
     }
     this.setAttr('value', value);
   }
