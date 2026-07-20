@@ -27,6 +27,20 @@ const isValidTimeString = (str) => {
  */
 class TinyHtmlTimeInput extends TinyHtmlInput {
   /**
+   * Convert a Date to Time String.
+   * @param {Date} value
+   * @returns {string}
+   */
+  static dateToString(value) {
+    if (!(value instanceof Date)) throw new TypeError('TinyHtmlTimeInput: "value" must be a date.');
+
+    const hours = String(value.getHours()).padStart(2, '0');
+    const minutes = String(value.getMinutes()).padStart(2, '0');
+
+    return `${hours}:${minutes}`;
+  }
+
+  /**
    * Creates a new TinyHtmlTimeInput instance.
    * @param {Object} config - Configuration object.
    * @param {string} [config.value] - Initial time value in "HH:MM" format.
