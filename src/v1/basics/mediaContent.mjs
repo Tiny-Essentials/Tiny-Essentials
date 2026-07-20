@@ -1,9 +1,11 @@
 /**
- * @typedef {string|(() => string)} UnknownArtistGetter A type representing either a static string or a function that returns a string, used to resolve an unknown artist's name.
+ * A type representing either a static string or a function that returns a string, used to resolve an unknown artist's name.
+ * @typedef {string|(() => string)} UnknownArtistGetter
  */
 
 /**
- * @typedef {Uint8Array|string} PictureDataType Represents the data type for images, which can be raw binary (Uint8Array) or a string (such as a Blob URL or Data URL).
+ * Represents the data type for images, which can be raw binary (Uint8Array) or a string (such as a Blob URL or Data URL).
+ * @typedef {Uint8Array|string} PictureDataType
  */
 
 /**
