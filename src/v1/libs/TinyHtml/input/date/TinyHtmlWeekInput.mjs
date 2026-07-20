@@ -81,7 +81,7 @@ class TinyHtmlWeekInput extends TinyHtmlInput {
 
   /** @returns {string|null} */
   get value() {
-    return this.attrString('value');
+    return this.valTxt();
   }
 
   /** @param {string} min */

@@ -50,11 +50,12 @@ class TinyHtmlButtonInput extends TinyHtmlInput {
     if (typeof value !== 'string' && typeof value !== 'number')
       throw new TypeError('TinyHtmlButtonInput: "value" must be a string.');
     this.setAttr('value', String(value));
+    this.setVal(String(value));
   }
 
   /** @returns {string|null} */
   get value() {
-    return this.attrString('value');
+    return this.valTxt();
   }
 
   /** @param {string} popovertarget */

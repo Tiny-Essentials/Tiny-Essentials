@@ -63,11 +63,12 @@ class TinyHtmlCheckboxInput extends TinyHtmlInput {
       throw new TypeError('TinyHtmlCheckboxInput: "value" must be a string.');
     }
     this.setAttr('value', value);
+    this.setVal(value);
   }
 
   /** @returns {string|null} */
   get value() {
-    return this.attrString('value');
+    return this.valTxt();
   }
 
   /**

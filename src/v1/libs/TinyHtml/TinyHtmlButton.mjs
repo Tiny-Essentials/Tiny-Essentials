@@ -304,11 +304,12 @@ class TinyHtmlButton extends TinyHtmlTemplate {
 
   /** @returns {string|null} */
   get value() {
-    return this.attr('value');
+    return this.valTxt();
   }
   set value(val) {
     if (typeof val !== 'string') throw new TypeError('TinyHtmlButton.value must be a string.');
     this.setAttr('value', val);
+    this.setVal(val);
   }
 }
 

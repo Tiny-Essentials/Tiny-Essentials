@@ -46,11 +46,12 @@ class TinyHtmlResetInput extends TinyHtmlInput {
     if (typeof value !== 'string' && typeof value !== 'number')
       throw new TypeError('TinyHtmlResetInput: "value" must be a string.');
     this.setAttr('value', value);
+    this.setVal(value);
   }
 
   /** @returns {string|null} */
   get value() {
-    return this.attrString('value');
+    return this.valTxt();
   }
 }
 

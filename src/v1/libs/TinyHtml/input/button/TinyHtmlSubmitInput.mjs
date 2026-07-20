@@ -61,11 +61,12 @@ class TinyHtmlSubmitInput extends TinyHtmlInput {
     if (typeof value !== 'string' && typeof value !== 'number')
       throw new TypeError('TinyHtmlSubmitInput: "value" must be a string or number.');
     this.setAttr('value', value);
+    this.setVal(value);
   }
 
   /** @returns {string|null} */
   get value() {
-    return this.attrString('value');
+    return this.valTxt();
   }
 
   /** @param {string} formaction */

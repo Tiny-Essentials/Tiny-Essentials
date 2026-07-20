@@ -66,11 +66,12 @@ class TinyHtmlRadioInput extends TinyHtmlInput {
       throw new TypeError('TinyHtmlRadioInput: "value" must be a string or number.');
     }
     this.setAttr('value', value);
+    this.setVal(value);
   }
 
   /** @returns {string|null} */
   get value() {
-    return this.attrString('value');
+    return this.valTxt();
   }
 
   /** @param {string} name */

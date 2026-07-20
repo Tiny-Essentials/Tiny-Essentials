@@ -60,11 +60,12 @@ class TinyHtmlColorInput extends TinyHtmlInput {
     if (typeof value !== 'string' && typeof value !== 'number')
       throw new TypeError('TinyHtmlColorInput: "value" must be a string.');
     this.setAttr('value', String(value));
+    this.setVal(String(value));
   }
 
   /** @returns {string|null} */
   get value() {
-    return this.attrString('value');
+    return this.valTxt();
   }
 
   /** @param {number} alpha */
