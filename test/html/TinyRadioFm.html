@@ -167,6 +167,10 @@
         width: 100%;
       }
 
+      textarea {
+        resize: vertical;
+      }
+
       /* PLAYER UI */
       #player-card {
         border: 2px solid var(--accent);
@@ -415,6 +419,17 @@
               <input type="number" id="custom-ts" value="0" />
             </div>
           </div>
+
+          <!-- Custom Metadata Input -->
+          <div class="input-group" style="margin-top: 1rem">
+            <label>Custom Metadata (JSON)</label>
+            <textarea
+              id="custom-metadata"
+              rows="4"
+              placeholder='{ "title": "My Song", "artist": "My Artist" }'
+            ></textarea>
+          </div>
+
           <button class="btn btn-primary" id="btn-add" style="width: 100%; margin-top: 1rem">
             Load & Add
           </button>
@@ -486,9 +501,9 @@
               <input type="number" id="cfg-silence" value="1000" />
             </div>
             <div class="input-group" style="justify-content: flex-end">
-              <label style="margin-bottom: 0.5rem"
-                ><input type="checkbox" id="cfg-voiceAfterMusic" checked /> Voice After Music</label
-              >
+              <label style="margin-bottom: 0.5rem">
+                <input type="checkbox" id="cfg-voiceAfterMusic" checked /> Voice After Music
+              </label>
             </div>
           </div>
 
@@ -697,7 +712,7 @@
           const logs = document.getElementById('system-logs');
           const entry = document.createElement('div');
           entry.className = 'log-entry';
-          entry.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> <div class="log-entry-content"><span class="log-msg">${msg}</span></div>`;
+          entry.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> <div class="log-entry-content"><span class="log-msg">${msg}</span></div\>`;
           logs.prepend(entry);
         }
 
@@ -900,6 +915,18 @@
           const type = document.getElementById('content-type').value;
           const customTs = parseInt(document.getElementById('custom-ts').value);
 
+          // Handle Custom Metadata
+          const metadataRaw = document.getElementById('custom-metadata').value.trim();
+          let metadata = {};
+          if (metadataRaw) {
+            try {
+              metadata = JSON.parse(metadataRaw);
+            } catch (e) {
+              this.log(`Error: Invalid JSON in metadata field.`);
+              return;
+            }
+          }
+
           try {
             this.log(`Processing ${file.name} to Base64...`);
 
@@ -911,7 +938,7 @@
               reader.readAsDataURL(file);
             });
 
-            const content = await TinyRadioFm.parseContent(base64Url, {}, {}, parseBlob, {
+            const content = await TinyRadioFm.parseContent(base64Url, {}, metadata, parseBlob, {
               onProgress: (p) => console.log(`[${p.stage}] ${p.status}`),
               onError: (e) =>
                 console.error(`Failed at ${e.stage} for ${e.url}: ${e.error.message}`),
@@ -1000,8 +1027,8 @@
                 <div class="log-entry-content">
                   <span class="truncate-title">${ev.title}</span>
                   <span style="color:var(--text-secondary)">@ ${new Date(ev.absoluteStart).toLocaleTimeString()}</span>
-                </div>
-              </div>`;
+                </div\>
+              </div\>`;
             });
           } catch (e) {
             console.warn(`Query Warning: ${e.message}`); // Using warn to not float UI logs
@@ -1127,22 +1154,22 @@
 
           this.radio.musicList.forEach(
             (m) =>
-              (mList.innerHTML += `<div class="log-entry"><span class="tag tag-music">M</span> <div class="log-entry-content"><span class="truncate-title">${m.title}</span><small style="color:var(--text-secondary)">ID: ${m.id}</small></div></div>`),
+              (mList.innerHTML += `<div class="log-entry"><span class="tag tag-music">M</span> <div class="log-entry-content"><span class="truncate-title">${m.title}</span><small style="color:var(--text-secondary)">ID: ${m.id}</small></div\></div\>`),
           );
 
           this.radio.voiceList.forEach(
             (v) =>
-              (oList.innerHTML += `<div class="log-entry"><span class="tag tag-voice">V</span> <div class="log-entry-content"><span class="truncate-title">${v.title}</span><small style="color:var(--text-secondary)">ID: ${v.id}</small></div></div>`),
+              (oList.innerHTML += `<div class="log-entry"><span class="tag tag-voice">V</span> <div class="log-entry-content"><span class="truncate-title">${v.title}</span><small style="color:var(--text-secondary)">ID: ${v.id}</small></div\></div\>`),
           );
 
           this.radio.customPositions.forEach(
             (c) =>
-              (oList.innerHTML += `<div class="log-entry"><span class="tag tag-custom">C</span> <div class="log-entry-content"><span class="truncate-title">${c.content.title}</span><small style="color:var(--text-secondary)">ID: ${c.content.id} @ ${c.intendedTimestamp}</small></div></div>`),
+              (oList.innerHTML += `<div class="log-entry"><span class="tag tag-custom">C</span> <div class="log-entry-content"><span class="truncate-title">${c.content.title}</span><small style="color:var(--text-secondary)">ID: ${c.content.id} @ ${c.intendedTimestamp}</small></div\></div\>`),
           );
 
           this.radio.scheduledTasks.forEach(
             (t) =>
-              (oList.innerHTML += `<div class="log-entry"><span class="tag tag-task">T</span> <div class="log-entry-content"><span>Action: ${t.action} [${t.type}]</span><small style="color:var(--text-secondary)">Exec: ${t.timestamp}</small></div></div>`),
+              (oList.innerHTML += `<div class="log-entry"><span class="tag tag-task">T</span> <div class="log-entry-content"><span>Action: ${t.action} [${t.type}]</span><small style="color:var(--text-secondary)">Exec: ${t.timestamp}</small></div\></div\>`),
           );
         }
 
