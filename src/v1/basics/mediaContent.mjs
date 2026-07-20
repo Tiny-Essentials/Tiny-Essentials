@@ -3,8 +3,12 @@
  */
 
 /**
+ * @typedef {Uint8Array|string} PictureDataType
+ */
+
+/**
  * Represents an image attachment template.
- * @template {Uint8Array|string} PictureData
+ * @template {PictureDataType} PictureData
  * @typedef {Object} IPictureTemplate
  * @property {string} format - The MIME type of the image (e.g., 'image/jpeg').
  * @property {PictureData} data - The raw binary data of the image.
@@ -26,7 +30,7 @@
 /**
  * This metadata structure is modeled template.
  *
- * @template {IPictureTemplate<Uint8Array|string>} IPictureContent
+ * @template {IPictureTemplate<PictureDataType>} IPictureContent
  * @typedef {Object} ContentMetadataTemplate
  * @property {string|null} title - The title of the track.
  * @property {string|null} album - The name of the album.
@@ -47,7 +51,8 @@
  * This metadata structure is modeled after the standard output of the
  * `music-metadata@11.13.0` npm package.
  *
- * @typedef {ContentMetadataTemplate<IPicture>} MediaContentMetadata
+ * @template {PictureDataType} PictureData
+ * @typedef {ContentMetadataTemplate<IPictureTemplate<PictureData>>} MediaContentMetadata
  */
 
 /**
@@ -65,7 +70,8 @@
  * The final content object used within the media, combining
  * core playback properties with rich metadata.
  *
- * @typedef {MediaContentBase & MediaContentMetadata} MediaContent
+ * @template {PictureDataType} PictureData
+ * @typedef {MediaContentBase & MediaContentMetadata<PictureData>} MediaContent
  */
 
 //////////////////////////////////////////////////////////////////
@@ -74,7 +80,7 @@
  * A promise that resolves to an object containing the extracted metadata.
  * @callback ParseMediaContentMetadata
  * @param {Blob} data - The raw file blob.
- * @returns {Promise<{ common: Partial<ContentMetadataTemplate<IPictureTemplate<Uint8Array|string>>> }>} A promise resolving to the common metadata properties.
+ * @returns {Promise<{ common: Partial<ContentMetadataTemplate<IPictureTemplate<PictureDataType>>> }>} A promise resolving to the common metadata properties.
  */
 
 /**
@@ -131,7 +137,7 @@ export const getMediaContentBase = () => ({
   weight: 1,
 });
 
-/** @returns {MediaContentMetadata} */
+/** @returns {MediaContentMetadata<PictureDataType>} */
 export const getMediaContentMetadata = () => ({
   title: null,
   album: null,
@@ -192,7 +198,7 @@ export const generateSimpleHash = async (str) => {
 
 /**
  * Helper to convert Uint8Array or Base64 string directly into a high performance Blob URL.
- * @param {Uint8Array|string} data
+ * @param {PictureDataType} data
  * @param {string} format
  * @returns {string} The generated Blob URL or original string if already valid.
  */
@@ -254,7 +260,8 @@ export const blobUrlToBase64 = async (url) => {
 
 /**
  * Safely revokes Blob URLs to prevent memory leaks from createObjectURL.
- * @param {MediaContent} content
+ * @template {PictureDataType} PictureData
+ * @param {MediaContent<PictureData>} content
  */
 export const revokeContentUrls = (content) => {
   checkObject(content, 'content');
@@ -378,7 +385,7 @@ export const valMediaContentMetadataPartial = (common) => validateMediaContent(c
  *
  * @param {string} url - The full URL of the audio file to be downloaded.
  * @param {ParseMediaContentMetadata} parseFile - The function used to parse the file data.
- * @returns {Promise<MediaContentMetadata>} A promise that resolves to an object containing the extracted metadata.
+ * @returns {Promise<MediaContentMetadata<string>>} A promise that resolves to an object containing the extracted metadata.
  * @throws {TypeError} If the provided `url` is not a string or `parseFile` is not a function.
  * @throws {Error} If the network request fails or the parsing process encounters an error.
  */
@@ -438,15 +445,16 @@ export const extractMediaId3Tags = async (url, parseFile) => {
  * A Static Factory Method that prepares a MediaContent object by
  * extracting metadata from an audio source.
  *
+ * @template {PictureDataType} PictureData
  * @param {string | HTMLMediaElement} source - A URL string or an existing Audio object.
- * @param {Partial<MediaContentBase & MediaContentMetadata> & { id?: string; weight?: number }} [defaultMetadata={}] - Optional default metadata that overrides automatic extraction.
- * @param {Partial<MediaContentBase & MediaContentMetadata> & { id?: string; weight?: number }} [metadata={}] - Optional manual metadata that overrides automatic extraction.
+ * @param {Partial<MediaContentBase & MediaContentMetadata<PictureData>> & { id?: string; weight?: number }} [defaultMetadata={}] - Optional default metadata that overrides automatic extraction.
+ * @param {Partial<MediaContentBase & MediaContentMetadata<PictureData>> & { id?: string; weight?: number }} [metadata={}] - Optional manual metadata that overrides automatic extraction.
  * @param {ParseMediaContentMetadata} [parseFile] - Private helper to interface with parseFile.
  * @param {Object} [callbacks={}] - Callbacks for monitoring the loading process.
  * @param {(progress: LoadingMediaProgress) => void} [callbacks.onProgress] - Callback triggered on stage changes.
  * @param {(error: MediaLoadingErrorData) => void} [callbacks.onError] - Callback triggered when a non-fatal or fatal error occurs.
  * @param {UnknownArtistGetter} unknownArtist
- * @returns {Promise<MediaContent>} A promise that resolves to a valid MediaContent object.
+ * @returns {Promise<MediaContent<PictureData>>} A promise that resolves to a valid MediaContent object.
  * @throws {MediaLoadingError} If the preparation process fails at any stage.
  *
  * @example
@@ -601,7 +609,7 @@ export const parseMediaMetadata = async (
     };
 
     // 4. Automatic Metadata Extraction (ID3 Tags)
-    /** @type {Partial<MediaContentMetadata>} */
+    /** @type {Partial<MediaContentMetadata<string>>} */
     let extractedMetadata = {};
     notifyProgress('EXTRACTING_ID3');
     try {
@@ -652,7 +660,7 @@ export const parseMediaMetadata = async (
       });
     }
 
-    return /** @type {MediaContent} */ (finalContent);
+    return /** @type {MediaContent<PictureData>} */ (finalContent);
   } catch (err) {
     // If it's already a MediaLoadingError, re-throw it.
     // Otherwise, wrap it.

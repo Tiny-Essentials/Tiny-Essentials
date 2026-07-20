@@ -10,9 +10,10 @@ import { createCheckDestroyed } from './utils.mjs';
 const checkDestroy = createCheckDestroyed('TinyRadioFm');
 
 /**
+ * @typedef {import('../basics/mediaContent.mjs').PictureDataType} PictureDataType
  * @typedef {import('../basics/mediaContent.mjs').MediaContentBase} MediaContentBase
- * @typedef {import('../basics/mediaContent.mjs').MediaContentMetadata} MediaContentMetadata
- * @typedef {import('../basics/mediaContent.mjs').MediaContent} MediaContent
+ * @typedef {import('../basics/mediaContent.mjs').MediaContentMetadata<PictureDataType>} MediaContentMetadata
+ * @typedef {import('../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
  * @typedef {import('../basics/mediaContent.mjs').IPicture} IPicture
  * @typedef {import('../basics/mediaContent.mjs').MediaNumber} MediaNumber
  * @typedef {import('../basics/mediaContent.mjs').MediaLoadingError} MediaLoadingError
@@ -729,10 +730,18 @@ class TinyRadioFm extends EventEmitter {
         const newItem = structuredClone(item);
         if (newItem.picture && Array.isArray(newItem.picture)) {
           newItem.picture = await Promise.all(
-            newItem.picture.map(async (pic) => ({
-              ...pic,
-              data: await blobUrlToBase64(pic.data),
-            })),
+            newItem.picture.map(async (pic) => {
+              // Only performs the asynchronous conversion if it really is a Blob URL
+              if (typeof pic.data === 'string' && pic.data.startsWith('blob:')) {
+                return {
+                  ...pic,
+                  data: await blobUrlToBase64(pic.data),
+                };
+              }
+
+              // If it is a normal URL, skip the process and keep it as it is
+              return pic;
+            }),
           );
         }
         return newItem;
@@ -1343,10 +1352,21 @@ class TinyRadioFm extends EventEmitter {
       return list.map((item) => {
         const newItem = { ...item };
         if (newItem.picture && Array.isArray(newItem.picture)) {
-          newItem.picture = newItem.picture.map((pic) => ({
-            ...pic,
-            data: convertToBlobUrl(pic.data, pic.format),
-          }));
+          newItem.picture = newItem.picture.map((pic) => {
+            // Check whether the data is compatible with the Blob structure (Base64 or Binary)
+            const isBase64 = typeof pic.data === 'string' && pic.data.startsWith('data:');
+            const isUint8Array = pic.data instanceof Uint8Array;
+
+            if (isBase64 || isUint8Array) {
+              return {
+                ...pic,
+                data: convertToBlobUrl(pic.data, pic.format),
+              };
+            }
+
+            // If it is a default web URL or local file, use the URL directly
+            return pic;
+          });
         }
         return newItem;
       });
