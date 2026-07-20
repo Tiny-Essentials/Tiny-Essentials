@@ -7,7 +7,7 @@
  * @typedef {Object} PluginDefinition
  * @property {string} name - The unique identifier for the plugin.
  * @property {string[]} [dependencies] - Array of plugin names required before applying this one.
- * @property {function(TBase, AppliedPluginClasses): TExtended} apply - Function that receives the base class and returns the extended class.
+ * @property {(Base: TBase, classes: AppliedPluginClasses) => TExtended} apply - Function that receives the base class and returns the extended class.
  */
 
 /**
@@ -162,7 +162,7 @@ class TinyClassManager {
    * Inserts a plugin directly by passing its apply function.
    * It reads `_tinyDepName` and `_tinyDeps` statically from the returned class.
    * @template {NewTinyClass} R
-   * @param {function(T, AppliedPluginClasses): R} applyFn - Function that receives the base class and returns the extended class.
+   * @param {(ClassItem: T, classes: AppliedPluginClasses) => R} applyFn - Function that receives the base class and returns the extended class.
    * @returns {TinyClassManager<R, T | oldT>} A new manager instance holding the extended class chain.
    * @throws {Error} Throws if static properties are missing, instance is consumed, or validation fails.
    */

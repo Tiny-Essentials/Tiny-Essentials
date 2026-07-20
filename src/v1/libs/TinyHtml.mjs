@@ -4135,7 +4135,7 @@ class TinyHtml {
 
   /**
    * CSS expansion shorthand used by genStyleFx to include margin/padding values.
-   * @typedef {['Top', 'Right', 'Bottom', 'Left']}
+   * @type {['Top', 'Right', 'Bottom', 'Left']}
    */
   static #cssExpand = ['Top', 'Right', 'Bottom', 'Left'];
 

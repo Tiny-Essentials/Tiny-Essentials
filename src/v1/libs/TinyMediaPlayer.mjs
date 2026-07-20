@@ -11,9 +11,10 @@ import { createCheckDestroyed } from './utils.mjs';
 const checkDestroy = createCheckDestroyed('TinyMediaPlayer');
 
 /**
- * @typedef {import('../basics/mediaContent.mjs').MediaContent} MediaContent
+ * @typedef {import('../basics/mediaContent.mjs').PictureDataType} PictureDataType
+ * @typedef {import('../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
  * @typedef {import('../basics/mediaContent.mjs').MediaContentBase} MediaContentBase
- * @typedef {import('../basics/mediaContent.mjs').MediaContentMetadata} MediaContentMetadata
+ * @typedef {import('../basics/mediaContent.mjs').MediaContentMetadata<PictureDataType>} MediaContentMetadata
  * @typedef {import('../basics/mediaContent.mjs').ParseMediaContentMetadata} ParseMediaContentMetadata
  * @typedef {import('../basics/mediaContent.mjs').LoadingMediaProgress} LoadingMediaProgress
  * @typedef {import('../basics/mediaContent.mjs').MediaLoadingErrorData} MediaLoadingErrorData
@@ -677,7 +678,7 @@ class TinyMediaPlayer extends EventEmitter {
 
   /**
    * Searches the playlist for tracks matching a string query or a custom evaluation function.
-   * @param {string | function(MediaContent): boolean} query - The search string (checked against title, artist, album) or a callback returning a boolean.
+   * @param {string | ((content: MediaContent) => boolean)} query - The search string (checked against title, artist, album) or a callback returning a boolean.
    * @returns {SearchResult[]} An array containing the matched tracks and their corresponding indices.
    * @throws {TypeError} If the query is neither a string nor a function.
    */

@@ -95,7 +95,7 @@ class TinyIframeEvents extends EventEmitter {
    * Executes the provided callback when the secure MessageChannel connection is fully established.
    * If the connection is already ready, the callback is executed immediately.
    *
-   * @param {function(): void} handler - The callback function to execute.
+   * @param {() => void} handler - The callback function to execute.
    */
   onReady(handler) {
     checkDestroy(this.#isDestroyed);

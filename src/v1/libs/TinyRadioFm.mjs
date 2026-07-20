@@ -604,7 +604,7 @@ class TinyRadioFm extends EventEmitter {
 
     /**
      * Filter function to match items against the provided ID.
-     * @type {function(any): boolean}
+     * @type {(item: any) => boolean}
      */
     const filterFn = (item) => item.id !== id && item.content?.id !== id;
 
@@ -838,7 +838,7 @@ class TinyRadioFm extends EventEmitter {
   /**
    * Mulberry32 Pseudo-Random Number Generator.
    * @param {number} seed - The initialization seed.
-   * @returns {function(): number} PRNG function returning a float between 0 and 1.
+   * @returns {() => number} PRNG function returning a float between 0 and 1.
    * @private
    */
   _prng(seed) {

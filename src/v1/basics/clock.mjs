@@ -79,13 +79,13 @@ export function formatCustomTimer(totalSeconds, level = 'seconds', format = '{ti
 
   /**
    * @type {{
-   * years: number|NaN,
-   * months: number|NaN,
-   * days: number|NaN,
-   * hours: number|NaN,
-   * minutes: number|NaN,
-   * seconds: number|NaN,
-   * total: number|NaN
+   * years: number,
+   * months: number,
+   * days: number,
+   * hours: number,
+   * minutes: number,
+   * seconds: number,
+   * total: number
    * }}
    */
   const parts = {
@@ -243,14 +243,14 @@ export function formatDayTimer(seconds) {
  * @param {number} totalMs - The total duration in milliseconds.
  * @param {'milliseconds'|'seconds'|'minutes'|'hours'|'days'|'months'|'years'} [level='milliseconds'] - The highest level to calculate and display.
  * @returns {{
- * years: number|NaN,
- * months: number|NaN,
- * days: number|NaN,
- * hours: number|NaN,
- * minutes: number|NaN,
- * seconds: number|NaN,
- * milliseconds: number|NaN,
- * total: number|NaN
+ * years: number,
+ * months: number,
+ * days: number,
+ * hours: number,
+ * minutes: number,
+ * seconds: number,
+ * milliseconds: number,
+ * total: number
  * }}
  */
 export function breakdownDuration(totalMs, level = 'milliseconds') {

@@ -16,7 +16,7 @@ const checkDestroy = createCheckDestroyed('TinyToastNotify');
  * @typedef {string | {
  *   message: string, // The main message to display
  *   title?: string,  // Optional title to appear above the message
- *   onClick?: function(MouseEvent, CloseToastFunc): void, // Optional click handler for the notification
+ *   onClick?: (event: MouseEvent, func: CloseToastFunc) => void, // Optional click handler for the notification
  *   html?: boolean,  // Whether the message should be interpreted as raw HTML
  *   avatar?: string  // Optional URL to an avatar image shown on the left
  * }} NotifyData

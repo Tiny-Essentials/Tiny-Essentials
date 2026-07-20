@@ -2747,7 +2747,6 @@ class TinyGamepad {
 
   /**
    * Sets the expected device ID.
-   * @returns {string}
    */
   set expectedId(value) {
     checkDestroy(this.#isDestroyed);
