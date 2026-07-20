@@ -22,6 +22,7 @@ const checkDestroy = createCheckDestroyed('TinyMediaPlayer');
  */
 
 /**
+ * The loop configuration modes.
  * @typedef {'NONE' | 'TRACK' | 'PLAYLIST'} LoopModeType
  */
 

@@ -1,9 +1,9 @@
 /**
- * @typedef {string|(() => string)} UnknownArtistGetter
+ * @typedef {string|(() => string)} UnknownArtistGetter A type representing either a static string or a function that returns a string, used to resolve an unknown artist's name.
  */
 
 /**
- * @typedef {Uint8Array|string} PictureDataType
+ * @typedef {Uint8Array|string} PictureDataType Represents the data type for images, which can be raw binary (Uint8Array) or a string (such as a Blob URL or Data URL).
  */
 
 /**
@@ -84,7 +84,7 @@
  */
 
 /**
- * @typedef {Object} LoadingMediaProgress
+ * @typedef {Object} LoadingMediaProgress Represents the current state of a media loading operation, including its status, execution stage, and the URL being processed.
  * @property {'loading'|'success'} status - The current status of the operation.
  * @property {LoadingProgressStage} stage - The current execution stage.
  * @property {ProgressEvent<EventTarget>} [event] - The current loading event.
@@ -135,7 +135,10 @@ const checkObject = (/** @type {Object<string, any> | null} */ val, /** @type {s
 /** @type {Map<string, number>} */
 export const _blobCounter = new Map();
 
-/** @returns {MediaContentBase} */
+/**
+ * Returns a new object initialized with the default values for the core media content properties.
+ * @returns {MediaContentBase}
+ */
 export const getMediaContentBase = () => ({
   id: '',
   title: '',
@@ -145,7 +148,10 @@ export const getMediaContentBase = () => ({
   weight: 1,
 });
 
-/** @returns {MediaContentMetadata<PictureDataType>} */
+/**
+ * Returns a new object initialized with the default values for the media content metadata properties.
+ * @returns {MediaContentMetadata<PictureDataType>}
+ */
 export const getMediaContentMetadata = () => ({
   title: null,
   album: null,
