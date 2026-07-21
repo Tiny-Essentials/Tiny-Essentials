@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { countObj, isJsonObject } from './objChecker.mjs';
 
 export { countObj, isJsonObject };
