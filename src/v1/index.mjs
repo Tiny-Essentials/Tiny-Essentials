@@ -18,6 +18,8 @@ import {
   cloneObjTypeOrder,
   objType,
   checkObj,
+  objTypeName,
+  isObjType,
 } from './basics/objFilter.mjs';
 import { countObj, isJsonObject } from './basics/objChecker.mjs';
 import {
@@ -298,6 +300,8 @@ export {
   cloneObjTypeOrder,
   countObj,
   checkObj,
+  objTypeName,
+  isObjType,
   objType,
   ruleOfThree,
   getSimplePerc,

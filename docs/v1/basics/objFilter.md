@@ -23,23 +23,6 @@ Whether you’re validating inputs, writing schema validators, or building tools
 
 ## Usage
 
-### 🔍 `objType(obj, [type])`
-
-Get the type of any value, or check it against a known type.
-
-```js
-objType([], 'array'); // true
-objType('hello');     // "string"
-objType(undefined);   // null
-```
-
-Returns:
-- `true` / `false` if a type is provided
-- The detected type name as a string if no type is provided
-- `null` if `undefined` is passed
-
----
-
 ### 🔍 `checkObj(obj)`
 
 Checks the type of a given object and returns the validation result if a known type is detected.
@@ -70,6 +53,37 @@ checkObj(Object.create(null));
 Returns:
 - `{ valid: true, type: "<type>" }` if the type is recognized
 - `{ valid: null, type: null }` if no matching type is found
+
+---
+
+### 🏷️ `objTypeName(val)`
+
+Returns the detected type name of a given value as a string.
+
+```js
+objTypeName([]); // "array"
+objTypeName(null); // "null"
+objTypeName(new Set()); // "set"
+```
+
+Returns:
+- A string representing the type name (e.g., `"array"`, `"date"`, `"map"`).
+- `"unknown"` if no matching type is found.
+
+---
+
+### ✅ `isObjType(obj, type)`
+
+Checks whether a given object matches a specific type. This check is case-insensitive.
+
+```js
+isObjType([], 'array'); // true
+isObjType({}, 'object'); // true
+isObjType('hello', 'string'); // true
+isObjType(123, 'boolean'); // false
+```
+
+*Note: Throws a `TypeError` if the `type` argument is not a string.*
 
 ---
 

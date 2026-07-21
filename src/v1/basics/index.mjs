@@ -15,7 +15,14 @@ import {
   readBase64Blob,
   fetchText,
 } from './html.mjs';
-import { extendObjType, reorderObjTypeOrder, cloneObjTypeOrder, objType } from './objFilter.mjs';
+import {
+  extendObjType,
+  reorderObjTypeOrder,
+  cloneObjTypeOrder,
+  objType,
+  isObjType,
+  objTypeName,
+} from './objFilter.mjs';
 import { countObj, isJsonObject } from './objChecker.mjs';
 import {
   documentIsFullScreen,
@@ -127,6 +134,8 @@ export {
   reorderObjTypeOrder,
   cloneObjTypeOrder,
   countObj,
+  isObjType,
+  objTypeName,
   objType,
   ruleOfThree,
   getSimplePerc,

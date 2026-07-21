@@ -144,9 +144,6 @@ export function cloneObjTypeOrder() {
 /**
  * Returns the detected type name of a given value based on predefined type validators.
  *
- * This function uses `getType` with a predefined `typeValidator` to determine or compare types safely.
- * in the specified `typeValidator.order`. The first matching type is returned.
- *
  * If `val` is `null`, it immediately returns `'null'`.
  * If no match is found, it returns `'unknown'`.
  *
@@ -154,12 +151,11 @@ export function cloneObjTypeOrder() {
  * @returns {string} - The type name of the value (e.g., "array", "date", "map"), or "unknown" if no match is found.
  *
  * @example
- * getType([]); // "array"
- * getType(null); // "null"
- * getType(new Set()); // "set"
- * getType(() => {}); // "unknown"
+ * objTypeName([]); // "array"
+ * objTypeName(null); // "null"
+ * objTypeName(new Set()); // "set"
  */
-const getType = (val) => {
+export const objTypeName = (val) => {
   if (val === null) return 'null';
   // @ts-ignore
   for (const name of typeValidator.order) {
@@ -171,8 +167,21 @@ const getType = (val) => {
 };
 
 /**
+ * Checks the type of a given object.
+ *
+ * @param {*} obj - The object to check.
+ * @param {string} [type] - Checks whether the object matches this type (e.g., "object", "array", "string").
+ * @returns {boolean} - Returns `true` if the type matches.
+ */
+export function isObjType(obj, type) {
+  if (typeof type !== 'string') throw new TypeError("Argument 'type' must be a string.");
+  return objTypeName(obj) === type.toLowerCase();
+}
+
+/**
  * Checks the type of a given object or returns its type as a string.
  *
+ * @deprecated Use {@link isObjType} or {@link objTypeName} instead.
  * @param {*} obj - The object to check or identify.
  * @param {string} [type] - Optional. If provided, checks whether the object matches this type (e.g., "object", "array", "string").
  * @returns {boolean|string|null} - Returns `true` if the type matches, `false` if not,
@@ -190,7 +199,7 @@ export function objType(obj, type) {
     throw new TypeError("Argument 'type' must be a string.");
   }
 
-  const result = getType(obj);
+  const result = objTypeName(obj);
   if (typeof type === 'string') return result === type.toLowerCase();
   return result;
 }
