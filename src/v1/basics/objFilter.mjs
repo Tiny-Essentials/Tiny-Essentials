@@ -241,49 +241,48 @@ export function getCheckObj() {
 extendObjType([
   [
     'undefined',
-    /** @param {*} val @returns {val is undefined} */
+    /** @param {unknown} val @returns {val is undefined} */
     (val) => typeof val === 'undefined',
   ],
   [
     'null',
-    /** @param {*} val @returns {val is null} */
+    /** @param {unknown} val @returns {val is null} */
     (val) => val === null,
   ],
   [
     'boolean',
-    /** @param {*} val @returns {val is boolean} */
+    /** @param {unknown} val @returns {val is boolean} */
     (val) => typeof val === 'boolean',
   ],
   [
     'number',
-    /** @param {*} val @returns {val is number} */
+    /** @param {unknown} val @returns {val is number} */
     (val) => typeof val === 'number' && !Number.isNaN(val),
   ],
   [
     'bigint',
-    /** @param {*} val @returns {val is bigint} */
+    /** @param {unknown} val @returns {val is bigint} */
     (val) => typeof val === 'bigint',
   ],
   [
     'string',
-    /** @param {*} val @returns {val is string} */
+    /** @param {unknown} val @returns {val is string} */
     (val) => typeof val === 'string',
   ],
   [
     'symbol',
-    /** @param {*} val @returns {val is symbol} */
+    /** @param {unknown} val @returns {val is symbol} */
     (val) => typeof val === 'symbol',
   ],
   [
     'function',
-    /** @param {*} val @returns {val is Function} */
+    /** @param {unknown} val @returns {val is Function} */
     (val) => typeof val === 'function',
   ],
   [
     'array',
     /**
-     * @template {any} Value
-     * @param {*} val @returns {val is Value[]}
+     * @param {unknown} val @returns {val is unknown[]}
      */
     (val) => Array.isArray(val),
   ],
@@ -293,7 +292,7 @@ if (isBrowser) {
   extendObjType([
     [
       'file',
-      /** @param {*} val @returns {val is File} */
+      /** @param {unknown} val @returns {val is File} */
       (val) => typeof File !== 'undefined' && val instanceof File,
     ],
   ]);
@@ -302,53 +301,46 @@ if (isBrowser) {
 extendObjType([
   [
     'date',
-    /** @param {*} val @returns {val is Date} */
+    /** @param {unknown} val @returns {val is Date} */
     (val) => val instanceof Date,
   ],
   [
     'regexp',
-    /** @param {*} val @returns {val is RegExp} */
+    /** @param {unknown} val @returns {val is RegExp} */
     (val) => val instanceof RegExp,
   ],
   [
     'map',
     /**
-     * @template {any} Key
-     * @template {any} Value
-     * @param {*} val @returns {val is Map<Key, Value>}
+     * @param {unknown} val @returns {val is Map<unknown, unknown>}
      */
     (val) => val instanceof Map,
   ],
   [
     'set',
     /**
-     * @template {any} Value
-     * @param {*} val @returns {val is Set<Value>}
+     * @param {unknown} val @returns {val is Set<unknown>}
      */
     (val) => val instanceof Set,
   ],
   [
     'weakmap',
     /**
-     * @template {WeakKey} Key
-     * @template {any} Value
-     * @param {*} val @returns {val is WeakMap<Key, Value>}
+     * @param {unknown} val @returns {val is WeakMap<unknown, unknown>}
      */
     (val) => val instanceof WeakMap,
   ],
   [
     'weakset',
     /**
-     * @template {WeakKey} Value
-     * @param {*} val @returns {val is WeakSet<Value>}
+     * @param {unknown} val @returns {val is WeakSet<unknown>}
      */
     (val) => val instanceof WeakSet,
   ],
   [
     'promise',
     /**
-     * @template {any} Value
-     * @param {*} val @returns {val is Promise<Value>}
+     * @param {unknown} val @returns {val is Promise<unknown>}
      */
     (val) => val instanceof Promise,
   ],
@@ -358,7 +350,7 @@ if (isBrowser) {
   extendObjType([
     [
       'htmlelement',
-      /** @param {*} val @returns {val is HTMLElement} */
+      /** @param {unknown} val @returns {val is HTMLElement} */
       (val) => typeof HTMLElement !== 'undefined' && val instanceof HTMLElement,
     ],
   ]);
@@ -368,8 +360,7 @@ extendObjType([
   [
     'object',
     /**
-     * @template {Record<string | number | symbol, any>} Value
-     * @param {*} val @returns {val is Value}
+     * @param {unknown} val @returns {val is Record<string | number | symbol, unknown>}
      */
     (val) => isJsonObject(val),
   ],
