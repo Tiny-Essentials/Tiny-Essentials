@@ -1,3 +1,5 @@
+import { EventEmitter } from 'events';
+
 /**
  * @typedef {import('../../basics/mediaContent.mjs').PictureDataType} PictureDataType
  * @typedef {import('../../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
@@ -8,11 +10,12 @@
  * All specific API wrappers must extend and implement this class.
  * @abstract
  */
-class BaseMediaAdapter {
+class BaseMediaAdapter extends EventEmitter {
   constructor() {
     if (new.target === BaseMediaAdapter) {
       throw new Error('BaseMediaAdapter is an abstract class and cannot be instantiated directly.');
     }
+    super();
   }
 
   /**
