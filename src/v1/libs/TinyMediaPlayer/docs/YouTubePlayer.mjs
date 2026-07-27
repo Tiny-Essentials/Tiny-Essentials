@@ -45,19 +45,40 @@
  * @property {YouTubePlayer} target - The player object that emitted the event.
  */
 
-/** @typedef {(event: YouTubePlayerEventBase) => void} OnReadyEvent */
+/**
+ * Called when the player is ready.
+ * @typedef {(event: YouTubePlayerEventBase) => void} OnReadyEvent
+ */
 
-/** @typedef {(event: YouTubePlayerEventBase & { data: YTPlayerState }) => void} OnStateChangeEvent */
+/**
+ * Called when the state changes.
+ * @typedef {(event: YouTubePlayerEventBase & { data: YTPlayerState }) => void} OnStateChangeEvent
+ */
 
-/** @typedef {(event: YouTubePlayerEventBase & { data: YTPlayerErrors }) => void} OnErrorEvent */
+/**
+ * Called when an error occurs.
+ * @typedef {(event: YouTubePlayerEventBase & { data: YTPlayerErrors }) => void} OnErrorEvent
+ */
 
-/** @typedef {(event: YouTubePlayerEventBase & { data: YTQuality }) => void} OnPlaybackQualityChangeEvent */
+/**
+ *  Called when quality changes.
+ * @typedef {(event: YouTubePlayerEventBase & { data: YTQuality }) => void} OnPlaybackQualityChangeEvent
+ */
 
-/** @typedef {(event: YouTubePlayerEventBase & { data: number }) => void} OnPlaybackRateChangeEvent */
+/**
+ * Called when playback rate changes.
+ * @typedef {(event: YouTubePlayerEventBase & { data: number }) => void} OnPlaybackRateChangeEvent
+ */
 
-/** @typedef {(event: YouTubePlayerEventBase & { data: any }) => void} OnApiChangeEvent */
+/**
+ * Called when the API module changes.
+ * @typedef {(event: YouTubePlayerEventBase & { data: any }) => void} OnApiChangeEvent
+ */
 
-/** @typedef {(event: YouTubePlayerEventBase) => void} OnAutoplayBlockedEvent */
+/**
+ * Called when autoplay is blocked.
+ * @typedef {(event: YouTubePlayerEventBase) => void} OnAutoplayBlockedEvent
+ */
 
 /**
  * YouTube Player Event listeners configuration.
@@ -88,7 +109,7 @@
 /**
  * Options for cueing or loading a playlist.
  * @typedef {Object} YTPlaylistOptions
- * @property {'playlist'|'user_uploads'|'search'} [listType='playlist'] - The type of feed.
+ * @property {'playlist'|'user_uploads'} [listType='playlist'] - The type of feed.
  * @property {string|string[]} list - The ID of the playlist or an array of video IDs.
  * @property {number} [index=0] - The index of the first video to play.
  * @property {number} [startSeconds] - The time at which the first video starts.
@@ -121,7 +142,7 @@ class YouTubePlayer {
 
   /**
    * Plays the loaded/selected video.
-   * 
+   *
    * The final player state after this function executes will be playing (1).
    * @returns {void}
    */
@@ -129,9 +150,9 @@ class YouTubePlayer {
 
   /**
    * Pauses the playing video.
-   * 
-   * The final player state after this function executes will be paused (2) 
-   * unless the player is in the ended (0) state when the function is called, 
+   *
+   * The final player state after this function executes will be paused (2)
+   * unless the player is in the ended (0) state when the function is called,
    * in which case the player state will not change.
    * @returns {void}
    */
@@ -139,10 +160,10 @@ class YouTubePlayer {
 
   /**
    * Stops and cancels the current video playback.
-   * 
-   * Important: Unlike the pauseVideo function, which leaves the player in the 
-   * paused (2) state, the stopVideo function could put the player into any 
-   * not-playing state, including ended (0), paused (2), video cued (5) or 
+   *
+   * Important: Unlike the pauseVideo function, which leaves the player in the
+   * paused (2) state, the stopVideo function could put the player into any
+   * not-playing state, including ended (0), paused (2), video cued (5) or
    * unstarted (-1).
    * @returns {void}
    */
@@ -273,7 +294,7 @@ class YouTubePlayer {
   setShuffle(shufflePlaylist) {}
 
   /**
-   * Returns a number between 0 and 1 that specifies the percentage of the video 
+   * Returns a number between 0 and 1 that specifies the percentage of the video
    * that the player shows as buffered.
    * @returns {number}
    */
@@ -394,7 +415,7 @@ class YouTubePlayer {
   /**
    * Adds an event listener.
    * @param {EventNames} event - The event name.
-   * @param {string} listener - The listener is a string that specifies the function 
+   * @param {string} listener - The listener is a string that specifies the function
    * that will execute when the specified event fires.
    * @returns {void}
    */
@@ -403,7 +424,7 @@ class YouTubePlayer {
   /**
    * Removes an event listener.
    * @param {EventNames} event - The event name.
-   * @param {string} listener - The listener is a string that identifies the function 
+   * @param {string} listener - The listener is a string that identifies the function
    * that will no longer execute when the specified event fires.
    * @returns {void}
    */
