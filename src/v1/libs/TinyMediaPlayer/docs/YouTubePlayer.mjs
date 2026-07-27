@@ -45,19 +45,19 @@
  * @property {YouTubePlayer} target - The player object that emitted the event.
  */
 
-/** @typedef {YouTubePlayerEventBase} OnReadyEvent */
+/** @typedef {(event: YouTubePlayerEventBase) => void} OnReadyEvent */
 
-/** @typedef {YouTubePlayerEventBase & { data: YTPlayerState }} OnStateChangeEvent */
+/** @typedef {(event: YouTubePlayerEventBase & { data: YTPlayerState }) => void} OnStateChangeEvent */
 
-/** @typedef {YouTubePlayerEventBase & { data: YTPlayerErrors }} OnErrorEvent */
+/** @typedef {(event: YouTubePlayerEventBase & { data: YTPlayerErrors }) => void} OnErrorEvent */
 
-/** @typedef {YouTubePlayerEventBase & { data: YTQuality }} OnPlaybackQualityChangeEvent */
+/** @typedef {(event: YouTubePlayerEventBase & { data: YTQuality }) => void} OnPlaybackQualityChangeEvent */
 
-/** @typedef {YouTubePlayerEventBase & { data: number }} OnPlaybackRateChangeEvent */
+/** @typedef {(event: YouTubePlayerEventBase & { data: number }) => void} OnPlaybackRateChangeEvent */
 
-/** @typedef {YouTubePlayerEventBase & { data: any }} OnApiChangeEvent */
+/** @typedef {(event: YouTubePlayerEventBase & { data: any }) => void} OnApiChangeEvent */
 
-/** @typedef {YouTubePlayerEventBase} OnAutoplayBlockedEvent */
+/** @typedef {(event: YouTubePlayerEventBase) => void} OnAutoplayBlockedEvent */
 
 /**
  * YouTube Player Event listeners configuration.
