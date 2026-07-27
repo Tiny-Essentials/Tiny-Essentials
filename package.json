@@ -1,6 +1,6 @@
 {
   "name": "tiny-essentials",
-  "version": "1.28.4",
+  "version": "1.28.5",
   "description": "Collection of small, essential scripts designed to be used across various projects. These simple utilities are crafted for speed, ease of use, and versatility.",
   "bin": {
     "tiny-essentials-fork": "./TinyFork.mjs"
@@ -131,6 +131,14 @@
     "./libs/TinyMediaPlayer": {
       "require": "./dist/v1/libs/TinyMediaPlayer.cjs",
       "import": "./dist/v1/libs/TinyMediaPlayer.mjs"
+    },
+    "./libs/TinyMediaPlayer/Youtube": {
+      "require": "./dist/v1/libs/TinyMediaPlayer/Youtube.cjs",
+      "import": "./dist/v1/libs/TinyMediaPlayer/Youtube.mjs"
+    },
+    "./libs/TinyMediaPlayer/docs/YouTubePlayer": {
+      "require": "./dist/v1/libs/TinyMediaPlayer/docs/YouTubePlayer.cjs",
+      "import": "./dist/v1/libs/TinyMediaPlayer/docs/YouTubePlayer.mjs"
     },
     "./libs/TinyRadioFm": {
       "require": "./dist/v1/libs/TinyRadioFm.cjs",
