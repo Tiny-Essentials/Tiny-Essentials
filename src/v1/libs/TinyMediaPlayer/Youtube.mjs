@@ -23,9 +23,9 @@
  * @typedef {import('./docs/YouTubePlayer.mjs').OnAutoplayBlockedEvent} OnAutoplayBlockedEvent
  */
 
-/** 
- * Represents a function used as an event handler, capable of accepting any number of arguments. 
- * @typedef {(...args: any) => boolean} HandlerFunc
+/**
+ * Represents a function used as an event handler, capable of accepting any number of arguments.
+ * @typedef {(...args: any[]) => boolean} HandlerFunc
  */
 
 import { EventEmitter } from 'events';
@@ -146,7 +146,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
 
   /**
    * Registry to reuse players and master emitters per container.
-   * @type {WeakMap<HTMLElement, {player: YouTubePlayer, masterEmitter: EventEmitter}>}
+   * @type {WeakMap<HTMLElement, {player: YouTubePlayer, masterEmitter: EventEmitter, refCount: number}>}
    */
   static #registry = new WeakMap();
 
@@ -187,6 +187,13 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
 
   /** @type {Array<{eventName: string, handler: HandlerFunc}>} */
   #eventHandlers = [];
+
+  /** @type {boolean} */
+  #destroyed = false;
+
+  get destroyed() {
+    return this.#destroyed;
+  }
 
   /**
    * Initializes the YouTube Media Adapter.
@@ -245,13 +252,6 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   get volume() {
     checkDestroy(this.#destroyed);
     return this.#currentVolume;
-  }
-
-  /** @type {boolean} */
-  #destroyed = false;
-
-  get destroyed() {
-    return this.#destroyed;
   }
 
   /**
@@ -313,6 +313,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     const existing = YoutubeMediaAdapter.#registry.get(this.#container);
 
     if (existing) {
+      existing.refCount++; // Increment reference count for the shared player
       this.#player = existing.player;
       this.#masterEmitter = existing.masterEmitter;
       this.#attachToMaster();
@@ -339,10 +340,11 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
         events: playerEvents,
       });
 
-      // Register this container and its master emitter
+      // Register this container and its master emitter with initial refCount
       YoutubeMediaAdapter.#registry.set(this.#container, {
         player: this.#player,
         masterEmitter: masterEmitter,
+        refCount: 1,
       });
 
       this.#masterEmitter = masterEmitter;
@@ -447,16 +449,29 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    */
   destroy() {
     if (this.#destroyed) return;
+
+    // 1. Detach from the master emitter
     if (this.#masterEmitter && this.#eventHandlers.length > 0) {
       for (const { eventName, handler } of this.#eventHandlers) {
         this.#masterEmitter.off(eventName, handler);
       }
       this.#eventHandlers = [];
     }
+
+    // 2. Handle Registry Cleanup (Reference Counting)
+    const existing = YoutubeMediaAdapter.#registry.get(this.#container);
+    if (existing) {
+      existing.refCount--;
+      // If this was the last instance using this player/container, clean up the registry
+      if (existing.refCount <= 0) {
+        YoutubeMediaAdapter.#registry.delete(this.#container);
+      }
+    }
+
     this.#player = null;
     this.#masterEmitter = null;
-    super.destroy();
     this.#destroyed = true;
+    super.destroy();
   }
 }
 
