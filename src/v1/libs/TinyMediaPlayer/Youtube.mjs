@@ -26,6 +26,7 @@
 import { EventEmitter } from 'events';
 import { BaseMediaAdapter } from './index.mjs';
 import YouTubePlayer from './docs/YouTubePlayer.mjs';
+import { createCheckDestroyed } from '../utils.mjs';
 
 /** @typedef {(...args: any) => boolean} HandlerFunc - Represents a function used as an event handler, capable of accepting any number of arguments. */
 
@@ -62,7 +63,7 @@ const loadYoutubeApi = async () => {
       };
       document.body.appendChild(tag);
 
-    // Check periodically if YT is ready
+      // Check periodically if YT is ready
       const checkInterval = setInterval(() => {
         // @ts-ignore
         if (typeof window !== 'undefined' && window.YT && window.YT.Player) {
@@ -99,6 +100,8 @@ const getYtPlayer = () => {
   const Player = window.YT.Player;
   return Player;
 };
+
+const checkDestroy = createCheckDestroyed('YoutubeMediaAdapter');
 
 /**
  * Implementation of BaseMediaAdapter for the YouTube IFrame Player API.
@@ -220,6 +223,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @throws {Error} If the player has not been initialized.
    */
   get player() {
+    checkDestroy(this.#destroyed);
     if (!this.#player) {
       throw new Error('YouTube player instance not initialized. Ensure a valid video was played.');
     }
@@ -231,6 +235,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @throws {RangeError} If the volume is not between 0.0 and 1.0.
    */
   set volume(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number' || value < 0 || value > 1) {
       throw new RangeError('Volume must be a number between 0.0 and 1.0.');
     }
@@ -244,7 +249,15 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @returns {number} The current volume level from 0.0 to 1.0.
    */
   get volume() {
+    checkDestroy(this.#destroyed);
     return this.#currentVolume;
+  }
+
+  /** @type {boolean} */
+  #destroyed = false;
+
+  get destroyed() {
+    return this.#destroyed;
   }
 
   /**
@@ -253,6 +266,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @returns {boolean} True if the content is a YouTube link/ID, false otherwise.
    */
   canHandle(content) {
+    checkDestroy(this.#destroyed);
     if (!content || !content.data) {
       return false;
     }
@@ -272,6 +286,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @throws {TypeError} If the content data is invalid.
    */
   async play(content) {
+    checkDestroy(this.#destroyed);
     await this.#apiLoadedPromise;
 
     if (!content || !content.data) {
@@ -300,6 +315,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @returns {Promise<void>}
    */
   async #initializePlayer(videoIdOrUrl) {
+    checkDestroy(this.#destroyed);
     const existing = YoutubeMediaAdapter.#registry.get(this.#container);
 
     if (existing) {
@@ -347,6 +363,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * Connects this instance to the master emitter of the shared player.
    */
   #attachToMaster() {
+    checkDestroy(this.#destroyed);
     if (!this.#masterEmitter) return;
 
     for (const eventName of Object.values(YoutubeMediaAdapter.EVENT_MAPPING)) {
@@ -363,6 +380,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @returns {string} The extracted video ID.
    */
   #extractVideoId(url) {
+    checkDestroy(this.#destroyed);
     const regex =
       /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
     const match = url.match(regex);
@@ -374,6 +392,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @returns {Promise<void>}
    */
   async pause() {
+    checkDestroy(this.#destroyed);
     if (this.#player) {
       this.#player.pauseVideo();
     }
@@ -384,6 +403,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @returns {Promise<void>}
    */
   async stop() {
+    checkDestroy(this.#destroyed);
     if (this.#player) {
       this.#player.stopVideo();
     }
@@ -396,6 +416,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @throws {TypeError} If timeMs is not a number.
    */
   async seek(timeMs) {
+    checkDestroy(this.#destroyed);
     if (typeof timeMs !== 'number') {
       throw new TypeError('Time must be a number.');
     }
@@ -409,6 +430,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @returns {number} The current time in milliseconds.
    */
   getCurrentTime() {
+    checkDestroy(this.#destroyed);
     if (this.#player) {
       return this.#player.getCurrentTime() * 1000;
     }
@@ -422,6 +444,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @throws {RangeError} If volume is outside [0.0, 1.0].
    */
   setVolume(volume) {
+    checkDestroy(this.#destroyed);
     this.volume = volume;
   }
 
@@ -429,6 +452,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * Cleans up the instance and disconnects from the shared player.
    */
   destroy() {
+    if (this.#destroyed) return;
     if (this.#masterEmitter && this.#eventHandlers.length > 0) {
       for (const { eventName, handler } of this.#eventHandlers) {
         this.#masterEmitter.off(eventName, handler);
@@ -438,6 +462,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     this.#player = null;
     this.#masterEmitter = null;
     super.destroy();
+    this.#destroyed = true;
   }
 }
 
