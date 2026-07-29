@@ -78,9 +78,10 @@ import {
   valMediaContentMetadata,
   valMediaContentMetadataPartial,
 } from './mediaContent.mjs';
-import { waitForTrue } from './promiseUtils.mjs';
+import { createSingletonTask, waitForTrue } from './promiseUtils.mjs';
 
 export {
+  createSingletonTask,
   waitForTrue,
   multiplyArrayBlocks,
   valMediaContentMetadata,

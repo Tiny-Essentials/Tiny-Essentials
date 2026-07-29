@@ -41,7 +41,7 @@ let apiPromise = null;
  * @returns {Promise<void>}
  */
 const loadYoutubeApi = async () => {
-  // Se já houver uma promessa de carregamento em curso, retorna ela para aguardar a finalização
+  // If there is already a promise making a loading in progress, it returns to wait for completion
   if (apiPromise) return apiPromise;
 
   return (async () => {
