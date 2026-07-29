@@ -839,6 +839,7 @@ class TinyMediaPlayer extends EventEmitter {
     this.#isPlaying = false;
 
     // 3. Clear all registered API adapters
+    this.#adapters.forEach((adapter) => adapter.destroy());
     this.#adapters.clear();
 
     // 4. Remove all event listeners inherited from EventEmitter

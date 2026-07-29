@@ -23,15 +23,104 @@
  * @typedef {import('./docs/YouTubePlayer.mjs').OnAutoplayBlockedEvent} OnAutoplayBlockedEvent
  */
 
+import { EventEmitter } from 'events';
 import { BaseMediaAdapter } from './index.mjs';
 import YouTubePlayer from './docs/YouTubePlayer.mjs';
+
+/** @typedef {(...args: any) => boolean} HandlerFunc - Represents a function used as an event handler, capable of accepting any number of arguments. */
+
+/**
+ * Module scope variable to control loading promise and avoid multiple simultaneous requests
+ * @type {Promise<void>|null}
+ */
+let apiPromise = null;
+
+/**
+ * Private method to ensure the YouTube IFrame API script is loaded.
+ * @returns {Promise<void>}
+ */
+const loadYoutubeApi = async () => {
+  // Se já houver uma promessa de carregamento em curso, retorna ela para aguardar a finalização
+  if (apiPromise) return apiPromise;
+
+  return (async () => {
+    // Use existing API if already loaded
+    // @ts-ignore
+    if (typeof window !== 'undefined' && window.YT && window.YT.Player) {
+      // @ts-ignore
+      YoutubeMediaAdapter.PlayerState = window.YT.PlayerState;
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      tag.async = true;
+      tag.onerror = () => {
+        apiPromise = null; // Reset to allow another attempt
+        reject(new Error('Failed to load YouTube IFrame API.'));
+      };
+      document.body.appendChild(tag);
+
+    // Check periodically if YT is ready
+      const checkInterval = setInterval(() => {
+        // @ts-ignore
+        if (typeof window !== 'undefined' && window.YT && window.YT.Player) {
+          // @ts-ignore
+          YoutubeMediaAdapter.PlayerState = window.YT.PlayerState;
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 100);
+    });
+  })();
+};
+
+/**
+ * Returns a deep clone of the current YouTube player state values.
+ * This ensures the returned object is a copy and does not maintain a reference to the original state.
+ * @returns {Record<string, number>} A copy of the PlayerState object.
+ */
+const getPlayerStateValues = () => {
+  return structuredClone(YoutubeMediaAdapter.PlayerState);
+};
+
+/**
+ * Retrieves the YouTube Player constructor from the global window object.
+ * @returns {typeof YouTubePlayer} The YouTube Player constructor.
+ * @throws {Error} If the YouTube API is not detected in the global scope.
+ */
+const getYtPlayer = () => {
+  // @ts-ignore
+  if (typeof window === 'undefined' || !window.YT || !window.YT.Player)
+    throw new Error('YouTube API not available');
+  /** @type {typeof YouTubePlayer} */
+  // @ts-ignore
+  const Player = window.YT.Player;
+  return Player;
+};
 
 /**
  * Implementation of BaseMediaAdapter for the YouTube IFrame Player API.
  * This adapter manages the lifecycle of a YouTube player embedded in a container.
  * @extends BaseMediaAdapter
  */
-export class YoutubeMediaAdapter extends BaseMediaAdapter {
+class YoutubeMediaAdapter extends BaseMediaAdapter {
+  /**
+   * Mapping YouTube API events for internal adapter events.
+   * @type {Record<string, string>}
+   * @private
+   */
+  static EVENT_MAPPING = {
+    onReady: 'onReady',
+    onPlaybackQualityChange: 'onPlaybackQualityChange',
+    onPlaybackRateChange: 'onPlaybackRateChange',
+    onError: 'onError',
+    onApiChange: 'onApiChange',
+    onAutoplayBlocked: 'onAutoplayBlocked',
+    onStateChange: 'onStateChange',
+  };
+
   /**
    * Represents the current state of the player.
    * @type {Record<string, number>}
@@ -46,10 +135,23 @@ export class YoutubeMediaAdapter extends BaseMediaAdapter {
   };
 
   /**
+   * Safety lock: If true, multiple instances can share the same player/iframe via WeakMap.
+   * If false, only one instance can be bound to a specific container at a time.
+   * @type {boolean}
+   */
+  static allowInstanceSharing = false;
+
+  /**
    * The default HTML element where the YouTube iframe will be injected.
    * @type {HTMLElement|null}
    */
   static #defaultContainer = null;
+
+  /**
+   * Registry to reuse players and master emitters per container.
+   * @type {WeakMap<HTMLElement, {player: YouTubePlayer, masterEmitter: EventEmitter}>}
+   */
+  static #registry = new WeakMap();
 
   /**
    * Gets the globally configured default container for YouTube players.
@@ -83,48 +185,34 @@ export class YoutubeMediaAdapter extends BaseMediaAdapter {
   /** @type {number} */
   #currentVolume = 1.0;
 
+  /** @type {EventEmitter|null} */
+  #masterEmitter = null;
+
+  /** @type {Array<{eventName: string, handler: HandlerFunc}>} */
+  #eventHandlers = [];
+
   /**
    * Initializes the YouTube Media Adapter.
-   * The container is automatically assigned from the static `defaultContainer`.
+   * @throws {Error} If allowInstanceSharing is false and the container is already in use.
    */
   constructor() {
     const container = YoutubeMediaAdapter.#defaultContainer;
     if (!(container instanceof HTMLElement)) {
-      throw new TypeError('The YoutubeMediaAdapter.defaultContainer must be an instance of HTMLElement.');
+      throw new TypeError(
+        'The YoutubeMediaAdapter.defaultContainer must be an instance of HTMLElement.',
+      );
     }
+
+    // Safety Lock Check
+    if (!YoutubeMediaAdapter.allowInstanceSharing && YoutubeMediaAdapter.#registry.has(container)) {
+      throw new Error(
+        'Security Lock: This container is already bound to another YoutubeMediaAdapter instance.',
+      );
+    }
+
     super();
     this.#container = container;
-    this.#apiLoadedPromise = this.#loadYoutubeApi();
-  }
-
-  /**
-   * Private method to ensure the YouTube IFrame API script is loaded.
-   * @returns {Promise<void>}
-   */
-  async #loadYoutubeApi() {
-    // @ts-ignore
-    if (window.YT && window.YT.Player) {
-      return Promise.resolve();
-    }
-
-    return new Promise((resolve, reject) => {
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      tag.async = true;
-      tag.onerror = () => reject(new Error('Failed to load YouTube IFrame API.'));
-      document.body.appendChild(tag);
-
-      // Check periodically if YT is ready
-      const checkInterval = setInterval(() => {
-        // @ts-ignore
-        if (window.YT && window.YT.Player) {
-          // @ts-ignore
-          YoutubeMediaAdapter.PlayerState = window.YT.PlayerState;
-          clearInterval(checkInterval);
-          resolve();
-        }
-      }, 100);
-    });
+    this.#apiLoadedPromise = loadYoutubeApi();
   }
 
   /**
@@ -132,8 +220,9 @@ export class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @throws {Error} If the player has not been initialized.
    */
   get player() {
-    if (!this.#player)
+    if (!this.#player) {
       throw new Error('YouTube player instance not initialized. Ensure a valid video was played.');
+    }
     return this.#player;
   }
 
@@ -195,6 +284,10 @@ export class YoutubeMediaAdapter extends BaseMediaAdapter {
       await this.#initializePlayer(videoSource);
     }
 
+    if (this.#player && typeof this.#player.setVolume === 'function') {
+      this.#player.setVolume(this.#currentVolume * 100);
+    }
+
     return new Promise((resolve) => {
       this.#player?.playVideo();
       resolve();
@@ -202,34 +295,66 @@ export class YoutubeMediaAdapter extends BaseMediaAdapter {
   }
 
   /**
-   * Initializes the YT.Player instance.
+   * Initializes the YT.Player instance or reuses an existing one.
    * @param {string} videoIdOrUrl - The YouTube video ID or URL.
    * @returns {Promise<void>}
    */
   async #initializePlayer(videoIdOrUrl) {
+    const existing = YoutubeMediaAdapter.#registry.get(this.#container);
+
+    if (existing) {
+      this.#player = existing.player;
+      this.#masterEmitter = existing.masterEmitter;
+      this.#attachToMaster();
+      return;
+    }
+
+    // Create new master emitter for this specific container
+    const masterEmitter = new EventEmitter();
+
+    // Map YouTube API events to the Master Emitter
+    /** @type {Record<string, HandlerFunc>} */
+    const playerEvents = {};
+    Object.entries(YoutubeMediaAdapter.EVENT_MAPPING).forEach(([ytEvent, internalEvent]) => {
+      playerEvents[ytEvent] = (...args) => masterEmitter.emit(internalEvent, ...args);
+    });
+
     return new Promise((resolve) => {
-      /** @type {typeof YouTubePlayer} */
-      // @ts-ignore
-      const Player = window.YT.Player;
+      const Player = getYtPlayer();
       this.#player = new Player(this.#container, {
         videoId: this.#extractVideoId(videoIdOrUrl),
         playerVars: {
           playsinline: 1,
         },
-        events: {
-          onReady: (...args) => {
-            this.emit('onReady', ...args);
-            resolve();
-          },
-          onPlaybackQualityChange: (...args) => this.emit('onPlaybackQualityChange', ...args),
-          onPlaybackRateChange: (...args) => this.emit('onPlaybackRateChange', ...args),
-          onError: (...args) => this.emit('onError', ...args),
-          onApiChange: (...args) => this.emit('onApiChange', ...args),
-          onAutoplayBlocked: (...args) => this.emit('onAutoplayBlocked', ...args),
-          onStateChange: (...args) => this.emit('onStateChange', ...args),
-        },
+        events: playerEvents,
       });
+
+      // Register this container and its master emitter
+      YoutubeMediaAdapter.#registry.set(this.#container, {
+        player: this.#player,
+        masterEmitter: masterEmitter,
+      });
+
+      this.#masterEmitter = masterEmitter;
+
+      // Resolve the initialization promise when the player is ready
+      this.#masterEmitter?.once('onReady', () => resolve());
+      this.#attachToMaster();
     });
+  }
+
+  /**
+   * Connects this instance to the master emitter of the shared player.
+   */
+  #attachToMaster() {
+    if (!this.#masterEmitter) return;
+
+    for (const eventName of Object.values(YoutubeMediaAdapter.EVENT_MAPPING)) {
+      /** @type {HandlerFunc} */
+      const handler = (...args) => this.emit(eventName, ...args);
+      this.#masterEmitter.on(eventName, handler);
+      this.#eventHandlers.push({ eventName, handler });
+    }
   }
 
   /**
@@ -297,7 +422,23 @@ export class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @throws {RangeError} If volume is outside [0.0, 1.0].
    */
   setVolume(volume) {
-    // Using the setter logic via the property
     this.volume = volume;
   }
+
+  /**
+   * Cleans up the instance and disconnects from the shared player.
+   */
+  destroy() {
+    if (this.#masterEmitter && this.#eventHandlers.length > 0) {
+      for (const { eventName, handler } of this.#eventHandlers) {
+        this.#masterEmitter.off(eventName, handler);
+      }
+      this.#eventHandlers = [];
+    }
+    this.#player = null;
+    this.#masterEmitter = null;
+    super.destroy();
+  }
 }
+
+export { YoutubeMediaAdapter, getYtPlayer, loadYoutubeApi, getPlayerStateValues };

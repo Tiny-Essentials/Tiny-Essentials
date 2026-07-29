@@ -77,6 +77,14 @@ class BaseMediaAdapter extends EventEmitter {
   setVolume(volume) {
     throw new Error('Method "setVolume" must be implemented by the subclass.');
   }
+
+  /**
+   * Cleans up the instance.
+   * @returns {void}
+   */
+  destroy() {
+    this.removeAllListeners();
+  }
 }
 
 export { BaseMediaAdapter };
