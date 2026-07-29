@@ -78,8 +78,10 @@ import {
   valMediaContentMetadata,
   valMediaContentMetadataPartial,
 } from './mediaContent.mjs';
+import { waitForTrue } from './promiseUtils.mjs';
 
 export {
+  waitForTrue,
   multiplyArrayBlocks,
   valMediaContentMetadata,
   valMediaContentMetadataPartial,

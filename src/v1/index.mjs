@@ -167,6 +167,7 @@ import TinyClassManager from './libs/TinyClassManager.mjs';
 import TinyRadioFm from './libs/TinyRadioFm.mjs';
 import TinyMediaPlayer from './libs/TinyMediaPlayer.mjs';
 import { createCheckDestroyed } from './libs/utils.mjs';
+import { waitForTrue } from './basics/promiseUtils.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
@@ -214,6 +215,7 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  waitForTrue,
   multiplyArrayBlocks,
   createCheckDestroyed,
   valMediaContentMetadata,

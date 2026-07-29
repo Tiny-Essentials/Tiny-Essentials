@@ -1,3 +1,4 @@
+import { waitForTrue } from '../basics/promiseUtils.mjs';
 import { createCheckDestroyed } from './utils.mjs';
 
 const checkDestroy = createCheckDestroyed('TinyTimeout');
@@ -150,21 +151,10 @@ class TinyTimeout {
    * @param {number} [checkInterval=100] - How often (in ms) to check the condition.
    * @returns {Promise<void>} Resolves when the condition is met.
    * @throws {TypeError} If arguments are invalid.
+   * @deprecated Script migrated to `src/v1/basics/promiseUtils.mjs`.
    */
   static waitForTrue(getValue, checkInterval = 100) {
-    if (typeof getValue !== 'function')
-      throw new TypeError(`Expected 'getValue' to be a function.`);
-    if (!Number.isFinite(checkInterval) || checkInterval <= 0)
-      throw new TypeError(`Expected 'checkInterval' to be a positive number.`);
-
-    return new Promise((resolve) => {
-      const interval = setInterval(() => {
-        if (getValue()) {
-          clearInterval(interval);
-          resolve();
-        }
-      }, checkInterval);
-    });
+    return waitForTrue(getValue, checkInterval);
   }
 
   /**
@@ -183,7 +173,7 @@ class TinyTimeout {
       throw new TypeError(`Expected 'getValue' to be a function.`);
     if (checkInterval !== null && (!Number.isFinite(checkInterval) || checkInterval <= 0))
       throw new TypeError(`Expected 'checkInterval' to be null or a positive number.`);
-    return TinyTimeout.waitForTrue(getValue, checkInterval ?? this.#cooldownWatcherTime);
+    return waitForTrue(getValue, checkInterval ?? this.#cooldownWatcherTime);
   }
 
   /**

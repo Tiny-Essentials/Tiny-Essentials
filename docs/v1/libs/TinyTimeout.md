@@ -78,20 +78,7 @@ A numeric ID returned by `setTimeout`, which can be manually canceled later usin
 
 ---
 
-### 🔁 `waitForTrue(getValue, checkInterval = 100)`
-
-Waits until a provided function returns `true`, polling periodically.
-
-```ts
-static waitForTrue(getValue: () => boolean, checkInterval?: number): Promise<void>
-```
-
-* `getValue`: Function that returns `true` when the wait should end.
-* `checkInterval`: Polling interval in milliseconds.
-
----
-
-### 🧩 `waitForTrue(getValue, checkInterval?)` *(instance version)*
+### 🧩 `waitForTrue(getValue, checkInterval?)`
 
 Same as `waitForTrue`, but uses the instance's `cooldownWatcherTime` as the default if `checkInterval` is `null`.
 
