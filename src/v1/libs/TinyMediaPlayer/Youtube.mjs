@@ -31,40 +31,42 @@ import { createSingletonTask } from '../../basics/promiseUtils.mjs';
 
 /** @typedef {(...args: any) => boolean} HandlerFunc - Represents a function used as an event handler, capable of accepting any number of arguments. */
 
-const {
-  /**
-   * Private method to ensure the YouTube IFrame API script is loaded.
-   * @returns {Promise<void>}
-   */
-  callback: loadYoutubeApi,
-} = createSingletonTask(async () => {
-  // Use existing API if already loaded
-  // @ts-ignore
-  if (typeof window !== 'undefined' && window.YT && window.YT.Player) {
+const makeLoadYoutubeApi = () => {
+  const { callback } = createSingletonTask(async () => {
+    // Use existing API if already loaded
     // @ts-ignore
-    YoutubeMediaAdapter.PlayerState = window.YT.PlayerState;
-    return Promise.resolve(undefined);
-  }
-
-  return new Promise((resolve, reject) => {
-    const tag = document.createElement('script');
-    tag.src = 'https://www.youtube.com/iframe_api';
-    tag.async = true;
-    tag.onerror = () => reject(new Error('Failed to load YouTube IFrame API.'));
-    document.body.appendChild(tag);
-
-    // Check periodically if YT is ready
-    const checkInterval = setInterval(() => {
+    if (typeof window !== 'undefined' && window.YT && window.YT.Player) {
       // @ts-ignore
-      if (typeof window !== 'undefined' && window.YT && window.YT.Player) {
+      YoutubeMediaAdapter.PlayerState = window.YT.PlayerState;
+      return Promise.resolve(undefined);
+    }
+
+    return new Promise((resolve, reject) => {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      tag.async = true;
+      tag.onerror = () => reject(new Error('Failed to load YouTube IFrame API.'));
+      document.body.appendChild(tag);
+
+      // Check periodically if YT is ready
+      const checkInterval = setInterval(() => {
         // @ts-ignore
-        YoutubeMediaAdapter.PlayerState = window.YT.PlayerState;
-        clearInterval(checkInterval);
-        resolve(undefined);
-      }
-    }, 100);
+        if (typeof window !== 'undefined' && window.YT && window.YT.Player) {
+          // @ts-ignore
+          YoutubeMediaAdapter.PlayerState = window.YT.PlayerState;
+          clearInterval(checkInterval);
+          resolve(undefined);
+        }
+      }, 100);
+    });
   });
-});
+  return callback;
+};
+
+/**
+ * Method to ensure the YouTube IFrame API script is loaded.
+ */
+const loadYoutubeApi = makeLoadYoutubeApi();
 
 /**
  * Returns a deep clone of the current YouTube player state values.
