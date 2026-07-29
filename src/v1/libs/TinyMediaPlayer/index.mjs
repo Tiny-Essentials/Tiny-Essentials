@@ -1,9 +1,12 @@
 import { EventEmitter } from 'events';
+import { createCheckDestroyed } from '../utils.mjs';
 
 /**
  * @typedef {import('../../basics/mediaContent.mjs').PictureDataType} PictureDataType
  * @typedef {import('../../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
  */
+
+const checkDestroy = createCheckDestroyed('BaseMediaAdapter');
 
 /**
  * Interface definition for a Media Provider Adapter.
@@ -18,12 +21,20 @@ class BaseMediaAdapter extends EventEmitter {
     super();
   }
 
+  /** @type {boolean} */
+  #destroyed = false;
+
+  get destroyed() {
+    return this.#destroyed;
+  }
+
   /**
    * Determines if this adapter can play the provided content.
    * @param {MediaContent} content - The media content to evaluate.
    * @returns {boolean} True if the adapter can handle the content, false otherwise.
    */
   canHandle(content) {
+    checkDestroy(this.#destroyed);
     throw new Error('Method "canHandle" must be implemented by the subclass.');
   }
 
@@ -33,6 +44,7 @@ class BaseMediaAdapter extends EventEmitter {
    * @returns {Promise<void>}
    */
   async play(content) {
+    checkDestroy(this.#destroyed);
     throw new Error('Method "play" must be implemented by the subclass.');
   }
 
@@ -41,6 +53,7 @@ class BaseMediaAdapter extends EventEmitter {
    * @returns {Promise<void>}
    */
   async pause() {
+    checkDestroy(this.#destroyed);
     throw new Error('Method "pause" must be implemented by the subclass.');
   }
 
@@ -49,6 +62,7 @@ class BaseMediaAdapter extends EventEmitter {
    * @returns {Promise<void>}
    */
   async stop() {
+    checkDestroy(this.#destroyed);
     throw new Error('Method "stop" must be implemented by the subclass.');
   }
 
@@ -58,6 +72,7 @@ class BaseMediaAdapter extends EventEmitter {
    * @returns {Promise<void>}
    */
   async seek(timeMs) {
+    checkDestroy(this.#destroyed);
     throw new Error('Method "seek" must be implemented by the subclass.');
   }
 
@@ -66,6 +81,7 @@ class BaseMediaAdapter extends EventEmitter {
    * @returns {number} The current time in milliseconds.
    */
   getCurrentTime() {
+    checkDestroy(this.#destroyed);
     throw new Error('Method "getCurrentTime" must be implemented by the subclass.');
   }
 
@@ -75,6 +91,7 @@ class BaseMediaAdapter extends EventEmitter {
    * @returns {void}
    */
   setVolume(volume) {
+    checkDestroy(this.#destroyed);
     throw new Error('Method "setVolume" must be implemented by the subclass.');
   }
 
@@ -83,7 +100,9 @@ class BaseMediaAdapter extends EventEmitter {
    * @returns {void}
    */
   destroy() {
+    if (this.#destroyed) return;
     this.removeAllListeners();
+    this.#destroyed = true;
   }
 }
 

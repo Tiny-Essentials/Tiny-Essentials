@@ -23,13 +23,16 @@
  * @typedef {import('./docs/YouTubePlayer.mjs').OnAutoplayBlockedEvent} OnAutoplayBlockedEvent
  */
 
+/** 
+ * Represents a function used as an event handler, capable of accepting any number of arguments. 
+ * @typedef {(...args: any) => boolean} HandlerFunc
+ */
+
 import { EventEmitter } from 'events';
 import { BaseMediaAdapter } from './index.mjs';
 import YouTubePlayer from './docs/YouTubePlayer.mjs';
 import { createCheckDestroyed } from '../utils.mjs';
 import { createSingletonTask } from '../../basics/promiseUtils.mjs';
-
-/** @typedef {(...args: any) => boolean} HandlerFunc - Represents a function used as an event handler, capable of accepting any number of arguments. */
 
 const makeLoadYoutubeApi = () => {
   const { callback } = createSingletonTask(async () => {
