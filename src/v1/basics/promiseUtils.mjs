@@ -23,14 +23,18 @@ export const waitForTrue = (getValue, checkInterval = 100) => {
 };
 
 /**
- * Creates a wrapper function that ensures a provided asynchronous function
- * is only executed once at a time. If the function is already in progress,
- * subsequent calls will wait for the existing promise to resolve.
+ * Creates a controller object that manages the execution state of an asynchronous function,
+ * ensuring it only executes one instance at a time. If a task is already in progress,
+ * subsequent calls to the callback will wait for the existing promise to resolve.
  *
  * @template {any} T
  * @template {any[]} A
  * @param {(...args: A) => Promise<T>} baseFunction - The asynchronous function to be wrapped.
- * @returns {(...args: A) => Promise<T>} A new function that manages the execution state.
+ * @returns {{
+ *   callback: (...args: A) => Promise<T>,
+ *   getActivePromise: () => Promise<T> | null,
+ *   resetActivePromise: () => void
+ * }} An object containing the execution controller.
  * @throws {TypeError} If the provided baseFunction is not a function.
  */
 export const createSingletonTask = (baseFunction) => {
@@ -51,23 +55,42 @@ export const createSingletonTask = (baseFunction) => {
    * @param {A} args - The arguments to pass to the base function.
    * @returns {Promise<T>} The result of the base function or the existing promise.
    */
-  return async (...args) => {
+  const callback = async (...args) => {
     // If a request is already in progress, return the existing promise.
     if (activePromise !== null) {
       return activePromise;
     }
 
-    // Create the execution wrapper
-    return (async () => {
+    // Create the execution wrapper and ASSIGN it to activePromise
+    activePromise = (async () => {
       try {
         const result = await baseFunction(...args);
+        // Reset after success so the next call can start a new execution
         activePromise = null;
         return result;
       } catch (error) {
-        // Reset the promise on error to allow subsequent retry attempts.
+        // Reset on error to allow subsequent retry attempts.
         activePromise = null;
         throw error;
       }
     })();
+
+    return activePromise;
   };
+
+  /**
+   * Returns the current active promise, or null if no task is running.
+   * @returns {Promise<T> | null}
+   */
+  const getActivePromise = () => activePromise;
+
+  /**
+   * Resets the active promise state, allowing the next call to the callback to start a new execution.
+   * @returns {void}
+   */
+  const resetActivePromise = () => {
+    activePromise = null;
+  };
+
+  return { callback, getActivePromise, resetActivePromise };
 };

@@ -27,55 +27,44 @@ import { EventEmitter } from 'events';
 import { BaseMediaAdapter } from './index.mjs';
 import YouTubePlayer from './docs/YouTubePlayer.mjs';
 import { createCheckDestroyed } from '../utils.mjs';
+import { createSingletonTask } from '../../basics/promiseUtils.mjs';
 
 /** @typedef {(...args: any) => boolean} HandlerFunc - Represents a function used as an event handler, capable of accepting any number of arguments. */
 
-/**
- * Module scope variable to control loading promise and avoid multiple simultaneous requests
- * @type {Promise<void>|null}
- */
-let apiPromise = null;
-
-/**
- * Private method to ensure the YouTube IFrame API script is loaded.
- * @returns {Promise<void>}
- */
-const loadYoutubeApi = async () => {
-  // If there is already a promise making a loading in progress, it returns to wait for completion
-  if (apiPromise) return apiPromise;
-
-  return (async () => {
-    // Use existing API if already loaded
+const {
+  /**
+   * Private method to ensure the YouTube IFrame API script is loaded.
+   * @returns {Promise<void>}
+   */
+  callback: loadYoutubeApi,
+} = createSingletonTask(async () => {
+  // Use existing API if already loaded
+  // @ts-ignore
+  if (typeof window !== 'undefined' && window.YT && window.YT.Player) {
     // @ts-ignore
-    if (typeof window !== 'undefined' && window.YT && window.YT.Player) {
+    YoutubeMediaAdapter.PlayerState = window.YT.PlayerState;
+    return Promise.resolve(undefined);
+  }
+
+  return new Promise((resolve, reject) => {
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    tag.async = true;
+    tag.onerror = () => reject(new Error('Failed to load YouTube IFrame API.'));
+    document.body.appendChild(tag);
+
+    // Check periodically if YT is ready
+    const checkInterval = setInterval(() => {
       // @ts-ignore
-      YoutubeMediaAdapter.PlayerState = window.YT.PlayerState;
-      return Promise.resolve();
-    }
-
-    return new Promise((resolve, reject) => {
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      tag.async = true;
-      tag.onerror = () => {
-        apiPromise = null; // Reset to allow another attempt
-        reject(new Error('Failed to load YouTube IFrame API.'));
-      };
-      document.body.appendChild(tag);
-
-      // Check periodically if YT is ready
-      const checkInterval = setInterval(() => {
+      if (typeof window !== 'undefined' && window.YT && window.YT.Player) {
         // @ts-ignore
-        if (typeof window !== 'undefined' && window.YT && window.YT.Player) {
-          // @ts-ignore
-          YoutubeMediaAdapter.PlayerState = window.YT.PlayerState;
-          clearInterval(checkInterval);
-          resolve();
-        }
-      }, 100);
-    });
-  })();
-};
+        YoutubeMediaAdapter.PlayerState = window.YT.PlayerState;
+        clearInterval(checkInterval);
+        resolve(undefined);
+      }
+    }, 100);
+  });
+});
 
 /**
  * Returns a deep clone of the current YouTube player state values.
