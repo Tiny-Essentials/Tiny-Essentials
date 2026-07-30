@@ -479,4 +479,19 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   }
 }
 
-export { YoutubeMediaAdapter, getYtPlayer, loadYoutubeApi, getPlayerStateValues };
+/**
+ * Asynchronously ensures the YouTube IFrame API is loaded and returns 
+ * the YouTube Player constructor and the current PlayerState values.
+ *
+ * @returns {Promise<{ Player: typeof YouTubePlayer, PlayerState: Record<string, number> }>} 
+ * An object containing the Player constructor and the current player state mapping.
+ */
+const getYT = async () => {
+  await loadYoutubeApi();
+  return {
+    Player: getYtPlayer(),
+    PlayerState: getPlayerStateValues(),
+  };
+};
+
+export { YoutubeMediaAdapter, getYtPlayer, loadYoutubeApi, getPlayerStateValues, getYT };
