@@ -196,6 +196,10 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   /** @type {boolean} */
   #destroyed = false;
 
+  /**
+   * Gets whether the adapter has been destroyed.
+   * @returns {boolean}
+   */
   get destroyed() {
     return this.#destroyed;
   }

@@ -353,68 +353,7 @@
 
     <script type="module">
       import { TinyMediaPlayer } from './src/v1/libs/TinyMediaPlayer.mjs';
-
-      /**
-       * Concrete implementation of the BaseMediaAdapter using HTML5 Audio.
-       */
-      class HtmlAudioAdapter extends TinyMediaPlayer.BaseMediaAdapter {
-        #audioElement;
-
-        constructor() {
-          super();
-          this.#audioElement = new Audio();
-        }
-
-        canHandle(content) {
-          if (!content || typeof content !== 'object') {
-            throw new TypeError('Content must be a valid object.');
-          }
-          return (
-            typeof content.url === 'string' &&
-            (content.url.startsWith('http') || content.url.startsWith('blob:'))
-          );
-        }
-
-        async play(content) {
-          if (typeof content?.url !== 'string') throw new TypeError('Valid media URL required.');
-
-          if (this.#audioElement.src !== content.url) {
-            this.#audioElement.src = content.url;
-            this.#audioElement.load();
-          }
-          await this.#audioElement.play();
-        }
-
-        async pause() {
-          this.#audioElement.pause();
-        }
-
-        async stop() {
-          this.#audioElement.pause();
-          this.#audioElement.currentTime = 0;
-        }
-
-        async seek(timeMs) {
-          if (typeof timeMs !== 'number') throw new TypeError('Seek time must be a number.');
-          this.#audioElement.currentTime = timeMs / 1000;
-        }
-
-        getCurrentTime() {
-          return Math.floor(this.#audioElement.currentTime * 1000);
-        }
-
-        setVolume(volume) {
-          if (typeof volume !== 'number' || volume < 0 || volume > 1) {
-            throw new RangeError('Volume must be between 0.0 and 1.0');
-          }
-          this.#audioElement.volume = volume;
-        }
-
-        // Exposing the element to easily bind the 'ended' event in testing
-        get audioElement() {
-          return this.#audioElement;
-        }
-      }
+      import { HtmlAudioAdapter } from './src/v1/libs/TinyMediaPlayer/HtmlAudio.mjs';
 
       // Initialize Player and Adapter
       const player = new TinyMediaPlayer({ persistVolume: false });

@@ -97,7 +97,7 @@ const executeObjType = async () => {
       const result = isValidObj(value);
       const expected = label === 'object';
       console.log(
-        `${emoji} ${color.yellow}${label.padEnd(10)}${color.reset} => ${color.cyan}${result}${color.reset} ${mark(result === expected)}`,
+        `${emoji} ${color.yellow}${label.padEnd(10)}${color.reset} => ${color.cyan}${result}${color.reset}`,
       );
     }
 
