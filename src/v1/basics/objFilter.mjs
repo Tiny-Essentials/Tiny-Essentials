@@ -1,7 +1,5 @@
 // @ts-nocheck
-import { countObj, isJsonObject } from './objChecker.mjs';
-
-export { countObj, isJsonObject };
+import { isJsonObject } from './objChecker.mjs';
 
 const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
 

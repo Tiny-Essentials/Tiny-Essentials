@@ -1,9 +1,10 @@
 import {
-  objType,
   checkObj,
   cloneObjTypeOrder,
   ColorSafeStringify,
   isJsonObject,
+  objTypeName,
+  isValidObj,
 } from '../../dist/v1/index.mjs';
 
 const colorizer = new ColorSafeStringify();
@@ -54,9 +55,9 @@ const executeObjType = async () => {
     console.log(stringifyJson(cloneObjTypeOrder(), 1));
     console.log('');
 
-    console.log(`${color.magenta}🔎 Testing objType()${color.reset}`);
+    console.log(`${color.magenta}🔎 Testing objTypeName()${color.reset}`);
     for (const [label, value, emoji] of typeTests) {
-      const result = objType(value);
+      const result = objTypeName(value);
       const expected = label;
       const isValid = result === expected;
       console.log(
@@ -84,6 +85,16 @@ const executeObjType = async () => {
     console.log(`${color.white}🧼 Testing isJsonObject()${color.reset}`);
     for (const [label, value, emoji] of typeTests) {
       const result = isJsonObject(value);
+      const expected = label === 'object';
+      console.log(
+        `${emoji} ${color.yellow}${label.padEnd(10)}${color.reset} => ${color.cyan}${result}${color.reset} ${mark(result === expected)}`,
+      );
+    }
+
+    console.log('\n');
+    console.log(`${color.white}🧼 Testing isValidObj()${color.reset}`);
+    for (const [label, value, emoji] of typeTests) {
+      const result = isValidObj(value);
       const expected = label === 'object';
       console.log(
         `${emoji} ${color.yellow}${label.padEnd(10)}${color.reset} => ${color.cyan}${result}${color.reset} ${mark(result === expected)}`,

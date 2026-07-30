@@ -20,6 +20,19 @@ countObj('hi');            // Throws TypeError
 
 ---
 
+### 🧼 `isValidObj(value)`
+
+Check if a value is a **JSON-compatible object** — meaning it's **not** a Array.
+
+🔒 This function ensures the object:
+
+* is not `null`
+* has `typeof === 'object'`
+
+Use this when you need to strictly validate a JSON object.
+
+---
+
 ### 🧼 `isJsonObject(value)`
 
 Check if a value is a **plain JSON-compatible object** — meaning it's created via `{}` or `new Object()`, with a prototype of `Object.prototype`, and **not** a special object like `Date`, `Map`, `Array`, etc.

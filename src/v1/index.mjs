@@ -21,7 +21,7 @@ import {
   objTypeName,
   isObjType,
 } from './basics/objFilter.mjs';
-import { countObj, isJsonObject } from './basics/objChecker.mjs';
+import { countObj, isJsonObject, isValidObj } from './basics/objChecker.mjs';
 import {
   documentIsFullScreen,
   isScreenFilled,
@@ -215,6 +215,7 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  isValidObj,
   createSingletonTask,
   waitForTrue,
   multiplyArrayBlocks,

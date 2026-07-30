@@ -23,7 +23,7 @@ import {
   isObjType,
   objTypeName,
 } from './objFilter.mjs';
-import { countObj, isJsonObject } from './objChecker.mjs';
+import { countObj, isJsonObject, isValidObj } from './objChecker.mjs';
 import {
   documentIsFullScreen,
   isScreenFilled,
@@ -81,6 +81,7 @@ import {
 import { createSingletonTask, waitForTrue } from './promiseUtils.mjs';
 
 export {
+  isValidObj,
   createSingletonTask,
   waitForTrue,
   multiplyArrayBlocks,

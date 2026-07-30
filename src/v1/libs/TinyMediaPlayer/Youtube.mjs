@@ -33,6 +33,7 @@ import { BaseMediaAdapter } from './index.mjs';
 import YouTubePlayer from './docs/YouTubePlayer.mjs';
 import { createCheckDestroyed } from '../utils.mjs';
 import { createSingletonTask, waitForTrue } from '../../basics/promiseUtils.mjs';
+import { isValidObj } from '../../basics/objChecker.mjs';
 
 const makeLoadYoutubeApi = () => {
   const { callback } = createSingletonTask(async () => {
@@ -265,7 +266,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    */
   canHandle(content) {
     checkDestroy(this.#destroyed);
-    if (!content || !content.url) {
+    if (!isValidObj(content) || !content.url) {
       return false;
     }
 
@@ -286,7 +287,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     checkDestroy(this.#destroyed);
     await this.#apiLoadedPromise;
 
-    if (!content || !content.url) {
+    if (!isValidObj(content) || !content.url) {
       throw new TypeError('Invalid media content provided to play().');
     }
 
@@ -479,10 +480,10 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
 }
 
 /**
- * Asynchronously ensures the YouTube IFrame API is loaded and returns 
+ * Asynchronously ensures the YouTube IFrame API is loaded and returns
  * the YouTube Player constructor and the current PlayerState values.
  *
- * @returns {Promise<{ Player: typeof YouTubePlayer, PlayerState: Record<string, number> }>} 
+ * @returns {Promise<{ Player: typeof YouTubePlayer, PlayerState: Record<string, number> }>}
  * An object containing the Player constructor and the current player state mapping.
  */
 const getYT = async () => {

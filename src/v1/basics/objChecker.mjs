@@ -41,3 +41,18 @@ export function isJsonObject(value) {
   if (Object.prototype.toString.call(value) !== '[object Object]') return false;
   return true;
 }
+
+/**
+ * Determines whether a given value is a JSON object.
+ *
+ * A pure object satisfies the following:
+ * - It is not null.
+ * - Its type is "object".
+ * - It is not an Array instance.
+ *
+ * @param {unknown} value - The value to test.
+ * @returns {value is Object<string | number | symbol, unknown>} Returns true if the value is a object.
+ */
+export function isValidObj(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
