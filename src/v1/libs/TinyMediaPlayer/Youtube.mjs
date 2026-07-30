@@ -196,6 +196,16 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   /** @type {boolean} */
   #destroyed = false;
 
+  /** @type {string|null} */
+  #currentContentId = null;
+
+  get currentContentId() {
+    return this.#currentContentId;
+  }
+
+  /** @type {ReturnType<typeof setInterval>|null} */
+  #timeUpdateInterval = null;
+
   /**
    * Gets whether the adapter has been destroyed.
    * @returns {boolean}
@@ -282,7 +292,8 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   }
 
   /**
-   * Initializes the YouTube player and starts playback.
+   * Plays the media content. If the player is already initialized with a different video,
+   * it will load the new video automatically.
    * @param {MediaContent} content - The media content to play.
    * @returns {Promise<void>}
    * @throws {TypeError} If the content data is invalid.
@@ -296,27 +307,29 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     }
 
     const videoSource = typeof content.url === 'string' ? content.url : '';
+    const targetVideoId = this.#extractVideoId(videoSource);
 
     if (!this.#player) {
-      await this.#initializePlayer(videoSource);
+      await this.#initializePlayer(targetVideoId);
     }
 
-    if (this.#player && typeof this.#player.setVolume === 'function') {
-      this.#player.setVolume(this.#currentVolume * 100);
-    }
-
-    return new Promise((resolve) => {
+    // If the video is different, load the new one
+    if (this.#currentContentId !== targetVideoId) {
+      this.#currentContentId = targetVideoId;
+      this.#player?.loadVideoById(targetVideoId);
+    } else {
       this.#player?.playVideo();
-      resolve();
-    });
+    }
+
+    return Promise.resolve();
   }
 
   /**
-   * Initializes the YT.Player instance or reuses an existing one.
-   * @param {string} videoIdOrUrl - The YouTube video ID or URL.
+   * Initializes the YT.Player instance and sets up semantic event bridging.
+   * @param {string} videoId - The video ID to load.
    * @returns {Promise<void>}
    */
-  async #initializePlayer(videoIdOrUrl) {
+  async #initializePlayer(videoId) {
     checkDestroy(this.#destroyed);
     const existing = YoutubeMediaAdapter.#registry.get(this.#container);
 
@@ -324,6 +337,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
       existing.refCount++; // Increment reference count for the shared player
       this.#player = existing.player;
       this.#masterEmitter = existing.masterEmitter;
+      this.#currentContentId = this.#player.getVideoData()?.video_id || null;
       this.#attachToMaster();
       return;
     }
@@ -335,16 +349,24 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     /** @type {Record<string, HandlerFunc>} */
     const playerEvents = {};
     Object.entries(YoutubeMediaAdapter.EVENT_MAPPING).forEach(([ytEvent, internalEvent]) => {
-      playerEvents[ytEvent] = (...args) => masterEmitter.emit(internalEvent, ...args);
+      playerEvents[ytEvent] = (...args) => {
+        const result = masterEmitter.emit(internalEvent, ...args);
+        // Bridge YouTube states to semantic events: play, pause, ended
+        if (ytEvent === 'onStateChange') {
+          const state = args[0];
+          if (state === YoutubeMediaAdapter.PlayerState.PLAYING) masterEmitter.emit('play');
+          if (state === YoutubeMediaAdapter.PlayerState.PAUSED) masterEmitter.emit('pause');
+          if (state === YoutubeMediaAdapter.PlayerState.ENDED) masterEmitter.emit('ended');
+        }
+        return result;
+      };
     });
 
     return new Promise((resolve) => {
       const Player = getYtPlayer();
       this.#player = new Player(this.#container, {
-        videoId: this.#extractVideoId(videoIdOrUrl),
-        playerVars: {
-          playsinline: 1,
-        },
+        videoId: videoId,
+        playerVars: { playsinline: 1 },
         events: playerEvents,
       });
 
@@ -358,9 +380,27 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
       this.#masterEmitter = masterEmitter;
 
       // Resolve the initialization promise when the player is ready
-      this.#masterEmitter?.once('onReady', () => resolve());
+      this.#masterEmitter?.once('onReady', () => {
+        this.#startPollingTimeUpdate();
+        resolve();
+      });
+
       this.#attachToMaster();
     });
+  }
+
+  /**
+   * Starts a polling interval to emit 'timeupdate' events, matching the HTML5 Audio interface.
+   */
+  #startPollingTimeUpdate() {
+    this.#timeUpdateInterval = setInterval(() => {
+      if (
+        this.#player &&
+        this.#player.getPlayerState() === YoutubeMediaAdapter.PlayerState.PLAYING
+      ) {
+        this.emit('timeupdate', this.getCurrentTime());
+      }
+    }, 250);
   }
 
   /**
@@ -397,9 +437,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    */
   async pause() {
     checkDestroy(this.#destroyed);
-    if (this.#player) {
-      this.#player.pauseVideo();
-    }
+    this.#player?.pauseVideo();
   }
 
   /**
@@ -408,9 +446,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    */
   async stop() {
     checkDestroy(this.#destroyed);
-    if (this.#player) {
-      this.#player.stopVideo();
-    }
+    this.#player?.stopVideo();
   }
 
   /**
@@ -421,12 +457,8 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    */
   async seek(timeMs) {
     checkDestroy(this.#destroyed);
-    if (typeof timeMs !== 'number') {
-      throw new TypeError('Time must be a number.');
-    }
-    if (this.#player) {
-      this.#player.seekTo(timeMs / 1000, true);
-    }
+    if (typeof timeMs !== 'number') throw new TypeError('Time must be a number.');
+    this.#player?.seekTo(timeMs / 1000, true);
   }
 
   /**
@@ -435,10 +467,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    */
   getCurrentTime() {
     checkDestroy(this.#destroyed);
-    if (this.#player) {
-      return this.#player.getCurrentTime() * 1000;
-    }
-    return 0;
+    return this.#player ? this.#player.getCurrentTime() * 1000 : 0;
   }
 
   /**
@@ -457,6 +486,10 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    */
   destroy() {
     if (this.#destroyed) return;
+
+    if (this.#timeUpdateInterval) {
+      clearInterval(this.#timeUpdateInterval);
+    }
 
     // 1. Detach from the master emitter
     if (this.#masterEmitter && this.#eventHandlers.length > 0) {
@@ -478,6 +511,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
 
     this.#player = null;
     this.#masterEmitter = null;
+    this.#currentContentId = null;
     this.#destroyed = true;
     super.destroy();
   }

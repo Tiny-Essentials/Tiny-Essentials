@@ -22,6 +22,13 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
    */
   #audioElement = new Audio();
 
+  /** @type {string|null} */
+  #currentContentId = null;
+
+  get currentContentId() {
+    return this.#currentContentId;
+  }
+
   /**
    * Gets whether the adapter has been destroyed.
    * @returns {boolean}
@@ -87,6 +94,7 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
     }
 
     if (this.#audioElement.src !== content.url) {
+      this.#currentContentId = content.url;
       this.#audioElement.src = content.url;
       this.#audioElement.load();
     }
@@ -176,6 +184,7 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
     try {
       this.#audioElement.pause();
       this.#audioElement.src = '';
+      this.#currentContentId = null;
       this.#audioElement.load();
     } catch (error) {
       // We catch errors during cleanup to ensure the destruction process completes.

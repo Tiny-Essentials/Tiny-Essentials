@@ -141,6 +141,12 @@ class YouTubePlayer {
   constructor(element, options) {}
 
   /**
+   * The current video title.
+   * @type {string|null|undefined}
+   */
+  videoTitle = '';
+
+  /**
    * Plays the loaded/selected video.
    *
    * The final player state after this function executes will be playing (1).
