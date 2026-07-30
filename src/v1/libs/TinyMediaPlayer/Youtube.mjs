@@ -265,12 +265,11 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    */
   canHandle(content) {
     checkDestroy(this.#destroyed);
-    if (!content || !content.data) {
+    if (!content || !content.url) {
       return false;
     }
 
-    // Assuming content.data contains the URL or the ID string
-    const videoSource = typeof content.data === 'string' ? content.data : content.data.url;
+    const videoSource = typeof content.url === 'string' ? content.url : '';
     const youtubeRegex =
       /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
 
@@ -287,11 +286,11 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     checkDestroy(this.#destroyed);
     await this.#apiLoadedPromise;
 
-    if (!content || !content.data) {
+    if (!content || !content.url) {
       throw new TypeError('Invalid media content provided to play().');
     }
 
-    const videoSource = typeof content.data === 'string' ? content.data : content.data.url;
+    const videoSource = typeof content.url === 'string' ? content.url : '';
 
     if (!this.#player) {
       await this.#initializePlayer(videoSource);
