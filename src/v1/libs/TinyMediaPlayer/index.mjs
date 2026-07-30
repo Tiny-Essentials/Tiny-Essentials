@@ -103,6 +103,7 @@ class BaseMediaAdapter extends EventEmitter {
     if (this.#destroyed) return;
     this.removeAllListeners();
     this.#destroyed = true;
+    this.emit('destroyed');
   }
 }
 

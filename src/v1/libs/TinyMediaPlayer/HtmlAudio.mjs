@@ -131,7 +131,9 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
     if (typeof timeMs !== 'number') {
       throw new TypeError('Seek time must be a number.');
     }
-    this.#audioElement.currentTime = timeMs / 1000;
+    const currentTime = timeMs / 1000;
+    this.#audioElement.currentTime = currentTime;
+    this.emit('seek', currentTime);
   }
 
   /**
@@ -192,9 +194,8 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
       // @ts-ignore
       this.#audioElement = null;
     }
-    super.destroy();
     this.#destroyed = true;
-    this.emit('destroyed');
+    super.destroy();
   }
 }
 

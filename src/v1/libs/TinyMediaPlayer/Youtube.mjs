@@ -398,7 +398,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
         this.#player &&
         this.#player.getPlayerState() === YoutubeMediaAdapter.PlayerState.PLAYING
       ) {
-        this.emit('timeupdate', this.getCurrentTime());
+        this.#masterEmitter?.emit('timeupdate', this.getCurrentTime());
       }
     }, 250);
   }
@@ -458,7 +458,9 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   async seek(timeMs) {
     checkDestroy(this.#destroyed);
     if (typeof timeMs !== 'number') throw new TypeError('Time must be a number.');
-    this.#player?.seekTo(timeMs / 1000, true);
+    const currentTime = timeMs / 1000;
+    this.#player?.seekTo(currentTime, true);
+    this.emit('seek', currentTime);
   }
 
   /**
