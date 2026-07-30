@@ -32,7 +32,7 @@
  */
 
 /**
- * Properties for 360° video playback.
+ * Properties for 360° video playback, defining the viewing angle.
  * @typedef {Object} YTSphericalProperties
  * @property {number} yaw - Horizontal angle of view [0, 360].
  * @property {number} pitch - Vertical angle of view [-90, 90].
@@ -41,47 +41,48 @@
  */
 
 /**
+ * Base structure for all YouTube Player Events.
  * @typedef {Object} YouTubePlayerEventBase
  * @property {YouTubePlayer} target - The player object that emitted the event.
  */
 
 /**
- * Called when the player is ready.
+ * Called when the player is ready to accept commands.
  * @typedef {(event: YouTubePlayerEventBase) => void} OnReadyEvent
  */
 
 /**
- * Called when the state changes.
+ * Called when the video playback state changes (e.g., playing, paused).
  * @typedef {(event: YouTubePlayerEventBase & { data: YTPlayerState }) => void} OnStateChangeEvent
  */
 
 /**
- * Called when an error occurs.
+ * Called when an error occurs during video processing or playback.
  * @typedef {(event: YouTubePlayerEventBase & { data: YTPlayerErrors }) => void} OnErrorEvent
  */
 
 /**
- *  Called when quality changes.
+ * Called specifically when the playback quality setting is updated.
  * @typedef {(event: YouTubePlayerEventBase & { data: YTQuality }) => void} OnPlaybackQualityChangeEvent
  */
 
 /**
- * Called when playback rate changes.
+ * Called when the video's speed (playback rate) changes or is set.
  * @typedef {(event: YouTubePlayerEventBase & { data: number }) => void} OnPlaybackRateChangeEvent
  */
 
 /**
- * Called when the API module changes.
+ * Called when a change occurs within the API module itself.
  * @typedef {(event: YouTubePlayerEventBase & { data: any }) => void} OnApiChangeEvent
  */
 
 /**
- * Called when autoplay is blocked.
+ * Called when automatic playback is specifically blocked by the browser or platform rules.
  * @typedef {(event: YouTubePlayerEventBase) => void} OnAutoplayBlockedEvent
  */
 
 /**
- * YouTube Player Event listeners configuration.
+ * Container object for configuring event listeners on the player instance.
  * @typedef {Object} YTPlayerOptionsEvents
  * @property {OnReadyEvent} [onReady] - Called when the player is ready.
  * @property {OnStateChangeEvent} [onStateChange] - Called when the state changes.
@@ -93,58 +94,119 @@
  */
 
 /**
- * Configuration options for the YouTube Player.
+ * Configuration options for initializing the YouTube Player instance.
  * @typedef {Object} YTPlayerOptions
- * @property {number|string} [width=640] - Player width in pixels.
- * @property {number|string} [height=390] - Player height in pixels.
- * @property {string} [videoId] - The ID of the YouTube video to load.
- * @property {Object<string, any>} [playerVars] - Configuration parameters for the player.
- * @property {YTPlayerOptionsEvents} [events] - Event listeners.
+ * @property {number|string} [width=640] - Desired width of the player frame in pixels.
+ * @property {number|string} [height=390] - Desired height of the player frame in pixels.
+ * @property {string} [videoId] - The unique identifier for the YouTube video to load.
+ * @property {Object<string, any>} [playerVars] - Additional configuration parameters passed to the player.
+ * @property {YTPlayerOptionsEvents} [events] - An object containing event listeners to handle specific player events.
  */
 
 /**
+ * List of valid names for all YouTube Player Event listeners.
  * @typedef {'onReady'|'onStateChange'|'onError'|'onPlaybackQualityChange'|'onPlaybackRateChange'|'onApiChange'|'onAutoplayBlocked'} EventNames
  */
 
 /**
- * Options for cueing or loading a playlist.
+ * Options specifically used when queuing or loading a playlist.
  * @typedef {Object} YTPlaylistOptions
- * @property {'playlist'|'user_uploads'} [listType='playlist'] - The type of feed.
- * @property {string|string[]} list - The ID of the playlist or an array of video IDs.
- * @property {number} [index=0] - The index of the first video to play.
- * @property {number} [startSeconds] - The time at which the first video starts.
+ * @property {'playlist'|'user_uploads'} [listType='playlist'] - Specifies whether to use a standard playlist or user uploads feed.
+ * @property {string|string[]} list - The ID of the target playlist or an array containing multiple video IDs.
+ * @property {number} [index=0] - The zero-based index of the first video that should be played from the list.
+ * @property {number} [startSeconds] - The specific time in seconds where the playback of the first video should begin.
  */
 
 /**
+ * Options used to cue or load a video based on its full media URL.
  * @typedef {Object} VideoByUrlOptions
- * @property {string} mediaContentUrl - The ID of the video.
- * @property {number} [startSeconds] - The time to start at.
- * @property {number} [endSeconds] - The time to end at.
+ * @property {string} mediaContentUrl - The complete URL pointing to the desired YouTube video resource.
+ * @property {number} [startSeconds] - Optional time in seconds to begin playback from within the video.
+ * @property {number} [endSeconds] - Optional time in seconds when playback should stop within the video.
  */
 
 /**
+ * Options used to cue or load a video based on its unique ID.
  * @typedef {Object} VideoByIdOptions
- * @property {string} videoId - The ID of the video.
- * @property {number} [startSeconds] - The time to start at.
- * @property {number} [endSeconds] - The time to end at.
+ * @property {string} videoId - The unique identifier of the target YouTube video.
+ * @property {number} [startSeconds] - Optional time in seconds to begin playback from within the video.
+ * @property {number} [endSeconds] - Optional time in seconds when playback should stop within the video.
  */
 
 /**
- * The YouTube Player instance.
+ * Detailed data object representing the current status and metadata of a loaded YouTube video.
+ * @typedef {Object} VideoData
+ * @property {boolean|null} allowLiveDvr - Whether DVR capabilities are permitted for live content.
+ * @property {string|null} author - The name or ID of the video creator.
+ * @property {boolean|null} backgroundable - Indicates if the video can be played in the background while minimized.
+ * @property {string|null} cpn - Content Protection Network identifier.
+ * @property {number|null} errorCode - A specific error code if playback failed.
+ * @property {string|null} eventId - An ID related to a specific content event.
+ * @property {boolean|null} hasProgressBarBoundaries - Flag indicating if the progress bar has defined start/end boundaries.
+ * @property {boolean|null} isListed - Indicates if the video belongs to a list or series.
+ * @property {boolean|null} isLive - True if the content is currently streaming live.
+ * @property {boolean|null} isManifestless - Flag indicating if manifest files are not being used for streaming.
+ * @property {boolean|null} isMultiChannelAudio - Indicates support for multiple audio channels.
+ * @property {boolean|null} isPlayable - Overall flag indicating the video can be played by the player.
+ * @property {boolean|null} isPremiere - True if the content is a scheduled premiere.
+ * @property {boolean|null} isSeekable - Whether random access seeking within the video is allowed.
+ * @property {boolean|null} isWindowedLive - Indicates if it is a windowed live event.
+ * @property {string|null} itct - Indicator of Interactivity Content Tracking tag.
+ * @property {number|null} paidContentOverlayDurationMs - Duration in milliseconds for paid content overlays.
+ * @property {string|null} playerResponseCpn - Content Protection Network response identifier from the player itself.
+ * @property {number|null} progressBarEndPositionUtcTimeMillis - UTC time in milliseconds for the end of the video's progress bar.
+ * @property {number|null} progressBarStartPositionUtcTimeMillis - UTC time in milliseconds for the start of the video's progress bar.
+ * @property {string|null} title - The descriptive title of the video.
+ * @property {string|null} video_id - The unique ID string of the video content.
+ */
+
+/**
+ * The main YouTube Player class instance. Manages all player interactions and state.
  */
 class YouTubePlayer {
   /**
-   * Constructor for the YouTube Player.
-   * @param {string|HTMLElement} element - The DOM element or ID where the player will be inserted.
-   * @param {YTPlayerOptions} [options] - Configuration options.
+   * Constructor for the YouTube Player. Initializes the player element.
+   * @param {string|HTMLElement} element - The DOM element or its ID where the player iframe will be inserted.
+   * @param {YTPlayerOptions} [options] - Optional configuration settings for the player initialization.
    */
   constructor(element, options) {}
 
   /**
-   * The current video title.
+   * Stores and retrieves the title of the currently loaded video.
    * @type {string|null|undefined}
    */
   videoTitle = '';
+
+  /**
+   * Retrieves a comprehensive snapshot of the current video metadata and status (e.g., ID, author, playability).
+   * @returns {Partial<VideoData>} A partial object containing various details about the loaded content.
+   */
+  getVideoData() {
+    return {
+      allowLiveDvr: false,
+      author: '',
+      backgroundable: true,
+      cpn: '',
+      errorCode: null,
+      eventId: '',
+      hasProgressBarBoundaries: false,
+      isListed: true,
+      isLive: false,
+      isManifestless: false,
+      isMultiChannelAudio: false,
+      isPlayable: true,
+      isPremiere: false,
+      isSeekable: null,
+      isWindowedLive: false,
+      itct: '',
+      paidContentOverlayDurationMs: 0,
+      playerResponseCpn: '',
+      progressBarEndPositionUtcTimeMillis: null,
+      progressBarStartPositionUtcTimeMillis: null,
+      title: '',
+      video_id: '',
+    };
+  }
 
   /**
    * Plays the loaded/selected video.
@@ -256,10 +318,10 @@ class YouTubePlayer {
    * Sets the size of the <iframe>.
    * @param {number} width - Width in pixels.
    * @param {number} height - Height in pixels.
-   * @returns {Object}
+   * @returns {this}
    */
   setSize(width, height) {
-    return {};
+    return this;
   }
 
   /**
