@@ -176,6 +176,63 @@ class TinyMediaPlayer extends EventEmitter {
     this.#prevClickTimeoutDuration = value;
   }
 
+  /** @returns {boolean} True if clicking 'previous' repeats the current track on the first click. */
+  get repeatCurrentOnPrev() {
+    checkDestroy(this.#destroyed);
+    return this.#repeatCurrentOnPrev;
+  }
+
+  /**
+   * @param {boolean} value - The repeat mode state.
+   * @throws {TypeError} If the value is not a boolean.
+   */
+  set repeatCurrentOnPrev(value) {
+    checkDestroy(this.#destroyed);
+    if (typeof value !== 'boolean') {
+      throw new TypeError('repeatCurrentOnPrev must be a boolean.');
+    }
+    this.#repeatCurrentOnPrev = value;
+    this.emit('repeatCurrentOnPrevChange', this.#repeatCurrentOnPrev);
+  }
+
+  /** @returns {boolean} True if volume fades smoothly during play/pause transitions. */
+  get smoothPlayPauseVolume() {
+    checkDestroy(this.#destroyed);
+    return this.#smoothPlayPauseVolume;
+  }
+
+  /**
+   * @param {boolean} value - The smooth play/pause volume mode.
+   * @throws {TypeError} If the value is not a boolean.
+   */
+  set smoothPlayPauseVolume(value) {
+    checkDestroy(this.#destroyed);
+    if (typeof value !== 'boolean') {
+      throw new TypeError('smoothPlayPauseVolume must be a boolean.');
+    }
+    this.#smoothPlayPauseVolume = value;
+    this.emit('smoothPlayPauseVolumeChange', this.#smoothPlayPauseVolume);
+  }
+
+  /** @returns {boolean} True if volume fades smoothly to zero when stopping. */
+  get smoothStopVolume() {
+    checkDestroy(this.#destroyed);
+    return this.#smoothStopVolume;
+  }
+
+  /**
+   * @param {boolean} value - The smooth stop volume mode.
+   * @throws {TypeError} If the value is not a boolean.
+   */
+  set smoothStopVolume(value) {
+    checkDestroy(this.#destroyed);
+    if (typeof value !== 'boolean') {
+      throw new TypeError('smoothStopVolume must be a boolean.');
+    }
+    this.#smoothStopVolume = value;
+    this.emit('smoothStopVolumeChange', this.#smoothStopVolume);
+  }
+
   /**
    * @param {TinyMediaPlayerOptions} [options={}] - Configuration parameters for the player.
    * @throws {TypeError} If options is not a valid object.
