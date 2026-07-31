@@ -23,6 +23,103 @@ To support different media platforms, `TinyMediaPlayer` relies on **Adapters**. 
 
 ---
 
+### 🚀 Implementation Guide
+
+You can integrate `TinyMediaPlayer` into your project using two methods: using the ready-to-use adapters provided in the library, or creating your own custom adapters for unique services.
+
+#### 📦 Option 1: Using Pre-built Adapters
+The library provides several optimized adapters for common media sources. You can import them and register them directly with your player instance.
+
+**Available Adapters:**
+* `YoutubeMediaAdapter` from `tiny-essentials/libs/TinyMediaPlayer/Youtube`
+* `HtmlAudioAdapter` from `tiny-essentials/libs/TinyMediaPlayer/HtmlAudio`
+* `HtmlVideoAdapter` from `tiny-essentials/libs/TinyMediaPlayer/HtmlVideo`
+
+**Example Usage:**
+```javascript
+import TinyMediaPlayer from 'tiny-essentials/libs/TinyMediaPlayer';
+import { YoutubeMediaAdapter } from 'tiny-essentials/libs/TinyMediaPlayer/Youtube';
+import { HtmlAudioAdapter } from 'tiny-essentials/libs/TinyMediaPlayer/HtmlAudio';
+
+const player = new TinyMediaPlayer({
+  persistVolume: true
+});
+
+YoutubeMediaAdapter.defaultContainer = YoutubeMediaAdapter.createIframeContainer({
+videoId: 'fzKvGbQ9SgY',
+hidden: true,
+autoplay: false,
+});
+
+// Register the ready-made adapters
+player.registerAdapter(new YoutubeMediaAdapter());
+player.registerAdapter(new HtmlAudioAdapter());
+
+// The player will now automatically select the correct adapter 
+// based on the content provided.
+```
+
+#### 🛠️ Option 2: Creating Custom Adapters
+If you need to support a service not covered by the pre-built adapters, you can create a custom class by extending the `BaseMediaAdapter`.
+
+**Example Implementation:**
+```javascript
+import { BaseMediaAdapter } from 'tiny-essentials/libs/TinyMediaPlayer/Base';
+
+/**
+ * A custom adapter for a hypothetical streaming service.
+ * @extends BaseMediaAdapter
+ */
+class MyCustomServiceAdapter extends BaseMediaAdapter {
+  /**
+   * Determines if this adapter can play the given content.
+   * @param {MediaContent} content - The media content to check.
+   * @returns {boolean} - True if the URL matches the service.
+   */
+  canHandle(content) {
+    return content.url.startsWith('https://example.com/');
+  }
+
+  /**
+   * Starts playback for the provided content.
+   * @param {MediaContent} content - The content to play.
+   * @returns {Promise<void>}
+   */
+  async play(content) {
+    console.log(`Starting playback for: ${content.title}`);
+    // Logic to interface with the custom service API goes here
+  }
+
+  async pause() {
+    // Logic to pause custom service playback
+  }
+
+  async stop() {
+    // Logic to stop custom service playback
+  }
+
+  async seek(timeMs) {
+    // Logic to seek in custom service playback
+  }
+
+  getCurrentTime() {
+    // Logic to return current time from custom service
+    return 0; 
+  }
+
+  setVolume(volume) {
+    // Logic to set volume on custom service
+    console.log(`Volume set to: ${volume}`);
+  }
+}
+
+// Registering the custom adapter
+const player = new TinyMediaPlayer();
+player.registerAdapter(new MyCustomServiceAdapter());
+```
+
+---
+
 ## 📊 Data Types
 
 ### `ContentTimeData`
@@ -170,7 +267,7 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 
 ## 📡 Emitted Events
 
-`TinyMediaPlayer` extends `EventEmitter`. You can listen to the following events:
+`TinyMediaPlayer` extends `EventEmitter`. You can listen to the following events.
 
 ### 🎶 Playback Events
 | Event | Data Type | Description |
