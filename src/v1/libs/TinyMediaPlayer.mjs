@@ -1222,6 +1222,7 @@ class TinyMediaPlayer extends EventEmitter {
         this.#prevClickTimer = null;
       }, 2000);
 
+      await this.stop();
       await this.play();
       return;
     }
