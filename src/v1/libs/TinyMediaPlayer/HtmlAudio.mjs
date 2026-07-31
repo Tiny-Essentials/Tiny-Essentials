@@ -154,6 +154,38 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
   }
 
   /**
+   * Gets the total duration of the audio.
+   * @returns {number} The total duration in milliseconds.
+   */
+  getTotalDuration() {
+    checkDestroy(this.#destroyed);
+    const duration = this.#audioElement.duration;
+    return Number.isFinite(duration) ? Math.floor(duration * 1000) : 0;
+  }
+
+  /**
+   * Gets the remaining time until the audio ends.
+   * @returns {number} The remaining time in milliseconds.
+   */
+  getRemainingTime() {
+    checkDestroy(this.#destroyed);
+    const total = this.getTotalDuration();
+    const current = this.getCurrentTime();
+    return total > 0 ? total - current : 0;
+  }
+
+  /**
+   * Gets the percentage of the audio that has been played.
+   * @returns {number} The percentage from 0 to 100.
+   */
+  getPlaybackPercentage() {
+    checkDestroy(this.#destroyed);
+    const total = this.getTotalDuration();
+    const current = this.getCurrentTime();
+    return total > 0 ? (current / total) * 100 : 0;
+  }
+
+  /**
    * Sets the volume level of the audio.
    * @param {number} volume - The volume level from 0.0 to 1.0.
    * @throws {RangeError} If the volume is not between 0.0 and 1.0.
@@ -171,7 +203,7 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
   }
 
   /**
-   * Gets the current volume level.
+   * Gets the current volume level of the audio.
    * @returns {number} The current volume level from 0.0 to 1.0.
    */
   get volume() {

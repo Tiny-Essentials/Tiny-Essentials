@@ -522,6 +522,37 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   }
 
   /**
+   * Gets the total duration of the YouTube video.
+   * @returns {number} The total duration in milliseconds.
+   */
+  getTotalDuration() {
+    checkDestroy(this.#destroyed);
+    return this.#player ? Math.floor(this.#player.getDuration() * 1000) : 0;
+  }
+
+  /**
+   * Gets the remaining time until the YouTube video ends.
+   * @returns {number} The remaining time in milliseconds.
+   */
+  getRemainingTime() {
+    checkDestroy(this.#destroyed);
+    const total = this.getTotalDuration();
+    const current = this.getCurrentTime();
+    return total > 0 ? total - current : 0;
+  }
+
+  /**
+   * Gets the percentage of the YouTube video that has been played.
+   * @returns {number} The percentage from 0 to 100.
+   */
+  getPlaybackPercentage() {
+    checkDestroy(this.#destroyed);
+    const total = this.getTotalDuration();
+    const current = this.getCurrentTime();
+    return total > 0 ? (current / total) * 100 : 0;
+  }
+
+  /**
    * Sets the playback volume.
    * @param {number} volume - The volume level from 0.0 to 1.0.
    * @returns {void}
@@ -533,7 +564,8 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
 
   /**
    * Gets the playback volume.
-   * @returns {number} The volume level from 0.0 to 1.0.
+   * @returns {number}
+   * @throws {RangeError} If volume is outside [0.0, 1.0].
    */
   getVolume() {
     return this.volume;
@@ -577,7 +609,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
 
 /**
  * Asynchronously ensures the YouTube IFrame API is loaded and returns
- * the YouTube Player constructor and the current PlayerState values.
+ * the YouTube Player constructor and the current player state mapping.
  *
  * @returns {Promise<{ Player: typeof YouTubePlayer, PlayerState: Record<string, number> }>}
  * An object containing the Player constructor and the current player state mapping.

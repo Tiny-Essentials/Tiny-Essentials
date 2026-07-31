@@ -86,6 +86,33 @@ class BaseMediaAdapter extends EventEmitter {
   }
 
   /**
+   * Gets the total duration of the content.
+   * @returns {number} The total duration in milliseconds.
+   */
+  getTotalDuration() {
+    checkDestroy(this.#destroyed);
+    throw new Error('Method "getTotalDuration" must be implemented by the subclass.');
+  }
+
+  /**
+   * Gets the remaining time until the content ends.
+   * @returns {number} The remaining time in milliseconds.
+   */
+  getRemainingTime() {
+    checkDestroy(this.#destroyed);
+    throw new Error('Method "getRemainingTime" must be implemented by the subclass.');
+  }
+
+  /**
+   * Gets the percentage of the content that has been played.
+   * @returns {number} The percentage from 0 to 100.
+   */
+  getPlaybackPercentage() {
+    checkDestroy(this.#destroyed);
+    throw new Error('Method "getPlaybackPercentage" must be implemented by the subclass.');
+  }
+
+  /**
    * Sets the playback volume for the underlying API.
    * @param {number} volume - The volume level from 0.0 to 1.0.
    * @returns {void}
