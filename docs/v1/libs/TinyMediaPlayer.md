@@ -41,6 +41,7 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 ### 🏗️ Static Members
 
 #### Properties
+* **`BaseMediaAdapter`**: A reference to the `BaseMediaAdapter` class (useful for `instanceof` checks).
 * **`unknownArtist`**: A global setting for when an artist's name is unavailable.
     * **Type**: `string` | `function` (returns a string).
     * **Getter/Setter**: Allows you to define a custom string or a logic-based function.
@@ -48,6 +49,12 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 #### Methods
 * **`parseContent(source, defaultMetadata, metadata, parseFile, callbacks)`**: 
     * A static factory method to prepare a `MediaContent` object by extracting metadata from a URL or HTMLMediaElement.
+    * **Parameters**:
+        * `source`: `string | HTMLMediaElement`
+        * `defaultMetadata`: `Partial<MediaContentBase & MediaContentMetadata>`
+        * `metadata`: `Partial<MediaContentBase & MediaContentMetadata>`
+        * `parseFile`: `ParseMediaContentMetadata`
+        * `callbacks`: `Object` (containing `onProgress` and `onError`)
     * **Returns**: `Promise<MediaContent>`.
 
 ---
@@ -90,7 +97,7 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 * **`registerAdapter(adapter)`**: Registers a new provider.
     * `adapter`: An instance of a class extending `BaseMediaAdapter`.
 * **`removeAdapter(adapter)`**: Removes a specific registered adapter.
-* **`destroyAdapter(adapter)`**: Destroys and removes a specific adapter.
+* **`destroyAdapter(adapter)`**: Destroys and removes a specific registered adapter.
 * **`hasAdapter(adapter)`**: Checks if a specific adapter is registered.
 * **`clearAdapters()`**: Clears the list of adapters (does not call `destroy` on them).
 * **`destroyAllAdapters()`**: Destroys and removes all registered media adapters.
@@ -98,6 +105,7 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 
 #### 📋 Playlist Management
 * **`addTrack(content)`**: Adds a new `MediaContent` object to the end of the playlist.
+    * **Returns**: `number` (the new length of the playlist).
 * **`existsTrack(index)`**: Returns `true` if the track exists at the given index.
 * **`getTrack(index)`**: Retrieves the track at the specified index.
 * **`removeTrack(index)`**: **(Async)** Removes a track and adjusts the current index/playback accordingly.
@@ -114,6 +122,12 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 * **`prev()`**: **(Async)** Returns to the previous track (respects `loopMode` and `isRandom`).
 * **`seek(timeMs)`**: **(Async)** Jumps to a specific millisecond in the current track.
 * **`step(stepMs)`**: **(Async)** Moves the timeline forward (positive) or backward (negative) by a specified amount.
+
+#### ⏳ Time Utilities
+* **`getCurrentTime()`**: Gets the current playback time in milliseconds.
+* **`getTotalDuration()`**: Gets the total duration of the current track in milliseconds.
+* **`getRemainingTime()`**: Gets the remaining time until the current track ends in milliseconds.
+* **`getPlaybackPercentage()`**: Gets the percentage of the current track that has been played (0-100).
 
 #### ♻️ Lifecycle
 * **`destroy()`**: **(Async)** Safely stops playback, clears state, removes adapters, and detaches all listeners to prevent memory leaks.

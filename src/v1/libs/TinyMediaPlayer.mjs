@@ -111,6 +111,9 @@ class TinyMediaPlayer extends EventEmitter {
   /** @type {Set<BaseMediaAdapter>} */
   #adapters = new Set();
 
+  /** @type {WeakMap<BaseMediaAdapter, (timeMs: number) => void>} */
+  #adapterHandlers = new WeakMap();
+
   /** @type {MediaContent[]} */
   #playlist = [];
 
@@ -172,6 +175,7 @@ class TinyMediaPlayer extends EventEmitter {
     if (typeof value !== 'number') throw new TypeError('fadeVolumeSpeed must be a number.');
     if (value < 0) throw new RangeError('fadeVolumeSpeed cannot be negative.');
     this.#fadeVolumeSpeed = value;
+    this.emit('fadeVolumeSpeedChange', this.#fadeVolumeSpeed);
   }
 
   /** @type {number} */
@@ -194,6 +198,7 @@ class TinyMediaPlayer extends EventEmitter {
       throw new TypeError('prevClickTimeoutDuration must be a number.');
     if (value < 0) throw new RangeError('prevClickTimeoutDuration cannot be negative.');
     this.#prevClickTimeoutDuration = value;
+    this.emit('prevClickTimeoutDurationChange', this.#prevClickTimeoutDuration);
   }
 
   /** @returns {boolean} True if clicking 'previous' repeats the current track on the first click. */
@@ -693,6 +698,18 @@ class TinyMediaPlayer extends EventEmitter {
   }
 
   /**
+   * Removes the timeupdate on adapter emitter.
+   * @param {BaseMediaAdapter} adapter
+   */
+  #removeHandler(adapter) {
+    const handler = this.#adapterHandlers.get(adapter);
+    if (handler) {
+      adapter.off('timeupdate', handler);
+      this.#adapterHandlers.delete(adapter);
+    }
+  }
+
+  /**
    * Registers a new media API adapter.
    * @param {BaseMediaAdapter} adapter - An instance extending BaseMediaAdapter.
    * @throws {TypeError} If adapter is invalid.
@@ -702,6 +719,18 @@ class TinyMediaPlayer extends EventEmitter {
     if (!(adapter instanceof BaseMediaAdapter)) {
       throw new TypeError('Adapter must be an instance of BaseMediaAdapter.');
     }
+
+    // Bind the timeupdate event from the adapter to the player
+    /** @param {number} timeMs */
+    const handler = (timeMs) => {
+      if (!this.#destroyed) {
+        this.emit('timeupdate', timeMs);
+      }
+    };
+
+    this.#adapterHandlers.set(adapter, handler);
+    adapter.on('timeupdate', handler);
+
     this.#adapters.add(adapter);
   }
 
@@ -715,6 +744,7 @@ class TinyMediaPlayer extends EventEmitter {
     if (!(adapter instanceof BaseMediaAdapter)) {
       throw new TypeError('Adapter must be an instance of BaseMediaAdapter.');
     }
+    this.#removeHandler(adapter);
     return this.#adapters.delete(adapter);
   }
 
@@ -728,7 +758,7 @@ class TinyMediaPlayer extends EventEmitter {
     if (!(adapter instanceof BaseMediaAdapter)) {
       throw new TypeError('Adapter must be an instance of BaseMediaAdapter.');
     }
-
+    this.#removeHandler(adapter);
     const result = this.#adapters.delete(adapter);
     if (result) adapter.destroy();
     return result;
@@ -752,15 +782,19 @@ class TinyMediaPlayer extends EventEmitter {
    */
   destroyAllAdapters() {
     checkDestroy(this.#destroyed);
-    this.#adapters.forEach((adapter) => adapter.destroy());
+    this.#adapters.forEach((adapter) => {
+      this.#removeHandler(adapter);
+      adapter.destroy();
+    });
     this.#adapters.clear();
   }
 
   /**
-   * Removes all registered media adapters.
+   * Clears all registered media adapters.
    */
   clearAdapters() {
     checkDestroy(this.#destroyed);
+    this.#adapters.forEach((adapter) => this.#removeHandler(adapter));
     this.#adapters.clear();
   }
 
@@ -827,7 +861,7 @@ class TinyMediaPlayer extends EventEmitter {
   /**
    * Checks if a track exists at the specified index.
    * @param {number} index - The target index.
-   * @returns {boolean} True if the track exists, false otherwise.
+   * @returns {boolean} True if the track exists at the specified index.
    * @throws {TypeError} If the index is not a number.
    */
   existsTrack(index) {
@@ -843,7 +877,7 @@ class TinyMediaPlayer extends EventEmitter {
    * @param {number} index - The target index.
    * @returns {MediaContent} The media content object.
    * @throws {TypeError} If the index is not a number.
-   * @throws {RangeError} If the index is out of bounds.
+   * @throws {RangeError} If the index is out of the playlist bounds.
    */
   getTrack(index) {
     checkDestroy(this.#destroyed);
@@ -1095,9 +1129,9 @@ class TinyMediaPlayer extends EventEmitter {
   /**
    * Jumps to a specific absolute time in the timeline.
    * @param {number} timeMs - The target time in milliseconds.
+   * @returns {Promise<void>}
    * @throws {TypeError} If timeMs is not a number.
    * @throws {RangeError} If timeMs is negative.
-   * @returns {Promise<void>}
    */
   async seek(timeMs) {
     checkDestroy(this.#destroyed);
@@ -1139,6 +1173,70 @@ class TinyMediaPlayer extends EventEmitter {
     await this.seek(targetTime);
   }
 
+  // ==========================================
+  // TIME UTILITIES (DELEGATED TO ADAPTERS)
+  // ==========================================
+
+  /**
+   * Gets the current playback time.
+   * @returns {number} The current time in milliseconds.
+   */
+  getCurrentTime() {
+    checkDestroy(this.#destroyed);
+    try {
+      const adapter = this.#getActiveAdapter();
+      return adapter ? adapter.getCurrentTime() : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Gets the total duration of the current track.
+   * @returns {number} The total duration in milliseconds.
+   */
+  getTotalDuration() {
+    checkDestroy(this.#destroyed);
+    try {
+      const adapter = this.#getActiveAdapter();
+      return adapter ? adapter.getTotalDuration() : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Gets the remaining time until the current track ends.
+   * @returns {number} The remaining time in milliseconds.
+   */
+  getRemainingTime() {
+    checkDestroy(this.#destroyed);
+    try {
+      const adapter = this.#getActiveAdapter();
+      return adapter ? adapter.getRemainingTime() : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Gets the percentage of the current track that has been played.
+   * @returns {number} A value between 0 and 100.
+   */
+  getPlaybackPercentage() {
+    checkDestroy(this.#destroyed);
+    try {
+      const adapter = this.#getActiveAdapter();
+      return adapter ? adapter.getPlaybackPercentage() : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  // ==========================================
+  // DESTROYER
+  // ==========================================
+
   /**
    * Safely destroys the TinyMediaPlayer instance.
    * This method stops active playback, clears the internal playlist,
@@ -1173,6 +1271,7 @@ class TinyMediaPlayer extends EventEmitter {
     // 4. Remove all event listeners inherited from EventEmitter
     this.removeAllListeners();
     this.#destroyed = true;
+    this.emit('destroyed');
   }
 }
 

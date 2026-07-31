@@ -1,6 +1,7 @@
 /**
  * @typedef {import('../../basics/mediaContent.mjs').PictureDataType} PictureDataType
  * @typedef {import('../../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
+ * @typedef {import('./index.mjs').ContentTimeData} ContentTimeData
  *
  * @typedef {import('./docs/YouTubePlayer.mjs').YTPlayerState} YTPlayerState
  * @typedef {import('./docs/YouTubePlayer.mjs').YTPlayerErrors} YTPlayerErrors
@@ -325,6 +326,18 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   }
 
   /**
+   * Retrieves a consolidated object containing all time-related metrics for the current media content.
+   * @returns {ContentTimeData} An object containing total, current, remaining time, and playback percentage.
+   */
+  getTimeData() {
+    const total = this.getTotalDuration();
+    const current = this.getCurrentTime();
+    const remaining = total > 0 ? total - current : 0;
+    const playbackPercentage = total > 0 ? (current / total) * 100 : 0;
+    return { total, current, remaining, playbackPercentage };
+  }
+
+  /**
    * Determines if the content is a valid YouTube URL or ID.
    * @param {MediaContent} content - The media content to evaluate.
    * @returns {boolean} True if the content is a YouTube link/ID, false otherwise.
@@ -447,7 +460,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
         this.#player &&
         this.#player.getPlayerState() === YoutubeMediaAdapter.PlayerState.PLAYING
       ) {
-        this.#masterEmitter?.emit('timeupdate', this.getCurrentTime());
+        this.#masterEmitter?.emit('timeupdate', this.getTimeData());
       }
     }, 250);
   }

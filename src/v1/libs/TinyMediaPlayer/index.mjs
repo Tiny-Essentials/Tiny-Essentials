@@ -6,6 +6,14 @@ import { createCheckDestroyed } from '../utils.mjs';
  * @typedef {import('../../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
  */
 
+/**
+ * @typedef {Object} ContentTimeData
+ * @property {number} total - The total duration of the media in milliseconds.
+ * @property {number} current - The current playback position in milliseconds.
+ * @property {number} remaining - The remaining time until the media ends in milliseconds.
+ * @property {number} playbackPercentage - The percentage of the media that has been played (0 to 100).
+ */
+
 const checkDestroy = createCheckDestroyed('BaseMediaAdapter');
 
 /**
@@ -110,6 +118,15 @@ class BaseMediaAdapter extends EventEmitter {
   getPlaybackPercentage() {
     checkDestroy(this.#destroyed);
     throw new Error('Method "getPlaybackPercentage" must be implemented by the subclass.');
+  }
+
+  /**
+   * Retrieves a consolidated object containing all time-related metrics for the current media content.
+   * @returns {ContentTimeData} An object containing total, current, remaining time, and playback percentage.
+   */
+  getTimeData() {
+    checkDestroy(this.#destroyed);
+    throw new Error('Method "getTimeData" must be implemented by the subclass.');
   }
 
   /**

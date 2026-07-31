@@ -1,6 +1,7 @@
 /**
  * @typedef {import('../../basics/mediaContent.mjs').PictureDataType} PictureDataType
  * @typedef {import('../../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
+ * @typedef {import('./index.mjs').ContentTimeData} ContentTimeData
  */
 
 import { isValidObj } from '../../basics/objChecker.mjs';
@@ -62,11 +63,23 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
     this.#audioElement.addEventListener('pause', () => this.emit('pause'));
     this.#audioElement.addEventListener('ended', () => this.emit('ended'));
     this.#audioElement.addEventListener('timeupdate', () => {
-      this.emit('timeupdate', this.getCurrentTime());
+      this.emit('timeupdate', this.getTimeData());
     });
     this.#audioElement.addEventListener('error', (error) => {
       this.emit('error', error);
     });
+  }
+
+  /**
+   * Retrieves a consolidated object containing all time-related metrics for the current media content.
+   * @returns {ContentTimeData} An object containing total, current, remaining time, and playback percentage.
+   */
+  getTimeData() {
+    const total = this.getTotalDuration();
+    const current = this.getCurrentTime();
+    const remaining = total > 0 ? total - current : 0;
+    const playbackPercentage = total > 0 ? (current / total) * 100 : 0;
+    return { total, current, remaining, playbackPercentage };
   }
 
   /**
