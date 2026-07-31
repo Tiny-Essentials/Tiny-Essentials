@@ -120,6 +120,7 @@ const checkDestroy = createCheckDestroyed('YoutubeMediaAdapter');
 class YoutubeMediaAdapter extends BaseMediaAdapter {
   /**
    * Mapping YouTube API events for internal adapter events.
+   * Includes semantic events triggered by state changes.
    * @type {Record<string, string>}
    * @private
    */
@@ -225,6 +226,23 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     }
 
     return iframe;
+  }
+
+  /**
+   * Returns the URL for a YouTube video thumbnail with a specified quality.
+   * @param {string} videoId - The YouTube video ID.
+   * @param {string} [quality='maxresdefault'] - The thumbnail quality (e.g., 'default', 'mqdefault', 'hqdefault', 'sddefault', 'maxresdefault').
+   * @returns {string} The thumbnail URL.
+   * @throws {TypeError} If the videoId is not a valid string.
+   */
+  static getThumbnailUrl(videoId, quality = 'maxresdefault') {
+    if (typeof videoId !== 'string' || videoId.trim() === '') {
+      throw new TypeError('The "videoId" must be a non-empty string.');
+    }
+    if (typeof quality !== 'string' || quality.trim() === '') {
+      throw new TypeError('The "quality" must be a non-empty string.');
+    }
+    return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
   }
 
   get id() {
@@ -593,6 +611,18 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    */
   getVolume() {
     return this.volume;
+  }
+
+  /**
+   * Retrieves the thumbnail URL for the currently loaded video with a specified quality.
+   * @param {string} [quality='maxresdefault'] - The thumbnail quality.
+   * @returns {string|null} The thumbnail URL or null if no video is loaded.
+   */
+  getThumbnailUrl(quality = 'maxresdefault') {
+    checkDestroy(this.#destroyed);
+    return this.#currentContentId
+      ? YoutubeMediaAdapter.getThumbnailUrl(this.#currentContentId, quality)
+      : null;
   }
 
   /**
