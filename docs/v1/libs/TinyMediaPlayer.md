@@ -67,6 +67,9 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 * **`unknownArtist`**: A global setting for when an artist's name is unavailable.
     * **Type**: `string` | `function` (returns a string).
     * **Getter/Setter**: Allows you to define a custom string or a logic-based function.
+* **`defaultAdapterEventNames`**: An array of strings representing the events the player listens to by default on all registered adapters.
+    * **Type**: `string[]` (e.g., `['timeupdate', 'ended']`).
+    * **Getter/Setter**: Allows customization of the default event subscription list.
 
 #### Methods
 * **`parseContent(source, defaultMetadata, metadata, parseFile, callbacks)`**: 
@@ -124,6 +127,15 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 * **`clearAdapters()`**: Clears the list of adapters (does not call `destroy` on them).
 * **`destroyAllAdapters()`**: Destroys and removes all registered media adapters.
 * **`getMediaAdapter(content)`**: Finds the compatible adapter for the provided content.
+
+#### 📡 Event Management (Controlled)
+*Use these methods to manage which events from the underlying adapters are proxied to the `TinyMediaPlayer` instance.*
+
+* **`addAdapterEvent(eventName)`**: Subscribes the player to a new event type from all registered adapters.
+    * `eventName`: `string`.
+* **`removeAdapterEvent(eventName)`**: Unsubscribes the player from a specific event type from all registered adapters.
+    * `eventName`: `string`.
+* **`resetAdapterEvents()`**: Restores the event listener list to the default state defined by `TinyMediaPlayer.defaultAdapterEventNames`.
 
 #### 📋 Playlist Management
 * **`addTrack(content)`**: Adds a new `MediaContent` object to the end of the playlist.

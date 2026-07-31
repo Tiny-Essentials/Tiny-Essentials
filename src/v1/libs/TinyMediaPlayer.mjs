@@ -698,7 +698,21 @@ class TinyMediaPlayer extends EventEmitter {
     return this.#adapters.size;
   }
 
-  #adapterEventNames = new Set(['timeupdate', 'ended']);
+  /** @type {string[]} */
+  static #defaultAdapterEventNames = ['timeupdate', 'ended'];
+
+  static get defaultAdapterEventNames() {
+    return structuredClone(TinyMediaPlayer.#defaultAdapterEventNames);
+  }
+
+  /** @param {string[]} value */
+  static set defaultAdapterEventNames(value) {
+    if (!Array.isArray(value) || !value.every((v) => typeof v === 'string'))
+      throw new TypeError('TinyMediaPlayer.defaultAdapterEventNames must be an array of strings.');
+    TinyMediaPlayer.#defaultAdapterEventNames = [...value];
+  }
+
+  #adapterEventNames = new Set(TinyMediaPlayer.defaultAdapterEventNames);
 
   /**
    * Removes the timeupdate on adapter emitter.
@@ -711,13 +725,14 @@ class TinyMediaPlayer extends EventEmitter {
       const handler = data.get(eventName);
       if (handler) adapter.off(eventName, handler);
     });
+    data.clear();
     this.#adapterHandlers.delete(adapter);
   }
 
   /**
    * Registers a new media API adapter.
    * @param {BaseMediaAdapter} adapter - An instance extending BaseMediaAdapter.
-   * @throws {TypeError} If adapter is invalid.
+   * @throws {TypeError} If the adapter is invalid.
    */
   registerAdapter(adapter) {
     checkDestroy(this.#destroyed);
@@ -727,15 +742,11 @@ class TinyMediaPlayer extends EventEmitter {
 
     const events = new Map();
     this.#adapterHandlers.set(adapter, events);
+
+    // Use the controlled helper to ensure each event is registered
+    // and correctly mapped in #adapterHandlers from the start.
     this.#adapterEventNames.forEach((eventName) => {
-      // Bind the event from the adapter to the player
-      /** @type {(...args: any[]) => any} */
-      const handler = (...args) => {
-        if (!this.#destroyed) {
-          this.emit(eventName, ...args);
-        }
-      };
-      adapter.on(eventName, handler);
+      this.#attachEventToAdapter(adapter, eventName);
     });
 
     this.#adapters.add(adapter);
@@ -834,6 +845,116 @@ class TinyMediaPlayer extends EventEmitter {
     const adapter = this.getMediaAdapter(currentContent);
     if (adapter) return adapter;
     throw new Error(`No compatible adapter found for content ID: ${currentContent.id}.`);
+  }
+
+  // ==========================================
+  // EVENT MANAGEMENT (CONTROLLED)
+  // ==========================================
+
+  /**
+   * Adds a new event to be listened to on the adapters.
+   * @param {string} eventName - The name of the event to add.
+   * @throws {TypeError} If the event name is not a string.
+   */
+  addAdapterEvent(eventName) {
+    checkDestroy(this.#destroyed);
+    if (typeof eventName !== 'string') {
+      throw new TypeError('Event name must be a string.');
+    }
+
+    // If the event is already in the list, do nothing to avoid duplicates
+    if (this.#adapterEventNames.has(eventName)) return;
+
+    this.#adapterEventNames.add(eventName);
+
+    // Synchronize: Add the listener to all already registered adapters
+    this.#adapters.forEach((adapter) => {
+      this.#attachEventToAdapter(adapter, eventName);
+    });
+  }
+
+  /**
+   * Removes an event from the list of listened events.
+   * @param {string} eventName - The name of the event to remove.
+   * @throws {TypeError} If the event name is not a string.
+   */
+  removeAdapterEvent(eventName) {
+    checkDestroy(this.#destroyed);
+    if (typeof eventName !== 'string') {
+      throw new TypeError('Event name must be a string.');
+    }
+
+    if (!this.#adapterEventNames.has(eventName)) return;
+
+    this.#adapterEventNames.delete(eventName);
+
+    // Synchronize: Remove the listener from all registered adapters
+    this.#adapters.forEach((adapter) => {
+      this.#detachEventFromAdapter(adapter, eventName);
+    });
+  }
+
+  /**
+   * Resets the event list to the factory default state: ['timeupdate', 'ended'].
+   * @throws {TypeError} If the event name is not a string.
+   */
+  resetAdapterEvents() {
+    checkDestroy(this.#destroyed);
+    const defaultEvents = TinyMediaPlayer.defaultAdapterEventNames;
+
+    // Convert to Array to avoid issues when deleting items during iteration
+    const currentEvents = Array.from(this.#adapterEventNames);
+
+    // 1. Remove events that are not part of the factory default
+    for (const eventName of currentEvents) {
+      if (!defaultEvents.includes(eventName)) {
+        this.removeAdapterEvent(eventName);
+      }
+    }
+
+    // 2. Ensure default events exist (in case they were previously removed)
+    for (const defaultEvent of defaultEvents) {
+      if (!this.#adapterEventNames.has(defaultEvent)) {
+        this.addAdapterEvent(defaultEvent);
+      }
+    }
+  }
+
+  /**
+   * Private helper to attach an event to a specific adapter and save the handler.
+   * @param {BaseMediaAdapter} adapter - The destination adapter.
+   * @param {string} eventName - The event name.
+   */
+  #attachEventToAdapter(adapter, eventName) {
+    const handlersMap = this.#adapterHandlers.get(adapter);
+    if (!handlersMap) return;
+
+    // Create an encapsulated handler to maintain security (checkDestroy)
+    /** @type {(...args: any[]) => any} */
+    const handler = (...args) => {
+      if (!this.#destroyed) {
+        this.emit(eventName, ...args);
+      }
+    };
+
+    adapter.on(eventName, handler);
+    handlersMap.set(eventName, handler); // Mandatory synchronization with the WeakMap
+  }
+
+  /**
+   * Private helper to remove an event from a specific adapter using the saved handler.
+   * @param {BaseMediaAdapter} adapter - The destination adapter.
+   * @param {string} eventName - The event name.
+   */
+  #detachEventFromAdapter(adapter, eventName) {
+    const handlersMap = this.#adapterHandlers.get(adapter);
+    if (!handlersMap) return;
+
+    const handler = handlersMap.get(eventName);
+    if (handler) {
+      adapter.off(eventName, handler);
+      handlersMap.delete(eventName); // Mandatory synchronization with the WeakMap
+    }
   }
 
   // ==========================================
@@ -1277,6 +1398,7 @@ class TinyMediaPlayer extends EventEmitter {
 
     // 4. Remove all event listeners inherited from EventEmitter
     this.removeAllListeners();
+    this.#adapterEventNames.clear();
     this.#destroyed = true;
     this.emit('destroyed');
   }
