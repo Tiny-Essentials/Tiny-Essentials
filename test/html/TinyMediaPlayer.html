@@ -446,7 +446,7 @@
       };
 
       // Bind Audio Ended Event to trigger next() automatically for testing
-      htmlAdapter.audioElement.addEventListener('ended', async () => {
+      player.on('ended', async () => {
         logMsg('Track ended naturally. Invoking player.next()');
         await player.next();
         renderPlaylist();

@@ -112,7 +112,7 @@ class TinyMediaPlayer extends EventEmitter {
   /** @type {Set<BaseMediaAdapter>} */
   #adapters = new Set();
 
-  /** @type {WeakMap<BaseMediaAdapter, (timeData: ContentTimeData) => void>} */
+  /** @type {WeakMap<BaseMediaAdapter, Map<string, (...args: any[]) => any>>} */
   #adapterHandlers = new WeakMap();
 
   /** @type {MediaContent[]} */
@@ -698,16 +698,20 @@ class TinyMediaPlayer extends EventEmitter {
     return this.#adapters.size;
   }
 
+  #adapterEventNames = new Set(['timeupdate', 'ended']);
+
   /**
    * Removes the timeupdate on adapter emitter.
    * @param {BaseMediaAdapter} adapter
    */
   #removeHandler(adapter) {
-    const handler = this.#adapterHandlers.get(adapter);
-    if (handler) {
-      adapter.off('timeupdate', handler);
-      this.#adapterHandlers.delete(adapter);
-    }
+    const data = this.#adapterHandlers.get(adapter);
+    if (!data) return;
+    this.#adapterEventNames.forEach((eventName) => {
+      const handler = data.get(eventName);
+      if (handler) adapter.off(eventName, handler);
+    });
+    this.#adapterHandlers.delete(adapter);
   }
 
   /**
@@ -721,16 +725,18 @@ class TinyMediaPlayer extends EventEmitter {
       throw new TypeError('Adapter must be an instance of BaseMediaAdapter.');
     }
 
-    // Bind the timeupdate event from the adapter to the player
-    /** @param {ContentTimeData} timeData */
-    const handler = (timeData) => {
-      if (!this.#destroyed) {
-        this.emit('timeupdate', timeData);
-      }
-    };
-
-    this.#adapterHandlers.set(adapter, handler);
-    adapter.on('timeupdate', handler);
+    const events = new Map();
+    this.#adapterHandlers.set(adapter, events);
+    this.#adapterEventNames.forEach((eventName) => {
+      // Bind the event from the adapter to the player
+      /** @type {(...args: any[]) => any} */
+      const handler = (...args) => {
+        if (!this.#destroyed) {
+          this.emit(eventName, ...args);
+        }
+      };
+      adapter.on(eventName, handler);
+    });
 
     this.#adapters.add(adapter);
   }
