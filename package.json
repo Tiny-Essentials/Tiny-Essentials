@@ -1,6 +1,6 @@
 {
   "name": "tiny-essentials",
-  "version": "1.28.5",
+  "version": "1.28.6",
   "description": "Collection of small, essential scripts designed to be used across various projects. These simple utilities are crafted for speed, ease of use, and versatility.",
   "bin": {
     "tiny-essentials-fork": "./TinyFork.mjs"
@@ -107,6 +107,10 @@
     "./basics/text": {
       "require": "./dist/v1/basics/text.cjs",
       "import": "./dist/v1/basics/text.mjs"
+    },
+    "./basics/promiseUtils": {
+      "require": "./dist/v1/basics/promiseUtils.cjs",
+      "import": "./dist/v1/basics/promiseUtils.mjs"
     },
     "./fileManager": {
       "require": "./dist/v1/fileManager/index.cjs",
