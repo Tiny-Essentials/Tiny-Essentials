@@ -23,6 +23,28 @@ To support different media platforms, `TinyMediaPlayer` relies on **Adapters**. 
 
 ---
 
+## 📊 Data Types
+
+### `ContentTimeData`
+This object is emitted during the `timeupdate` event and provides real-time playback information.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `total` | `number` | The total duration of the media in milliseconds. |
+| `current` | `number` | The current playback position in milliseconds. |
+| `remaining` | `number` | The remaining time until the media ends in milliseconds. |
+| `playbackPercentage` | `number` | The percentage of the media that has been played (0 to 100). |
+
+### `SearchResult`
+Returned by the `searchTrack` method.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `track` | `MediaContent` | The matched media content object. |
+| `index` | `number` | The current index of the track in the playlist. |
+
+---
+
 ## 🚀 `TinyMediaPlayer` Class
 
 The main controller for managing playlists, playback state, and adapters.
@@ -77,10 +99,10 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 | `repeatCurrentOnPrev` | `boolean` | Whether clicking 'previous' repeats the current track on first click. |
 | `smoothPlayPauseVolume`| `boolean` | Enables smooth volume fading during play/pause. |
 | `smoothStopVolume` | `boolean` | Enables smooth volume fading when stopping. |
-| `fadeVolumeSpeed` | `number` | The duration (ms) of the volume fade transition. |
-| `prevClickTimeoutDuration`| `number` | The duration (ms) before the "repeat on prev" state resets. |
+| `fadeVolumeSpeed` | `number` | The duration (ms) of the volume fade transition (must be non-negative). |
+| `prevClickTimeoutDuration`| `number` | The duration (ms) before the "repeat on prev" state resets (must be non-negative). |
 | `persistVolume` | `boolean` | Enables/disables volume saving to `localStorage`. |
-| `volumeStorageKey` | `string` | The key used for volume persistence. |
+| `volumeStorageKey` | `string` | The key used for volume persistence (cannot be empty). |
 
 #### 🛠️ Utility & Lifecycle
 | Property | Type | Description |
@@ -111,7 +133,7 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 * **`removeTrack(index)`**: **(Async)** Removes a track and adjusts the current index/playback accordingly.
 * **`searchTrack(query)`**: Searches the playlist.
     * `query`: A `string` (searches title, artist, or album) or a `function` (custom logic).
-    * **Returns**: `SearchResult[]` (array of objects containing the track and its index).
+    * **Returns**: `SearchResult[]` (array of objects containing the track and their corresponding indices).
 * **`clearPlaylist()`**: **(Async)** Stops playback and empties the entire playlist.
 
 #### ⏯️ Playback Controls
@@ -134,9 +156,43 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 
 ---
 
+## 📡 Emitted Events
+
+`TinyMediaPlayer` extends `EventEmitter`. You can listen to the following events:
+
+### 🎶 Playback Events
+| Event | Data Type | Description |
+| :--- | :--- | :--- |
+| `play` | `number` | Emitted when playback starts. Returns the `currentIndex`. |
+| `pause` | `number` | Emitted when playback is paused. Returns the `currentIndex`. |
+| `stop` | `number` | Emitted when playback is stopped. Returns the `currentIndex`. |
+| `seek` | `number` | Emitted when the timeline is jumped to a new time (in ms). |
+| `timeupdate` | `ContentTimeData` | Emitted by the adapter every time the playback position changes (in ms). |
+
+### 🔄 State & Configuration Events
+| Event | Data Type | Description |
+| :--- | :--- | :--- |
+| `playlistUpdate` | `MediaContent[]` | Emitted when the playlist is modified. |
+| `trackChange` | `number` | Emitted when the `currentIndex` changes. |
+| `volumeChange` | `number` | Emitted when the volume is updated (0.0 to 1.0). |
+| `isRandomChange` | `boolean` | Emitted when the random mode is toggled. |
+| `loopModeChange` | `LoopModeType` | Emitted when the loop mode is changed. |
+| `repeatCurrentOnPrevChange` | `boolean` | Emitted when the "repeat on prev" setting is toggled. |
+| `smoothPlayPauseVolumeChange` | `boolean` | Emitted when the smooth play/pause volume setting is toggled. |
+| `smoothStopVolumeChange` | `boolean` | Emitted when the smooth stop volume setting is toggled. |
+| `fadeVolumeSpeedChange` | `number` | Emitted when the volume fade speed is updated. |
+| `prevClickTimeoutDurationChange` | `number` | Emitted when the "repeat on prev" timeout duration is updated. |
+
+### 💀 Lifecycle Events
+| Event | Data Type | Description |
+| :--- | :--- | :--- |
+| `destroyed` | `void` | Emitted when the `destroy()` method has finished executing. |
+
+---
+
 ## ⚠️ Error Handling
 
 The class uses strict validation. The following errors may be thrown:
-* **`TypeError`**: Thrown when an argument is of the wrong type (e.g., invalid index type, non-boolean options, invalid adapter instance).
-* **`RangeError`**: Thrown when a number is out of allowed bounds (e.g., negative time, volume outside `0.0`-`1.0`, or index out of playlist bounds).
+* **`TypeError`**: Thrown when an argument is of the wrong type (e.g., invalid index type, non-boolean options, invalid adapter instance, or empty storage key).
+* **`RangeError`**: Thrown when a number is out of allowed bounds (e.g., negative time, volume outside `0.0`-`1.0`, negative durations, or index out of playlist bounds).
 * **`Error`**: Thrown if no compatible adapter is found for the current content.

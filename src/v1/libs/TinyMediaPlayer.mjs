@@ -21,6 +21,7 @@ const checkDestroy = createCheckDestroyed('TinyMediaPlayer');
  * @typedef {import('../basics/mediaContent.mjs').LoadingMediaProgress} LoadingMediaProgress
  * @typedef {import('../basics/mediaContent.mjs').MediaLoadingErrorData} MediaLoadingErrorData
  * @typedef {import('../basics/mediaContent.mjs').UnknownArtistGetter} UnknownArtistGetter
+ * @typedef {import('./TinyMediaPlayer/index.mjs').ContentTimeData} ContentTimeData
  */
 
 /**
@@ -111,7 +112,7 @@ class TinyMediaPlayer extends EventEmitter {
   /** @type {Set<BaseMediaAdapter>} */
   #adapters = new Set();
 
-  /** @type {WeakMap<BaseMediaAdapter, (timeMs: number) => void>} */
+  /** @type {WeakMap<BaseMediaAdapter, (timeData: ContentTimeData) => void>} */
   #adapterHandlers = new WeakMap();
 
   /** @type {MediaContent[]} */
@@ -721,10 +722,10 @@ class TinyMediaPlayer extends EventEmitter {
     }
 
     // Bind the timeupdate event from the adapter to the player
-    /** @param {number} timeMs */
-    const handler = (timeMs) => {
+    /** @param {ContentTimeData} timeData */
+    const handler = (timeData) => {
       if (!this.#destroyed) {
-        this.emit('timeupdate', timeMs);
+        this.emit('timeupdate', timeData);
       }
     };
 
