@@ -163,6 +163,14 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
   }
 
   /**
+   * Gets the volume level of the audio.
+   * @returns {number} The volume level from 0.0 to 1.0.
+   */
+  getVolume() {
+    return this.volume;
+  }
+
+  /**
    * Gets the current volume level.
    * @returns {number} The current volume level from 0.0 to 1.0.
    */

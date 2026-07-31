@@ -528,8 +528,15 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @throws {RangeError} If volume is outside [0.0, 1.0].
    */
   setVolume(volume) {
-    checkDestroy(this.#destroyed);
     this.volume = volume;
+  }
+
+  /**
+   * Gets the playback volume.
+   * @returns {number} The volume level from 0.0 to 1.0.
+   */
+  getVolume() {
+    return this.volume;
   }
 
   /**

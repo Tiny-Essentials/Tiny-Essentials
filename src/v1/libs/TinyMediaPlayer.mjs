@@ -29,10 +29,14 @@ const checkDestroy = createCheckDestroyed('TinyMediaPlayer');
  */
 
 /**
- * Configuration options for initializing the UniversalMediaPlayer.
+ * Configuration options for initializing the TinyMediaPlayer.
  * @typedef {Object} TinyMediaPlayerOptions
  * @property {boolean} [persistVolume=false] - Whether to automatically save the volume in localStorage.
- * @property {string} [volumeStorageKey='universal_media_player_volume'] - The specific key name used for localStorage cache.
+ * @property {string} [volumeStorageKey='tiny_media_player_volume'] - The specific key name used for localStorage cache.
+ * @property {boolean} [repeatCurrentOnPrev=false] - If true, clicking 'previous' repeats the current track on the first click.
+ * @property {boolean} [smoothPlayPauseVolume=false] - If true, volume fades smoothly during play/pause transitions.
+ * @property {boolean} [smoothStopVolume=false] - If true, volume fades smoothly to zero when stopping.
+ * @property {number} [prevClickTimeoutDuration=2000] - The duration (ms) before the prev click state resets.
  */
 
 /**
@@ -69,7 +73,7 @@ class TinyMediaPlayer extends EventEmitter {
    */
   static set unknownArtist(value) {
     if (typeof value !== 'string' && typeof value !== 'function')
-      throw new TypeError('unknownArtist must have an string or function.');
+      throw new TypeError('unknownArtist must be a string or a function.');
     TinyMediaPlayer.#unknownArtist = value;
   }
 
@@ -132,17 +136,116 @@ class TinyMediaPlayer extends EventEmitter {
   /** @type {string} */
   #volumeStorageKey;
 
+  /** @type {boolean} */
+  #repeatCurrentOnPrev;
+
+  /** @type {boolean} */
+  #prevClickedToRepeat = false;
+
+  /** @type {boolean} */
+  #smoothPlayPauseVolume;
+
+  /** @type {boolean} */
+  #smoothStopVolume;
+
+  /** @type {AbortController | null} */
+  #fadeController = null;
+
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  #prevClickTimer = null;
+
+  /** @type {number} */
+  #prevClickTimeoutDuration = 2000;
+
+  /** @returns {number} The duration (ms) before the prev click state resets. */
+  get prevClickTimeoutDuration() {
+    checkDestroy(this.#destroyed);
+    return this.#prevClickTimeoutDuration;
+  }
+
+  /**
+   * @param {number} value - The new duration in milliseconds.
+   * @throws {TypeError} If the value is not a number.
+   * @throws {RangeError} If the value is negative.
+   */
+  set prevClickTimeoutDuration(value) {
+    checkDestroy(this.#destroyed);
+    if (typeof value !== 'number')
+      throw new TypeError('prevClickTimeoutDuration must be a number.');
+    if (value < 0) throw new RangeError('prevClickTimeoutDuration cannot be negative.');
+    this.#prevClickTimeoutDuration = value;
+  }
+
   /**
    * @param {TinyMediaPlayerOptions} [options={}] - Configuration parameters for the player.
+   * @throws {TypeError} If options is not a valid object.
+   * @throws {TypeError} If option values do not match their expected types.
+   * @throws {RangeError} If numeric options are out of valid ranges.
    */
   constructor(options = {}) {
     super();
+    if (!isValidObj(options)) {
+      throw new TypeError('Options must be a non-null object.');
+    }
+
     // Volume configuration
-    this.#persistVolume = Boolean(options.persistVolume);
-    this.#volumeStorageKey =
-      typeof options.volumeStorageKey === 'string'
-        ? options.volumeStorageKey
-        : 'tiny_media_player_volume';
+    if (options.persistVolume !== undefined) {
+      if (typeof options.persistVolume !== 'boolean') {
+        throw new TypeError('persistVolume must be a boolean.');
+      }
+      this.#persistVolume = options.persistVolume;
+    } else {
+      this.#persistVolume = false;
+    }
+
+    if (options.volumeStorageKey !== undefined) {
+      if (typeof options.volumeStorageKey !== 'string')
+        throw new TypeError('volumeStorageKey must be a string.');
+      this.#volumeStorageKey = options.volumeStorageKey;
+    } else {
+      this.#volumeStorageKey = 'tiny_media_player_volume';
+    }
+
+    // UX Options
+    if (options.repeatCurrentOnPrev !== undefined) {
+      if (typeof options.repeatCurrentOnPrev !== 'boolean') {
+        throw new TypeError('repeatCurrentOnPrev must be a boolean.');
+      }
+      this.#repeatCurrentOnPrev = options.repeatCurrentOnPrev;
+    } else {
+      this.#repeatCurrentOnPrev = false;
+    }
+
+    if (options.smoothPlayPauseVolume !== undefined) {
+      if (typeof options.smoothPlayPauseVolume !== 'boolean') {
+        throw new TypeError('smoothPlayPauseVolume must be a boolean.');
+      }
+      this.#smoothPlayPauseVolume = options.smoothPlayPauseVolume;
+    } else {
+      this.#smoothPlayPauseVolume = false;
+    }
+
+    if (options.smoothStopVolume !== undefined) {
+      if (typeof options.smoothStopVolume !== 'boolean') {
+        throw new TypeError('smoothStopVolume must be a boolean.');
+      }
+      this.#smoothStopVolume = options.smoothStopVolume;
+    } else {
+      this.#smoothStopVolume = false;
+    }
+
+    // Customization Options (Timeout)
+    if (options.prevClickTimeoutDuration !== undefined) {
+      if (typeof options.prevClickTimeoutDuration !== 'number') {
+        throw new TypeError('prevClickTimeoutDuration must be a number.');
+      }
+      if (options.prevClickTimeoutDuration < 0) {
+        throw new RangeError('prevClickTimeoutDuration cannot be negative.');
+      }
+      this.#prevClickTimeoutDuration = options.prevClickTimeoutDuration;
+    } else {
+      this.#prevClickTimeoutDuration = 2000;
+    }
 
     if (this.#persistVolume) this.#loadVolumeFromStorage();
   }
@@ -226,6 +329,47 @@ class TinyMediaPlayer extends EventEmitter {
 
     // Fallback in case of floating point inaccuracies
     return this.#currentIndex === this.#playlist.length - 1 ? 0 : this.#playlist.length - 1;
+  }
+
+  /**
+   * Handles smooth volume transitions for the active adapter.
+   * @param {number} targetVolume - The volume to transition to.
+   * @param {number} [duration=500] - Duration of the fade in milliseconds.
+   * @returns {Promise<void>}
+   */
+  async #fadeAdapterVolume(targetVolume, duration = 500) {
+    if (this.#fadeController) {
+      this.#fadeController.abort();
+    }
+
+    this.#fadeController = new AbortController();
+    const { signal } = this.#fadeController;
+
+    const adapter = this.#getActiveAdapter();
+    if (!adapter) return;
+
+    const startVolume = adapter.getVolume();
+    const startTime = performance.now();
+
+    return new Promise((resolve) => {
+      /** @param {number} currentTime */
+      const step = (currentTime) => {
+        if (signal.aborted) return resolve();
+
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const currentFadeVolume = startVolume + (targetVolume - startVolume) * progress;
+
+        adapter.setVolume(currentFadeVolume);
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          resolve();
+        }
+      };
+      requestAnimationFrame(step);
+    });
   }
 
   // ==========================================
@@ -399,6 +543,9 @@ class TinyMediaPlayer extends EventEmitter {
     if (value < 0 || value > 1)
       throw new RangeError('Volume must be tightly constrained between 0.0 and 1.0.');
 
+    // Abort any ongoing fade to ensure manual control is immediate
+    if (this.#fadeController) this.#fadeController.abort();
+
     this.#volume = value;
     this.#saveVolumeToStorage();
     this.emit('volumeChange', this.#volume);
@@ -571,8 +718,9 @@ class TinyMediaPlayer extends EventEmitter {
    */
   addTrack(content) {
     checkDestroy(this.#destroyed);
-    if (!content || typeof content !== 'object' || typeof content.url !== 'string')
+    if (!isValidObj(content) || typeof content.url !== 'string') {
       throw new TypeError('Track content must be a valid MediaContent object containing a URL.');
+    }
 
     /** @type {MediaContent} */
     const newContent = { ...getMediaContentBase(), ...getMediaContentMetadata(), ...content };
@@ -644,7 +792,7 @@ class TinyMediaPlayer extends EventEmitter {
         this.#currentIndex = -1;
       } else if (this.#currentIndex >= this.#playlist.length) {
         // If we removed the last item and others exist, reset index safely
-        this.#currentIndex = 0;
+        this.#currentIndex = 0; // Reset to start if out of bounds
       }
       this.emit('trackChange', this.#currentIndex);
     } else {
@@ -722,7 +870,12 @@ class TinyMediaPlayer extends EventEmitter {
     if (!adapter) return;
 
     // Ensure the adapter aligns with the global volume before playing
-    adapter.setVolume(this.#volume);
+    if (this.#smoothPlayPauseVolume) {
+      await this.#fadeAdapterVolume(this.#volume);
+    } else {
+      adapter.setVolume(this.#volume);
+    }
+
     await adapter.play(this.#playlist[this.#currentIndex]);
     this.#isPlaying = true;
     this.emit('play', this.#currentIndex);
@@ -737,6 +890,10 @@ class TinyMediaPlayer extends EventEmitter {
     const adapter = this.#getActiveAdapter();
     if (!adapter) return;
 
+    if (this.#smoothPlayPauseVolume) {
+      await this.#fadeAdapterVolume(0);
+    }
+
     await adapter.pause();
     this.#isPlaying = false;
     this.emit('pause', this.#currentIndex);
@@ -750,6 +907,10 @@ class TinyMediaPlayer extends EventEmitter {
     checkDestroy(this.#destroyed);
     const adapter = this.#getActiveAdapter();
     if (!adapter) return;
+
+    if (this.#smoothStopVolume) {
+      await this.#fadeAdapterVolume(0);
+    }
 
     await adapter.stop();
     this.#isPlaying = false;
@@ -798,6 +959,28 @@ class TinyMediaPlayer extends EventEmitter {
   async prev() {
     checkDestroy(this.#destroyed);
     if (this.#playlist.length === 0) return;
+
+    // UX: Repeat current track if "repeat on prev" is enabled and it's the first click
+    if (this.#repeatCurrentOnPrev && !this.#prevClickedToRepeat) {
+      this.#prevClickedToRepeat = true;
+
+      // Reset the "repeat" state after 2 seconds of inactivity to prevent glitches
+      if (this.#prevClickTimer) clearTimeout(this.#prevClickTimer);
+      this.#prevClickTimer = setTimeout(() => {
+        this.#prevClickedToRepeat = false;
+        this.#prevClickTimer = null;
+      }, 2000);
+
+      await this.play();
+      return;
+    }
+
+    // If we reached here, it's either the second click or repeat is disabled
+    if (this.#prevClickTimer) {
+      clearTimeout(this.#prevClickTimer);
+      this.#prevClickTimer = null;
+    }
+    this.#prevClickedToRepeat = false;
 
     await this.stop();
 
@@ -887,10 +1070,13 @@ class TinyMediaPlayer extends EventEmitter {
       console.warn('[TinyMediaPlayer] Non-fatal error during playback termination:', error);
     }
 
+    if (this.#prevClickTimer) clearTimeout(this.#prevClickTimer);
+
     // 2. Clear internal state variables
     this.#playlist = [];
     this.#currentIndex = -1;
     this.#isPlaying = false;
+    this.#prevClickedToRepeat = false;
 
     // 3. Clear all registered API adapters
     this.clearAdapters();

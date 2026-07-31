@@ -96,6 +96,15 @@ class BaseMediaAdapter extends EventEmitter {
   }
 
   /**
+   * Gets the playback volume for the underlying API.
+   * @returns {number} - The volume level from 0.0 to 1.0.
+   */
+  getVolume() {
+    checkDestroy(this.#destroyed);
+    throw new Error('Method "getVolume" must be implemented by the subclass.');
+  }
+
+  /**
    * Cleans up the instance.
    * @returns {void}
    */

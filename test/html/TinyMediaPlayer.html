@@ -357,7 +357,11 @@
       import { HtmlAudioAdapter } from './src/v1/libs/TinyMediaPlayer/HtmlAudio.mjs';
 
       // Initialize Player and Adapter
-      const player = new TinyMediaPlayer({ persistVolume: false });
+      const player = new TinyMediaPlayer({
+        repeatCurrentOnPrev: true,
+        smoothPlayPauseVolume: true,
+        smoothStopVolume: true,
+      });
       window.player = player;
 
       YoutubeMediaAdapter.defaultContainer = YoutubeMediaAdapter.createIframeContainer({
