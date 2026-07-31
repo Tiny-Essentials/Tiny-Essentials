@@ -132,6 +132,10 @@
       "require": "./dist/v1/libs/TinyMediaPlayer.cjs",
       "import": "./dist/v1/libs/TinyMediaPlayer.mjs"
     },
+    "./libs/TinyMediaPlayer/Base": {
+      "require": "./dist/v1/libs/TinyMediaPlayer/index.cjs",
+      "import": "./dist/v1/libs/TinyMediaPlayer/index.mjs"
+    },
     "./libs/TinyMediaPlayer/Youtube": {
       "require": "./dist/v1/libs/TinyMediaPlayer/Youtube.cjs",
       "import": "./dist/v1/libs/TinyMediaPlayer/Youtube.mjs"
