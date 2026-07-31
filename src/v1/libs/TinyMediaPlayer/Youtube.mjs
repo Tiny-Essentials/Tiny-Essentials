@@ -315,6 +315,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     if (this.#player && typeof this.#player.setVolume === 'function') {
       this.#player.setVolume(value * 100);
     }
+    this.emit('volumeChange', this.#currentVolume);
   }
 
   /**

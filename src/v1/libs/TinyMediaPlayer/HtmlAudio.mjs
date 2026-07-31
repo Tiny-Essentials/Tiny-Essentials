@@ -235,6 +235,7 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
       throw new RangeError('Volume must be a number between 0.0 and 1.0.');
     }
     this.#audioElement.volume = value;
+    this.emit('volumeChange', value);
   }
 
   /**
