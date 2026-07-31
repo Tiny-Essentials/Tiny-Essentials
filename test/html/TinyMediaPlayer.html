@@ -359,7 +359,7 @@
       const player = new TinyMediaPlayer({ persistVolume: false });
       window.player = player;
       const htmlAdapter = new HtmlAudioAdapter();
-      player.registerAdapter('html5_audio', htmlAdapter);
+      player.registerAdapter(htmlAdapter);
 
       // DOM Elements setup
       const logsContainer = document.getElementById('system-logs');

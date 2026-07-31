@@ -8,6 +8,7 @@ import {
 } from '../basics/mediaContent.mjs';
 import { createCheckDestroyed } from './utils.mjs';
 import { BaseMediaAdapter } from './TinyMediaPlayer/index.mjs';
+import { isValidObj } from '../basics/objChecker.mjs';
 
 const checkDestroy = createCheckDestroyed('TinyMediaPlayer');
 
@@ -104,8 +105,8 @@ class TinyMediaPlayer extends EventEmitter {
     return this.#destroyed;
   }
 
-  /** @type {Map<string, BaseMediaAdapter>} */
-  #adapters = new Map();
+  /** @type {Set<BaseMediaAdapter>} */
+  #adapters = new Set();
 
   /** @type {MediaContent[]} */
   #playlist = [];
@@ -471,21 +472,78 @@ class TinyMediaPlayer extends EventEmitter {
   // ADAPTER MANAGEMENT
   // ==========================================
 
+  get adapters() {
+    return Array.from(this.#adapters);
+  }
+
+  get adaptersSize() {
+    return this.#adapters.size;
+  }
+
   /**
    * Registers a new media API adapter.
-   * @param {string} id - Unique identifier for the platform (e.g., 'youtube', 'spotify').
    * @param {BaseMediaAdapter} adapter - An instance extending BaseMediaAdapter.
-   * @throws {TypeError} If id is not a string or adapter is invalid.
+   * @throws {TypeError} If adapter is invalid.
    */
-  registerAdapter(id, adapter) {
+  registerAdapter(adapter) {
     checkDestroy(this.#destroyed);
-    if (typeof id !== 'string') {
-      throw new TypeError('Adapter ID must be a string.');
-    }
     if (!(adapter instanceof BaseMediaAdapter)) {
       throw new TypeError('Adapter must be an instance of BaseMediaAdapter.');
     }
-    this.#adapters.set(id, adapter);
+    this.#adapters.add(adapter);
+  }
+
+  /**
+   * Deletes a media API adapter.
+   * @param {BaseMediaAdapter} adapter - An instance extending BaseMediaAdapter.
+   * @throws {TypeError} If adapter is invalid.
+   */
+  removeAdapter(adapter) {
+    checkDestroy(this.#destroyed);
+    if (!(adapter instanceof BaseMediaAdapter)) {
+      throw new TypeError('Adapter must be an instance of BaseMediaAdapter.');
+    }
+    return this.#adapters.delete(adapter);
+  }
+
+  /**
+   * If exists a media API adapter.
+   * @param {BaseMediaAdapter} adapter - An instance extending BaseMediaAdapter.
+   * @throws {TypeError} If adapter is invalid.
+   */
+  hasAdapter(adapter) {
+    checkDestroy(this.#destroyed);
+    if (!(adapter instanceof BaseMediaAdapter)) {
+      throw new TypeError('Adapter must be an instance of BaseMediaAdapter.');
+    }
+    return this.#adapters.has(adapter);
+  }
+
+  /**
+   * Removes all registered media adapters.
+   */
+  clearAdapters() {
+    checkDestroy(this.#destroyed);
+    this.#adapters.forEach((adapter) => adapter.destroy());
+    this.#adapters.clear();
+  }
+
+  /**
+   * Helper to find the correct API wrapper for the content.
+   * @param {MediaContent} content - The content to check.
+   * @returns {BaseMediaAdapter | null} The compatible adapter, or null if empty.
+   * @throws {TypeError} If the content is invalid.
+   */
+  getMediaAdapter(content) {
+    if (!isValidObj(content)) {
+      throw new TypeError('Content must be a valid object.');
+    }
+    for (const adapter of this.#adapters.values()) {
+      if (adapter.canHandle(content)) {
+        return adapter;
+      }
+    }
+    return null;
   }
 
   /**
@@ -496,12 +554,8 @@ class TinyMediaPlayer extends EventEmitter {
   #getActiveAdapter() {
     if (this.#currentIndex === -1 || this.#playlist.length === 0) return null;
     const currentContent = this.#playlist[this.#currentIndex];
-
-    for (const adapter of this.#adapters.values()) {
-      if (adapter.canHandle(currentContent)) {
-        return adapter;
-      }
-    }
+    const adapter = this.getMediaAdapter(currentContent);
+    if (adapter) return adapter;
     throw new Error(`No compatible adapter found for content ID: ${currentContent.id}.`);
   }
 
@@ -839,8 +893,7 @@ class TinyMediaPlayer extends EventEmitter {
     this.#isPlaying = false;
 
     // 3. Clear all registered API adapters
-    this.#adapters.forEach((adapter) => adapter.destroy());
-    this.#adapters.clear();
+    this.clearAdapters();
 
     // 4. Remove all event listeners inherited from EventEmitter
     this.removeAllListeners();

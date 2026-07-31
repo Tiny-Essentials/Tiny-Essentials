@@ -3,6 +3,7 @@
  * @typedef {import('../../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
  */
 
+import { isValidObj } from '../../basics/objChecker.mjs';
 import { createCheckDestroyed } from '../utils.mjs';
 import { BaseMediaAdapter } from './index.mjs';
 
@@ -15,6 +16,10 @@ const checkDestroy = createCheckDestroyed('HtmlAudioAdapter');
 class HtmlAudioAdapter extends BaseMediaAdapter {
   /** @type {boolean} */
   #destroyed = false;
+
+  get id() {
+    return 'html5Audio';
+  }
 
   /**
    * The internal HTMLAudioElement instance.
@@ -72,7 +77,7 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
    */
   canHandle(content) {
     checkDestroy(this.#destroyed);
-    if (!content || typeof content !== 'object') {
+    if (!isValidObj(content)) {
       throw new TypeError('Content must be a valid object.');
     }
     return (
@@ -89,6 +94,9 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
    */
   async play(content) {
     checkDestroy(this.#destroyed);
+    if (!isValidObj(content)) {
+      throw new TypeError('Content must be a valid object.');
+    }
     if (typeof content?.url !== 'string') {
       throw new TypeError('Valid media URL required.');
     }

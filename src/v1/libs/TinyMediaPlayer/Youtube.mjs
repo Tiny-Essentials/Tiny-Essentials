@@ -175,6 +175,10 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     this.#defaultContainer = element;
   }
 
+  get id() {
+    return 'youtubeEmbedApi';
+  }
+
   /** @type {YouTubePlayer|null} */
   #player = null;
 
@@ -280,15 +284,13 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    */
   canHandle(content) {
     checkDestroy(this.#destroyed);
-    if (!isValidObj(content) || !content.url) {
-      return false;
+    if (!isValidObj(content)) {
+      throw new TypeError('Content must be a valid object.');
     }
-
-    const videoSource = typeof content.url === 'string' ? content.url : '';
+    if (typeof content.url !== 'string') return false;
     const youtubeRegex =
       /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-
-    return youtubeRegex.test(videoSource);
+    return youtubeRegex.test(content.url);
   }
 
   /**
