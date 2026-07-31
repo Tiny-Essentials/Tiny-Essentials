@@ -316,8 +316,8 @@ class YouTubePlayer {
 
   /**
    * Sets the size of the <iframe>.
-   * @param {number} width - Width in pixels.
-   * @param {number} height - Height in pixels.
+   * @param {number|string} width - Width in pixels.
+   * @param {number|string} height - Height in pixels.
    * @returns {this}
    */
   setSize(width, height) {
