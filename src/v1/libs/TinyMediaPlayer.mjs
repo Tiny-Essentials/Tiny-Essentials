@@ -36,7 +36,6 @@ const checkDestroy = createCheckDestroyed('TinyMediaPlayer');
  * @property {boolean} [repeatCurrentOnPrev=false] - If true, clicking 'previous' repeats the current track on the first click.
  * @property {boolean} [smoothPlayPauseVolume=false] - If true, volume fades smoothly during play/pause transitions.
  * @property {boolean} [smoothStopVolume=false] - If true, volume fades smoothly to zero when stopping.
- * @property {number} [prevClickTimeoutDuration=2000] - The duration (ms) before the prev click state resets.
  */
 
 /**
@@ -310,19 +309,6 @@ class TinyMediaPlayer extends EventEmitter {
       this.#smoothStopVolume = options.smoothStopVolume;
     } else {
       this.#smoothStopVolume = false;
-    }
-
-    // Customization Options (Timeout)
-    if (options.prevClickTimeoutDuration !== undefined) {
-      if (typeof options.prevClickTimeoutDuration !== 'number') {
-        throw new TypeError('prevClickTimeoutDuration must be a number.');
-      }
-      if (options.prevClickTimeoutDuration < 0) {
-        throw new RangeError('prevClickTimeoutDuration cannot be negative.');
-      }
-      this.#prevClickTimeoutDuration = options.prevClickTimeoutDuration;
-    } else {
-      this.#prevClickTimeoutDuration = 2000;
     }
 
     if (this.#persistVolume) this.#loadVolumeFromStorage();
@@ -720,7 +706,7 @@ class TinyMediaPlayer extends EventEmitter {
   }
 
   /**
-   * Deletes a media API adapter.
+   * Removes a media API adapter.
    * @param {BaseMediaAdapter} adapter - An instance extending BaseMediaAdapter.
    * @throws {TypeError} If adapter is invalid.
    */
@@ -730,6 +716,22 @@ class TinyMediaPlayer extends EventEmitter {
       throw new TypeError('Adapter must be an instance of BaseMediaAdapter.');
     }
     return this.#adapters.delete(adapter);
+  }
+
+  /**
+   * Destroys and removes a media API adapter.
+   * @param {BaseMediaAdapter} adapter - An instance extending BaseMediaAdapter.
+   * @throws {TypeError} If adapter is invalid.
+   */
+  destroyAdapter(adapter) {
+    checkDestroy(this.#destroyed);
+    if (!(adapter instanceof BaseMediaAdapter)) {
+      throw new TypeError('Adapter must be an instance of BaseMediaAdapter.');
+    }
+
+    const result = this.#adapters.delete(adapter);
+    if (result) adapter.destroy();
+    return result;
   }
 
   /**
@@ -746,11 +748,19 @@ class TinyMediaPlayer extends EventEmitter {
   }
 
   /**
+   * Destroys and removes all registered media adapters.
+   */
+  destroyAllAdapters() {
+    checkDestroy(this.#destroyed);
+    this.#adapters.forEach((adapter) => adapter.destroy());
+    this.#adapters.clear();
+  }
+
+  /**
    * Removes all registered media adapters.
    */
   clearAdapters() {
     checkDestroy(this.#destroyed);
-    this.#adapters.forEach((adapter) => adapter.destroy());
     this.#adapters.clear();
   }
 
@@ -1157,8 +1167,8 @@ class TinyMediaPlayer extends EventEmitter {
     this.#isPlaying = false;
     this.#prevClickedToRepeat = false;
 
-    // 3. Clear all registered API adapters
-    this.clearAdapters();
+    // 3. Clears and destroys all registered API adapters
+    this.destroyAllAdapters();
 
     // 4. Remove all event listeners inherited from EventEmitter
     this.removeAllListeners();

@@ -28,29 +28,33 @@ To support different media platforms, `TinyMediaPlayer` relies on **Adapters**. 
 The main controller for managing playlists, playback state, and adapters.
 
 ### ⚙️ Configuration (Constructor Options)
-When initializing `new TinyMediaPlayer(options)`, you can pass the following:
+When initializing `new TinyMediaPlayer(options)`, you can pass the following `TinyMediaPlayerOptions`:
 
-*   **`persistVolume`** (`boolean`): If `true`, the volume level is automatically saved to and loaded from `localStorage`. (Default: `false`).
-*   **`volumeStorageKey`** (`string`): The key name used in `localStorage` to store the volume. (Default: `'tiny_media_player_volume'`).
+* **`persistVolume`** (`boolean`): If `true`, the volume level is automatically saved to and loaded from `localStorage`. (Default: `false`).
+* **`volumeStorageKey`** (`string`): The key name used in `localStorage` to store the volume. (Default: `'tiny_media_player_volume'`).
+* **`repeatCurrentOnPrev`** (`boolean`): If `true`, clicking 'previous' repeats the current track on the first click. (Default: `false`).
+* **`smoothPlayPauseVolume`** (`boolean`): If `true`, volume fades smoothly during play/pause transitions. (Default: `false`).
+* **`smoothStopVolume`** (`boolean`): If `true`, volume fades smoothly to zero when stopping. (Default: `false`).
 
 ---
 
 ### 🏗️ Static Members
 
 #### Properties
-*   **`unknownArtist`**: A global setting for when an artist's name is unavailable.
-    *   **Type**: `string` | `function` (returns a string).
-    *   **Getter/Setter**: Allows you to define a custom string or a logic-based function.
+* **`unknownArtist`**: A global setting for when an artist's name is unavailable.
+    * **Type**: `string` | `function` (returns a string).
+    * **Getter/Setter**: Allows you to define a custom string or a logic-based function.
 
 #### Methods
-*   **`parseContent(source, defaultMetadata, metadata, parseFile, callbacks)`**: 
-    *   A static factory method to prepare a `MediaContent` object by extracting metadata from a URL or HTMLMediaElement.
-    *   **Returns**: `Promise<MediaContent>`.
+* **`parseContent(source, defaultMetadata, metadata, parseFile, callbacks)`**: 
+    * A static factory method to prepare a `MediaContent` object by extracting metadata from a URL or HTMLMediaElement.
+    * **Returns**: `Promise<MediaContent>`.
 
 ---
 
 ### 📊 Instance Properties (Getters & Setters)
 
+#### 🔄 State & Playback
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `playlist` | `MediaContent[]` | Returns a shallow copy of the current playlist. |
@@ -58,43 +62,67 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following:
 | `loopMode` | `'NONE' \| 'TRACK' \| 'PLAYLIST'` | Defines how the player behaves at the end of a track. |
 | `isRandom` | `boolean` | Enables or disables shuffle mode. |
 | `isPlaying` | `boolean` | Indicates if media is currently playing. |
-| `volume` | `number` | The current volume (constrained between `0.0` and `1.0`). |
+| `volume` | `number` | The current volume level (strictly between `0.0` and `1.0`). |
+
+#### 🎨 UX & Customization
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `repeatCurrentOnPrev` | `boolean` | Whether clicking 'previous' repeats the current track on first click. |
+| `smoothPlayPauseVolume`| `boolean` | Enables smooth volume fading during play/pause. |
+| `smoothStopVolume` | `boolean` | Enables smooth volume fading when stopping. |
+| `fadeVolumeSpeed` | `number` | The duration (ms) of the volume fade transition. |
+| `prevClickTimeoutDuration`| `number` | The duration (ms) before the "repeat on prev" state resets. |
 | `persistVolume` | `boolean` | Enables/disables volume saving to `localStorage`. |
-| `volumeStorageKey`| `string` | The key used for volume persistence. |
+| `volumeStorageKey` | `string` | The key used for volume persistence. |
+
+#### 🛠️ Utility & Lifecycle
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `destroyed` | `boolean` | Indicates if the instance has been destroyed. |
+| `adapters` | `BaseMediaAdapter[]` | Returns an array of all registered adapters. |
+| `adaptersSize` | `number` | The number of currently registered adapters. |
 
 ---
 
 ### 🕹️ Methods
 
 #### 🔌 Adapter Management
-*   **`registerAdapter(id, adapter)`**: Registers a new provider.
-    *   `id`: A unique string (e.g., `'youtube'`).
-    *   `adapter`: An instance of a class extending `BaseMediaAdapter`.
+* **`registerAdapter(adapter)`**: Registers a new provider.
+    * `adapter`: An instance of a class extending `BaseMediaAdapter`.
+* **`removeAdapter(adapter)`**: Removes a specific registered adapter.
+* **`destroyAdapter(adapter)`**: Destroys and removes a specific adapter.
+* **`hasAdapter(adapter)`**: Checks if a specific adapter is registered.
+* **`clearAdapters()`**: Clears the list of adapters (does not call `destroy` on them).
+* **`destroyAllAdapters()`**: Destroys and removes all registered media adapters.
+* **`getMediaAdapter(content)`**: Finds the compatible adapter for the provided content.
 
 #### 📋 Playlist Management
-*   **`addTrack(content)`**: Adds a new `MediaContent` object to the end of the playlist.
-*   **`existsTrack(index)`**: Returns `true` if a track exists at the given index.
-*   **`getTrack(index)`**: Retrieves the track at the specified index.
-*   **`removeTrack(index)`**: Removes a track. If the current track is removed, playback stops or adjusts.
-*   **`searchTrack(query)`**: Searches the playlist.
-    *   `query`: A `string` (searches title, artist, or album) or a `function` (custom logic).
-    *   **Returns**: `SearchResult[]` (array of objects containing the track and its index).
-*   **`clearPlaylist()`**: Stops playback and empties the playlist.
+* **`addTrack(content)`**: Adds a new `MediaContent` object to the end of the playlist.
+* **`existsTrack(index)`**: Returns `true` if the track exists at the given index.
+* **`getTrack(index)`**: Retrieves the track at the specified index.
+* **`removeTrack(index)`**: **(Async)** Removes a track and adjusts the current index/playback accordingly.
+* **`searchTrack(query)`**: Searches the playlist.
+    * `query`: A `string` (searches title, artist, or album) or a `function` (custom logic).
+    * **Returns**: `SearchResult[]` (array of objects containing the track and its index).
+* **`clearPlaylist()`**: **(Async)** Stops playback and empties the entire playlist.
 
 #### ⏯️ Playback Controls
-*   **`play()`**: Starts playback of the current track.
-*   **`pause()`**: Pauses the current track.
-*   **`stop()`**: Stops the current track completely.
-*   **`next()`**: Advances to the next track (respects `loopMode` and `isRandom`).
-*   **`prev()`**: Returns to the previous track (respects `loopMode` and `isRandom`).
-*   **`seek(timeMs)`**: Jumps to a specific millisecond in the current track.
-*   **`step(stepMs)`**: Moves the timeline forward (positive) or backward (negative) by a specific amount.
+* **`play()`**: **(Async)** Starts playback of the current track.
+* **`pause()`**: **(Async)** Pauses the current track.
+* **`stop()`**: **(Async)** Stops the current track completely.
+* **`next()`**: **(Async)** Advances to the next track (respects `loopMode` and `isRandom`).
+* **`prev()`**: **(Async)** Returns to the previous track (respects `loopMode` and `isRandom`).
+* **`seek(timeMs)`**: **(Async)** Jumps to a specific millisecond in the current track.
+* **`step(stepMs)`**: **(Async)** Moves the timeline forward (positive) or backward (negative) by a specified amount.
+
+#### ♻️ Lifecycle
+* **`destroy()`**: **(Async)** Safely stops playback, clears state, removes adapters, and detaches all listeners to prevent memory leaks.
 
 ---
 
 ## ⚠️ Error Handling
 
 The class uses strict validation. The following errors may be thrown:
-*   **`TypeError`**: Thrown when an argument is of the wrong type (e.g., passing a string to `volume`).
-*   **`RangeError`**: Thrown when a number is out of allowed bounds (e.g., an index that doesn't exist or volume > 1.0).
-*   **`Error`**: Thrown if no compatible adapter is found for the current content.
+* **`TypeError`**: Thrown when an argument is of the wrong type (e.g., invalid index type, non-boolean options, invalid adapter instance).
+* **`RangeError`**: Thrown when a number is out of allowed bounds (e.g., negative time, volume outside `0.0`-`1.0`, or index out of playlist bounds).
+* **`Error`**: Thrown if no compatible adapter is found for the current content.
