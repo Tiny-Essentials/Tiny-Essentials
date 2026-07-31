@@ -155,6 +155,27 @@ class TinyMediaPlayer extends EventEmitter {
   #prevClickTimer = null;
 
   /** @type {number} */
+  #fadeVolumeSpeed = 300;
+
+  /** @returns {number} The duration (ms) of the volume fade speed. */
+  get fadeVolumeSpeed() {
+    checkDestroy(this.#destroyed);
+    return this.#fadeVolumeSpeed;
+  }
+
+  /**
+   * @param {number} value - The new duration in milliseconds.
+   * @throws {TypeError} If the value is not a number.
+   * @throws {RangeError} If the value is negative.
+   */
+  set fadeVolumeSpeed(value) {
+    checkDestroy(this.#destroyed);
+    if (typeof value !== 'number') throw new TypeError('fadeVolumeSpeed must be a number.');
+    if (value < 0) throw new RangeError('fadeVolumeSpeed cannot be negative.');
+    this.#fadeVolumeSpeed = value;
+  }
+
+  /** @type {number} */
   #prevClickTimeoutDuration = 2000;
 
   /** @returns {number} The duration (ms) before the prev click state resets. */
@@ -391,10 +412,9 @@ class TinyMediaPlayer extends EventEmitter {
   /**
    * Handles smooth volume transitions for the active adapter.
    * @param {number} targetVolume - The volume to transition to.
-   * @param {number} [duration=500] - Duration of the fade in milliseconds.
    * @returns {Promise<void>}
    */
-  async #fadeAdapterVolume(targetVolume, duration = 500) {
+  async #fadeAdapterVolume(targetVolume) {
     if (this.#fadeController) {
       this.#fadeController.abort();
     }
@@ -407,6 +427,7 @@ class TinyMediaPlayer extends EventEmitter {
 
     const startVolume = adapter.getVolume();
     const startTime = performance.now();
+    const duration = this.#fadeVolumeSpeed;
 
     return new Promise((resolve) => {
       /** @param {number} currentTime */
@@ -415,13 +436,14 @@ class TinyMediaPlayer extends EventEmitter {
 
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        const currentFadeVolume = startVolume + (targetVolume - startVolume) * progress;
-
-        adapter.setVolume(currentFadeVolume);
+        const calculatedVolume = startVolume + (targetVolume - startVolume) * progress;
+        const clampedVolume = Math.max(0, Math.min(1, calculatedVolume));
+        adapter.setVolume(clampedVolume);
 
         if (progress < 1) {
           requestAnimationFrame(step);
         } else {
+          adapter.setVolume(targetVolume);
           resolve();
         }
       };

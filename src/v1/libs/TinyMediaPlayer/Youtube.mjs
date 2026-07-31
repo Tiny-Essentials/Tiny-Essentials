@@ -192,7 +192,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @returns {HTMLIFrameElement} The created iframe element.
    * @throws {TypeError} If the `videoId` is not a valid string.
    */
-  static createDefaultIframeContainer(options) {
+  static createIframeContainer(options) {
     const { videoId, width = 640, height = 360, hidden = true, autoplay = false } = options;
 
     if (typeof videoId !== 'string' || videoId.trim() === '') {
