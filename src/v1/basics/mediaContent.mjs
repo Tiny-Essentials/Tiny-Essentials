@@ -61,6 +61,7 @@
  * The core properties required for any content item within the media system.
  * @typedef {Object} MediaContentBase
  * @property {string} id - Unique identifier.
+ * @property {string} [mediaType] - Media type (e.g., video, audio).
  * @property {string} title - Name of the track/message.
  * @property {string} artist - Artist or speaker name.
  * @property {number} duration - Duration in milliseconds.

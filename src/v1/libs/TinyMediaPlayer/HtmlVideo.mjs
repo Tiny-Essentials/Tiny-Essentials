@@ -92,7 +92,8 @@ class HtmlVideoAdapter extends BaseMediaAdapter {
     }
     return (
       typeof content.url === 'string' &&
-      (content.url.startsWith('http') || content.url.startsWith('blob:'))
+      (content.url.startsWith('http') || content.url.startsWith('blob:')) &&
+      (content.mediaType === undefined || content.mediaType === 'video')
     );
   }
 

@@ -13,7 +13,7 @@ These definitions ensure type safety and provide a clear blueprint for how media
 | Type | Description |
 | :--- | :--- |
 | `MediaContent` | **The Final Object.** A combination of `MediaContentBase` and `MediaContentMetadata`. This is what the system uses for playback. |
-| `MediaContentBase` | The essential properties: `id`, `title`, `artist`, `duration`, `url`, and `weight`. |
+| `MediaContentBase` | The essential properties: `id`, `title`, `artist`, `duration`, `url`, `weight`, and an optional `mediaType` (e.g., 'audio', 'video') to facilitate content filtering when using both `HtmlAudioAdapter` and `HtmlVideoAdapter` within a `TinyMediaPlayer`. |
 | `MediaContentMetadata` | Rich metadata modeled after `music-metadata`. Includes `album`, `genre`, `year`, `track` info, etc. |
 | `MediaNumber` | A structure for indexing: `{ no: number \| null, of: number \| null }`. |
 | `UnknownArtistGetter` | A type that can be a `string` or a function returning a `string`. |
