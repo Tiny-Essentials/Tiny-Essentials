@@ -131,6 +131,10 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     onApiChange: 'onApiChange',
     onAutoplayBlocked: 'onAutoplayBlocked',
     onStateChange: 'onStateChange',
+    timeupdate: 'timeupdate',
+    play: 'play',
+    pause: 'pause',
+    ended: 'ended',
   };
 
   /**
@@ -376,6 +380,10 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
       await this.#initializePlayer(targetVideoId);
     }
 
+    if (this.#player && typeof this.#player.setVolume === 'function') {
+      this.#player.setVolume(this.#currentVolume * 100);
+    }
+
     // If the video is different, load the new one
     if (this.#currentContentId !== targetVideoId) {
       this.#currentContentId = targetVideoId;
@@ -417,9 +425,11 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
         // Bridge YouTube states to semantic events: play, pause, ended
         if (ytEvent === 'onStateChange') {
           const state = args[0];
-          if (state === YoutubeMediaAdapter.PlayerState.PLAYING) masterEmitter.emit('play');
-          if (state === YoutubeMediaAdapter.PlayerState.PAUSED) masterEmitter.emit('pause');
-          if (state === YoutubeMediaAdapter.PlayerState.ENDED) masterEmitter.emit('ended');
+          if (isValidObj(state)) {
+            if (state.data === YoutubeMediaAdapter.PlayerState.PLAYING) masterEmitter.emit('play');
+            if (state.data === YoutubeMediaAdapter.PlayerState.PAUSED) masterEmitter.emit('pause');
+            if (state.data === YoutubeMediaAdapter.PlayerState.ENDED) masterEmitter.emit('ended');
+          }
         }
         return result;
       };
