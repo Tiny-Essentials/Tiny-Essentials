@@ -140,6 +140,10 @@
       "require": "./dist/v1/libs/TinyMediaPlayer/HtmlAudio.cjs",
       "import": "./dist/v1/libs/TinyMediaPlayer/HtmlAudio.mjs"
     },
+    "./libs/TinyMediaPlayer/HtmlVideo": {
+      "require": "./dist/v1/libs/TinyMediaPlayer/HtmlVideo.cjs",
+      "import": "./dist/v1/libs/TinyMediaPlayer/HtmlVideo.mjs"
+    },
     "./libs/TinyMediaPlayer/docs/YouTubePlayer": {
       "require": "./dist/v1/libs/TinyMediaPlayer/docs/YouTubePlayer.cjs",
       "import": "./dist/v1/libs/TinyMediaPlayer/docs/YouTubePlayer.mjs"
