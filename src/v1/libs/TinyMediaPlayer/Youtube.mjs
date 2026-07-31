@@ -28,6 +28,15 @@
  * @typedef {(...args: any[]) => boolean} HandlerFunc
  */
 
+/**
+ * @typedef {Object} IframeContainerOptions
+ * @property {string} videoId - The YouTube video ID to be loaded.
+ * @property {number|string} [width=640] - The iframe width in pixels or a string (e.g., '100%').
+ * @property {number|string} [height=360] - The iframe height in pixels or a string (e.g., '100%').
+ * @property {boolean} [hidden=true] - If true, the iframe will be invisible (opacity 0) and will not respond to clicks (pointer-events none) and appends it to the document body.
+ * @property {boolean} [autoplay=false] - If true, the video will start automatically upon loading.
+ */
+
 import { EventEmitter } from 'events';
 import { BaseMediaAdapter } from './index.mjs';
 import YouTubePlayer from './docs/YouTubePlayer.mjs';
@@ -145,19 +154,19 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
 
   /**
    * The default HTML element where the YouTube iframe will be injected.
-   * @type {HTMLElement|null}
+   * @type {HTMLIFrameElement|null}
    */
   static #defaultContainer = null;
 
   /**
    * Registry to reuse players and master emitters per container.
-   * @type {WeakMap<HTMLElement, {player: YouTubePlayer, masterEmitter: EventEmitter, refCount: number}>}
+   * @type {WeakMap<HTMLIFrameElement, {player: YouTubePlayer, masterEmitter: EventEmitter, refCount: number}>}
    */
   static #registry = new WeakMap();
 
   /**
    * Gets the globally configured default container for YouTube players.
-   * @returns {HTMLElement|null}
+   * @returns {HTMLIFrameElement|null}
    */
   static get defaultContainer() {
     return this.#defaultContainer;
@@ -165,14 +174,52 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
 
   /**
    * Sets the globally configured default container for YouTube players.
-   * @param {HTMLElement|null} element - The element to be used as the default container.
-   * @throws {TypeError} If the provided element is not an instance of HTMLElement.
+   * @param {HTMLIFrameElement|null} element - The element to be used as the default container.
+   * @throws {TypeError} If the provided element is not an instance of HTMLIFrameElement.
    */
   static set defaultContainer(element) {
-    if (element !== null && !(element instanceof HTMLElement)) {
-      throw new TypeError('The defaultContainer must be an instance of HTMLElement.');
+    if (element !== null && !(element instanceof HTMLIFrameElement)) {
+      throw new TypeError('The defaultContainer must be an instance of HTMLIFrameElement.');
     }
     this.#defaultContainer = element;
+  }
+
+  /**
+   * Creates a YouTube iframe element.
+   * This element can be used as the `defaultContainer` for the adapter.
+   *
+   * @param {IframeContainerOptions} options - Configuration for the iframe creation.
+   * @returns {HTMLIFrameElement} The created iframe element.
+   * @throws {TypeError} If the `videoId` is not a valid string.
+   */
+  static createDefaultIframeContainer(options) {
+    const { videoId, width = 640, height = 360, hidden = true, autoplay = false } = options;
+
+    if (typeof videoId !== 'string' || videoId.trim() === '') {
+      throw new TypeError('The "videoId" property is required and must be a valid string.');
+    }
+
+    const iframe = document.createElement('iframe');
+
+    // enablejsapi=1 is required to allow control via the YouTube API
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay ? 1 : 0}&enablejsapi=1`;
+
+    iframe.style.width = `${width}px`;
+    iframe.style.height = `${height}px`;
+    iframe.setAttribute('frameborder', '0');
+    iframe.setAttribute('allow', 'autoplay; encrypted-media');
+
+    if (hidden) {
+      iframe.style.opacity = '0';
+      iframe.style.pointerEvents = 'none';
+      // Absolute positioning outside the viewport to prevent layout shifting
+      iframe.style.position = 'absolute';
+      iframe.style.top = '-9999px';
+      iframe.style.left = '-9999px';
+      document.body.appendChild(iframe);
+    }
+
+    return iframe;
   }
 
   get id() {
@@ -182,7 +229,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   /** @type {YouTubePlayer|null} */
   #player = null;
 
-  /** @type {HTMLElement} */
+  /** @type {HTMLIFrameElement} */
   #container;
 
   /** @type {Promise<void>} */
@@ -224,9 +271,9 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    */
   constructor() {
     const container = YoutubeMediaAdapter.#defaultContainer;
-    if (!(container instanceof HTMLElement)) {
+    if (!(container instanceof HTMLIFrameElement)) {
       throw new TypeError(
-        'The YoutubeMediaAdapter.defaultContainer must be an instance of HTMLElement.',
+        'The YoutubeMediaAdapter.defaultContainer must be an instance of HTMLIFrameElement.',
       );
     }
 

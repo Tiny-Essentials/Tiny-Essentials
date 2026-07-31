@@ -353,12 +353,23 @@
 
     <script type="module">
       import { TinyMediaPlayer } from './src/v1/libs/TinyMediaPlayer.mjs';
+      import { YoutubeMediaAdapter } from './src/v1/libs/TinyMediaPlayer/Youtube.mjs';
       import { HtmlAudioAdapter } from './src/v1/libs/TinyMediaPlayer/HtmlAudio.mjs';
 
       // Initialize Player and Adapter
       const player = new TinyMediaPlayer({ persistVolume: false });
       window.player = player;
+
+      YoutubeMediaAdapter.defaultContainer = YoutubeMediaAdapter.createIframeContainer({
+         videoId: 'fzKvGbQ9SgY',
+         hidden: true,
+         autoplay: false
+      });
+
+      const ytAdapter = new YoutubeMediaAdapter();
       const htmlAdapter = new HtmlAudioAdapter();
+
+      player.registerAdapter(ytAdapter);
       player.registerAdapter(htmlAdapter);
 
       // DOM Elements setup
