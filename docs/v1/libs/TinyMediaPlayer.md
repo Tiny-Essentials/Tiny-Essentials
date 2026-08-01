@@ -9,17 +9,29 @@
 To support different media platforms, `TinyMediaPlayer` relies on **Adapters**. You must create a class that extends `BaseMediaAdapter` for every new service you wish to support.
 
 ### 🛠️ `BaseMediaAdapter` (Abstract Class)
-*This class cannot be instantiated directly. It serves as an interface.*
+*This class cannot be instantiated directly. It serves as an interface that all specific API wrappers must extend and implement.*
 
+#### Properties
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `destroyed` | `boolean` | Indicates if the adapter instance has been destroyed. |
+
+#### Methods
 | Method | Description | Parameters | Returns |
 | :--- | :--- | :--- | :--- |
-| `canHandle` | Checks if the adapter supports a specific content item. | `content: MediaContent` | `boolean` |
-| `play` | Starts or resumes playback. | `content: MediaContent` | `Promise<void>` |
+| `canHandle` | Determines if the adapter can play the provided content. | `content: MediaContent` | `boolean` |
+| `play` | Starts or resumes playback of the provided content. | `content: MediaContent` | `Promise<void>` |
 | `pause` | Pauses the current playback. | None | `Promise<void>` |
-| `stop` | Stops playback and resets the platform state. | None | `Promise<void>` |
-| `seek` | Jumps to a specific time. | `timeMs: number` | `Promise<void>` |
-| `getCurrentTime` | Gets the current playback position. | None | `number` (ms) |
-| `setVolume` | Sets the volume level. | `volume: number` (0.0 to 1.0) | `void` |
+| `stop` | Stops the playback completely and resets the platform state. | None | `Promise<void>` |
+| `seek` | Seeks to a specific time in the media timeline. | `timeMs: number` | `Promise<void>` |
+| `getCurrentTime` | Retrieves the current playback position. | None | `number` (ms) |
+| `getTotalDuration` | Gets the total duration of the content. | None | `number` (ms) |
+| `getRemainingTime` | Gets the remaining time until the content ends. | None | `number` (ms) |
+| `getPlaybackPercentage` | Gets the percentage of the content that has been played. | None | `number` (0 to 100) |
+| `getTimeData` | Retrieves a consolidated object containing all time-related metrics. | None | `ContentTimeData` |
+| `setVolume` | Sets the playback volume for the underlying API. | `volume: number` (0.0 to 1.0) | `void` |
+| `getVolume` | Gets the current playback volume. | None | `number` (0.0 to 1.0) |
+| `destroy` | Cleans up the instance, removes listeners, and marks it as destroyed. | None | `void` |
 
 ---
 
