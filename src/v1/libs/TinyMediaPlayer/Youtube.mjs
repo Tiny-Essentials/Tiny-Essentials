@@ -36,6 +36,24 @@
  * @property {number|string} [height=360] - The iframe height in pixels or a string (e.g., '100%').
  * @property {boolean} [hidden=true] - If true, the iframe will be invisible (opacity 0) and will not respond to clicks (pointer-events none) and appends it to the document body.
  * @property {boolean} [autoplay=false] - If true, the video will start automatically upon loading.
+ * @property {string|null} [list=null]
+ * @property {string|null} [listType=null]
+ * @property {string|null} [ccLangPref=null]
+ * @property {boolean} [ccLoadPolicy=false]
+ * @property {string|null} [color=false]
+ * @property {boolean} [controls=true]
+ * @property {boolean} [disableKb=false]
+ * @property {boolean} [loop=false]
+ * @property {number|string|null} [end=null]
+ * @property {number|string|null} [start=null]
+ * @property {string|null} [playlist=null]
+ * @property {boolean} [playsinline=false]
+ * @property {string|null} [widgetReferrer=null]
+ * @property {boolean} [rel=true]
+ * @property {boolean} [true]
+ * @property {string|null} [hl=null]
+ * @property {boolean} [fs=true]
+ * @property {boolean} [ivLoadPolicy=true]
  */
 
 import { EventEmitter } from 'events';
@@ -199,7 +217,30 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @throws {TypeError} If the `videoId` is not a valid string.
    */
   static createIframeContainer(options) {
-    const { videoId, width = 640, height = 360, hidden = true, autoplay = false } = options;
+    const {
+      videoId,
+      width = 640,
+      height = 360,
+      hidden = true,
+      autoplay = false,
+      ivLoadPolicy = true,
+      list = null,
+      listType = null,
+      ccLangPref = null,
+      ccLoadPolicy = false,
+      color = null,
+      controls = true,
+      disableKb = false,
+      loop = false,
+      end = null,
+      start = null,
+      playlist = null,
+      playsinline = false,
+      widgetReferrer = null,
+      rel = true,
+      fs = true,
+      hl = null,
+    } = options;
 
     if (typeof videoId !== 'string' || videoId.trim() === '') {
       throw new TypeError('The "videoId" property is required and must be a valid string.');
@@ -208,7 +249,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     const iframe = document.createElement('iframe');
 
     // enablejsapi=1 is required to allow control via the YouTube API
-    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay ? 1 : 0}&enablejsapi=1`;
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay ? 1 : 0}&rel=${rel ? 1 : 0}&iv_load_policy=${ivLoadPolicy ? 1 : 3}&loop=${loop ? 1 : 0}&playsinline=${playsinline ? 1 : 0}&fs=${fs ? 1 : 0}${typeof playlist === 'string' ? `&playlist=${playlist}` : ''}${typeof ccLangPref === 'string' ? `&cc_lang_pref=${ccLangPref}` : ''}${typeof end === 'string' || typeof end === 'number' ? `&end=${end}` : ''}${typeof start === 'string' || typeof start === 'number' ? `&start=${start}` : ''}&cc_load_policy=${ccLoadPolicy ? 1 : 0}${typeof list === 'string' ? `&list=${list}` : ''}${typeof listType === 'string' ? `&listType=${listType}` : ''}${typeof widgetReferrer === 'string' ? `&widget_referrer=${widgetReferrer}` : ''}${typeof color === 'string' ? `&color=${color}` : ''}${typeof hl === 'string' ? `&hl=${hl}` : ''}&controls=${controls ? 1 : 0}&disablekb=${disableKb ? 1 : 0}&enablejsapi=1`;
 
     iframe.style.width = `${width}px`;
     iframe.style.height = `${height}px`;
