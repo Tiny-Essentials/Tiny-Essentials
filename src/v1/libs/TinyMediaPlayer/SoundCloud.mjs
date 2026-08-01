@@ -223,8 +223,12 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
    * Returns the thumbnail URL for the currently loaded track.
    * @param {string} trackId - The SoundCloud track ID.
    * @returns {string} The thumbnail URL.
+   * @throws {TypeError} If the trackId is not a valid string.
    */
   static getThumbnailUrl(trackId) {
+    if (typeof trackId !== 'string' || trackId.trim() === '') {
+      throw new TypeError('The "trackId" must be a non-empty string.');
+    }
     return `https://i.soundcloud.com/${trackId}.jpg`;
   }
 
@@ -429,6 +433,7 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
       const WidgetClass = getSCWidget();
       this.#widget = new WidgetClass(this.#container);
 
+      // Resolve the initialization promise when the player is ready
       this.#widget.bind(SoundCloudMediaAdapter.PlayerState.READY, () => {
         this.#masterEmitter?.emit('onReady');
         this.#startPollingTimeUpdate();
@@ -552,6 +557,7 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
    * @returns {number} The current time in milliseconds.
    */
   getCurrentTime() {
+    checkDestroy(this.#destroyed);
     return this.#cachedPosition;
   }
 
@@ -653,4 +659,4 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
   }
 }
 
-export { SoundCloudMediaAdapter, getPlayerStateValues };
+export { SoundCloudMediaAdapter, getPlayerStateValues, getSCWidget, loadSoundCloudApi };
