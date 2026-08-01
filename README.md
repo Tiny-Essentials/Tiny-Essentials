@@ -33,7 +33,24 @@ You can install Tiny Essentials via npm:
 npm install tiny-essentials
 ```
 
-Or download the scripts directly from this repository.
+### 💡 Best Practices
+
+* **For Package Developers:** If you are using `tiny-essentials` as a dependency to build another package, we recommend installing it as a development dependency:
+  ```bash
+  npm install --save-dev tiny-essentials
+  ```
+  Additionally, utilize the **TinyFork** tool to inject the specific modules you require into your package development.
+
+* **For Application Developers:** If you are integrating `tiny-essentials` into a website or a standalone application, a standard installation is recommended.
+
+* **Optimization:** To ensure the smallest possible bundle size and optimal performance, avoid importing from the root package. Instead, use specific sub-module imports to allow for efficient tree-shaking:
+  ```javascript
+  // ❌ Avoid this (imports the entire library)
+  import { someFunction } from 'tiny-essentials';
+
+  // ✅ Do this (optimized for bundle size)
+  import { someFunction } from 'tiny-essentials/basics/module-path';
+  ```
 
 ## 🧪 Module Versions
 
