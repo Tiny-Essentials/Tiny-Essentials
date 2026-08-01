@@ -2,6 +2,8 @@
  * @typedef {import('../../basics/mediaContent.mjs').PictureDataType} PictureDataType
  * @typedef {import('../../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
  * @typedef {import('./index.mjs').ContentTimeData} ContentTimeData
+ *
+ * @typedef {import('./docs/SoundCloudWidget.mjs').SoundCloudWidget} SoundCloudWidget
  */
 
 /**
@@ -39,7 +41,7 @@ const makeLoadSoundCloudApi = () => {
     // @ts-ignore
     if (typeof window !== 'undefined' && window.SC && window.SC.Widget) {
       // @ts-ignore
-      SoundCloudMediaAdapter.PlayerState = window.SC.Widget.Events;
+      SoundCloudMediaAdapter.Events = window.SC.Widget.Events;
       return Promise.resolve(undefined);
     }
 
@@ -61,7 +63,7 @@ const makeLoadSoundCloudApi = () => {
       ).then(() => {
         if (isError) return;
         // @ts-ignore
-        SoundCloudMediaAdapter.PlayerState = window.SC.Widget.Events;
+        SoundCloudMediaAdapter.Events = window.SC.Widget.Events;
         resolve(undefined);
       });
     });
@@ -77,15 +79,15 @@ const loadSoundCloudApi = makeLoadSoundCloudApi();
 /**
  * Returns a deep clone of the current YouTube player state values.
  * This ensures the returned object is a copy and does not maintain a reference to the original state.
- * @returns {Record<string, string>} A copy of the PlayerState object.
+ * @returns {Record<string, string>} A copy of the Events object.
  */
 const getPlayerStateValues = () => {
-  return structuredClone(SoundCloudMediaAdapter.PlayerState);
+  return structuredClone(SoundCloudMediaAdapter.Events);
 };
 
 /**
  * Returns the SoundCloud Widget constructor from the global window object.
- * @returns {typeof import('./docs/SoundCloudWidget.mjs').SoundCloudWidget} The SoundCloud Widget constructor.
+ * @returns {typeof SoundCloudWidget} The SoundCloud Widget constructor.
  * @throws {Error} If the SoundCloud API is not detected in the global scope.
  */
 const getSCWidget = () => {
@@ -123,7 +125,7 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
    * Represents the current state of the player.
    * @type {Record<string, string>}
    */
-  static PlayerState = {};
+  static Events = {};
 
   /**
    * Safety lock: If true, multiple instances can share the same player/iframe via WeakMap.
@@ -434,26 +436,26 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
       this.#widget = new WidgetClass(this.#container);
 
       // Resolve the initialization promise when the player is ready
-      this.#widget.bind(SoundCloudMediaAdapter.PlayerState.READY, () => {
+      this.#widget.bind(SoundCloudMediaAdapter.Events.READY, () => {
         this.#masterEmitter?.emit('onReady');
         this.#startPollingTimeUpdate();
         resolve();
       });
 
-      this.#widget.bind(SoundCloudMediaAdapter.PlayerState.PLAY, () => {
+      this.#widget.bind(SoundCloudMediaAdapter.Events.PLAY, () => {
         this.#masterEmitter?.emit('play');
       });
 
-      this.#widget.bind(SoundCloudMediaAdapter.PlayerState.PAUSE, () => {
+      this.#widget.bind(SoundCloudMediaAdapter.Events.PAUSE, () => {
         this.#masterEmitter?.emit('pause');
       });
 
-      this.#widget.bind(SoundCloudMediaAdapter.PlayerState.FINISH, () => {
+      this.#widget.bind(SoundCloudMediaAdapter.Events.FINISH, () => {
         this.#masterEmitter?.emit('ended');
       });
 
-      for (const eventName of Object.values(SoundCloudMediaAdapter.PlayerState)) {
-        this.#widget.bind(SoundCloudMediaAdapter.PlayerState[eventName], (...args) => {
+      for (const eventName of Object.values(SoundCloudMediaAdapter.Events)) {
+        this.#widget.bind(SoundCloudMediaAdapter.Events[eventName], (...args) => {
           const result = masterEmitter.emit(eventName, ...args);
           return result;
         });
@@ -498,7 +500,7 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
 
     for (const eventName of Object.values({
       ...SoundCloudMediaAdapter.EVENT_MAPPING,
-      ...SoundCloudMediaAdapter.PlayerState,
+      ...SoundCloudMediaAdapter.Events,
     })) {
       /** @type {HandlerFunc} */
       const handler = (...args) => this.emit(eventName, ...args);
@@ -659,4 +661,19 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
   }
 }
 
-export { SoundCloudMediaAdapter, getPlayerStateValues, getSCWidget, loadSoundCloudApi };
+/**
+ * Asynchronously ensures the SoundCloud IFrame API is loaded and returns
+ * the SoundCloud Player constructor and the current player state mapping.
+ *
+ * @returns {Promise<{ Widget: SoundCloudWidget, Events: Record<string, string> }>}
+ * An object containing the Player constructor and the current player state mapping.
+ */
+const getSC = async () => {
+  await loadSoundCloudApi();
+  return {
+    Widget: getSCWidget(),
+    Events: getPlayerStateValues(),
+  };
+};
+
+export { SoundCloudMediaAdapter, getPlayerStateValues, getSCWidget, loadSoundCloudApi, getSC };
