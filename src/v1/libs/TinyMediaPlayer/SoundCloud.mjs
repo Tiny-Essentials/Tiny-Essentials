@@ -39,7 +39,7 @@ const makeLoadSoundCloudApi = () => {
     // @ts-ignore
     if (typeof window !== 'undefined' && window.SC && window.SC.Widget) {
       // @ts-ignore
-        SoundCloudMediaAdapter.PlayerState = window.SC.Widget.Events;
+      SoundCloudMediaAdapter.PlayerState = window.SC.Widget.Events;
       return Promise.resolve(undefined);
     }
 
@@ -362,10 +362,10 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
       throw new TypeError('Content must be a valid object.');
     }
     if (typeof content.url !== 'string') return false;
-    // Regex to match SoundCloud track URLs or IDs
-    const scRegex =
-      /(?:soundcloud\.com\/[\w-]+\/([\w-]+))|(?:soundcloud\.com\/[\w-]+)\/([\w-]+)|([\w-]{11})/;
-    return scRegex.test(content.url);
+    // Regex to match SoundCloud track IDs
+    const scRegex = /^https?:\/\/api.(soundcloud\.com|snd\.sc)\/tracks\/(.*)$/;
+    const result = content.url.match(scRegex);
+    return result && result[2] ? true : false;
   }
 
   /**
