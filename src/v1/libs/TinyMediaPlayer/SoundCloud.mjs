@@ -112,7 +112,11 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
    * @private
    */
   static EVENT_MAPPING = {
+    onReady: 'onReady',
     timeupdate: 'timeupdate',
+    play: 'play',
+    pause: 'pause',
+    ended: 'ended',
   };
 
   /**
