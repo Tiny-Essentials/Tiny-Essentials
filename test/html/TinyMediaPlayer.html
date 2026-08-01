@@ -354,6 +354,7 @@
     <script type="module">
       import { TinyMediaPlayer } from './src/v1/libs/TinyMediaPlayer.mjs';
       import { YoutubeMediaAdapter } from './src/v1/libs/TinyMediaPlayer/Youtube.mjs';
+      import { SoundCloudMediaAdapter } from './src/v1/libs/TinyMediaPlayer/SoundCloud.mjs';
       import { HtmlAudioAdapter } from './src/v1/libs/TinyMediaPlayer/HtmlAudio.mjs';
 
       // Initialize Player and Adapter
@@ -363,6 +364,12 @@
         smoothStopVolume: true,
       });
       window.player = player;
+
+      SoundCloudMediaAdapter.defaultContainer = SoundCloudMediaAdapter.createIframeContainer({
+        videoId: '328270345',
+        hidden: true,
+        autoplay: false,
+      });
 
       YoutubeMediaAdapter.defaultContainer = YoutubeMediaAdapter.createIframeContainer({
         videoId: 'fzKvGbQ9SgY',
@@ -375,9 +382,11 @@
         autoplay: false,
       });
 
+      const scAdapter = new SoundCloudMediaAdapter();
       const ytAdapter = new YoutubeMediaAdapter();
       const htmlAdapter = new HtmlAudioAdapter();
 
+      player.registerAdapter(scAdapter);
       player.registerAdapter(ytAdapter);
       player.registerAdapter(htmlAdapter);
 

@@ -144,6 +144,10 @@
       "require": "./dist/v1/libs/TinyMediaPlayer/Youtube.cjs",
       "import": "./dist/v1/libs/TinyMediaPlayer/Youtube.mjs"
     },
+    "./libs/TinyMediaPlayer/SoundCloud": {
+      "require": "./dist/v1/libs/TinyMediaPlayer/SoundCloud.cjs",
+      "import": "./dist/v1/libs/TinyMediaPlayer/SoundCloud.mjs"
+    },
     "./libs/TinyMediaPlayer/HtmlAudio": {
       "require": "./dist/v1/libs/TinyMediaPlayer/HtmlAudio.cjs",
       "import": "./dist/v1/libs/TinyMediaPlayer/HtmlAudio.mjs"
