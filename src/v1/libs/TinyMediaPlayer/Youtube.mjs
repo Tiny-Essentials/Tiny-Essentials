@@ -36,24 +36,23 @@
  * @property {number|string} [height=360] - The iframe height in pixels or a string (e.g., '100%').
  * @property {boolean} [hidden=true] - If true, the iframe will be invisible (opacity 0) and will not respond to clicks (pointer-events none) and appends it to the document body.
  * @property {boolean} [autoplay=false] - If true, the video will start automatically upon loading.
- * @property {string|null} [list=null]
- * @property {string|null} [listType=null]
- * @property {string|null} [ccLangPref=null]
- * @property {boolean} [ccLoadPolicy=false]
- * @property {string|null} [color=false]
- * @property {boolean} [controls=true]
- * @property {boolean} [disableKb=false]
- * @property {boolean} [loop=false]
- * @property {number|string|null} [end=null]
- * @property {number|string|null} [start=null]
- * @property {string|null} [playlist=null]
- * @property {boolean} [playsinline=false]
- * @property {string|null} [widgetReferrer=null]
- * @property {boolean} [rel=true]
- * @property {boolean} [true]
- * @property {string|null} [hl=null]
- * @property {boolean} [fs=true]
- * @property {boolean} [ivLoadPolicy=true]
+ * @property {string|null} [list=null] - The ID of a playlist to load.
+ * @property {string|null} [listType=null] - The type of list to load (e.g., 'playlist').
+ * @property {string|null} [ccLangPref=null] - The preferred language for closed captions.
+ * @property {boolean} [ccLoadPolicy=false] - Whether to load closed captions by default (0 for off, 1 for on).
+ * @property {string|null} [color=null] - The color of the player controls (e.g., 'red', 'white').
+ * @property {boolean} [controls=true] - Whether to display the player controls.
+ * @property {boolean} [disableKb=false] - Whether to disable keyboard controls.
+ * @property {boolean} [loop=false] - Whether the video should loop.
+ * @property {number|string|null} [end=null] - The time in seconds when the video should end.
+ * @property {number|string|null} [start=null] - The time in seconds when the video should start.
+ * @property {string|string[]|null} [playlist=null] - A comma-separated list of video IDs to be played as a playlist.
+ * @property {boolean} [playsinline=false] - Whether to play the video inline on mobile devices.
+ * @property {string|null} [widgetReferrer=null] - The URL of the page where the player is embedded.
+ * @property {boolean} [rel=true] - Whether to show related videos from the same channel.
+ * @property {string|null} [hl=null] - The language of the player interface.
+ * @property {boolean} [fs=true] - Whether to allow the player to enter fullscreen mode.
+ * @property {boolean} [ivLoadPolicy=true] - The policy for showing video annotations (1 to show, 3 to hide).
  */
 
 import { EventEmitter } from 'events';
@@ -249,7 +248,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     const iframe = document.createElement('iframe');
 
     // enablejsapi=1 is required to allow control via the YouTube API
-    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay ? 1 : 0}&rel=${rel ? 1 : 0}&iv_load_policy=${ivLoadPolicy ? 1 : 3}&loop=${loop ? 1 : 0}&playsinline=${playsinline ? 1 : 0}&fs=${fs ? 1 : 0}${typeof playlist === 'string' ? `&playlist=${playlist}` : ''}${typeof ccLangPref === 'string' ? `&cc_lang_pref=${ccLangPref}` : ''}${typeof end === 'string' || typeof end === 'number' ? `&end=${end}` : ''}${typeof start === 'string' || typeof start === 'number' ? `&start=${start}` : ''}&cc_load_policy=${ccLoadPolicy ? 1 : 0}${typeof list === 'string' ? `&list=${list}` : ''}${typeof listType === 'string' ? `&listType=${listType}` : ''}${typeof widgetReferrer === 'string' ? `&widget_referrer=${widgetReferrer}` : ''}${typeof color === 'string' ? `&color=${color}` : ''}${typeof hl === 'string' ? `&hl=${hl}` : ''}&controls=${controls ? 1 : 0}&disablekb=${disableKb ? 1 : 0}&enablejsapi=1`;
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay ? 1 : 0}&rel=${rel ? 1 : 0}&iv_load_policy=${ivLoadPolicy ? 1 : 3}&loop=${loop ? 1 : 0}&playsinline=${playsinline ? 1 : 0}&fs=${fs ? 1 : 0}${typeof playlist === 'string' || Array.isArray(playlist) ? `&playlist=${!Array.isArray(playlist) ? playlist : playlist.join(',')}` : ''}${typeof ccLangPref === 'string' ? `&cc_lang_pref=${ccLangPref}` : ''}${typeof end === 'string' || typeof end === 'number' ? `&end=${end}` : ''}${typeof start === 'string' || typeof start === 'number' ? `&start=${start}` : ''}&cc_load_policy=${ccLoadPolicy ? 1 : 0}${typeof list === 'string' ? `&list=${list}` : ''}${typeof listType === 'string' ? `&listType=${listType}` : ''}${typeof widgetReferrer === 'string' ? `&widget_referrer=${widgetReferrer}` : ''}${typeof color === 'string' ? `&color=${color}` : ''}${typeof hl === 'string' ? `&hl=${hl}` : ''}&controls=${controls ? 1 : 0}&disablekb=${disableKb ? 1 : 0}&enablejsapi=1`;
 
     iframe.style.width = `${width}px`;
     iframe.style.height = `${height}px`;
