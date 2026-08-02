@@ -14,7 +14,7 @@
 /**
  * Class representing a SoundCloud Widget instance.
  */
-export default class SoundCloudWidget {
+class SoundCloudWidget {
   // Private fields for encapsulation
   #volume = 50;
   #position = 0;
@@ -238,3 +238,5 @@ export default class SoundCloudWidget {
     }
   }
 }
+
+export default SoundCloudWidget;

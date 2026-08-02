@@ -42,6 +42,9 @@
 
         /* Used for success messages in the console log */
         --success-color: #10b981;
+
+        /* Used for the Event Monitor entries */
+        --event-color: #f59e0b;
       }
 
       * {
@@ -69,10 +72,15 @@
         font-weight: 600;
       }
 
+      /* Layout Grid */
       .dashboard-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 2rem;
+      }
+
+      .full-width {
+        grid-column: 1 / -1;
       }
 
       .panel {
@@ -88,6 +96,50 @@
         color: var(--accent-primary);
       }
 
+      /* Visual Player Styles */
+      .visual-player-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+        text-align: center;
+      }
+
+      .now-playing-info {
+        margin-bottom: 0.5rem;
+      }
+
+      .now-playing-title {
+        font-size: 1.4rem;
+        font-weight: bold;
+        display: block;
+      }
+
+      .now-playing-artist {
+        color: var(--text-muted);
+        font-size: 1rem;
+      }
+
+      .progress-wrapper {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .time-display {
+        font-family: monospace;
+        font-size: 0.9rem;
+        min-width: 100px;
+      }
+
+      input[type='range'] {
+        flex: 1;
+        cursor: pointer;
+        accent-color: var(--accent-primary);
+      }
+
+      /* Form Elements */
       .control-group {
         margin-bottom: 1rem;
         display: flex;
@@ -150,17 +202,24 @@
         font-size: 0.8rem;
       }
 
+      /* Status Boxes */
       .status-box {
         background-color: var(--bg-base);
         border: 1px solid var(--border-color);
         padding: 1rem;
         border-radius: 4px;
         font-family: monospace;
-        font-size: 0.9rem;
-        height: 250px;
+        font-size: 0.85rem;
+        height: 200px;
         overflow-y: auto;
-        color: var(--success-color);
         white-space: pre-wrap;
+      }
+
+      #system-logs {
+        color: var(--success-color);
+      }
+      #event-monitor {
+        color: var(--event-color);
       }
 
       .playlist-view {
@@ -200,6 +259,23 @@
     </header>
 
     <main class="dashboard-grid">
+      <!-- 1. VISUAL PLAYER (NEW) -->
+      <section class="panel full-width">
+        <h2>Visual Playback Monitor</h2>
+        <div class="visual-player-container">
+          <div class="now-playing-info">
+            <span id="display-title" class="now-playing-title">No Track Loaded</span>
+            <span id="display-artist" class="now-playing-artist">---</span>
+          </div>
+          <div class="progress-wrapper">
+            <span id="time-current" class="time-display">00:00</span>
+            <input type="range" id="progress-slider" min="0" max="100" value="0" step="0.1" />
+            <span id="time-total" class="time-display">00:00</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. PLAYBACK CONTROLS -->
       <div class="left-col">
         <section class="panel" style="margin-bottom: 2rem">
           <h2>1. Playback Controls</h2>
@@ -228,7 +304,7 @@
           </div>
         </section>
 
-        <section class="panel">
+        <section class="panel" style="margin-bottom: 2rem">
           <h2>2. State & Settings Management</h2>
           <div class="control-group">
             <label for="volume-slider">Global Volume:</label>
@@ -275,8 +351,15 @@
             <button id="btn-update-storage" style="margin-top: 0.5rem">Update Storage Key</button>
           </div>
         </section>
+
+        <!-- 3. SYSTEM LOGS -->
+        <section class="panel full-width">
+          <h2>5. System Logs</h2>
+          <div id="system-logs" class="status-box" style="height: 150px"></div>
+        </section>
       </div>
 
+      <!-- 4. PLAYLIST & EVENTS -->
       <div class="right-col">
         <section class="panel" style="margin-bottom: 2rem">
           <h2>3. Playlist Management</h2>
@@ -285,7 +368,7 @@
             <input
               type="text"
               id="track-url"
-              placeholder="Media URL (e.g., https://.../audio.mp3)"
+              placeholder="Media URL"
               value="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3"
             />
             <input
@@ -345,8 +428,8 @@
         </section>
 
         <section class="panel">
-          <h2>4. System Logs & Active State</h2>
-          <div id="system-logs" class="status-box"></div>
+          <h2>4. Event Stream Monitor</h2>
+          <div id="event-monitor" class="status-box"></div>
         </section>
       </div>
     </main>
@@ -357,7 +440,7 @@
       import { SoundCloudMediaAdapter } from './src/v1/libs/TinyMediaPlayer/SoundCloud.mjs';
       import { HtmlAudioAdapter } from './src/v1/libs/TinyMediaPlayer/HtmlAudio.mjs';
 
-      // Initialize Player and Adapter
+      // Initialize Player
       const player = new TinyMediaPlayer({
         repeatCurrentOnPrev: true,
         smoothPlayPauseVolume: true,
@@ -365,6 +448,7 @@
       });
       window.player = player;
 
+      // Setup Adapters
       SoundCloudMediaAdapter.defaultContainer = SoundCloudMediaAdapter.createIframeContainer({
         videoId: '328270345',
         hidden: true,
@@ -390,10 +474,18 @@
       player.registerAdapter(ytAdapter);
       player.registerAdapter(htmlAdapter);
 
-      // DOM Elements setup
+      // DOM Elements
       const logsContainer = document.getElementById('system-logs');
+      const eventMonitor = document.getElementById('event-monitor');
       const playlistView = document.getElementById('playlist-view');
       const volumeSlider = document.getElementById('volume-slider');
+      const progressSlider = document.getElementById('progress-slider');
+      const displayTitle = document.getElementById('display-title');
+      const displayArtist = document.getElementById('display-artist');
+      const timeCurrent = document.getElementById('time-current');
+      const timeTotal = document.getElementById('time-total');
+
+      // --- UTILITIES ---
 
       /**
        * Logger utility.
@@ -403,6 +495,93 @@
         const time = new Date().toLocaleTimeString();
         logsContainer.textContent = `[${time}] ${message}\n` + logsContainer.textContent;
       };
+
+      const logEvent = (eventName, data) => {
+        const time = new Date().toLocaleTimeString();
+        const dataStr = data !== undefined ? ` | Data: ${JSON.stringify(data)}` : '';
+        eventMonitor.textContent =
+          `[${time}] EVENT: ${eventName}${dataStr}\n` + eventMonitor.textContent;
+      };
+
+      const formatTime = (ms) => {
+        if (isNaN(ms) || ms < 0) return '00:00';
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60)
+          .toString()
+          .padStart(2, '0');
+        const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+        return `${minutes}:${seconds}`;
+      };
+
+      // --- VISUAL PLAYER LOGIC ---
+
+      const updateVisualPlayer = () => {
+        const track = player.playlist[player.currentIndex];
+        if (track) {
+          displayTitle.textContent = track.title || 'Unknown Title';
+          displayArtist.textContent = track.artist || 'Unknown Artist';
+        } else {
+          displayTitle.textContent = 'No Track Loaded';
+          displayArtist.textContent = '---';
+        }
+
+        const total = player.getTotalDuration();
+        const current = player.getCurrentTime();
+
+        timeCurrent.textContent = formatTime(current);
+        timeTotal.textContent = formatTime(total);
+
+        // Update Slider position
+        if (total > 0) {
+          progressSlider.value = (current / total) * 100;
+        } else {
+          progressSlider.value = 0;
+        }
+      };
+
+      // --- EVENT MONITOR AUTOMATION ---
+
+      // List of all events we want to monitor from the player
+      const eventsToMonitor = [
+        'play',
+        'pause',
+        'stop',
+        'next',
+        'prev',
+        'seek',
+        'ended',
+        'timeupdate',
+        'trackChange',
+        'playlistUpdate',
+        'volumeChange',
+        'loopModeChange',
+        'randomModeChange',
+        'destroyed',
+      ];
+
+      eventsToMonitor.forEach((eventName) => {
+        player.on(eventName, (data) => {
+          logEvent(eventName, data);
+          // Trigger UI updates for specific events
+          if (eventName === 'timeupdate' || eventName === 'seek') updateVisualPlayer();
+          if (eventName === 'trackChange' || eventName === 'playlistUpdate') renderPlaylist();
+        });
+      });
+
+      // --- INTERACTIVE ELEMENTS ---
+
+      progressSlider.addEventListener('input', async (e) => {
+        const percent = e.target.value / 100;
+        const total = player.getTotalDuration();
+        const targetMs = Math.floor(percent * total);
+        try {
+          await player.seek(targetMs);
+        } catch (err) {
+          logMsg(`Seek Error: ${err.message}`);
+        }
+      });
+
+      // --- CORE FUNCTIONS (REUSED FROM YOUR ORIGINAL) ---
 
       /**
        * Renders the playlist array to the UI and attaches dynamic event listeners.
@@ -422,8 +601,7 @@
 
           div.innerHTML = `
             <div>
-              <span>${index}. ${track.title}</span> 
-              <br/>
+              <span>${index}. ${track.title}</span><br/>
               <span style="font-size: 0.8rem; color: var(--text-muted)">ID: ${track.id}</span>
             </div>
             <button class="btn-danger btn-small remove-btn" data-index="${index}">Remove</button>
@@ -432,12 +610,11 @@
         });
 
         // Attach listeners for dynamic remove buttons
-        const removeButtons = document.querySelectorAll('.remove-btn');
-        removeButtons.forEach((btn) => {
+        document.querySelectorAll('.remove-btn').forEach((btn) => {
           btn.addEventListener('click', async (e) => {
-            const index = parseInt(e.target.getAttribute('data-index'), 10);
+            const idx = parseInt(e.target.dataset.index, 10);
             try {
-              await player.removeTrack(index);
+              await player.removeTrack(idx);
               logMsg(`Removed track at index: ${index} (via list button).`);
               renderPlaylist();
             } catch (error) {
@@ -457,6 +634,7 @@
         document.getElementById('persist-volume-checkbox').checked = player.persistVolume;
         document.getElementById('storage-key-input').value = player.volumeStorageKey;
         renderPlaylist();
+        updateVisualPlayer();
       };
 
       // Bind Audio Ended Event to trigger next() automatically for testing
@@ -639,7 +817,7 @@
 
       // Initial Render
       syncUIWithState();
-      logMsg('System initialized successfully. Ready for QA testing.');
+      logMsg('System initialized. QA Monitor Active.');
     </script>
   </body>
 </html>
