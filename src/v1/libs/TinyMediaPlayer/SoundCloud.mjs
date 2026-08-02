@@ -2,7 +2,16 @@
  * @typedef {import('../../basics/mediaContent.mjs').PictureDataType} PictureDataType
  * @typedef {import('../../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
  * @typedef {import('./index.mjs').ContentTimeData} ContentTimeData
+ * 
  * @typedef {import('./docs/SoundCloudWidget.mjs').SoundObject} SoundObject
+ * @typedef {import('./docs/SoundCloudWidget.mjs').MediaObject} MediaObject
+ * @typedef {import('./docs/SoundCloudWidget.mjs').TranscodingObject} TranscodingObject
+ * @typedef {import('./docs/SoundCloudWidget.mjs').PublisherObject} PublisherObject
+ * @typedef {import('./docs/SoundCloudWidget.mjs').UserBadgesObject} UserBadgesObject
+ * @typedef {import('./docs/SoundCloudWidget.mjs').CreatorSubscriptionObject} CreatorSubscriptionObject
+ * @typedef {import('./docs/SoundCloudWidget.mjs').VisualsObject} VisualsObject
+ * @typedef {import('./docs/SoundCloudWidget.mjs').VisualsObjectData} VisualsObjectData
+ * @typedef {import('./docs/SoundCloudWidget.mjs').UserObject} UserObject
  */
 
 /**
