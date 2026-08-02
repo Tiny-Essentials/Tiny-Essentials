@@ -172,7 +172,7 @@ class BaseMediaAdapter extends EventEmitter {
   }
 
   /**
-   * Retrieves the metadata of the currently loaded content, returning a structured 
+   * Retrieves the metadata of the currently loaded content, returning a structured
    * object containing details such as the content ID, title, author, and duration.
    * @returns {Promise<ContentData>}
    */

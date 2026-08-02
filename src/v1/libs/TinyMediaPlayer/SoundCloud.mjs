@@ -709,7 +709,7 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
   }
 
   /**
-   * Retrieves the metadata of the currently loaded SoundCloud music, returning a structured 
+   * Retrieves the metadata of the currently loaded SoundCloud music, returning a structured
    * object containing details such as the audio ID, title, author, and duration.
    * @returns {Promise<ContentData>}
    */

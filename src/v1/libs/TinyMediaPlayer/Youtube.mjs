@@ -676,7 +676,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   }
 
   /**
-   * Retrieves the metadata of the currently loaded YouTube video, returning a structured 
+   * Retrieves the metadata of the currently loaded YouTube video, returning a structured
    * object containing details such as the video ID, title, author, and duration.
    * @returns {Promise<ContentData>}
    */

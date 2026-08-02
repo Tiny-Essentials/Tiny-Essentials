@@ -22,6 +22,7 @@ const checkDestroy = createCheckDestroyed('TinyMediaPlayer');
  * @typedef {import('../basics/mediaContent.mjs').MediaLoadingErrorData} MediaLoadingErrorData
  * @typedef {import('../basics/mediaContent.mjs').UnknownArtistGetter} UnknownArtistGetter
  * @typedef {import('./TinyMediaPlayer/index.mjs').ContentTimeData} ContentTimeData
+ * @typedef {import('./TinyMediaPlayer/index.mjs').ContentData} ContentData
  */
 
 /**
@@ -1359,6 +1360,32 @@ class TinyMediaPlayer extends EventEmitter {
       return adapter ? adapter.getPlaybackPercentage() : 0;
     } catch {
       return 0;
+    }
+  }
+
+  /**
+   * Retrieves the metadata of the currently loaded content, returning a structured
+   * object containing details such as the content ID, title, author, and duration.
+   * @returns {Promise<ContentData>}
+   */
+  async getContentData() {
+    checkDestroy(this.#destroyed);
+    const defaultData = {
+      id: '',
+      createdAt: '',
+      artistId: '',
+      artistName: '',
+      description: '',
+      title: '',
+      duration: 0,
+      avatar: '',
+      url: '',
+    };
+    try {
+      const adapter = this.#getActiveAdapter();
+      return adapter ? adapter.getContentData() : defaultData;
+    } catch {
+      return defaultData;
     }
   }
 
