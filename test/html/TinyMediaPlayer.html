@@ -649,38 +649,55 @@
       // ==========================================
 
       // Playback Controls
-      document.getElementById('btn-play').addEventListener('click', async () => {
+      const play = document.getElementById('btn-play');
+      play.addEventListener('click', async () => {
+        play.disabled = true;
         try {
           await player.play();
           logMsg(`Playing track index: ${player.currentIndex}`);
         } catch (error) {
           logMsg(`ERROR: ${error.message}`);
         }
+        play.disabled = false;
       });
 
-      document.getElementById('btn-pause').addEventListener('click', async () => {
+      const pause = document.getElementById('btn-pause');
+      pause.addEventListener('click', async () => {
+        pause.disabled = true;
         await player.pause();
         logMsg('Playback paused.');
+        pause.disabled = false;
       });
 
-      document.getElementById('btn-stop').addEventListener('click', async () => {
+      const stop = document.getElementById('btn-stop');
+      stop.addEventListener('click', async () => {
+        stop.disabled = true;
         await player.stop();
         logMsg('Playback stopped.');
+        stop.disabled = false;
       });
 
-      document.getElementById('btn-next').addEventListener('click', async () => {
+      const next = document.getElementById('btn-next');
+      next.addEventListener('click', async () => {
+        next.disabled = true;
         await player.next();
         logMsg(`Skipped to next. Current index: ${player.currentIndex}`);
         renderPlaylist();
+        next.disabled = false;
       });
 
-      document.getElementById('btn-prev').addEventListener('click', async () => {
+      const prev = document.getElementById('btn-prev');
+      prev.addEventListener('click', async () => {
+        prev.disabled = true;
         await player.prev();
         logMsg(`Returned to previous. Current index: ${player.currentIndex}`);
         renderPlaylist();
+        prev.disabled = false;
       });
 
-      document.getElementById('btn-seek').addEventListener('click', async () => {
+      const seek = document.getElementById('btn-seek');
+      seek.addEventListener('click', async () => {
+        seek.disabled = true;
         const timeMs = parseInt(document.getElementById('seek-input').value, 10);
         try {
           await player.seek(timeMs);
@@ -688,9 +705,12 @@
         } catch (error) {
           logMsg(`ERROR: ${error.message}`);
         }
+        seek.disabled = false;
       });
 
-      document.getElementById('btn-step').addEventListener('click', async () => {
+      const step = document.getElementById('btn-step');
+      step.addEventListener('click', async () => {
+        step.disabled = true;
         const stepMs = parseInt(document.getElementById('step-input').value, 10);
         try {
           await player.step(stepMs);
@@ -698,6 +718,7 @@
         } catch (error) {
           logMsg(`ERROR: ${error.message}`);
         }
+        step.disabled = false;
       });
 
       // State Controls

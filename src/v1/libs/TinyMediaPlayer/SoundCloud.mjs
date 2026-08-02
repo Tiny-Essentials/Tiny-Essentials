@@ -442,26 +442,29 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
       this.#currentContentId = targetId;
 
       await new Promise((resolve, reject) => {
+        let timeout = false;
         // We set a time limit of 10 seconds to prevent await from locking the system
         const timeoutId = setTimeout(() => {
-          this.off('onReady', onReady);
+          timeout = true;
           reject(new Error('SoundCloud track load timeout: The track took too long to load.'));
         }, 10000);
 
-        /**
-         * Handler for the READY event.
-         * Remove the listener to prevent memory leakage and resolve Promise.
-         */
-        const onReady = () => {
-          clearTimeout(timeoutId);
-          resolve(null);
-        };
-
-        // We registered the listener for the READY event before calling the load
-        this.once('onReady', onReady);
-
         // Command to load the new song
         this.#widget?.load(`https://api.soundcloud.com/tracks/${targetId}`);
+        /** @type {Partial<SoundObject>} */
+        let sound = {};
+
+        // We registered the listener for the READY event before calling the load
+        waitForTrue(() => {
+          this.#widget?.getCurrentSound((s) => {
+            sound = s;
+          });
+          return String(sound.id) === targetId;
+        }).then(() => {
+          if (timeout) return;
+          clearTimeout(timeoutId);
+          resolve(null);
+        });
       });
 
       // After Promise is resolved (READY event received), we begin play
