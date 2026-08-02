@@ -265,6 +265,12 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
   /** @type {HTMLIFrameElement} */
   #container;
 
+  #loadedProgress = 0;
+
+  get loadedProgress() {
+    return this.#loadedProgress;
+  }
+
   /** @type {Promise<void>} */
   #apiLoadedPromise;
 
@@ -410,6 +416,7 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
    * @param {MediaContent} content - The media content to play.
    * @returns {Promise<void>}
    * @throws {TypeError} If the content data is invalid.
+   * @throws {Error} If the track fails to load within the timeout period.
    */
   async play(content) {
     checkDestroy(this.#destroyed);
@@ -433,8 +440,34 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
     // If the video is different, load the new one
     if (this.#currentContentId !== targetId) {
       this.#currentContentId = targetId;
-      this.#widget?.load(`https://api.soundcloud.com/tracks/${targetId}`);
+
+      await new Promise((resolve, reject) => {
+        // We set a time limit of 10 seconds to prevent await from locking the system
+        const timeoutId = setTimeout(() => {
+          this.off('onReady', onReady);
+          reject(new Error('SoundCloud track load timeout: The track took too long to load.'));
+        }, 10000);
+
+        /**
+         * Handler for the READY event.
+         * Remove the listener to prevent memory leakage and resolve Promise.
+         */
+        const onReady = () => {
+          clearTimeout(timeoutId);
+          resolve(null);
+        };
+
+        // We registered the listener for the READY event before calling the load
+        this.once('onReady', onReady);
+
+        // Command to load the new song
+        this.#widget?.load(`https://api.soundcloud.com/tracks/${targetId}`);
+      });
+
+      // After Promise is resolved (READY event received), we begin play
+      this.#widget?.play();
     } else {
+      // If it's the same song, we just play
       this.#widget?.play();
     }
 
@@ -464,26 +497,57 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
     // Create new master emitter for this specific container
     const masterEmitter = new EventEmitter();
     return new Promise((resolve) => {
+      let isReady = false;
       const WidgetClass = getSCWidget();
       this.#widget = new WidgetClass(this.#container);
 
+      const eventSync = (/** @type {any} */ event, /** @type {string} */ eventName) => {
+        if (!event) return;
+        if (typeof event.currentPosition === 'number') this.#cachedPosition = event.currentPosition;
+        if (typeof event.loadedProgress === 'number') this.#loadedProgress = event.loadedProgress;
+        if (typeof event.soundId === 'number') this.#currentContentId = String(event.soundId);
+      };
+
       // Resolve the initialization promise when the player is ready
-      this.#widget.bind(SoundCloudMediaAdapter.Events.READY, () => {
+      this.#widget.bind(SoundCloudMediaAdapter.Events.READY, (/** @type {any} */ event) => {
+        eventSync(event, 'READY');
         this.#masterEmitter?.emit('onReady');
-        this.#startPollingTimeUpdate();
+        if (isReady) return;
+        isReady = true;
         resolve();
       });
 
-      this.#widget.bind(SoundCloudMediaAdapter.Events.PLAY, () => {
+      this.#widget.bind(SoundCloudMediaAdapter.Events.PLAY, (/** @type {any} */ event) => {
+        eventSync(event, 'PLAY');
         this.#masterEmitter?.emit('play');
       });
 
-      this.#widget.bind(SoundCloudMediaAdapter.Events.PAUSE, () => {
+      this.#widget.bind(SoundCloudMediaAdapter.Events.PAUSE, (/** @type {any} */ event) => {
+        eventSync(event, 'PAUSE');
         this.#masterEmitter?.emit('pause');
       });
 
-      this.#widget.bind(SoundCloudMediaAdapter.Events.FINISH, () => {
+      this.#widget.bind(SoundCloudMediaAdapter.Events.FINISH, (/** @type {any} */ event) => {
+        eventSync(event, 'FINISH');
         this.#masterEmitter?.emit('ended');
+      });
+
+      this.#widget.bind(SoundCloudMediaAdapter.Events.LOAD_PROGRESS, (/** @type {any} */ event) => {
+        eventSync(event, 'LOAD_PROGRESS');
+      });
+
+      this.#widget.bind(SoundCloudMediaAdapter.Events.PLAY_PROGRESS, (/** @type {any} */ event) => {
+        eventSync(event, 'PLAY_PROGRESS');
+        // SoundCloud uses callbacks for getters, so we update local cache
+        this.#widget?.getDuration((dur) => {
+          this.#cachedDuration = dur;
+          this.#masterEmitter?.emit('timeupdate', this.getTimeData());
+        });
+      });
+
+      this.#widget.bind(SoundCloudMediaAdapter.Events.SEEK, (/** @type {any} */ event) => {
+        eventSync(event, 'SEEK');
+        this.#masterEmitter?.emit('seek', event.currentPosition);
       });
 
       for (const eventName of Object.values(SoundCloudMediaAdapter.Events)) {
@@ -506,24 +570,6 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
       this.#masterEmitter = masterEmitter;
       this.#attachToMaster();
     });
-  }
-
-  /**
-   * Starts a polling interval to emit 'timeupdate' events, matching the HTML5 Audio interface.
-   */
-  #startPollingTimeUpdate() {
-    this.#timeUpdateInterval = setInterval(() => {
-      if (this.#widget) {
-        // SoundCloud uses callbacks for getters, so we update local cache
-        this.#widget.getPosition((pos) => {
-          this.#cachedPosition = pos;
-          this.#masterEmitter?.emit('timeupdate', this.getTimeData());
-        });
-        this.#widget.getDuration((dur) => {
-          this.#cachedDuration = dur;
-        });
-      }
-    }, 250);
   }
 
   /**
@@ -586,7 +632,6 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
     checkDestroy(this.#destroyed);
     if (typeof timeMs !== 'number') throw new TypeError('Time must be a number.');
     this.#widget?.seekTo(timeMs);
-    this.emit('seek', timeMs);
   }
 
   /**
@@ -650,10 +695,9 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
 
   /**
    * Retrieves the thumbnail URL for the currently loaded video with a specified quality.
-   * @param {string} [quality='maxresdefault'] - The thumbnail quality.
    * @returns {string|null} The thumbnail URL or null if no video is loaded.
    */
-  getThumbnailUrl(quality = 'maxresdefault') {
+  getThumbnailUrl() {
     checkDestroy(this.#destroyed);
     return this.#currentContentId
       ? SoundCloudMediaAdapter.getThumbnailUrl(this.#currentContentId)
