@@ -2,7 +2,7 @@
  * @typedef {import('../../basics/mediaContent.mjs').PictureDataType} PictureDataType
  * @typedef {import('../../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
  * @typedef {import('./index.mjs').ContentTimeData} ContentTimeData
- * 
+ *
  * @typedef {import('./docs/SoundCloudWidget.mjs').SoundObject} SoundObject
  * @typedef {import('./docs/SoundCloudWidget.mjs').MediaObject} MediaObject
  * @typedef {import('./docs/SoundCloudWidget.mjs').TranscodingObject} TranscodingObject
@@ -90,7 +90,7 @@ const loadSoundCloudApi = makeLoadSoundCloudApi();
  * This ensures the returned object is a copy and does not maintain a reference to the original state.
  * @returns {Record<string, string>} A copy of the Events object.
  */
-const getPlayerStateValues = () => {
+const getEventValues = () => {
   return structuredClone(SoundCloudMediaAdapter.Events);
 };
 
@@ -454,7 +454,9 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
       existing.refCount++; // Increment reference count for the shared player
       this.#widget = existing.widget;
       this.#masterEmitter = existing.masterEmitter;
-      // this.#currentContentId = this.#player.getVideoData()?.video_id || null;
+      this.#widget.getCurrentSound(
+        (audioData) => (this.#currentContentId = audioData ? (String(audioData.id) ?? null) : null),
+      );
       this.#attachToMaster();
       return;
     }
@@ -698,15 +700,14 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
  * Asynchronously ensures the SoundCloud IFrame API is loaded and returns
  * the SoundCloud Player constructor and the current player state mapping.
  *
- * @returns {Promise<{ Widget: typeof SoundCloudWidget, Events: Record<string, string> }>}
+ * @returns {Promise<{ Widget: typeof SoundCloudWidget }>}
  * An object containing the Player constructor and the current player state mapping.
  */
 const getSC = async () => {
   await loadSoundCloudApi();
   return {
     Widget: getSCWidget(),
-    Events: getPlayerStateValues(),
   };
 };
 
-export { SoundCloudMediaAdapter, getPlayerStateValues, getSCWidget, loadSoundCloudApi, getSC };
+export { SoundCloudMediaAdapter, getEventValues, getSCWidget, loadSoundCloudApi, getSC };
