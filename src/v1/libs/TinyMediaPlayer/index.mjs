@@ -41,9 +41,18 @@ class BaseMediaAdapter extends EventEmitter {
    * @param {MediaContent} content - The media content to evaluate.
    * @returns {boolean} True if the adapter can handle the content, false otherwise.
    */
+  static canHandle(content) {
+    throw new Error('Method "canHandle" must be implemented by the subclass.');
+  }
+
+  /**
+   * Determines if this adapter can play the provided content.
+   * @param {MediaContent} content - The media content to evaluate.
+   * @returns {boolean} True if the adapter can handle the content, false otherwise.
+   */
   canHandle(content) {
     checkDestroy(this.#destroyed);
-    throw new Error('Method "canHandle" must be implemented by the subclass.');
+    return BaseMediaAdapter.canHandle(content);
   }
 
   /**

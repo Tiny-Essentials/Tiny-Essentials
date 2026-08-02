@@ -405,8 +405,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * @param {MediaContent} content - The media content to evaluate.
    * @returns {boolean} True if the content is a YouTube link/ID, false otherwise.
    */
-  canHandle(content) {
-    checkDestroy(this.#destroyed);
+  static canHandle(content) {
     if (!isValidObj(content)) {
       throw new TypeError('Content must be a valid object.');
     }
@@ -414,6 +413,16 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     const youtubeRegex =
       /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
     return youtubeRegex.test(content.url);
+  }
+
+  /**
+   * Determines if the content is a valid YouTube URL or ID.
+   * @param {MediaContent} content - The media content to evaluate.
+   * @returns {boolean} True if the content is a YouTube link/ID, false otherwise.
+   */
+  canHandle(content) {
+    checkDestroy(this.#destroyed);
+    return YoutubeMediaAdapter.canHandle(content);
   }
 
   /**

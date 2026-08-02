@@ -88,8 +88,7 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
    * @returns {boolean} True if the content is compatible, false otherwise.
    * @throws {TypeError} If content is not a valid object.
    */
-  canHandle(content) {
-    checkDestroy(this.#destroyed);
+  static canHandle(content) {
     if (!isValidObj(content)) {
       throw new TypeError('Content must be a valid object.');
     }
@@ -98,6 +97,17 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
       (content.url.startsWith('http') || content.url.startsWith('blob:')) &&
       (content.mediaType === undefined || content.mediaType === 'audio')
     );
+  }
+
+  /**
+   * Determines if the provided content is compatible with this adapter.
+   * @param {MediaContent} content - The media content object.
+   * @returns {boolean} True if the content is compatible, false otherwise.
+   * @throws {TypeError} If content is not a valid object.
+   */
+  canHandle(content) {
+    checkDestroy(this.#destroyed);
+    return HtmlAudioAdapter.canHandle(content);
   }
 
   /**

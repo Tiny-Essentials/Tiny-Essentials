@@ -12,7 +12,7 @@
  */
 
 /**
- * Mock class representing a SoundCloud Widget instance.
+ * Class representing a SoundCloud Widget instance.
  */
 export default class SoundCloudWidget {
   // Private fields for encapsulation

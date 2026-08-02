@@ -2,6 +2,7 @@
  * @typedef {import('../../basics/mediaContent.mjs').PictureDataType} PictureDataType
  * @typedef {import('../../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
  * @typedef {import('./index.mjs').ContentTimeData} ContentTimeData
+ * @typedef {import('./docs/SoundCloudWidget.mjs').SoundObject} SoundObject
  */
 
 /**
@@ -373,8 +374,7 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
    * @param {MediaContent} content - The media content to evaluate.
    * @returns {boolean} True if the content is a SoundCloud link/ID, false otherwise.
    */
-  canHandle(content) {
-    checkDestroy(this.#destroyed);
+  static canHandle(content) {
     if (!isValidObj(content)) {
       throw new TypeError('Content must be a valid object.');
     }
@@ -383,6 +383,16 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
     const scRegex = /^https?:\/\/api.(soundcloud\.com|snd\.sc)\/tracks\/(.*)$/;
     const result = content.url.match(scRegex);
     return result && result[2] ? true : false;
+  }
+
+  /**
+   * Determines if the content is a valid SoundCloud URL or ID.
+   * @param {MediaContent} content - The media content to evaluate.
+   * @returns {boolean} True if the content is a SoundCloud link/ID, false otherwise.
+   */
+  canHandle(content) {
+    checkDestroy(this.#destroyed);
+    return SoundCloudMediaAdapter.canHandle(content);
   }
 
   /**

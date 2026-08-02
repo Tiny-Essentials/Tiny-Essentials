@@ -88,8 +88,17 @@ class MyCustomServiceAdapter extends BaseMediaAdapter {
    * @param {MediaContent} content - The media content to check.
    * @returns {boolean} - True if the URL matches the service.
    */
-  canHandle(content) {
+  static canHandle(content) {
     return content.url.startsWith('https://example.com/');
+  }
+
+  /**
+   * Determines if this adapter can play the given content.
+   * @param {MediaContent} content - The media content to check.
+   * @returns {boolean} - True if the URL matches the service.
+   */
+  canHandle(content) {
+    return MyCustomServiceAdapter.canHandle(content);
   }
 
   /**
