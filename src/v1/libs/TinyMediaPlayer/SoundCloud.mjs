@@ -17,15 +17,15 @@
  * @property {number|string} [height=360] - The iframe height in pixels or a string (e.g., '100%').
  * @property {boolean} [hidden=true] - If true, the iframe will be invisible (opacity 0) and will not respond to clicks (pointer-events none) and appends it to the document body.
  * @property {boolean} [autoPlay=false] - If true, the video will start automatically upon loading.
- * @property {null|number} [startTrack=null]
- * @property {string|null} [color=null]
- * @property {boolean} [buying=false]
- * @property {boolean} [sharing=true]
- * @property {boolean} [download=true]
- * @property {boolean} [showArtwork=true]
- * @property {boolean} [showPlayCount=true]
- * @property {boolean} [showUser=true]
- * @property {boolean} [singleActive=true]
+ * @property {null|number} [startTrack=null] - The track number to start playback from.
+ * @property {string|null} [color=null] - The color of the widget's user interface.
+ * @property {boolean} [buying=false] - Whether the "Buy" button is displayed in the widget.
+ * @property {boolean} [sharing=true] - Whether the "Share" button is displayed in the widget.
+ * @property {boolean} [download=true] - Whether the "Download" button is displayed in the widget.
+ * @property {boolean} [showArtwork=true] - Whether the track's artwork is displayed.
+ * @property {boolean} [showPlayCount=true] - Whether the play count is displayed.
+ * @property {boolean} [showUser=true] - Whether the user/artist information is displayed.
+ * @property {boolean} [singleActive=true] - Whether to restrict playback to a single active track.
  */
 
 import { EventEmitter } from 'events';
