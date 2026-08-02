@@ -296,6 +296,8 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   /** @type {HTMLIFrameElement} */
   #container;
 
+  #isReady = false;
+
   /** @type {Promise<void>} */
   #apiLoadedPromise;
 
@@ -387,6 +389,24 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   get volume() {
     checkDestroy(this.#destroyed);
     return this.#currentVolume;
+  }
+
+  /**
+   * Synchronously checks whether the YouTube media adapter is fully initialized and ready.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isReady() {
+    checkDestroy(this.#destroyed);
+    return this.#isReady;
+  }
+
+  /**
+   * Asynchronously waits until the YouTube media adapter is fully initialized and ready.
+   * @returns {Promise<void>} A promise that resolves once the adapter is ready.
+   */
+  async waitIsReady() {
+    checkDestroy(this.#destroyed);
+    return waitForTrue(() => this.#isReady);
   }
 
   /**
@@ -523,6 +543,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
       // Resolve the initialization promise when the player is ready
       this.#masterEmitter?.once('onReady', () => {
         this.#startPollingTimeUpdate();
+        this.#isReady = true;
         resolve();
       });
 

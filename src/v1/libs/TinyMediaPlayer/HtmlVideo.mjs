@@ -2,6 +2,7 @@
  * @typedef {import('../../basics/mediaContent.mjs').PictureDataType} PictureDataType
  * @typedef {import('../../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
  * @typedef {import('./index.mjs').ContentTimeData} ContentTimeData
+ * @typedef {import('./index.mjs').ContentData} ContentData
  */
 
 import { isValidObj } from '../../basics/objChecker.mjs';
@@ -65,6 +66,24 @@ class HtmlVideoAdapter extends BaseMediaAdapter {
     this.#videoElement.addEventListener('error', (error) => {
       this.emit('error', error);
     });
+  }
+
+  /**
+   * Synchronously checks whether the media adapter is fully initialized and ready.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isReady() {
+    checkDestroy(this.#destroyed);
+    return true;
+  }
+
+  /**
+   * Asynchronously waits until the content media adapter is fully initialized and ready.
+   * @returns {Promise<void>} A promise that resolves once the adapter is ready.
+   */
+  async waitIsReady() {
+    checkDestroy(this.#destroyed);
+    return;
   }
 
   /**
@@ -244,6 +263,25 @@ class HtmlVideoAdapter extends BaseMediaAdapter {
     }
     this.#videoElement.volume = value;
     this.emit('volumeChange', value);
+  }
+
+  /**
+   * Retrieves the metadata of the currently loaded content, returning a structured
+   * object containing details such as the content ID, title, author, and duration.
+   * @returns {Promise<ContentData>}
+   */
+  async getContentData() {
+    return {
+      id: '',
+      createdAt: '',
+      artistId: '',
+      artistName: '',
+      description: '',
+      title: '',
+      duration: 0,
+      avatar: '',
+      url: '',
+    };
   }
 
   /**

@@ -1389,6 +1389,17 @@ class TinyMediaPlayer extends EventEmitter {
     }
   }
 
+  /**
+   * Asynchronously waits until the content media adapter is fully initialized and ready.
+   * @returns {Promise<void>} A promise that resolves once the adapter is ready.
+   */
+  async waitIsReady() {
+    checkDestroy(this.#destroyed);
+    const adapter = this.#getActiveAdapter();
+    if (!adapter) return;
+    return adapter.waitIsReady();
+  }
+
   // ==========================================
   // DESTROYER
   // ==========================================

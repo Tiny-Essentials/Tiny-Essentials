@@ -60,6 +60,24 @@ class BaseMediaAdapter extends EventEmitter {
   }
 
   /**
+   * Synchronously checks whether the media adapter is fully initialized and ready.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isReady() {
+    checkDestroy(this.#destroyed);
+    throw new Error('Method "isReady" must be implemented by the subclass.');
+  }
+
+  /**
+   * Asynchronously waits until the content media adapter is fully initialized and ready.
+   * @returns {Promise<void>} A promise that resolves once the adapter is ready.
+   */
+  async waitIsReady() {
+    checkDestroy(this.#destroyed);
+    throw new Error('Method "waitIsReady" must be implemented by the subclass.');
+  }
+
+  /**
    * Determines if this adapter can play the provided content.
    * @param {MediaContent} content - The media content to evaluate.
    * @returns {boolean} True if the adapter can handle the content, false otherwise.

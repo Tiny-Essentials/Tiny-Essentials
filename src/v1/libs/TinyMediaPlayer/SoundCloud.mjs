@@ -266,6 +266,8 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
   /** @type {HTMLIFrameElement} */
   #container;
 
+  #isReady = false;
+
   #loadedProgress = 0;
 
   get loadedProgress() {
@@ -371,6 +373,24 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
   get volume() {
     checkDestroy(this.#destroyed);
     return this.#currentVolume;
+  }
+
+  /**
+   * Synchronously checks whether the SoundCloud media adapter is fully initialized and ready.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isReady() {
+    checkDestroy(this.#destroyed);
+    return this.#isReady;
+  }
+
+  /**
+   * Asynchronously waits until the SoundCloud media adapter is fully initialized and ready.
+   * @returns {Promise<void>} A promise that resolves once the adapter is ready.
+   */
+  async waitIsReady() {
+    checkDestroy(this.#destroyed);
+    return waitForTrue(() => this.#isReady);
   }
 
   /**
@@ -518,6 +538,7 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
         this.#masterEmitter?.emit('onReady');
         if (isReady) return;
         isReady = true;
+        this.#isReady = true;
         resolve();
       });
 
