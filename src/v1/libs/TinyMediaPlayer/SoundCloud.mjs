@@ -2,8 +2,6 @@
  * @typedef {import('../../basics/mediaContent.mjs').PictureDataType} PictureDataType
  * @typedef {import('../../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
  * @typedef {import('./index.mjs').ContentTimeData} ContentTimeData
- *
- * @typedef {import('./docs/SoundCloudWidget.mjs').SoundCloudWidget} SoundCloudWidget
  */
 
 /**
@@ -30,6 +28,7 @@
  */
 
 import { EventEmitter } from 'events';
+import SoundCloudWidget from './docs/SoundCloudWidget.mjs';
 import { BaseMediaAdapter } from './index.mjs';
 import { createCheckDestroyed } from '../utils.mjs';
 import { createSingletonTask, waitForTrue } from '../../basics/promiseUtils.mjs';
@@ -122,10 +121,22 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
   };
 
   /**
-   * Represents the current state of the player.
+   * Static object containing event names to match SC.Widget.Events.
    * @type {Record<string, string>}
    */
-  static Events = {};
+  static Events = {
+    LOAD_PROGRESS: 'LOAD_PROGRESS',
+    PLAY_PROGRESS: 'PLAY_PROGRESS',
+    PLAY: 'PLAY',
+    PAUSE: 'PAUSE',
+    FINISH: 'FINISH',
+    SEEK: 'SEEK',
+    READY: 'READY',
+    CLICK_DOWNLOAD: 'CLICK_DOWNLOAD',
+    CLICK_BUY: 'CLICK_BUY',
+    OPEN_SHARE_PANEL: 'OPEN_SHARE_PANEL',
+    ERROR: 'ERROR',
+  };
 
   /**
    * Safety lock: If true, multiple instances can share the same player/iframe via WeakMap.
@@ -455,10 +466,13 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
       });
 
       for (const eventName of Object.values(SoundCloudMediaAdapter.Events)) {
-        this.#widget.bind(SoundCloudMediaAdapter.Events[eventName], (...args) => {
-          const result = masterEmitter.emit(eventName, ...args);
-          return result;
-        });
+        this.#widget.bind(
+          SoundCloudMediaAdapter.Events[eventName],
+          (/** @type {any} */ ...args) => {
+            const result = masterEmitter.emit(eventName, ...args);
+            return result;
+          },
+        );
       }
 
       // Register this container and its master emitter with initial refCount
@@ -665,7 +679,7 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
  * Asynchronously ensures the SoundCloud IFrame API is loaded and returns
  * the SoundCloud Player constructor and the current player state mapping.
  *
- * @returns {Promise<{ Widget: SoundCloudWidget, Events: Record<string, string> }>}
+ * @returns {Promise<{ Widget: typeof SoundCloudWidget, Events: Record<string, string> }>}
  * An object containing the Player constructor and the current player state mapping.
  */
 const getSC = async () => {
