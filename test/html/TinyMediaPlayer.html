@@ -488,20 +488,118 @@
       // --- UTILITIES ---
 
       /**
-       * Logger utility.
-       * @param {string} message
+       * Log manager to handle the recording of messages and events in the DOM,
+       * featuring an automatic pruning system to prevent memory overload.
        */
-      const logMsg = (message) => {
-        const time = new Date().toLocaleTimeString();
-        logsContainer.textContent = `[${time}] ${message}\n` + logsContainer.textContent;
-      };
+      class LogManager {
+        #logsContainer;
+        #eventMonitor;
+        #maxLines;
 
-      const logEvent = (eventName, data) => {
-        const time = new Date().toLocaleTimeString();
-        const dataStr = data !== undefined ? ` | Data: ${JSON.stringify(data)}` : '';
-        eventMonitor.textContent =
-          `[${time}] EVENT: ${eventName}${dataStr}\n` + eventMonitor.textContent;
-      };
+        /**
+         * @param {HTMLElement} logsContainer - The DOM element where general logs will be displayed.
+         * @param {HTMLElement} eventMonitor - The DOM element where events will be displayed.
+         * @param {number} [maxLines=100] - The maximum number of lines to keep in each container.
+         * @throws {TypeError} If the containers are not valid HTML elements.
+         * @throws {RangeError} If maxLines is not a positive number.
+         */
+        constructor(logsContainer, eventMonitor, maxLines = 100) {
+          if (!(logsContainer instanceof HTMLElement)) {
+            throw new TypeError('The logsContainer parameter must be an instance of HTMLElement.');
+          }
+          if (!(eventMonitor instanceof HTMLElement)) {
+            throw new TypeError('The eventMonitor parameter must be an instance of HTMLElement.');
+          }
+          if (typeof maxLines !== 'number' || maxLines <= 0) {
+            throw new RangeError('The maxLines parameter must be a number greater than zero.');
+          }
+
+          this.#logsContainer = logsContainer;
+          this.#eventMonitor = eventMonitor;
+          this.#maxLines = maxLines;
+        }
+
+        /**
+         * Gets the current configured line limit.
+         * @returns {number}
+         */
+        get maxLines() {
+          return this.#maxLines;
+        }
+
+        /**
+         * Sets a new line limit.
+         * @param {number} value - The new line limit.
+         * @throws {RangeError} If the value is less than or equal to zero.
+         */
+        set maxLines(value) {
+          if (typeof value !== 'number' || value <= 0) {
+            throw new RangeError('The maxLines value must be a positive number.');
+          }
+          this.#maxLines = value;
+        }
+
+        /**
+         * Logs a simple message.
+         * @param {string} message - The message to be displayed.
+         * @throws {TypeError} If the message is not a string.
+         */
+        logMsg(message) {
+          if (typeof message !== 'string') {
+            throw new TypeError('The log message must be a string.');
+          }
+
+          const time = new Date().toLocaleTimeString();
+          this.#logsContainer.textContent =
+            `[${time}] ${message}\n` + this.#logsContainer.textContent;
+          this.#prune(this.#logsContainer);
+        }
+
+        /**
+         * Logs an event with optional data.
+         * @param {string} eventName - The name of the event occurred.
+         * @param {any} [data] - Additional data associated with the event.
+         * @throws {TypeError} If eventName is not a string.
+         */
+        logEvent(eventName, data) {
+          if (typeof eventName !== 'string') {
+            throw new TypeError('The event name (eventName) must be a string.');
+          }
+
+          const time = new Date().toLocaleTimeString();
+          let dataStr = '';
+
+          if (data !== undefined) {
+            try {
+              // Security implementation: prevents log breakage if the object has circular references
+              dataStr = ` | Data: ${JSON.stringify(data)}`;
+            } catch (error) {
+              dataStr = ' | Data: [Error serializing data]';
+            }
+          }
+
+          this.#eventMonitor.textContent =
+            `[${time}] EVENT: ${eventName}${dataStr}\n` + this.#eventMonitor.textContent;
+          this.#prune(this.#eventMonitor);
+        }
+
+        /**
+         * Private method that removes the oldest lines (the last ones in the text)
+         * to keep the container within the defined limit.
+         * @param {HTMLElement} container - The container to be pruned.
+         * @private
+         */
+        #prune(container) {
+          const lines = container.textContent.split('\n').filter((line) => line.trim() !== '');
+
+          if (lines.length > this.#maxLines) {
+            // Keeps only the first N lines (which are the most recent, since we are using prepend)
+            container.textContent = lines.slice(0, this.#maxLines).join('\n') + '\n';
+          }
+        }
+      }
+
+      const logger = new LogManager(logsContainer, eventMonitor, 50);
 
       const formatTime = (ms) => {
         if (isNaN(ms) || ms < 0) return '00:00';
@@ -561,7 +659,7 @@
 
       eventsToMonitor.forEach((eventName) => {
         player.on(eventName, (data) => {
-          logEvent(eventName, data);
+          logger.logEvent(eventName, data);
           // Trigger UI updates for specific events
           if (eventName === 'timeupdate' || eventName === 'seek') updateVisualPlayer();
           if (eventName === 'trackChange' || eventName === 'playlistUpdate') renderPlaylist();
@@ -577,7 +675,7 @@
         try {
           await player.seek(targetMs);
         } catch (err) {
-          logMsg(`Seek Error: ${err.message}`);
+          logger.logMsg(`Seek Error: ${err.message}`);
         }
       });
 
@@ -615,10 +713,10 @@
             const idx = parseInt(e.target.dataset.index, 10);
             try {
               await player.removeTrack(idx);
-              logMsg(`Removed track at index: ${index} (via list button).`);
+              logger.logMsg(`Removed track at index: ${index} (via list button).`);
               renderPlaylist();
             } catch (error) {
-              logMsg(`ERROR: ${error.message}`);
+              logger.logMsg(`ERROR: ${error.message}`);
             }
           });
         });
@@ -639,7 +737,7 @@
 
       // Bind Audio Ended Event to trigger next() automatically for testing
       player.on('ended', async () => {
-        logMsg('Track ended naturally. Invoking player.next()');
+        logger.logMsg('Track ended naturally. Invoking player.next()');
         await player.next();
         renderPlaylist();
       });
@@ -654,9 +752,9 @@
         play.disabled = true;
         try {
           await player.play();
-          logMsg(`Playing track index: ${player.currentIndex}`);
+          logger.logMsg(`Playing track index: ${player.currentIndex}`);
         } catch (error) {
-          logMsg(`ERROR: ${error.message}`);
+          logger.logMsg(`ERROR: ${error.message}`);
         }
         play.disabled = false;
       });
@@ -665,7 +763,7 @@
       pause.addEventListener('click', async () => {
         pause.disabled = true;
         await player.pause();
-        logMsg('Playback paused.');
+        logger.logMsg('Playback paused.');
         pause.disabled = false;
       });
 
@@ -673,7 +771,7 @@
       stop.addEventListener('click', async () => {
         stop.disabled = true;
         await player.stop();
-        logMsg('Playback stopped.');
+        logger.logMsg('Playback stopped.');
         stop.disabled = false;
       });
 
@@ -681,7 +779,7 @@
       next.addEventListener('click', async () => {
         next.disabled = true;
         await player.next();
-        logMsg(`Skipped to next. Current index: ${player.currentIndex}`);
+        logger.logMsg(`Skipped to next. Current index: ${player.currentIndex}`);
         renderPlaylist();
         next.disabled = false;
       });
@@ -690,7 +788,7 @@
       prev.addEventListener('click', async () => {
         prev.disabled = true;
         await player.prev();
-        logMsg(`Returned to previous. Current index: ${player.currentIndex}`);
+        logger.logMsg(`Returned to previous. Current index: ${player.currentIndex}`);
         renderPlaylist();
         prev.disabled = false;
       });
@@ -701,9 +799,9 @@
         const timeMs = parseInt(document.getElementById('seek-input').value, 10);
         try {
           await player.seek(timeMs);
-          logMsg(`Seeked to ${timeMs}ms.`);
+          logger.logMsg(`Seeked to ${timeMs}ms.`);
         } catch (error) {
-          logMsg(`ERROR: ${error.message}`);
+          logger.logMsg(`ERROR: ${error.message}`);
         }
         seek.disabled = false;
       });
@@ -714,9 +812,9 @@
         const stepMs = parseInt(document.getElementById('step-input').value, 10);
         try {
           await player.step(stepMs);
-          logMsg(`Stepped timeline by ${stepMs}ms.`);
+          logger.logMsg(`Stepped timeline by ${stepMs}ms.`);
         } catch (error) {
-          logMsg(`ERROR: ${error.message}`);
+          logger.logMsg(`ERROR: ${error.message}`);
         }
         step.disabled = false;
       });
@@ -725,34 +823,34 @@
       volumeSlider.addEventListener('input', (e) => {
         try {
           player.volume = parseFloat(e.target.value);
-          logMsg(`Volume set to: ${player.volume.toFixed(2)}`);
+          logger.logMsg(`Volume set to: ${player.volume.toFixed(2)}`);
         } catch (error) {
-          logMsg(`ERROR: ${error.message}`);
+          logger.logMsg(`ERROR: ${error.message}`);
         }
       });
 
       document.getElementById('loop-select').addEventListener('change', (e) => {
         player.loopMode = e.target.value;
-        logMsg(`Loop mode changed to: ${player.loopMode}`);
+        logger.logMsg(`Loop mode changed to: ${player.loopMode}`);
       });
 
       document.getElementById('random-checkbox').addEventListener('change', (e) => {
         player.isRandom = e.target.checked;
-        logMsg(`Random mode is now: ${player.isRandom}`);
+        logger.logMsg(`Random mode is now: ${player.isRandom}`);
       });
 
       document.getElementById('persist-volume-checkbox').addEventListener('change', (e) => {
         player.persistVolume = e.target.checked;
-        logMsg(`Persist Volume changed to: ${player.persistVolume}`);
+        logger.logMsg(`Persist Volume changed to: ${player.persistVolume}`);
       });
 
       document.getElementById('btn-update-storage').addEventListener('click', () => {
         try {
           const newKey = document.getElementById('storage-key-input').value;
           player.volumeStorageKey = newKey;
-          logMsg(`Storage key updated to: ${newKey}`);
+          logger.logMsg(`Storage key updated to: ${newKey}`);
         } catch (error) {
-          logMsg(`ERROR: ${error.message}`);
+          logger.logMsg(`ERROR: ${error.message}`);
         }
       });
 
@@ -771,16 +869,16 @@
             duration: 0,
           };
           player.addTrack(content);
-          logMsg(`Added track: ${title}`);
+          logger.logMsg(`Added track: ${title}`);
           renderPlaylist();
         } catch (error) {
-          logMsg(`ERROR: ${error.message}`);
+          logger.logMsg(`ERROR: ${error.message}`);
         }
       });
 
       document.getElementById('btn-clear-playlist').addEventListener('click', async () => {
         await player.clearPlaylist();
-        logMsg('Playlist cleared and playback stopped.');
+        logger.logMsg('Playlist cleared and playback stopped.');
         renderPlaylist();
       });
 
@@ -788,22 +886,22 @@
       document.getElementById('btn-search-track').addEventListener('click', () => {
         const query = document.getElementById('search-track-input').value;
         if (!query) {
-          logMsg('Please enter a search query.');
+          logger.logMsg('Please enter a search query.');
           return;
         }
 
         try {
           const results = player.searchTrack(query);
           if (results.length === 0) {
-            logMsg(`Search: No tracks found matching "${query}".`);
+            logger.logMsg(`Search: No tracks found matching "${query}".`);
           } else {
-            logMsg(`Search found ${results.length} match(es):`);
+            logger.logMsg(`Search found ${results.length} match(es):`);
             results.forEach((res) => {
-              logMsg(` - Index ${res.index}: ${res.track.title}`);
+              logger.logMsg(` - Index ${res.index}: ${res.track.title}`);
             });
           }
         } catch (error) {
-          logMsg(`ERROR: ${error.message}`);
+          logger.logMsg(`ERROR: ${error.message}`);
         }
       });
 
@@ -814,12 +912,12 @@
         try {
           if (player.existsTrack(index)) {
             const track = player.getTrack(index);
-            logMsg(`Track at index ${index} exists. Title: ${track.title}`);
+            logger.logMsg(`Track at index ${index} exists. Title: ${track.title}`);
           } else {
-            logMsg(`Track at index ${index} does not exist in the current playlist.`);
+            logger.logMsg(`Track at index ${index} does not exist in the current playlist.`);
           }
         } catch (error) {
-          logMsg(`ERROR: ${error.message}`);
+          logger.logMsg(`ERROR: ${error.message}`);
         }
       });
 
@@ -829,16 +927,16 @@
         const index = parseInt(indexValue, 10);
         try {
           await player.removeTrack(index);
-          logMsg(`Successfully removed track at index ${index} (via input field).`);
+          logger.logMsg(`Successfully removed track at index ${index} (via input field).`);
           renderPlaylist();
         } catch (error) {
-          logMsg(`ERROR: ${error.message}`);
+          logger.logMsg(`ERROR: ${error.message}`);
         }
       });
 
       // Initial Render
       syncUIWithState();
-      logMsg('System initialized. QA Monitor Active.');
+      logger.logMsg('System initialized. QA Monitor Active.');
     </script>
   </body>
 </html>
