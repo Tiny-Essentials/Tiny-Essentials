@@ -2,6 +2,7 @@
  * @typedef {import('../../basics/mediaContent.mjs').PictureDataType} PictureDataType
  * @typedef {import('../../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
  * @typedef {import('./index.mjs').ContentTimeData} ContentTimeData
+ * @typedef {import('./index.mjs').ContentData} ContentData
  *
  * @typedef {import('./docs/SoundCloudWidget.mjs').SoundObject} SoundObject
  * @typedef {import('./docs/SoundCloudWidget.mjs').MediaObject} MediaObject
@@ -705,6 +706,31 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
     return this.#currentContentId
       ? SoundCloudMediaAdapter.getThumbnailUrl(this.#currentContentId)
       : null;
+  }
+
+  /**
+   * Retrieves the metadata of the currently loaded SoundCloud music, returning a structured 
+   * object containing details such as the audio ID, title, author, and duration.
+   * @returns {Promise<ContentData>}
+   */
+  async getContentData() {
+    return new Promise((resolve, reject) => {
+      if (!this.#widget) reject(new Error('No music data available from the SoundCloud player.'));
+      else
+        this.#widget.getCurrentSound((sound) => {
+          resolve({
+            id: String(sound.id ?? ''),
+            createdAt: String(sound.created_at ?? ''),
+            artistId: String(sound.user_id ?? ''),
+            artistName: String(sound.user?.full_name ?? ''),
+            description: String(sound.description ?? ''),
+            title: String(sound.label_name ?? ''),
+            duration: Number(sound.duration ?? ''),
+            avatar: String(sound.artwork_url ?? ''),
+            url: String(sound.uri ?? ''),
+          });
+        });
+    });
   }
 
   /**

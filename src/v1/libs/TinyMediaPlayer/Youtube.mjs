@@ -2,6 +2,7 @@
  * @typedef {import('../../basics/mediaContent.mjs').PictureDataType} PictureDataType
  * @typedef {import('../../basics/mediaContent.mjs').MediaContent<PictureDataType>} MediaContent
  * @typedef {import('./index.mjs').ContentTimeData} ContentTimeData
+ * @typedef {import('./index.mjs').ContentData} ContentData
  *
  * @typedef {import('./docs/YouTubePlayer.mjs').YTPlayerState} YTPlayerState
  * @typedef {import('./docs/YouTubePlayer.mjs').YTPlayerErrors} YTPlayerErrors
@@ -672,6 +673,27 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     return this.#currentContentId
       ? YoutubeMediaAdapter.getThumbnailUrl(this.#currentContentId, quality)
       : null;
+  }
+
+  /**
+   * Retrieves the metadata of the currently loaded YouTube video, returning a structured 
+   * object containing details such as the video ID, title, author, and duration.
+   * @returns {Promise<ContentData>}
+   */
+  async getContentData() {
+    const video = this.#player?.getVideoData();
+    if (!video) throw new Error('No video data available from the YouTube player.');
+    return {
+      id: String(video.video_id ?? ''),
+      createdAt: '',
+      artistId: '',
+      artistName: String(video.author ?? ''),
+      description: '',
+      title: String(video.title ?? ''),
+      duration: Number(video.progressBarEndPositionUtcTimeMillis ?? 0),
+      avatar: this.getThumbnailUrl() ?? '',
+      url: `https://youtu.be/${this.#currentContentId}`,
+    };
   }
 
   /**

@@ -14,6 +14,20 @@ import { createCheckDestroyed } from '../utils.mjs';
  * @property {number} playbackPercentage - The percentage of the media that has been played (0 to 100).
  */
 
+/**
+ * Represents the data structure for a piece of content.
+ * @typedef {Object} ContentData
+ * @property {string} id - The unique identifier for the content.
+ * @property {string} createdAt - The timestamp indicating when the content was created.
+ * @property {string} title - The title of the content.
+ * @property {number} duration - The duration of the content.
+ * @property {string} artistId - The unique identifier for the artist.
+ * @property {string} [artistName] - The name of the artist (optional).
+ * @property {string} [description] - A brief description of the content (optional).
+ * @property {string} [avatar] - The URL for the artist's avatar image (optional).
+ * @property {string} [url] - The URL to access the content (optional).
+ */
+
 const checkDestroy = createCheckDestroyed('BaseMediaAdapter');
 
 /**
@@ -155,6 +169,16 @@ class BaseMediaAdapter extends EventEmitter {
   getVolume() {
     checkDestroy(this.#destroyed);
     throw new Error('Method "getVolume" must be implemented by the subclass.');
+  }
+
+  /**
+   * Retrieves the metadata of the currently loaded content, returning a structured 
+   * object containing details such as the content ID, title, author, and duration.
+   * @returns {Promise<ContentData>}
+   */
+  async getContentData() {
+    checkDestroy(this.#destroyed);
+    throw new Error('Method "getContentData" must be implemented by the subclass.');
   }
 
   /**
