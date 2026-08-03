@@ -131,6 +131,9 @@ class TinyMediaPlayer extends EventEmitter {
   /** @type {boolean} */
   #isPlaying = false;
 
+  /** @type {boolean} */
+  #isMuted = false;
+
   /** @type {number} */
   #volume = 1.0;
 
@@ -687,6 +690,39 @@ class TinyMediaPlayer extends EventEmitter {
     }
   }
 
+  /** @returns {boolean} True if the player is currently muted. */
+  get isMuted() {
+    checkDestroy(this.#destroyed);
+    return this.#isMuted;
+  }
+
+  /**
+   * Sets the mute state of the player.
+   * This state is synchronized with the active adapter and respected when playing new tracks.
+   * @param {boolean} value - True to mute, false to unmute.
+   * @throws {TypeError} If the value is not a boolean.
+   */
+  set isMuted(value) {
+    checkDestroy(this.#destroyed);
+    if (typeof value !== 'boolean') {
+      throw new TypeError('isMuted must be a boolean.');
+    }
+
+    this.#isMuted = value;
+
+    // Synchronize with the active adapter immediately
+    try {
+      const adapter = this.#getActiveAdapter();
+      if (adapter) {
+        value ? adapter.mute() : adapter.unmute();
+      }
+    } catch (error) {
+      // If no active adapter, we just wait for the next play() call to apply the state
+    }
+
+    this.emit('muteChange', this.#isMuted);
+  }
+
   // ==========================================
   // ADAPTER MANAGEMENT
   // ==========================================
@@ -1129,6 +1165,7 @@ class TinyMediaPlayer extends EventEmitter {
     }
 
     await adapter.play(this.#playlist[this.#currentIndex]);
+    if (this.#isMuted) await adapter.mute();
     this.#isPlaying = true;
     this.emit('play', this.#currentIndex);
   }
