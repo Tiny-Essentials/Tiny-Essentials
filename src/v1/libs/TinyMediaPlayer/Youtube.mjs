@@ -449,6 +449,8 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   /**
    * Plays the media content. If the player is already initialized with a different video,
    * it will load the new video automatically.
+   * 
+   * Example: https://www.youtube.com/watch?v=XXXXXXXXXXX
    * @param {MediaContent} content - The media content to play.
    * @returns {Promise<void>}
    * @throws {TypeError} If the content data is invalid.

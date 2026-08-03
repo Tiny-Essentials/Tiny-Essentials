@@ -434,6 +434,8 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
   /**
    * Plays the media content. If the player is already initialized with a different video,
    * it will load the new video automatically.
+   * 
+   * Example: https://api.soundcloud.com/tracks/XXXXXXXXX (From SoundCloud Embed)
    * @param {MediaContent} content - The media content to play.
    * @returns {Promise<void>}
    * @throws {TypeError} If the content data is invalid.
@@ -454,15 +456,11 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
       await this.#initializeWidget(targetId);
     }
 
-    if (this.#widget && typeof this.#widget.setVolume === 'function') {
-      this.#widget.setVolume(this.#currentVolume * 100);
-    }
-
     // If the video is different, load the new one
     if (this.#currentContentId !== targetId) {
       this.#currentContentId = targetId;
 
-      await new Promise((resolve, reject) => {
+      await new Promise(async (resolve, reject) => {
         let timeout = false;
         // We set a time limit of 10 seconds to prevent await from locking the system
         const timeoutId = setTimeout(() => {
@@ -472,11 +470,12 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
 
         // Command to load the new song
         this.#widget?.load(`https://api.soundcloud.com/tracks/${targetId}`);
+        await waitForTrue(() => true, 300);
         /** @type {Partial<SoundObject>} */
         let sound = {};
 
         // We registered the listener for the READY event before calling the load
-        waitForTrue(() => {
+        await waitForTrue(() => {
           this.#widget?.getCurrentSound((s) => {
             sound = s;
           });
@@ -484,6 +483,9 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
         }).then(() => {
           if (timeout) return;
           clearTimeout(timeoutId);
+          if (this.#widget && typeof this.#widget.setVolume === 'function') {
+            this.#widget.setVolume(this.#currentVolume * 100);
+          }
           resolve(null);
         });
       });
