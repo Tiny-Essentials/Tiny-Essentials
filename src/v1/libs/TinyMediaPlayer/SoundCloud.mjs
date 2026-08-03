@@ -535,12 +535,13 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
 
       const eventSync = (/** @type {any} */ event, /** @type {string} */ eventName) => {
         if (!event) return;
-        this.#widget?.getVolume((volume) => {
-          if (this.#isMuted && volume > 0) {
-            this.#isMuted = false;
-            this.volume = this.#preMuteVolume;
-          }
-        });
+        if (this.#isMuted)
+          this.#widget?.getVolume((volume) => {
+            if (this.#isMuted && volume > 0) {
+              this.#isMuted = false;
+              this.volume = this.#preMuteVolume;
+            }
+          });
         if (typeof event.currentPosition === 'number') this.#cachedPosition = event.currentPosition;
         if (typeof event.loadedProgress === 'number') this.#loadedProgress = event.loadedProgress;
         if (typeof event.soundId === 'number') this.#currentContentId = String(event.soundId);

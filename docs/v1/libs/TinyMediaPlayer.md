@@ -20,10 +20,15 @@ To support different media platforms, `TinyMediaPlayer` relies on **Adapters**. 
 | Method | Description | Parameters | Returns |
 | :--- | :--- | :--- | :--- |
 | `canHandle` | Determines if the adapter can play the provided content. | `content: MediaContent` | `boolean` |
+| `isReady` | Synchronously checks if the adapter is ready. | None | `boolean` |
+| `waitIsReady` | Asynchronously waits until the adapter is ready. | None | `Promise<void>` |
 | `play` | Starts or resumes playback of the provided content. | `content: MediaContent` | `Promise<void>` |
 | `pause` | Pauses the current playback. | None | `Promise<void>` |
 | `stop` | Stops the playback completely and resets the platform state. | None | `Promise<void>` |
 | `seek` | Seeks to a specific time in the media timeline. | `timeMs: number` | `Promise<void>` |
+| `isMuted` | Checks whether the player is currently muted. | None | `boolean \| null` |
+| `mute` | Mutes the current playback. | None | `Promise<void>` |
+| `unmute` | Unmutes the current playback. | None | `Promise<void>` |
 | `getCurrentTime` | Retrieves the current playback position. | None | `number` (ms) |
 | `getTotalDuration` | Gets the total duration of the content. | None | `number` (ms) |
 | `getRemainingTime` | Gets the remaining time until the content ends. | None | `number` (ms) |
@@ -31,7 +36,8 @@ To support different media platforms, `TinyMediaPlayer` relies on **Adapters**. 
 | `getTimeData` | Retrieves a consolidated object containing all time-related metrics. | None | `ContentTimeData` |
 | `setVolume` | Sets the playback volume for the underlying API. | `volume: number` (0.0 to 1.0) | `void` |
 | `getVolume` | Gets the current playback volume. | None | `number` (0.0 to 1.0) |
-| `destroy` | Cleans up the instance, removes listeners, and marks it as destroyed. | None | `void` |
+| `getContentData` | Retrieves the metadata of the loaded content. | None | `Promise<ContentData>` |
+| `destroy` | Cleans up the instance and marks it as destroyed. | None | `void` |
 
 ---
 
@@ -59,9 +65,9 @@ const player = new TinyMediaPlayer({
 });
 
 YoutubeMediaAdapter.defaultContainer = YoutubeMediaAdapter.createIframeContainer({
-videoId: 'fzKvGbQ9SgY',
-hidden: true,
-autoplay: false,
+  videoId: 'fzKvGbQ9SgY',
+  hidden: true,
+  autoplay: false,
 });
 
 // Register the ready-made adapters
@@ -93,46 +99,30 @@ class MyCustomServiceAdapter extends BaseMediaAdapter {
     return content.url.startsWith('https://example.com/');
   }
 
-  /**
-   * Determines if this adapter can play the given content.
-   * @param {MediaContent} content - The media content to check.
-   * @returns {boolean} - True if the URL matches the service.
-   */
   canHandle(content) {
     return MyCustomServiceAdapter.canHandle(content);
   }
 
-  /**
-   * Starts playback for the provided content.
-   * @param {MediaContent} content - The content to play.
-   * @returns {Promise<void>}
-   */
   async play(content) {
     console.log(`Starting playback for: ${content.title}`);
-    // Logic to interface with the custom service API goes here
   }
 
-  async pause() {
-    // Logic to pause custom service playback
-  }
-
-  async stop() {
-    // Logic to stop custom service playback
-  }
-
-  async seek(timeMs) {
-    // Logic to seek in custom service playback
-  }
-
-  getCurrentTime() {
-    // Logic to return current time from custom service
-    return 0; 
-  }
-
-  setVolume(volume) {
-    // Logic to set volume on custom service
-    console.log(`Volume set to: ${volume}`);
-  }
+  async pause() {}
+  async stop() {}
+  async seek(timeMs) {}
+  getCurrentTime() { return 0; }
+  setVolume(volume) {}
+  getVolume() { return 1.0; }
+  async getContentData() { return {}; }
+  async waitIsReady() {}
+  isReady() { return true; }
+  isMuted() { return false; }
+  async mute() {}
+  async unmute() {}
+  getTotalDuration() { return 0; }
+  getRemainingTime() { return 0; }
+  getPlaybackPercentage() { return 0; }
+  getTimeData() { return {}; }
 }
 
 // Registering the custom adapter
@@ -214,6 +204,7 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 | `isRandom` | `boolean` | Enables or disables shuffle mode. |
 | `isPlaying` | `boolean` | Indicates if media is currently playing. |
 | `volume` | `number` | The current volume level (strictly between `0.0` and `1.0`). |
+| `isMuted` | `boolean` | Sets the mute state of the player. |
 
 #### 🎨 UX & Customization
 | Property | Type | Description |
@@ -274,13 +265,15 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 * **`next()`**: **(Async)** Advances to the next track (respects `loopMode` and `isRandom`).
 * **`prev()`**: **(Async)** Returns to the previous track (respects `loopMode` and `isRandom`).
 * **`seek(timeMs)`**: **(Async)** Jumps to a specific millisecond in the current track.
-* **`step(stepMs)`**: **(Async)** Moves the timeline forward (positive) or backward (negative) by a specified amount.
+* **`step(stepMs)`**: **(Async)** Moves the timeline forward (+) or backward (-) by `stepMs`.
 
 #### ⏳ Time Utilities
 * **`getCurrentTime()`**: Gets the current playback time in milliseconds.
 * **`getTotalDuration()`**: Gets the total duration of the current track in milliseconds.
 * **`getRemainingTime()`**: Gets the remaining time until the current track ends in milliseconds.
 * **`getPlaybackPercentage()`**: Gets the percentage of the current track that has been played (0-100).
+* **`getContentData()`**: Retrieves structured metadata for the current content.
+* **`waitIsReady()`**: **(Async)** Waits until the active adapter is fully initialized.
 
 #### ♻️ Lifecycle
 * **`destroy()`**: **(Async)** Safely stops playback, clears state, removes adapters, and detaches all listeners to prevent memory leaks.
@@ -313,6 +306,7 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 | `smoothStopVolumeChange` | `boolean` | Emitted when the smooth stop volume setting is toggled. |
 | `fadeVolumeSpeedChange` | `number` | Emitted when the volume fade speed is updated. |
 | `prevClickTimeoutDurationChange` | `number` | Emitted when the "repeat on prev" timeout duration is updated. |
+| `muteChange` | `boolean` | Emitted when the mute state is toggled. |
 
 ### 💀 Lifecycle Events
 | Event | Data Type | Description |
