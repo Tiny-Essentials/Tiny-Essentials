@@ -320,6 +320,9 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     return this.#currentContentId;
   }
 
+  /** @type {number} */
+  #lastReportedTime = 0;
+
   /** @type {ReturnType<typeof setInterval>|null} */
   #timeUpdateInterval = null;
 
@@ -449,7 +452,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   /**
    * Plays the media content. If the player is already initialized with a different video,
    * it will load the new video automatically.
-   * 
+   *
    * Example: https://www.youtube.com/watch?v=XXXXXXXXXXX
    * @param {MediaContent} content - The media content to play.
    * @returns {Promise<void>}
@@ -478,6 +481,9 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     if (this.#currentContentId !== targetVideoId) {
       this.#currentContentId = targetVideoId;
       this.#player?.loadVideoById(targetVideoId);
+      // Reset the last reported time to 0 to prevent a false 'seek' event
+      // when the new video starts playing.
+      this.#lastReportedTime = 0;
     } else {
       this.#player?.playVideo();
     }
@@ -544,6 +550,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
 
       // Resolve the initialization promise when the player is ready
       this.#masterEmitter?.once('onReady', () => {
+        this.#lastReportedTime = this.getCurrentTime();
         this.#startPollingTimeUpdate();
         this.#isReady = true;
         resolve();
@@ -555,16 +562,31 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
 
   /**
    * Starts a polling interval to emit 'timeupdate' events, matching the HTML5 Audio interface.
+   * Also detects 'seek' events by monitoring large jumps in the playback time.
    */
   #startPollingTimeUpdate() {
     this.#timeUpdateInterval = setInterval(() => {
-      if (
-        this.#player &&
-        this.#player.getPlayerState() === YoutubeMediaAdapter.PlayerState.PLAYING
-      ) {
+      if (!this.#player) return;
+
+      const currentTime = this.getCurrentTime();
+      const isPlaying = this.#player.getPlayerState() === YoutubeMediaAdapter.PlayerState.PLAYING;
+
+      if (isPlaying) {
+        const diff = Math.abs(currentTime - this.#lastReportedTime);
+
+        // If the time jump is greater than 1 second, we interpret it as a 'seek' event.
+        // This captures both programmatic seeks and user interactions with the YouTube UI.
+        if (diff > 1000) {
+          this.emit('seek', currentTime / 1000);
+        }
+
         this.#masterEmitter?.emit('timeupdate', this.getTimeData());
       }
-    }, 250);
+
+      // Always update the last reported time to keep it in sync with the actual player position.
+      // This prevents false 'seek' events when resuming playback after a pause or a seek while paused.
+      this.#lastReportedTime = currentTime;
+    }, 1);
   }
 
   /**
@@ -622,9 +644,8 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   async seek(timeMs) {
     checkDestroy(this.#destroyed);
     if (typeof timeMs !== 'number') throw new TypeError('Time must be a number.');
-    const currentTime = timeMs / 1000;
-    this.#player?.seekTo(currentTime, true);
-    this.emit('seek', currentTime);
+    const targetTimeInSeconds = timeMs / 1000;
+    this.#player?.seekTo(targetTimeInSeconds, true);
   }
 
   /**

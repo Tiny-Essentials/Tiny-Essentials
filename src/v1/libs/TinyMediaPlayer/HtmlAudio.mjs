@@ -69,6 +69,9 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
     this.#audioElement.addEventListener('error', (error) => {
       this.emit('error', error);
     });
+    this.#audioElement.addEventListener('seeked', () => {
+      this.emit('seek', this.getCurrentTime());
+    });
   }
 
   /**
@@ -184,7 +187,6 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
     }
     const currentTime = timeMs / 1000;
     this.#audioElement.currentTime = currentTime;
-    this.emit('seek', currentTime);
   }
 
   /**

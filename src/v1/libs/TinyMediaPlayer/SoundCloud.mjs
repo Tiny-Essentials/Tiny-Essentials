@@ -434,7 +434,7 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
   /**
    * Plays the media content. If the player is already initialized with a different video,
    * it will load the new video automatically.
-   * 
+   *
    * Example: https://api.soundcloud.com/tracks/XXXXXXXXX (From SoundCloud Embed)
    * @param {MediaContent} content - The media content to play.
    * @returns {Promise<void>}

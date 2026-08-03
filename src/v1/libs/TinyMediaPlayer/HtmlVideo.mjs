@@ -66,6 +66,9 @@ class HtmlVideoAdapter extends BaseMediaAdapter {
     this.#videoElement.addEventListener('error', (error) => {
       this.emit('error', error);
     });
+    this.#videoElement.addEventListener('seeked', () => {
+      this.emit('seek', this.getCurrentTime());
+    });
   }
 
   /**
@@ -181,7 +184,6 @@ class HtmlVideoAdapter extends BaseMediaAdapter {
     }
     const currentTime = timeMs / 1000;
     this.#videoElement.currentTime = currentTime;
-    this.emit('seek', currentTime);
   }
 
   /**
