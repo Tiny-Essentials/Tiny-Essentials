@@ -586,7 +586,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
       // Always update the last reported time to keep it in sync with the actual player position.
       // This prevents false 'seek' events when resuming playback after a pause or a seek while paused.
       this.#lastReportedTime = currentTime;
-    }, 1);
+    }, 250);
   }
 
   /**

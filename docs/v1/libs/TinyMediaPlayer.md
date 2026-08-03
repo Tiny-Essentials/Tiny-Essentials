@@ -43,7 +43,8 @@ You can integrate `TinyMediaPlayer` into your project using two methods: using t
 The library provides several optimized adapters for common media sources. You can import them and register them directly with your player instance.
 
 **Available Adapters:**
-* `YoutubeMediaAdapter` from `tiny-essentials/libs/TinyMediaPlayer/Youtube`
+* `YoutubeMediaAdapter` from `tiny-essentials/libs/TinyMediaPlayer/Youtube` (https://www.youtube.com/watch?v=XXXXXXXXXXX)
+* `SoundCloudMediaAdapter` from `tiny-essentials/libs/TinyMediaPlayer/SoundCloud` (https://api.soundcloud.com/tracks/XXXXXXXXX (From SoundCloud Embed))
 * `HtmlAudioAdapter` from `tiny-essentials/libs/TinyMediaPlayer/HtmlAudio`
 * `HtmlVideoAdapter` from `tiny-essentials/libs/TinyMediaPlayer/HtmlVideo`
 
