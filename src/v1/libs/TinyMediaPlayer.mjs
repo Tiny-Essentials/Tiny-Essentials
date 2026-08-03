@@ -1294,6 +1294,28 @@ class TinyMediaPlayer extends EventEmitter {
   }
 
   /**
+   * Jumps directly to a specific index in the playlist.
+   * @param {number} index - The target index to skip to.
+   * @returns {Promise<void>}
+   * @throws {TypeError} If the index is not a number.
+   * @throws {RangeError} If the index is out of the playlist bounds.
+   */
+  async skipTo(index) {
+    checkDestroy(this.#destroyed);
+    if (typeof index !== 'number') {
+      throw new TypeError('Index must be a number.');
+    }
+    if (!this.existsTrack(index)) {
+      throw new RangeError(`Index ${index} is out of bounds for the current playlist.`);
+    }
+
+    await this.stop();
+    this.#currentIndex = index;
+    this.emit('trackChange', this.#currentIndex);
+    await this.play();
+  }
+
+  /**
    * Jumps to a specific absolute time in the timeline.
    * @param {number} timeMs - The target time in milliseconds.
    * @returns {Promise<void>}
