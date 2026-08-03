@@ -855,10 +855,7 @@
       });
 
       // Playlist Controls
-      document.getElementById('btn-add-track').addEventListener('click', () => {
-        const url = document.getElementById('track-url').value;
-        const title = document.getElementById('track-title').value;
-
+      const addNewTrack = (url, title) => {
         try {
           // Creating a mock MediaContent object
           const content = {
@@ -874,7 +871,16 @@
         } catch (error) {
           logger.logMsg(`ERROR: ${error.message}`);
         }
+      };
+      document.getElementById('btn-add-track').addEventListener('click', () => {
+        const url = document.getElementById('track-url').value;
+        const title = document.getElementById('track-title').value;
+        addNewTrack(url, title);
       });
+
+      addNewTrack('https://api.soundcloud.com/tracks/328270345', 'Play Again (2015)(no lyrics)');
+      addNewTrack('https://www.youtube.com/watch?v=fzKvGbQ9SgY', 'Tiny Wag Meme');
+      addNewTrack('https://api.soundcloud.com/tracks/260505529', 'Mystery Star Battlefield (Mystery Planet Remake)');
 
       document.getElementById('btn-clear-playlist').addEventListener('click', async () => {
         await player.clearPlaylist();

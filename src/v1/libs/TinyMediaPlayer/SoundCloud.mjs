@@ -470,7 +470,7 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
 
         // Command to load the new song
         this.#widget?.load(`https://api.soundcloud.com/tracks/${targetId}`);
-        await waitForTrue(() => true, 300);
+        await waitForTrue(() => true, 500);
         /** @type {Partial<SoundObject>} */
         let sound = {};
 
