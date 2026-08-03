@@ -305,6 +305,12 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
   /** @type {number} */
   #cachedPosition = 0;
 
+  /** @type {boolean} */
+  #isMuted = false;
+
+  /** @type {number} */
+  #preMuteVolume = 1.0;
+
   /**
    * Gets whether the adapter has been destroyed.
    * @returns {boolean}
@@ -470,7 +476,7 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
 
         // Command to load the new song
         this.#widget?.load(`https://api.soundcloud.com/tracks/${targetId}`);
-        await waitForTrue(() => true, 500);
+        await waitForTrue(() => true, 700);
         /** @type {Partial<SoundObject>} */
         let sound = {};
 
@@ -529,6 +535,12 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
 
       const eventSync = (/** @type {any} */ event, /** @type {string} */ eventName) => {
         if (!event) return;
+        this.#widget?.getVolume((volume) => {
+          if (this.#isMuted && volume > 0) {
+            this.#isMuted = false;
+            this.volume = this.#preMuteVolume;
+          }
+        });
         if (typeof event.currentPosition === 'number') this.#cachedPosition = event.currentPosition;
         if (typeof event.loadedProgress === 'number') this.#loadedProgress = event.loadedProgress;
         if (typeof event.soundId === 'number') this.#currentContentId = String(event.soundId);
@@ -659,6 +671,47 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
     checkDestroy(this.#destroyed);
     if (typeof timeMs !== 'number') throw new TypeError('Time must be a number.');
     this.#widget?.seekTo(timeMs);
+  }
+
+  /**
+   * Checks whether the player is currently muted.
+   * @returns {boolean} True if muted, false otherwise.
+   */
+  isMuted() {
+    checkDestroy(this.#destroyed);
+    return this.#isMuted;
+  }
+
+  /**
+   * Mutes the current playback.
+   * @returns {Promise<void>}
+   */
+  async mute() {
+    checkDestroy(this.#destroyed);
+    if (this.#isMuted) return;
+
+    this.#isMuted = true;
+    this.#preMuteVolume = this.#currentVolume;
+
+    // We update the state directly to avoid the setter's logic
+    // overwriting preMuteVolume during the transition.
+    this.#currentVolume = 0;
+    if (this.#widget && typeof this.#widget.setVolume === 'function') {
+      this.#widget.setVolume(0);
+    }
+  }
+
+  /**
+   * Unmutes the current playback.
+   * @returns {Promise<void>}
+   */
+  async unmute() {
+    checkDestroy(this.#destroyed);
+    if (!this.#isMuted) return;
+
+    this.#isMuted = false;
+    // This will trigger the 'set volume' logic which applies the restored volume
+    this.volume = this.#preMuteVolume;
   }
 
   /**

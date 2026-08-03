@@ -663,6 +663,33 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   }
 
   /**
+   * Checks whether the player is currently muted.
+   * @returns {boolean|null} True if muted, false otherwise.
+   */
+  isMuted() {
+    checkDestroy(this.#destroyed);
+    return this.#player?.isMuted() ?? null;
+  }
+
+  /**
+   * Mutes the current playback.
+   * @returns {Promise<void>}
+   */
+  async mute() {
+    checkDestroy(this.#destroyed);
+    this.#player?.mute();
+  }
+
+  /**
+   * Unmutes the current playback.
+   * @returns {Promise<void>}
+   */
+  async unmute() {
+    checkDestroy(this.#destroyed);
+    this.#player?.unMute();
+  }
+
+  /**
    * Retrieves the current playback time.
    * @returns {number} The current time in milliseconds.
    */

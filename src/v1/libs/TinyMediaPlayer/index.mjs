@@ -126,6 +126,33 @@ class BaseMediaAdapter extends EventEmitter {
   }
 
   /**
+   * Checks whether the player is currently muted.
+   * @returns {boolean|null} True if muted, false otherwise.
+   */
+  isMuted() {
+    checkDestroy(this.#destroyed);
+    throw new Error('Method "isMuted" must be implemented by the subclass.');
+  }
+
+  /**
+   * Mutes the current playback.
+   * @returns {Promise<void>}
+   */
+  async mute() {
+    checkDestroy(this.#destroyed);
+    throw new Error('Method "mute" must be implemented by the subclass.');
+  }
+
+  /**
+   * Unmutes the current playback.
+   * @returns {Promise<void>}
+   */
+  async unmute() {
+    checkDestroy(this.#destroyed);
+    throw new Error('Method "unmute" must be implemented by the subclass.');
+  }
+
+  /**
    * Retrieves the current playback time from the underlying API.
    * @returns {number} The current time in milliseconds.
    */

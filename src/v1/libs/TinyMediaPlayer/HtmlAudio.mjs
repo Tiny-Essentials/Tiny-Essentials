@@ -190,6 +190,33 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
   }
 
   /**
+   * Checks whether the player is currently muted.
+   * @returns {boolean} True if muted, false otherwise.
+   */
+  isMuted() {
+    checkDestroy(this.#destroyed);
+    return this.#audioElement.muted;
+  }
+
+  /**
+   * Mutes the current playback.
+   * @returns {Promise<void>}
+   */
+  async mute() {
+    checkDestroy(this.#destroyed);
+    this.#audioElement.muted = true;
+  }
+
+  /**
+   * Unmutes the current playback.
+   * @returns {Promise<void>}
+   */
+  async unmute() {
+    checkDestroy(this.#destroyed);
+    this.#audioElement.muted = false;
+  }
+
+  /**
    * Gets the current playback time.
    * @returns {number} The current time in milliseconds.
    */

@@ -187,6 +187,33 @@ class HtmlVideoAdapter extends BaseMediaAdapter {
   }
 
   /**
+   * Checks whether the player is currently muted.
+   * @returns {boolean} True if muted, false otherwise.
+   */
+  isMuted() {
+    checkDestroy(this.#destroyed);
+    return this.#videoElement.muted;
+  }
+
+  /**
+   * Mutes the current playback.
+   * @returns {Promise<void>}
+   */
+  async mute() {
+    checkDestroy(this.#destroyed);
+    this.#videoElement.muted = true;
+  }
+
+  /**
+   * Unmutes the current playback.
+   * @returns {Promise<void>}
+   */
+  async unmute() {
+    checkDestroy(this.#destroyed);
+    this.#videoElement.muted = false;
+  }
+
+  /**
    * Gets the current playback time.
    * @returns {number} The current time in milliseconds.
    */
