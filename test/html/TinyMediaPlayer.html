@@ -880,7 +880,10 @@
 
       addNewTrack('https://api.soundcloud.com/tracks/328270345', 'Play Again (2015)(no lyrics)');
       addNewTrack('https://www.youtube.com/watch?v=fzKvGbQ9SgY', 'Tiny Wag Meme');
-      addNewTrack('https://api.soundcloud.com/tracks/260505529', 'Mystery Star Battlefield (Mystery Planet Remake)');
+      addNewTrack(
+        'https://api.soundcloud.com/tracks/260505529',
+        'Mystery Star Battlefield (Mystery Planet Remake)',
+      );
 
       document.getElementById('btn-clear-playlist').addEventListener('click', async () => {
         await player.clearPlaylist();

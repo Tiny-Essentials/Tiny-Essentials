@@ -326,6 +326,20 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   /** @type {ReturnType<typeof setInterval>|null} */
   #timeUpdateInterval = null;
 
+  /** @type {number} */
+  #pollingTimeUpdateValue = 250;
+
+  get pollingTimeUpdateValue() {
+    checkDestroy(this.#destroyed);
+    return this.#pollingTimeUpdateValue;
+  }
+
+  set pollingTimeUpdateValue(timeMs) {
+    checkDestroy(this.#destroyed);
+    if (typeof timeMs !== 'number') throw new TypeError('Time must be a number.');
+    this.#pollingTimeUpdateValue = timeMs;
+  }
+
   /**
    * Gets whether the adapter has been destroyed.
    * @returns {boolean}
@@ -586,7 +600,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
       // Always update the last reported time to keep it in sync with the actual player position.
       // This prevents false 'seek' events when resuming playback after a pause or a seek while paused.
       this.#lastReportedTime = currentTime;
-    }, 250);
+    }, this.#pollingTimeUpdateValue);
   }
 
   /**
