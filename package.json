@@ -160,6 +160,10 @@
       "require": "./dist/v1/libs/TinyMediaPlayer/docs/YouTubePlayer.cjs",
       "import": "./dist/v1/libs/TinyMediaPlayer/docs/YouTubePlayer.mjs"
     },
+    "./libs/TinyMediaPlayer/docs/SoundCloudWidget": {
+      "require": "./dist/v1/libs/TinyMediaPlayer/docs/SoundCloudWidget.cjs",
+      "import": "./dist/v1/libs/TinyMediaPlayer/docs/SoundCloudWidget.mjs"
+    },
     "./libs/TinyRadioFm": {
       "require": "./dist/v1/libs/TinyRadioFm.cjs",
       "import": "./dist/v1/libs/TinyRadioFm.mjs"
