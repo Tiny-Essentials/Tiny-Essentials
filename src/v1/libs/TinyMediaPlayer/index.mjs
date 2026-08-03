@@ -69,6 +69,24 @@ class BaseMediaAdapter extends EventEmitter {
   }
 
   /**
+   * Checks whether the media adapter is paused.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isPaused() {
+    checkDestroy(this.#destroyed);
+    throw new Error('Method "isPaused" must be implemented by the subclass.');
+  }
+
+  /**
+   * Checks whether the media adapter is finished.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isFinished() {
+    checkDestroy(this.#destroyed);
+    throw new Error('Method "isFinished" must be implemented by the subclass.');
+  }
+
+  /**
    * Asynchronously waits until the content media adapter is fully initialized and ready.
    * @returns {Promise<void>} A promise that resolves once the adapter is ready.
    */

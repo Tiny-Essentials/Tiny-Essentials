@@ -1401,6 +1401,34 @@ class TinyMediaPlayer extends EventEmitter {
   }
 
   /**
+   * Checks whether the media adapter is paused.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isPaused() {
+    checkDestroy(this.#destroyed);
+    try {
+      const adapter = this.#getActiveAdapter();
+      return adapter ? adapter.isPaused() : false;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Checks whether the media adapter is finished.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isFinished() {
+    checkDestroy(this.#destroyed);
+    try {
+      const adapter = this.#getActiveAdapter();
+      return adapter ? adapter.isFinished() : true;
+    } catch {
+      return true;
+    }
+  }
+
+  /**
    * Retrieves the metadata of the currently loaded content, returning a structured
    * object containing details such as the content ID, title, author, and duration.
    * @returns {Promise<ContentData>}

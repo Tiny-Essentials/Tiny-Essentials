@@ -329,6 +329,12 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   /** @type {number} */
   #pollingTimeUpdateValue = 250;
 
+  /** @type {boolean} */
+  #isPaused = false;
+
+  /** @type {boolean} */
+  #isFinished = false;
+
   get pollingTimeUpdateValue() {
     checkDestroy(this.#destroyed);
     return this.#pollingTimeUpdateValue;
@@ -415,6 +421,24 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   isReady() {
     checkDestroy(this.#destroyed);
     return this.#isReady;
+  }
+
+  /**
+   * Checks whether the media adapter is paused.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isPaused() {
+    checkDestroy(this.#destroyed);
+    return this.#isPaused;
+  }
+
+  /**
+   * Checks whether the media adapter is finished.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isFinished() {
+    checkDestroy(this.#destroyed);
+    return this.#isFinished;
   }
 
   /**
@@ -536,9 +560,21 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
         if (ytEvent === 'onStateChange') {
           const state = args[0];
           if (isValidObj(state)) {
-            if (state.data === YoutubeMediaAdapter.PlayerState.PLAYING) masterEmitter.emit('play');
-            if (state.data === YoutubeMediaAdapter.PlayerState.PAUSED) masterEmitter.emit('pause');
-            if (state.data === YoutubeMediaAdapter.PlayerState.ENDED) masterEmitter.emit('ended');
+            if (state.data === YoutubeMediaAdapter.PlayerState.PLAYING) {
+              this.#isPaused = false;
+              this.#isFinished = false;
+              masterEmitter.emit('play');
+            }
+            if (state.data === YoutubeMediaAdapter.PlayerState.PAUSED) {
+              this.#isPaused = true;
+              this.#isFinished = false;
+              masterEmitter.emit('pause');
+            }
+            if (state.data === YoutubeMediaAdapter.PlayerState.ENDED) {
+              this.#isPaused = false;
+              this.#isFinished = true;
+              masterEmitter.emit('ended');
+            }
           }
         }
         return result;

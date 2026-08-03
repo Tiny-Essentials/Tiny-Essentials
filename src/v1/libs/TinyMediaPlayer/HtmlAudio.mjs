@@ -19,6 +19,12 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
   /** @type {boolean} */
   #destroyed = false;
 
+  /** @type {boolean} */
+  #isPaused = false;
+
+  /** @type {boolean} */
+  #isFinished = false;
+
   get id() {
     return 'html5Audio';
   }
@@ -60,9 +66,21 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
   constructor() {
     super();
 
-    this.#audioElement.addEventListener('play', () => this.emit('play'));
-    this.#audioElement.addEventListener('pause', () => this.emit('pause'));
-    this.#audioElement.addEventListener('ended', () => this.emit('ended'));
+    this.#audioElement.addEventListener('play', () => {
+      this.#isPaused = false;
+      this.#isFinished = false;
+      this.emit('play');
+    });
+    this.#audioElement.addEventListener('pause', () => {
+      this.#isPaused = true;
+      this.#isFinished = false;
+      this.emit('pause');
+    });
+    this.#audioElement.addEventListener('ended', () => {
+      this.#isPaused = false;
+      this.#isFinished = true;
+      this.emit('ended');
+    });
     this.#audioElement.addEventListener('timeupdate', () => {
       this.emit('timeupdate', this.getTimeData());
     });
@@ -81,6 +99,24 @@ class HtmlAudioAdapter extends BaseMediaAdapter {
   isReady() {
     checkDestroy(this.#destroyed);
     return true;
+  }
+
+  /**
+   * Checks whether the media adapter is paused.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isPaused() {
+    checkDestroy(this.#destroyed);
+    return this.#isPaused;
+  }
+
+  /**
+   * Checks whether the media adapter is finished.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isFinished() {
+    checkDestroy(this.#destroyed);
+    return this.#isFinished;
   }
 
   /**

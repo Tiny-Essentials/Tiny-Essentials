@@ -19,6 +19,12 @@ class HtmlVideoAdapter extends BaseMediaAdapter {
   /** @type {boolean} */
   #destroyed = false;
 
+  /** @type {boolean} */
+  #isPaused = false;
+
+  /** @type {boolean} */
+  #isFinished = false;
+
   get id() {
     return 'html5Video';
   }
@@ -57,9 +63,21 @@ class HtmlVideoAdapter extends BaseMediaAdapter {
   constructor() {
     super();
 
-    this.#videoElement.addEventListener('play', () => this.emit('play'));
-    this.#videoElement.addEventListener('pause', () => this.emit('pause'));
-    this.#videoElement.addEventListener('ended', () => this.emit('ended'));
+    this.#videoElement.addEventListener('play', () => {
+      this.#isPaused = false;
+      this.#isFinished = false;
+      this.emit('play');
+    });
+    this.#videoElement.addEventListener('pause', () => {
+      this.#isPaused = true;
+      this.#isFinished = false;
+      this.emit('pause');
+    });
+    this.#videoElement.addEventListener('ended', () => {
+      this.#isPaused = false;
+      this.#isFinished = true;
+      this.emit('ended');
+    });
     this.#videoElement.addEventListener('timeupdate', () => {
       this.emit('timeupdate', this.getTimeData());
     });
@@ -78,6 +96,24 @@ class HtmlVideoAdapter extends BaseMediaAdapter {
   isReady() {
     checkDestroy(this.#destroyed);
     return true;
+  }
+
+  /**
+   * Checks whether the media adapter is paused.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isPaused() {
+    checkDestroy(this.#destroyed);
+    return this.#isPaused;
+  }
+
+  /**
+   * Checks whether the media adapter is finished.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isFinished() {
+    checkDestroy(this.#destroyed);
+    return this.#isFinished;
   }
 
   /**

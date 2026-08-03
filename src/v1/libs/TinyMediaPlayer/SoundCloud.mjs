@@ -311,6 +311,12 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
   /** @type {number} */
   #preMuteVolume = 1.0;
 
+  /** @type {boolean} */
+  #isPaused = false;
+
+  /** @type {boolean} */
+  #isFinished = false;
+
   /**
    * Gets whether the adapter has been destroyed.
    * @returns {boolean}
@@ -388,6 +394,24 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
   isReady() {
     checkDestroy(this.#destroyed);
     return this.#isReady;
+  }
+
+  /**
+   * Checks whether the media adapter is paused.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isPaused() {
+    checkDestroy(this.#destroyed);
+    return this.#isPaused;
+  }
+
+  /**
+   * Checks whether the media adapter is finished.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
+  isFinished() {
+    checkDestroy(this.#destroyed);
+    return this.#isFinished;
   }
 
   /**
@@ -559,16 +583,22 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
 
       this.#widget.bind(SoundCloudMediaAdapter.Events.PLAY, (/** @type {any} */ event) => {
         eventSync(event, 'PLAY');
+        this.#isPaused = false;
+        this.#isFinished = false;
         this.#masterEmitter?.emit('play');
       });
 
       this.#widget.bind(SoundCloudMediaAdapter.Events.PAUSE, (/** @type {any} */ event) => {
         eventSync(event, 'PAUSE');
+        this.#isPaused = true;
+        this.#isFinished = false;
         this.#masterEmitter?.emit('pause');
       });
 
       this.#widget.bind(SoundCloudMediaAdapter.Events.FINISH, (/** @type {any} */ event) => {
         eventSync(event, 'FINISH');
+        this.#isPaused = false;
+        this.#isFinished = true;
         this.#masterEmitter?.emit('ended');
       });
 
