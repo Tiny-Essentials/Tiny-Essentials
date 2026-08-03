@@ -147,9 +147,9 @@ class BaseMediaAdapter extends EventEmitter {
    * Unmutes the current playback.
    * @returns {Promise<void>}
    */
-  async unmute() {
+  async unMute() {
     checkDestroy(this.#destroyed);
-    throw new Error('Method "unmute" must be implemented by the subclass.');
+    throw new Error('Method "unMute" must be implemented by the subclass.');
   }
 
   /**

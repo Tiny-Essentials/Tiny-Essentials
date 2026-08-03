@@ -28,7 +28,7 @@ To support different media platforms, `TinyMediaPlayer` relies on **Adapters**. 
 | `seek` | Seeks to a specific time in the media timeline. | `timeMs: number` | `Promise<void>` |
 | `isMuted` | Checks whether the player is currently muted. | None | `boolean \| null` |
 | `mute` | Mutes the current playback. | None | `Promise<void>` |
-| `unmute` | Unmutes the current playback. | None | `Promise<void>` |
+| `unMute` | Unmutes the current playback. | None | `Promise<void>` |
 | `getCurrentTime` | Retrieves the current playback position. | None | `number` (ms) |
 | `getTotalDuration` | Gets the total duration of the content. | None | `number` (ms) |
 | `getRemainingTime` | Gets the remaining time until the content ends. | None | `number` (ms) |
@@ -118,7 +118,7 @@ class MyCustomServiceAdapter extends BaseMediaAdapter {
   isReady() { return true; }
   isMuted() { return false; }
   async mute() {}
-  async unmute() {}
+  async unMute() {}
   getTotalDuration() { return 0; }
   getRemainingTime() { return 0; }
   getPlaybackPercentage() { return 0; }

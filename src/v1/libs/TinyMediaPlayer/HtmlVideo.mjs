@@ -208,7 +208,7 @@ class HtmlVideoAdapter extends BaseMediaAdapter {
    * Unmutes the current playback.
    * @returns {Promise<void>}
    */
-  async unmute() {
+  async unMute() {
     checkDestroy(this.#destroyed);
     this.#videoElement.muted = false;
   }

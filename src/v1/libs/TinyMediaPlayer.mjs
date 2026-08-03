@@ -699,7 +699,7 @@ class TinyMediaPlayer extends EventEmitter {
   /**
    * Sets the mute state of the player.
    * This state is synchronized with the active adapter and respected when playing new tracks.
-   * @param {boolean} value - True to mute, false to unmute.
+   * @param {boolean} value - True to mute, false to unMute.
    * @throws {TypeError} If the value is not a boolean.
    */
   set isMuted(value) {
@@ -714,7 +714,7 @@ class TinyMediaPlayer extends EventEmitter {
     try {
       const adapter = this.#getActiveAdapter();
       if (adapter) {
-        value ? adapter.mute() : adapter.unmute();
+        value ? adapter.mute() : adapter.unMute();
       }
     } catch (error) {
       // If no active adapter, we just wait for the next play() call to apply the state
