@@ -9,7 +9,8 @@ import { isValidObj } from '../../basics/objChecker.mjs';
  * @typedef {import('./index.mjs').ContentTimeData} ContentTimeData
  */
 
-const checkDestroy = createCheckDestroyed('YoutubeMediaAdapter');
+const checkDestroy = createCheckDestroyed('MockMediaAdapter');
+const createdAt = new Date().toISOString();
 
 /**
  * MOCK VERSION of BaseMediaAdapter
@@ -34,38 +35,58 @@ class MockMediaAdapter extends BaseMediaAdapter {
   #currentTime = 0; // in milliseconds
   #totalDuration = 60000; // 60 seconds in milliseconds
 
+  /**
+   * @returns {boolean}
+   */
+  get destroyed() {
+    return this.#destroyed;
+  }
+
+  /**
+   * @returns {boolean}
+   */
   get isPlaying() {
     checkDestroy(this.#destroyed);
     return this.#isPlaying;
   }
 
-  constructor() {
-    super();
+  /**
+   * @returns {string|null}
+   */
+  get currentContentId() {
+    checkDestroy(this.#destroyed);
+    return this.#currentContentId;
   }
 
+  /**
+   * @returns {number}
+   */
   get volume() {
     checkDestroy(this.#destroyed);
     return this.#currentVolume;
   }
 
+  /**
+   * @param {number} value - O volume de 0.0 a 1.0.
+   * @throws {RangeError} Se o valor estiver fora do intervalo.
+   */
   set volume(value) {
     checkDestroy(this.#destroyed);
     if (typeof value !== 'number' || value < 0 || value > 1) {
       throw new RangeError('Volume must be a number between 0.0 and 1.0.');
     }
     this.#currentVolume = value;
-    this.emit('volumeChange', this.#currentVolume);
+    this.emit('volumeChange', value);
   }
 
-  get destroyed() {
-    return this.#destroyed;
+  constructor() {
+    super();
   }
 
-  get currentContentId() {
-    checkDestroy(this.#destroyed);
-    return this.#currentContentId;
-  }
-
+  /**
+   * Checks whether the media adapter is fully initialized and ready.
+   * @returns {boolean} True if the adapter is ready, false otherwise.
+   */
   isReady() {
     checkDestroy(this.#destroyed);
     return this.#isReady;
@@ -140,7 +161,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
     if (!isValidObj(content)) {
       throw new TypeError('Invalid media content provided to play().');
     }
-    this.#currentContentId = 'mock';
+    this.#currentContentId = typeof content.url === 'string' ? content.url : 'mock';
     this.#isPaused = false;
     this.#isEnded = false;
     this.#isPlaying = true;
@@ -148,7 +169,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
     // Simulate a small delay for loading
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    return Promise.resolve();
+    this.emit('play');
   }
 
   /**
@@ -160,6 +181,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
     this.#isPaused = true;
     this.#isEnded = false;
     this.#isPlaying = false;
+    this.emit('pause');
   }
 
   /**
@@ -171,6 +193,8 @@ class MockMediaAdapter extends BaseMediaAdapter {
     this.#isPaused = false;
     this.#isEnded = true;
     this.#isPlaying = false;
+    this.#currentTime = 0;
+    this.emit('ended');
   }
 
   /**
@@ -180,8 +204,11 @@ class MockMediaAdapter extends BaseMediaAdapter {
    */
   async seek(timeMs) {
     checkDestroy(this.#destroyed);
-    if (typeof timeMs !== 'number') throw new TypeError('Time must be a number.');
+    if (typeof timeMs !== 'number') {
+      throw new TypeError('Seek time must be a number.');
+    }
     this.#currentTime = timeMs;
+    this.emit('seek', this.#currentTime);
   }
 
   /**
@@ -235,7 +262,9 @@ class MockMediaAdapter extends BaseMediaAdapter {
    */
   getRemainingTime() {
     checkDestroy(this.#destroyed);
-    return this.#totalDuration;
+    const total = this.getTotalDuration();
+    const current = this.getCurrentTime();
+    return total > 0 ? total - current : 0;
   }
 
   /**
@@ -244,7 +273,9 @@ class MockMediaAdapter extends BaseMediaAdapter {
    */
   getPlaybackPercentage() {
     checkDestroy(this.#destroyed);
-    return 100;
+    const total = this.getTotalDuration();
+    const current = this.getCurrentTime();
+    return total > 0 ? (current / total) * 100 : 0;
   }
 
   /**
@@ -274,12 +305,12 @@ class MockMediaAdapter extends BaseMediaAdapter {
   async getContentData() {
     checkDestroy(this.#destroyed);
     return {
-      id: 'mock',
-      createdAt: '',
-      artistId: 'mock',
-      artistName: 'Mock',
-      description: '',
-      title: 'Mock',
+      id: this.#currentContentId ?? 'mock',
+      createdAt,
+      artistId: 'mock-artist',
+      artistName: 'Mock Artist',
+      description: 'Mock description',
+      title: 'Mock Title',
       duration: this.#totalDuration,
       avatar: '',
       url: '',
