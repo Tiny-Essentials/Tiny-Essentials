@@ -453,6 +453,54 @@ class TinyRadioFm extends EventEmitter {
     }
   }
 
+  /** @type {boolean} */
+  #optimizeMediaMemory = true;
+
+  /**
+   * Gets whether Blob URLs for media content
+   * should be converted to Base64 during export and restored during import.
+   * @returns {boolean}
+   */
+  get optimizeMediaMemory() {
+    checkDestroy(this.#destroyed);
+    return this.#optimizeMediaMemory;
+  }
+
+  /**
+   * Sets whether Blob URLs should be converted to Base64 during export and restored during import.
+   * @param {boolean} value
+   * @throws {TypeError} If value is not a boolean.
+   */
+  set optimizeMediaMemory(value) {
+    checkDestroy(this.#destroyed);
+    if (typeof value !== 'boolean') throw new TypeError('optimizeMediaMemory must be a boolean.');
+    this.#optimizeMediaMemory = value;
+  }
+
+  /** @type {boolean} */
+  #optimizePictureMemory = true;
+
+  /**
+   * Gets whether Blob URLs for pictures
+   * should be converted to Base64 during export and restored during import.
+   * @returns {boolean}
+   */
+  get optimizePictureMemory() {
+    checkDestroy(this.#destroyed);
+    return this.#optimizePictureMemory;
+  }
+
+  /**
+   * Sets whether Blob URLs should be converted to Base64 during export and restored during import.
+   * @param {boolean} value
+   * @throws {TypeError} If value is not a boolean.
+   */
+  set optimizePictureMemory(value) {
+    checkDestroy(this.#destroyed);
+    if (typeof value !== 'boolean') throw new TypeError('optimizePictureMemory must be a boolean.');
+    this.#optimizePictureMemory = value;
+  }
+
   /**
    * Initializes the radio system.
    * @param {TinyRadioFmImport|null} [initialData=null] - JSON object to hydrate the radio state.
@@ -719,7 +767,7 @@ class TinyRadioFm extends EventEmitter {
   }
 
   /**
-   * Process a content list, waiting to convert the images from Blob URL to Base64.
+   * Process a content list, waiting to convert the images and content URLs from Blob URL to Base64.
    * @param {MediaContent[]} list
    * @returns {Promise<MediaContent[]>}
    * @private
@@ -728,7 +776,18 @@ class TinyRadioFm extends EventEmitter {
     return Promise.all(
       list.map(async (item) => {
         const newItem = structuredClone(item);
-        if (newItem.picture && Array.isArray(newItem.picture)) {
+
+        // Optimizes the content url (audio/music) if it is a Blob URL
+        if (
+          this.#optimizeMediaMemory &&
+          typeof newItem.url === 'string' &&
+          newItem.url.startsWith('blob:')
+        ) {
+          newItem.url = await blobUrlToBase64(newItem.url);
+        }
+
+        // Optimizes the pictures
+        if (this.#optimizePictureMemory && newItem.picture && Array.isArray(newItem.picture)) {
           newItem.picture = await Promise.all(
             newItem.picture.map(async (pic) => {
               // Only performs the asynchronous conversion if it really is a Blob URL
@@ -738,9 +797,7 @@ class TinyRadioFm extends EventEmitter {
                   data: await blobUrlToBase64(pic.data),
                 };
               }
-
-              // If it is a normal URL, skip the process and keep it as it is
-              return pic;
+              return pic; // Keep intact if it is a standard URL
             }),
           );
         }
@@ -1351,20 +1408,30 @@ class TinyRadioFm extends EventEmitter {
     const processListForImport = (/** @type {MediaContent[]} */ list) => {
       return list.map((item) => {
         const newItem = { ...item };
+
+        if (this.#optimizeMediaMemory) {
+          // Restores the content url if it is a Base64 string
+          if (typeof newItem.url === 'string' && newItem.url.startsWith('data:')) {
+            newItem.url = convertToBlobUrl(newItem.url);
+          }
+        }
+
         if (newItem.picture && Array.isArray(newItem.picture)) {
           newItem.picture = newItem.picture.map((pic) => {
-            // Check whether the data is compatible with the Blob structure (Base64 or Binary)
-            const isBase64 = typeof pic.data === 'string' && pic.data.startsWith('data:');
-            const isUint8Array = pic.data instanceof Uint8Array;
+            if (this.#optimizePictureMemory) {
+              // Check whether the data is compatible with the Blob structure (Base64 or Binary)
+              const isBase64 = typeof pic.data === 'string' && pic.data.startsWith('data:');
+              const isUint8Array = pic.data instanceof Uint8Array;
 
-            if (isBase64 || isUint8Array) {
-              return {
-                ...pic,
-                data: convertToBlobUrl(pic.data, pic.format),
-              };
+              if (isBase64 || isUint8Array) {
+                return {
+                  ...pic,
+                  data: convertToBlobUrl(pic.data, pic.format),
+                };
+              }
             }
 
-            // If it is a default web URL or local file, use the URL directly
+            // If memory optimization is disabled or it is a default URL, return as is
             return pic;
           });
         }
