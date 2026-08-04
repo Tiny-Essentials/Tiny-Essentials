@@ -180,9 +180,10 @@ class TinyPromiseQueue {
    * Inserts a point in the queue where subsequent tasks will be grouped and executed together in a Promise.all.
    * If the queue is currently empty, behaves like a regular promise.
    *
-   * @param {(...args: any[]) => Promise<any>|Promise<any>} task A function that returns a Promise.
+   * @template {any} PromiseResult
+   * @param {((...args: any[]) => Promise<PromiseResult>)|Promise<PromiseResult>} task A function that returns a Promise.
    * @param {string} [id] Optional ID to identify the task in the queue.
-   * @returns {Promise<any>} A Promise that resolves or rejects with the result of the task once it's processed.
+   * @returns {Promise<PromiseResult>} A Promise that resolves or rejects with the result of the task once it's processed.
    * @throws {Error} Throws if param is invalid.
    */
   async enqueuePoint(task, id) {
@@ -204,10 +205,11 @@ class TinyPromiseQueue {
    * If the task is canceled before execution, it will be rejected with the message:
    * "The function was canceled on TinyPromiseQueue."
    *
-   * @param {(...args: any[]) => Promise<any>|Promise<any>} task A function that returns a Promise to be executed sequentially.
+   * @template {any} PromiseResult
+   * @param {((...args: any[]) => Promise<PromiseResult>)|Promise<PromiseResult>} task A function that returns a Promise to be executed sequentially.
    * @param {number|null} [delay] Optional delay (in ms) before the task is executed.
    * @param {string} [id] Optional ID to identify the task in the queue.
-   * @returns {Promise<any>} A Promise that resolves or rejects with the result of the task once it's processed.
+   * @returns {Promise<PromiseResult>} A Promise that resolves or rejects with the result of the task once it's processed.
    * @throws {Error} Throws if param is invalid.
    */
   enqueue(task, delay, id) {
