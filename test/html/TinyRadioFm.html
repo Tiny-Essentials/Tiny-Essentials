@@ -677,14 +677,10 @@
       import { TinyDragDropDetector } from './src/v1/libs/TinyDragDropDetector.mjs';
       /** IMPORT: TinyRadioFm */
       import { TinyRadioFm } from './src/v1/libs/TinyRadioFm.mjs';
-      import { TinyMediaPlayer } from './src/v1/libs/TinyMediaPlayer.mjs';
-      import { HtmlAudioAdapter } from './src/v1/libs/TinyMediaPlayer/HtmlAudio.mjs';
-      import { TinyPromiseQueue } from './src/v1/libs/TinyPromiseQueue.mjs';
       import { parseBlob } from 'https://cdn.jsdelivr.net/npm/music-metadata@11.13.0/+esm';
       window.TinyRadioFm = TinyRadioFm;
       window.TinyDragDropDetector = TinyDragDropDetector;
 
-      const queue = new TinyPromiseQueue();
       const draggerDetector = new TinyDragDropDetector(document.body, {
         fullscreen: true,
         onDrop: console.log,
@@ -693,18 +689,11 @@
       });
       window.draggerDetector = draggerDetector;
 
-      const btnApplyCfg = document.getElementById('btn-apply-cfg');
-      const btnImport = document.getElementById('btn-import');
-      const volumeSlider = document.getElementById('volume-slider');
-      const btnResync = document.getElementById('btn-resync');
-      const btnMute = document.getElementById('btn-mute');
-
       // --- UI Controller ---
       class TestEnvironment {
         constructor() {
           this.radio = new TinyRadioFm();
-          this.player = new TinyMediaPlayer();
-          this.player.registerAdapter(new HtmlAudioAdapter());
+          this.audio = document.getElementById('audio-engine');
           this.currentPlayingId = null;
           this.isEngineStarted = false;
           this.tickCounter = 0; // Used to spaced updates (e.g. Query Engine)
@@ -784,7 +773,9 @@
             .addEventListener('click', () => this.handleAddContent());
 
           // Config
-          btnApplyCfg.addEventListener('click', () => this.handleApplyConfig());
+          document
+            .getElementById('btn-apply-cfg')
+            .addEventListener('click', () => this.handleApplyConfig());
 
           // Schedule
           document
@@ -809,7 +800,9 @@
           document
             .getElementById('btn-export')
             .addEventListener('click', () => this.handleExport());
-          btnImport.addEventListener('click', () => document.getElementById('import-file').click());
+          document
+            .getElementById('btn-import')
+            .addEventListener('click', () => document.getElementById('import-file').click());
           document
             .getElementById('import-file')
             .addEventListener('change', (e) => this.handleImport(e));
@@ -818,14 +811,13 @@
           document
             .getElementById('btn-start-engine')
             .addEventListener('click', () => this.startEngine());
-          btnResync.addEventListener('click', () => this.resyncAudio());
+          document.getElementById('btn-resync').addEventListener('click', () => this.resyncAudio());
 
           // Mute / Pause logic
-          btnMute.addEventListener('click', async () => {
-            btnMute.disabled = true;
-            if (this.player.isMuted) await this.player.unMute();
-            else await this.player.mute();
-            if (this.player.isMuted) {
+          const btnMute = document.getElementById('btn-mute');
+          btnMute.addEventListener('click', () => {
+            this.audio.muted = !this.audio.muted;
+            if (this.audio.muted) {
               btnMute.title = 'Unmute Audio';
               btnMute.innerText = '▶️';
               btnMute.classList.add('btn-danger');
@@ -835,28 +827,28 @@
               btnMute.innerText = '⏸️';
               btnMute.classList.remove('btn-danger');
               btnMute.classList.add('btn-outline');
-              await queue.enqueue(this.resyncAudio());
+              this.resyncAudio();
             }
-            btnMute.disabled = false;
           });
 
           // Volume Configuration and Persistence
+          const volumeSlider = document.getElementById('volume-slider');
 
           // Try loading the localStorage volume
           const savedVolume = localStorage.getItem('tinyRadioFm_volume');
           if (savedVolume !== null) {
-            volumeSlider.value = Number(savedVolume);
-            this.player.volume = Number(savedVolume);
+            volumeSlider.value = savedVolume;
+            this.audio.volume = savedVolume;
           } else {
             // If you have nothing, set the audio to the default HTML value (0.7)
-            this.player.volume = Number(volumeSlider.value);
+            this.audio.volume = volumeSlider.value;
           }
 
           // Update audio and save in localStorage
           volumeSlider.addEventListener('input', (e) => {
-            const newVolume = Number(e.target.value);
-            this.player.volume = newVolume;
-            localStorage.setItem('tinyRadioFm_volume', String(newVolume));
+            const newVolume = e.target.value;
+            this.audio.volume = newVolume;
+            localStorage.setItem('tinyRadioFm_volume', newVolume);
           });
         }
 
@@ -896,27 +888,25 @@
           if (this.isEngineStarted || !this.currentPlayingId) return;
           this.isEngineStarted = true;
           // Play a silent buffer or just unlock audio context
-          await queue.enqueue(
-            this.player
-              .play()
-              .then(async () => {
-                await this.player.pause();
-                const btnStart = document.getElementById('btn-start-engine');
-                btnStart.innerText = 'Engine Running';
-                btnStart.classList.replace('btn-primary', 'btn-outline');
-                btnStart.disabled = true;
+          this.audio
+            .play()
+            .then(() => {
+              this.audio.pause();
+              const btnStart = document.getElementById('btn-start-engine');
+              btnStart.innerText = 'Engine Running';
+              btnStart.classList.replace('btn-primary', 'btn-outline');
+              btnStart.disabled = true;
 
-                // Hides the manual resync and automatically triggers the first sync
-                const btnResync = document.getElementById('btn-resync');
-                const btnMute = document.getElementById('btn-mute');
-                btnResync.disabled = false;
-                btnMute.disabled = false;
+              // Hides the manual resync and automatically triggers the first sync
+              const btnResync = document.getElementById('btn-resync');
+              const btnMute = document.getElementById('btn-mute');
+              btnResync.disabled = false;
+              btnMute.disabled = false;
 
-                this.log('Audio Engine Unlocked.');
-                await queue.enqueue(this.resyncAudio());
-              })
-              .catch((e) => this.log('Error starting engine: ' + e.message)),
-          );
+              this.log('Audio Engine Unlocked.');
+              this.resyncAudio();
+            })
+            .catch((e) => this.log('Error starting engine: ' + e.message));
         }
 
         async handleAddContent() {
@@ -962,8 +952,7 @@
           }
         }
 
-        async handleApplyConfig() {
-          btnApplyCfg.disabled = true;
+        handleApplyConfig() {
           try {
             const seed = parseInt(document.getElementById('cfg-seed').value);
             const unknownArtist = document.getElementById('cfg-unknown-artist').value;
@@ -990,12 +979,11 @@
 
             // Force rebooting of the instance by cleaning the current screening
             this.currentPlayingId = null;
-            await this.player.pause();
-            await queue.enqueue(this.resyncCurrentEvent());
+            this.audio.pause();
+            this.resyncCurrentEvent();
           } catch (e) {
             this.log(`Config Error: ${e.message}`);
           }
-          btnApplyCfg.disabled = false;
         }
 
         handleScheduleTask() {
@@ -1049,20 +1037,18 @@
 
         // --- PLAYER LOGIC ---
 
-        async resyncAudio() {
-          btnResync.disabled = true;
+        resyncAudio() {
           const event = this.radio.getCurrentEvent();
           if (!event) return;
           this.log('Resyncing audio to radio timeline...');
-          await queue.enqueue(this.player.seek((event.duration - event.remainingTime) / 1000));
-          if (this.player.isPaused && this.isEngineStarted) await this.player.play();
-          btnResync.disabled = false;
+          this.audio.currentTime = (event.duration - event.remainingTime) / 1000;
+          if (this.audio.paused && this.isEngineStarted) this.audio.play();
         }
 
-        async syncAudioWithRadio(event) {
+        syncAudioWithRadio(event) {
           if (!event) {
             if (this.currentPlayingId !== null) {
-              await this.player.pause();
+              this.audio.pause();
               this.currentPlayingId = null;
               this.resetThumbnail();
             }
@@ -1071,34 +1057,17 @@
 
           if (this.currentPlayingId !== event.id) {
             this.currentPlayingId = event.id;
-
-            const searchResult = this.player.searchTrack((track) => track.id === event.id);
-
-            const index = !searchResult[0]
-              ? this.player.addTrack({
-                  id: event.id,
-                  url: event.url,
-                  title: event.title ?? 'Unknown Title',
-                  artist: event.artist ?? 'Unknown Artist',
-                  duration: event.duration,
-                })
-              : searchResult[0].index;
-
-            this.player.skipTo(index);
+            this.audio.src = event.url;
             this.loadThumbnail(event.id);
 
             if (this.isEngineStarted) {
-              await this.player
-                .play()
-                .catch((e) => this.log('Autoplay blocked. Click Start Engine.'));
+              this.audio.play().catch((e) => this.log('Autoplay blocked. Click Start Engine.'));
             }
-          } else if (this.player.isFinished && this.isEngineStarted) {
+          } else if (this.audio.ended && this.isEngineStarted) {
             // Workaround: Since the radio has one song only, the ID doesn't change, but the audio is over.
             // We need to get it to play again from scratch!
-            await queue.enqueue(this.player.seek(0));
-            await this.player
-              .play()
-              .catch((e) => this.log('Autoplay blocked. Click Start Engine.'));
+            this.audio.currentTime = 0;
+            this.audio.play().catch((e) => this.log('Autoplay blocked. Click Start Engine.'));
           }
         }
 
@@ -1141,47 +1110,36 @@
           this.log('Export complete.');
         }
 
-        async resyncCurrentEvent() {
+        resyncCurrentEvent() {
           // If the audio engine is already on, restart and sync time
           if (this.isEngineStarted) {
             const newEvent = this.radio.getCurrentEvent();
             if (newEvent) {
-              await queue.enqueue(this.syncAudioWithRadio(newEvent));
-              await queue.enqueue(this.resyncAudio());
+              this.syncAudioWithRadio(newEvent);
+              this.resyncAudio();
             }
           }
         }
 
-        async handleImport(event) {
-          btnImport.disabled = true;
+        handleImport(event) {
           const file = event.target.files[0];
           if (!file) return;
           const reader = new FileReader();
-          return queue.enqueue(
-            new Promise((resolve, reject) => {
-              reader.onload = async (e) => {
-                try {
-                  const json = JSON.parse(e.target.result);
-                  this.radio.importState(json);
+          reader.onload = (e) => {
+            try {
+              const json = JSON.parse(e.target.result);
+              this.radio.importState(json);
 
-                  // Force rebooting of the instance by cleaning the current screening
-                  this.currentPlayingId = null;
-                  await this.player.pause();
+              // Force rebooting of the instance by cleaning the current screening
+              this.currentPlayingId = null;
+              this.audio.pause();
 
-                  this.log('Import success.');
-                  await queue.enqueue(this.resyncCurrentEvent());
-                } catch (err) {
-                  this.log(`Import error: ${err.message}`);
-                }
-                btnImport.disabled = true;
-                resolve();
-              };
-              reader.onerror = (err) => {
-                btnImport.disabled = false;
-                reject(err);
-              };
-            }),
-          );
+              this.log('Import success.');
+              this.resyncCurrentEvent();
+            } catch (err) {
+              this.log(`Import error: ${err.message}`);
+            }
+          };
           reader.readAsText(file);
 
           // Zerate input in case you want to import the same file again later
@@ -1216,45 +1174,41 @@
         }
 
         startUpdateLoop() {
-          setInterval(
-            () =>
-              queue.enqueue(async () => {
-                // Clock
-                document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+          setInterval(() => {
+            // Clock
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
 
-                // QueryEngine Autoupdate every 1 second (10 ticks)
-                this.tickCounter++;
-                if (this.tickCounter % 10 === 0) {
-                  this.handleQuery();
-                }
+            // QueryEngine Autoupdate every 1 second (10 ticks)
+            this.tickCounter++;
+            if (this.tickCounter % 10 === 0) {
+              this.handleQuery();
+            }
 
-                // Live Status
-                const event = this.radio.getCurrentEvent();
+            // Live Status
+            const event = this.radio.getCurrentEvent();
 
-                // Update UI Status
-                const stTitle = document.getElementById('st-title');
-                const stArtist = document.getElementById('st-artist');
-                const stRem = document.getElementById('st-rem');
-                const prog = document.getElementById('progress-bar');
+            // Update UI Status
+            const stTitle = document.getElementById('st-title');
+            const stArtist = document.getElementById('st-artist');
+            const stRem = document.getElementById('st-rem');
+            const prog = document.getElementById('progress-bar');
 
-                if (event) {
-                  stTitle.innerText = event.title;
-                  stArtist.innerText = event.artist;
-                  stRem.innerText = `${Math.floor(event.remainingTime / 1000)}s`;
-                  prog.style.width = `${event.progress * 100}%`;
+            if (event) {
+              stTitle.innerText = event.title;
+              stArtist.innerText = event.artist;
+              stRem.innerText = `${Math.floor(event.remainingTime / 1000)}s`;
+              prog.style.width = `${event.progress * 100}%`;
 
-                  // Sync the Audio Engine
-                  await this.syncAudioWithRadio(event);
-                } else {
-                  stTitle.innerText = 'Idle';
-                  stArtist.innerText = '-';
-                  stRem.innerText = '-';
-                  prog.style.width = '0%';
-                  await this.syncAudioWithRadio(null);
-                }
-              }),
-            100,
-          );
+              // Sync the Audio Engine
+              this.syncAudioWithRadio(event);
+            } else {
+              stTitle.innerText = 'Idle';
+              stArtist.innerText = '-';
+              stRem.innerText = '-';
+              prog.style.width = '0%';
+              this.syncAudioWithRadio(null);
+            }
+          }, 100);
         }
       }
 
