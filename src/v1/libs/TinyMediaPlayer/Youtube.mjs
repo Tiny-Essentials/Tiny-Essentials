@@ -333,7 +333,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   #isPaused = false;
 
   /** @type {boolean} */
-  #isFinished = false;
+  #isEnded = false;
 
   get pollingTimeUpdateValue() {
     checkDestroy(this.#destroyed);
@@ -433,12 +433,12 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   }
 
   /**
-   * Checks whether the media adapter is finished.
+   * Checks whether the media adapter is ended.
    * @returns {boolean} True if the adapter is ready, false otherwise.
    */
-  isFinished() {
+  isEnded() {
     checkDestroy(this.#destroyed);
-    return this.#isFinished;
+    return this.#isEnded;
   }
 
   /**
@@ -562,17 +562,17 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
           if (isValidObj(state)) {
             if (state.data === YoutubeMediaAdapter.PlayerState.PLAYING) {
               this.#isPaused = false;
-              this.#isFinished = false;
+              this.#isEnded = false;
               masterEmitter.emit('play');
             }
             if (state.data === YoutubeMediaAdapter.PlayerState.PAUSED) {
               this.#isPaused = true;
-              this.#isFinished = false;
+              this.#isEnded = false;
               masterEmitter.emit('pause');
             }
             if (state.data === YoutubeMediaAdapter.PlayerState.ENDED) {
               this.#isPaused = false;
-              this.#isFinished = true;
+              this.#isEnded = true;
               masterEmitter.emit('ended');
             }
           }

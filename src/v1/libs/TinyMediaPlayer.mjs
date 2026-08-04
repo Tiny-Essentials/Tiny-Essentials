@@ -1437,14 +1437,14 @@ class TinyMediaPlayer extends EventEmitter {
   }
 
   /**
-   * Checks whether the media adapter is finished.
+   * Checks whether the media adapter is ended.
    * @returns {boolean} True if the adapter is ready, false otherwise.
    */
-  get isFinished() {
+  get isEnded() {
     checkDestroy(this.#destroyed);
     try {
       const adapter = this.#getActiveAdapter();
-      return adapter ? adapter.isFinished() : true;
+      return adapter ? adapter.isEnded() : true;
     } catch {
       return true;
     }

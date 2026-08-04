@@ -78,12 +78,12 @@ class BaseMediaAdapter extends EventEmitter {
   }
 
   /**
-   * Checks whether the media adapter is finished.
+   * Checks whether the media adapter is ended.
    * @returns {boolean} True if the adapter is ready, false otherwise.
    */
-  isFinished() {
+  isEnded() {
     checkDestroy(this.#destroyed);
-    throw new Error('Method "isFinished" must be implemented by the subclass.');
+    throw new Error('Method "isEnded" must be implemented by the subclass.');
   }
 
   /**

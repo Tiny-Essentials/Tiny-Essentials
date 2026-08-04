@@ -23,7 +23,7 @@ class HtmlVideoAdapter extends BaseMediaAdapter {
   #isPaused = false;
 
   /** @type {boolean} */
-  #isFinished = false;
+  #isEnded = false;
 
   get id() {
     return 'html5Video';
@@ -65,17 +65,17 @@ class HtmlVideoAdapter extends BaseMediaAdapter {
 
     this.#videoElement.addEventListener('play', () => {
       this.#isPaused = false;
-      this.#isFinished = false;
+      this.#isEnded = false;
       this.emit('play');
     });
     this.#videoElement.addEventListener('pause', () => {
       this.#isPaused = true;
-      this.#isFinished = false;
+      this.#isEnded = false;
       this.emit('pause');
     });
     this.#videoElement.addEventListener('ended', () => {
       this.#isPaused = false;
-      this.#isFinished = true;
+      this.#isEnded = true;
       this.emit('ended');
     });
     this.#videoElement.addEventListener('timeupdate', () => {
@@ -108,12 +108,12 @@ class HtmlVideoAdapter extends BaseMediaAdapter {
   }
 
   /**
-   * Checks whether the media adapter is finished.
+   * Checks whether the media adapter is ended.
    * @returns {boolean} True if the adapter is ready, false otherwise.
    */
-  isFinished() {
+  isEnded() {
     checkDestroy(this.#destroyed);
-    return this.#isFinished;
+    return this.#isEnded;
   }
 
   /**
