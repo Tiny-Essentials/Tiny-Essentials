@@ -1,4 +1,6 @@
+import { createCheckDestroyed } from '../utils.mjs';
 import { BaseMediaAdapter } from './index.mjs';
+import { isValidObj } from '../../basics/objChecker.mjs';
 
 /**
  * @typedef {import('../../basics/mediaContent.mjs').PictureDataType} PictureDataType
@@ -7,9 +9,11 @@ import { BaseMediaAdapter } from './index.mjs';
  * @typedef {import('./index.mjs').ContentTimeData} ContentTimeData
  */
 
+const checkDestroy = createCheckDestroyed('YoutubeMediaAdapter');
+
 /**
  * MOCK VERSION of BaseMediaAdapter
- * 
+ *
  * This file simulates the behavior of the Media Adapter for testing purposes.
  */
 class MockMediaAdapter extends BaseMediaAdapter {
@@ -31,6 +35,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
   #totalDuration = 60000; // 60 seconds in milliseconds
 
   get isPlaying() {
+    checkDestroy(this.#destroyed);
     return this.#isPlaying;
   }
 
@@ -39,10 +44,12 @@ class MockMediaAdapter extends BaseMediaAdapter {
   }
 
   get volume() {
+    checkDestroy(this.#destroyed);
     return this.#currentVolume;
   }
 
   set volume(value) {
+    checkDestroy(this.#destroyed);
     if (typeof value !== 'number' || value < 0 || value > 1) {
       throw new RangeError('Volume must be a number between 0.0 and 1.0.');
     }
@@ -55,34 +62,39 @@ class MockMediaAdapter extends BaseMediaAdapter {
   }
 
   get currentContentId() {
+    checkDestroy(this.#destroyed);
     return this.#currentContentId;
   }
 
   isReady() {
+    checkDestroy(this.#destroyed);
     return this.#isReady;
   }
 
-   /**
+  /**
    * Checks whether the media adapter is paused.
    * @returns {boolean} True if the adapter is ready, false otherwise.
    */
   isPaused() {
+    checkDestroy(this.#destroyed);
     return this.#isPaused;
   }
 
-    /**
+  /**
    * Checks whether the media adapter is ended.
    * @returns {boolean} True if the adapter is ready, false otherwise.
    */
   isEnded() {
+    checkDestroy(this.#destroyed);
     return this.#isEnded;
   }
 
-    /**
+  /**
    * Asynchronously waits until the content media adapter is fully initialized and ready.
    * @returns {Promise<void>} A promise that resolves once the adapter is ready.
    */
   async waitIsReady() {
+    checkDestroy(this.#destroyed);
     return Promise.resolve();
   }
 
@@ -91,6 +103,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
    * @returns {ContentTimeData} An object containing total, current, remaining time, and playback percentage.
    */
   getTimeData() {
+    checkDestroy(this.#destroyed);
     const total = this.getTotalDuration();
     const current = this.getCurrentTime();
     const remaining = total > 0 ? total - current : 0;
@@ -98,7 +111,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
     return { total, current, remaining, playbackPercentage };
   }
 
-    /**
+  /**
    * Determines if this adapter can play the provided content.
    * @param {MediaContent} content - The media content to evaluate.
    * @returns {boolean} True if the adapter can handle the content, false otherwise.
@@ -107,12 +120,13 @@ class MockMediaAdapter extends BaseMediaAdapter {
     return content && typeof content.url === 'string';
   }
 
-      /**
+  /**
    * Determines if this adapter can play the provided content.
    * @param {MediaContent} content - The media content to evaluate.
    * @returns {boolean} True if the adapter can handle the content, false otherwise.
    */
   canHandle(content) {
+    checkDestroy(this.#destroyed);
     return MockMediaAdapter.canHandle(content);
   }
 
@@ -122,25 +136,27 @@ class MockMediaAdapter extends BaseMediaAdapter {
    * @returns {Promise<void>}
    */
   async play(content) {
-    if (!content || !content.url) {
+    checkDestroy(this.#destroyed);
+    if (!isValidObj(content)) {
       throw new TypeError('Invalid media content provided to play().');
     }
     this.#currentContentId = 'mock';
     this.#isPaused = false;
     this.#isEnded = false;
     this.#isPlaying = true;
-    
+
     // Simulate a small delay for loading
-    await new Promise(resolve => setTimeout(resolve, 10));
-    
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
     return Promise.resolve();
   }
 
-    /**
+  /**
    * Pauses the current playback.
    * @returns {Promise<void>}
    */
   async pause() {
+    checkDestroy(this.#destroyed);
     this.#isPaused = true;
     this.#isEnded = false;
     this.#isPlaying = false;
@@ -151,17 +167,19 @@ class MockMediaAdapter extends BaseMediaAdapter {
    * @returns {Promise<void>}
    */
   async stop() {
+    checkDestroy(this.#destroyed);
     this.#isPaused = false;
     this.#isEnded = true;
     this.#isPlaying = false;
   }
 
-    /**
+  /**
    * Seeks to a specific time in the media timeline.
    * @param {number} timeMs - The target time in milliseconds.
    * @returns {Promise<void>}
    */
   async seek(timeMs) {
+    checkDestroy(this.#destroyed);
     if (typeof timeMs !== 'number') throw new TypeError('Time must be a number.');
     this.#currentTime = timeMs;
   }
@@ -171,6 +189,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
    * @returns {boolean|null} True if muted, false otherwise.
    */
   isMuted() {
+    checkDestroy(this.#destroyed);
     return this.#isMuted;
   }
 
@@ -179,6 +198,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
    * @returns {Promise<void>}
    */
   async mute() {
+    checkDestroy(this.#destroyed);
     this.#isMuted = true;
   }
 
@@ -187,6 +207,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
    * @returns {Promise<void>}
    */
   async unMute() {
+    checkDestroy(this.#destroyed);
     this.#isMuted = false;
   }
 
@@ -195,6 +216,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
    * @returns {number} The current time in milliseconds.
    */
   getCurrentTime() {
+    checkDestroy(this.#destroyed);
     return this.#currentTime;
   }
 
@@ -203,6 +225,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
    * @returns {number} The total duration in milliseconds.
    */
   getTotalDuration() {
+    checkDestroy(this.#destroyed);
     return this.#totalDuration;
   }
 
@@ -211,6 +234,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
    * @returns {number} The remaining time in milliseconds.
    */
   getRemainingTime() {
+    checkDestroy(this.#destroyed);
     return this.#totalDuration;
   }
 
@@ -219,6 +243,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
    * @returns {number} The percentage from 0 to 100.
    */
   getPlaybackPercentage() {
+    checkDestroy(this.#destroyed);
     return 100;
   }
 
@@ -228,6 +253,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
    * @returns {void}
    */
   setVolume(volume) {
+    checkDestroy(this.#destroyed);
     this.volume = volume;
   }
 
@@ -236,6 +262,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
    * @returns {number} - The volume level from 0.0 to 1.0.
    */
   getVolume() {
+    checkDestroy(this.#destroyed);
     return this.volume;
   }
 
@@ -245,6 +272,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
    * @returns {Promise<ContentData>}
    */
   async getContentData() {
+    checkDestroy(this.#destroyed);
     return {
       id: '',
       createdAt: '',
@@ -263,6 +291,7 @@ class MockMediaAdapter extends BaseMediaAdapter {
    * @returns {void}
    */
   destroy() {
+    if (this.#destroyed) return;
     this.#destroyed = true;
     super.destroy();
   }
