@@ -841,7 +841,6 @@
         }
 
         /**
-         * @method log
          * Appends a message to the system logs UI.
          * @param {string} msg - The message to log.
          */
@@ -854,7 +853,41 @@
         }
 
         /**
-         * @method bindRadioEvents
+         * Removes a specific track from the media player to prevent memory leaks and desync.
+         * @param {string} id - The ID of the track to remove.
+         * @returns {void}
+         * @throws {TypeError} Thrown if the id is not a string.
+         */
+        #removeTrackFromPlayer(id) {
+          if (typeof id !== 'string') {
+            throw new TypeError('id must be a string.');
+          }
+
+          try {
+            const searchResult = this.player.searchTrack((track) => track.id === id);
+            if (searchResult && searchResult.length > 0) {
+              this.player.removeTrack(searchResult[0].index);
+              this.log(`Player Sync: Track ${id} removed from media player.`);
+            }
+          } catch (error) {
+            this.log(`Player Sync Warning: Could not remove track ${id}.`);
+          }
+        }
+
+        /**
+         * Clears all tracks from the media player. Used when the radio state is imported or reset.
+         * @returns {void}
+         */
+        #clearPlayerTracks() {
+          try {
+            this.player.clearPlaylist();
+            this.log('Player Sync: All tracks cleared from media player.');
+          } catch (error) {
+            this.log('Player Sync Warning: Failed to clear player tracks.');
+          }
+        }
+
+        /**
          * Binds event listeners to the radio instance to sync the UI.
          */
         bindRadioEvents() {
@@ -887,16 +920,21 @@
             this.log(`Event: taskScheduled -> ${d.action} on ${d.type}`);
             syncUI();
           });
+
           this.radio.on('contentRemoved', (d) => {
             this.log(`Event: contentRemoved -> ID ${d.id}`);
+            this.#removeTrackFromPlayer(d.id);
             syncUI();
           });
+
           this.radio.on('taskExecuted', (d) => {
             this.log(`Event: taskExecuted -> ${d.action} completed.`);
             syncUI();
           });
+
           this.radio.on('customPositionExpired', (d) => {
             this.log(`Event: customPositionExpired -> ID ${d.contentId}`);
+            this.#removeTrackFromPlayer(d.contentId);
             syncUI();
           });
 
@@ -907,7 +945,6 @@
         }
 
         /**
-         * @method setupEventListeners
          * Attaches standard DOM event listeners.
          */
         setupEventListeners() {
@@ -992,7 +1029,6 @@
         }
 
         /**
-         * @method syncConfigUI
          * Syncs the HTML inputs with the radio configuration.
          */
         syncConfigUI() {
@@ -1026,8 +1062,6 @@
         }
 
         /**
-         * @async
-         * @method startEngine
          * Unlocks the AudioContext correctly without breaking media elements.
          * @returns {Promise<void>}
          */
@@ -1062,8 +1096,6 @@
         }
 
         /**
-         * @async
-         * @method handleAddContent
          * Parses and adds new content to the radio.
          * @returns {Promise<void>}
          */
@@ -1111,9 +1143,7 @@
         }
 
         /**
-         * @async
-         * @method handleApplyConfig
-         * Applies configurations and reboots the active tracking.
+         * Applies configurations and reboots the active tracking in a locked queue.
          * @returns {Promise<void>}
          */
         async handleApplyConfig() {
@@ -1138,22 +1168,27 @@
               ),
             };
 
-            this.radio.seed = seed;
-            this.radio.unknownArtist = unknownArtist;
-            this.radio.setConfig(cfg);
+            // Using queue to prevent tick interference during config reset
+            await queue.enqueue(async () => {
+              this.radio.seed = seed;
+              this.radio.unknownArtist = unknownArtist;
+              this.radio.setConfig(cfg);
 
-            // Force rebooting of the instance by cleaning the current screening
-            this.currentPlayingId = null;
-            await this.player.pause();
-            await this.resyncCurrentEvent();
+              // Force rebooting of the instance by cleaning the current screening
+              this.currentPlayingId = null;
+              await this.player.pause();
+              this.#clearPlayerTracks();
+
+              await this.resyncCurrentEvent();
+            });
           } catch (e) {
             this.log(`Config Error: ${e.message}`);
+          } finally {
+            btnApplyCfg.disabled = false;
           }
-          btnApplyCfg.disabled = false;
         }
 
         /**
-         * @method handleScheduleTask
          * Schedules an action dynamically.
          */
         handleScheduleTask() {
@@ -1187,7 +1222,6 @@
         }
 
         /**
-         * @method handleQuery
          * Queries the radio timeline.
          */
         handleQuery() {
@@ -1210,8 +1244,6 @@
         }
 
         /**
-         * @async
-         * @method resyncAudio
          * Jumps the audio position to correctly match the radio's current time.
          * @returns {Promise<void>}
          */
@@ -1231,10 +1263,8 @@
         }
 
         /**
-         * @async
-         * @method syncAudioWithRadio
          * Updates the player track based on the current radio event and prevents unwanted autoplay.
-         * @param {Object|null} event
+         * @param {Object|null} event - The current radio event data or null if idle.
          * @returns {Promise<void>}
          */
         async syncAudioWithRadio(event) {
@@ -1250,20 +1280,27 @@
           if (this.currentPlayingId !== event.id) {
             this.currentPlayingId = event.id;
 
-            const searchResult = this.player.searchTrack((track) => track.id === event.id);
+            let searchResult = this.player.searchTrack((track) => track.id === event.id);
 
-            const index = !searchResult[0]
-              ? this.player.addTrack({
-                  id: event.id,
-                  url: event.url,
-                  title: event.title ?? 'Unknown Title',
-                  artist: event.artist ?? 'Unknown Artist',
-                  duration: event.duration,
-                }) - 1
-              : searchResult[0].index;
+            if (searchResult.length === 0) {
+              this.player.addTrack({
+                id: event.id,
+                url: event.url,
+                title: event.title ?? 'Unknown Title',
+                artist: event.artist ?? 'Unknown Artist',
+                duration: event.duration,
+              });
 
-            // Await the transition to prevent race conditions in the next interval tick
-            await this.player.skipTo(index);
+              // Search immediately again to guarantee exact index extraction
+              searchResult = this.player.searchTrack((track) => track.id === event.id);
+            }
+
+            if (searchResult.length > 0) {
+              const index = searchResult[0].index;
+              // Await the transition to prevent race conditions in the next interval tick
+              await this.player.skipTo(index);
+            }
+
             this.loadThumbnail(event.id);
 
             // Block auto-play securely if the engine is not started yet.
@@ -1283,9 +1320,8 @@
         }
 
         /**
-         * @method loadThumbnail
          * Parses and injects the thumbnail base64 image into the UI.
-         * @param {string} id
+         * @param {string} id - The ID string of the track.
          */
         loadThumbnail(id) {
           this.resetThumbnail();
@@ -1306,7 +1342,6 @@
         }
 
         /**
-         * @method resetThumbnail
          * Resets the cover art image element to default state.
          */
         resetThumbnail() {
@@ -1316,8 +1351,6 @@
         }
 
         /**
-         * @async
-         * @method handleExport
          * Generates and downloads a JSON of the system state.
          * @returns {Promise<void>}
          */
@@ -1335,8 +1368,6 @@
         }
 
         /**
-         * @async
-         * @method resyncCurrentEvent
          * Safely resets the event loop and synchronizes time if the engine is running.
          * @returns {Promise<void>}
          */
@@ -1347,53 +1378,63 @@
             if (newEvent) {
               await this.syncAudioWithRadio(newEvent);
               await this.resyncAudio();
+            } else {
+              await this.syncAudioWithRadio(null);
             }
           }
         }
 
         /**
-         * @async
-         * @method handleImport
-         * Imports a JSON state file.
-         * @param {Event} event
+         * Imports a JSON state file and fully cleans up the active media player inside the queue.
+         * @param {Event} event - The DOM event triggered by the file input change.
          * @returns {Promise<void>}
          */
         async handleImport(event) {
           btnImport.disabled = true;
           const file = event.target.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          return new Promise((resolve, reject) => {
-            reader.onload = async (e) => {
-              try {
-                const json = JSON.parse(e.target.result);
-                this.radio.importState(json);
+          if (!file) {
+            btnImport.disabled = false;
+            return;
+          }
 
-                // Force rebooting of the instance by cleaning the current screening
+          const reader = new FileReader();
+
+          reader.onload = async (e) => {
+            try {
+              const json = JSON.parse(e.target.result);
+
+              // Executing critical cleanup and import inside the Queue locks out startUpdateLoop
+              await queue.enqueue(async () => {
                 this.currentPlayingId = null;
                 await this.player.pause();
 
-                this.log('Import success.');
-                await this.resyncCurrentEvent();
-              } catch (err) {
-                this.log(`Import error: ${err.message}`);
-              }
-              btnImport.disabled = false;
-              resolve();
-            };
-            reader.onerror = (err) => {
-              btnImport.disabled = false;
-              reject(err);
-            };
-            reader.readAsText(file);
+                // Explicitly clear the media player queue
+                this.#clearPlayerTracks();
 
-            // Zerate input in case you want to import the same file again later
+                this.radio.importState(json);
+                this.log('Import success.');
+
+                await this.resyncCurrentEvent();
+              });
+            } catch (err) {
+              this.log(`Import error: ${err.message}`);
+            } finally {
+              btnImport.disabled = false;
+              event.target.value = '';
+            }
+          };
+
+          reader.onerror = (err) => {
+            this.log(`Import error: Failed to read file.`);
+            btnImport.disabled = false;
             event.target.value = '';
-          });
+          };
+
+          // Zerate input in case you want to import the same file again later
+          reader.readAsText(file);
         }
 
         /**
-         * @method updateLists
          * Updates UI tables for music, voices and tasks.
          */
         updateLists() {
@@ -1424,7 +1465,6 @@
         }
 
         /**
-         * @method startUpdateLoop
          * Runs the interval for the UI timeline rendering.
          */
         startUpdateLoop() {
