@@ -380,9 +380,6 @@
     </style>
   </head>
   <body>
-    <!-- Audio Engine (Hidden) -->
-    <audio id="audio-engine"></audio>
-
     <header>
       <div>
         <h1 style="font-size: 1.25rem">
@@ -675,12 +672,17 @@
 
     <script type="module">
       import { TinyDragDropDetector } from './src/v1/libs/TinyDragDropDetector.mjs';
-      /** IMPORT: TinyRadioFm */
       import { TinyRadioFm } from './src/v1/libs/TinyRadioFm.mjs';
+      import { TinyMediaPlayer } from './src/v1/libs/TinyMediaPlayer.mjs';
+      import { HtmlAudioAdapter } from './src/v1/libs/TinyMediaPlayer/HtmlAudio.mjs';
+      import { MockMediaAdapter } from './src/v1/libs/TinyMediaPlayer/Mock.mjs';
+      import { TinyPromiseQueue } from './src/v1/libs/TinyPromiseQueue.mjs';
       import { parseBlob } from 'https://cdn.jsdelivr.net/npm/music-metadata@11.13.0/+esm';
+
       window.TinyRadioFm = TinyRadioFm;
       window.TinyDragDropDetector = TinyDragDropDetector;
 
+      const queue = new TinyPromiseQueue();
       const draggerDetector = new TinyDragDropDetector(document.body, {
         fullscreen: true,
         onDrop: console.log,
@@ -689,25 +691,160 @@
       });
       window.draggerDetector = draggerDetector;
 
-      // --- UI Controller ---
+      const btnApplyCfg = document.getElementById('btn-apply-cfg');
+      const btnImport = document.getElementById('btn-import');
+      const volumeSlider = document.getElementById('volume-slider');
+      const btnResync = document.getElementById('btn-resync');
+      const btnMute = document.getElementById('btn-mute');
+
+      /**
+       * @class TestEnvironment
+       * Controller for the TinyRadioFm test UI and audio synchronization.
+       */
       class TestEnvironment {
+        /** @private @type {TinyRadioFm} */
+        #radio;
+        /** @private @type {TinyMediaPlayer} */
+        #player;
+        /** @private @type {string|null} */
+        #currentPlayingId;
+        /** @private @type {boolean} */
+        #isEngineStarted;
+        /** @private @type {number} */
+        #tickCounter;
+        /** @private @type {HTMLElement} */
+        #imgEl;
+
+        /**
+         * @returns {TinyRadioFm}
+         */
+        get radio() {
+          return this.#radio;
+        }
+
+        /**
+         * @param {TinyRadioFm} value
+         * @throws {TypeError}
+         */
+        set radio(value) {
+          if (!value) throw new TypeError('radio must be a valid instance.');
+          this.#radio = value;
+        }
+
+        /**
+         * @returns {TinyMediaPlayer}
+         */
+        get player() {
+          return this.#player;
+        }
+
+        /**
+         * @param {TinyMediaPlayer} value
+         * @throws {TypeError}
+         */
+        set player(value) {
+          if (!value) throw new TypeError('player must be a valid instance.');
+          this.#player = value;
+        }
+
+        /**
+         * @returns {string|null}
+         */
+        get currentPlayingId() {
+          return this.#currentPlayingId;
+        }
+
+        /**
+         * @param {string|null} value
+         * @throws {TypeError}
+         */
+        set currentPlayingId(value) {
+          if (value !== null && typeof value !== 'string') {
+            throw new TypeError('currentPlayingId must be a string or null.');
+          }
+          this.#currentPlayingId = value;
+        }
+
+        /**
+         * @returns {boolean}
+         */
+        get isEngineStarted() {
+          return this.#isEngineStarted;
+        }
+
+        /**
+         * @param {boolean} value
+         * @throws {TypeError}
+         */
+        set isEngineStarted(value) {
+          if (typeof value !== 'boolean') {
+            throw new TypeError('isEngineStarted must be a boolean.');
+          }
+          this.#isEngineStarted = value;
+        }
+
+        /**
+         * @returns {number}
+         */
+        get tickCounter() {
+          return this.#tickCounter;
+        }
+
+        /**
+         * @param {number} value
+         * @throws {TypeError}
+         */
+        set tickCounter(value) {
+          if (typeof value !== 'number') {
+            throw new TypeError('tickCounter must be a number.');
+          }
+          this.#tickCounter = value;
+        }
+
+        /**
+         * @returns {HTMLElement}
+         */
+        get imgEl() {
+          return this.#imgEl;
+        }
+
+        /**
+         * @param {HTMLElement} value
+         * @throws {TypeError}
+         */
+        set imgEl(value) {
+          if (!(value instanceof HTMLElement)) {
+            throw new TypeError('imgEl must be an HTMLElement.');
+          }
+          this.#imgEl = value;
+        }
+
         constructor() {
           this.radio = new TinyRadioFm();
-          this.audio = document.getElementById('audio-engine');
+          this.player = new TinyMediaPlayer();
+          this.player.registerAdapter(new HtmlAudioAdapter());
+          this.player.registerAdapter(new MockMediaAdapter());
+
           this.currentPlayingId = null;
           this.isEngineStarted = false;
           this.tickCounter = 0; // Used to spaced updates (e.g. Query Engine)
 
           this.imgEl = document.getElementById('st-thumb');
+
           this.setupEventListeners();
           this.bindRadioEvents();
           this.startUpdateLoop();
-          this.log('Environment Ready. Click "Start Engine" to enable audio.');
+          this.log('Environment Ready. Click "Start Engine" to unlock audio context.');
           this.imgEl.addEventListener('error', () => this.resetThumbnail());
 
           this.syncConfigUI();
         }
 
+        /**
+         * @method log
+         * Appends a message to the system logs UI.
+         * @param {string} msg - The message to log.
+         */
         log(msg) {
           const logs = document.getElementById('system-logs');
           const entry = document.createElement('div');
@@ -716,6 +853,10 @@
           logs.prepend(entry);
         }
 
+        /**
+         * @method bindRadioEvents
+         * Binds event listeners to the radio instance to sync the UI.
+         */
         bindRadioEvents() {
           // Automatically update the entire interface when data changes
           const syncUI = () => {
@@ -765,17 +906,18 @@
           });
         }
 
+        /**
+         * @method setupEventListeners
+         * Attaches standard DOM event listeners.
+         */
         setupEventListeners() {
           // Add Content
-          // Actions
           document
             .getElementById('btn-add')
             .addEventListener('click', () => this.handleAddContent());
 
           // Config
-          document
-            .getElementById('btn-apply-cfg')
-            .addEventListener('click', () => this.handleApplyConfig());
+          btnApplyCfg.addEventListener('click', () => this.handleApplyConfig());
 
           // Schedule
           document
@@ -783,9 +925,7 @@
             .addEventListener('click', () => this.handleScheduleTask());
           document.getElementById('btn-remove-now').addEventListener('click', () => {
             const id = document.getElementById('manage-id').value;
-            if (id) {
-              this.radio.remove(id);
-            }
+            if (id) this.radio.remove(id);
           });
 
           // Queries
@@ -800,9 +940,7 @@
           document
             .getElementById('btn-export')
             .addEventListener('click', () => this.handleExport());
-          document
-            .getElementById('btn-import')
-            .addEventListener('click', () => document.getElementById('import-file').click());
+          btnImport.addEventListener('click', () => document.getElementById('import-file').click());
           document
             .getElementById('import-file')
             .addEventListener('change', (e) => this.handleImport(e));
@@ -811,13 +949,14 @@
           document
             .getElementById('btn-start-engine')
             .addEventListener('click', () => this.startEngine());
-          document.getElementById('btn-resync').addEventListener('click', () => this.resyncAudio());
+          btnResync.addEventListener('click', () => this.resyncAudio());
 
           // Mute / Pause logic
-          const btnMute = document.getElementById('btn-mute');
-          btnMute.addEventListener('click', () => {
-            this.audio.muted = !this.audio.muted;
-            if (this.audio.muted) {
+          btnMute.addEventListener('click', async () => {
+            btnMute.disabled = true;
+            this.player.isMuted = !this.player.isMuted;
+
+            if (this.player.isMuted) {
               btnMute.title = 'Unmute Audio';
               btnMute.innerText = '▶️';
               btnMute.classList.add('btn-danger');
@@ -827,39 +966,41 @@
               btnMute.innerText = '⏸️';
               btnMute.classList.remove('btn-danger');
               btnMute.classList.add('btn-outline');
-              this.resyncAudio();
+              await this.resyncAudio();
             }
+            btnMute.disabled = false;
           });
 
           // Volume Configuration and Persistence
-          const volumeSlider = document.getElementById('volume-slider');
 
           // Try loading the localStorage volume
           const savedVolume = localStorage.getItem('tinyRadioFm_volume');
           if (savedVolume !== null) {
-            volumeSlider.value = savedVolume;
-            this.audio.volume = savedVolume;
+            volumeSlider.value = Number(savedVolume);
+            this.player.volume = Number(savedVolume);
           } else {
             // If you have nothing, set the audio to the default HTML value (0.7)
-            this.audio.volume = volumeSlider.value;
+            this.player.volume = Number(volumeSlider.value);
           }
 
           // Update audio and save in localStorage
           volumeSlider.addEventListener('input', (e) => {
-            const newVolume = e.target.value;
-            this.audio.volume = newVolume;
-            localStorage.setItem('tinyRadioFm_volume', newVolume);
+            const newVolume = Number(e.target.value);
+            this.player.volume = newVolume;
+            localStorage.setItem('tinyRadioFm_volume', String(newVolume));
           });
         }
 
+        /**
+         * @method syncConfigUI
+         * Syncs the HTML inputs with the radio configuration.
+         */
         syncConfigUI() {
           // Synchronize direct properties
-          if (this.radio.seed !== undefined) {
+          if (this.radio.seed !== undefined)
             document.getElementById('cfg-seed').value = this.radio.seed;
-          }
-          if (this.radio.unknownArtist !== undefined) {
+          if (this.radio.unknownArtist !== undefined)
             document.getElementById('cfg-unknown-artist').value = this.radio.unknownArtist;
-          }
 
           // Synchronize options within the config object
           const cfg = this.radio.config;
@@ -884,31 +1025,48 @@
           }
         }
 
+        /**
+         * @async
+         * @method startEngine
+         * Unlocks the AudioContext correctly without breaking media elements.
+         * @returns {Promise<void>}
+         */
         async startEngine() {
-          if (this.isEngineStarted || !this.currentPlayingId) return;
+          if (this.isEngineStarted) return;
           this.isEngineStarted = true;
-          // Play a silent buffer or just unlock audio context
-          this.audio
-            .play()
-            .then(() => {
-              this.audio.pause();
-              const btnStart = document.getElementById('btn-start-engine');
-              btnStart.innerText = 'Engine Running';
-              btnStart.classList.replace('btn-primary', 'btn-outline');
-              btnStart.disabled = true;
 
-              // Hides the manual resync and automatically triggers the first sync
-              const btnResync = document.getElementById('btn-resync');
-              const btnMute = document.getElementById('btn-mute');
-              btnResync.disabled = false;
-              btnMute.disabled = false;
+          try {
+            const btnStart = document.getElementById('btn-start-engine');
+            btnStart.innerText = 'Engine Running';
+            btnStart.classList.replace('btn-primary', 'btn-outline');
+            btnStart.disabled = true;
 
-              this.log('Audio Engine Unlocked.');
-              this.resyncAudio();
-            })
-            .catch((e) => this.log('Error starting engine: ' + e.message));
+            btnResync.disabled = false;
+            btnMute.disabled = false;
+
+            this.log('Audio Engine Unlocked.');
+
+            if (this.currentPlayingId) {
+              await this.resyncAudio();
+            } else {
+              try {
+                // Allows the browser to register the user gesture
+                await this.player.play();
+              } catch (e) {
+                // It is expected to fail if no track is loaded, but context is unlocked.
+              }
+            }
+          } catch (e) {
+            this.log('Error starting engine: ' + e.message);
+          }
         }
 
+        /**
+         * @async
+         * @method handleAddContent
+         * Parses and adds new content to the radio.
+         * @returns {Promise<void>}
+         */
         async handleAddContent() {
           const file = document.getElementById('file-input').files[0];
           if (!file) return alert('Select an audio file.');
@@ -928,13 +1086,13 @@
           }
 
           try {
-            this.log(`Processing ${file.name} to Base64...`);
+            this.log(`Processing ${file.name}...`);
 
             // Convert the audio file directly to a Base64 string (Date URL)
             const base64Url = await new Promise((resolve, reject) => {
               const reader = new FileReader();
               reader.onload = () => resolve(reader.result);
-              reader.onerror = () => reject(new Error('Failed to read file as Base64.'));
+              reader.onerror = () => reject(new Error('Failed to read file.'));
               reader.readAsDataURL(file);
             });
 
@@ -952,7 +1110,14 @@
           }
         }
 
-        handleApplyConfig() {
+        /**
+         * @async
+         * @method handleApplyConfig
+         * Applies configurations and reboots the active tracking.
+         * @returns {Promise<void>}
+         */
+        async handleApplyConfig() {
+          btnApplyCfg.disabled = true;
           try {
             const seed = parseInt(document.getElementById('cfg-seed').value);
             const unknownArtist = document.getElementById('cfg-unknown-artist').value;
@@ -979,13 +1144,18 @@
 
             // Force rebooting of the instance by cleaning the current screening
             this.currentPlayingId = null;
-            this.audio.pause();
-            this.resyncCurrentEvent();
+            await this.player.pause();
+            await this.resyncCurrentEvent();
           } catch (e) {
             this.log(`Config Error: ${e.message}`);
           }
+          btnApplyCfg.disabled = false;
         }
 
+        /**
+         * @method handleScheduleTask
+         * Schedules an action dynamically.
+         */
         handleScheduleTask() {
           try {
             const delay = parseInt(document.getElementById('task-delay').value);
@@ -1016,12 +1186,16 @@
           }
         }
 
+        /**
+         * @method handleQuery
+         * Queries the radio timeline.
+         */
         handleQuery() {
           try {
             const offset = parseInt(document.getElementById('query-offset').value);
             const results = this.radio.queryTimeline(Date.now() + offset, 30);
             const container = document.getElementById('query-results');
-            container.innerHTML = results.length ? '' : 'No upcoming events generated.';
+            container.innerHTML = results.length ? '' : 'No upcoming events.';
             results.forEach((ev) => {
               container.innerHTML += `<div class="log-entry">
                 <div class="log-entry-content">
@@ -1035,20 +1209,38 @@
           }
         }
 
-        // --- PLAYER LOGIC ---
-
-        resyncAudio() {
+        /**
+         * @async
+         * @method resyncAudio
+         * Jumps the audio position to correctly match the radio's current time.
+         * @returns {Promise<void>}
+         */
+        async resyncAudio() {
+          btnResync.disabled = true;
           const event = this.radio.getCurrentEvent();
-          if (!event) return;
+          if (!event) {
+            btnResync.disabled = false;
+            return;
+          }
           this.log('Resyncing audio to radio timeline...');
-          this.audio.currentTime = (event.duration - event.remainingTime) / 1000;
-          if (this.audio.paused && this.isEngineStarted) this.audio.play();
+          await this.player.seek(event.duration - event.remainingTime);
+          if (this.player.isPaused && this.isEngineStarted) {
+            await this.player.play();
+          }
+          btnResync.disabled = false;
         }
 
-        syncAudioWithRadio(event) {
+        /**
+         * @async
+         * @method syncAudioWithRadio
+         * Updates the player track based on the current radio event and prevents unwanted autoplay.
+         * @param {Object|null} event
+         * @returns {Promise<void>}
+         */
+        async syncAudioWithRadio(event) {
           if (!event) {
             if (this.currentPlayingId !== null) {
-              this.audio.pause();
+              await this.player.pause();
               this.currentPlayingId = null;
               this.resetThumbnail();
             }
@@ -1057,20 +1249,44 @@
 
           if (this.currentPlayingId !== event.id) {
             this.currentPlayingId = event.id;
-            this.audio.src = event.url;
+
+            const searchResult = this.player.searchTrack((track) => track.id === event.id);
+
+            const index = !searchResult[0]
+              ? this.player.addTrack({
+                  id: event.id,
+                  url: event.url,
+                  title: event.title ?? 'Unknown Title',
+                  artist: event.artist ?? 'Unknown Artist',
+                  duration: event.duration,
+                }) - 1
+              : searchResult[0].index;
+
+            // Await the transition to prevent race conditions in the next interval tick
+            await this.player.skipTo(index);
             this.loadThumbnail(event.id);
 
-            if (this.isEngineStarted) {
-              this.audio.play().catch((e) => this.log('Autoplay blocked. Click Start Engine.'));
+            // Block auto-play securely if the engine is not started yet.
+            if (!this.isEngineStarted) {
+              await this.player.pause();
+            } else {
+              try {
+                await this.player.play();
+              } catch (e) {
+                // Expected errors when a quick action interrupts a fetch.
+              }
             }
-          } else if (this.audio.ended && this.isEngineStarted) {
-            // Workaround: Since the radio has one song only, the ID doesn't change, but the audio is over.
-            // We need to get it to play again from scratch!
-            this.audio.currentTime = 0;
-            this.audio.play().catch((e) => this.log('Autoplay blocked. Click Start Engine.'));
+          } else if (this.player.isEnded && this.isEngineStarted) {
+            await this.player.seek(0);
+            await this.player.play().catch((e) => this.log('Autoplay error: ' + e.message));
           }
         }
 
+        /**
+         * @method loadThumbnail
+         * Parses and injects the thumbnail base64 image into the UI.
+         * @param {string} id
+         */
         loadThumbnail(id) {
           this.resetThumbnail();
 
@@ -1089,12 +1305,22 @@
           }
         }
 
+        /**
+         * @method resetThumbnail
+         * Resets the cover art image element to default state.
+         */
         resetThumbnail() {
           this.imgEl.classList.add('default');
           this.imgEl.src =
             "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 18V5l12-2v13'></path><circle cx='6' cy='18' r='3'></circle><circle cx='18' cy='16' r='3'></circle></svg>";
         }
 
+        /**
+         * @async
+         * @method handleExport
+         * Generates and downloads a JSON of the system state.
+         * @returns {Promise<void>}
+         */
         async handleExport() {
           this.log('Generating Export...');
           const jsonString = await this.radio.exportState();
@@ -1102,50 +1328,74 @@
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `tinyradiofm-full-state-${new Date().getTime()}.json`;
-          document.body.appendChild(link);
+          link.download = `tinyradiofm-state-${Date.now()}.json`;
           link.click();
-          document.body.removeChild(link);
           URL.revokeObjectURL(url);
           this.log('Export complete.');
         }
 
-        resyncCurrentEvent() {
+        /**
+         * @async
+         * @method resyncCurrentEvent
+         * Safely resets the event loop and synchronizes time if the engine is running.
+         * @returns {Promise<void>}
+         */
+        async resyncCurrentEvent() {
           // If the audio engine is already on, restart and sync time
           if (this.isEngineStarted) {
             const newEvent = this.radio.getCurrentEvent();
             if (newEvent) {
-              this.syncAudioWithRadio(newEvent);
-              this.resyncAudio();
+              await this.syncAudioWithRadio(newEvent);
+              await this.resyncAudio();
             }
           }
         }
 
-        handleImport(event) {
+        /**
+         * @async
+         * @method handleImport
+         * Imports a JSON state file.
+         * @param {Event} event
+         * @returns {Promise<void>}
+         */
+        async handleImport(event) {
+          btnImport.disabled = true;
           const file = event.target.files[0];
           if (!file) return;
           const reader = new FileReader();
-          reader.onload = (e) => {
-            try {
-              const json = JSON.parse(e.target.result);
-              this.radio.importState(json);
+          return new Promise((resolve, reject) => {
+            reader.onload = async (e) => {
+              try {
+                const json = JSON.parse(e.target.result);
+                this.radio.importState(json);
 
-              // Force rebooting of the instance by cleaning the current screening
-              this.currentPlayingId = null;
-              this.audio.pause();
+                // Force rebooting of the instance by cleaning the current screening
+                this.currentPlayingId = null;
+                await this.player.pause();
 
-              this.log('Import success.');
-              this.resyncCurrentEvent();
-            } catch (err) {
-              this.log(`Import error: ${err.message}`);
-            }
-          };
-          reader.readAsText(file);
+                this.log('Import success.');
+                await this.resyncCurrentEvent();
+              } catch (err) {
+                this.log(`Import error: ${err.message}`);
+              }
+              btnImport.disabled = false;
+              resolve();
+            };
+            reader.onerror = (err) => {
+              btnImport.disabled = false;
+              reject(err);
+            };
+            reader.readAsText(file);
 
-          // Zerate input in case you want to import the same file again later
-          event.target.value = '';
+            // Zerate input in case you want to import the same file again later
+            event.target.value = '';
+          });
         }
 
+        /**
+         * @method updateLists
+         * Updates UI tables for music, voices and tasks.
+         */
         updateLists() {
           const mList = document.getElementById('list-music');
           const oList = document.getElementById('list-others');
@@ -1173,42 +1423,48 @@
           );
         }
 
+        /**
+         * @method startUpdateLoop
+         * Runs the interval for the UI timeline rendering.
+         */
         startUpdateLoop() {
-          setInterval(() => {
-            // Clock
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+          setInterval(
+            () =>
+              queue.enqueue(async () => {
+                // Clock
+                document.getElementById('clock').innerText = new Date().toLocaleTimeString();
 
-            // QueryEngine Autoupdate every 1 second (10 ticks)
-            this.tickCounter++;
-            if (this.tickCounter % 10 === 0) {
-              this.handleQuery();
-            }
+                // QueryEngine Autoupdate every 1 second (10 ticks)
+                this.tickCounter++;
+                if (this.tickCounter % 10 === 0) this.handleQuery();
 
-            // Live Status
-            const event = this.radio.getCurrentEvent();
+                // Live Status
+                const event = this.radio.getCurrentEvent();
 
-            // Update UI Status
-            const stTitle = document.getElementById('st-title');
-            const stArtist = document.getElementById('st-artist');
-            const stRem = document.getElementById('st-rem');
-            const prog = document.getElementById('progress-bar');
+                // Update UI Status
+                const stTitle = document.getElementById('st-title');
+                const stArtist = document.getElementById('st-artist');
+                const stRem = document.getElementById('st-rem');
+                const prog = document.getElementById('progress-bar');
 
-            if (event) {
-              stTitle.innerText = event.title;
-              stArtist.innerText = event.artist;
-              stRem.innerText = `${Math.floor(event.remainingTime / 1000)}s`;
-              prog.style.width = `${event.progress * 100}%`;
+                if (event) {
+                  stTitle.innerText = event.title;
+                  stArtist.innerText = event.artist;
+                  stRem.innerText = `${Math.floor(event.remainingTime / 1000)}s`;
+                  prog.style.width = `${event.progress * 100}%`;
 
-              // Sync the Audio Engine
-              this.syncAudioWithRadio(event);
-            } else {
-              stTitle.innerText = 'Idle';
-              stArtist.innerText = '-';
-              stRem.innerText = '-';
-              prog.style.width = '0%';
-              this.syncAudioWithRadio(null);
-            }
-          }, 100);
+                  // Sync the Audio Engine
+                  await this.syncAudioWithRadio(event);
+                } else {
+                  stTitle.innerText = 'Idle';
+                  stArtist.innerText = '-';
+                  stRem.innerText = '-';
+                  prog.style.width = '0%';
+                  await this.syncAudioWithRadio(null);
+                }
+              }),
+            100,
+          );
         }
       }
 
