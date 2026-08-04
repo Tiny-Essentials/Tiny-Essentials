@@ -156,6 +156,10 @@
       "require": "./dist/v1/libs/TinyMediaPlayer/HtmlVideo.cjs",
       "import": "./dist/v1/libs/TinyMediaPlayer/HtmlVideo.mjs"
     },
+    "./libs/TinyMediaPlayer/Mock": {
+      "require": "./dist/v1/libs/TinyMediaPlayer/Mock.cjs",
+      "import": "./dist/v1/libs/TinyMediaPlayer/Mock.mjs"
+    },
     "./libs/TinyMediaPlayer/docs/YouTubePlayer": {
       "require": "./dist/v1/libs/TinyMediaPlayer/docs/YouTubePlayer.cjs",
       "import": "./dist/v1/libs/TinyMediaPlayer/docs/YouTubePlayer.mjs"

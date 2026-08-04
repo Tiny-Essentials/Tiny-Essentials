@@ -274,13 +274,13 @@ class MockMediaAdapter extends BaseMediaAdapter {
   async getContentData() {
     checkDestroy(this.#destroyed);
     return {
-      id: '',
+      id: 'mock',
       createdAt: '',
-      artistId: '',
-      artistName: '',
+      artistId: 'mock',
+      artistName: 'Mock',
       description: '',
-      title: '',
-      duration: 0,
+      title: 'Mock',
+      duration: this.#totalDuration,
       avatar: '',
       url: '',
     };
