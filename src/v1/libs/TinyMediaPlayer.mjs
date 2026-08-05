@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import TinyDebbuger from './TinyDebbuger.mjs';
 
 import {
   getMediaContentBase,
@@ -38,6 +38,8 @@ const checkDestroy = createCheckDestroyed('TinyMediaPlayer');
  * @property {boolean} [repeatCurrentOnPrev=false] - If true, clicking 'previous' repeats the current track on the first click.
  * @property {boolean} [smoothPlayPauseVolume=false] - If true, volume fades smoothly during play/pause transitions.
  * @property {boolean} [smoothStopVolume=false] - If true, volume fades smoothly to zero when stopping.
+ * @property {boolean} [debugMode=false] - Whether to enable internal debug logging.
+ * @property {Console} [logger=console] - A custom logger object (must implement console methods).
  */
 
 /**
@@ -50,7 +52,7 @@ const checkDestroy = createCheckDestroyed('TinyMediaPlayer');
 /**
  * A universal media player manager capable of orchestrating multiple API adapters.
  */
-class TinyMediaPlayer extends EventEmitter {
+class TinyMediaPlayer extends TinyDebbuger {
   static BaseMediaAdapter = BaseMediaAdapter;
 
   /**
@@ -270,10 +272,16 @@ class TinyMediaPlayer extends EventEmitter {
    * @throws {RangeError} If numeric options are out of valid ranges.
    */
   constructor(options = {}) {
-    super();
     if (!isValidObj(options)) {
       throw new TypeError('Options must be a non-null object.');
     }
+
+    // Debug Configuration
+    super({
+      id: '[TinyMediaPlayer DEBUG]',
+      logger: options.logger ?? console,
+      debugMode: options.debugMode ?? false,
+    });
 
     // Volume configuration
     if (options.persistVolume !== undefined) {
@@ -322,6 +330,8 @@ class TinyMediaPlayer extends EventEmitter {
     }
 
     if (this.#persistVolume) this.#loadVolumeFromStorage();
+
+    this.log('info', 'Instance initialized.', { options });
   }
 
   // ==========================================
@@ -339,6 +349,7 @@ class TinyMediaPlayer extends EventEmitter {
           const parsedVolume = parseFloat(storedValue);
           if (!isNaN(parsedVolume) && parsedVolume >= 0 && parsedVolume <= 1) {
             this.#volume = parsedVolume;
+            this.log('info', `Volume loaded from storage: ${this.#volume}`);
           }
         }
       }
@@ -354,6 +365,7 @@ class TinyMediaPlayer extends EventEmitter {
     try {
       if (this.#persistVolume && typeof window !== 'undefined' && window.localStorage) {
         window.localStorage.setItem(this.#volumeStorageKey, this.#volume.toString());
+        this.log('info', `Volume saved to storage: ${this.#volume}`);
       }
     } catch (error) {
       console.warn('[TinyMediaPlayer] Failed to save volume to localStorage.', error);
@@ -425,10 +437,15 @@ class TinyMediaPlayer extends EventEmitter {
     const startTime = performance.now();
     const duration = this.#fadeVolumeSpeed;
 
+    this.log('info', `Starting volume fade: ${startVolume} -> ${targetVolume}`);
+
     return new Promise((resolve) => {
       /** @param {number} currentTime */
       const step = (currentTime) => {
-        if (signal.aborted) return resolve();
+        if (signal.aborted) {
+          this.log('info', 'Volume fade aborted.');
+          return resolve();
+        }
 
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
@@ -440,6 +457,7 @@ class TinyMediaPlayer extends EventEmitter {
           requestAnimationFrame(step);
         } else {
           adapter.setVolume(targetVolume);
+          this.log('info', `Volume fade completed: ${targetVolume}`);
           resolve();
         }
       };
@@ -481,6 +499,7 @@ class TinyMediaPlayer extends EventEmitter {
     }
 
     this.#playlist = value;
+    this.log('info', `Playlist updated. New size: ${this.#playlist.length}`);
     this.emit('playlistUpdate', this.playlist);
 
     // Validation to correct currentIndex ensuring it aligns with the new playlist limits
@@ -501,6 +520,7 @@ class TinyMediaPlayer extends EventEmitter {
           if (oldAdapter) await oldAdapter.stop();
           if (this.#currentIndex !== -1) await this.play();
         } catch (error) {
+          this.log('error', 'Background transition error on playlist update:', error);
           console.warn('[TinyMediaPlayer] Background transition error on playlist update:', error);
         }
       })();
@@ -529,6 +549,8 @@ class TinyMediaPlayer extends EventEmitter {
 
     if (this.#currentIndex === value) return; // Optimization: do nothing if index is the same
 
+    this.log('info', `Index change requested: ${this.#currentIndex} -> ${value}`);
+
     const wasPlaying = this.#isPlaying;
     let oldAdapter = null;
 
@@ -550,6 +572,7 @@ class TinyMediaPlayer extends EventEmitter {
           if (oldAdapter) await oldAdapter.stop();
           if (this.#currentIndex !== -1) await this.play();
         } catch (error) {
+          this.log('error', 'Background transition error on index update:', error);
           console.warn('[TinyMediaPlayer] Background transition error on index update:', error);
         }
       })();
@@ -573,6 +596,7 @@ class TinyMediaPlayer extends EventEmitter {
       throw new TypeError(`Loop mode must be one of: ${validModes.join(', ')}.`);
     }
     this.#loopMode = value;
+    this.log('info', `Loop mode changed to: ${this.#loopMode}`);
     this.emit('loopModeChange', this.#loopMode);
   }
 
@@ -592,6 +616,7 @@ class TinyMediaPlayer extends EventEmitter {
       throw new TypeError('Random mode state must be a boolean.');
     }
     this.#isRandom = value;
+    this.log('info', `Random mode: ${this.#isRandom}`);
     this.emit('randomModeChange', this.#isRandom);
   }
 
@@ -621,6 +646,7 @@ class TinyMediaPlayer extends EventEmitter {
     // Abort any ongoing fade to ensure manual control is immediate
     if (this.#fadeController) this.#fadeController.abort();
 
+    this.log('info', `Volume changed: ${this.#volume} -> ${value}`);
     this.#volume = value;
     this.#saveVolumeToStorage();
     this.emit('volumeChange', this.#volume);
@@ -652,6 +678,7 @@ class TinyMediaPlayer extends EventEmitter {
       throw new TypeError('Persist volume parameter must be a boolean.');
     }
     this.#persistVolume = value;
+    this.log('info', `Persist volume: ${this.#persistVolume}`);
     if (value) {
       this.#saveVolumeToStorage();
     }
@@ -708,6 +735,7 @@ class TinyMediaPlayer extends EventEmitter {
       throw new TypeError('isMuted must be a boolean.');
     }
 
+    this.log('info', `Mute state changed: ${value}`);
     this.#isMuted = value;
 
     // Synchronize with the active adapter immediately
@@ -777,6 +805,8 @@ class TinyMediaPlayer extends EventEmitter {
       throw new TypeError('Adapter must be an instance of BaseMediaAdapter.');
     }
 
+    this.log('info', 'Registering new adapter:', adapter);
+
     const events = new Map();
     this.#adapterHandlers.set(adapter, events);
 
@@ -799,6 +829,7 @@ class TinyMediaPlayer extends EventEmitter {
     if (!(adapter instanceof BaseMediaAdapter)) {
       throw new TypeError('Adapter must be an instance of BaseMediaAdapter.');
     }
+    this.log('info', 'Removing adapter:', adapter);
     this.#removeHandler(adapter);
     return this.#adapters.delete(adapter);
   }
@@ -813,6 +844,7 @@ class TinyMediaPlayer extends EventEmitter {
     if (!(adapter instanceof BaseMediaAdapter)) {
       throw new TypeError('Adapter must be an instance of BaseMediaAdapter.');
     }
+    this.log('info', 'Destroying adapter:', adapter);
     this.#removeHandler(adapter);
     const result = this.#adapters.delete(adapter);
     if (result) adapter.destroy();
@@ -837,6 +869,7 @@ class TinyMediaPlayer extends EventEmitter {
    */
   destroyAllAdapters() {
     checkDestroy(this.#destroyed);
+    this.log('info', 'Destroying all adapters.');
     this.#adapters.forEach((adapter) => {
       this.#removeHandler(adapter);
       adapter.destroy();
@@ -849,6 +882,7 @@ class TinyMediaPlayer extends EventEmitter {
    */
   clearAdapters() {
     checkDestroy(this.#destroyed);
+    this.log('info', 'Clearing all adapters.');
     this.#adapters.forEach((adapter) => this.#removeHandler(adapter));
     this.#adapters.clear();
   }
@@ -881,7 +915,9 @@ class TinyMediaPlayer extends EventEmitter {
     const currentContent = this.#playlist[this.#currentIndex];
     const adapter = this.getMediaAdapter(currentContent);
     if (adapter) return adapter;
-    throw new Error(`No compatible adapter found for content ID: ${currentContent.id}.`);
+    const errorMsg = `No compatible adapter found for content ID: ${currentContent.id}.`;
+    this.log('error', errorMsg);
+    throw new Error(errorMsg);
   }
 
   // ==========================================
@@ -902,6 +938,7 @@ class TinyMediaPlayer extends EventEmitter {
     // If the event is already in the list, do nothing to avoid duplicates
     if (this.#adapterEventNames.has(eventName)) return;
 
+    this.log('info', `Adding adapter event listener: ${eventName}`);
     this.#adapterEventNames.add(eventName);
 
     // Synchronize: Add the listener to all already registered adapters
@@ -923,6 +960,7 @@ class TinyMediaPlayer extends EventEmitter {
 
     if (!this.#adapterEventNames.has(eventName)) return;
 
+    this.log('info', `Removing adapter event listener: ${eventName}`);
     this.#adapterEventNames.delete(eventName);
 
     // Synchronize: Remove the listener from all registered adapters
@@ -970,6 +1008,7 @@ class TinyMediaPlayer extends EventEmitter {
     /** @type {(...args: any[]) => any} */
     const handler = (...args) => {
       if (!this.#destroyed) {
+        this.log('debug', `Adapter event triggered: ${eventName}`, ...args);
         this.emit(eventName, ...args);
       }
     };
@@ -1015,6 +1054,8 @@ class TinyMediaPlayer extends EventEmitter {
     valMediaContentMetadata(newContent);
 
     const newLength = this.#playlist.push(newContent);
+    this.log('info', `Track added. New length: ${newLength}`, newContent);
+
     if (this.#currentIndex === -1) {
       this.#currentIndex = 0;
       this.emit('trackChange', this.#currentIndex);
@@ -1071,6 +1112,8 @@ class TinyMediaPlayer extends EventEmitter {
       throw new RangeError(`Index ${index} is out of bounds for the current playlist.`);
     }
 
+    this.log('info', `Removing track at index: ${index}`);
+
     if (index === this.#currentIndex) {
       // Stop the current track if it is the one being removed
       await this.stop();
@@ -1107,6 +1150,8 @@ class TinyMediaPlayer extends EventEmitter {
       throw new TypeError('Search query must be a string or a boolean evaluation function.');
     }
 
+    this.log('info', 'Searching playlist...', { query });
+
     const results = [];
 
     for (let i = 0; i < this.#playlist.length; i++) {
@@ -1129,6 +1174,7 @@ class TinyMediaPlayer extends EventEmitter {
       }
     }
 
+    this.log('info', `Search completed. Found ${results.length} results.`);
     return results;
   }
 
@@ -1137,6 +1183,7 @@ class TinyMediaPlayer extends EventEmitter {
    */
   async clearPlaylist() {
     checkDestroy(this.#destroyed);
+    this.log('info', 'Clearing entire playlist.');
     await this.stop();
     this.#playlist = [];
     this.#currentIndex = -1;
@@ -1154,6 +1201,7 @@ class TinyMediaPlayer extends EventEmitter {
    */
   async play() {
     checkDestroy(this.#destroyed);
+    this.log('info', `Attempting to play track at index: ${this.#currentIndex}`);
     const adapter = this.#getActiveAdapter();
     if (!adapter) return;
 
@@ -1164,10 +1212,16 @@ class TinyMediaPlayer extends EventEmitter {
       adapter.setVolume(this.#volume);
     }
 
-    await adapter.play(this.#playlist[this.#currentIndex]);
-    if (this.#isMuted) await adapter.mute();
-    this.#isPlaying = true;
-    this.emit('play', this.#currentIndex);
+    try {
+      await adapter.play(this.#playlist[this.#currentIndex]);
+      if (this.#isMuted) await adapter.mute();
+      this.#isPlaying = true;
+      this.log('info', 'Playback started successfully.');
+      this.emit('play', this.#currentIndex);
+    } catch (error) {
+      this.log('error', 'Failed to play track:', error);
+      throw error;
+    }
   }
 
   /**
@@ -1176,6 +1230,7 @@ class TinyMediaPlayer extends EventEmitter {
    */
   async pause() {
     checkDestroy(this.#destroyed);
+    this.log('info', 'Attempting to pause playback.');
     const adapter = this.#getActiveAdapter();
     if (!adapter) return;
 
@@ -1185,6 +1240,7 @@ class TinyMediaPlayer extends EventEmitter {
 
     await adapter.pause();
     this.#isPlaying = false;
+    this.log('info', 'Playback paused.');
     this.emit('pause', this.#currentIndex);
   }
 
@@ -1194,6 +1250,7 @@ class TinyMediaPlayer extends EventEmitter {
    */
   async stop() {
     checkDestroy(this.#destroyed);
+    this.log('info', 'Attempting to stop playback.');
     const adapter = this.#getActiveAdapter();
     if (!adapter) return;
 
@@ -1203,6 +1260,7 @@ class TinyMediaPlayer extends EventEmitter {
 
     await adapter.stop();
     this.#isPlaying = false;
+    this.log('info', 'Playback stopped.');
     this.emit('stop', this.#currentIndex);
   }
 
@@ -1214,9 +1272,11 @@ class TinyMediaPlayer extends EventEmitter {
     checkDestroy(this.#destroyed);
     if (this.#playlist.length === 0) return;
 
+    this.log('info', 'Next track requested.');
     await this.stop();
 
     if (this.#loopMode === 'TRACK') {
+      this.log('info', 'Loop mode: TRACK. Repeating current track.');
       // Index remains the same
       await this.play();
       return;
@@ -1224,13 +1284,15 @@ class TinyMediaPlayer extends EventEmitter {
 
     if (this.#isRandom) {
       this.#currentIndex = this._getWeightedRandomIndex();
+      this.log('info', `Random mode: Selected index ${this.#currentIndex}`);
     } else {
       let nextIndex = this.#currentIndex + 1;
       if (nextIndex >= this.#playlist.length) {
         if (this.#loopMode === 'PLAYLIST') {
           nextIndex = 0;
+          this.log('info', 'Loop mode: PLAYLIST. Returning to start.');
         } else {
-          // End of playlist, stop playing
+          this.log('info', 'End of playlist reached. Stopping.');
           return;
         }
       }
@@ -1251,6 +1313,7 @@ class TinyMediaPlayer extends EventEmitter {
 
     // UX: Repeat current track if "repeat on prev" is enabled and it's the first click
     if (this.#repeatCurrentOnPrev && !this.#prevClickedToRepeat) {
+      this.log('info', 'UX: Repeat current track on first "prev" click.');
       this.#prevClickedToRepeat = true;
 
       // Reset the "repeat" state after 2 seconds of inactivity to prevent glitches
@@ -1272,17 +1335,20 @@ class TinyMediaPlayer extends EventEmitter {
     }
     this.#prevClickedToRepeat = false;
 
+    this.log('info', 'Previous track requested.');
     await this.stop();
 
     if (this.#isRandom) {
       this.#currentIndex = this._getWeightedRandomIndex();
+      this.log('info', `Random mode: Selected index ${this.#currentIndex}`);
     } else {
       let prevIndex = this.#currentIndex - 1;
       if (prevIndex < 0) {
         if (this.#loopMode === 'PLAYLIST') {
           prevIndex = this.#playlist.length - 1;
+          this.log('info', 'Loop mode: PLAYLIST. Returning to end.');
         } else {
-          // End of playlist, stop playing
+          this.log('info', 'Start of playlist reached. Stopping.');
           return;
         }
       }
@@ -1309,6 +1375,7 @@ class TinyMediaPlayer extends EventEmitter {
       throw new RangeError(`Index ${index} is out of bounds for the current playlist.`);
     }
 
+    this.log('info', `Skipping to index: ${index}`);
     await this.stop();
     this.#currentIndex = index;
     this.emit('trackChange', this.#currentIndex);
@@ -1331,6 +1398,7 @@ class TinyMediaPlayer extends EventEmitter {
       throw new RangeError('Seek time cannot be negative.');
     }
 
+    this.log('info', `Seeking to: ${timeMs}ms`);
     const adapter = this.#getActiveAdapter();
     if (adapter) {
       await adapter.seek(timeMs);
@@ -1350,6 +1418,7 @@ class TinyMediaPlayer extends EventEmitter {
       throw new TypeError('Step amount must be a number in milliseconds.');
     }
 
+    this.log('info', `Stepping by: ${stepMs}ms`);
     const adapter = this.#getActiveAdapter();
     if (!adapter) return;
 
@@ -1502,12 +1571,15 @@ class TinyMediaPlayer extends EventEmitter {
   async destroy() {
     if (this.#destroyed) return;
 
+    this.log('info', 'Destroying TinyMediaPlayer instance.');
+
     // 1. Stop current playback if active to halt media processes
     try {
       if (this.#isPlaying) {
         await this.stop();
       }
     } catch (error) {
+      this.log('error', 'Non-fatal error during playback termination:', error);
       console.warn('[TinyMediaPlayer] Non-fatal error during playback termination:', error);
     }
 
