@@ -105,5 +105,6 @@ addModule(1, './src/v1/build/TinyArrayComparator.mjs', 'TinyArrayComparator', tr
 addModule(1, './src/v1/build/TinyClassManager.mjs', 'TinyClassManager', true);
 addModule(1, './src/v1/build/TinyRadioFm.mjs', 'TinyRadioFm', true);
 addModule(1, './src/v1/build/TinyMediaPlayer.mjs', 'TinyMediaPlayer', true);
+addModule(1, './src/v1/build/TinyDebugger.mjs', 'TinyDebugger', true);
 
 export default modules;

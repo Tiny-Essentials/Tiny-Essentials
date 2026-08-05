@@ -172,6 +172,10 @@
       "require": "./dist/v1/libs/TinyRadioFm.cjs",
       "import": "./dist/v1/libs/TinyRadioFm.mjs"
     },
+    "./libs/TinyDebugger": {
+      "require": "./dist/v1/libs/TinyDebugger.cjs",
+      "import": "./dist/v1/libs/TinyDebugger.mjs"
+    },
     "./libs/UltraRandomMsgGen": {
       "require": "./dist/v1/libs/UltraRandomMsgGen.cjs",
       "import": "./dist/v1/libs/UltraRandomMsgGen.mjs"

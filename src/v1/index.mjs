@@ -168,9 +168,11 @@ import TinyRadioFm from './libs/TinyRadioFm.mjs';
 import TinyMediaPlayer from './libs/TinyMediaPlayer.mjs';
 import { createCheckDestroyed } from './libs/utils.mjs';
 import { createSingletonTask, waitForTrue } from './basics/promiseUtils.mjs';
+import TinyDebugger from './libs/TinyDebugger.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
+  TinyDebugger,
   TinyMediaPlayer,
   TinyRadioFm,
   TinyClassManager,
