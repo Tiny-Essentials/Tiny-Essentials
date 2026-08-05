@@ -39,6 +39,7 @@ const checkDestroy = createCheckDestroyed('TinyMediaPlayer');
  * @property {boolean} [smoothPlayPauseVolume=false] - If true, volume fades smoothly during play/pause transitions.
  * @property {boolean} [smoothStopVolume=false] - If true, volume fades smoothly to zero when stopping.
  * @property {boolean} [debugMode=false] - Whether to enable internal debug logging.
+ * @property {boolean} [useLogColors=false] - Whether to enable log color support.
  * @property {Console} [logger=console] - A custom logger object (must implement console methods).
  */
 
@@ -278,9 +279,10 @@ class TinyMediaPlayer extends TinyDebugger {
 
     // Debug Configuration
     super({
-      id: '[TinyMediaPlayer DEBUG]',
+      id: '[_blue_TinyMediaPlayer_reset_] :debug:',
       logger: options.logger ?? console,
       debugMode: options.debugMode ?? false,
+      useLogColors: options.useLogColors ?? false,
     });
 
     // Volume configuration

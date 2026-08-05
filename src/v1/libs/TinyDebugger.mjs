@@ -26,12 +26,24 @@ class TinyDebugger extends EventEmitter {
    * @type {Map<string, string>}
    */
   #colorMap = new Map([
+    // Log types mapping (for automatic usage)
     ['log', '\x1b[37m'], // White
     ['info', '\x1b[36m'], // Cyan
     ['warn', '\x1b[33m'], // Yellow
     ['error', '\x1b[31m'], // Red
     ['debug', '\x1b[35m'], // Magenta
     ['reset', '\x1b[0m'], // Reset
+
+    // Color names mapping (for manual usage via _color_)
+    ['black', '\x1b[30m'],
+    ['red', '\x1b[31m'],
+    ['green', '\x1b[32m'],
+    ['yellow', '\x1b[33m'],
+    ['blue', '\x1b[34m'],
+    ['magenta', '\x1b[35m'],
+    ['cyan', '\x1b[36m'],
+    ['white', '\x1b[37m'],
+    ['gray', '\x1b[90m'],
   ]);
 
   /**
@@ -39,11 +51,11 @@ class TinyDebugger extends EventEmitter {
    * @type {Map<string, string>}
    */
   #prefixMap = new Map([
-    ['log', '[LOG]'],
-    ['info', '[INFO]'],
-    ['warn', '[WARN]'],
-    ['error', '[ERROR]'],
-    ['debug', '[DEBUG]'],
+    ['log', '[_log_LOG_reset_]'],
+    ['info', '[_info_INFO_reset_]'],
+    ['warn', '[_warn_WARN_reset_]'],
+    ['error', '[_error_ERROR_reset_]'],
+    ['debug', '[_debug_DEBUG_reset_]'],
   ]);
 
   /**
@@ -53,7 +65,7 @@ class TinyDebugger extends EventEmitter {
    * @param {string} config.id - The unique identifier for this debugger instance.
    * @param {boolean} config.debugMode - Whether to enable internal debug logging.
    * @param {boolean} [config.canEmitLogs=false] - Whether to emit debug events to listeners.
-   * @param {boolean} [config.useLogColors=false] - Whether to enable color/prefix shortcut support.
+   * @param {boolean} [config.useLogColors=false] - Whether to enable log color support.
    * @throws {TypeError} If parameters do not match the required types.
    */
   constructor({ logger, id, debugMode, canEmitLogs = false, useLogColors = false }) {
@@ -183,14 +195,14 @@ class TinyDebugger extends EventEmitter {
 
     // 1. Apply Prefixes first
     for (const [id, value] of this.#prefixMap) {
-      const regex = new RegExp(`:${id}:`, 'g');
+      const regex = new RegExp(`\\:${id}\\:`, 'g');
       result = result.replace(regex, value);
     }
 
     // 2. Apply Color shortcuts second
     for (const [id, value] of this.#colorMap) {
-      const regex = new RegExp(`:${id}:`, 'g');
-      result = result.replace(regex, value);
+      const regex = new RegExp(`\\_${id}\\_`, 'g');
+      result = result.replace(regex, this.#useLogColors ? value : '');
     }
 
     return result;
@@ -347,10 +359,8 @@ class TinyDebugger extends EventEmitter {
     let prefix = this.#logId;
     let formattedMessage = message;
 
-    if (this.#useLogColors) {
-      prefix = this.#applyFormatting(prefix);
-      formattedMessage = this.#applyFormatting(formattedMessage);
-    }
+    prefix = this.#applyFormatting(prefix);
+    formattedMessage = this.#applyFormatting(formattedMessage);
 
     const logFunc = this.#logger[logType] ? this.#logger[logType] : console[logType];
 
