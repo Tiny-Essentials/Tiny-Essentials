@@ -169,6 +169,13 @@ import TinyMediaPlayer from './libs/TinyMediaPlayer.mjs';
 import { createCheckDestroyed } from './libs/utils.mjs';
 import { createSingletonTask, waitForTrue } from './basics/promiseUtils.mjs';
 import TinyDebugger from './libs/TinyDebugger.mjs';
+import {
+  browserIs,
+  getBrowserCssPrefix,
+  getBrowserPings,
+  getDuckTyping,
+  isBrowserAgent,
+} from './basics/browserDetector.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
@@ -217,6 +224,11 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  getBrowserPings,
+  isBrowserAgent,
+  getBrowserCssPrefix,
+  getDuckTyping,
+  browserIs,
   isValidObj,
   createSingletonTask,
   waitForTrue,

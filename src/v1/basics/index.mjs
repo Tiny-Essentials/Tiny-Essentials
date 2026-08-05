@@ -79,8 +79,20 @@ import {
   valMediaContentMetadataPartial,
 } from './mediaContent.mjs';
 import { createSingletonTask, waitForTrue } from './promiseUtils.mjs';
+import {
+  browserIs,
+  getBrowserCssPrefix,
+  getBrowserPings,
+  getDuckTyping,
+  isBrowserAgent,
+} from './browserDetector.mjs';
 
 export {
+  getBrowserPings,
+  isBrowserAgent,
+  getBrowserCssPrefix,
+  getDuckTyping,
+  browserIs,
   isValidObj,
   createSingletonTask,
   waitForTrue,
