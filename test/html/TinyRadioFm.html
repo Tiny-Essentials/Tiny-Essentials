@@ -1249,17 +1249,19 @@
          */
         async resyncAudio() {
           btnResync.disabled = true;
-          const event = this.radio.getCurrentEvent();
-          if (!event) {
+          await queue.enqueue(async () => {
+            const event = this.radio.getCurrentEvent();
+            if (!event) {
+              btnResync.disabled = false;
+              return;
+            }
+            this.log('Resyncing audio to radio timeline...');
+            await this.player.seek(event.duration - event.remainingTime);
+            if (this.player.isPaused && this.isEngineStarted) {
+              await this.player.play();
+            }
             btnResync.disabled = false;
-            return;
-          }
-          this.log('Resyncing audio to radio timeline...');
-          await this.player.seek(event.duration - event.remainingTime);
-          if (this.player.isPaused && this.isEngineStarted) {
-            await this.player.play();
-          }
-          btnResync.disabled = false;
+          });
         }
 
         /**
@@ -1392,46 +1394,55 @@
         async handleImport(event) {
           btnImport.disabled = true;
           const file = event.target.files[0];
-          if (!file) {
-            btnImport.disabled = false;
-            return;
-          }
+          return new Promise((resolve, reject) => {
+            if (!file) {
+              btnImport.disabled = false;
+              resolve(null);
+              return;
+            }
 
-          const reader = new FileReader();
+            const reader = new FileReader();
+            let isErr = false;
 
-          reader.onload = async (e) => {
-            try {
-              const json = JSON.parse(e.target.result);
+            reader.onload = async (e) => {
+              try {
+                const json = JSON.parse(e.target.result);
 
-              // Executing critical cleanup and import inside the Queue locks out startUpdateLoop
-              await queue.enqueue(async () => {
-                this.currentPlayingId = null;
-                await this.player.pause();
+                // Executing critical cleanup and import inside the Queue locks out startUpdateLoop
+                await queue.enqueue(async () => {
+                  this.currentPlayingId = null;
+                  await this.player.pause();
 
-                // Explicitly clear the media player queue
-                this.#clearPlayerTracks();
+                  // Explicitly clear the media player queue
+                  this.#clearPlayerTracks();
 
-                this.radio.importState(json);
-                this.log('Import success.');
+                  this.radio.importState(json);
+                  this.log('Import success.');
 
-                await this.resyncCurrentEvent();
-              });
-            } catch (err) {
-              this.log(`Import error: ${err.message}`);
-            } finally {
+                  await this.resyncCurrentEvent();
+                });
+              } catch (err) {
+                this.log(`Import error: ${err.message}`);
+                isErr = true;
+                reject(err);
+              } finally {
+                btnImport.disabled = false;
+                event.target.value = '';
+                if (!isErr) resolve(null);
+              }
+            };
+
+            reader.onerror = (err) => {
+              this.log(`Import error: Failed to read file.`);
               btnImport.disabled = false;
               event.target.value = '';
-            }
-          };
+              isErr = true;
+              reject(err);
+            };
 
-          reader.onerror = (err) => {
-            this.log(`Import error: Failed to read file.`);
-            btnImport.disabled = false;
-            event.target.value = '';
-          };
-
-          // Zerate input in case you want to import the same file again later
-          reader.readAsText(file);
+            // Zerate input in case you want to import the same file again later
+            reader.readAsText(file);
+          });
         }
 
         /**
