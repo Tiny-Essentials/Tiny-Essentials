@@ -1,4 +1,4 @@
-import TinyDebbuger from './TinyDebbuger.mjs';
+import TinyDebugger from './TinyDebugger.mjs';
 
 import {
   getMediaContentBase,
@@ -52,7 +52,7 @@ const checkDestroy = createCheckDestroyed('TinyMediaPlayer');
 /**
  * A universal media player manager capable of orchestrating multiple API adapters.
  */
-class TinyMediaPlayer extends TinyDebbuger {
+class TinyMediaPlayer extends TinyDebugger {
   static BaseMediaAdapter = BaseMediaAdapter;
 
   /**

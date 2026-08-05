@@ -5,9 +5,9 @@ import { isValidObj } from '../basics/objChecker.mjs';
  * A lightweight debugging utility that wraps console methods and provides event emission.
  * @extends EventEmitter
  */
-class TinyDebbuger extends EventEmitter {
+class TinyDebugger extends EventEmitter {
   /**
-   * Creates an instance of TinyDebbuger.
+   * Creates an instance of TinyDebugger.
    * @param {Object} config - The configuration object.
    * @param {Partial<Console>} config.logger - A custom logger (must implement Console methods).
    * @param {string} config.id - The unique identifier for this debugger instance.
@@ -246,4 +246,4 @@ class TinyDebbuger extends EventEmitter {
   }
 }
 
-export default TinyDebbuger;
+export default TinyDebugger;
