@@ -6,6 +6,46 @@ import { isValidObj } from '../basics/objChecker.mjs';
  * @extends EventEmitter
  */
 class TinyDebugger extends EventEmitter {
+  /** @type {Partial<Console>} */
+  #logger;
+
+  /** @type {string} */
+  #logId;
+
+  /** @type {boolean} */
+  #canEmitLogs;
+
+  /** @type {boolean} */
+  #debugMode;
+
+  /** @type {boolean} */
+  #useLogColors;
+
+  /**
+   * Colors (ANSI Escape Codes)
+   * @type {Map<string, string>}
+   */
+  #colorMap = new Map([
+    ['log', '\x1b[37m'], // White
+    ['info', '\x1b[36m'], // Cyan
+    ['warn', '\x1b[33m'], // Yellow
+    ['error', '\x1b[31m'], // Red
+    ['debug', '\x1b[35m'], // Magenta
+    ['reset', '\x1b[0m'], // Reset
+  ]);
+
+  /**
+   * Prefixes
+   * @type {Map<string, string>}
+   */
+  #prefixMap = new Map([
+    ['log', '[LOG]'],
+    ['info', '[INFO]'],
+    ['warn', '[WARN]'],
+    ['error', '[ERROR]'],
+    ['debug', '[DEBUG]'],
+  ]);
+
   /**
    * Creates an instance of TinyDebugger.
    * @param {Object} config - The configuration object.
@@ -13,9 +53,10 @@ class TinyDebugger extends EventEmitter {
    * @param {string} config.id - The unique identifier for this debugger instance.
    * @param {boolean} config.debugMode - Whether to enable internal debug logging.
    * @param {boolean} [config.canEmitLogs=false] - Whether to emit debug events to listeners.
-   * @throws {TypeError} If logger is not an object, id is not a string, debugMode is not a boolean, or canEmitLogs is not a boolean.
+   * @param {boolean} [config.useLogColors=false] - Whether to enable color/prefix shortcut support.
+   * @throws {TypeError} If parameters do not match the required types.
    */
-  constructor({ logger, id, debugMode, canEmitLogs = false }) {
+  constructor({ logger, id, debugMode, canEmitLogs = false, useLogColors = false }) {
     super();
     if (!isValidObj(logger)) {
       throw new TypeError('Logger must be an object that implements the Console interface.');
@@ -29,33 +70,25 @@ class TinyDebugger extends EventEmitter {
     if (typeof canEmitLogs !== 'boolean') {
       throw new TypeError('canEmitLogs must be a boolean.');
     }
+    if (typeof useLogColors !== 'boolean') {
+      throw new TypeError('useLogColors must be a boolean.');
+    }
 
-    this.#instanceId = id;
+    this.#logId = id;
     this.#logger = logger;
-    this.debugMode = debugMode;
+    this.#debugMode = debugMode;
     this.#canEmitLogs = canEmitLogs;
+    this.#useLogColors = useLogColors;
 
     this.log('info', `Emit logs of debug mode set to: ${this.#debugMode ? 'ON' : 'OFF'}`);
     this.log('info', 'Custom logger assigned.');
   }
 
-  /** @type {Partial<Console>} */
-  #logger;
-
-  /** @type {string} */
-  #instanceId;
-
-  /** @type {boolean} */
-  #canEmitLogs = false;
-
-  /** @type {boolean} */
-  #debugMode = false;
-
   /**
    * @returns {string} The instance debug id.
    */
-  get instanceId() {
-    return this.#instanceId;
+  get logId() {
+    return this.#logId;
   }
 
   /**
@@ -63,6 +96,26 @@ class TinyDebugger extends EventEmitter {
    */
   get canEmitLogs() {
     return this.#canEmitLogs;
+  }
+
+  /**
+   * @returns {boolean} True if log colors mode is enabled.
+   */
+  get useLogColors() {
+    return this.#useLogColors;
+  }
+
+  /**
+   * @param {boolean} value - Enables or disables log colors mode.
+   * @throws {TypeError} If the value is not a boolean.
+   */
+  set useLogColors(value) {
+    if (typeof value !== 'boolean') {
+      throw new TypeError('useLogColors must be a boolean.');
+    }
+    this.#useLogColors = value;
+    this.log('info', `Log Colors usage mode set to: ${this.#useLogColors ? 'ON' : 'OFF'}`);
+    this.emit('setDebugMode', value);
   }
 
   /**
@@ -83,6 +136,64 @@ class TinyDebugger extends EventEmitter {
     this.#debugMode = value;
     this.log('info', `Debug mode set to: ${this.#debugMode ? 'ON' : 'OFF'}`);
     this.emit('setDebugMode', value);
+  }
+
+  /**
+   * Adds a new color shortcut.
+   * @param {string} id - The shortcut ID (e.g., 'red').
+   * @param {string} code - The replacement string (e.g., ANSI code).
+   */
+  _addLogColor(id, code) {
+    this.#colorMap.set(id, code);
+  }
+
+  /**
+   * Removes a color shortcut.
+   * @param {string} id - The shortcut ID to remove.
+   */
+  _removeLogColor(id) {
+    this.#colorMap.delete(id);
+  }
+
+  /**
+   * Adds a new prefix shortcut.
+   * @param {string} id - The shortcut ID (e.g., 'info').
+   * @param {string} text - The text to insert (e.g., '[INFO]').
+   */
+  _addLogPrefix(id, text) {
+    this.#prefixMap.set(id, text);
+  }
+
+  /**
+   * Removes a prefix shortcut.
+   * @param {string} id - The shortcut ID to remove.
+   */
+  _removeLogPrefix(id) {
+    this.#prefixMap.delete(id);
+  }
+
+  /**
+   * Internal method to apply prefix and color replacements.
+   * @param {string} text - The text to format.
+   * @returns {string} The formatted text.
+   */
+  #applyFormatting(text) {
+    if (typeof text !== 'string') return text;
+    let result = text;
+
+    // 1. Apply Prefixes first
+    for (const [id, value] of this.#prefixMap) {
+      const regex = new RegExp(`:${id}:`, 'g');
+      result = result.replace(regex, value);
+    }
+
+    // 2. Apply Color shortcuts second
+    for (const [id, value] of this.#colorMap) {
+      const regex = new RegExp(`:${id}:`, 'g');
+      result = result.replace(regex, value);
+    }
+
+    return result;
   }
 
   /**
@@ -233,15 +344,22 @@ class TinyDebugger extends EventEmitter {
       throw new TypeError('The message must be a string.');
     }
 
-    const prefix = this.#instanceId;
-    const log = this.#logger[logType] ? this.#logger[logType] : console[logType];
+    let prefix = this.#logId;
+    let formattedMessage = message;
 
-    if (log) {
-      if (this.#canEmitLogs) this.emit('debug:log', prefix, message, ...args);
-      return log(logType, prefix, message, ...args);
+    if (this.#useLogColors) {
+      prefix = this.#applyFormatting(prefix);
+      formattedMessage = this.#applyFormatting(formattedMessage);
+    }
+
+    const logFunc = this.#logger[logType] ? this.#logger[logType] : console[logType];
+
+    if (logFunc) {
+      if (this.#canEmitLogs) this.emit('debug:log', prefix, formattedMessage, ...args);
+      return logFunc(prefix, formattedMessage, ...args);
     } else {
-      if (this.#canEmitLogs) this.emit('debug:log', prefix, message, ...args);
-      return console.log(logType, prefix, message, ...args);
+      if (this.#canEmitLogs) this.emit('debug:log', prefix, formattedMessage, ...args);
+      return console.log(prefix, formattedMessage, ...args);
     }
   }
 }
