@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { isValidObj } from '../basics/objChecker.mjs';
+import { browserIs } from '../basics/browserDetector.mjs';
 
 /**
  * A lightweight debugging utility that wraps console methods and provides event emission.
@@ -90,7 +91,7 @@ class TinyDebugger extends EventEmitter {
     this.#logger = logger;
     this.#debugMode = debugMode;
     this.#canEmitLogs = canEmitLogs;
-    this.#useLogColors = useLogColors;
+    this.#useLogColors = browserIs() !== 'firefox' ? useLogColors : false;
 
     this.log('info', `Emit logs of debug mode set to: ${this.#debugMode ? 'ON' : 'OFF'}`);
     this.log('info', 'Custom logger assigned.');
