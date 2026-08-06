@@ -726,30 +726,28 @@ class TinyMediaPlayer extends TinyDebugger {
   }
 
   /**
-   * Sets the mute state of the player.
-   * This state is synchronized with the active adapter and respected when playing new tracks.
-   * @param {boolean} value - True to mute, false to unMute.
-   * @throws {TypeError} If the value is not a boolean.
+   * Mutes the current playback.
+   * @returns {Promise<void>}
    */
-  set isMuted(value) {
+  async mute() {
     checkDestroy(this.#destroyed);
-    if (typeof value !== 'boolean') {
-      throw new TypeError('isMuted must be a boolean.');
-    }
+    const adapter = this.#getActiveAdapter();
+    if (!adapter) return;
+    await adapter.mute();
+    this.#isMuted = true;
+    this.emit('muteChange', this.#isMuted);
+  }
 
-    this.log('info', `Mute state changed: ${value}`);
-    this.#isMuted = value;
-
-    // Synchronize with the active adapter immediately
-    try {
-      const adapter = this.#getActiveAdapter();
-      if (adapter) {
-        value ? adapter.mute() : adapter.unMute();
-      }
-    } catch (error) {
-      // If no active adapter, we just wait for the next play() call to apply the state
-    }
-
+  /**
+   * Unmutes the current playback.
+   * @returns {Promise<void>}
+   */
+  async unMute() {
+    checkDestroy(this.#destroyed);
+    const adapter = this.#getActiveAdapter();
+    if (!adapter) return;
+    await adapter.unMute()
+    this.#isMuted = false;
     this.emit('muteChange', this.#isMuted);
   }
 

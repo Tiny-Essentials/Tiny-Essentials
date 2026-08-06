@@ -696,6 +696,7 @@
       const volumeSlider = document.getElementById('volume-slider');
       const btnResync = document.getElementById('btn-resync');
       const btnMute = document.getElementById('btn-mute');
+      const btnStart = document.getElementById('btn-start-engine');
 
       /**
        * @class TestEnvironment
@@ -821,7 +822,7 @@
 
         constructor() {
           this.radio = new TinyRadioFm();
-          this.player = new TinyMediaPlayer();
+          this.player = new TinyMediaPlayer({ debugMode: true, useLogColors: true });
           this.player.registerAdapter(new HtmlAudioAdapter());
           this.player.registerAdapter(new MockMediaAdapter());
 
@@ -983,15 +984,14 @@
             .addEventListener('change', (e) => this.handleImport(e));
 
           // Player Setup
-          document
-            .getElementById('btn-start-engine')
-            .addEventListener('click', () => this.startEngine());
+          btnStart.addEventListener('click', () => this.startEngine());
           btnResync.addEventListener('click', () => this.resyncAudio());
 
           // Mute / Pause logic
           btnMute.addEventListener('click', async () => {
             btnMute.disabled = true;
-            this.player.isMuted = !this.player.isMuted;
+            if (this.player.isMuted) await this.player.unMute();
+            else await this.player.mute();
 
             if (this.player.isMuted) {
               btnMute.title = 'Unmute Audio';
@@ -1070,7 +1070,6 @@
           this.isEngineStarted = true;
 
           try {
-            const btnStart = document.getElementById('btn-start-engine');
             btnStart.innerText = 'Engine Running';
             btnStart.classList.replace('btn-primary', 'btn-outline');
             btnStart.disabled = true;
