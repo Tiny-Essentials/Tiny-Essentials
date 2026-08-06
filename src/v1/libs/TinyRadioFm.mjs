@@ -526,6 +526,39 @@ class TinyRadioFm extends EventEmitter {
   // --- PUBLIC API ---
 
   /**
+   * Converts new content base64 instantly to the blob url.
+   * @param {MediaContent} data
+   */
+  _ccBase64ToBlobUrl(data) {
+    if (this.#optimizeMediaMemory) {
+      // Restores the content url if it is a Base64 string
+      if (typeof data.url === 'string' && data.url.startsWith('data:')) {
+        data.url = convertToBlobUrl(data.url);
+      }
+    }
+
+    if (data.picture && Array.isArray(data.picture)) {
+      data.picture = data.picture.map((pic) => {
+        if (this.#optimizePictureMemory) {
+          // Check whether the data is compatible with the Blob structure (Base64 or Binary)
+          const isBase64 = typeof pic.data === 'string' && pic.data.startsWith('data:');
+          const isUint8Array = pic.data instanceof Uint8Array;
+
+          if (isBase64 || isUint8Array) {
+            return {
+              ...pic,
+              data: convertToBlobUrl(pic.data, pic.format),
+            };
+          }
+        }
+
+        // If memory optimization is disabled or it is a default URL, return as is
+        return pic;
+      });
+    }
+  }
+
+  /**
    * Adds new content instantly to the radio sequence.
    * @param {'music'|'voice'|'custom'} type - The category of the content.
    * @param {MediaContent & { timestamp?: number }} data - The content payload to insert.
@@ -546,6 +579,7 @@ class TinyRadioFm extends EventEmitter {
       throw new TypeError('smartQueue must be a boolean.');
     }
 
+    this._ccBase64ToBlobUrl(data);
     if (type === 'music') {
       this.#musicList.push(data);
       this.#cycleCache.clear();
@@ -1408,33 +1442,7 @@ class TinyRadioFm extends EventEmitter {
     const processListForImport = (/** @type {MediaContent[]} */ list) => {
       return list.map((item) => {
         const newItem = { ...item };
-
-        if (this.#optimizeMediaMemory) {
-          // Restores the content url if it is a Base64 string
-          if (typeof newItem.url === 'string' && newItem.url.startsWith('data:')) {
-            newItem.url = convertToBlobUrl(newItem.url);
-          }
-        }
-
-        if (newItem.picture && Array.isArray(newItem.picture)) {
-          newItem.picture = newItem.picture.map((pic) => {
-            if (this.#optimizePictureMemory) {
-              // Check whether the data is compatible with the Blob structure (Base64 or Binary)
-              const isBase64 = typeof pic.data === 'string' && pic.data.startsWith('data:');
-              const isUint8Array = pic.data instanceof Uint8Array;
-
-              if (isBase64 || isUint8Array) {
-                return {
-                  ...pic,
-                  data: convertToBlobUrl(pic.data, pic.format),
-                };
-              }
-            }
-
-            // If memory optimization is disabled or it is a default URL, return as is
-            return pic;
-          });
-        }
+        this._ccBase64ToBlobUrl(newItem);
         return newItem;
       });
     };
