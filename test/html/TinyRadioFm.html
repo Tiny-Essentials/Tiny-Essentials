@@ -1088,19 +1088,14 @@
               ),
             };
 
-            // Using queue to prevent tick interference during config reset
-            await queue.enqueue(async () => {
-              this.radio.seed = seed;
-              this.radio.unknownArtist = unknownArtist;
-              this.radio.setConfig(cfg);
+            this.radio.seed = seed;
+            this.radio.unknownArtist = unknownArtist;
+            this.radio.setConfig(cfg);
 
-              // Force rebooting of the instance by cleaning the current screening
-              this.currentPlayingId = null;
-              await this.player.pause();
-              this.#clearPlayerTracks();
-
-              await this.resyncCurrentEvent();
-            });
+            // Force rebooting of the instance by cleaning the current screening
+            this.currentPlayingId = null;
+            await this.player.pause();
+            await this.resyncCurrentEvent();
           } catch (e) {
             this.log(`Config Error: ${e.message}`);
           } finally {
