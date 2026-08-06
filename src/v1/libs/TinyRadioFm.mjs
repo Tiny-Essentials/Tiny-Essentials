@@ -559,6 +559,33 @@ class TinyRadioFm extends EventEmitter {
   }
 
   /**
+   * Restores the content blob instantly to the base64 url.
+   * @param {MediaContent} data
+   */
+  async _rcblobUrlToBase64(data) {
+    // Optimizes the content url (audio/music) if it is a Blob URL
+    if (this.#optimizeMediaMemory && typeof data.url === 'string' && data.url.startsWith('blob:')) {
+      data.url = await blobUrlToBase64(data.url);
+    }
+
+    // Optimizes the pictures
+    if (this.#optimizePictureMemory && data.picture && Array.isArray(data.picture)) {
+      data.picture = await Promise.all(
+        data.picture.map(async (pic) => {
+          // Only performs the asynchronous conversion if it really is a Blob URL
+          if (typeof pic.data === 'string' && pic.data.startsWith('blob:')) {
+            return {
+              ...pic,
+              data: await blobUrlToBase64(pic.data),
+            };
+          }
+          return pic; // Keep intact if it is a standard URL
+        }),
+      );
+    }
+  }
+
+  /**
    * Adds new content instantly to the radio sequence.
    * @param {'music'|'voice'|'custom'} type - The category of the content.
    * @param {MediaContent & { timestamp?: number }} data - The content payload to insert.
@@ -579,19 +606,20 @@ class TinyRadioFm extends EventEmitter {
       throw new TypeError('smartQueue must be a boolean.');
     }
 
-    this._ccBase64ToBlobUrl(data);
+    const newItem = structuredClone(data);
+    this._ccBase64ToBlobUrl(newItem);
     if (type === 'music') {
-      this.#musicList.push(data);
+      this.#musicList.push(newItem);
       this.#cycleCache.clear();
     } else if (type === 'voice') {
-      this.#voiceList.push(data);
+      this.#voiceList.push(newItem);
       this.#cycleCache.clear();
     } else if (type === 'custom') {
-      this.#handleCustomInsertion(data, smartQueue);
+      this.#handleCustomInsertion(newItem, smartQueue);
     }
 
     this.#syncRealTimeState(Date.now());
-    this.emit('contentAdded', { type, data: structuredClone(data) });
+    this.emit('contentAdded', { type, data: structuredClone(newItem) });
   }
 
   /**
@@ -810,31 +838,7 @@ class TinyRadioFm extends EventEmitter {
     return Promise.all(
       list.map(async (item) => {
         const newItem = structuredClone(item);
-
-        // Optimizes the content url (audio/music) if it is a Blob URL
-        if (
-          this.#optimizeMediaMemory &&
-          typeof newItem.url === 'string' &&
-          newItem.url.startsWith('blob:')
-        ) {
-          newItem.url = await blobUrlToBase64(newItem.url);
-        }
-
-        // Optimizes the pictures
-        if (this.#optimizePictureMemory && newItem.picture && Array.isArray(newItem.picture)) {
-          newItem.picture = await Promise.all(
-            newItem.picture.map(async (pic) => {
-              // Only performs the asynchronous conversion if it really is a Blob URL
-              if (typeof pic.data === 'string' && pic.data.startsWith('blob:')) {
-                return {
-                  ...pic,
-                  data: await blobUrlToBase64(pic.data),
-                };
-              }
-              return pic; // Keep intact if it is a standard URL
-            }),
-          );
-        }
+        await this._rcblobUrlToBase64(newItem);
         return newItem;
       }),
     );
@@ -1441,7 +1445,7 @@ class TinyRadioFm extends EventEmitter {
 
     const processListForImport = (/** @type {MediaContent[]} */ list) => {
       return list.map((item) => {
-        const newItem = { ...item };
+        const newItem = structuredClone(item);
         this._ccBase64ToBlobUrl(newItem);
         return newItem;
       });
