@@ -989,22 +989,24 @@
          * @returns {Promise<void>}
          */
         async startEngine() {
-          if (this.isEngineStarted) return;
+          if (this.isEngineStarted || !this.currentPlayingId) return;
           this.isEngineStarted = true;
+          return new Promise((resolve, reject) => {
+            try {
+              btnStart.innerText = 'Engine Running';
+              btnStart.classList.replace('btn-primary', 'btn-outline');
+              btnStart.disabled = true;
 
-          try {
-            btnStart.innerText = 'Engine Running';
-            btnStart.classList.replace('btn-primary', 'btn-outline');
-            btnStart.disabled = true;
+              btnResync.disabled = false;
+              btnMute.disabled = false;
 
-            btnResync.disabled = false;
-            btnMute.disabled = false;
-
-            this.log('Audio Engine Unlocked.');
-            this.resyncAudio();
-          } catch (e) {
-            this.log('Error starting engine: ' + e.message);
-          }
+              this.log('Audio Engine Unlocked.');
+              this.resyncAudio().then(resolve);
+            } catch (e) {
+              this.log('Error starting engine: ' + e.message);
+              reject(e);
+            }
+          });
         }
 
         /**
@@ -1219,6 +1221,8 @@
               const index = searchResult[0].index;
               // Await the transition to prevent race conditions in the next interval tick
               await this.player.skipTo(index);
+            } else {
+              await this.player.stop();
             }
 
             this.loadThumbnail(event.id);
@@ -1227,9 +1231,13 @@
             if (!this.isEngineStarted) {
               await this.player.pause();
             } else {
-              await this.player.play().catch((e) => this.log('Autoplay blocked. Click Start Engine.'));
+              await this.player
+                .play()
+                .catch((e) => this.log('Autoplay blocked. Click Start Engine.'));
             }
           } else if (this.player.isEnded && this.isEngineStarted) {
+            // Workaround: Since the radio has one song only, the ID doesn't change, but the audio is over.
+            // We need to get it to play again from scratch!
             await this.player.seek(0);
             await this.player.play().catch((e) => this.log('Autoplay error: ' + e.message));
           }
@@ -1291,7 +1299,7 @@
           // If the audio engine is already on, restart and sync time
           if (this.isEngineStarted) {
             const newEvent = this.radio.getCurrentEvent();
-            await this.syncAudioWithRadio(newEvent ?? null)
+            await this.syncAudioWithRadio(newEvent ?? null);
             await this.resyncAudio();
           }
         }
