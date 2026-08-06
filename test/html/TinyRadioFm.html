@@ -1164,19 +1164,17 @@
          */
         async resyncAudio() {
           btnResync.disabled = true;
-          await queue.enqueue(async () => {
-            const event = this.radio.getCurrentEvent();
-            if (!event) {
-              btnResync.disabled = false;
-              return;
-            }
-            this.log('Resyncing audio to radio timeline...');
-            await this.player.seek(event.duration - event.remainingTime);
-            if (this.player.isPaused && this.isEngineStarted) {
-              await this.player.play();
-            }
+          const event = this.radio.getCurrentEvent();
+          if (!event) {
             btnResync.disabled = false;
-          });
+            return;
+          }
+          this.log('Resyncing audio to radio timeline...');
+          await this.player.seek(event.duration - event.remainingTime);
+          if (this.player.isPaused && this.isEngineStarted) {
+            await this.player.play();
+          }
+          btnResync.disabled = false;
         }
 
         /**
