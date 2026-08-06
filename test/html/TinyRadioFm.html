@@ -1001,17 +1001,7 @@
             btnMute.disabled = false;
 
             this.log('Audio Engine Unlocked.');
-
-            if (this.currentPlayingId) {
-              await this.resyncAudio();
-            } else {
-              try {
-                // Allows the browser to register the user gesture
-                await this.player.play();
-              } catch (e) {
-                // It is expected to fail if no track is loaded, but context is unlocked.
-              }
-            }
+            this.resyncAudio();
           } catch (e) {
             this.log('Error starting engine: ' + e.message);
           }
@@ -1059,6 +1049,12 @@
             if (type === 'custom') content.timestamp = customTs > 0 ? customTs : Date.now();
 
             this.radio.add(type, content);
+
+            // If the engine is running, force a resync to catch the new content immediately
+            if (this.isEngineStarted) {
+              this.log('Engine running. Resyncing to new content...');
+              await this.resyncCurrentEvent();
+            }
           } catch (err) {
             this.log(`Error: ${err.message}`);
           }
@@ -1231,11 +1227,7 @@
             if (!this.isEngineStarted) {
               await this.player.pause();
             } else {
-              try {
-                await this.player.play();
-              } catch (e) {
-                // Expected errors when a quick action interrupts a fetch.
-              }
+              await this.player.play().catch((e) => this.log('Autoplay blocked. Click Start Engine.'));
             }
           } else if (this.player.isEnded && this.isEngineStarted) {
             await this.player.seek(0);
@@ -1299,12 +1291,8 @@
           // If the audio engine is already on, restart and sync time
           if (this.isEngineStarted) {
             const newEvent = this.radio.getCurrentEvent();
-            if (newEvent) {
-              await this.syncAudioWithRadio(newEvent);
-              await this.resyncAudio();
-            } else {
-              await this.syncAudioWithRadio(null);
-            }
+            await this.syncAudioWithRadio(newEvent ?? null)
+            await this.resyncAudio();
           }
         }
 
@@ -1329,20 +1317,15 @@
             reader.onload = async (e) => {
               try {
                 const json = JSON.parse(e.target.result);
+                this.#clearPlayerTracks();
+                this.radio.importState(json);
 
-                // Executing critical cleanup and import inside the Queue locks out startUpdateLoop
-                await queue.enqueue(async () => {
-                  this.currentPlayingId = null;
-                  await this.player.pause();
+                // Force rebooting of the instance by cleaning the current screening
+                this.currentPlayingId = null;
+                await this.player.pause();
+                this.log('Import success.');
 
-                  // Explicitly clear the media player queue
-                  this.#clearPlayerTracks();
-
-                  this.radio.importState(json);
-                  this.log('Import success.');
-
-                  await this.resyncCurrentEvent();
-                });
+                await this.resyncCurrentEvent();
               } catch (err) {
                 this.log(`Import error: ${err.message}`);
                 isErr = true;
