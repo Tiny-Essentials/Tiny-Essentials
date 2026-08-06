@@ -90,7 +90,9 @@ const checkDestroy = createCheckDestroyed('TinyRadioFm');
  * @property {number} voiceMin - Minimum amount of voice messages to play if voiceAfterMusic is true.
  * @property {number} voiceMax - Maximum amount of voice messages to play.
  * @property {number} musicMaxConsecutive - Max times a music track can repeat consecutively (-1 = unlimited, 0 = strictly no repetition).
+ * @property {number} musicMinConsecutive - Min times a music track must repeat consecutively (1 = no mandatory repetition).
  * @property {number} voiceMaxConsecutive - Max times a voice track can repeat consecutively (-1 = unlimited, 0 = strictly no repetition).
+ * @property {number} voiceMinConsecutive - Min times a voice track must repeat consecutively (1 = no mandatory repetition).
  */
 
 //////////////////////////////////////////////////////////////////
@@ -105,6 +107,10 @@ const checkDestroy = createCheckDestroyed('TinyRadioFm');
  * @typedef {Object} CycleBlock
  * @property {CycleBlockData[]} items - Items belonging to this cycle.
  * @property {number} duration - Total duration of the cycle block in ms.
+ * @property {string|null} lastMusicId - ID of the last music played in this block.
+ * @property {number} musicConsecutiveCount - Current consecutive count for music.
+ * @property {string|null} lastVoiceId - ID of the last voice played in this block.
+ * @property {number} voiceConsecutiveCount - Current consecutive count for voice.
  */
 
 /**
@@ -141,8 +147,8 @@ class TinyRadioFm extends EventEmitter {
    * extracting metadata from an audio source.
    *
    * @param {string | HTMLMediaElement} source - A URL string or an existing Audio object.
-   * @param {Partial<MediaContentBase & MediaContentMetadata> & { id?: string; weight?: number }} [defaultMetadata={}] - Optional default metadata that overrides automatic extraction.
-   * @param {Partial<MediaContentBase & MediaContentMetadata> & { id?: string; weight?: number }} [metadata={}] - Optional manual metadata that overrides automatic extraction.
+   * @param {Partial<MediaContentBase & MediaContentMetadata> & { id?: string; weight?: number }} [defaultMetadata={}] - Optional default metadata.
+   * @param {Partial<MediaContentBase & MediaContentMetadata> & { id?: string; weight?: number }} [metadata={}] - Optional manual metadata.
    * @param {ParseMediaContentMetadata} [parseFile] - Private helper to interface with parseFile.
    * @param {Object} [callbacks={}] - Callbacks for monitoring the loading process.
    * @param {(progress: LoadingMediaProgress) => void} [callbacks.onProgress] - Callback triggered on stage changes.
@@ -346,7 +352,9 @@ class TinyRadioFm extends EventEmitter {
     voiceMin: 0,
     voiceMax: 1,
     musicMaxConsecutive: 0,
+    musicMinConsecutive: 0,
     voiceMaxConsecutive: 0,
+    voiceMinConsecutive: 0,
   };
   /**
    * Gets a deep clone of the current radio configuration.
@@ -385,7 +393,7 @@ class TinyRadioFm extends EventEmitter {
 
     const modes = ['playlist', 'random'];
 
-    // 1. Type and Bounds Validation
+    // Type and Bounds Validation
     if (config.mode !== undefined && !modes.includes(config.mode)) {
       throw new TypeError(`Invalid mode: "${config.mode}". Must be one of: ${modes.join(', ')}.`);
     }
@@ -414,41 +422,33 @@ class TinyRadioFm extends EventEmitter {
       throw new TypeError('voiceAfterMusic must be a boolean.');
     }
 
-    if (
-      config.voiceMin !== undefined &&
-      (typeof config.voiceMin !== 'number' || config.voiceMin < 0)
-    ) {
-      throw new TypeError('voiceMin must be a non-negative number.');
-    }
+    const checkRange = (/** @type {number | undefined} */ val, /** @type {string} */ minKey) => {
+      if (val !== undefined && (typeof val !== 'number' || val < 0)) {
+        throw new TypeError(`${minKey} must be a non-negative number.`);
+      }
+    };
 
-    if (
-      config.voiceMax !== undefined &&
-      (typeof config.voiceMax !== 'number' || config.voiceMax < 0)
-    ) {
-      throw new TypeError('voiceMax must be a non-negative number.');
-    }
+    checkRange(config.voiceMin, 'voiceMin');
+    checkRange(config.voiceMax, 'voiceMax');
+    checkRange(config.musicMinConsecutive, 'musicMinConsecutive');
+    checkRange(config.musicMaxConsecutive, 'musicMaxConsecutive');
+    checkRange(config.voiceMinConsecutive, 'voiceMinConsecutive');
+    checkRange(config.voiceMaxConsecutive, 'voiceMaxConsecutive');
 
-    if (
-      config.musicMaxConsecutive !== undefined &&
-      (typeof config.musicMaxConsecutive !== 'number' || config.musicMaxConsecutive < -1)
-    ) {
-      throw new TypeError('musicMaxConsecutive must be a number >= -1.');
-    }
-
-    if (
-      config.voiceMaxConsecutive !== undefined &&
-      (typeof config.voiceMaxConsecutive !== 'number' || config.voiceMaxConsecutive < -1)
-    ) {
-      throw new TypeError('voiceMaxConsecutive must be a number >= -1.');
-    }
-
-    // 2. Logical Cross-Field Validation
-    const min = config.voiceMin ?? this.#config.voiceMin;
-    const max = config.voiceMax ?? this.#config.voiceMax;
-
-    if (max < min) {
+    // Logical cross-field validation
+    const vMin = config.voiceMin ?? this.#config.voiceMin;
+    const vMax = config.voiceMax ?? this.#config.voiceMax;
+    if (vMax < vMin) {
       throw new RangeError(
-        `Logical error: voiceMax (${max}) cannot be less than voiceMin (${min}).`,
+        `Logical error: voiceMax (${vMax}) cannot be less than voiceMin (${vMin}).`,
+      );
+    }
+
+    const mMin = config.musicMinConsecutive ?? this.#config.musicMinConsecutive;
+    const mMax = config.musicMaxConsecutive ?? this.#config.musicMaxConsecutive;
+    if (mMax !== -1 && mMin > mMax) {
+      throw new RangeError(
+        `Logical error: musicMinConsecutive (${mMin}) cannot be greater than musicMaxConsecutive (${mMax}).`,
       );
     }
   }
@@ -654,9 +654,8 @@ class TinyRadioFm extends EventEmitter {
         );
       }
     } else if (action === 'remove') {
-      if (typeof payload !== 'string') {
+      if (typeof payload !== 'string')
         throw new TypeError('Payload for "remove" must be a string (the content ID).');
-      }
     } else if (action === 'move') {
       if (
         typeof payload !== 'object' ||
@@ -680,9 +679,7 @@ class TinyRadioFm extends EventEmitter {
 
       // If there is, we set the timing of the task to the exact fraction of milliseconds
       // in which this event ends before the next audio begins.
-      if (eventAtTime) {
-        finalTimestamp = eventAtTime.absoluteEnd;
-      }
+      if (eventAtTime) finalTimestamp = eventAtTime.absoluteEnd;
     }
 
     /** @type {ScheduledTask} */
@@ -785,14 +782,12 @@ class TinyRadioFm extends EventEmitter {
    */
   queryTimeline(targetDate, limit = 10) {
     checkDestroy(this.#destroyed);
-    if (typeof limit !== 'number' || isNaN(limit)) {
-      throw new TypeError(`Invalid query limit value. Ensure it is a number.`);
-    }
-    if (limit > this.#config.queryLimit || limit <= 0) {
+    if (typeof limit !== 'number' || isNaN(limit))
+      throw new TypeError('Invalid query limit value. Ensure it is a number.');
+    if (limit > this.#config.queryLimit || limit <= 0)
       throw new RangeError(
         `Invalid query limit. Ensure it is > 0 and <= ${this.#config.queryLimit}.`,
       );
-    }
 
     /**
      * Virtual instance to sandbox the timeline prediction.
@@ -952,12 +947,34 @@ class TinyRadioFm extends EventEmitter {
    * @param {MediaContent[]} list - The source list to sequence.
    * @param {number} currentSeed - Cycle-specific seed.
    * @param {RadioModes} mode - Processing mode.
-   * @param {number} [maxConsecutive=0] - Max consecutive repetitions permitted (-1 = unlimited, 0 = strictly no repeat).
-   * @returns {MediaContent[]} The generated sequence.
+   * @param {number} [minConsecutive=0] - Min times a track must repeat.
+   * @param {number} [maxConsecutive=0] - Max times a track can repeat.
+   * @param {string|null} [initialLastId=null] - Memory of the last played ID.
+   * @param {number} [initialConsecutiveCount=0] - Memory of the consecutive count.
+   * @returns {{ items: MediaContent[], lastId: string|null, consecutiveCount: number }}
    */
-  #buildSequence(list, currentSeed, mode, maxConsecutive = 0) {
-    if (list.length === 0) return [];
-    if (mode !== 'random') return [...list]; // Respects manual indexing/moving
+  #buildSequence(
+    list,
+    currentSeed,
+    mode,
+    minConsecutive = 0,
+    maxConsecutive = 0,
+    initialLastId = null,
+    initialConsecutiveCount = 0,
+  ) {
+    if (list.length === 0) {
+      return { items: [], lastId: initialLastId, consecutiveCount: initialConsecutiveCount };
+    }
+
+    if (mode !== 'random') {
+      const items = [...list];
+      const lastItem = items[items.length - 1];
+      return {
+        items,
+        lastId: lastItem.id,
+        consecutiveCount: initialLastId === lastItem.id ? initialConsecutiveCount + 1 : 1,
+      };
+    }
 
     /**
      * Pool of available items for weighted selection.
@@ -973,59 +990,69 @@ class TinyRadioFm extends EventEmitter {
     const sequence = [];
 
     /** @type {string|null} */
-    let lastId = null;
-    let consecutiveCount = 0;
+    let lastId = initialLastId;
+    let consecutiveCount = initialConsecutiveCount;
 
     while (pool.length > 0) {
-      let validPool = pool;
-
-      // If there is a restriction rule and the consecutive limit has been reached
-      if (maxConsecutive !== -1 && lastId !== null && consecutiveCount > maxConsecutive) {
-        // Try filtering the last played to force the rotation
-        validPool = pool.filter((item) => item.id !== lastId);
-
-        // Self-adjustment: If there is nothing left in the urn (small/no diversity playlist),
-        // we revert to the full pool so as not to stagnate the cycle.
-        if (validPool.length === 0) {
-          validPool = pool;
-        }
-      }
-
-      const totalWeight = validPool.reduce((sum, item) => sum + item.weight, 0);
-
-      // Safety catch if all weights are 0
-      if (totalWeight <= 0) {
-        sequence.push(...validPool);
-        break;
-      }
-
-      const r = random() * totalWeight;
-      let sum = 0;
       /** @type {MediaContent|null} */
       let selectedItem = null;
       let selectedIndex = -1;
 
-      // Run the draw on the valid urn
-      for (let i = 0; i < validPool.length; i++) {
-        sum += validPool[i].weight;
-        if (r <= sum) {
-          selectedItem = validPool[i];
-          // Find the index in the original pool for correct removal
-          selectedIndex = pool.findIndex((p) => selectedItem && p.id === selectedItem.id);
-          break;
+      // 1. Minimum repetition logic
+      if (lastId !== null && consecutiveCount < minConsecutive) {
+        selectedIndex = pool.findIndex((item) => item.id === lastId);
+
+        if (selectedIndex !== -1) {
+          selectedItem = pool[selectedIndex];
+        } else if (sequence.length > 0) {
+          // Duplicates the previous item without consuming from pool
+          selectedItem = sequence[sequence.length - 1];
         }
       }
 
-      // Fallback in case of mathematical failure in floating accuracy
-      if (!selectedItem || selectedIndex === -1) {
-        selectedItem = validPool[0];
-        selectedIndex = pool.findIndex((p) => selectedItem && p.id === selectedItem.id);
+      // 2. Maximum repetition logic and random draw
+      if (!selectedItem) {
+        let validPool = pool;
+
+        if (lastId !== null && maxConsecutive !== -1 && consecutiveCount >= maxConsecutive) {
+          validPool = pool.filter((item) => item.id !== lastId);
+        }
+
+        if (validPool.length === 0) {
+          validPool = pool;
+        }
+
+        const totalWeight = validPool.reduce((sum, item) => sum + item.weight, 0);
+
+        if (totalWeight <= 0) {
+          selectedItem = validPool[0];
+          selectedIndex = pool.findIndex((p) => p.id === selectedItem?.id);
+        } else {
+          const r = random() * totalWeight;
+          let sum = 0;
+          for (let i = 0; i < validPool.length; i++) {
+            sum += validPool[i].weight;
+            if (r <= sum) {
+              selectedItem = validPool[i];
+              selectedIndex = pool.findIndex((p) => p.id === selectedItem?.id);
+              break;
+            }
+          }
+        }
+      }
+
+      // Safety fallback
+      if (!selectedItem) {
+        selectedItem = pool[0];
+        selectedIndex = 0;
       }
 
       sequence.push(selectedItem);
-      pool.splice(selectedIndex, 1);
 
-      // Update counters to the next loop step
+      if (selectedIndex !== -1) {
+        pool.splice(selectedIndex, 1);
+      }
+
       if (selectedItem.id === lastId) {
         consecutiveCount++;
       } else {
@@ -1034,7 +1061,7 @@ class TinyRadioFm extends EventEmitter {
       }
     }
 
-    return sequence;
+    return { items: sequence, lastId, consecutiveCount };
   }
 
   /**
@@ -1046,18 +1073,44 @@ class TinyRadioFm extends EventEmitter {
     const cycleSeed = this.#seed + loopIndex;
     const mixRandom = this._prng(cycleSeed * 10);
 
-    const musicSeq = this.#buildSequence(
+    // Initial memory state
+    let initialLastMusicId = null;
+    let initialMusicConsecutive = 0;
+    let initialLastVoiceId = null;
+    let initialVoiceConsecutive = 0;
+
+    // Rescues memory from the previous block seamlessly
+    if (loopIndex > 0) {
+      const prevBlock = this.#cycleCache.get(loopIndex - 1);
+      if (prevBlock) {
+        initialLastMusicId = prevBlock.lastMusicId ?? null;
+        initialMusicConsecutive = prevBlock.musicConsecutiveCount ?? 0;
+        initialLastVoiceId = prevBlock.lastVoiceId ?? null;
+        initialVoiceConsecutive = prevBlock.voiceConsecutiveCount ?? 0;
+      }
+    }
+
+    const musicData = this.#buildSequence(
       this.#musicList,
       cycleSeed + 1,
       this.#config.mode,
+      this.#config.musicMinConsecutive,
       this.#config.musicMaxConsecutive,
+      initialLastMusicId,
+      initialMusicConsecutive,
     );
-    const voiceSeq = this.#buildSequence(
+    const musicSeq = musicData.items;
+
+    const voiceData = this.#buildSequence(
       this.#voiceList,
       cycleSeed + 2,
       this.#config.voiceMode,
+      this.#config.voiceMinConsecutive,
       this.#config.voiceMaxConsecutive,
+      initialLastVoiceId,
+      initialVoiceConsecutive,
     );
+    const voiceSeq = voiceData.items;
 
     /**
      * Array containing the positioned items for the current cycle.
@@ -1094,7 +1147,14 @@ class TinyRadioFm extends EventEmitter {
       }
     }
 
-    return { items: block, duration: cycleDuration };
+    return {
+      items: block,
+      duration: cycleDuration,
+      lastMusicId: musicData.lastId,
+      musicConsecutiveCount: musicData.consecutiveCount,
+      lastVoiceId: voiceData.lastId,
+      voiceConsecutiveCount: voiceData.consecutiveCount,
+    };
   }
 
   /**
@@ -1291,9 +1351,7 @@ class TinyRadioFm extends EventEmitter {
 
       // If there is any content playing (whether music, voice or even other custom),
       // we push the initial target to the exact millisecond where it ends.
-      if (eventAtTime) {
-        originalTarget = eventAtTime.absoluteEnd;
-      }
+      if (eventAtTime) originalTarget = eventAtTime.absoluteEnd;
     }
 
     const activeCps = [...this.#customPositions].sort(
@@ -1396,8 +1454,7 @@ class TinyRadioFm extends EventEmitter {
           if (task.action === 'add') {
             list.push(/** @type {MediaContent} */ (task.payload));
           } else if (task.action === 'remove') {
-            const payloadId = /** @type {string} */ (task.payload);
-            const idx = list.findIndex((i) => i.id === payloadId);
+            const idx = list.findIndex((i) => i.id === task.payload);
             if (idx !== -1) {
               const [removedItem] = list.splice(idx, 1);
               revokeContentUrls(removedItem); // Free memory!
@@ -1418,9 +1475,7 @@ class TinyRadioFm extends EventEmitter {
         });
     }
 
-    if (listsMutated) {
-      this.#cycleCache.clear();
-    }
+    if (listsMutated) this.#cycleCache.clear();
   }
 
   /**
@@ -1443,13 +1498,12 @@ class TinyRadioFm extends EventEmitter {
       }
     });
 
-    const processListForImport = (/** @type {MediaContent[]} */ list) => {
-      return list.map((item) => {
+    const processListForImport = (/** @type {MediaContent[]} */ list) =>
+      list.map((item) => {
         const newItem = structuredClone(item);
         this._ccBase64ToBlobUrl(newItem);
         return newItem;
       });
-    };
 
     this.#musicList = processListForImport(data.music);
     this.#voiceList = processListForImport(data.voice);
