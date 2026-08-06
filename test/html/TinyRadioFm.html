@@ -190,6 +190,7 @@
         align-items: center;
         gap: 1rem;
         margin-bottom: 0.5rem;
+        min-width: 0; /* Allows the whole header to shrink */
       }
 
       .thumbnail {
@@ -203,14 +204,6 @@
 
       .thumbnail.default {
         padding: 10px;
-      }
-
-      .now-playing-header {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 0.5rem;
-        min-width: 0; /* Allows the whole header to shrink */
       }
 
       /* Player Information Container */
@@ -251,6 +244,17 @@
         overflow: hidden;
         text-overflow: ellipsis;
         width: 100%;
+      }
+
+      /* LISTS & LOGS */
+      .list-container {
+        font-size: 0.75rem;
+        max-height: 200px;
+        overflow-y: auto;
+        background: #000;
+        padding: 0.5rem;
+        border-radius: 4px;
+        font-family: var(--font-mono);
       }
 
       .log-entry {
@@ -303,25 +307,6 @@
         cursor: pointer;
       }
 
-      /* LISTS & LOGS */
-      .list-container {
-        font-size: 0.75rem;
-        max-height: 200px;
-        overflow-y: auto;
-        background: #000;
-        padding: 0.5rem;
-        border-radius: 4px;
-        font-family: var(--font-mono);
-      }
-
-      .log-entry {
-        padding: 0.25rem 0;
-        border-bottom: 1px solid #1e293b;
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-      }
-
       .log-time {
         color: var(--text-secondary);
       }
@@ -349,22 +334,6 @@
       }
       .tag-task {
         background: #5b21b6;
-      }
-
-      /* Progress Bar */
-      .progress-container {
-        width: 100%;
-        height: 6px;
-        background: var(--border);
-        border-radius: 3px;
-        margin-top: 0.5rem;
-        overflow: hidden;
-      }
-      #progress-bar {
-        height: 100%;
-        background: var(--accent);
-        width: 0%;
-        transition: width 0.1s linear;
       }
 
       ::-webkit-scrollbar {
@@ -716,107 +685,64 @@
         /** @private @type {HTMLElement} */
         #imgEl;
 
-        /**
-         * @returns {TinyRadioFm}
-         */
+        /** @returns {TinyRadioFm} */
         get radio() {
           return this.#radio;
         }
-
-        /**
-         * @param {TinyRadioFm} value
-         * @throws {TypeError}
-         */
+        /** @param {TinyRadioFm} value @throws {TypeError} */
         set radio(value) {
           if (!value) throw new TypeError('radio must be a valid instance.');
           this.#radio = value;
         }
 
-        /**
-         * @returns {TinyMediaPlayer}
-         */
+        /** @returns {TinyMediaPlayer} */
         get player() {
           return this.#player;
         }
-
-        /**
-         * @param {TinyMediaPlayer} value
-         * @throws {TypeError}
-         */
+        /** @param {TinyMediaPlayer} value @throws {TypeError} */
         set player(value) {
           if (!value) throw new TypeError('player must be a valid instance.');
           this.#player = value;
         }
 
-        /**
-         * @returns {string|null}
-         */
+        /** @returns {string|null} */
         get currentPlayingId() {
           return this.#currentPlayingId;
         }
-
-        /**
-         * @param {string|null} value
-         * @throws {TypeError}
-         */
+        /** @param {string|null} value @throws {TypeError} */
         set currentPlayingId(value) {
-          if (value !== null && typeof value !== 'string') {
+          if (value !== null && typeof value !== 'string')
             throw new TypeError('currentPlayingId must be a string or null.');
-          }
           this.#currentPlayingId = value;
         }
 
-        /**
-         * @returns {boolean}
-         */
+        /** @returns {boolean} */
         get isEngineStarted() {
           return this.#isEngineStarted;
         }
-
-        /**
-         * @param {boolean} value
-         * @throws {TypeError}
-         */
+        /** @param {boolean} value @throws {TypeError} */
         set isEngineStarted(value) {
-          if (typeof value !== 'boolean') {
-            throw new TypeError('isEngineStarted must be a boolean.');
-          }
+          if (typeof value !== 'boolean') throw new TypeError('isEngineStarted must be a boolean.');
           this.#isEngineStarted = value;
         }
 
-        /**
-         * @returns {number}
-         */
+        /** @returns {number} */
         get tickCounter() {
           return this.#tickCounter;
         }
-
-        /**
-         * @param {number} value
-         * @throws {TypeError}
-         */
+        /** @param {number} value @throws {TypeError} */
         set tickCounter(value) {
-          if (typeof value !== 'number') {
-            throw new TypeError('tickCounter must be a number.');
-          }
+          if (typeof value !== 'number') throw new TypeError('tickCounter must be a number.');
           this.#tickCounter = value;
         }
 
-        /**
-         * @returns {HTMLElement}
-         */
+        /** @returns {HTMLElement} */
         get imgEl() {
           return this.#imgEl;
         }
-
-        /**
-         * @param {HTMLElement} value
-         * @throws {TypeError}
-         */
+        /** @param {HTMLElement} value @throws {TypeError} */
         set imgEl(value) {
-          if (!(value instanceof HTMLElement)) {
-            throw new TypeError('imgEl must be an HTMLElement.');
-          }
+          if (!(value instanceof HTMLElement)) throw new TypeError('imgEl must be an HTMLElement.');
           this.#imgEl = value;
         }
 
@@ -860,10 +786,7 @@
          * @throws {TypeError} Thrown if the id is not a string.
          */
         #removeTrackFromPlayer(id) {
-          if (typeof id !== 'string') {
-            throw new TypeError('id must be a string.');
-          }
-
+          if (typeof id !== 'string') throw new TypeError('id must be a string.');
           try {
             const searchResult = this.player.searchTrack((track) => track.id === id);
             if (searchResult && searchResult.length > 0) {

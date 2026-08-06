@@ -736,6 +736,7 @@ class TinyMediaPlayer extends TinyDebugger {
     await adapter.mute();
     this.#isMuted = true;
     this.emit('muteChange', this.#isMuted);
+    this.log('info', 'Playback muted successfully.');
   }
 
   /**
@@ -746,9 +747,10 @@ class TinyMediaPlayer extends TinyDebugger {
     checkDestroy(this.#destroyed);
     const adapter = this.#getActiveAdapter();
     if (!adapter) return;
-    await adapter.unMute()
+    await adapter.unMute();
     this.#isMuted = false;
     this.emit('muteChange', this.#isMuted);
+    this.log('info', 'Playback unmuted successfully.');
   }
 
   // ==========================================
@@ -1008,7 +1010,8 @@ class TinyMediaPlayer extends TinyDebugger {
     /** @type {(...args: any[]) => any} */
     const handler = (...args) => {
       if (!this.#destroyed) {
-        this.log('debug', `Adapter event triggered: ${eventName}`, ...args);
+        if (eventName !== 'timeupdate')
+          this.log('debug', `Adapter event triggered: ${eventName}`, ...args);
         this.emit(eventName, ...args);
       }
     };
