@@ -21,6 +21,7 @@ Here, you can navigate through different sections of the project. Below are the 
 - 📺 **[FullScreen](./basics/fullScreen.md)** — A complete fullscreen API manager with detection, event handling, and cross-browser compatibility.
 - 🧱 **[Collision](./basics/collision.md)** — Full-featured rectangle collision detection system with directional analysis, depth calculation, and center offset metrics.
 - 🎵 **[MediaContent](./basics/mediaContent.md)** — A comprehensive media processing module for downloading audio, extracting rich ID3 metadata, and managing image blobs for album art.
+- 📦 **[BrowserDetector](./basics/browserDetector.md)** — A multi-layered JavaScript utility for identifying the user's web browser and rendering engine.
 
 ### 2. **`libs/`**
 - 🗂️ **[TinyPromiseQueue](./libs/TinyPromiseQueue.md)** — A class that allows sequential execution of asynchronous tasks, supporting task delays, cancellation, and queue management.
@@ -64,6 +65,7 @@ Here, you can navigate through different sections of the project. Below are the 
 * 🧠 **[TinyMamdaniInferenceSystem](./libs/TinyMamdaniInferenceSystem.md)** — A implementation of a Mamdani Inference System, allowing you to model logic using trapezoidal membership functions.
 * 📻 **[TinyRadioFm](./libs/TinyRadioFm.md)** — It is designed to handle complex playback sequences, including music and voice playlists, scheduled timeline mutations, and custom content injections, all while maintaining absolute reproducibility through a mathematical seed.
 * ⏯️ **[TinyMediaPlayer](./libs/TinyMediaPlayer.md)** — A universal media player architecture utilizing an adapter pattern to orchestrate multiple platform APIs, featuring robust playlist management, playback controls, and weighted random selection.
+* 🛠️ **[TinyDebugger](./libs/TinyDebugger.md)** — A lightweight, event-driven debugging utility designed to wrap standard `console` methods. It provides enhanced features such as custom prefixes, color support, and the ability to emit events whenever a log occurs, making it perfect for complex applications where you might want to redirect logs to an external service or a UI component.
 
 ### 2.1. **`libs/TinyClassManager`**
 

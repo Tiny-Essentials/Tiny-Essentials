@@ -252,7 +252,7 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 * **`existsTrack(index)`**: Returns `true` if the track exists at the given index.
 * **`getTrack(index)`**: Retrieves the track at the specified index.
 * **`removeTrack(index)`**: **(Async)** Removes a track and adjusts the current index/playback accordingly.
-* **`searchTrack(query)`**: Searches the playlist.
+* **`searchTrack(query)`**: Searches the playlist (string or function).
     * `query`: A `string` (searches title, artist, or album) or a `function` (custom logic).
     * **Returns**: `SearchResult[]` (array of objects containing the track and their corresponding indices).
 * **`clearPlaylist()`**: **(Async)** Stops playback and empties the entire playlist.
@@ -260,22 +260,22 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 #### ⏯️ Playback Controls
 * **`play()`**: **(Async)** Starts playback of the current track.
 * **`pause()`**: **(Async)** Pauses the current track.
-* **`mute()`**: **(Async)** Mutes the playback.
-* **`unMute()`**: **(Async)** Unmutes the playback.
 * **`stop()`**: **(Async)** Stops the current track completely.
 * **`next()`**: **(Async)** Advances to the next track (respects `loopMode` and `isRandom`).
 * **`prev()`**: **(Async)** Returns to the previous track (respects `loopMode` and `isRandom`).
 * **`skipTo(index)`**: **(Async)** Jumps to a specific index in the playlist.
 * **`seek(timeMs)`**: **(Async)** Jumps to a specific millisecond in the current track.
 * **`step(stepMs)`**: **(Async)** Moves the timeline forward (+) or backward (-) by `stepMs`.
+* **`mute()`**: **(Async)** Mutes the current playback.
+* **`unMute()`**: **(Async)** Unmutes the current playback.
 
 #### ⏳ Time Utilities
 * **`getCurrentTime()`**: Gets the current playback time in milliseconds.
 * **`getTotalDuration()`**: Gets the total duration of the current track in milliseconds.
 * **`getRemainingTime()`**: Gets the remaining time until the current track ends in milliseconds.
 * **`getPlaybackPercentage()`**: Gets the percentage of the current track that has been played (0-100).
-* **`isPaused` (Getter)**: Checks if the adapter is paused.
-* **`isEnded` (Getter)**: Checks if the adapter has ended.
+* **`isPaused`**: **(Getter)** Checks if the adapter is paused.
+* **`isEnded`**: **(Getter)** Checks if the adapter has ended.
 * **`getContentData()`**: **(Async)** Retrieves structured metadata for the current content.
 * **`waitIsReady()`**: **(Async)** Waits until the active adapter is fully initialized.
 
