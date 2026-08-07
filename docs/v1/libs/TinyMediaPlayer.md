@@ -1,6 +1,6 @@
 # 🎧 TinyMediaPlayer Documentation
 
-`TinyMediaPlayer` is a robust, universal media player manager designed to orchestrate playback across multiple different media providers (such as YouTube, Spotify, etc.) using an **Adapter Pattern**.
+`TinyMediaPlayer` is a robust, universal media player manager designed to orchestrate playback across multiple different media providers (such as YouTube, Spotify, etc.) using an **Adapter Pattern**. It inherits debugging capabilities from `TinyDebugger`.
 
 ---
 
@@ -11,33 +11,31 @@ To support different media platforms, `TinyMediaPlayer` relies on **Adapters**. 
 ### 🛠️ `BaseMediaAdapter` (Abstract Class)
 *This class cannot be instantiated directly. It serves as an interface that all specific API wrappers must extend and implement.*
 
-#### Properties
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `destroyed` | `boolean` | Indicates if the adapter instance has been destroyed. |
-
 #### Methods
 | Method | Description | Parameters | Returns |
 | :--- | :--- | :--- | :--- |
+| `static canHandle` | Determines if the adapter can play the provided content. | `content: MediaContent` | `boolean` |
 | `canHandle` | Determines if the adapter can play the provided content. | `content: MediaContent` | `boolean` |
 | `isReady` | Synchronously checks if the adapter is ready. | None | `boolean` |
+| `isPaused` | Checks whether the media adapter is paused. | None | `boolean` |
+| `isEnded` | Checks whether the media adapter is ended. | None | `boolean` |
 | `waitIsReady` | Asynchronously waits until the adapter is ready. | None | `Promise<void>` |
 | `play` | Starts or resumes playback of the provided content. | `content: MediaContent` | `Promise<void>` |
 | `pause` | Pauses the current playback. | None | `Promise<void>` |
-| `stop` | Stops the playback completely and resets the platform state. | None | `Promise<void>` |
+| `stop` | Stops the playback completely and resets the internal platform state. | None | `Promise<void>` |
 | `seek` | Seeks to a specific time in the media timeline. | `timeMs: number` | `Promise<void>` |
 | `isMuted` | Checks whether the player is currently muted. | None | `boolean \| null` |
 | `mute` | Mutes the current playback. | None | `Promise<void>` |
 | `unMute` | Unmutes the current playback. | None | `Promise<void>` |
-| `getCurrentTime` | Retrieves the current playback position. | None | `number` (ms) |
+| `getCurrentTime` | Retrieves the current playback time from the underlying API. | None | `number` (ms) |
 | `getTotalDuration` | Gets the total duration of the content. | None | `number` (ms) |
 | `getRemainingTime` | Gets the remaining time until the content ends. | None | `number` (ms) |
 | `getPlaybackPercentage` | Gets the percentage of the content that has been played. | None | `number` (0 to 100) |
 | `getTimeData` | Retrieves a consolidated object containing all time-related metrics. | None | `ContentTimeData` |
 | `setVolume` | Sets the playback volume for the underlying API. | `volume: number` (0.0 to 1.0) | `void` |
-| `getVolume` | Gets the current playback volume. | None | `number` (0.0 to 1.0) |
-| `getContentData` | Retrieves the metadata of the loaded content. | None | `Promise<ContentData>` |
-| `destroy` | Cleans up the instance and marks it as destroyed. | None | `void` |
+| `getVolume` | Gets the playback volume from the underlying API. | None | `number` (0.0 to 1.0) |
+| `getContentData` | Retrieves the metadata of the currently loaded content. | None | `Promise<ContentData>` |
+| `destroy` | Cleans up the instance. | None | `void` |
 
 ---
 
@@ -90,11 +88,6 @@ import { BaseMediaAdapter } from 'tiny-essentials/libs/TinyMediaPlayer/Base';
  * @extends BaseMediaAdapter
  */
 class MyCustomServiceAdapter extends BaseMediaAdapter {
-  /**
-   * Determines if this adapter can play the given content.
-   * @param {MediaContent} content - The media content to check.
-   * @returns {boolean} - True if the URL matches the service.
-   */
   static canHandle(content) {
     return content.url.startsWith('https://example.com/');
   }
@@ -116,6 +109,8 @@ class MyCustomServiceAdapter extends BaseMediaAdapter {
   async getContentData() { return {}; }
   async waitIsReady() {}
   isReady() { return true; }
+  isPaused() { return false; }
+  isEnded() { return false; }
   isMuted() { return false; }
   async mute() {}
   async unMute() {}
@@ -123,6 +118,7 @@ class MyCustomServiceAdapter extends BaseMediaAdapter {
   getRemainingTime() { return 0; }
   getPlaybackPercentage() { return 0; }
   getTimeData() { return {}; }
+  destroy() {}
 }
 
 // Registering the custom adapter
@@ -166,6 +162,9 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 * **`repeatCurrentOnPrev`** (`boolean`): If `true`, clicking 'previous' repeats the current track on the first click. (Default: `false`).
 * **`smoothPlayPauseVolume`** (`boolean`): If `true`, volume fades smoothly during play/pause transitions. (Default: `false`).
 * **`smoothStopVolume`** (`boolean`): If `true`, volume fades smoothly to zero when stopping. (Default: `false`).
+* **`debugMode`** (`boolean`): Whether to enable internal debug logging.
+* **`useLogColors`** (`boolean`): Whether to enable log color support.
+* **`logger`** (`Console`): A custom logger object.
 
 ---
 
@@ -204,7 +203,7 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 | `isRandom` | `boolean` | Enables or disables shuffle mode. |
 | `isPlaying` | `boolean` | Indicates if media is currently playing. |
 | `volume` | `number` | The current volume level (strictly between `0.0` and `1.0`). |
-| `isMuted` | `boolean` | Sets the mute state of the player. |
+| `isMuted` | `boolean` | Indicates if the player is currently muted. |
 
 #### 🎨 UX & Customization
 | Property | Type | Description |
@@ -261,9 +260,12 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 #### ⏯️ Playback Controls
 * **`play()`**: **(Async)** Starts playback of the current track.
 * **`pause()`**: **(Async)** Pauses the current track.
+* **`mute()`**: **(Async)** Mutes the playback.
+* **`unMute()`**: **(Async)** Unmutes the playback.
 * **`stop()`**: **(Async)** Stops the current track completely.
 * **`next()`**: **(Async)** Advances to the next track (respects `loopMode` and `isRandom`).
 * **`prev()`**: **(Async)** Returns to the previous track (respects `loopMode` and `isRandom`).
+* **`skipTo(index)`**: **(Async)** Jumps to a specific index in the playlist.
 * **`seek(timeMs)`**: **(Async)** Jumps to a specific millisecond in the current track.
 * **`step(stepMs)`**: **(Async)** Moves the timeline forward (+) or backward (-) by `stepMs`.
 
@@ -272,11 +274,13 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 * **`getTotalDuration()`**: Gets the total duration of the current track in milliseconds.
 * **`getRemainingTime()`**: Gets the remaining time until the current track ends in milliseconds.
 * **`getPlaybackPercentage()`**: Gets the percentage of the current track that has been played (0-100).
-* **`getContentData()`**: Retrieves structured metadata for the current content.
+* **`isPaused` (Getter)**: Checks if the adapter is paused.
+* **`isEnded` (Getter)**: Checks if the adapter has ended.
+* **`getContentData()`**: **(Async)** Retrieves structured metadata for the current content.
 * **`waitIsReady()`**: **(Async)** Waits until the active adapter is fully initialized.
 
 #### ♻️ Lifecycle
-* **`destroy()`**: **(Async)** Safely stops playback, clears state, removes adapters, and detaches all listeners to prevent memory leaks.
+* **`destroy()`**: **(Async)** Safely stops playback, clears state, removes adapters, and detaches all listeners.
 
 ---
 
@@ -318,6 +322,6 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 ## ⚠️ Error Handling
 
 The class uses strict validation. The following errors may be thrown:
-* **`TypeError`**: Thrown when an argument is of the wrong type (e.g., invalid index type, non-boolean options, invalid adapter instance, or empty storage key).
-* **`RangeError`**: Thrown when a number is out of allowed bounds (e.g., negative time, volume outside `0.0`-`1.0`, negative durations, or index out of playlist bounds).
+* **`TypeError`**: Thrown when an argument is of the wrong type.
+* **`RangeError`**: Thrown when a number is out of allowed bounds.
 * **`Error`**: Thrown if no compatible adapter is found for the current content.

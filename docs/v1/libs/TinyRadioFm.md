@@ -31,7 +31,9 @@ The behavior of the engine is controlled via the `RadioConfig` object.
 | `voiceAfterMusic` | `boolean` | `true` | If `true`, voice messages play after music tracks. |
 | `voiceMin` | `number` | `0` | Minimum number of voice messages to play in a cycle. |
 | `voiceMax` | `number` | `1` | Maximum number of voice messages to play in a cycle. |
+| `musicMinConsecutive`| `number` | `0` | Min times a music track must repeat consecutively. |
 | `musicMaxConsecutive`| `number` | `0` | Max consecutive music repeats (`-1` = unlimited, `0` = no repeats). |
+| `voiceMinConsecutive`| `number` | `0` | Min times a voice track must repeat consecutively. |
 | `voiceMaxConsecutive`| `number` | `0` | Max consecutive voice repeats (`-1` = unlimited, `0` = no repeats). |
 
 ---
@@ -60,7 +62,7 @@ Adds new content to the engine immediately.
 * **Parameters:**
     * `type`: `'music' | 'voice' | 'custom'`.
     * `data`: The `MediaContent` object (must include `id` and `duration`).
-    * `smartQueue`: If `true`, delays insertion until the current content ends (primarily for `custom`).
+    * `smartQueue`: If `true`, delays insertion until the end of the content playing at that timestamp (primarily for `custom`).
 * **Emits:** `contentAdded`
 
 #### `remove(id)`
@@ -108,7 +110,7 @@ Predicts upcoming events from a specific date forward using a virtual sandbox to
 ### 💾 Persistence & Lifecycle
 
 #### `async exportState()`
-Exports the entire radio state (playlists, tasks, seed, config) as a JSON string. Automatically converts all image Blob URLs to **Base64** for portability.
+Exports the entire radio state (playlists, tasks, seed, config) as a JSON string. Automatically converts all image Blob URLs to **Base64** for easy storage.
 * **Returns:** `Promise<string>`
 
 #### `importState(json)`
@@ -138,4 +140,24 @@ An instruction to change the radio state.
 * `timestamp`: Execution time.
 * `action`: `'add' | 'remove' | 'move'`.
 * `type`: `'music' | 'voice'`.
-* `payload`: Action-specific data.
+* `payload`: Action-specific data (`MediaContent`, `string`, or `ScheduledMovePayload`).
+
+### `CustomPosition` 📍
+Represents content injected at a specific absolute timestamp.
+* `content`: The `MediaContent` object.
+* `intendedTimestamp`: The target absolute timestamp.
+* `originalTimestamp`: The timestamp preserved for intelligent repositioning.
+
+### `ScheduledMovePayload` 🚚
+Data required to relocate an existing item within a playlist.
+* `id`: Content ID to move.
+* `newIndex`: The target index in the playlist.
+
+### `CycleBlock` 🔄
+A structural block representing a single full iteration of the radio sequence.
+* `items`: Items belonging to this cycle.
+* `duration`: Total duration of the cycle block in ms.
+* `lastMusicId`: ID of the last music played in this block.
+* `musicConsecutiveCount`: Current consecutive count for music.
+* `lastVoiceId`: ID of the last voice played in this block.
+* `voiceConsecutiveCount`: Current consecutive count for voice.
