@@ -51,6 +51,19 @@ class BaseMediaAdapter extends EventEmitter {
   }
 
   /**
+   * Returns the thumbnail URL for the currently loaded track.
+   * @param {string} trackId - The SoundCloud track ID.
+   * @returns {string} The thumbnail URL.
+   * @throws {TypeError} If the trackId is not a valid string.
+   */
+  static getThumbnailUrl(trackId) {
+    if (typeof trackId !== 'string' || trackId.trim() === '') {
+      throw new TypeError('The "trackId" must be a non-empty string.');
+    }
+    return ``;
+  }
+
+  /**
    * Determines if this adapter can play the provided content.
    * @param {MediaContent} content - The media content to evaluate.
    * @returns {boolean} True if the adapter can handle the content, false otherwise.

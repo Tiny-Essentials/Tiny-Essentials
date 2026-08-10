@@ -14,6 +14,7 @@ To support different media platforms, `TinyMediaPlayer` relies on **Adapters**. 
 #### Methods
 | Method | Description | Parameters | Returns |
 | :--- | :--- | :--- | :--- |
+| `static getThumbnailUrl` | Returns the thumbnail URL for the provided track ID. Throws `TypeError` if `trackId` is invalid. | `trackId: string` | `string` |
 | `static canHandle` | Determines if the adapter can play the provided content. | `content: MediaContent` | `boolean` |
 | `canHandle` | Determines if the adapter can play the provided content. | `content: MediaContent` | `boolean` |
 | `isReady` | Synchronously checks if the adapter is ready. | None | `boolean` |
@@ -231,7 +232,7 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 * **`registerAdapter(adapter)`**: Registers a new provider.
     * `adapter`: An instance of a class extending `BaseMediaAdapter`.
 * **`removeAdapter(adapter)`**: Removes a specific registered adapter.
-* **`destroyAdapter(adapter)`**: Destroys and removes a specific registered adapter.
+* **`destroyAdapter(adapter)`**: Destroys and removes a specific registered media adapter.
 * **`hasAdapter(adapter)`**: Checks if a specific adapter is registered.
 * **`clearAdapters()`**: Clears the list of adapters (does not call `destroy` on them).
 * **`destroyAllAdapters()`**: Destroys and removes all registered media adapters.
@@ -254,7 +255,7 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
 * **`removeTrack(index)`**: **(Async)** Removes a track and adjusts the current index/playback accordingly.
 * **`searchTrack(query)`**: Searches the playlist (string or function).
     * `query`: A `string` (searches title, artist, or album) or a `function` (custom logic).
-    * **Returns**: `SearchResult[]` (array of objects containing the track and their corresponding indices).
+    * `Returns`: `SearchResult[]` (array of objects containing the track and their corresponding indices).
 * **`clearPlaylist()`**: **(Async)** Stops playback and empties the entire playlist.
 
 #### ⏯️ Playback Controls
