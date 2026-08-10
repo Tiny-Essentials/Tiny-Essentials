@@ -1040,16 +1040,6 @@ class TinyHtml {
     return true;
   }
 
-  /**
-   * @deprecated Use the getter {@link elements} instead.
-   * Returns the current targets held by this instance.
-   *
-   * @returns {ConstructorElValues[]} - The instance's targets element.
-   */
-  getAll() {
-    return [...this.#el];
-  }
-
   ////////////////////////////////////////////////
 
   // TITLE: Element Getter (Private) (Pt1)
