@@ -42,7 +42,7 @@ The behavior of the engine is controlled via the `RadioConfig` object.
 
 ### 🏗️ Static Methods
 
-#### `static parseContent(source, defaultMetadata, metadata, parseFile, callbacks)`
+#### `static parseContent(source, defaultMetadata, metadata, parseFile, callbacks, convertBase64toBlob)`
 Prepares a `MediaContent` object by extracting metadata from an audio source.
 * **Parameters:**
     * `source`: A URL string or an existing `HTMLMediaElement`.
@@ -50,6 +50,7 @@ Prepares a `MediaContent` object by extracting metadata from an audio source.
     * `metadata`: Optional manual overrides.
     * `parseFile`: Internal helper for file parsing.
     * `callbacks`: Object containing `onProgress` and `onError` handlers.
+    * `convertBase64toBlob`: If true, the image content will be converted directly into a high-performance Blob URL, use this method.
 * **Returns:** `Promise<MediaContent>`
 * **Throws:** `MediaLoadingError`
 

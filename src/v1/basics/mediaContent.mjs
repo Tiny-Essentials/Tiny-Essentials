@@ -410,11 +410,12 @@ export const valMediaContentMetadataPartial = (common) => {
  *
  * @param {string} url - The full URL of the audio file to be downloaded.
  * @param {ParseMediaContentMetadata} parseFile - The function used to parse the file data.
- * @returns {Promise<MediaContentMetadata<string>>} A promise that resolves to an object containing the extracted metadata.
+ * @param {boolean} [convertBase64toBlob=true] - If the image content needs to be converted directly into a high-performance Blob URL, use this method.
+ * @returns {Promise<MediaContentMetadata<PictureDataType>>} A promise that resolves to an object containing the extracted metadata.
  * @throws {TypeError} If the provided `url` is not a string or `parseFile` is not a function.
  * @throws {Error} If the network request fails or the parsing process encounters an error.
  */
-export const extractMediaId3Tags = async (url, parseFile) => {
+export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = true) => {
   // Argument Validation
   checkString(url, 'url');
   checkFunction(parseFile, 'parseFile');
@@ -457,7 +458,7 @@ export const extractMediaId3Tags = async (url, parseFile) => {
       picture:
         common?.picture?.map((value) => ({
           ...value,
-          data: convertToBlobUrl(value.data, value.format),
+          data: convertBase64toBlob ? convertToBlobUrl(value.data, value.format) : value.data,
         })) ?? [],
     };
   } catch (error) {
@@ -478,6 +479,7 @@ export const extractMediaId3Tags = async (url, parseFile) => {
  * @param {Object} [callbacks={}] - Callbacks for monitoring the loading process.
  * @param {(progress: LoadingMediaProgress) => void} [callbacks.onProgress] - Callback triggered on stage changes.
  * @param {(error: MediaLoadingErrorData) => void} [callbacks.onError] - Callback triggered when a non-fatal or fatal error occurs.
+ * @param {boolean} [convertBase64toBlob=true] - If the image content needs to be converted directly into a high-performance Blob URL, use this method.
  * @param {UnknownArtistGetter} unknownArtist
  * @returns {Promise<MediaContent<PictureData>>} A promise that resolves to a valid MediaContent object.
  * @throws {MediaLoadingError} If the preparation process fails at any stage.
@@ -518,6 +520,7 @@ export const parseMediaMetadata = async (
     return new Promise((resolve, reject) => reject(new TypeError('parseFile library not found.')));
   },
   callbacks = {},
+  convertBase64toBlob = true,
   unknownArtist = 'null',
 ) => {
   // Argument Validation
@@ -643,11 +646,11 @@ export const parseMediaMetadata = async (
     };
 
     // 4. Automatic Metadata Extraction (ID3 Tags)
-    /** @type {Partial<MediaContentMetadata<string>>} */
+    /** @type {Partial<MediaContentMetadata<PictureDataType>>} */
     let extractedMetadata = {};
     notifyProgress('EXTRACTING_ID3');
     try {
-      extractedMetadata = await extractMediaId3Tags(url, parseFile);
+      extractedMetadata = await extractMediaId3Tags(url, parseFile, convertBase64toBlob);
     } catch (err) {
       // We treat ID3 failure as a non-fatal error for the whole process,
       // but we still notify the developer via onError.

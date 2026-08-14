@@ -77,6 +77,7 @@ Downloads an audio file and uses a provided parser to extract its internal metad
 *   **Parameters:**
     *   `url` (string): The full URL of the audio file.
     *   `parseFile` (Function): A callback that accepts a `Blob` and returns a promise with metadata.
+    *   `convertBase64toBlob` (boolean): If true, the image content will be converted directly into a high-performance Blob URL, use this method.
 *   **Returns:** `Promise<MediaContentMetadata>`
 *   **Throws:** `TypeError` for invalid arguments or `Error` for network/parsing failures.
 
@@ -94,6 +95,7 @@ Downloads an audio file and uses a provided parser to extract its internal metad
 | `metadata` | `Partial<MediaContent>` | Manual overrides for the metadata (highest priority). |
 | `parseFile` | `ParseMediaContentMetadata` | The library function used to parse the file. |
 | `callbacks` | `Object` | Contains `onProgress` and `onError` listeners. |
+| `convertBase64toBlob` | `boolean` | If true, the image content will be converted directly into a high-performance Blob URL, use this method.
 | `unknownArtist` | `UnknownArtistGetter` | Logic to determine the artist if none is found. |
 
 #### 💡 Usage Examples

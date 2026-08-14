@@ -181,7 +181,7 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
     * **Getter/Setter**: Allows customization of the default event subscription list.
 
 #### Methods
-* **`parseContent(source, defaultMetadata, metadata, parseFile, callbacks)`**: 
+* **`parseContent(source, defaultMetadata, metadata, parseFile, callbacks, convertBase64toBlob)`**: 
     * A static factory method to prepare a `MediaContent` object by extracting metadata from a URL or HTMLMediaElement.
     * **Parameters**:
         * `source`: `string | HTMLMediaElement`
@@ -189,6 +189,7 @@ When initializing `new TinyMediaPlayer(options)`, you can pass the following `Ti
         * `metadata`: `Partial<MediaContentBase & MediaContentMetadata>`
         * `parseFile`: `ParseMediaContentMetadata`
         * `callbacks`: `Object` (containing `onProgress` and `onError`)
+        * `convertBase64toBlob`: `boolean`
     * **Returns**: `Promise<MediaContent>`.
 
 ---

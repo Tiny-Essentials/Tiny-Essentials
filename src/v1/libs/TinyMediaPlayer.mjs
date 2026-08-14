@@ -92,16 +92,25 @@ class TinyMediaPlayer extends TinyDebugger {
    * @param {Object} [callbacks={}] - Callbacks for monitoring the loading process.
    * @param {(progress: LoadingMediaProgress) => void} [callbacks.onProgress] - Callback triggered on stage changes.
    * @param {(error: MediaLoadingErrorData) => void} [callbacks.onError] - Callback triggered when a non-fatal or fatal error occurs.
+   * @param {boolean} [convertBase64toBlob=true] - If the image content needs to be converted directly into a high-performance Blob URL, use this method.
    * @returns {Promise<MediaContent>} A promise that resolves to a valid MediaContent object.
    * @throws {MediaLoadingError} If the preparation process fails at any stage.
    */
-  static async parseContent(source, defaultMetadata, metadata, parseFile, callbacks) {
+  static async parseContent(
+    source,
+    defaultMetadata,
+    metadata,
+    parseFile,
+    callbacks,
+    convertBase64toBlob,
+  ) {
     return parseMediaMetadata(
       source,
       defaultMetadata,
       metadata,
       parseFile,
       callbacks,
+      convertBase64toBlob,
       TinyMediaPlayer.#unknownArtist,
     );
   }
@@ -1206,7 +1215,14 @@ class TinyMediaPlayer extends TinyDebugger {
     checkDestroy(this.#destroyed);
     this.log('info', `Attempting to play track at index: ${this.#currentIndex}`);
     const adapter = this.#getActiveAdapter();
-    if (!adapter) return;
+    if (!adapter) {
+      this.log(
+        'error',
+        'Failed to play track:',
+        `Active adapter not found for track at index ${this.#currentIndex}.`,
+      );
+      return;
+    }
 
     // Ensure the adapter aligns with the global volume before playing
     if (this.#smoothPlayPauseVolume) {
