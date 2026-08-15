@@ -54,7 +54,7 @@
  * `music-metadata@11.13.0` npm package.
  *
  * @template {PictureDataType} PictureData
- * @typedef {ContentMetadataTemplate<IPictureTemplate<PictureData>>} MediaContentMetadata
+ * @typedef {{ _fetch_data: any; } & ContentMetadataTemplate<IPictureTemplate<PictureData>>} MediaContentMetadata
  */
 
 /**
@@ -74,7 +74,7 @@
  * core playback properties with rich metadata.
  *
  * @template {PictureDataType} PictureData
- * @typedef {{ _fetch_data: any; } & MediaContentBase & MediaContentMetadata<PictureData>} MediaContent
+ * @typedef {MediaContentBase & MediaContentMetadata<PictureData>} MediaContent
  */
 
 //////////////////////////////////////////////////////////////////
@@ -156,6 +156,7 @@ export const getMediaContentBase = () => ({
  * @returns {MediaContentMetadata<PictureDataType>}
  */
 export const getMediaContentMetadata = () => ({
+  _fetch_data: null,
   title: null,
   album: null,
   albumartist: null,
@@ -443,6 +444,7 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
     // 5. Return the specific metadata fields requested
     // We structure the return to match the MediaContentMetadata typedef
     return {
+      _fetch_data: common,
       title: common?.title ?? null,
       album: common?.album ?? null,
       albumartist: common?.albumartist ?? null,
@@ -677,7 +679,6 @@ export const parseMediaMetadata = async (
     // 5. Final Merge Logic
     // Priority: Manual Metadata (highest) > Extracted ID3 > Default values
     const finalContent = {
-      _fetch_data: extractedMetadata,
       ...baseData,
       ...defaultMetadata,
       ...extractedMetadata,
