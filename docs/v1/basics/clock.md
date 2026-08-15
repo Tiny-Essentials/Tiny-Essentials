@@ -25,7 +25,7 @@ Calculates how much time remains (or has passed) between now and a given time.
 | `durationType` | `string` | Format to return (`asMilliseconds`, `asSeconds`, `asMinutes`, etc.) |
 | `now`          | `Date`   | Optional custom "now". Defaults to current time.                    |
 
-**Returns:** `number|null` — The duration in the chosen unit.
+**Returns:** `number` — The duration in the chosen unit.
 
 ---
 

@@ -4,7 +4,7 @@
  * @param {Date} timeData - The target time as a Date object.
  * @param {'asMilliseconds'|'asSeconds'|'asMinutes'|'asHours'|'asDays'} [durationType='asSeconds'] - The type of duration to return.
  * @param {Date|null} [now=null] - The current time as a Date object. Defaults to the current date and time if not provided.
- * @returns {number|null} The calculated duration in the specified unit, or `null` if `timeData` is not provided.
+ * @returns {number} The calculated duration in the specified unit, or `null` if `timeData` is not provided.
  */
 export function getTimeDuration(timeData = new Date(), durationType = 'asSeconds', now = null) {
   if (!(timeData instanceof Date)) {
