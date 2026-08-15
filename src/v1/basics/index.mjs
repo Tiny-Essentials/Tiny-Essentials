@@ -5,6 +5,7 @@ import {
   formatDayTimer,
   formatTimer,
   getTimeDuration,
+  getUserTimeFormat,
 } from './clock.mjs';
 import {
   readJsonBlob,
@@ -88,6 +89,7 @@ import {
 } from './browserDetector.mjs';
 
 export {
+  getUserTimeFormat,
   getBrowserPings,
   isBrowserAgent,
   getBrowserCssPrefix,

@@ -6,6 +6,7 @@ A versatile time utility module for JavaScript that helps you calculate and form
 
 - 🔢 Calculate time differences in various units
 - 🧭 Format durations into clean, readable timer strings
+- 🌍 Locale-aware time cycle detection (12h vs 24h)
 - 🧱 Support for years, months, days, hours, minutes, seconds **and milliseconds**
 - 🎛️ Customizable output with template-based formatting
 - 🛠️ Built-in presets for classic timer formats
@@ -14,6 +15,14 @@ A versatile time utility module for JavaScript that helps you calculate and form
 ---
 
 ## 🧠 API Overview
+
+### 🔹 `getUserTimeFormat()`
+
+Detects the user's preferred time format (12-hour or 24-hour) based on the system's locale settings.
+
+**Returns:** `number` — `12` if the user's locale uses a 12-hour cycle, otherwise `24`.
+
+---
 
 ### 🔹 `getTimeDuration(timeData, durationType = 'asSeconds', now = null)`
 
@@ -93,15 +102,22 @@ This is useful when you want numeric values to build your own custom formats.
 ## 🧪 Examples
 
 ```js
+// Detect user time preference
+const timeFormat = getUserTimeFormat();
+console.log(timeFormat); // 12 or 24
+
+// Calculate remaining time
 const futureTime = new Date(Date.now() + 10000);
 const secondsLeft = getTimeDuration(futureTime, 'asSeconds');
 
 console.log(formatTimer(secondsLeft)); // e.g. "00:00:09"
 console.log(formatDayTimer(172800 + 3661)); // "2d 01:01:01"
 
+// Custom formatting
 const custom = formatCustomTimer(3600 * 26 + 61, 'days', '{days}d {hours}h {minutes}m {seconds}s');
 console.log(custom); // "1d 2h 1m 1s"
 
+// Detailed breakdown
 const breakdown = breakdownDuration(987654321, 'years');
 console.log(breakdown);
 // {

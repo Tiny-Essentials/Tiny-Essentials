@@ -11,6 +11,7 @@ import {
   formatDayTimer,
   formatTimer,
   getTimeDuration,
+  getUserTimeFormat,
 } from './basics/clock.mjs';
 import {
   extendObjType,
@@ -224,6 +225,7 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  getUserTimeFormat,
   getBrowserPings,
   isBrowserAgent,
   getBrowserCssPrefix,

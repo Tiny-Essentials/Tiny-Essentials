@@ -1,4 +1,18 @@
 /**
+ * Determines the user's preferred time format (12-hour or 24-hour)
+ * based on the system's locale settings.
+ *
+ * Credits: https://www.reddit.com/r/webdev/comments/1azu87y/comment/ks3mtci/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+ *
+ * @returns {12|24} Returns 12 if the user's locale uses a 12-hour cycle, otherwise returns 24.
+ */
+export function getUserTimeFormat() {
+  const format = new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).resolvedOptions()
+    .hourCycle;
+  return format?.startsWith('h12') ? 12 : 24;
+}
+
+/**
  * Calculates the time duration between the current time and a given time offset.
  *
  * @param {Date} timeData - The target time as a Date object.
