@@ -30,6 +30,51 @@
  */
 
 /**
+ * @typedef {Object} IComment
+ * @property {string|null} descriptor - A descriptor for the comment.
+ * @property {string|null} language - The language of the comment.
+ * @property {string|null} text - The text content of the comment.
+ */
+
+/**
+ * @typedef {Object} ILyricsText
+ * @property {string} text - The lyric text content.
+ * @property {number|null} timestamp - The timestamp associated with this lyric line.
+ */
+
+/**
+ * @typedef {Object} TimestampFormat
+ * @property {number} notSynchronized - Indicates if the timestamp is not synchronized.
+ * @property {number} mpegFrameNumber - The MPEG frame number.
+ * @property {number} milliseconds - The time in milliseconds.
+ */
+
+/**
+ * @typedef {Object} LyricsContentType
+ * @property {number} other - Content type for other.
+ * @property {number} lyrics - Content type for lyrics.
+ * @property {number} text - Content type for text.
+ * @property {number} movement_part - Content type for movement parts.
+ * @property {number} events - Content type for events.
+ * @property {number} chord - Content type for chords.
+ * @property {number} trivia_pop - Content type for trivia/pop.
+ */
+
+/**
+ * @typedef {Object} ILyricsTag
+ * @property {string|null} text - The text content of the lyrics.
+ * @property {ILyricsText[]} syncText - An array of synchronized lyric text objects.
+ * @property {TimestampFormat} timeStampFormat - The format of the timestamp.
+ * @property {LyricsContentType} contentType - The type of lyrical content.
+ */
+
+/**
+ * @typedef {Object} IRating
+ * @property {string|null} source - The source of the rating.
+ * @property {number|null} rating - The numeric rating value.
+ */
+
+/**
  * This metadata structure is modeled template.
  *
  * @template {IPictureTemplate<PictureDataType>} IPictureContent
@@ -46,7 +91,108 @@
  * @property {string[]} artists - An array of artists associated with the track.
  * @property {MediaNumber} disk - Disk information containing the current disk number and total disks.
  * @property {MediaNumber} track - Track information containing the current track number and total tracks.
- * @property {IPictureContent[]} [picture] - An array of picture objects containing album art.
+ * @property {IPictureContent[]} picture - An array of picture objects containing album art.
+ * @property {string|null} date - The date.
+ * @property {string|null} originaldate - The original date.
+ * @property {number|null} originalyear - The original release year.
+ * @property {string|null} releasedate - The release date.
+ * @property {IComment[]} comment - An array of comments.
+ * @property {ILyricsTag[]} lyrics - An array of lyric tags.
+ * @property {string|null} albumsort - The sortable album name.
+ * @property {string|null} titlesort - The sortable title.
+ * @property {string|null} work - The work/composition name.
+ * @property {string|null} artistsort - The sortable artist name.
+ * @property {string|null} albumartistsort - The sortable album artist name.
+ * @property {string|null} composersort - The sortable composer name.
+ * @property {string[]} lyricist - An array of lyricists.
+ * @property {string[]} writer - An array of writers.
+ * @property {string[]} conductor - An array of conductors.
+ * @property {string[]} remixer - An array of remixers.
+ * @property {string[]} arranger - An array of arrangers.
+ * @property {string[]} engineer - An array of engineers.
+ * @property {string[]} publisher - An array of publishers.
+ * @property {string[]} producer - An array of producers.
+ * @property {string[]} djmixer - An array of DJ mixers.
+ * @property {string[]} mixer - An array of mixers.
+ * @property {string[]} technician - An array of technicians.
+ * @property {string|null} grouping - The grouping name.
+ * @property {string[]} subtitle - An array of subtitles.
+ * @property {string[]} description - An array of descriptions.
+ * @property {string|null} longDescription - A long description.
+ * @property {string[]} discsubtitle - An array of disc subtitles.
+ * @property {string|null} totaltracks - Total number of tracks.
+ * @property {string|null} totaldiscs - Total number of discs.
+ * @property {number|null} movementTotal - Total number of movements.
+ * @property {boolean|null} compilation - Whether it is a compilation.
+ * @property {IRating[]} rating - An array of ratings.
+ * @property {number|null} bpm - Beats per minute.
+ * @property {string|null} mood - The mood of the track.
+ * @property {string|null} media - The media type.
+ * @property {string[]} catalognumber - An array of catalog numbers.
+ * @property {string|null} tvShow - The TV show name.
+ * @property {string|null} tvShowSort - The sortable TV show name.
+ * @property {number|null} tvSeason - The TV season number.
+ * @property {number|null} tvEpisode - The TV episode number.
+ * @property {string|null} tvEpisodeId - The TV episode ID.
+ * @property {string|null} tvNetwork - The TV network.
+ * @property {boolean|null} podcast - Whether it is a podcast.
+ * @property {string|null} podcasturl - The podcast URL.
+ * @property {string|null} releasestatus - The release status.
+ * @property {string[]} releasetype - An array of release types.
+ * @property {string|null} releasecountry - The release country.
+ * @property {string|null} script - The script.
+ * @property {string|null} language - The language.
+ * @property {string|null} copyright - The copyright information.
+ * @property {string|null} license - The license information.
+ * @property {string|null} encodedby - The encoder.
+ * @property {string|null} encodersettings - The encoder settings.
+ * @property {boolean|null} gapless - Whether it is gapless.
+ * @property {string|null} barcode - The barcode.
+ * @property {string[]} isrc - An array of ISRC codes.
+ * @property {string|null} asin - The ASIN.
+ * @property {string|null} website - The website.
+ * @property {string[]} performer_instrument - An array of performers and their instruments.
+ * @property {number|null} averageLevel - The average loudness level.
+ * @property {number|null} peakLevel - The peak loudness level.
+ * @property {string[]} notes - An array of notes.
+ * @property {string|null} originalalbum - The original album.
+ * @property {string|null} originalartist - The original artist.
+ * @property {string|null} key - The initial key of the music in the file, e.g. "A Minor".
+ * @property {string[]} category - An array of categories.
+ * @property {number|null} hdVideo - HD video flag.
+ * @property {string[]} keywords - An array of keywords.
+ * @property {string|null} movement - The movement.
+ * @property {MediaNumber} movementIndex - The movement index.
+ * @property {string|null} podcastId - The podcast ID.
+ * @property {boolean|null} showMovement - Whether to show movement.
+ * @property {number|null} stik - The stik value.
+ * @property {number|null} playCounter - The play counter.
+ */
+
+/**
+ * @typedef {Object} MediaContentFetchNativeData
+ * @property {string} id - The unique identifier for the native data.
+ * @property {any|Record<string|number|symbol, unknown>} [value] - The actual data value.
+ */
+
+/**
+ * A record containing common metadata tags.
+ * @template {PictureDataType} PictureData
+ * @typedef {Record<string|number|symbol, unknown> & Partial<ContentMetadataTemplate<IPictureTemplate<PictureData>>>} ICommonTagsResult
+ */
+
+/**
+ * A mapping of keys to arrays of native metadata fetch data.
+ * @typedef {Record<string|number|symbol, MediaContentFetchNativeData[]>} INativeTags
+ */
+
+/**
+ * @template {PictureDataType} PictureData
+ * @typedef {Object} MediaContentFetchData
+ * @property {ICommonTagsResult<PictureDataType>} common - The common metadata properties.
+ * @property {INativeTags} native - The native metadata properties.
+ * @property {unknown} format - The format of the media.
+ * @property {unknown} quality - The quality of the media.
  */
 
 /**
@@ -54,7 +200,7 @@
  * `music-metadata@11.13.0` npm package.
  *
  * @template {PictureDataType} PictureData
- * @typedef {{ _fetch_data: any; } & ContentMetadataTemplate<IPictureTemplate<PictureData>>} MediaContentMetadata
+ * @typedef {{ _fetch_data: null|MediaContentFetchData<PictureData>; } & ContentMetadataTemplate<IPictureTemplate<PictureData>>} MediaContentMetadata
  */
 
 /**
@@ -83,7 +229,7 @@
  * A promise that resolves to an object containing the extracted metadata.
  * @callback ParseMediaContentMetadata
  * @param {Blob} data - The raw file blob.
- * @returns {Promise<{ common: Partial<ContentMetadataTemplate<IPictureTemplate<PictureDataType>>> }>} A promise resolving to the common metadata properties.
+ * @returns {Promise<MediaContentFetchData<PictureDataType>>} A promise resolving to the common metadata properties.
  */
 
 /**
@@ -298,54 +444,260 @@ export const revokeContentUrls = (content) => {
 
 /**
  * Central logic of metadata validation.
- * @param {Partial<ContentMetadataTemplate<IPictureTemplate<string | Uint8Array<ArrayBufferLike>>>>} common - The object to be validated.
+ * @param {Partial<ContentMetadataTemplate<IPictureTemplate<string | Uint8Array>>>} common - The object to be validated.
  * @param {boolean} isPartial - If true, properties can be undefined.
  */
 const validateMediaContent = (common, isPartial) => {
   checkObject(common, 'common');
   if (typeof isPartial !== 'boolean') throw new TypeError('Expected "isPartial" to be a boolean.');
 
-  const isUndefinedAllowed = (/** @type {any} */ v) => isPartial && typeof v === 'undefined';
+  const isUndefinedAllowed = (/** @type {any} */ v, forceNoUndefined = false) =>
+    !forceNoUndefined && isPartial && typeof v === 'undefined';
 
-  const isString = (/** @type {string | null | undefined} */ v) =>
-    isUndefinedAllowed(v) || typeof v === 'string' || v === null;
+  const isString = (/** @type {string | null | undefined} */ v, forceNoUndefined = false) =>
+    isUndefinedAllowed(v, forceNoUndefined) ||
+    typeof v === 'string' ||
+    (!forceNoUndefined && v === null);
 
-  const isNumber = (/** @type {number | null | undefined}} */ v) =>
-    isUndefinedAllowed(v) || typeof v === 'number' || v === null;
+  const isNumber = (/** @type {number | null | undefined} */ v, forceNoUndefined = false) =>
+    isUndefinedAllowed(v, forceNoUndefined) ||
+    typeof v === 'number' ||
+    (!forceNoUndefined && v === null);
+
+  const isBoolean = (/** @type {boolean | null | undefined} */ v, forceNoUndefined = false) =>
+    isUndefinedAllowed(v, forceNoUndefined) ||
+    typeof v === 'boolean' ||
+    (!forceNoUndefined && v === null);
 
   const isArray = (
-    /** @type {string[] | IPictureTemplate<string|Uint8Array>[] | undefined} */ v,
-    /** @type {(value: any, index: number, array: any[]) => any} */ valueValidator,
+    /** @type {any[]|undefined} */ v,
+    /** @type {(value: any) => boolean} */ valueValidator,
   ) => {
-    checkFunction(valueValidator, 'valueValidator');
     if (isUndefinedAllowed(v)) return true;
-    if (Array.isArray(v) && v.every(valueValidator)) return true;
-    return false;
+    checkFunction(valueValidator, 'valueValidator');
+    return Array.isArray(v) && v.every(valueValidator);
   };
 
-  // Validate Primitives
+  // --- Recursive Validators for Deep Validation ---
+
+  const isTimestampFormat = (
+    /** @type {{ notSynchronized: number | null | undefined; mpegFrameNumber: number | null | undefined; milliseconds: number | null | undefined; } | null} */ v,
+  ) =>
+    v !== null &&
+    typeof v === 'object' &&
+    isNumber(v.notSynchronized, true) &&
+    isNumber(v.mpegFrameNumber, true) &&
+    isNumber(v.milliseconds, true);
+
+  const isLyricsText = (
+    /** @type {{ text: string | null | undefined; timestamp: number | null | undefined; } | null} */ v,
+  ) => v !== null && typeof v === 'object' && isString(v.text, true) && isNumber(v.timestamp);
+
+  const isLyricsContentType = (
+    /** @type {{ other: number | null | undefined; lyrics: number | null | undefined; text: number | null | undefined; movement_part: number | null | undefined; events: number | null | undefined; chord: number | null | undefined; trivia_pop: number | null | undefined; } | null} */ v,
+  ) =>
+    v !== null &&
+    typeof v === 'object' &&
+    isNumber(v.other, true) &&
+    isNumber(v.lyrics, true) &&
+    isNumber(v.text, true) &&
+    isNumber(v.movement_part, true) &&
+    isNumber(v.events, true) &&
+    isNumber(v.chord, true) &&
+    isNumber(v.trivia_pop, true);
+
+  const isLyricsTag = (
+    /** @type {{ text: string | null | undefined; syncText: any[] | undefined; timeStampFormat: any; contentType: any; } | null} */ v,
+  ) =>
+    v !== null &&
+    typeof v === 'object' &&
+    isString(v.text) &&
+    isArray(v.syncText, isLyricsText) &&
+    isTimestampFormat(v.timeStampFormat) &&
+    isLyricsContentType(v.contentType);
+
+  const isComment = (
+    /** @type {{ descriptor: string | null | undefined; language: string | null | undefined; text: string | null | undefined; } | null} */ v,
+  ) =>
+    v !== null &&
+    typeof v === 'object' &&
+    isString(v.descriptor) &&
+    isString(v.language) &&
+    isString(v.text);
+
+  const isRating = (
+    /** @type {{ source: string | null | undefined; rating: number | null | undefined; } | null} */ v,
+  ) => v !== null && typeof v === 'object' && isString(v.source) && isNumber(v.rating);
+
+  // --- Primitive Validation ---
+
   if (!isString(common.title))
     throw new TypeError('Invalid metadata: "title" must be a string or null.');
   if (!isString(common.album))
     throw new TypeError('Invalid metadata: "album" must be a string or null.');
   if (!isString(common.albumartist))
-    throw new TypeError('Invalid metadata: "albumartist" must be a string or null.');
+    throw new TypeError('Invalid metadata: "albumartist" must be a a string or null.');
   if (!isString(common.artist))
     throw new TypeError('Invalid metadata: "artist" must be a string or null.');
+  if (!isBoolean(common.compilation))
+    throw new TypeError('Invalid metadata: "compilation" must be a boolean or null.');
+  if (!isBoolean(common.podcast))
+    throw new TypeError('Invalid metadata: "podcast" must be a boolean or null.');
+  if (!isBoolean(common.gapless))
+    throw new TypeError('Invalid metadata: "gapless" must be a boolean or null.');
+  if (!isBoolean(common.showMovement))
+    throw new TypeError('Invalid metadata: "showMovement" must be a boolean or null.');
+  if (!isNumber(common.averageLevel))
+    throw new TypeError('Invalid metadata: "averageLevel" must be a number or null.');
+  if (!isNumber(common.peakLevel))
+    throw new TypeError('Invalid metadata: "peakLevel" must be a number or null.');
+  if (!isNumber(common.hdVideo))
+    throw new TypeError('Invalid metadata: "hdVideo" must be a number or null.');
+  if (!isNumber(common.stik))
+    throw new TypeError('Invalid metadata: "stik" must be a number or null.');
+  if (!isNumber(common.playCounter))
+    throw new TypeError('Invalid metadata: "playCounter" must be a number or null.');
+  if (!isNumber(common.tvSeason))
+    throw new TypeError('Invalid metadata: "tvSeason" must be a number or null.');
+  if (!isNumber(common.tvEpisode))
+    throw new TypeError('Invalid metadata: "tvEpisode" must be a number or null.');
   if (!isNumber(common.year))
     throw new TypeError('Invalid metadata: "year" must be a number or null.');
+  if (!isNumber(common.bpm))
+    throw new TypeError('Invalid metadata: "bpm" must be a number or null.');
+  if (!isNumber(common.originalyear))
+    throw new TypeError('Invalid metadata: "originalyear" must be a number or null.');
+  if (!isNumber(common.movementTotal))
+    throw new TypeError('Invalid metadata: "movementTotal" must be a number or null.');
+  if (!isString(common.date))
+    throw new TypeError('Invalid metadata: "date" must be a string or null.');
+  if (!isString(common.originaldate))
+    throw new TypeError('Invalid metadata: "originaldate" must be a string or null.');
+  if (!isString(common.releasedate))
+    throw new TypeError('Invalid metadata: "releasedate" must be a string or null.');
+  if (!isString(common.albumsort))
+    throw new TypeError('Invalid metadata: "albumsort" must be a string or null.');
+  if (!isString(common.titlesort))
+    throw new TypeError('Invalid metadata: "titlesort" must be a string or null.');
+  if (!isString(common.work))
+    throw new TypeError('Invalid metadata: "work" must be a string or null.');
+  if (!isString(common.artistsort))
+    throw new TypeError('Invalid metadata: "artistsort" must be a string or null.');
+  if (!isString(common.albumartistsort))
+    throw new TypeError('Invalid metadata: "albumartistsort" must be a string or null.');
+  if (!isString(common.composersort))
+    throw new TypeError('Invalid metadata: "composersort" must be a string or null.');
+  if (!isString(common.grouping))
+    throw new TypeError('Invalid metadata: "grouping" must be a string or null.');
+  if (!isString(common.longDescription))
+    throw new TypeError('Invalid metadata: "longDescription" must be a string or null.');
+  if (!isString(common.totaltracks))
+    throw new TypeError('Invalid metadata: "totaltracks" must be a string or null.');
+  if (!isString(common.totaldiscs))
+    throw new TypeError('Invalid metadata: "totaldiscs" must be a string or null.');
+  if (!isString(common.mood))
+    throw new TypeError('Invalid metadata: "mood" must be a string or null.');
+  if (!isString(common.media))
+    throw new TypeError('Invalid metadata: "media" must be a string or null.');
+  if (!isString(common.tvShow))
+    throw new TypeError('Invalid metadata: "tvShow" must be a string or null.');
+  if (!isString(common.tvShowSort))
+    throw new TypeError('Invalid metadata: "tvShowSort" must be a string or null.');
+  if (!isString(common.tvEpisodeId))
+    throw new TypeError('Invalid metadata: "tvEpisodeId" must be a string or null.');
+  if (!isString(common.tvNetwork))
+    throw new TypeError('Invalid metadata: "tvNetwork" must be a string or null.');
+  if (!isString(common.podcasturl))
+    throw new TypeError('Invalid metadata: "podcasturl" must be a string or null.');
+  if (!isString(common.releasestatus))
+    throw new TypeError('Invalid metadata: "releasestatus" must be a string or null.');
+  if (!isString(common.releasecountry))
+    throw new TypeError('Invalid metadata: "releasecountry" must be a string or null.');
+  if (!isString(common.script))
+    throw new TypeError('Invalid metadata: "script" must be a string or null.');
+  if (!isString(common.language))
+    throw new TypeError('Invalid metadata: "language" must be a string or null.');
+  if (!isString(common.copyright))
+    throw new TypeError('Invalid metadata: "copyright" must be a string or null.');
+  if (!isString(common.license))
+    throw new TypeError('Invalid metadata: "license" must be a string or null.');
+  if (!isString(common.encodedby))
+    throw new TypeError('Invalid metadata: "encodedby" must be a string or null.');
+  if (!isString(common.encodersettings))
+    throw new TypeError('Invalid metadata: "encodersettings" must be a string or null.');
+  if (!isString(common.barcode))
+    throw new TypeError('Invalid metadata: "barcode" must be a string or null.');
+  if (!isString(common.asin))
+    throw new TypeError('Invalid metadata: "asin" must be a string or null.');
+  if (!isString(common.website))
+    throw new TypeError('Invalid metadata: "website" must be a string or null.');
+  if (!isString(common.originalalbum))
+    throw new TypeError('Invalid metadata: "originalalbum" must be a string or null.');
+  if (!isString(common.originalartist))
+    throw new TypeError('Invalid metadata: "originalartist" must be a string or null.');
+  if (!isString(common.key))
+    throw new TypeError('Invalid metadata: "key" must be a string or null.');
+  if (!isString(common.movement))
+    throw new TypeError('Invalid metadata: "movement" must be a string or null.');
+  if (!isString(common.podcastId))
+    throw new TypeError('Invalid metadata: "podcastId" must be a string or null.');
 
   // Validate Arrays
-  if (!isArray(common.albumartists, (value) => typeof value === 'string'))
-    throw new TypeError('Invalid metadata: "albumartists" must be an array of string.');
-  if (!isArray(common.genre, (value) => typeof value === 'string'))
-    throw new TypeError('Invalid metadata: "genre" must be an array of string.');
-  if (!isArray(common.label, (value) => typeof value === 'string'))
-    throw new TypeError('Invalid metadata: "label" must be an array of string.');
-  if (!isArray(common.composer, (value) => typeof value === 'string'))
-    throw new TypeError('Invalid metadata: "composer" must be an array of string.');
-  if (!isArray(common.artists, (value) => typeof value === 'string'))
-    throw new TypeError('Invalid metadata: "artists" must be an array of string.');
+  if (!isArray(common.albumartists, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "albumartists" must be an array of strings.');
+  if (!isArray(common.genre, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "genre" must be an array of strings.');
+  if (!isArray(common.label, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "label" must be an array of strings.');
+  if (!isArray(common.composer, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "composer" must be an array of strings.');
+  if (!isArray(common.artists, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "artists" must be an array of strings.');
+  if (!isArray(common.lyricist, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "lyricist" must be an array of strings.');
+  if (!isArray(common.writer, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "writer" must be an array of strings.');
+  if (!isArray(common.conductor, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "conductor" must be an array of strings.');
+  if (!isArray(common.remixer, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "remixer" must be an array of strings.');
+  if (!isArray(common.arranger, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "arranger" must be an array of strings.');
+  if (!isArray(common.engineer, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "engineer" must be an array of strings.');
+  if (!isArray(common.publisher, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "publisher" must be an array of strings.');
+  if (!isArray(common.producer, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "producer" must be an array of strings.');
+  if (!isArray(common.djmixer, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "djmixer" must be an array of strings.');
+  if (!isArray(common.mixer, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "mixer" must be an array of strings.');
+  if (!isArray(common.technician, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "technician" must be an array of strings.');
+  if (!isArray(common.subtitle, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "subtitle" must be an array of strings.');
+  if (!isArray(common.description, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "description" must be an array of strings.');
+  if (!isArray(common.discsubtitle, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "discsubtitle" must be an array of strings.');
+  if (!isArray(common.releasetype, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "releasetype" must be an array of strings.');
+  if (!isArray(common.isrc, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "isrc" must be an array of strings.');
+  if (!isArray(common.performer_instrument, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "performer_instrument" must be an array of strings.');
+  if (!isArray(common.notes, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "notes" must be an array of strings.');
+  if (!isArray(common.category, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "category" must be an array of strings.');
+  if (!isArray(common.keywords, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "keywords" must be an array of strings.');
+  if (!isArray(common.catalognumber, (v) => typeof v === 'string'))
+    throw new TypeError('Invalid metadata: "catalognumber" must be an array of strings.');
+
+  // Validate Complex Arrays
+
   if (
     !isArray(
       common.picture,
@@ -361,19 +713,23 @@ const validateMediaContent = (common, isPartial) => {
   )
     throw new TypeError('Invalid metadata: "picture" must be an array of pictures.');
 
+  if (!isArray(common.comment, isComment))
+    throw new TypeError('Invalid metadata: "comment" must be an array of valid IComment objects.');
+  if (!isArray(common.lyrics, isLyricsTag))
+    throw new TypeError('Invalid metadata: "lyrics" must be an array of valid ILyricsTag objects.');
+  if (!isArray(common.rating, isRating))
+    throw new TypeError('Invalid metadata: "rating" must be an array of valid IRating objects.');
+
+  // Validate Nested Objects (Disk, Track, Movement, etc.)
+
   /**
    * Validate Nested Objects (Disk and Track)
    * @param {string} name
    * @param {MediaNumber|null} [info]
    */
   const validateTrackInfo = (name, info) => {
-    checkString(name, 'name');
-    if (isUndefinedAllowed(info)) return; // Ignores if partial
-
-    if (info === undefined || info === null) {
-      throw new TypeError(`Invalid metadata: "${name}" is required.`);
-    }
-
+    if (isUndefinedAllowed(info)) return;
+    if (info === null) return;
     if (typeof info !== 'object')
       throw new TypeError(`Invalid metadata: "${name}" must be an object or null.`);
     if (typeof info.no !== 'number' && info.no !== null)
@@ -384,12 +740,13 @@ const validateMediaContent = (common, isPartial) => {
 
   validateTrackInfo('disk', common.disk);
   validateTrackInfo('track', common.track);
+  validateTrackInfo('movementIndex', common.movementIndex);
 };
 
 /**
  * Helper to validate types within the media content metadata object.
  * This ensures that if a property is present, it matches the expected type.
- * @param {ContentMetadataTemplate<IPictureTemplate<string | Uint8Array<ArrayBufferLike>>>} common
+ * @param {ContentMetadataTemplate<IPictureTemplate<string | Uint8Array>>} common
  */
 export const valMediaContentMetadata = (common) => {
   checkObject(common, 'common');
@@ -399,7 +756,7 @@ export const valMediaContentMetadata = (common) => {
 /**
  * Helper to validate types within the media content metadata object.
  * Allows the absence of properties (useful for updates/patch).
- * @param {Partial<ContentMetadataTemplate<IPictureTemplate<string | Uint8Array<ArrayBufferLike>>>>} common
+ * @param {Partial<ContentMetadataTemplate<IPictureTemplate<string | Uint8Array>>>} common
  */
 export const valMediaContentMetadataPartial = (common) => {
   checkObject(common, 'common');
@@ -436,7 +793,7 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
 
     // 4. Complete Validation of the parsed metadata structure
     if (!metadata || typeof metadata.common !== 'object')
-      throw new TypeError('Invalid metadata: "common" property is missing or not an object.');
+      throw new TypeError('Invalid metadata: "common" property is missing.');
 
     const common = metadata.common;
     valMediaContentMetadataPartial(common);
@@ -519,7 +876,7 @@ export const parseMediaMetadata = async (
   metadata = {},
   parseFile = (data) => {
     if (!(data instanceof Blob)) throw new TypeError('Expected "data" to be a Blob.');
-    return new Promise((resolve, reject) => reject(new TypeError('parseFile library not found.')));
+    return new Promise((_, reject) => reject(new TypeError('parseFile library not found.')));
   },
   callbacks = {},
   convertBase64toBlob = true,
@@ -570,11 +927,11 @@ export const parseMediaMetadata = async (
 
   const notifyError = (/** @type {Error} */ error, /** @type {LoadingErrorStage} */ stage) => {
     if (!(error instanceof Error)) throw new TypeError('Expected "error" to be an Error.');
-    checkString(stage, 'stage'); // Adicionado
+    checkString(stage, 'stage');
 
     if (callbacks.onError) {
       callbacks.onError({
-        error,
+        error: error instanceof Error ? error : new Error(String(error)),
         url: url || (source instanceof HTMLMediaElement ? source.src : 'unknown'),
         stage,
       });
@@ -693,27 +1050,20 @@ export const parseMediaMetadata = async (
 
     // Notify Success
     if (callbacks.onProgress) {
-      callbacks.onProgress({
-        status: 'success',
-        stage: 'COMPLETE',
-        url: url,
-      });
+      callbacks.onProgress({ status: 'success', stage: 'COMPLETE', url: url });
     }
 
     return /** @type {MediaContent<PictureData>} */ (finalContent);
   } catch (err) {
     // If it's already a MediaLoadingError, re-throw it.
     // Otherwise, wrap it.
-    if (err instanceof MediaLoadingError) {
-      throw err;
-    } else {
-      const wrappedError = new MediaLoadingError(
-        err instanceof Error ? err.message : 'UNKNOWN ERROR',
-        url,
-        'INITIALIZING',
-      );
-      notifyError(wrappedError, 'INITIALIZING');
-      throw wrappedError;
-    }
+    if (err instanceof MediaLoadingError) throw err;
+    const wrappedError = new MediaLoadingError(
+      err instanceof Error ? err.message : 'UNKNOWN ERROR',
+      url,
+      'INITIALIZING',
+    );
+    notifyError(wrappedError, 'INITIALIZING');
+    throw wrappedError;
   }
 };
