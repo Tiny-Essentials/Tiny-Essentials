@@ -677,6 +677,7 @@ export const parseMediaMetadata = async (
     // 5. Final Merge Logic
     // Priority: Manual Metadata (highest) > Extracted ID3 > Default values
     const finalContent = {
+      _fetch_data: extractedMetadata,
       ...baseData,
       ...defaultMetadata,
       ...extractedMetadata,
@@ -687,7 +688,6 @@ export const parseMediaMetadata = async (
         extractedMetadata.artist ||
         metadata.artist ||
         (typeof unknownArtist === 'string' ? unknownArtist : String(unknownArtist())),
-      _fetch_data: structuredClone(extractedMetadata),
     };
 
     // Notify Success
