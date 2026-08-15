@@ -444,7 +444,7 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
     // 5. Return the specific metadata fields requested
     // We structure the return to match the MediaContentMetadata typedef
     return {
-      _fetch_data: common,
+      _fetch_data: metadata,
       title: common?.title ?? null,
       album: common?.album ?? null,
       albumartist: common?.albumartist ?? null,
