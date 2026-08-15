@@ -74,7 +74,7 @@
  * core playback properties with rich metadata.
  *
  * @template {PictureDataType} PictureData
- * @typedef {MediaContentBase & MediaContentMetadata<PictureData>} MediaContent
+ * @typedef {{ _fetch_data: any; } & MediaContentBase & MediaContentMetadata<PictureData>} MediaContent
  */
 
 //////////////////////////////////////////////////////////////////
@@ -687,6 +687,7 @@ export const parseMediaMetadata = async (
         extractedMetadata.artist ||
         metadata.artist ||
         (typeof unknownArtist === 'string' ? unknownArtist : String(unknownArtist())),
+      _fetch_data: structuredClone(extractedMetadata),
     };
 
     // Notify Success
