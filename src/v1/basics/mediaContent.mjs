@@ -81,6 +81,7 @@ import { countObj, isJsonObject } from './objChecker.mjs';
  *
  * @template {IPictureTemplate<PictureDataType>} IPictureContent
  * @typedef {Object} ContentMetadataTemplate
+ * @property {MediaContentFetchData<PictureDataType>|null} [_fetchData]
  * @property {string} [title] - The title of the track.
  * @property {string} [album] - The name of the album.
  * @property {string} [albumartist] - The primary artist of the album.
@@ -202,7 +203,7 @@ import { countObj, isJsonObject } from './objChecker.mjs';
  * `music-metadata@11.13.0` npm package.
  *
  * @template {PictureDataType} PictureData
- * @typedef {{ _fetch_data?: MediaContentFetchData<PictureData>|null; } & ContentMetadataTemplate<IPictureTemplate<PictureData>>} MediaContentMetadata
+ * @typedef {ContentMetadataTemplate<IPictureTemplate<PictureData>>} MediaContentMetadata
  */
 
 /**
@@ -447,65 +448,27 @@ export const valMediaContentMetadata = (common) => {
     typeof v === 'boolean' ||
     (!forceNoUndefined && v === null);
 
-  const isArray = (
-    /** @type {any[]|undefined} */ v,
-    /** @type {(value: any) => boolean} */ valueValidator,
-  ) => {
+  /**
+   * @template {any} T
+   * @param {T[]|undefined} v
+   * @param {(value: T) => boolean} valueValidator
+   */
+  const isArray = (v, valueValidator) => {
     if (isUndefinedAllowed(v)) return true;
     checkFunction(valueValidator, 'valueValidator');
     return Array.isArray(v) && v.every(valueValidator);
   };
 
-  // --- Recursive Validators for Deep Validation ---
+  if (isJsonObject(common._fetchData)) {
+    valMediaContentMetadata(common._fetchData.common);
+    checkObject(common._fetchData.native, '_fetchData.native');
+    for (const id in common._fetchData.native) {
+      const item = common._fetchData.native[id];
 
-  const isTimestampFormat = (
-    /** @type {{ notSynchronized: number | null | undefined; mpegFrameNumber: number | null | undefined; milliseconds: number | null | undefined; } | null} */ v,
-  ) =>
-    v !== null &&
-    typeof v === 'object' &&
-    isNumber(v.notSynchronized, true) &&
-    isNumber(v.mpegFrameNumber, true) &&
-    isNumber(v.milliseconds, true);
-
-  const isLyricsText = (
-    /** @type {{ text: string | null | undefined; timestamp: number | null | undefined; } | null} */ v,
-  ) => v !== null && typeof v === 'object' && isString(v.text, true) && isNumber(v.timestamp);
-
-  const isLyricsContentType = (
-    /** @type {{ other: number | null | undefined; lyrics: number | null | undefined; text: number | null | undefined; movement_part: number | null | undefined; events: number | null | undefined; chord: number | null | undefined; trivia_pop: number | null | undefined; } | null} */ v,
-  ) =>
-    v !== null &&
-    typeof v === 'object' &&
-    isNumber(v.other, true) &&
-    isNumber(v.lyrics, true) &&
-    isNumber(v.text, true) &&
-    isNumber(v.movement_part, true) &&
-    isNumber(v.events, true) &&
-    isNumber(v.chord, true) &&
-    isNumber(v.trivia_pop, true);
-
-  const isLyricsTag = (
-    /** @type {{ text: string | null | undefined; syncText: any[] | undefined; timeStampFormat: any; contentType: any; } | null} */ v,
-  ) =>
-    v !== null &&
-    typeof v === 'object' &&
-    isString(v.text) &&
-    isArray(v.syncText, isLyricsText) &&
-    isTimestampFormat(v.timeStampFormat) &&
-    isLyricsContentType(v.contentType);
-
-  const isComment = (
-    /** @type {{ descriptor: string | null | undefined; language: string | null | undefined; text: string | null | undefined; } | null} */ v,
-  ) =>
-    v !== null &&
-    typeof v === 'object' &&
-    isString(v.descriptor) &&
-    isString(v.language) &&
-    isString(v.text);
-
-  const isRating = (
-    /** @type {{ source: string | null | undefined; rating: number | null | undefined; } | null} */ v,
-  ) => v !== null && typeof v === 'object' && isString(v.source) && isNumber(v.rating);
+      if (!isArray(item, (data) => typeof data.id === 'string'))
+        throw new TypeError(`Invalid native data: "${id}" must be an array of native fetch data.`);
+    }
+  }
 
   // --- Primitive Validation ---
 
@@ -691,11 +654,61 @@ export const valMediaContentMetadata = (common) => {
   )
     throw new TypeError('Invalid metadata: "picture" must be an array of pictures.');
 
-  if (!isArray(common.comment, isComment))
+  if (
+    !isArray(
+      common.comment,
+      (v) =>
+        v !== null &&
+        typeof v === 'object' &&
+        isString(v.descriptor) &&
+        isString(v.language) &&
+        isString(v.text),
+    )
+  )
     throw new TypeError('Invalid metadata: "comment" must be an array of valid IComment objects.');
-  if (!isArray(common.lyrics, isLyricsTag))
+
+  if (
+    !isArray(common.lyrics, (v) => {
+      const isLyricsContentType = (/** @type {LyricsContentType} */ v) =>
+        v !== null &&
+        typeof v === 'object' &&
+        isNumber(v.other, true) &&
+        isNumber(v.lyrics, true) &&
+        isNumber(v.text, true) &&
+        isNumber(v.movement_part, true) &&
+        isNumber(v.events, true) &&
+        isNumber(v.chord, true) &&
+        isNumber(v.trivia_pop, true);
+
+      const isTimestampFormat = (/** @type {TimestampFormat} */ v) =>
+        v !== null &&
+        typeof v === 'object' &&
+        isNumber(v.notSynchronized, true) &&
+        isNumber(v.mpegFrameNumber, true) &&
+        isNumber(v.milliseconds, true);
+
+      return (
+        v !== null &&
+        typeof v === 'object' &&
+        isString(v.text) &&
+        isArray(
+          v.syncText,
+          (v) =>
+            v !== null && typeof v === 'object' && isString(v.text, true) && isNumber(v.timestamp),
+        ) &&
+        isTimestampFormat(v.timeStampFormat) &&
+        isLyricsContentType(v.contentType)
+      );
+    })
+  )
     throw new TypeError('Invalid metadata: "lyrics" must be an array of valid ILyricsTag objects.');
-  if (!isArray(common.rating, isRating))
+
+  if (
+    !isArray(
+      common.rating,
+      (v) => v !== null && typeof v === 'object' && isString(v.source) && isNumber(v.rating),
+    )
+  )
     throw new TypeError('Invalid metadata: "rating" must be an array of valid IRating objects.');
 
   // Validate Nested Objects (Disk, Track, Movement, etc.)
@@ -775,7 +788,7 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
     // We structure the return to match the MediaContentMetadata typedef
     return Object.fromEntries(
       Object.entries({
-        _fetch_data: metadata,
+        _fetchData: metadata,
         title: common?.title ?? null,
         album: common?.album ?? null,
         albumartist: common?.albumartist ?? null,
