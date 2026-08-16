@@ -54,9 +54,7 @@ Used to provide specific context when something goes wrong during the media prep
 | Function | Description |
 | :--- | :--- |
 | `getMediaContentBase` | Returns a fresh, empty `MediaContentBase` object. |
-| `getMediaContentMetadata` | Returns a fresh, empty `MediaContentMetadata` object. |
 | `valMediaContentMetadata` | Performs strict validation on a full `MediaContentMetadata` object. |
-| `valMediaContentMetadataPartial` | Performs validation on a partial metadata object (useful for patches/updates). |
 
 ### Data & Memory Management
 

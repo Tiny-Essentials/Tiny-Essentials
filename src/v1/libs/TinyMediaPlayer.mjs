@@ -2,7 +2,6 @@ import TinyDebugger from './TinyDebugger.mjs';
 
 import {
   getMediaContentBase,
-  getMediaContentMetadata,
   parseMediaMetadata,
   valMediaContentMetadata,
 } from '../basics/mediaContent.mjs';
@@ -1062,7 +1061,7 @@ class TinyMediaPlayer extends TinyDebugger {
     }
 
     /** @type {MediaContent} */
-    const newContent = { ...getMediaContentBase(), ...getMediaContentMetadata(), ...content };
+    const newContent = { ...getMediaContentBase(), ...content };
     valMediaContentMetadata(newContent);
 
     const newLength = this.#playlist.push(newContent);

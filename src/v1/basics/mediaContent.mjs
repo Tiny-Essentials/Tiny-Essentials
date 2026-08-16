@@ -1,3 +1,5 @@
+import { countObj, isJsonObject } from './objChecker.mjs';
+
 /**
  * A type representing either a static string or a function that returns a string, used to resolve an unknown artist's name.
  * @typedef {string|(() => string)} UnknownArtistGetter
@@ -26,20 +28,20 @@
 
 /**
  * A numeric structure representing track or disk indexing.
- * @typedef {{no: number|null, of: number|null}} MediaNumber
+ * @typedef {{no?: number, of?: number}} MediaNumber
  */
 
 /**
  * @typedef {Object} IComment
- * @property {string|null} descriptor - A descriptor for the comment.
- * @property {string|null} language - The language of the comment.
- * @property {string|null} text - The text content of the comment.
+ * @property {string} [descriptor] - A descriptor for the comment.
+ * @property {string} [language] - The language of the comment.
+ * @property {string} [text] - The text content of the comment.
  */
 
 /**
  * @typedef {Object} ILyricsText
  * @property {string} text - The lyric text content.
- * @property {number|null} timestamp - The timestamp associated with this lyric line.
+ * @property {number} [timestamp] - The timestamp associated with this lyric line.
  */
 
 /**
@@ -62,7 +64,7 @@
 
 /**
  * @typedef {Object} ILyricsTag
- * @property {string|null} text - The text content of the lyrics.
+ * @property {string} [text] - The text content of the lyrics.
  * @property {ILyricsText[]} syncText - An array of synchronized lyric text objects.
  * @property {TimestampFormat} timeStampFormat - The format of the timestamp.
  * @property {LyricsContentType} contentType - The type of lyrical content.
@@ -70,8 +72,8 @@
 
 /**
  * @typedef {Object} IRating
- * @property {string|null} source - The source of the rating.
- * @property {number|null} rating - The numeric rating value.
+ * @property {string} [source] - The source of the rating.
+ * @property {number} [rating] - The numeric rating value.
  */
 
 /**
@@ -79,94 +81,94 @@
  *
  * @template {IPictureTemplate<PictureDataType>} IPictureContent
  * @typedef {Object} ContentMetadataTemplate
- * @property {string|null} title - The title of the track.
- * @property {string|null} album - The name of the album.
- * @property {string|null} albumartist - The primary artist of the album.
- * @property {string[]} albumartists - An array of artists associated with the album.
- * @property {string[]} genre - An array of genres associated with the track.
- * @property {string[]} label - The record label.
- * @property {string[]} composer - The composer of the track.
- * @property {number|null} year - The release year.
- * @property {string|null} artist - The primary artist of the track.
- * @property {string[]} artists - An array of artists associated with the track.
- * @property {MediaNumber} disk - Disk information containing the current disk number and total disks.
- * @property {MediaNumber} track - Track information containing the current track number and total tracks.
- * @property {IPictureContent[]} picture - An array of picture objects containing album art.
- * @property {string|null} date - The date.
- * @property {string|null} originaldate - The original date.
- * @property {number|null} originalyear - The original release year.
- * @property {string|null} releasedate - The release date.
- * @property {IComment[]} comment - An array of comments.
- * @property {ILyricsTag[]} lyrics - An array of lyric tags.
- * @property {string|null} albumsort - The sortable album name.
- * @property {string|null} titlesort - The sortable title.
- * @property {string|null} work - The work/composition name.
- * @property {string|null} artistsort - The sortable artist name.
- * @property {string|null} albumartistsort - The sortable album artist name.
- * @property {string|null} composersort - The sortable composer name.
- * @property {string[]} lyricist - An array of lyricists.
- * @property {string[]} writer - An array of writers.
- * @property {string[]} conductor - An array of conductors.
- * @property {string[]} remixer - An array of remixers.
- * @property {string[]} arranger - An array of arrangers.
- * @property {string[]} engineer - An array of engineers.
- * @property {string[]} publisher - An array of publishers.
- * @property {string[]} producer - An array of producers.
- * @property {string[]} djmixer - An array of DJ mixers.
- * @property {string[]} mixer - An array of mixers.
- * @property {string[]} technician - An array of technicians.
- * @property {string|null} grouping - The grouping name.
- * @property {string[]} subtitle - An array of subtitles.
- * @property {string[]} description - An array of descriptions.
- * @property {string|null} longDescription - A long description.
- * @property {string[]} discsubtitle - An array of disc subtitles.
- * @property {string|null} totaltracks - Total number of tracks.
- * @property {string|null} totaldiscs - Total number of discs.
- * @property {number|null} movementTotal - Total number of movements.
- * @property {boolean|null} compilation - Whether it is a compilation.
- * @property {IRating[]} rating - An array of ratings.
- * @property {number|null} bpm - Beats per minute.
- * @property {string|null} mood - The mood of the track.
- * @property {string|null} media - The media type.
- * @property {string[]} catalognumber - An array of catalog numbers.
- * @property {string|null} tvShow - The TV show name.
- * @property {string|null} tvShowSort - The sortable TV show name.
- * @property {number|null} tvSeason - The TV season number.
- * @property {number|null} tvEpisode - The TV episode number.
- * @property {string|null} tvEpisodeId - The TV episode ID.
- * @property {string|null} tvNetwork - The TV network.
- * @property {boolean|null} podcast - Whether it is a podcast.
- * @property {string|null} podcasturl - The podcast URL.
- * @property {string|null} releasestatus - The release status.
- * @property {string[]} releasetype - An array of release types.
- * @property {string|null} releasecountry - The release country.
- * @property {string|null} script - The script.
- * @property {string|null} language - The language.
- * @property {string|null} copyright - The copyright information.
- * @property {string|null} license - The license information.
- * @property {string|null} encodedby - The encoder.
- * @property {string|null} encodersettings - The encoder settings.
- * @property {boolean|null} gapless - Whether it is gapless.
- * @property {string|null} barcode - The barcode.
- * @property {string[]} isrc - An array of ISRC codes.
- * @property {string|null} asin - The ASIN.
- * @property {string|null} website - The website.
- * @property {string[]} performer_instrument - An array of performers and their instruments.
- * @property {number|null} averageLevel - The average loudness level.
- * @property {number|null} peakLevel - The peak loudness level.
- * @property {string[]} notes - An array of notes.
- * @property {string|null} originalalbum - The original album.
- * @property {string|null} originalartist - The original artist.
- * @property {string|null} key - The initial key of the music in the file, e.g. "A Minor".
- * @property {string[]} category - An array of categories.
- * @property {number|null} hdVideo - HD video flag.
- * @property {string[]} keywords - An array of keywords.
- * @property {string|null} movement - The movement.
- * @property {MediaNumber} movementIndex - The movement index.
- * @property {string|null} podcastId - The podcast ID.
- * @property {boolean|null} showMovement - Whether to show movement.
- * @property {number|null} stik - The stik value.
- * @property {number|null} playCounter - The play counter.
+ * @property {string} [title] - The title of the track.
+ * @property {string} [album] - The name of the album.
+ * @property {string} [albumartist] - The primary artist of the album.
+ * @property {string[]} [albumartists] - An array of artists associated with the album.
+ * @property {string[]} [genre] - An array of genres associated with the track.
+ * @property {string[]} [label] - The record label.
+ * @property {string[]} [composer] - The composer of the track.
+ * @property {number} [year] - The release year.
+ * @property {string} [artist] - The primary artist of the track.
+ * @property {string[]} [artists] - An array of artists associated with the track.
+ * @property {MediaNumber} [disk] - Disk information containing the current disk number and total disks.
+ * @property {MediaNumber} [track] - Track information containing the current track number and total tracks.
+ * @property {IPictureContent[]} [picture] - An array of picture objects containing album art.
+ * @property {string} [date] - The date.
+ * @property {string} [originaldate] - The original date.
+ * @property {number} [originalyear] - The original release year.
+ * @property {string} [releasedate] - The release date.
+ * @property {IComment[]} [comment] - An array of comments.
+ * @property {ILyricsTag[]} [lyrics] - An array of lyric tags.
+ * @property {string} [albumsort] - The sortable album name.
+ * @property {string} [titlesort] - The sortable title.
+ * @property {string} [work] - The work/composition name.
+ * @property {string} [artistsort] - The sortable artist name.
+ * @property {string} [albumartistsort] - The sortable album artist name.
+ * @property {string} [composersort] - The sortable composer name.
+ * @property {string[]} [lyricist] - An array of lyricists.
+ * @property {string[]} [writer] - An array of writers.
+ * @property {string[]} [conductor] - An array of conductors.
+ * @property {string[]} [remixer] - An array of remixers.
+ * @property {string[]} [arranger] - An array of arrangers.
+ * @property {string[]} [engineer] - An array of engineers.
+ * @property {string[]} [publisher] - An array of publishers.
+ * @property {string[]} [producer] - An array of producers.
+ * @property {string[]} [djmixer] - An array of DJ mixers.
+ * @property {string[]} [mixer] - An array of mixers.
+ * @property {string[]} [technician] - An array of technicians.
+ * @property {string} [grouping] - The grouping name.
+ * @property {string[]} [subtitle] - An array of subtitles.
+ * @property {string[]} [description] - An array of descriptions.
+ * @property {string} [longDescription] - A long description.
+ * @property {string[]} [discsubtitle] - An array of disc subtitles.
+ * @property {string} [totaltracks] - Total number of tracks.
+ * @property {string} [totaldiscs] - Total number of discs.
+ * @property {number} [movementTotal] - Total number of movements.
+ * @property {boolean} [compilation] - Whether it is a compilation.
+ * @property {IRating[]} [rating] - An array of ratings.
+ * @property {number} [bpm] - Beats per minute.
+ * @property {string} [mood] - The mood of the track.
+ * @property {string} [media] - The media type.
+ * @property {string[]} [catalognumber] - An array of catalog numbers.
+ * @property {string} [tvShow] - The TV show name.
+ * @property {string} [tvShowSort] - The sortable TV show name.
+ * @property {number} [tvSeason] - The TV season number.
+ * @property {number} [tvEpisode] - The TV episode number.
+ * @property {string} [tvEpisodeId] - The TV episode ID.
+ * @property {string} [tvNetwork] - The TV network.
+ * @property {boolean} [podcast] - Whether it is a podcast.
+ * @property {string} [podcasturl] - The podcast URL.
+ * @property {string} [releasestatus] - The release status.
+ * @property {string[]} [releasetype] - An array of release types.
+ * @property {string} [releasecountry] - The release country.
+ * @property {string} [script] - The script.
+ * @property {string} [language] - The language.
+ * @property {string} [copyright] - The copyright information.
+ * @property {string} [license] - The license information.
+ * @property {string} [encodedby] - The encoder.
+ * @property {string} [encodersettings] - The encoder settings.
+ * @property {boolean} [gapless] - Whether it is gapless.
+ * @property {string} [barcode] - The barcode.
+ * @property {string[]} [isrc] - An array of ISRC codes.
+ * @property {string} [asin] - The ASIN.
+ * @property {string} [website] - The website.
+ * @property {string[]} [performer_instrument] - An array of performers and their instruments.
+ * @property {number} [averageLevel] - The average loudness level.
+ * @property {number} [peakLevel] - The peak loudness level.
+ * @property {string[]} [notes] - An array of notes.
+ * @property {string} [originalalbum] - The original album.
+ * @property {string} [originalartist] - The original artist.
+ * @property {string} [key] - The initial key of the music in the file, e.g. "A Minor".
+ * @property {string[]} [category] - An array of categories.
+ * @property {number} [hdVideo] - HD video flag.
+ * @property {string[]} [keywords] - An array of keywords.
+ * @property {string} [movement] - The movement.
+ * @property {MediaNumber} [movementIndex] - The movement index.
+ * @property {string} [podcastId] - The podcast ID.
+ * @property {boolean} [showMovement] - Whether to show movement.
+ * @property {number} [stik] - The stik value.
+ * @property {number} [playCounter] - The play counter.
  */
 
 /**
@@ -200,7 +202,7 @@
  * `music-metadata@11.13.0` npm package.
  *
  * @template {PictureDataType} PictureData
- * @typedef {{ _fetch_data: null|MediaContentFetchData<PictureData>; } & ContentMetadataTemplate<IPictureTemplate<PictureData>>} MediaContentMetadata
+ * @typedef {{ _fetch_data?: MediaContentFetchData<PictureData>; } & ContentMetadataTemplate<IPictureTemplate<PictureData>>} MediaContentMetadata
  */
 
 /**
@@ -295,102 +297,6 @@ export const getMediaContentBase = () => ({
   url: '',
   duration: 0,
   weight: 1,
-});
-
-/**
- * Returns a new object initialized with the default values for the media content metadata properties.
- * @returns {MediaContentMetadata<PictureDataType>}
- */
-export const getMediaContentMetadata = () => ({
-  _fetch_data: null,
-  title: null,
-  album: null,
-  albumartist: null,
-  albumartists: [],
-  genre: [],
-  label: [],
-  composer: [],
-  year: null,
-  artist: null,
-  artists: [],
-  disk: { no: null, of: null },
-  track: { no: null, of: null },
-  movementIndex: { no: null, of: null },
-  picture: [],
-  date: null,
-  originaldate: null,
-  originalyear: null,
-  releasedate: null,
-  comment: [],
-  lyrics: [],
-  albumsort: null,
-  titlesort: null,
-  work: null,
-  artistsort: null,
-  albumartistsort: null,
-  composersort: null,
-  lyricist: [],
-  writer: [],
-  conductor: [],
-  remixer: [],
-  arranger: [],
-  engineer: [],
-  publisher: [],
-  producer: [],
-  djmixer: [],
-  mixer: [],
-  technician: [],
-  grouping: null,
-  subtitle: [],
-  description: [],
-  longDescription: null,
-  discsubtitle: [],
-  totaltracks: null,
-  totaldiscs: null,
-  movementTotal: null,
-  compilation: null,
-  rating: [],
-  bpm: null,
-  mood: null,
-  media: null,
-  catalognumber: [],
-  tvShow: null,
-  tvShowSort: null,
-  tvSeason: null,
-  tvEpisode: null,
-  tvEpisodeId: null,
-  tvNetwork: null,
-  podcast: null,
-  podcasturl: null,
-  releasestatus: null,
-  releasetype: [],
-  releasecountry: null,
-  script: null,
-  language: null,
-  copyright: null,
-  license: null,
-  encodedby: null,
-  encodersettings: null,
-  gapless: null,
-  barcode: null,
-  isrc: [],
-  asin: null,
-  website: null,
-  performer_instrument: [],
-  averageLevel: null,
-  peakLevel: null,
-  notes: [],
-  originalalbum: null,
-  originalartist: null,
-  key: null,
-  category: [],
-  hdVideo: null,
-  keywords: [],
-  movement: null,
-  podcastId: null,
-  showMovement: null,
-  stik: null,
-  playCounter: null,
 });
 
 /**
@@ -520,14 +426,11 @@ export const revokeContentUrls = (content) => {
 /**
  * Central logic of metadata validation.
  * @param {Partial<ContentMetadataTemplate<IPictureTemplate<string | Uint8Array>>>} common - The object to be validated.
- * @param {boolean} isPartial - If true, properties can be undefined.
  */
-const validateMediaContent = (common, isPartial) => {
+const validateMediaContent = (common) => {
   checkObject(common, 'common');
-  if (typeof isPartial !== 'boolean') throw new TypeError('Expected "isPartial" to be a boolean.');
-
   const isUndefinedAllowed = (/** @type {any} */ v, forceNoUndefined = false) =>
-    !forceNoUndefined && isPartial && typeof v === 'undefined';
+    !forceNoUndefined && typeof v === 'undefined';
 
   const isString = (/** @type {string | null | undefined} */ v, forceNoUndefined = false) =>
     isUndefinedAllowed(v, forceNoUndefined) ||
@@ -825,17 +728,18 @@ const validateMediaContent = (common, isPartial) => {
  */
 export const valMediaContentMetadata = (common) => {
   checkObject(common, 'common');
-  return validateMediaContent(common, false);
+  return validateMediaContent(common);
 };
 
 /**
  * Helper to validate types within the media content metadata object.
  * Allows the absence of properties (useful for updates/patch).
- * @param {Partial<ContentMetadataTemplate<IPictureTemplate<string | Uint8Array>>>} common
+ * @param {ContentMetadataTemplate<IPictureTemplate<string | Uint8Array>>} common
+ * @deprecated Use {@link valMediaContentMetadata} instead.
  */
 export const valMediaContentMetadataPartial = (common) => {
   checkObject(common, 'common');
-  return validateMediaContent(common, true);
+  return validateMediaContent(common);
 };
 
 /**
@@ -873,105 +777,122 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
     const common = metadata.common;
     valMediaContentMetadataPartial(common);
 
+    /**
+     * @type {(value: [string, any]) => boolean}
+     */
+    const filterContent = ([_, value]) =>
+      Array.isArray(value)
+        ? value.length > 0
+        : isJsonObject(value)
+          ? (() => {
+              value;
+              const d = Object.fromEntries(Object.entries(value).filter(filterContent));
+              const amount = countObj(d);
+              return amount > 0;
+            })()
+          : value !== null;
+
     // 5. Return the specific metadata fields requested
     // We structure the return to match the MediaContentMetadata typedef
-    return {
-      _fetch_data: metadata,
-      title: common?.title ?? null,
-      album: common?.album ?? null,
-      albumartist: common?.albumartist ?? null,
-      albumartists: common?.albumartists ?? [],
-      genre: common?.genre ?? [],
-      label: common?.label ?? [],
-      composer: common?.composer ?? [],
-      year: common?.year ?? null,
-      artist: common?.artist ?? null,
-      artists: common?.artists ?? [],
-      disk: common?.disk ? { no: common.disk.no, of: common.disk.of } : { no: null, of: null },
-      track: common?.track ? { no: common.track.no, of: common.track.of } : { no: null, of: null },
-      movementIndex: common?.movementIndex
-        ? { no: common.movementIndex.no, of: common.movementIndex.of }
-        : { no: null, of: null },
-      picture:
-        common?.picture?.map((value) => ({
-          ...value,
-          data: convertBase64toBlob ? convertToBlobUrl(value.data, value.format) : value.data,
-        })) ?? [],
-      date: common?.date ?? null,
-      originaldate: common?.originaldate ?? null,
-      originalyear: common?.originalyear ?? null,
-      releasedate: common?.releasedate ?? null,
-      comment: common?.comment ?? [],
-      lyrics: common?.lyrics ?? [],
-      albumsort: common?.albumsort ?? null,
-      titlesort: common?.titlesort ?? null,
-      work: common?.work ?? null,
-      artistsort: common?.artistsort ?? null,
-      albumartistsort: common?.albumartistsort ?? null,
-      composersort: common?.composersort ?? null,
-      lyricist: common?.lyricist ?? [],
-      writer: common?.writer ?? [],
-      conductor: common?.conductor ?? [],
-      remixer: common?.remixer ?? [],
-      arranger: common?.arranger ?? [],
-      engineer: common?.engineer ?? [],
-      publisher: common?.publisher ?? [],
-      producer: common?.producer ?? [],
-      djmixer: common?.djmixer ?? [],
-      mixer: common?.mixer ?? [],
-      technician: common?.technician ?? [],
-      grouping: common?.grouping ?? null,
-      subtitle: common?.subtitle ?? [],
-      description: common?.description ?? [],
-      longDescription: common?.longDescription ?? null,
-      discsubtitle: common?.discsubtitle ?? [],
-      totaltracks: common?.totaltracks ?? null,
-      totaldiscs: common?.totaldiscs ?? null,
-      movementTotal: common?.movementTotal ?? null,
-      compilation: common?.compilation ?? null,
-      rating: common?.rating ?? [],
-      bpm: common?.bpm ?? null,
-      mood: common?.mood ?? null,
-      media: common?.media ?? null,
-      catalognumber: common?.catalognumber ?? [],
-      tvShow: common?.tvShow ?? null,
-      tvShowSort: common?.tvShowSort ?? null,
-      tvSeason: common?.tvSeason ?? null,
-      tvEpisode: common?.tvEpisode ?? null,
-      tvEpisodeId: common?.tvEpisodeId ?? null,
-      tvNetwork: common?.tvNetwork ?? null,
-      podcast: common?.podcast ?? null,
-      podcasturl: common?.podcasturl ?? null,
-      releasestatus: common?.releasestatus ?? null,
-      releasetype: common?.releasetype ?? [],
-      releasecountry: common?.releasecountry ?? null,
-      script: common?.script ?? null,
-      language: common?.language ?? null,
-      copyright: common?.copyright ?? null,
-      license: common?.license ?? null,
-      encodedby: common?.encodedby ?? null,
-      encodersettings: common?.encodersettings ?? null,
-      gapless: common?.gapless ?? null,
-      barcode: common?.barcode ?? null,
-      isrc: common?.isrc ?? [],
-      asin: common?.asin ?? null,
-      website: common?.website ?? null,
-      performer_instrument: common?.performer_instrument ?? [],
-      averageLevel: common?.averageLevel ?? null,
-      peakLevel: common?.peakLevel ?? null,
-      notes: common?.notes ?? [],
-      originalalbum: common?.originalalbum ?? null,
-      originalartist: common?.originalartist ?? null,
-      key: common?.key ?? null,
-      category: common?.category ?? [],
-      hdVideo: common?.hdVideo ?? null,
-      keywords: common?.keywords ?? [],
-      movement: common?.movement ?? null,
-      podcastId: common?.podcastId ?? null,
-      showMovement: common?.showMovement ?? null,
-      stik: common?.stik ?? null,
-      playCounter: common?.playCounter ?? null,
-    };
+    return Object.fromEntries(
+      Object.entries({
+        _fetch_data: metadata,
+        title: common?.title ?? null,
+        album: common?.album ?? null,
+        albumartist: common?.albumartist ?? null,
+        albumartists: common?.albumartists ?? [],
+        genre: common?.genre ?? [],
+        label: common?.label ?? [],
+        composer: common?.composer ?? [],
+        year: common?.year ?? null,
+        artist: common?.artist ?? null,
+        artists: common?.artists ?? [],
+        disk: common?.disk ? { no: common.disk.no, of: common.disk.of } : null,
+        track: common?.track ? { no: common.track.no, of: common.track.of } : null,
+        movementIndex: common?.movementIndex
+          ? { no: common.movementIndex.no, of: common.movementIndex.of }
+          : null,
+        picture:
+          common?.picture?.map((value) => ({
+            ...value,
+            data: convertBase64toBlob ? convertToBlobUrl(value.data, value.format) : value.data,
+          })) ?? [],
+        date: common?.date ?? null,
+        originaldate: common?.originaldate ?? null,
+        originalyear: common?.originalyear ?? null,
+        releasedate: common?.releasedate ?? null,
+        comment: common?.comment ?? [],
+        lyrics: common?.lyrics ?? [],
+        albumsort: common?.albumsort ?? null,
+        titlesort: common?.titlesort ?? null,
+        work: common?.work ?? null,
+        artistsort: common?.artistsort ?? null,
+        albumartistsort: common?.albumartistsort ?? null,
+        composersort: common?.composersort ?? null,
+        lyricist: common?.lyricist ?? [],
+        writer: common?.writer ?? [],
+        conductor: common?.conductor ?? [],
+        remixer: common?.remixer ?? [],
+        arranger: common?.arranger ?? [],
+        engineer: common?.engineer ?? [],
+        publisher: common?.publisher ?? [],
+        producer: common?.producer ?? [],
+        djmixer: common?.djmixer ?? [],
+        mixer: common?.mixer ?? [],
+        technician: common?.technician ?? [],
+        grouping: common?.grouping ?? null,
+        subtitle: common?.subtitle ?? [],
+        description: common?.description ?? [],
+        longDescription: common?.longDescription ?? null,
+        discsubtitle: common?.discsubtitle ?? [],
+        totaltracks: common?.totaltracks ?? null,
+        totaldiscs: common?.totaldiscs ?? null,
+        movementTotal: common?.movementTotal ?? null,
+        compilation: common?.compilation ?? null,
+        rating: common?.rating ?? [],
+        bpm: common?.bpm ?? null,
+        mood: common?.mood ?? null,
+        media: common?.media ?? null,
+        catalognumber: common?.catalognumber ?? [],
+        tvShow: common?.tvShow ?? null,
+        tvShowSort: common?.tvShowSort ?? null,
+        tvSeason: common?.tvSeason ?? null,
+        tvEpisode: common?.tvEpisode ?? null,
+        tvEpisodeId: common?.tvEpisodeId ?? null,
+        tvNetwork: common?.tvNetwork ?? null,
+        podcast: common?.podcast ?? null,
+        podcasturl: common?.podcasturl ?? null,
+        releasestatus: common?.releasestatus ?? null,
+        releasetype: common?.releasetype ?? [],
+        releasecountry: common?.releasecountry ?? null,
+        script: common?.script ?? null,
+        language: common?.language ?? null,
+        copyright: common?.copyright ?? null,
+        license: common?.license ?? null,
+        encodedby: common?.encodedby ?? null,
+        encodersettings: common?.encodersettings ?? null,
+        gapless: common?.gapless ?? null,
+        barcode: common?.barcode ?? null,
+        isrc: common?.isrc ?? [],
+        asin: common?.asin ?? null,
+        website: common?.website ?? null,
+        performer_instrument: common?.performer_instrument ?? [],
+        averageLevel: common?.averageLevel ?? null,
+        peakLevel: common?.peakLevel ?? null,
+        notes: common?.notes ?? [],
+        originalalbum: common?.originalalbum ?? null,
+        originalartist: common?.originalartist ?? null,
+        key: common?.key ?? null,
+        category: common?.category ?? [],
+        hdVideo: common?.hdVideo ?? null,
+        keywords: common?.keywords ?? [],
+        movement: common?.movement ?? null,
+        podcastId: common?.podcastId ?? null,
+        showMovement: common?.showMovement ?? null,
+        stik: common?.stik ?? null,
+        playCounter: common?.playCounter ?? null,
+      }).filter(filterContent),
+    );
   } catch (error) {
     // Re-throwing the error allows the caller to handle specific failure cases
     throw error;
