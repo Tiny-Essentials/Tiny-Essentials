@@ -460,8 +460,18 @@ export const revokeContentUrls = (content) => {
  */
 export const valFetchMediaContent = (fetchData, returnsBoolean = false) => {
   if (isJsonObject(fetchData)) {
+    if (countObj(fetchData) !== 4) {
+      if (returnsBoolean) return false;
+      throw new TypeError(`Invalid fetch data: Object must be an MediaContentFetchData.`);
+    }
     valMediaContentMetadata(fetchData.common);
     checkObject(fetchData.native, '_fetchData.native');
+
+    // @ts-ignore
+    checkObject(fetchData.format, '_fetchData.format');
+    // @ts-ignore
+    checkObject(fetchData.quality, '_fetchData.quality');
+
     for (const id in fetchData.native) {
       const item = fetchData.native[id];
 
