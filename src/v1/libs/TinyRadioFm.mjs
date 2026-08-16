@@ -4,8 +4,10 @@ import {
   convertToBlobUrl,
   parseMediaMetadata,
   revokeContentUrls,
+  valMediaContentMetadata,
 } from '../basics/mediaContent.mjs';
 import { createCheckDestroyed } from './utils.mjs';
+import { isJsonObject } from '../basics/objChecker.mjs';
 
 const checkDestroy = createCheckDestroyed('TinyRadioFm');
 
@@ -615,6 +617,7 @@ class TinyRadioFm extends EventEmitter {
       throw new TypeError('smartQueue must be a boolean.');
     }
 
+    valMediaContentMetadata(data);
     const newItem = structuredClone(data);
     this._ccBase64ToBlobUrl(newItem);
     if (type === 'music') {
@@ -691,6 +694,13 @@ class TinyRadioFm extends EventEmitter {
       if (eventAtTime) finalTimestamp = eventAtTime.absoluteEnd;
     }
 
+    if (
+      isJsonObject(payload) &&
+      // @ts-ignore
+      typeof payload.newIndex !== 'number'
+    )
+      // @ts-ignore
+      valMediaContentMetadata(payload);
     /** @type {ScheduledTask} */
     const task = { timestamp: finalTimestamp, action, type, payload };
     this.#scheduledTasks.push(task);
@@ -841,6 +851,7 @@ class TinyRadioFm extends EventEmitter {
   async _processListForExport(list) {
     return Promise.all(
       list.map(async (item) => {
+        valMediaContentMetadata(item);
         const newItem = structuredClone(item);
         await this._rcblobUrlToBase64(newItem);
         return newItem;
@@ -1509,6 +1520,7 @@ class TinyRadioFm extends EventEmitter {
 
     const processListForImport = (/** @type {MediaContent[]} */ list) =>
       list.map((item) => {
+        valMediaContentMetadata(item);
         const newItem = structuredClone(item);
         this._ccBase64ToBlobUrl(newItem);
         return newItem;
