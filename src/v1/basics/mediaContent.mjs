@@ -427,7 +427,7 @@ export const revokeContentUrls = (content) => {
  * Central logic of metadata validation.
  * @param {ContentMetadataTemplate<IPictureTemplate<string | Uint8Array>>} common - The object to be validated.
  */
-const valMediaContentMetadata = (common) => {
+export const valMediaContentMetadata = (common) => {
   checkObject(common, 'common');
   const isUndefinedAllowed = (/** @type {any} */ v, forceNoUndefined = false) =>
     !forceNoUndefined && typeof v === 'undefined';
