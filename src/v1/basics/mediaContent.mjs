@@ -180,7 +180,7 @@ import { countObj, isJsonObject } from './objChecker.mjs';
 /**
  * A record containing common metadata tags.
  * @template {PictureDataType} PictureData
- * @typedef {Record<string|number|symbol, unknown> & Partial<ContentMetadataTemplate<IPictureTemplate<PictureData>>>} ICommonTagsResult
+ * @typedef {Record<string|number|symbol, unknown> & ContentMetadataTemplate<IPictureTemplate<PictureData>>} ICommonTagsResult
  */
 
 /**
@@ -202,7 +202,7 @@ import { countObj, isJsonObject } from './objChecker.mjs';
  * `music-metadata@11.13.0` npm package.
  *
  * @template {PictureDataType} PictureData
- * @typedef {{ _fetch_data?: MediaContentFetchData<PictureData>; } & ContentMetadataTemplate<IPictureTemplate<PictureData>>} MediaContentMetadata
+ * @typedef {{ _fetch_data?: MediaContentFetchData<PictureData>|null; } & ContentMetadataTemplate<IPictureTemplate<PictureData>>} MediaContentMetadata
  */
 
 /**
@@ -425,9 +425,9 @@ export const revokeContentUrls = (content) => {
 
 /**
  * Central logic of metadata validation.
- * @param {Partial<ContentMetadataTemplate<IPictureTemplate<string | Uint8Array>>>} common - The object to be validated.
+ * @param {ContentMetadataTemplate<IPictureTemplate<string | Uint8Array>>} common - The object to be validated.
  */
-const validateMediaContent = (common) => {
+const valMediaContentMetadata = (common) => {
   checkObject(common, 'common');
   const isUndefinedAllowed = (/** @type {any} */ v, forceNoUndefined = false) =>
     !forceNoUndefined && typeof v === 'undefined';
@@ -719,16 +719,6 @@ const validateMediaContent = (common) => {
   validateTrackInfo('disk', common.disk);
   validateTrackInfo('track', common.track);
   validateTrackInfo('movementIndex', common.movementIndex);
-};
-
-/**
- * Helper to validate types within the media content metadata object.
- * This ensures that if a property is present, it matches the expected type.
- * @param {ContentMetadataTemplate<IPictureTemplate<string | Uint8Array>>} common
- */
-export const valMediaContentMetadata = (common) => {
-  checkObject(common, 'common');
-  return validateMediaContent(common);
 };
 
 /**

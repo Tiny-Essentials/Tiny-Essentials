@@ -77,7 +77,6 @@ import {
   extractMediaId3Tags,
   parseMediaMetadata,
   valMediaContentMetadata,
-  valMediaContentMetadataPartial,
 } from './mediaContent.mjs';
 import { createSingletonTask, waitForTrue } from './promiseUtils.mjs';
 import {
@@ -100,7 +99,6 @@ export {
   waitForTrue,
   multiplyArrayBlocks,
   valMediaContentMetadata,
-  valMediaContentMetadataPartial,
   parseMediaMetadata,
   extractMediaId3Tags,
   diffStrings,
