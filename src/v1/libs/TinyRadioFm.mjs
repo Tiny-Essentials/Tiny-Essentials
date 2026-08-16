@@ -165,7 +165,7 @@ class TinyRadioFm extends EventEmitter {
     metadata,
     parseFile,
     callbacks,
-    convertBase64toBlob,
+    convertBase64toBlob = true,
   ) {
     return parseMediaMetadata(
       source,

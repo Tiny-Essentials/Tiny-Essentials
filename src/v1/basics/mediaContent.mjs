@@ -192,7 +192,7 @@ import { countObj, isJsonObject } from './objChecker.mjs';
 /**
  * @template {PictureDataType} PictureData
  * @typedef {Object} MediaContentFetchData
- * @property {ICommonTagsResult<PictureDataType>} common - The common metadata properties.
+ * @property {ICommonTagsResult<PictureData>} common - The common metadata properties.
  * @property {INativeTags} native - The native metadata properties.
  * @property {unknown} format - The format of the media.
  * @property {unknown} quality - The quality of the media.
@@ -800,6 +800,37 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
             })()
           : value !== null;
 
+    // Fix blob values.
+    const picture =
+      common?.picture?.map((value) => ({
+        ...value,
+        data: convertBase64toBlob ? convertToBlobUrl(value.data, value.format) : value.data,
+      })) ?? [];
+
+    metadata.common = { ...metadata.common, picture };
+
+    // Sanitize metadata.native to prevent Uint8Array leakage
+    if (convertBase64toBlob) {
+      Object.keys(metadata.native).forEach((key) => {
+        metadata.native[key] = metadata.native[key].map((item) => {
+          // Check if item.value is an object and contains a 'data' property that is a Uint8Array
+          if (
+            item.value &&
+            typeof item.value === 'object' &&
+            item.value.data instanceof Uint8Array
+          ) {
+            const index =
+              common?.picture?.findIndex((item2) => item2.data === item.value.data) ?? -1;
+            const data = picture[index];
+            if (data) {
+              return { ...item, value: { ...item.value, data: data.data } };
+            }
+          }
+          return item;
+        });
+      });
+    }
+
     // 5. Return the specific metadata fields requested
     // We structure the return to match the MediaContentMetadata typedef
     return Object.fromEntries(
@@ -820,11 +851,7 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
         movementIndex: common?.movementIndex
           ? { no: common.movementIndex.no, of: common.movementIndex.of }
           : null,
-        picture:
-          common?.picture?.map((value) => ({
-            ...value,
-            data: convertBase64toBlob ? convertToBlobUrl(value.data, value.format) : value.data,
-          })) ?? [],
+        picture,
         date: common?.date ?? null,
         originaldate: common?.originaldate ?? null,
         originalyear: common?.originalyear ?? null,
