@@ -732,17 +732,6 @@ export const valMediaContentMetadata = (common) => {
 };
 
 /**
- * Helper to validate types within the media content metadata object.
- * Allows the absence of properties (useful for updates/patch).
- * @param {ContentMetadataTemplate<IPictureTemplate<string | Uint8Array>>} common
- * @deprecated Use {@link valMediaContentMetadata} instead.
- */
-export const valMediaContentMetadataPartial = (common) => {
-  checkObject(common, 'common');
-  return validateMediaContent(common);
-};
-
-/**
  * Downloads an audio file from a URL and extracts its ID3/metadata tags.
  *
  * @param {string} url - The full URL of the audio file to be downloaded.
@@ -775,7 +764,7 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
       throw new TypeError('Invalid metadata: "common" property is missing.');
 
     const common = metadata.common;
-    valMediaContentMetadataPartial(common);
+    valMediaContentMetadata(common);
 
     /**
      * @type {(value: [string, any]) => boolean}
