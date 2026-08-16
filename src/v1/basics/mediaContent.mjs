@@ -40,34 +40,34 @@ import { countObj, isJsonObject } from './objChecker.mjs';
 
 /**
  * @typedef {Object} ILyricsText
- * @property {string} text - The lyric text content.
+ * @property {string} [text] - The lyric text content.
  * @property {number} [timestamp] - The timestamp associated with this lyric line.
  */
 
 /**
  * @typedef {Object} TimestampFormat
- * @property {number} notSynchronized - Indicates if the timestamp is not synchronized.
- * @property {number} mpegFrameNumber - The MPEG frame number.
- * @property {number} milliseconds - The time in milliseconds.
+ * @property {number} [notSynchronized] - Indicates if the timestamp is not synchronized.
+ * @property {number} [mpegFrameNumber] - The MPEG frame number.
+ * @property {number} [milliseconds] - The time in milliseconds.
  */
 
 /**
  * @typedef {Object} LyricsContentType
- * @property {number} other - Content type for other.
- * @property {number} lyrics - Content type for lyrics.
- * @property {number} text - Content type for text.
- * @property {number} movement_part - Content type for movement parts.
- * @property {number} events - Content type for events.
- * @property {number} chord - Content type for chords.
- * @property {number} trivia_pop - Content type for trivia/pop.
+ * @property {number} [other] - Content type for other.
+ * @property {number} [lyrics] - Content type for lyrics.
+ * @property {number} [text] - Content type for text.
+ * @property {number} [movement_part] - Content type for movement parts.
+ * @property {number} [events] - Content type for events.
+ * @property {number} [chord] - Content type for chords.
+ * @property {number} [trivia_pop] - Content type for trivia/pop.
  */
 
 /**
  * @typedef {Object} ILyricsTag
  * @property {string} [text] - The text content of the lyrics.
- * @property {ILyricsText[]} syncText - An array of synchronized lyric text objects.
- * @property {TimestampFormat} timeStampFormat - The format of the timestamp.
- * @property {LyricsContentType} contentType - The type of lyrical content.
+ * @property {ILyricsText[]} [syncText] - An array of synchronized lyric text objects.
+ * @property {TimestampFormat} [timeStampFormat] - The format of the timestamp.
+ * @property {LyricsContentType} [contentType] - The type of lyrical content.
  */
 
 /**
@@ -691,33 +691,35 @@ export const valMediaContentMetadata = (common) => {
 
   if (
     !isArray(common.lyrics, (v) => {
-      const isLyricsContentType = (/** @type {LyricsContentType} */ v) =>
-        v !== null &&
-        typeof v === 'object' &&
-        isNumber(v.other, true) &&
-        isNumber(v.lyrics, true) &&
-        isNumber(v.text, true) &&
-        isNumber(v.movement_part, true) &&
-        isNumber(v.events, true) &&
-        isNumber(v.chord, true) &&
-        isNumber(v.trivia_pop, true);
+      const isLyricsContentType = (/** @type {LyricsContentType|null|undefined} */ v) =>
+        v === undefined ||
+        (v !== null &&
+          typeof v === 'object' &&
+          isNumber(v.other) &&
+          isNumber(v.lyrics) &&
+          isNumber(v.text) &&
+          isNumber(v.movement_part) &&
+          isNumber(v.events) &&
+          isNumber(v.chord) &&
+          isNumber(v.trivia_pop));
 
-      const isTimestampFormat = (/** @type {TimestampFormat} */ v) =>
-        v !== null &&
-        typeof v === 'object' &&
-        isNumber(v.notSynchronized, true) &&
-        isNumber(v.mpegFrameNumber, true) &&
-        isNumber(v.milliseconds, true);
+      const isTimestampFormat = (/** @type {TimestampFormat|null|undefined} */ v) =>
+        v === undefined ||
+        (v !== null &&
+          typeof v === 'object' &&
+          isNumber(v.notSynchronized) &&
+          isNumber(v.mpegFrameNumber) &&
+          isNumber(v.milliseconds));
 
       return (
         v !== null &&
         typeof v === 'object' &&
         isString(v.text) &&
-        isArray(
-          v.syncText,
-          (v) =>
-            v !== null && typeof v === 'object' && isString(v.text, true) && isNumber(v.timestamp),
-        ) &&
+        (!Array.isArray(v) ||
+          isArray(
+            v.syncText,
+            (v) => v !== null && typeof v === 'object' && isString(v.text) && isNumber(v.timestamp),
+          )) &&
         isTimestampFormat(v.timeStampFormat) &&
         isLyricsContentType(v.contentType)
       );
@@ -771,192 +773,183 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
   checkString(url, 'url');
   checkFunction(parseFile, 'parseFile');
 
-  try {
-    // 1. Download the file from the provided URL
-    const response = await fetch(url);
+  // 1. Download the file from the provided URL
+  const response = await fetch(url);
 
-    if (!response.ok)
-      throw new Error(`Failed to fetch audio file: ${response.status} ${response.statusText}`);
+  if (!response.ok)
+    throw new Error(`Failed to fetch audio file: ${response.status} ${response.statusText}`);
 
-    // 2. Convert the response into a Blob so the parser can read it
-    const blob = await response.blob();
+  // 2. Convert the response into a Blob so the parser can read it
+  const blob = await response.blob();
 
-    // 3. Use the provided parser function on the Blob
-    const metadata = await parseFile(blob);
+  // 3. Use the provided parser function on the Blob
+  const metadata = await parseFile(blob);
 
-    // 4. Complete Validation of the parsed metadata structure
-    if (!metadata || typeof metadata.common !== 'object')
-      throw new TypeError('Invalid metadata: "common" property is missing.');
-    if (typeof metadata.common['performer:instrument'] !== undefined)
-      // @ts-ignore
-      metadata.common.performer_instrument = metadata.common['performer:instrument'];
-    valFetchMediaContent(metadata);
+  // 4. Complete Validation of the parsed metadata structure
+  if (!metadata || typeof metadata.common !== 'object')
+    throw new TypeError('Invalid metadata: "common" property is missing.');
+  if (typeof metadata.common['performer:instrument'] !== undefined)
+    // @ts-ignore
+    metadata.common.performer_instrument = metadata.common['performer:instrument'];
+  valFetchMediaContent(metadata);
 
-    const common = metadata.common;
-    valMediaContentMetadata(common);
+  const common = metadata.common;
+  valMediaContentMetadata(common);
 
-    /**
-     * @type {(value: [string, any]) => boolean}
-     */
-    const filterContent = ([_, value]) =>
-      Array.isArray(value)
-        ? value.length > 0
-        : isJsonObject(value)
-          ? (() => {
-              value;
-              const d = Object.fromEntries(Object.entries(value).filter(filterContent));
-              const amount = countObj(d);
-              return amount > 0;
-            })()
-          : value !== null;
+  /**
+   * @type {(value: [string, any]) => boolean}
+   */
+  const filterContent = ([_, value]) =>
+    Array.isArray(value)
+      ? value.length > 0
+      : isJsonObject(value)
+        ? (() => {
+            value;
+            const d = Object.fromEntries(Object.entries(value).filter(filterContent));
+            const amount = countObj(d);
+            return amount > 0;
+          })()
+        : value !== null;
 
-    // Fix blob values.
-    const picture =
-      common?.picture?.map((value) => ({
-        ...value,
-        data: convertBase64toBlob ? convertToBlobUrl(value.data, value.format) : value.data,
-      })) ?? [];
+  // Fix blob values.
+  const picture =
+    common?.picture?.map((value) => ({
+      ...value,
+      data: convertBase64toBlob ? convertToBlobUrl(value.data, value.format) : value.data,
+    })) ?? [];
 
-    metadata.common = {
-      ...metadata.common,
-      picture: picture.map((value) => ({
-        ...value,
-        data: '',
-      })),
-    };
+  metadata.common = {
+    ...metadata.common,
+    picture: picture.map((value) => ({
+      ...value,
+      data: '',
+    })),
+  };
 
-    // Sanitize metadata.native to prevent Uint8Array leakage
-    if (convertBase64toBlob) {
-      Object.keys(metadata.native).forEach((key) => {
-        metadata.native[key] = metadata.native[key].map((item) => {
-          // Check if item.value is an object and contains a 'data' property that is a Uint8Array
-          if (
-            item.value &&
-            typeof item.value === 'object' &&
-            item.value.data instanceof Uint8Array
-          ) {
-            const index =
-              common?.picture?.findIndex(
-                (item2) =>
-                  item2.data === item.value.data &&
-                  item2.format === item.value.format &&
-                  item2.description === item.value.description &&
-                  item2.name === item.value.name,
-              ) ?? -1;
-            const data = picture[index];
-            if (data) {
-              return { ...item, value: { ...item.value, data: '' } };
-            }
+  // Sanitize metadata.native to prevent Uint8Array leakage
+  if (convertBase64toBlob) {
+    Object.keys(metadata.native).forEach((key) => {
+      metadata.native[key] = metadata.native[key].map((item) => {
+        // Check if item.value is an object and contains a 'data' property that is a Uint8Array
+        if (item.value && typeof item.value === 'object' && item.value.data instanceof Uint8Array) {
+          const index =
+            common?.picture?.findIndex(
+              (item2) =>
+                item2.data === item.value.data &&
+                item2.format === item.value.format &&
+                item2.description === item.value.description &&
+                item2.name === item.value.name,
+            ) ?? -1;
+          const data = picture[index];
+          if (data) {
+            return { ...item, value: { ...item.value, data: '' } };
           }
-          return item;
-        });
+        }
+        return item;
       });
-    }
-
-    // 5. Return the specific metadata fields requested
-    // We structure the return to match the MediaContentMetadata typedef
-    /** @type {MediaContentMetadata<PictureDataType>} */
-    const result = Object.fromEntries(
-      Object.entries({
-        title: common?.title ?? null,
-        album: common?.album ?? null,
-        albumartist: common?.albumartist ?? null,
-        albumartists: common?.albumartists ?? [],
-        genre: common?.genre ?? [],
-        label: common?.label ?? [],
-        composer: common?.composer ?? [],
-        year: common?.year ?? null,
-        artist: common?.artist ?? null,
-        artists: common?.artists ?? [],
-        disk: common?.disk ? { no: common.disk.no, of: common.disk.of } : null,
-        track: common?.track ? { no: common.track.no, of: common.track.of } : null,
-        movementIndex: common?.movementIndex
-          ? { no: common.movementIndex.no, of: common.movementIndex.of }
-          : null,
-        picture,
-        date: common?.date ?? null,
-        originaldate: common?.originaldate ?? null,
-        originalyear: common?.originalyear ?? null,
-        releasedate: common?.releasedate ?? null,
-        comment: common?.comment ?? [],
-        lyrics: common?.lyrics ?? [],
-        albumsort: common?.albumsort ?? null,
-        titlesort: common?.titlesort ?? null,
-        work: common?.work ?? null,
-        artistsort: common?.artistsort ?? null,
-        albumartistsort: common?.albumartistsort ?? null,
-        composersort: common?.composersort ?? null,
-        lyricist: common?.lyricist ?? [],
-        writer: common?.writer ?? [],
-        conductor: common?.conductor ?? [],
-        remixer: common?.remixer ?? [],
-        arranger: common?.arranger ?? [],
-        engineer: common?.engineer ?? [],
-        publisher: common?.publisher ?? [],
-        producer: common?.producer ?? [],
-        djmixer: common?.djmixer ?? [],
-        mixer: common?.mixer ?? [],
-        technician: common?.technician ?? [],
-        grouping: common?.grouping ?? null,
-        subtitle: common?.subtitle ?? [],
-        description: common?.description ?? [],
-        longDescription: common?.longDescription ?? null,
-        discsubtitle: common?.discsubtitle ?? [],
-        totaltracks: common?.totaltracks ?? null,
-        totaldiscs: common?.totaldiscs ?? null,
-        movementTotal: common?.movementTotal ?? null,
-        compilation: common?.compilation ?? null,
-        rating: common?.rating ?? [],
-        bpm: common?.bpm ?? null,
-        mood: common?.mood ?? null,
-        media: common?.media ?? null,
-        catalognumber: common?.catalognumber ?? [],
-        tvShow: common?.tvShow ?? null,
-        tvShowSort: common?.tvShowSort ?? null,
-        tvSeason: common?.tvSeason ?? null,
-        tvEpisode: common?.tvEpisode ?? null,
-        tvEpisodeId: common?.tvEpisodeId ?? null,
-        tvNetwork: common?.tvNetwork ?? null,
-        podcast: common?.podcast ?? null,
-        podcasturl: common?.podcasturl ?? null,
-        releasestatus: common?.releasestatus ?? null,
-        releasetype: common?.releasetype ?? [],
-        releasecountry: common?.releasecountry ?? null,
-        script: common?.script ?? null,
-        language: common?.language ?? null,
-        copyright: common?.copyright ?? null,
-        license: common?.license ?? null,
-        encodedby: common?.encodedby ?? null,
-        encodersettings: common?.encodersettings ?? null,
-        gapless: common?.gapless ?? null,
-        barcode: common?.barcode ?? null,
-        isrc: common?.isrc ?? [],
-        asin: common?.asin ?? null,
-        website: common?.website ?? null,
-        performer_instrument: common?.performer_instrument ?? [],
-        averageLevel: common?.averageLevel ?? null,
-        peakLevel: common?.peakLevel ?? null,
-        notes: common?.notes ?? [],
-        originalalbum: common?.originalalbum ?? null,
-        originalartist: common?.originalartist ?? null,
-        key: common?.key ?? null,
-        category: common?.category ?? [],
-        hdVideo: common?.hdVideo ?? null,
-        keywords: common?.keywords ?? [],
-        movement: common?.movement ?? null,
-        podcastId: common?.podcastId ?? null,
-        showMovement: common?.showMovement ?? null,
-        stik: common?.stik ?? null,
-        playCounter: common?.playCounter ?? null,
-      }).filter(filterContent),
-    );
-
-    result._fetchData = metadata;
-    return result;
-  } catch (error) {
-    // Re-throwing the error allows the caller to handle specific failure cases
-    throw error;
+    });
   }
+
+  // 5. Return the specific metadata fields requested
+  // We structure the return to match the MediaContentMetadata typedef
+  /** @type {MediaContentMetadata<PictureDataType>} */
+  const result = Object.fromEntries(
+    Object.entries({
+      title: common?.title ?? null,
+      album: common?.album ?? null,
+      albumartist: common?.albumartist ?? null,
+      albumartists: common?.albumartists ?? [],
+      genre: common?.genre ?? [],
+      label: common?.label ?? [],
+      composer: common?.composer ?? [],
+      year: common?.year ?? null,
+      artist: common?.artist ?? null,
+      artists: common?.artists ?? [],
+      disk: common?.disk ? { no: common.disk.no, of: common.disk.of } : null,
+      track: common?.track ? { no: common.track.no, of: common.track.of } : null,
+      movementIndex: common?.movementIndex
+        ? { no: common.movementIndex.no, of: common.movementIndex.of }
+        : null,
+      picture,
+      date: common?.date ?? null,
+      originaldate: common?.originaldate ?? null,
+      originalyear: common?.originalyear ?? null,
+      releasedate: common?.releasedate ?? null,
+      comment: common?.comment ?? [],
+      lyrics: common?.lyrics ?? [],
+      albumsort: common?.albumsort ?? null,
+      titlesort: common?.titlesort ?? null,
+      work: common?.work ?? null,
+      artistsort: common?.artistsort ?? null,
+      albumartistsort: common?.albumartistsort ?? null,
+      composersort: common?.composersort ?? null,
+      lyricist: common?.lyricist ?? [],
+      writer: common?.writer ?? [],
+      conductor: common?.conductor ?? [],
+      remixer: common?.remixer ?? [],
+      arranger: common?.arranger ?? [],
+      engineer: common?.engineer ?? [],
+      publisher: common?.publisher ?? [],
+      producer: common?.producer ?? [],
+      djmixer: common?.djmixer ?? [],
+      mixer: common?.mixer ?? [],
+      technician: common?.technician ?? [],
+      grouping: common?.grouping ?? null,
+      subtitle: common?.subtitle ?? [],
+      description: common?.description ?? [],
+      longDescription: common?.longDescription ?? null,
+      discsubtitle: common?.discsubtitle ?? [],
+      totaltracks: common?.totaltracks ?? null,
+      totaldiscs: common?.totaldiscs ?? null,
+      movementTotal: common?.movementTotal ?? null,
+      compilation: common?.compilation ?? null,
+      rating: common?.rating ?? [],
+      bpm: common?.bpm ?? null,
+      mood: common?.mood ?? null,
+      media: common?.media ?? null,
+      catalognumber: common?.catalognumber ?? [],
+      tvShow: common?.tvShow ?? null,
+      tvShowSort: common?.tvShowSort ?? null,
+      tvSeason: common?.tvSeason ?? null,
+      tvEpisode: common?.tvEpisode ?? null,
+      tvEpisodeId: common?.tvEpisodeId ?? null,
+      tvNetwork: common?.tvNetwork ?? null,
+      podcast: common?.podcast ?? null,
+      podcasturl: common?.podcasturl ?? null,
+      releasestatus: common?.releasestatus ?? null,
+      releasetype: common?.releasetype ?? [],
+      releasecountry: common?.releasecountry ?? null,
+      script: common?.script ?? null,
+      language: common?.language ?? null,
+      copyright: common?.copyright ?? null,
+      license: common?.license ?? null,
+      encodedby: common?.encodedby ?? null,
+      encodersettings: common?.encodersettings ?? null,
+      gapless: common?.gapless ?? null,
+      barcode: common?.barcode ?? null,
+      isrc: common?.isrc ?? [],
+      asin: common?.asin ?? null,
+      website: common?.website ?? null,
+      performer_instrument: common?.performer_instrument ?? [],
+      averageLevel: common?.averageLevel ?? null,
+      peakLevel: common?.peakLevel ?? null,
+      notes: common?.notes ?? [],
+      originalalbum: common?.originalalbum ?? null,
+      originalartist: common?.originalartist ?? null,
+      key: common?.key ?? null,
+      category: common?.category ?? [],
+      hdVideo: common?.hdVideo ?? null,
+      keywords: common?.keywords ?? [],
+      movement: common?.movement ?? null,
+      podcastId: common?.podcastId ?? null,
+      showMovement: common?.showMovement ?? null,
+      stik: common?.stik ?? null,
+      playCounter: common?.playCounter ?? null,
+    }).filter(filterContent),
+  );
+
+  result._fetchData = metadata;
+  return result;
 };
 
 /**
