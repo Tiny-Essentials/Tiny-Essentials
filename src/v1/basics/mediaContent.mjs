@@ -284,6 +284,35 @@ const checkObject = (/** @type {Object<string, any> | null} */ val, /** @type {s
   }
 };
 
+const isUndefinedAllowed = (/** @type {any} */ v, forceNoUndefined = false) =>
+  !forceNoUndefined && typeof v === 'undefined';
+
+const isString = (/** @type {string | null | undefined} */ v, forceNoUndefined = false) =>
+  isUndefinedAllowed(v, forceNoUndefined) ||
+  typeof v === 'string' ||
+  (!forceNoUndefined && v === null);
+
+const isNumber = (/** @type {number | null | undefined} */ v, forceNoUndefined = false) =>
+  isUndefinedAllowed(v, forceNoUndefined) ||
+  typeof v === 'number' ||
+  (!forceNoUndefined && v === null);
+
+const isBoolean = (/** @type {boolean | null | undefined} */ v, forceNoUndefined = false) =>
+  isUndefinedAllowed(v, forceNoUndefined) ||
+  typeof v === 'boolean' ||
+  (!forceNoUndefined && v === null);
+
+/**
+ * @template {any} T
+ * @param {T[]|undefined} v
+ * @param {(value: T) => boolean} valueValidator
+ */
+const isArray = (v, valueValidator) => {
+  if (isUndefinedAllowed(v)) return true;
+  checkFunction(valueValidator, 'valueValidator');
+  return Array.isArray(v) && v.every(valueValidator);
+};
+
 /** @type {Map<string, number>} */
 export const _blobCounter = new Map();
 
@@ -425,50 +454,28 @@ export const revokeContentUrls = (content) => {
 };
 
 /**
- * Central logic of metadata validation.
- * @param {ContentMetadataTemplate<IPictureTemplate<string | Uint8Array>>} common - The object to be validated.
+ * @param {MediaContentFetchData<PictureDataType>|null} [fetchData] - The fetch object to be validated.
  */
-export const valMediaContentMetadata = (common) => {
-  checkObject(common, 'common');
-  const isUndefinedAllowed = (/** @type {any} */ v, forceNoUndefined = false) =>
-    !forceNoUndefined && typeof v === 'undefined';
-
-  const isString = (/** @type {string | null | undefined} */ v, forceNoUndefined = false) =>
-    isUndefinedAllowed(v, forceNoUndefined) ||
-    typeof v === 'string' ||
-    (!forceNoUndefined && v === null);
-
-  const isNumber = (/** @type {number | null | undefined} */ v, forceNoUndefined = false) =>
-    isUndefinedAllowed(v, forceNoUndefined) ||
-    typeof v === 'number' ||
-    (!forceNoUndefined && v === null);
-
-  const isBoolean = (/** @type {boolean | null | undefined} */ v, forceNoUndefined = false) =>
-    isUndefinedAllowed(v, forceNoUndefined) ||
-    typeof v === 'boolean' ||
-    (!forceNoUndefined && v === null);
-
-  /**
-   * @template {any} T
-   * @param {T[]|undefined} v
-   * @param {(value: T) => boolean} valueValidator
-   */
-  const isArray = (v, valueValidator) => {
-    if (isUndefinedAllowed(v)) return true;
-    checkFunction(valueValidator, 'valueValidator');
-    return Array.isArray(v) && v.every(valueValidator);
-  };
-
-  if (isJsonObject(common._fetchData)) {
-    valMediaContentMetadata(common._fetchData.common);
-    checkObject(common._fetchData.native, '_fetchData.native');
-    for (const id in common._fetchData.native) {
-      const item = common._fetchData.native[id];
+export const valFetchMediaContent = (fetchData) => {
+  if (isJsonObject(fetchData)) {
+    valMediaContentMetadata(fetchData.common);
+    checkObject(fetchData.native, '_fetchData.native');
+    for (const id in fetchData.native) {
+      const item = fetchData.native[id];
 
       if (!isArray(item, (data) => typeof data.id === 'string'))
         throw new TypeError(`Invalid native data: "${id}" must be an array of native fetch data.`);
     }
   }
+};
+
+/**
+ * Central logic of metadata validation.
+ * @param {ContentMetadataTemplate<IPictureTemplate<string | Uint8Array>>} common - The object to be validated.
+ */
+export const valMediaContentMetadata = (common) => {
+  checkObject(common, 'common');
+  valFetchMediaContent(common._fetchData);
 
   // --- Primitive Validation ---
 

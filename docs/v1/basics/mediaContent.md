@@ -55,6 +55,7 @@ Used to provide specific context when something goes wrong during the media prep
 | :--- | :--- |
 | `getMediaContentBase` | Returns a fresh, empty `MediaContentBase` object. |
 | `valMediaContentMetadata` | Performs strict validation on a full `MediaContentMetadata` object. |
+| `valFetchMediaContent` | Performs strict validation on a full `MediaContentFetchData` object. |
 
 ### Data & Memory Management
 

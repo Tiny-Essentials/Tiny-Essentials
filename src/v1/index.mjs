@@ -128,6 +128,7 @@ import {
   extractMediaId3Tags,
   parseMediaMetadata,
   valMediaContentMetadata,
+  valFetchMediaContent,
 } from './basics/mediaContent.mjs';
 import TinyHtml from './libs/TinyHtml.mjs';
 import TinyAfterScrollWatcher from './libs/TinyAfterScrollWatcher.mjs';
@@ -236,6 +237,7 @@ export {
   multiplyArrayBlocks,
   createCheckDestroyed,
   valMediaContentMetadata,
+  valFetchMediaContent,
   parseMediaMetadata,
   extractMediaId3Tags,
   defuzzifyCentroid,
