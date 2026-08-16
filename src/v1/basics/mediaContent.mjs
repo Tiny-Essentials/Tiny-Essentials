@@ -777,6 +777,9 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
     // 4. Complete Validation of the parsed metadata structure
     if (!metadata || typeof metadata.common !== 'object')
       throw new TypeError('Invalid metadata: "common" property is missing.');
+    if (typeof metadata.common['performer:instrument'] !== undefined)
+      // @ts-ignore
+      metadata.common.performer_instrument = metadata.common['performer:instrument'];
     valFetchMediaContent(metadata);
 
     const common = metadata.common;
