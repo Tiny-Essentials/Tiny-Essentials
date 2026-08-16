@@ -817,7 +817,13 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
         data: convertBase64toBlob ? convertToBlobUrl(value.data, value.format) : value.data,
       })) ?? [];
 
-    metadata.common = { ...metadata.common, picture };
+    metadata.common = {
+      ...metadata.common,
+      picture: picture.map((value) => ({
+        ...value,
+        data: '',
+      })),
+    };
 
     // Sanitize metadata.native to prevent Uint8Array leakage
     if (convertBase64toBlob) {
@@ -830,10 +836,16 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
             item.value.data instanceof Uint8Array
           ) {
             const index =
-              common?.picture?.findIndex((item2) => item2.data === item.value.data) ?? -1;
+              common?.picture?.findIndex(
+                (item2) =>
+                  item2.data === item.value.data &&
+                  item2.format === item.value.format &&
+                  item2.description === item.value.description &&
+                  item2.name === item.value.name,
+              ) ?? -1;
             const data = picture[index];
             if (data) {
-              return { ...item, value: { ...item.value, data: data.data } };
+              return { ...item, value: { ...item.value, data: '' } };
             }
           }
           return item;
