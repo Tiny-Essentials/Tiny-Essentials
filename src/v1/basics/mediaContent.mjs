@@ -65,6 +65,8 @@ import { countObj, isJsonObject } from './objChecker.mjs';
 /**
  * @typedef {Object} ILyricsTag
  * @property {string} [text] - The text content of the lyrics.
+ * @property {string} [descriptor] - A descriptor for the lyrics.
+ * @property {string} [language] - The language of the lyrics.
  * @property {ILyricsText[]} [syncText] - An array of synchronized lyric text objects.
  * @property {TimestampFormat} [timeStampFormat] - The format of the timestamp.
  * @property {LyricsContentType} [contentType] - The type of lyrical content.
@@ -715,6 +717,8 @@ export const valMediaContentMetadata = (common) => {
         v !== null &&
         typeof v === 'object' &&
         isString(v.text) &&
+        isString(v.descriptor) &&
+        isString(v.language) &&
         (!Array.isArray(v) ||
           isArray(
             v.syncText,
@@ -782,7 +786,7 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
   // 2. Convert the response into a Blob so the parser can read it
   const blob = await response.blob();
 
-  // 3. Use the provided parser function on the Blob
+  // 3. Use the provided parser function on the Blob to read metadata
   const metadata = await parseFile(blob);
 
   // 4. Complete Validation of the parsed metadata structure
