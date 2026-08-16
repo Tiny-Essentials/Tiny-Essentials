@@ -855,9 +855,9 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
 
     // 5. Return the specific metadata fields requested
     // We structure the return to match the MediaContentMetadata typedef
-    return Object.fromEntries(
+    /** @type {MediaContentMetadata<PictureDataType>} */
+    const result = Object.fromEntries(
       Object.entries({
-        _fetchData: metadata,
         title: common?.title ?? null,
         album: common?.album ?? null,
         albumartist: common?.albumartist ?? null,
@@ -950,6 +950,9 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
         playCounter: common?.playCounter ?? null,
       }).filter(filterContent),
     );
+
+    result._fetchData = metadata;
+    return result;
   } catch (error) {
     // Re-throwing the error allows the caller to handle specific failure cases
     throw error;
@@ -1165,11 +1168,38 @@ export const parseMediaMetadata = async (
 
     // 5. Final Merge Logic
     // Priority: Manual Metadata (highest) > Extracted ID3 > Default values
+
+    /**
+     * @template {Partial<MediaContent<PictureData>>} Metadata
+     * @param {Metadata} meta
+     */
+    const mergeMetadata = (meta) => {
+      const metadataEdit = { ...meta };
+      if (isJsonObject(metadataEdit._fetchData)) {
+        if (isJsonObject(extractedMetadata._fetchData)) {
+          metadataEdit._fetchData = {
+            ...extractedMetadata._fetchData,
+          };
+        }
+        if (isJsonObject(meta._fetchData)) {
+          if (typeof meta._fetchData.common !== 'undefined')
+            metadataEdit._fetchData.common = meta._fetchData.common;
+          if (typeof meta._fetchData.native !== 'undefined')
+            metadataEdit._fetchData.native = meta._fetchData.native;
+          if (typeof meta._fetchData.format !== 'undefined')
+            metadataEdit._fetchData.format = meta._fetchData.format;
+          if (typeof meta._fetchData.quality !== 'undefined')
+            metadataEdit._fetchData.quality = meta._fetchData.quality;
+        }
+      }
+      return metadataEdit;
+    };
+
     const finalContent = {
       ...baseData,
-      ...defaultMetadata,
+      ...mergeMetadata(defaultMetadata),
       ...extractedMetadata,
-      ...metadata,
+      ...mergeMetadata(metadata),
       // Explicitly ensure title and artist are resolved from the hierarchy
       title: extractedMetadata.title || metadata.title || getFallbackTitleFromUrl(url),
       artist:
