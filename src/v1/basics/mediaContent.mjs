@@ -455,18 +455,23 @@ export const revokeContentUrls = (content) => {
 
 /**
  * @param {MediaContentFetchData<PictureDataType>|null} [fetchData] - The fetch object to be validated.
+ * @param {boolean} [returnsBoolean=false] - Ignores the throw error to return a boolean.
+ * @returns {boolean}
  */
-export const valFetchMediaContent = (fetchData) => {
+export const valFetchMediaContent = (fetchData, returnsBoolean = false) => {
   if (isJsonObject(fetchData)) {
     valMediaContentMetadata(fetchData.common);
     checkObject(fetchData.native, '_fetchData.native');
     for (const id in fetchData.native) {
       const item = fetchData.native[id];
 
-      if (!isArray(item, (data) => typeof data.id === 'string'))
+      if (!isArray(item, (data) => typeof data.id === 'string')) {
+        if (returnsBoolean) return false;
         throw new TypeError(`Invalid native data: "${id}" must be an array of native fetch data.`);
+      }
     }
   }
+  return true;
 };
 
 /**
@@ -772,6 +777,7 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
     // 4. Complete Validation of the parsed metadata structure
     if (!metadata || typeof metadata.common !== 'object')
       throw new TypeError('Invalid metadata: "common" property is missing.');
+    valFetchMediaContent(metadata);
 
     const common = metadata.common;
     valMediaContentMetadata(common);
