@@ -115,10 +115,7 @@ class TinyPkgExportValidator {
 
   // --- Private State ---
 
-  /**
-   * The content of the package.json JSON object.
-   * @type {Record<string, any>}
-   */
+  /** @type {Record<string, any>} */
   #packageData = {};
 
   /** @type {string} */
@@ -172,7 +169,7 @@ class TinyPkgExportValidator {
    * @param {string} packageJsonPath - The package.json JSON file path.
    * @param {string} rootDir - The project root directory.
    * @param {ValidatorOptions} [options={}] - Configuration options.
-   * @throws {TypeError} If arguments are not strings.
+   * @throws {TypeError} If arguments are not strings or if options is not an object.
    */
   constructor(packageJsonPath, rootDir, options = {}) {
     if (typeof packageJsonPath !== 'string') {
@@ -180,6 +177,9 @@ class TinyPkgExportValidator {
     }
     if (typeof rootDir !== 'string') {
       throw new TypeError('The "rootDir" argument must be a string.');
+    }
+    if (typeof options !== 'object' || options === null || Array.isArray(options)) {
+      throw new TypeError('The "options" argument must be an object.');
     }
 
     this.#packageJsonPath = packageJsonPath;
@@ -197,8 +197,16 @@ class TinyPkgExportValidator {
    * @param {string} template - The message template string.
    * @param {Object} context - Data for placeholders.
    * @returns {string} The processed string.
+   * @throws {TypeError} If template is not a string or context is not an object.
    */
   #applyTemplate(template, context) {
+    if (typeof template !== 'string') {
+      throw new TypeError('The template must be a string.');
+    }
+    if (typeof context !== 'object' || context === null) {
+      throw new TypeError('The context must be a non-null object.');
+    }
+
     return template.replace(/{(\w+)}/g, (match, key) => {
       // @ts-ignore
       return context[key] !== undefined ? context[key] : match;
@@ -210,9 +218,24 @@ class TinyPkgExportValidator {
    * @param {'error'|'warning'|'success'|'info'|'dim'|'cyan'} type - The log type.
    * @param {string} templateKey - The key in the messages object.
    * @param {Object} [context={}] - Data for the template.
+   * @throws {TypeError} If arguments do not match required types or if type is invalid.
    */
   #log(type, templateKey, context = {}) {
     if (this.#silent) return;
+
+    const VALID_LOG_TYPES = ['error', 'warning', 'success', 'info', 'dim', 'cyan'];
+
+    if (!VALID_LOG_TYPES.includes(type)) {
+      throw new TypeError(
+        `Invalid log type: "${type}". Valid types are: ${VALID_LOG_TYPES.join(', ')}`,
+      );
+    }
+    if (typeof templateKey !== 'string') {
+      throw new TypeError('The templateKey must be a string.');
+    }
+    if (typeof context !== 'object' || context === null) {
+      throw new TypeError('The context must be a non-null object.');
+    }
 
     const template =
       // @ts-ignore
@@ -304,10 +327,15 @@ class TinyPkgExportValidator {
    * Recursively traverses the exports object.
    *
    * @param {Record<string, any>|string} node - The current node of the exports object.
-   * @param {string} currentKey - The current key (used for log tracking).
+   * @param {string} currentKey - The key (used for log tracking).
    * @returns {Promise<void>}
+   * @throws {TypeError} If node is not a string or object, or if currentKey is not a string.
    */
   async #traverseExports(node, currentKey = '') {
+    if (typeof currentKey !== 'string') {
+      throw new TypeError('The "currentKey" argument must be a string.');
+    }
+
     if (typeof node === 'string') {
       // Base case: the value is a direct path
       await this.#checkFileExists(node, currentKey);
@@ -318,6 +346,8 @@ class TinyPkgExportValidator {
         const subKey = currentKey ? `${currentKey} -> ${key}` : key;
         await this.#traverseExports(node[key], subKey);
       }
+    } else {
+      throw new TypeError('The "node" argument must be a string or a non-null object.');
     }
   }
 
@@ -327,8 +357,16 @@ class TinyPkgExportValidator {
    * @param {string} relativePath - The relative path defined in package.json.
    * @param {string} context - The key context for reporting purposes.
    * @returns {Promise<void>}
+   * @throws {TypeError} If relativePath or context are not strings.
    */
   async #checkFileExists(relativePath, context) {
+    if (typeof relativePath !== 'string') {
+      throw new TypeError('The "relativePath" argument must be a string.');
+    }
+    if (typeof context !== 'string') {
+      throw new TypeError('The "context" argument must be a string.');
+    }
+
     // Remove potential wildcards (e.g., '*') for literal path validation
     const cleanPath = relativePath.replace(/\*/g, '');
     const absolutePath = resolve(this.#rootDir, cleanPath);
