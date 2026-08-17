@@ -1,4 +1,6 @@
 # Remove original repository data
+dist/v1/build
+dist/v1/libs/utils/examples
 src
 test
 temp
@@ -9,7 +11,6 @@ babel.config.json
 rollup.config.mjs
 webpack.config.mjs
 tsconfig.json
-*.map
 
 # Logs
 logs

@@ -1,3 +1,3 @@
-import TinyLoadingScreen from '../libs/TinyLoadingScreen.mjs';
+import TinyLoadingScreen from '../libs/html/templates/TinyLoadingScreen.mjs';
 
 export { TinyLoadingScreen };

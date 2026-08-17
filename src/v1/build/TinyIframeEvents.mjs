@@ -1,3 +1,3 @@
-import TinyIframeEvents from '../libs/TinyIframeEvents.mjs';
+import TinyIframeEvents from '../libs/html/events/TinyIframeEvents.mjs';
 
 export { TinyIframeEvents };

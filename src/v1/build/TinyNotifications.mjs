@@ -1,3 +1,3 @@
-import TinyNotifications from '../libs/TinyNotifications.mjs';
+import TinyNotifications from '../libs/html/notification/TinyNotifications.mjs';
 
 export { TinyNotifications };

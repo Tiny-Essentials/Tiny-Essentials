@@ -1,3 +1,3 @@
-import TinyDragger from '../libs/TinyDragger.mjs';
+import TinyDragger from '../libs/html/drag/TinyDragger.mjs';
 
 export { TinyDragger };

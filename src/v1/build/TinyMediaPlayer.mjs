@@ -1,3 +1,3 @@
-import TinyMediaPlayer from '../libs/TinyMediaPlayer.mjs';
+import TinyMediaPlayer from '../libs/media/TinyMediaPlayer.mjs';
 
 export { TinyMediaPlayer };

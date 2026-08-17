@@ -1,3 +1,3 @@
-import TinyAnalogClock from '../libs/TinyAnalogClock.mjs';
+import TinyAnalogClock from '../libs/html/templates/TinyAnalogClock.mjs';
 
 export { TinyAnalogClock };

@@ -1,3 +1,3 @@
-import TinyArrayComparator from '../libs/TinyArrayComparator.mjs';
+import TinyArrayComparator from '../libs/array/TinyArrayComparator.mjs';
 
 export { TinyArrayComparator };

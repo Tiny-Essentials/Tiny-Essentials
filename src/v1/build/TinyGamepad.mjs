@@ -1,3 +1,3 @@
-import TinyGamepad from '../libs/TinyGamepad.mjs';
+import TinyGamepad from '../libs/game/TinyGamepad.mjs';
 
 export { TinyGamepad };

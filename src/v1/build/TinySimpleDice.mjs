@@ -1,3 +1,3 @@
-import TinySimpleDice from '../libs/TinySimpleDice.mjs';
+import TinySimpleDice from '../libs/math/TinySimpleDice.mjs';
 
 export { TinySimpleDice };

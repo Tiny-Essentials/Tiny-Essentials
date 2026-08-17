@@ -1,3 +1,3 @@
-import TinyAdvancedRaffle from '../libs/TinyAdvancedRaffle.mjs';
+import TinyAdvancedRaffle from '../libs/math/TinyAdvancedRaffle.mjs';
 
 export { TinyAdvancedRaffle };

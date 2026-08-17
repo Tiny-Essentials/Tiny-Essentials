@@ -1,3 +1,3 @@
-import TinyLocalStorage from '../libs/TinyLocalStorage.mjs';
+import TinyLocalStorage from '../libs/storage/TinyLocalStorage.mjs';
 
 export { TinyLocalStorage };

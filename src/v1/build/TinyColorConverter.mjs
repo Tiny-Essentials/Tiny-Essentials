@@ -1,3 +1,3 @@
-import TinyColorConverter from '../libs/TinyColorConverter.mjs';
+import TinyColorConverter from '../libs/color/TinyColorConverter.mjs';
 
 export { TinyColorConverter };

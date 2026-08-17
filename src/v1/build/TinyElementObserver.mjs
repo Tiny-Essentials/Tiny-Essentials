@@ -1,3 +1,3 @@
-import TinyElementObserver from '../libs/TinyElementObserver.mjs';
+import TinyElementObserver from '../libs/html/TinyElementObserver.mjs';
 
 export { TinyElementObserver };

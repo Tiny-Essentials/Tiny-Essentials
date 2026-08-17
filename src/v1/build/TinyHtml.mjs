@@ -1,3 +1,3 @@
-import TinyHtml from '../libs/TinyHtml.mjs';
+import TinyHtml from '../libs/html/TinyHtml.mjs';
 
 export { TinyHtml };

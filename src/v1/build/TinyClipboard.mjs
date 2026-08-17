@@ -1,3 +1,3 @@
-import TinyClipboard from '../libs/TinyClipboard.mjs';
+import TinyClipboard from '../libs/text/TinyClipboard.mjs';
 
 export { TinyClipboard };

@@ -1,3 +1,3 @@
-import TinyI18 from '../libs/TinyI18.mjs';
+import TinyI18 from '../libs/text/TinyI18.mjs';
 
 export { TinyI18 };

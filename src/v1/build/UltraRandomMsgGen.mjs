@@ -1,3 +1,3 @@
-import UltraRandomMsgGen from '../libs/UltraRandomMsgGen.mjs';
+import UltraRandomMsgGen from '../libs/utils/UltraRandomMsgGen.mjs';
 
 export { UltraRandomMsgGen };

@@ -1,3 +1,3 @@
-import TinyRadioFm from '../libs/TinyRadioFm.mjs';
+import TinyRadioFm from '../libs/media/TinyRadioFm.mjs';
 
 export { TinyRadioFm };

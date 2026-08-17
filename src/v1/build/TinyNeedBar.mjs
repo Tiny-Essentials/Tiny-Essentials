@@ -1,3 +1,3 @@
-import TinyNeedBar from '../libs/TinyNeedBar.mjs';
+import TinyNeedBar from '../libs/game/TinyNeedBar.mjs';
 
 export { TinyNeedBar };

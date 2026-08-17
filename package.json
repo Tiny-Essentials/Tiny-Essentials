@@ -128,9 +128,9 @@
       "require": "./dist/v1/fileManager/normalFuncs.cjs",
       "import": "./dist/v1/fileManager/normalFuncs.mjs"
     },
-    "./libs/utils": {
-      "require": "./dist/v1/libs/utils.cjs",
-      "import": "./dist/v1/libs/utils.mjs"
+    "./libs/utils/tools": {
+      "require": "./dist/v1/libs/utils/tools.cjs",
+      "import": "./dist/v1/libs/utils/tools.mjs"
     },
     "./libs/ColorSafeStringify": {
       "require": "./dist/v1/libs/ColorSafeStringify.cjs",

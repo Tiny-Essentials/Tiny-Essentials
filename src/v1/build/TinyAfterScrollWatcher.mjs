@@ -1,3 +1,3 @@
-import TinyAfterScrollWatcher from '../libs/TinyAfterScrollWatcher.mjs';
+import TinyAfterScrollWatcher from '../libs/html/scroll/TinyAfterScrollWatcher.mjs';
 
 export { TinyAfterScrollWatcher };

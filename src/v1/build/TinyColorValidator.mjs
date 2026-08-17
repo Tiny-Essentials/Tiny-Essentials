@@ -1,3 +1,3 @@
-import TinyColorValidator from '../libs/TinyColorValidator.mjs';
+import TinyColorValidator from '../libs/color/TinyColorValidator.mjs';
 
 export { TinyColorValidator };

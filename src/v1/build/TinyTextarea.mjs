@@ -1,3 +1,3 @@
-import TinyTextarea from '../libs/TinyTextarea.mjs';
+import TinyTextarea from '../libs/text/TinyTextarea.mjs';
 
 export { TinyTextarea };

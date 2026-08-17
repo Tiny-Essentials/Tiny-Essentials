@@ -1,3 +1,3 @@
-import TinyInventoryTrader from '../libs/TinyInventoryTrader.mjs';
+import TinyInventoryTrader from '../libs/game/TinyInventoryTrader.mjs';
 
 export { TinyInventoryTrader };

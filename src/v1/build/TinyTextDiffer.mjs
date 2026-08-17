@@ -1,3 +1,3 @@
-import TinyTextDiffer from '../libs/TinyTextDiffer.mjs';
+import TinyTextDiffer from '../libs/text/TinyTextDiffer.mjs';
 
 export { TinyTextDiffer };

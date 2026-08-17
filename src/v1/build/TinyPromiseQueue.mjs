@@ -1,3 +1,3 @@
-import TinyPromiseQueue from '../libs/TinyPromiseQueue.mjs';
+import TinyPromiseQueue from '../libs/utils/TinyPromiseQueue.mjs';
 
 export { TinyPromiseQueue };

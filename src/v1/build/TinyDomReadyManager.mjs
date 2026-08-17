@@ -1,3 +1,3 @@
-import TinyDomReadyManager from '../libs/TinyDomReadyManager.mjs';
+import TinyDomReadyManager from '../libs/html/TinyDomReadyManager.mjs';
 
 export { TinyDomReadyManager };

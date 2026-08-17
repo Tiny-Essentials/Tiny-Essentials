@@ -1,3 +1,3 @@
-import TinyRateLimiter from '../libs/TinyRateLimiter.mjs';
+import TinyRateLimiter from '../libs/math/TinyRateLimiter.mjs';
 
 export { TinyRateLimiter };

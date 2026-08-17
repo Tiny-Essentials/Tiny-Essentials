@@ -1,3 +1,3 @@
-import TinyInventory from '../libs/TinyInventory.mjs';
+import TinyInventory from '../libs/game/TinyInventory.mjs';
 
 export { TinyInventory };

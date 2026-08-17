@@ -1,3 +1,3 @@
-import TinyLevelUp from '../libs/TinyLevelUp.mjs';
+import TinyLevelUp from '../libs/game/TinyLevelUp.mjs';
 
 export { TinyLevelUp };

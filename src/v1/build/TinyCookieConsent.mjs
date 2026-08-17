@@ -1,3 +1,3 @@
-import TinyCookieConsent from '../libs/TinyCookieConsent.mjs';
+import TinyCookieConsent from '../libs/html/templates/TinyCookieConsent.mjs';
 
 export { TinyCookieConsent };

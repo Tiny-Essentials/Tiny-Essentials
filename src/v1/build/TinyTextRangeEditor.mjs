@@ -1,3 +1,3 @@
-import TinyTextRangeEditor from '../libs/TinyTextRangeEditor.mjs';
+import TinyTextRangeEditor from '../libs/text/TinyTextRangeEditor.mjs';
 
 export { TinyTextRangeEditor };

@@ -1,3 +1,3 @@
-import TinyArrayPaginator from '../libs/TinyArrayPaginator.mjs';
+import TinyArrayPaginator from '../libs/array/TinyArrayPaginator.mjs';
 
 export { TinyArrayPaginator };

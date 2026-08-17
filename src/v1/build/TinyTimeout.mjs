@@ -1,3 +1,3 @@
-import TinyTimeout from '../libs/TinyTimeout.mjs';
+import TinyTimeout from '../libs/math/TinyTimeout.mjs';
 
 export { TinyTimeout };

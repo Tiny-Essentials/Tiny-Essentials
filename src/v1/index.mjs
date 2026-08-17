@@ -1,4 +1,4 @@
-import TinyLevelUp from './libs/TinyLevelUp.mjs';
+import TinyLevelUp from './libs/game/TinyLevelUp.mjs';
 import {
   diffArrayList,
   shuffleArray,
@@ -51,11 +51,11 @@ import {
   toTitleCaseLowerFirst,
   asyncReplace,
 } from './basics/text.mjs';
-import ColorSafeStringify from './libs/ColorSafeStringify.mjs';
-import TinyPromiseQueue from './libs/TinyPromiseQueue.mjs';
-import TinyRateLimiter from './libs/TinyRateLimiter.mjs';
-import TinyNotifyCenter from './libs/TinyNotifyCenter.mjs';
-import TinyToastNotify from './libs/TinyToastNotify.mjs';
+import ColorSafeStringify from './libs/color/ColorSafeStringify.mjs';
+import TinyPromiseQueue from './libs/utils/TinyPromiseQueue.mjs';
+import TinyRateLimiter from './libs/math/TinyRateLimiter.mjs';
+import TinyNotifyCenter from './libs/html/notification/TinyNotifyCenter.mjs';
+import TinyToastNotify from './libs/html/notification/TinyToastNotify.mjs';
 import {
   readJsonBlob,
   saveJsonFile,
@@ -65,7 +65,7 @@ import {
   readBase64Blob,
   fetchText,
 } from './basics/html.mjs';
-import TinyDragDropDetector from './libs/TinyDragDropDetector.mjs';
+import TinyDragDropDetector from './libs/html/drag/TinyDragDropDetector.mjs';
 
 import {
   readJsonFile,
@@ -101,9 +101,9 @@ import {
   dirSizeAsync,
 } from './fileManager/asyncFuncs.mjs';
 
-import TinyDragger from './libs/TinyDragger.mjs';
-import TinyDomReadyManager from './libs/TinyDomReadyManager.mjs';
-import TinyNotifications from './libs/TinyNotifications.mjs';
+import TinyDragger from './libs/html/drag/TinyDragger.mjs';
+import TinyDomReadyManager from './libs/html/TinyDomReadyManager.mjs';
+import TinyNotifications from './libs/html/notification/TinyNotifications.mjs';
 import {
   areElsCollTop,
   areElsCollBottom,
@@ -130,46 +130,46 @@ import {
   valMediaContentMetadata,
   valFetchMediaContent,
 } from './basics/mediaContent.mjs';
-import TinyHtml from './libs/TinyHtml.mjs';
-import TinyAfterScrollWatcher from './libs/TinyAfterScrollWatcher.mjs';
-import UltraRandomMsgGen from './libs/UltraRandomMsgGen.mjs';
-import TinySmartScroller from './libs/TinySmartScroller.mjs';
-import TinyTextRangeEditor from './libs/TinyTextRangeEditor.mjs';
-import TinyClipboard from './libs/TinyClipboard.mjs';
-import TinyColorConverter from './libs/TinyColorConverter.mjs';
-import TinyTimeout from './libs/TinyTimeout.mjs';
-import TinyLocalStorage from './libs/TinyLocalStorage.mjs';
-import TinyIframeEvents from './libs/TinyIframeEvents.mjs';
-import TinyNewWinEvents from './libs/TinyNewWinEvents.mjs';
-import TinyTextarea from './libs/TinyTextarea.mjs';
-import TinyGamepad from './libs/TinyGamepad.mjs';
-import TinyDayNightCycle from './libs/TinyDayNightCycle.mjs';
-import TinyAdvancedRaffle from './libs/TinyAdvancedRaffle.mjs';
-import TinyArrayPaginator from './libs/TinyArrayPaginator.mjs';
-import TinyInventory from './libs/TinyInventory.mjs';
-import TinyInventoryTrader from './libs/TinyInventoryTrader.mjs';
-import TinyCookieConsent from './libs/TinyCookieConsent.mjs';
-import TinyI18 from './libs/TinyI18.mjs';
-import TinyNeedBar from './libs/TinyNeedBar.mjs';
-import TinySimpleDice from './libs/TinySimpleDice.mjs';
-import TinyElementObserver from './libs/TinyElementObserver.mjs';
-import TinyLoadingScreen from './libs/TinyLoadingScreen.mjs';
-import TinyColorValidator from './libs/TinyColorValidator.mjs';
-import TinyAnalogClock from './libs/TinyAnalogClock.mjs';
-import TinyTextDiffer from './libs/TinyTextDiffer.mjs';
-import TinyArrayComparator from './libs/TinyArrayComparator.mjs';
+import TinyHtml from './libs/html/TinyHtml.mjs';
+import TinyAfterScrollWatcher from './libs/html/scroll/TinyAfterScrollWatcher.mjs';
+import UltraRandomMsgGen from './libs/utils/UltraRandomMsgGen.mjs';
+import TinySmartScroller from './libs/html/scroll/TinySmartScroller.mjs';
+import TinyTextRangeEditor from './libs/text/TinyTextRangeEditor.mjs';
+import TinyClipboard from './libs/text/TinyClipboard.mjs';
+import TinyColorConverter from './libs/color/TinyColorConverter.mjs';
+import TinyTimeout from './libs/math/TinyTimeout.mjs';
+import TinyLocalStorage from './libs/storage/TinyLocalStorage.mjs';
+import TinyIframeEvents from './libs/html/events/TinyIframeEvents.mjs';
+import TinyNewWinEvents from './libs/html/events/TinyNewWinEvents.mjs';
+import TinyTextarea from './libs/text/TinyTextarea.mjs';
+import TinyGamepad from './libs/game/TinyGamepad.mjs';
+import TinyDayNightCycle from './libs/game/TinyDayNightCycle.mjs';
+import TinyAdvancedRaffle from './libs/math/TinyAdvancedRaffle.mjs';
+import TinyArrayPaginator from './libs/array/TinyArrayPaginator.mjs';
+import TinyInventory from './libs/game/TinyInventory.mjs';
+import TinyInventoryTrader from './libs/game/TinyInventoryTrader.mjs';
+import TinyCookieConsent from './libs/html/templates/TinyCookieConsent.mjs';
+import TinyI18 from './libs/text/TinyI18.mjs';
+import TinyNeedBar from './libs/game/TinyNeedBar.mjs';
+import TinySimpleDice from './libs/math/TinySimpleDice.mjs';
+import TinyElementObserver from './libs/html/TinyElementObserver.mjs';
+import TinyLoadingScreen from './libs/html/templates/TinyLoadingScreen.mjs';
+import TinyColorValidator from './libs/color/TinyColorValidator.mjs';
+import TinyAnalogClock from './libs/html/templates/TinyAnalogClock.mjs';
+import TinyTextDiffer from './libs/text/TinyTextDiffer.mjs';
+import TinyArrayComparator from './libs/array/TinyArrayComparator.mjs';
 import {
   FuzzySet,
   MamdaniInferenceSystem,
   trapezoid,
   defuzzifyCentroid,
-} from './libs/TinyMamdaniInferenceSystem.mjs';
-import TinyClassManager from './libs/TinyClassManager.mjs';
-import TinyRadioFm from './libs/TinyRadioFm.mjs';
-import TinyMediaPlayer from './libs/TinyMediaPlayer.mjs';
-import { createCheckDestroyed } from './libs/utils.mjs';
+} from './libs/math/TinyMamdaniInferenceSystem.mjs';
+import TinyClassManager from './libs/utils/TinyClassManager.mjs';
+import TinyRadioFm from './libs/media/TinyRadioFm.mjs';
+import TinyMediaPlayer from './libs/media/TinyMediaPlayer.mjs';
+import { createCheckDestroyed } from './libs/utils/tools.mjs';
 import { createSingletonTask, waitForTrue } from './basics/promiseUtils.mjs';
-import TinyDebugger from './libs/TinyDebugger.mjs';
+import TinyDebugger from './libs/utils/TinyDebugger.mjs';
 import {
   browserIs,
   getBrowserCssPrefix,

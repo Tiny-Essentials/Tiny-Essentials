@@ -1,3 +1,3 @@
-import TinyDragDropDetector from '../libs/TinyDragDropDetector.mjs';
+import TinyDragDropDetector from '../libs/html/drag/TinyDragDropDetector.mjs';
 
 export { TinyDragDropDetector };

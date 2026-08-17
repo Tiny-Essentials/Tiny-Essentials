@@ -1,3 +1,3 @@
-import TinySmartScroller from '../libs/TinySmartScroller.mjs';
+import TinySmartScroller from '../libs/html/scroll/TinySmartScroller.mjs';
 
 export { TinySmartScroller };

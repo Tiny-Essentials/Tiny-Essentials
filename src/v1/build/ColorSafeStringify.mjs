@@ -1,3 +1,3 @@
-import ColorSafeStringify from '../libs/ColorSafeStringify.mjs';
+import ColorSafeStringify from '../libs/color/ColorSafeStringify.mjs';
 
 export { ColorSafeStringify };
