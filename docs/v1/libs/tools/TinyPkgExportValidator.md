@@ -4,6 +4,13 @@
 
 When developing Node.js packages, it is easy to misspell a path or forget to include a file in your repository. This tool automates the validation process, preventing "Module not found" errors for your end-users. 🚀
 
+## ✨ Key Features
+
+* **🔍 Automatic Traversal:** Recursively checks all nested paths in the `exports` object.
+* **🎨 Custom Reporting:** Completely redefine the terminal output using custom message templates.
+* **🤫 Silent Mode:** Suppress all console logs for clean integration into build scripts.
+* **🛠 Strict Validation:** High reliability through rigorous type checking and error handling.
+
 ## 🔍 How it Works
 
 The validator performs a **recursive traversal** of the `exports` object in your `package.json`. 
@@ -69,20 +76,56 @@ async function main() {
 main();
 ```
 
+### Advanced Usage (Customization)
+
+You can pass an `options` object to the constructor to personalize the validator.
+
+```javascript
+import { resolve } from 'path';
+import TinyPkgExportValidator from 'tiny-essentials/libs/tools/TinyPkgExportValidator';
+
+async function main() {
+  const validator = new TinyPkgExportValidator(
+    resolve(process.cwd(), 'package.json'),
+    process.cwd(),
+    {
+      projectName: 'My Awesome Library',
+      silent: false,
+      messages: {
+        header: `\n🚀 STARTING VALIDATION FOR: {projectName} 🚀\n`,
+        successHeader: `✨ Perfect! Everything is in place. ✨`,
+      }
+    }
+  );
+
+  await validator.start();
+  await validator.validate();
+}
+
+main();
+```
+
 ---
 
 ## 🛠 API Reference
 
-### `new TinyPkgExportValidator(packageJsonPath, rootDir)`
+### `new TinyPkgExportValidator(packageJsonPath, rootDir, options)`
 
 **Constructor**
 
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `packageJsonPath` | `string` | The absolute path to the `package.json` file. |
-| `rootDir` | `string` | The base directory used to resolve relative paths. |
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `packageJsonPath` | `string` | Yes | Absolute path to your `package.json`. |
+| `rootDir` | `string` | Yes | The project root directory. |
+| `options` | `Object` | No | Configuration for customization. |
 
-**Throws:** `TypeError` if arguments are not strings.
+#### `options` Object Properties
+
+| Property | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `projectName` | `string` | `'Tiny-Essentials Export Validation'` | The name displayed in the report header. |
+| `silent` | `boolean` | `false` | If `true`, no console output is generated. |
+| `messages` | `Object` | `DEFAULT_MESSAGES` | Custom template strings for the report. |
 
 ---
 
@@ -120,6 +163,38 @@ Returns a detailed list of the validation results.
 
 ---
 
+### 📝 Customizing Messages (Templates)
+
+The `messages` option allows you to override the default output. You can use **placeholders** within your strings to inject dynamic data at runtime.
+
+#### Available Placeholders:
+* `{projectName}`: The name provided in `options.projectName`.
+* `{path}`: The key path being validated (e.g., `import -> ./dist/index.js`).
+* `{errorPath}`: The actual missing file path.
+* `{errorCount}`: The total number of failed exports.
+* `{message}`: The specific error message (used in unexpected errors).
+
+#### Message Keys to Override:
+To ensure a valid custom message object, you must provide all the following keys:
+
+| Key | Description |
+| :--- | :--- |
+| `header` | The top of the report. |
+| `divider` | The line separating the report parts. |
+| `itemValid` | Message for a successful check. |
+| `itemInvalid` | Message for a failed check. |
+| `itemMissing` | Message showing the missing path. |
+| `successHeader` | Final message on total success. |
+| `failureHeader` | Final message on failure. |
+| `errorLoad` | Error if `package.json` isn't loaded. |
+| `noExports` | Warning if `"exports"` field is missing. |
+| `errorNotFound` | Error if `package.json` file is missing. |
+| `errorParse` | Error if `package.json` is invalid JSON. |
+| `errorUnexpected`| Error for any other runtime exception. |
+
+
+---
+
 ## 📊 Console Output
 
 The validator provides high-visibility feedback in your terminal using ANSI colors.
@@ -151,7 +226,9 @@ FAILURE: 1 export(s) are missing or invalid.
 
 ## ⚠️ Error Handling
 
-The validator handles common errors gracefully:
-- **`ENOENT`**: If the `package.json` is not found.
-- **`SyntaxError`**: If the `package.json` contains invalid JSON syntax.
-- **Missing `exports`**: If the `exports` field is missing, it will issue a warning but return `true` (as there is nothing to validate).
+The validator provides specific feedback for common issues:
+1. **`errorLoad`**: Attempted to validate before calling `.start()`.
+2. **`noExports`**: The `package.json` exists, but the `"exports"` field is missing.
+3. **`errorNotFound`**: The file at `packageJsonPath` does not exist.
+4. **`errorParse`**: The `package.json` file contains syntax errors.
+5. **`errorUnexpected`**: Any other error (e.g., permission issues).
