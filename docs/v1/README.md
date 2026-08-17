@@ -89,6 +89,7 @@ Here, you can navigate through different sections of the project. Below are the 
 #### 2.7.4. **`libs/html/scroll`**
 
 - 🌀 **[TinySmartScroller](./libs/html/scroll/TinySmartScroller.md)** — A smart scroll monitor that detects user scroll behavior, visibility changes, element sizes, and automatically handles scroll preservation, bottom detection, debounce, and more.
+- 📜 **[TinyAfterScrollWatcher](./libs/html/scroll/TinyAfterScrollWatcher.md)** —  A minimalistic scroll watcher that queues and executes functions **after scrolling has stopped** on a given element or the window.
 
 #### 2.7.5. **`libs/html/events`**
 
@@ -114,6 +115,7 @@ Here, you can navigate through different sections of the project. Below are the 
 ### 2.10. **`libs/tools`**
 
 * 🛠️ **[TinyDebugger](./libs/tools/TinyDebugger.md)** — A lightweight, event-driven debugging utility designed to wrap standard `console` methods. It provides enhanced features such as custom prefixes, color support, and the ability to emit events whenever a log occurs, making it perfect for complex applications where you might want to redirect logs to an external service or a UI component.
+* 📦 **[TinyPkgExportValidator](./libs/tools/TinyPkgExportValidator.md)** — A utility to validate that all paths defined in the `"exports"` field of `package.json` exist physically within the project directory.
 
 #### 2.10.1. **`libs/tools/TinyClassManager`**
 
