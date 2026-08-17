@@ -55,6 +55,12 @@ const DEFAULT_MESSAGES = {
 };
 
 /**
+ * Array of keys required by the DefaultMessages type.
+ * Used for deep validation of the messages object.
+ */
+const MESSAGE_KEYS = Object.keys(DEFAULT_MESSAGES);
+
+/**
  * Class responsible for validating package exports.
  * Implements state encapsulation, custom logging, and recursive search logic.
  */
@@ -169,7 +175,7 @@ class TinyPkgExportValidator {
    * @param {string} packageJsonPath - The package.json JSON file path.
    * @param {string} rootDir - The project root directory.
    * @param {ValidatorOptions} [options={}] - Configuration options.
-   * @throws {TypeError} If arguments are not strings or if options is not an object.
+   * @throws {TypeError} If arguments are not strings or if options fails deep validation.
    */
   constructor(packageJsonPath, rootDir, options = {}) {
     if (typeof packageJsonPath !== 'string') {
@@ -178,9 +184,8 @@ class TinyPkgExportValidator {
     if (typeof rootDir !== 'string') {
       throw new TypeError('The "rootDir" argument must be a string.');
     }
-    if (typeof options !== 'object' || options === null || Array.isArray(options)) {
-      throw new TypeError('The "options" argument must be an object.');
-    }
+
+    this.#validateOptions(options);
 
     this.#packageJsonPath = packageJsonPath;
     this.#rootDir = rootDir;
@@ -190,6 +195,47 @@ class TinyPkgExportValidator {
     this.#projectName = options.projectName ?? 'Tiny-Essentials Export Validation';
     this.#silent = !!options.silent;
     this.#messages = { ...DEFAULT_MESSAGES, ...(options.messages ?? {}) };
+  }
+
+  /**
+   * Performs a deep validation of the options object against the ValidatorOptions JSDoc.
+   *
+   * @param {ValidatorOptions} options - The options to validate.
+   * @throws {TypeError} If any property does not match the expected type or structure.
+   */
+  #validateOptions(options) {
+    if (typeof options !== 'object' || options === null || Array.isArray(options)) {
+      throw new TypeError('The "options" argument must be a non-null object.');
+    }
+
+    // Validate projectName
+    if (options.projectName !== undefined && typeof options.projectName !== 'string') {
+      throw new TypeError('The "options.projectName" property must be a string.');
+    }
+
+    // Validate silent
+    if (options.silent !== undefined && typeof options.silent !== 'boolean') {
+      throw new TypeError('The "options.silent" property must be a boolean.');
+    }
+
+    // Validate messages (Deep Validation)
+    if (options.messages !== undefined) {
+      if (
+        typeof options.messages !== 'object' ||
+        options.messages === null ||
+        Array.isArray(options.messages)
+      ) {
+        throw new TypeError('The "options.messages" property must be a non-null object.');
+      }
+
+      // Ensure all required keys from DefaultMessages are present and are strings
+      for (const key of MESSAGE_KEYS) {
+        // @ts-ignore
+        if (typeof options.messages[key] !== 'string') {
+          throw new TypeError(`The "options.messages.${key}" property must be a string.`);
+        }
+      }
+    }
   }
 
   /**
