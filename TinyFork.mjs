@@ -132,23 +132,43 @@ async function resolveSourceFile(targetVersion, basePath) {
   for (let v = startVersion; v >= endVersion; v--) {
     const versionDir = path.join(PATHS.cliRoot, 'dist', `v${v}`);
 
-    // If it's a direct file path without functions (which means basePath might be the full path)
     for (const ext of extensions) {
-      // First attempt: Treating basePath as the exact file (minus extension)
-      const exactPath = path.join(versionDir, `${basePath}${ext}`);
-      if (existsSync(exactPath)) return { filePath: exactPath, ext, versionDir };
+      // 1. Exact file match (path/to/folder/file.mjs)
+      const exactPathFile = path.join(versionDir, `${basePath}${ext}`);
+      if (existsSync(exactPathFile)) {
+        return { filePath: exactPathFile, ext, versionDir };
+      }
 
-      // Second attempt: Checking if the last folder segment in basePath was meant to be functions,
-      // but didn't have commas. (e.g., folder/module/func1)
+      // 2. Exact file match for directory index (path/to/folder/index.mjs)
+      const exactPathFolder = path.join(versionDir, basePath, `index${ext}`);
+      if (existsSync(exactPathFolder)) {
+        return { filePath: exactPathFolder, ext, versionDir };
+      }
+
+      // 3. Intercepted function match (path/to/module/function -> path/to/module.mjs or path/to/folder/index.mjs)
       const parts = basePath.split('/');
       if (parts.length > 1) {
         const funcNameCandidate = parts.pop();
         const modulePath = parts.join('/');
-        const nestedPath = path.join(versionDir, `${modulePath}${ext}`);
 
-        if (existsSync(nestedPath)) {
-          // Returns the path, but caller needs to know it intercepted a single function
-          return { filePath: nestedPath, ext, versionDir, interceptedFunction: funcNameCandidate };
+        const nestedPathFile = path.join(versionDir, `${modulePath}${ext}`);
+        if (existsSync(nestedPathFile)) {
+          return {
+            filePath: nestedPathFile,
+            ext,
+            versionDir,
+            interceptedFunction: funcNameCandidate,
+          };
+        }
+
+        const nestedPathFolder = path.join(versionDir, modulePath, `index${ext}`);
+        if (existsSync(nestedPathFolder)) {
+          return {
+            filePath: nestedPathFolder,
+            ext,
+            versionDir,
+            interceptedFunction: funcNameCandidate,
+          };
         }
       }
     }
@@ -238,6 +258,8 @@ class MultiFileExtractor {
     if (!path.extname(resolved)) {
       for (const ext of ['.mjs', '.js']) {
         if (existsSync(resolved + ext)) return resolved + ext;
+        if (existsSync(path.join(resolved, `index${ext}`)))
+          return path.join(resolved, `index${ext}`);
       }
     }
     return resolved;
@@ -297,26 +319,26 @@ class MultiFileExtractor {
           // Tracing Static Methods on any Class
           ClassDeclaration(classPath) {
             if (req.full) return;
-            classPath.node.body.body.forEach((item) => {
+            const bodyPaths = classPath.get('body.body');
+
+            bodyPaths.forEach((itemPath) => {
+              const item = itemPath.node;
               const keyName = t.isIdentifier(item.key) ? item.key.name : null;
+
               if (
                 keyName &&
                 item.static &&
-                (t.isClassMethod(item) || t.isClassProperty(item)) &&
+                (itemPath.isClassMethod() || itemPath.isClassProperty()) &&
                 req.names.has(keyName)
               ) {
-                traverse(
-                  item,
-                  {
-                    Identifier(idPath) {
-                      if (idPath.isReferencedIdentifier() && bindings[idPath.node.name]) {
-                        addToKeep(idPath.node.name);
-                      }
-                    },
+                // Fixed Babel parent context mapping by traversing the specific Path node
+                itemPath.traverse({
+                  Identifier(idPath) {
+                    if (idPath.isReferencedIdentifier() && bindings[idPath.node.name]) {
+                      addToKeep(idPath.node.name);
+                    }
                   },
-                  astPath.scope,
-                  astPath,
-                );
+                });
               }
             });
           },
