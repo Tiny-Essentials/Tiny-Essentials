@@ -154,7 +154,7 @@ class TinyPkgExportValidator {
    * @returns {Array<{path: string, valid: boolean, errorPath?: string}>} List of validated paths.
    */
   get results() {
-    return this.#results;
+    return structuredClone(this.#results);
   }
 
   /**
