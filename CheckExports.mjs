@@ -1,6 +1,6 @@
 /**
- * @fileoverview Script para validar se todos os caminhos definidos no campo 'exports'
- * do package.json existem fisicamente no diretório do projeto.
+ * @fileoverview Script to validate if all paths defined in the 'exports' field
+ * of package.json exist physically within the project directory.
  * @version 1.0.0
  */
 
@@ -8,8 +8,8 @@ import { readFile, access } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 /**
- * Constantes de cores para o console (ANSI escape codes).
- * Utilizadas para fornecer um feedback visual profissional e claro.
+ * Console color constants (ANSI escape codes).
+ * Used to provide professional and clear visual feedback.
  */
 const COLORS = {
   RESET: '\x1b[0m',
@@ -21,23 +21,23 @@ const COLORS = {
 };
 
 /**
- * Classe responsável por validar as exportações do pacote.
- * Implementa encapsulamento de estado e lógica de busca recursiva.
+ * Class responsible for validating package exports.
+ * Implements state encapsulation and recursive search logic.
  */
 class ExportValidator {
-  /** @type {Object} */
+  /** @type {Record<string, any>} */
   #packageData;
   /** @type {string} */
   #rootDir;
-  /** @type {Array<{path: string, valid: boolean}>} */
+  /** @type {Array<{path: string, valid: boolean, errorPath?: string}>} */
   #results;
 
   /**
-   * Cria uma instância de ExportValidator.
+   * Creates an instance of ExportValidator.
    *
-   * @param {Object} packageData - O conteúdo do objeto JSON do package.json.
-   * @param {string} rootDir - O diretório raiz do projeto.
-   * @throws {TypeError} Se packageData não for um objeto ou rootDir não for uma string.
+   * @param {Record<string, any>} packageData - The content of the package.json JSON object.
+   * @param {string} rootDir - The project root directory.
+   * @throws {TypeError} If packageData is not a non-null object or rootDir is not a string.
    */
   constructor(packageData, rootDir) {
     if (typeof packageData !== 'object' || packageData === null) {
@@ -53,16 +53,16 @@ class ExportValidator {
   }
 
   /**
-   * Getter para acessar os resultados da validação.
-   * @returns {Array<{path: string, valid: boolean}>} Lista de caminhos validados.
+   * Getter to access the validation results.
+   * @returns {Array<{path: string, valid: boolean, errorPath?: string}>} List of validated paths.
    */
   get results() {
     return this.#results;
   }
 
   /**
-   * Executa o processo de validação.
-   * @returns {Promise<boolean>} Retorna true se todos os caminhos forem válidos, false caso contrário.
+   * Executes the validation process.
+   * @returns {Promise<boolean>} Returns true if all paths are valid, false otherwise.
    */
   async validate() {
     const exports = this.#packageData.exports;
@@ -78,19 +78,19 @@ class ExportValidator {
   }
 
   /**
-   * Percorre recursivamente o objeto de exportações.
+   * Recursively traverses the exports object.
    *
-   * @param {Object|string} node - O nó atual do objeto de exportações.
-   * @param {string} currentKey - A chave atual (usada para rastreamento de logs).
+   * @param {Record<string, any>|string} node - The current node of the exports object.
+   * @param {string} currentKey - The current key (used for log tracking).
    * @private
    * @returns {Promise<void>}
    */
   async #traverseExports(node, currentKey = '') {
     if (typeof node === 'string') {
-      // Caso base: o valor é um caminho direto
+      // Base case: the value is a direct path
       await this.#checkFileExists(node, currentKey);
     } else if (typeof node === 'object' && node !== null) {
-      // Caso recursivo: o valor é um objeto (ex: { import: '...', require: '...' })
+      // Recursive case: the value is an object (e.g., { import: '...', require: '...' })
       const keys = Object.keys(node);
       for (const key of keys) {
         const subKey = currentKey ? `${currentKey} -> ${key}` : key;
@@ -100,15 +100,15 @@ class ExportValidator {
   }
 
   /**
-   * Verifica a existência de um arquivo no sistema de arquivos.
+   * Checks for the existence of a file in the file system.
    *
-   * @param {string} relativePath - O caminho relativo definido no package.json.
-   * @param {string} context - O contexto da chave para fins de relatório.
+   * @param {string} relativePath - The relative path defined in package.json.
+   * @param {string} context - The key context for reporting purposes.
    * @private
    * @returns {Promise<void>}
    */
   async #checkFileExists(relativePath, context) {
-    // Remove possíveis curingas (wildcards) como '*' para validação de caminhos literais
+    // Remove potential wildcards (e.g., '*') for literal path validation
     const cleanPath = relativePath.replace(/\*/g, '');
     const absolutePath = resolve(this.#rootDir, cleanPath);
 
@@ -121,9 +121,9 @@ class ExportValidator {
   }
 
   /**
-   * Gera o relatório final no console.
+   * Generates the final report in the console.
    *
-   * @returns {boolean} True se não houver erros, false se houver falhas.
+   * @returns {boolean} True if there are no errors, false if there are failures.
    * @private
    */
   #report() {
@@ -155,7 +155,7 @@ class ExportValidator {
 }
 
 /**
- * Função principal de execução.
+ * Main execution function.
  */
 async function main() {
   try {
