@@ -3,7 +3,7 @@ import { mkdir, rm } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import TinyI18 from '../../dist/v1/libs/TinyI18.mjs';
+import TinyI18 from '../../dist/v1/libs/text/TinyI18.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
