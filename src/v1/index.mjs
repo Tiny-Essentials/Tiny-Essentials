@@ -164,12 +164,12 @@ import {
   trapezoid,
   defuzzifyCentroid,
 } from './libs/math/TinyMamdaniInferenceSystem.mjs';
-import TinyClassManager from './libs/utils/TinyClassManager.mjs';
+import TinyClassManager from './libs/tools/TinyClassManager.mjs';
 import TinyRadioFm from './libs/media/TinyRadioFm.mjs';
 import TinyMediaPlayer from './libs/media/TinyMediaPlayer.mjs';
 import { createCheckDestroyed } from './libs/utils/tools.mjs';
 import { createSingletonTask, waitForTrue } from './basics/promiseUtils.mjs';
-import TinyDebugger from './libs/utils/TinyDebugger.mjs';
+import TinyDebugger from './libs/tools/TinyDebugger.mjs';
 import {
   browserIs,
   getBrowserCssPrefix,

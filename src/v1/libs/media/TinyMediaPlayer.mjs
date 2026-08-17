@@ -1,4 +1,4 @@
-import TinyDebugger from '../utils/TinyDebugger.mjs';
+import TinyDebugger from '../tools/TinyDebugger.mjs';
 
 import {
   getMediaContentBase,

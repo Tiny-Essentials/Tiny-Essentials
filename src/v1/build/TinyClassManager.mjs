@@ -1,3 +1,3 @@
-import TinyClassManager from '../libs/utils/TinyClassManager.mjs';
+import TinyClassManager from '../libs/tools/TinyClassManager.mjs';
 
 export { TinyClassManager };

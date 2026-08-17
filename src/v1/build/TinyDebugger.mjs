@@ -1,3 +1,3 @@
-import TinyDebugger from '../libs/utils/TinyDebugger.mjs';
+import TinyDebugger from '../libs/tools/TinyDebugger.mjs';
 
 export { TinyDebugger };

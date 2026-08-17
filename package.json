@@ -174,9 +174,9 @@
       "require": "./dist/v1/libs/media/TinyRadioFm.cjs",
       "import": "./dist/v1/libs/media/TinyRadioFm.mjs"
     },
-    "./libs/utils/TinyDebugger": {
-      "require": "./dist/v1/libs/utils/TinyDebugger.cjs",
-      "import": "./dist/v1/libs/utils/TinyDebugger.mjs"
+    "./libs/tools/TinyDebugger": {
+      "require": "./dist/v1/libs/tools/TinyDebugger.cjs",
+      "import": "./dist/v1/libs/tools/TinyDebugger.mjs"
     },
     "./libs/utils/UltraRandomMsgGen": {
       "require": "./dist/v1/libs/utils/UltraRandomMsgGen.cjs",
@@ -330,13 +330,13 @@
       "require": "./dist/v1/libs/math/TinyAdvancedRaffle.cjs",
       "import": "./dist/v1/libs/math/TinyAdvancedRaffle.mjs"
     },
-    "./libs/utils/TinyClassManager/TinyPluginInliner": {
-      "require": "./dist/v1/libs/utils/TinyClassManager/TinyPluginInliner.cjs",
-      "import": "./dist/v1/libs/utils/TinyClassManager/TinyPluginInliner.mjs"
+    "./libs/tools/TinyClassManager/TinyPluginInliner": {
+      "require": "./dist/v1/libs/tools/TinyClassManager/TinyPluginInliner.cjs",
+      "import": "./dist/v1/libs/tools/TinyClassManager/TinyPluginInliner.mjs"
     },
-    "./libs/utils/TinyClassManager": {
-      "require": "./dist/v1/libs/utils/TinyClassManager.cjs",
-      "import": "./dist/v1/libs/utils/TinyClassManager.mjs"
+    "./libs/tools/TinyClassManager": {
+      "require": "./dist/v1/libs/tools/TinyClassManager.cjs",
+      "import": "./dist/v1/libs/tools/TinyClassManager.mjs"
     },
     "./libs/math/TinyMamdaniInferenceSystem": {
       "require": "./dist/v1/libs/math/TinyMamdaniInferenceSystem.cjs",
