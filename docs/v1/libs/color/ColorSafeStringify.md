@@ -26,7 +26,7 @@ Then import both the stable stringifier and `ColorSafeStringify`:
 
 ```js
 import stringify from 'safe-stable-stringify';
-import ColorSafeStringify from 'tiny-essentials/libs/ColorSafeStringify';
+import ColorSafeStringify from 'tiny-essentials/libs/color/ColorSafeStringify';
 ```
 
 ---

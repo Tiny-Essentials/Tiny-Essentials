@@ -135,7 +135,7 @@ Returns `false` if preferences are missing or category is not allowed.
 ## 🧩 Example Usage
 
 ```js
-import TinyCookieConsent from 'tiny-essentials/libs/TinyCookieConsent';
+import TinyCookieConsent from 'tiny-essentials/libs/html/templates/TinyCookieConsent';
 
 const consent = new TinyCookieConsent({
   message: "We use cookies to personalize your experience.",

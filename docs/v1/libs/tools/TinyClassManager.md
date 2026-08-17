@@ -42,7 +42,7 @@ Let's break down exactly how to design, extend, and instantiate a class structur
 Every structure needs a solid foundation. The core class is the absolute minimum requirement and contains properties that every subsequent plugin might rely on.
 
 ```javascript
-import TinyClassManager from 'tiny-essentials/libs/TinyClassManager';
+import TinyClassManager from 'tiny-essentials/libs/tools/TinyClassManager';
 
 // The foundational class
 class EntityCore {

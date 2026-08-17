@@ -133,7 +133,7 @@ Returns `false` if the DOM is still loading.
 ### Basic Usage
 
 ```js
-import TinyDomReadyManager from 'tiny-essentials/libs/TinyDomReadyManager';
+import TinyDomReadyManager from 'tiny-essentials/libs/html/TinyDomReadyManager';
 
 const manager = new TinyDomReadyManager();
 

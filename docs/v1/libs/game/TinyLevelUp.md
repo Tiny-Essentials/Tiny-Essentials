@@ -227,7 +227,7 @@ console.log(`You need ${missing} more XP to level up! 🚀`);
 ## 🌟 Example Usage
 
 ```js
-import TinyLevelUp from 'tiny-essentials/libs/TinyLevelUp';
+import TinyLevelUp from 'tiny-essentials/libs/game/TinyLevelUp';
 
 const levelSystem = new TinyLevelUp(15, 10);
 const user = levelSystem.createUser();

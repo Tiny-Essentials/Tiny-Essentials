@@ -19,7 +19,7 @@
 Import the class into your JavaScript module.
 
 ```javascript
-import TinyAnalogClock from 'tiny-essentials/libs/TinyAnalogClock';
+import TinyAnalogClock from 'tiny-essentials/libs/html/templates/TinyAnalogClock';
 ```
 
 ### 2. Basic Usage

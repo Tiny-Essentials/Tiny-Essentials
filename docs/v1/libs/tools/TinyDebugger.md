@@ -7,7 +7,7 @@
 To use `TinyDebugger`, import it into your project and initialize it with a configuration object.
 
 ```javascript
-import TinyDebugger from 'tiny-essentials/libs/TinyDebugger';
+import TinyDebugger from 'tiny-essentials/libs/tools/TinyDebugger';
 
 const debuggerInstance = new TinyDebugger({
   logger: console, // You can use standard console or a custom object

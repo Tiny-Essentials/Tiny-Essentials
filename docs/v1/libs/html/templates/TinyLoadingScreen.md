@@ -121,7 +121,7 @@ loader.onChange = (status) => {
 ### Basic Example
 
 ```js
-import TinyLoadingScreen from 'tiny-essentials/libs/TinyLoadingScreen';
+import TinyLoadingScreen from 'tiny-essentials/libs/html/templates/TinyLoadingScreen';
 
 const loader = new TinyLoadingScreen();
 loader.defaultMessage = 'Loading...';

@@ -121,7 +121,7 @@ Filters and paginates the stored data.
 ### 📌 Example Usage
 
 ```js
-import TinyArrayPaginator from 'tiny-essentials/libs/TinyArrayPaginator';
+import TinyArrayPaginator from 'tiny-essentials/libs/array/TinyArrayPaginator';
 
 const paginator = new TinyArrayPaginator([
   { id: 1, category: 'fruit' },

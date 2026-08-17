@@ -21,7 +21,7 @@ Ideal for secure, bidirectional messaging with route-based logic.
 ### In the main window:
 
 ```js
-import TinyNewWinEvents from 'tiny-essentials/libs/TinyNewWinEvents';
+import TinyNewWinEvents from 'tiny-essentials/libs/html/events/TinyNewWinEvents';
 
 const events = new TinyNewWinEvents({
   url: '/popup.html',
@@ -42,7 +42,7 @@ events.winEmit('init:data', { id: 123 });
 ### In the popup window:
 
 ```js
-import TinyNewWinEvents from 'tiny-essentials/libs/TinyNewWinEvents';
+import TinyNewWinEvents from 'tiny-essentials/libs/html/events/TinyNewWinEvents';
 
 const events = new TinyNewWinEvents();
 
