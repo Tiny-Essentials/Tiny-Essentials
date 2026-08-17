@@ -1,4 +1,4 @@
-import { isJsonObject } from '../../basics/objChecker.mjs';
+import { isJsonObject } from '../../../basics/objChecker.mjs';
 
 /**
  * @typedef {Object} UploaderConfig

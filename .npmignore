@@ -10,6 +10,7 @@ temp
 babel.config.json
 rollup.config.mjs
 webpack.config.mjs
+CheckExports.mjs
 tsconfig.json
 
 # Logs
