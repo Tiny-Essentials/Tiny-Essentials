@@ -6,7 +6,7 @@
     "tiny-essentials-fork": "./TinyFork.mjs"
   },
   "scripts": {
-    "test": "npm run test:mjs && npm run test:cjs && npm run test:js",
+    "test": "npm run test:mjs && npm run test:cjs && npm run test:js && npm run check-exports",
     "test:js": "node -r @babel/register test/index.js",
     "test:cjs": "node test/index.cjs",
     "test:mjs": "node test/index.mjs",
