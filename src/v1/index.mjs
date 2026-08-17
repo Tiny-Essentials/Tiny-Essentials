@@ -177,6 +177,7 @@ import {
   getDuckTyping,
   isBrowserAgent,
 } from './basics/browserDetector.mjs';
+import TinyUploadClicker from './libs/html/upload/TinyUploadClicker.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
@@ -190,6 +191,7 @@ export {
   TinyTextDiffer,
   TinyAnalogClock,
   // TinyHtmlElems,
+  TinyUploadClicker,
   TinyColorValidator,
   TinyLoadingScreen,
   TinyElementObserver,
