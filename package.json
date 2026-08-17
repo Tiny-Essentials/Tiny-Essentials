@@ -338,6 +338,10 @@
       "require": "./dist/v1/libs/tools/TinyClassManager.cjs",
       "import": "./dist/v1/libs/tools/TinyClassManager.mjs"
     },
+    "./libs/tools/TinyPkgExportValidator": {
+      "require": "./dist/v1/libs/tools/TinyPkgExportValidator.cjs",
+      "import": "./dist/v1/libs/tools/TinyPkgExportValidator.mjs"
+    },
     "./libs/math/TinyMamdaniInferenceSystem": {
       "require": "./dist/v1/libs/math/TinyMamdaniInferenceSystem.cjs",
       "import": "./dist/v1/libs/math/TinyMamdaniInferenceSystem.mjs"
