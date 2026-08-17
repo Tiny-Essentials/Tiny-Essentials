@@ -77,21 +77,43 @@ class TinyPkgExportValidator {
    */
   #packageData = {};
 
+  get packageData() {
+    return structuredClone(this.#packageData);
+  }
+
   /** @type {string} */
   #packageJsonPath;
+
+  get packageJsonPath() {
+    return this.#packageJsonPath;
+  }
+
   /** @type {string} */
   #rootDir;
+
+  get rootDir() {
+    return this.#rootDir;
+  }
+
   /** @type {Array<{path: string, valid: boolean, errorPath?: string}>} */
   #results;
 
+  /**
+   * Indicates whether the package data has been successfully loaded.
+   * @type {boolean}
+   */
   #started = false;
+
+  get started() {
+    return this.#started;
+  }
 
   /**
    * Creates an instance of TinyPkgExportValidator.
    *
-   * @param {string} packageJsonPath - The package.json JSON directory.
+   * @param {string} packageJsonPath - The package.json JSON file path.
    * @param {string} rootDir - The project root directory.
-   * @throws {TypeError} If packageData is not a non-null object or rootDir is not a string.
+   * @throws {TypeError} If packageJsonPath is not a string or rootDir is not a string.
    */
   constructor(packageJsonPath, rootDir) {
     if (typeof packageJsonPath !== 'string') {
@@ -106,6 +128,13 @@ class TinyPkgExportValidator {
     this.#results = [];
   }
 
+  /**
+   * Loads and parses the package.json file from the specified path.
+   *
+   * @returns {Promise<void>} A promise that resolves when the package data is loaded.
+   * @throws {TypeError} If the parsed JSON content is not a non-null object.
+   * @throws {Error} If the file cannot be read or parsed.
+   */
   async start() {
     if (this.#started) return;
     this.#started = true;
