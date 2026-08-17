@@ -12,13 +12,55 @@ import { resolve } from 'path';
  */
 
 /**
+ * @typedef {Object} ValidatorOptions - Configuration options for the validator.
+ * @property {string} [projectName] - Custom name for the project report.
+ * @property {boolean} [silent] - If true, no logs will be printed to the console.
+ * @property {DefaultMessages} [messages] - Custom message templates.
+ */
+
+/**
+ * @typedef {Object} DefaultMessages
+ * @property {string} header
+ * @property {string}  divider
+ * @property {string}  itemValid
+ * @property {string}  itemInvalid
+ * @property {string}  itemMissing
+ * @property {string}  successHeader
+ * @property {string}  failureHeader
+ * @property {string}  errorLoad
+ * @property {string}  noExports
+ * @property {string}  errorNotFound
+ * @property {string}  errorParse
+ * @property {string}  errorUnexpected
+ */
+
+/**
+ * Default messages used when no custom messages are provided.
+ * Placeholders like {projectName}, {path}, etc., are replaced at runtime.
+ * @type {DefaultMessages}
+ */
+const DEFAULT_MESSAGES = {
+  header: `\n=== {projectName} ===\n`,
+  divider: `\n-----------------------------------------`,
+  itemValid: `  [✔] {path}`,
+  itemInvalid: `  [✘] {path}`,
+  itemMissing: `      Missing: {errorPath}`,
+  successHeader: `SUCCESS: All exports are correctly mapped.`,
+  failureHeader: `FAILURE: {errorCount} export(s) are missing or invalid.`,
+  errorLoad: `Error: package.json not loaded in the current directory.`,
+  noExports: `[!] No "exports" field found in package.json.`,
+  errorNotFound: `Error: package.json not found in the current directory.`,
+  errorParse: `Error: Failed to parse package.json. Ensure it is valid JSON.`,
+  errorUnexpected: `An unexpected error occurred: {message}`,
+};
+
+/**
  * Class responsible for validating package exports.
- * Implements state encapsulation and recursive search logic.
+ * Implements state encapsulation, custom logging, and recursive search logic.
  */
 class TinyPkgExportValidator {
   /**
    * Console color constants (ANSI escape codes).
-   * Used to provide professional and clear visual feedback.
    * @type {ConsoleColors}
    */
   #COLORS = {
@@ -71,41 +113,57 @@ class TinyPkgExportValidator {
     this.#COLORS = structuredClone(newColors);
   }
 
+  // --- Private State ---
+
   /**
    * The content of the package.json JSON object.
    * @type {Record<string, any>}
    */
   #packageData = {};
 
-  get packageData() {
-    return structuredClone(this.#packageData);
-  }
-
   /** @type {string} */
   #packageJsonPath;
-
-  get packageJsonPath() {
-    return this.#packageJsonPath;
-  }
 
   /** @type {string} */
   #rootDir;
 
-  get rootDir() {
-    return this.#rootDir;
-  }
-
   /** @type {Array<{path: string, valid: boolean, errorPath?: string}>} */
   #results;
 
-  /**
-   * Indicates whether the package data has been successfully loaded.
-   * @type {boolean}
-   */
+  /** @type {boolean} */
   #started = false;
 
+  /** @type {string} */
+  #projectName;
+
+  /** @type {boolean} */
+  #silent;
+
+  /** @type {DefaultMessages} */
+  #messages;
+
+  // --- Getters ---
+
+  get packageData() {
+    return structuredClone(this.#packageData);
+  }
+  get packageJsonPath() {
+    return this.#packageJsonPath;
+  }
+  get rootDir() {
+    return this.#rootDir;
+  }
+  get results() {
+    return structuredClone(this.#results);
+  }
   get started() {
     return this.#started;
+  }
+  get projectName() {
+    return this.#projectName;
+  }
+  get silent() {
+    return this.#silent;
   }
 
   /**
@@ -113,9 +171,10 @@ class TinyPkgExportValidator {
    *
    * @param {string} packageJsonPath - The package.json JSON file path.
    * @param {string} rootDir - The project root directory.
-   * @throws {TypeError} If packageJsonPath is not a string or rootDir is not a string.
+   * @param {ValidatorOptions} [options={}] - Configuration options.
+   * @throws {TypeError} If arguments are not strings.
    */
-  constructor(packageJsonPath, rootDir) {
+  constructor(packageJsonPath, rootDir, options = {}) {
     if (typeof packageJsonPath !== 'string') {
       throw new TypeError('The "packageJsonPath" argument must be a string.');
     }
@@ -126,6 +185,59 @@ class TinyPkgExportValidator {
     this.#packageJsonPath = packageJsonPath;
     this.#rootDir = rootDir;
     this.#results = [];
+
+    // Configuration assignment
+    this.#projectName = options.projectName ?? 'Tiny-Essentials Export Validation';
+    this.#silent = !!options.silent;
+    this.#messages = { ...DEFAULT_MESSAGES, ...(options.messages ?? {}) };
+  }
+
+  /**
+   * Internal helper to apply template replacements.
+   * @param {string} template - The message template string.
+   * @param {Object} context - Data for placeholders.
+   * @returns {string} The processed string.
+   */
+  #applyTemplate(template, context) {
+    return template.replace(/{(\w+)}/g, (match, key) => {
+      // @ts-ignore
+      return context[key] !== undefined ? context[key] : match;
+    });
+  }
+
+  /**
+   * Internal helper to handle console output, coloring, and silent mode.
+   * @param {'error'|'warning'|'success'|'info'|'dim'|'cyan'} type - The log type.
+   * @param {string} templateKey - The key in the messages object.
+   * @param {Object} [context={}] - Data for the template.
+   */
+  #log(type, templateKey, context = {}) {
+    if (this.#silent) return;
+
+    const template =
+      // @ts-ignore
+      this.#messages[templateKey] || templateKey;
+    const message = this.#applyTemplate(template, { ...context, projectName: this.#projectName });
+
+    switch (type) {
+      case 'error':
+        console.error(`${this.#COLORS.RED}${message}${this.#COLORS.RESET}`);
+        break;
+      case 'warning':
+        console.log(`${this.#COLORS.YELLOW}${message}${this.#COLORS.RESET}`);
+        break;
+      case 'success':
+        console.log(`${this.#COLORS.GREEN}${message}${this.#COLORS.RESET}`);
+        break;
+      case 'cyan':
+        console.log(`${this.#COLORS.CYAN}${message}${this.#COLORS.RESET}`);
+        break;
+      case 'dim':
+        console.log(`${this.#COLORS.DIM}${message}${this.#COLORS.RESET}`);
+        break;
+      default:
+        console.log(message);
+    }
   }
 
   /**
@@ -139,22 +251,18 @@ class TinyPkgExportValidator {
     if (this.#started) return;
     this.#started = true;
 
-    const packageRaw = await readFile(this.#packageJsonPath, 'utf-8');
-    const packageData = JSON.parse(packageRaw);
-    if (typeof packageData !== 'object' || packageData === null) {
+    try {
+      const packageRaw = await readFile(this.#packageJsonPath, 'utf-8');
+      const packageData = JSON.parse(packageRaw);
+      if (typeof packageData !== 'object' || packageData === null) {
+        this.#started = false;
+        throw new TypeError('The "packageData" argument must be a non-null object.');
+      }
+      this.#packageData = packageData;
+    } catch (error) {
       this.#started = false;
-      throw new TypeError('The "packageData" argument must be a non-null object.');
+      throw error;
     }
-
-    this.#packageData = packageData;
-  }
-
-  /**
-   * Getter to access the validation results.
-   * @returns {Array<{path: string, valid: boolean, errorPath?: string}>} List of validated paths.
-   */
-  get results() {
-    return structuredClone(this.#results);
   }
 
   /**
@@ -163,18 +271,14 @@ class TinyPkgExportValidator {
    */
   async validate() {
     if (!this.#started) {
-      console.error(
-        `${this.#COLORS.RED}Error: package.json not loaded in the current directory.${this.#COLORS.RESET}`,
-      );
+      this.#log('error', 'errorLoad');
       return true;
     }
 
     const exports = this.#packageData.exports;
 
     if (!exports) {
-      console.log(
-        `${this.#COLORS.YELLOW}[!] No "exports" field found in package.json.${this.#COLORS.RESET}`,
-      );
+      this.#log('warning', 'noExports');
       return true;
     }
 
@@ -183,19 +287,12 @@ class TinyPkgExportValidator {
       await this.#traverseExports(exports);
     } catch (error) {
       if (error instanceof Error) {
-        if ('code' in error && error.code === 'ENOENT') {
-          console.error(
-            `${this.#COLORS.RED}Error: package.json not found in the current directory.${this.#COLORS.RESET}`,
-          );
-        } else if (error instanceof SyntaxError) {
-          console.error(
-            `${this.#COLORS.RED}Error: Failed to parse package.json. Ensure it is valid JSON.${this.#COLORS.RESET}`,
-          );
+        if (error instanceof SyntaxError) {
+          this.#log('error', 'errorParse');
+        } else if ('code' in error && error.code === 'ENOENT') {
+          this.#log('error', 'errorNotFound');
         } else {
-          console.error(
-            `${this.#COLORS.RED}An unexpected error occurred:${this.#COLORS.RESET}`,
-            error.message,
-          );
+          this.#log('error', 'errorUnexpected', { message: error.message });
         }
       }
       throw error;
@@ -250,34 +347,27 @@ class TinyPkgExportValidator {
    * @returns {boolean} True if there are no errors, false if there are failures.
    */
   #report() {
-    console.log(
-      `\n${this.#COLORS.CYAN}=== Tiny-Essentials Export Validation ===${this.#COLORS.RESET}\n`,
-    );
+    this.#log('cyan', 'header');
 
     let errorCount = 0;
 
     for (const result of this.#results) {
       if (result.valid) {
-        console.log(`${this.#COLORS.GREEN}  [✔] ${result.path}${this.#COLORS.RESET}`);
+        this.#log('success', 'itemValid', { path: result.path });
       } else {
-        console.log(`${this.#COLORS.RED}  [✘] ${result.path}${this.#COLORS.RESET}`);
-        console.log(`      ${this.#COLORS.DIM}Missing: ${result.errorPath}${this.#COLORS.RESET}`);
+        this.#log('error', 'itemInvalid', { path: result.path });
+        this.#log('dim', 'itemMissing', { errorPath: result.errorPath });
         errorCount++;
       }
     }
 
-    console.log(
-      `\n${this.#COLORS.CYAN}-----------------------------------------${this.#COLORS.RESET}`,
-    );
+    this.#log('cyan', 'divider');
+
     if (errorCount === 0) {
-      console.log(
-        `${this.#COLORS.GREEN}SUCCESS: All exports are correctly mapped.${this.#COLORS.RESET}`,
-      );
+      this.#log('success', 'successHeader');
       return true;
     } else {
-      console.log(
-        `${this.#COLORS.RED}FAILURE: ${errorCount} export(s) are missing or invalid.${this.#COLORS.RESET}`,
-      );
+      this.#log('error', 'failureHeader', { errorCount });
       return false;
     }
   }
