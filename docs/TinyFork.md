@@ -55,14 +55,14 @@ npx tiny-essentials-fork basics/array/multiplyArrayBlocks,diffArrayList
 If a module exports a default class filled with static methods, you can extract those methods just like regular functions. TinyFork will intelligently detach them from the class and export them as standalone functions!
 
 ```bash
-npx tiny-essentials-fork libs/TinyArrayComparator/generateHash
+npx tiny-essentials-fork libs/array/TinyArrayComparator/generateHash
 ```
 
 ### 4. Extracting Multiple Targets at Once
 You can queue as many targets as you want in a single command. TinyFork will orchestrate the entire extraction, mapping all dependencies together.
 
 ```bash
-npx tiny-essentials-fork libs/TinyHtml basics/array/multiplyArrayBlocks libs/TinyArrayComparator/generateHash
+npx tiny-essentials-fork libs/html/TinyHtml basics/array/multiplyArrayBlocks libs/array/TinyArrayComparator/generateHash
 ```
 
 ### 5. Specifying a Library Version

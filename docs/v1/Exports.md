@@ -46,15 +46,20 @@ import "tiny-essentials/css/TinyNotify.min.css";
 
 Direct access to smaller utilities:
 
+* `basics/mediaContent`
 * `basics/array`
 * `basics/clock`
 * `basics/collision`
 * `basics/fullScreen`
 * `basics/html`
+* `basics/deprecated/html`
 * `basics/objChecker`
 * `basics/objFilter`
+* `basics/extendObjType/Buffer`
 * `basics/simpleMath`
 * `basics/text`
+* `basics/promiseUtils`
+* `basics/browserDetector`
 
 Direct access to file utilities:
 
@@ -67,45 +72,82 @@ Direct access to file utilities:
 
 Each library can be imported separately:
 
-* **General Tools** 🛠
+* **General Tools 🛠**
 
-  * `libs/color/ColorSafeStringify`
-  * `libs/utils/UltraRandomMsgGen`
-  * `libs/html/upload/TinyUploadClicker`
-  * `libs/html/notification/TinyToastNotify`
-  * `libs/math/TinyTimeout`
-  * `libs/text/TinyTextRangeEditor`
-  * `libs/text/TinyTextarea`
-  * `libs/html/scroll/TinySmartScroller`
-  * `libs/math/TinySimpleDice`
-  * `libs/math/TinyRateLimiter`
-  * `libs/utils/TinyPromiseQueue`
-  * `libs/html/notification/TinyNotifyCenter`
-  * `libs/html/notification/TinyNotifications`
-  * `libs/html/events/TinyNewWinEvents`
-  * `libs/game/TinyNeedBar`
-  * `libs/storage/TinyLocalStorage`
-  * `libs/html/templates/TinyLoadingScreen`
-  * `libs/color/TinyColorValidator`
-  * `libs/game/TinyInventoryTrader`
-  * `libs/game/TinyInventory`
-  * `libs/html/events/TinyIframeEvents`
-  * `libs/text/TinyI18`
-  * `libs/game/TinyLevelUp`
-  * `libs/game/TinyGamepad`
-  * `libs/html/TinyElementObserver`
-  * `libs/html/drag/TinyDragger`
-  * `libs/html/drag/TinyDragDropDetector`
-  * `libs/html/TinyDomReadyManager`
-  * `libs/game/TinyDayNightCycle`
-  * `libs/html/templates/TinyCookieConsent`
-  * `libs/color/TinyColorConverter`
-  * `libs/text/TinyClipboard`
-  * `libs/array/TinyArrayPaginator`
-  * `libs/html/scroll/TinyAfterScrollWatcher`
-  * `libs/math/TinyAdvancedRaffle`
+  * **Utils & Tools**
+    * `libs/utils/tools`
+    * `libs/utils/UltraRandomMsgGen`
+    * `libs/utils/TinyPromiseQueue`
+    * `libs/tools/TinyDebugger`
+    * `libs/tools/TinyClassManager`
+    * `libs/tools/TinyClassManager/TinyPluginInliner`
+    * `libs/tools/TinyPkgExportValidator`
 
-* **HTML Helpers** 🧩
+  * **Color**
+    * `libs/color/ColorSafeStringify`
+    * `libs/color/TinyColorValidator`
+    * `libs/color/TinyColorConverter`
+
+  * **Math**
+    * `libs/math/TinyTimeout`
+    * `libs/math/TinySimpleDice`
+    * `libs/math/TinyRateLimiter`
+    * `libs/math/TinyAdvancedRaffle`
+    * `libs/math/TinyMamdaniInferenceSystem`
+
+  * **Text**
+    * `libs/text/TinyTextRangeEditor`
+    * `libs/text/TinyTextarea`
+    * `libs/text/TinyI18`
+    * `libs/text/TinyClipboard`
+    * `libs/text/TinyTextDiffer`
+
+  * **Array**
+    * `libs/array/TinyArrayPaginator`
+    * `libs/array/TinyArrayComparator`
+
+  * **HTML & UI Helpers**
+    * `libs/html/upload/TinyUploadClicker`
+    * `libs/html/notification/TinyToastNotify`
+    * `libs/html/notification/TinyNotifyCenter`
+    * `libs/html/notification/TinyNotifications`
+    * `libs/html/events/TinyNewWinEvents`
+    * `libs/html/events/TinyIframeEvents`
+    * `libs/html/scroll/TinySmartScroller`
+    * `libs/html/scroll/TinyAfterScrollWatcher`
+    * `libs/html/templates/TinyLoadingScreen`
+    * `libs/html/templates/TinyCookieConsent`
+    * `libs/html/templates/TinyAnalogClock`
+    * `libs/html/drag/TinyDragger`
+    * `libs/html/drag/TinyDragDropDetector`
+    * `libs/html/TinyElementObserver`
+    * `libs/html/TinyDomReadyManager`
+
+  * **Game**
+    * `libs/game/TinyNeedBar`
+    * `libs/game/TinyInventoryTrader`
+    * `libs/game/TinyInventory`
+    * `libs/game/TinyLevelUp`
+    * `libs/game/TinyGamepad`
+    * `libs/game/TinyDayNightCycle`
+
+  * **Storage**
+    * `libs/storage/TinyLocalStorage`
+
+* **Media 🎬**
+
+  * `libs/media/TinyMediaPlayer`
+  * `libs/media/TinyMediaPlayer/Base`
+  * `libs/media/TinyMediaPlayer/Youtube`
+  * `libs/media/TinyMediaPlayer/SoundCloud`
+  * `libs/media/TinyMediaPlayer/HtmlAudio`
+  * `libs/media/TinyMediaPlayer/HtmlVideo`
+  * `libs/media/TinyMediaPlayer/Mock`
+  * `libs/media/TinyMediaPlayer/docs/YouTubePlayer`
+  * `libs/media/TinyMediaPlayer/docs/SoundCloudWidget`
+  * `libs/media/TinyRadioFm`
+
+* **HTML Helpers 🧩**
 
   * `libs/html/TinyHtml`
   * `libs/html/TinyHtmlElems` (BETA)
