@@ -178,4 +178,4 @@ If you're curious about how I integrate AI into my development workflow — incl
 
 ✨ **Visit the Tiny-Essentials documentation hub here:**
 
-👉 [https://github.com/Tiny-Essentials/.github/tree/main/docs](https://github.com/Tiny-Essentials/.github/tree/main/docs)
+👉 [https://github.com/Tiny-Essentials/Tiny-AI-Workflow](https://github.com/Tiny-Essentials/Tiny-AI-Workflow)
