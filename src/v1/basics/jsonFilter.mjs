@@ -1,16 +1,20 @@
 /**
+ * A predicate function used to filter object entries. It receives the current entry as a [key, value] tuple, 
+ * the current index, and the array of all entries. It must act as a type guard to ensure the entry maintains the 
+ * correct tuple structure.
+ * 
  * @template T
  * @typedef {(
  *   entry: [keyof T, T[keyof T]],
  *   index: number,
  *   array: [keyof T, T[keyof T]][]
- * ) => entry is [keyof T, T[keyof T]]} FilterObjCallback
+ * ) => entry is [keyof T, T[keyof T]]} JsonFilterCallback
  */
 
 /**
  * @template {Record<string|number|symbol, any>} T
  * @param {T} value - The source object to be filtered.
- * @param {FilterObjCallback<T>} filterContent - Predicate function used to filter the object's entries.
+ * @param {JsonFilterCallback<T>} filterContent - Predicate function used to filter the object's entries.
  * @returns {Partial<T>} - A new object containing a subset of the original object's keys.
  * @throws {TypeError} If the value is not a non-null object or filterContent is not a function.
  */
