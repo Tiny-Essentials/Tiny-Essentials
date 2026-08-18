@@ -229,11 +229,11 @@ Each library can be imported separately:
 **ESM (modern projects)**
 
 ```js
-import { TinyTextarea } from "tiny-essentials/libs/text/TinyTextarea";
+import TinyTextarea from "tiny-essentials/libs/text/TinyTextarea";
 ```
 
 **CommonJS (Node.js)**
 
 ```js
-const { TinyTextarea } = require("tiny-essentials/libs/text/TinyTextarea");
+const { shuffleArray } = require("tiny-essentials/basics/array`");
 ```
