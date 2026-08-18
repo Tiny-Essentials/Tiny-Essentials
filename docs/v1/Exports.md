@@ -235,5 +235,5 @@ import TinyTextarea from "tiny-essentials/libs/text/TinyTextarea";
 **CommonJS (Node.js)**
 
 ```js
-const { shuffleArray } = require("tiny-essentials/basics/array`");
+const { shuffleArray } = require("tiny-essentials/basics/array");
 ```
