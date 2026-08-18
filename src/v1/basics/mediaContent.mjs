@@ -1,3 +1,4 @@
+import { jsonFilterRecursive } from './jsonFilter.mjs';
 import { countObj, isJsonObject } from './objChecker.mjs';
 
 /**
@@ -800,21 +801,6 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
   const common = metadata.common;
   valMediaContentMetadata(common);
 
-  /**
-   * @type {(value: [string, any]) => boolean}
-   */
-  const filterContent = ([_, value]) =>
-    Array.isArray(value)
-      ? value.length > 0
-      : isJsonObject(value)
-        ? (() => {
-            value;
-            const d = Object.fromEntries(Object.entries(value).filter(filterContent));
-            const amount = countObj(d);
-            return amount > 0;
-          })()
-        : value !== null;
-
   // Fix blob values.
   const picture =
     common?.picture?.map((value) => ({
@@ -857,8 +843,8 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
   // 5. Return the specific metadata fields requested
   // We structure the return to match the MediaContentMetadata typedef
   /** @type {MediaContentMetadata<PictureDataType>} */
-  const result = Object.fromEntries(
-    Object.entries({
+  const result = jsonFilterRecursive(
+    {
       title: common?.title ?? null,
       album: common?.album ?? null,
       albumartist: common?.albumartist ?? null,
@@ -949,7 +935,9 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
       showMovement: common?.showMovement ?? null,
       stik: common?.stik ?? null,
       playCounter: common?.playCounter ?? null,
-    }).filter(filterContent),
+    },
+    ([_, value]) => value !== null,
+    ([_, value]) => value.length > 0,
   );
 
   result._fetchData = metadata;
