@@ -38,28 +38,50 @@ export function jsonFilter(value, filterContent) {
 }
 
 /**
+ * @callback EntryPredicate
+ * @param {[string | number | symbol, any]} entry - The current [key, value] pair.
+ * @param {number} index - The current index.
+ * @param {any[]} array - The array of entries being processed.
+ * @returns {boolean}
+ */
+
+/**
+ * Recursively filters an object.
+ * If an object is encountered, it is only kept if its filtered content is not empty.
+ *
  * @template {Record<string|number|symbol, any>} T
  * @param {T} value - The source object to be filtered.
- * @param {(value: [string | number | symbol, any], index: number, array: any[]) => boolean} [filterJson]
- * @param {(value: [string | number | symbol, any], index: number, array: any[]) => boolean} [filterArray]
- * @returns {Partial<any>} - A new object containing a subset of the original object's keys.
- * @throws {TypeError} If the value is not a non-null object or filterContent is not a function.
+ * @param {EntryPredicate} [filterJson] - Predicate applied to non-array values.
+ * @param {EntryPredicate} [filterArray] - Predicate applied to array values.
+ * @returns {Record<string|number|symbol, any>} A new filtered structure.
+ * @throws {TypeError} If filterJson or filterArray are provided but are not functions.
  */
 export function jsonFilterRecursive(value, filterJson, filterArray) {
+  // Validation for optional functional arguments
+  if (filterJson !== undefined && typeof filterJson !== 'function') {
+    throw new TypeError('filterJson must be a function if provided.');
+  }
+  if (filterArray !== undefined && typeof filterArray !== 'function') {
+    throw new TypeError('filterArray must be a function if provided.');
+  }
+
   /** @type {JsonFilterCallback<any>} */
   const fr = ([_, value], index, array) =>
+    // Case 1: Value is an Array
     Array.isArray(value)
       ? typeof filterArray !== 'undefined'
         ? filterArray([_, value], index, array)
         : true
-      : isJsonObject(value)
+      : // Case 2: Value is an Object (pruning logic)
+        isJsonObject(value)
         ? (() => {
             value;
             const d = jsonFilterRecursive(value, filterJson, filterArray);
             const amount = countObj(d);
             return amount > 0;
           })()
-        : typeof filterJson !== 'undefined'
+        : // Case 3: Value is a primitive/other
+          typeof filterJson !== 'undefined'
           ? filterJson([_, value], index, array)
           : true;
 
