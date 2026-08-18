@@ -39,7 +39,7 @@ export function jsonFilter(value, filterContent) {
 
 /**
  * @callback EntryPredicate
- * @param {[string | number | symbol, any]} entry - The current [key, value] pair.
+ * @param {[string, any]} entry - The current [key, value] pair.
  * @param {number} index - The current index.
  * @param {any[]} array - The array of entries being processed.
  * @returns {boolean}
@@ -53,7 +53,7 @@ export function jsonFilter(value, filterContent) {
  * @param {T} value - The source object to be filtered.
  * @param {EntryPredicate} [filterJson] - Predicate applied to non-array values.
  * @param {EntryPredicate} [filterArray] - Predicate applied to array values.
- * @returns {Record<string|number|symbol, any>} A new filtered structure.
+ * @returns {Record<string, any>} A new filtered structure.
  * @throws {TypeError} If filterJson or filterArray are provided but are not functions.
  */
 export function jsonFilterRecursive(value, filterJson, filterArray) {
@@ -66,10 +66,12 @@ export function jsonFilterRecursive(value, filterJson, filterArray) {
   }
 
   /** @type {JsonFilterCallback<any>} */
+  // @ts-ignore
   const fr = ([_, value], index, array) =>
     // Case 1: Value is an Array
     Array.isArray(value)
       ? typeof filterArray !== 'undefined'
+        // @ts-ignore
         ? filterArray([_, value], index, array)
         : true
       : // Case 2: Value is an Object (pruning logic)
@@ -82,6 +84,7 @@ export function jsonFilterRecursive(value, filterJson, filterArray) {
           })()
         : // Case 3: Value is a primitive/other
           typeof filterJson !== 'undefined'
+          // @ts-ignore
           ? filterJson([_, value], index, array)
           : true;
 
