@@ -1,6 +1,11 @@
 import { countObj, isJsonObject, isValidObj } from './objChecker.mjs';
 
 /**
+ * Represents a valid key for an object, which can be a string, number, or symbol.
+ * @typedef {string|number|symbol} RecordKey
+ */
+
+/**
  * A predicate function used to filter object entries. It receives the current entry as a [key, value] tuple,
  * the current index, and the array of all entries. It must act as a type guard to ensure the entry maintains the
  * correct tuple structure.
@@ -14,7 +19,7 @@ import { countObj, isJsonObject, isValidObj } from './objChecker.mjs';
  */
 
 /**
- * @template {Record<string|number|symbol, any>} T
+ * @template {Record<RecordKey, any>} T
  * @param {T} value - The source object to be filtered.
  * @param {JsonFilterCallback<T>} filterContent - Predicate function used to filter the object's entries.
  * @returns {Partial<T>} - A new object containing a subset of the original object's keys.
@@ -49,7 +54,7 @@ export function jsonFilter(value, filterContent) {
  * Recursively filters an object.
  * If an object is encountered, it is only kept if its filtered content is not empty.
  *
- * @template {Record<string|number|symbol, any>} T
+ * @template {Record<RecordKey, any>} T
  * @param {T} value - The source object to be filtered.
  * @param {EntryPredicate} [filterJson] - Predicate applied to non-array values.
  * @param {EntryPredicate} [filterArray] - Predicate applied to array values.
@@ -89,4 +94,41 @@ export function jsonFilterRecursive(value, filterJson, filterArray) {
           : true;
 
   return jsonFilter(value, fr);
+}
+
+/**
+ * @template {Record<RecordKey, any>} T
+ * @param {T} item - The source object to be filtered.
+ * @param {(RecordKey|[RecordKey, any])[]} keys - An array of keys to keep.
+ * @param {any[]} [values] - An array of values to keep the key.
+ * @returns {Partial<T>} - A new object containing only the specified keys.
+ * @throws {TypeError} If the value is not a non-null object or keys is not an array.
+ */
+export function jsonFilterByKeys(item, keys, values) {
+  if (!Array.isArray(keys)) {
+    throw new TypeError('The second argument must be an array.');
+  }
+  if (typeof values !== 'undefined' && !Array.isArray(values)) {
+    throw new TypeError('The third argument must be an array.');
+  }
+
+  return jsonFilter(
+    item,
+    // @ts-ignore
+    ([key, value]) => {
+      return keys.some((k) => {
+        // Case 1: The element in 'keys' is a tuple [targetKey, targetValue]
+        if (Array.isArray(k)) {
+          const [targetKey, targetValue] = k;
+          return key === targetKey && value === targetValue;
+        }
+
+        // Case 2: The element in 'keys' is a simple key (RecordKey)
+        const keyMatches = String(key) === String(k);
+        const valueMatches = typeof values === 'undefined' || values.includes(value);
+
+        return keyMatches && valueMatches;
+      });
+    },
+  );
 }

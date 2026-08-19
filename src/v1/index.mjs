@@ -179,7 +179,7 @@ import {
 } from './basics/browserDetector.mjs';
 import TinyUploadClicker from './libs/html/upload/TinyUploadClicker.mjs';
 import TinyPkgExportValidator from './libs/tools/TinyPkgExportValidator.mjs';
-import { jsonFilter, jsonFilterRecursive } from './basics/jsonFilter.mjs';
+import { jsonFilter, jsonFilterRecursive, jsonFilterByKeys } from './basics/jsonFilter.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
@@ -232,6 +232,7 @@ export {
   TinyLevelUp,
   jsonFilter,
   jsonFilterRecursive,
+  jsonFilterByKeys,
   getUserTimeFormat,
   getBrowserPings,
   isBrowserAgent,
