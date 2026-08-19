@@ -87,8 +87,10 @@ import {
   getDuckTyping,
   isBrowserAgent,
 } from './browserDetector.mjs';
-
+import { jsonFilter, jsonFilterRecursive } from './jsonFilter.mjs';
 export {
+  jsonFilter,
+  jsonFilterRecursive,
   getUserTimeFormat,
   getBrowserPings,
   isBrowserAgent,
