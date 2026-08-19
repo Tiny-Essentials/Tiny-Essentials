@@ -71,8 +71,8 @@ export function jsonFilterRecursive(value, filterJson, filterArray) {
     // Case 1: Value is an Array
     Array.isArray(value)
       ? typeof filterArray !== 'undefined'
-        // @ts-ignore
-        ? filterArray([_, value], index, array)
+        ? // @ts-ignore
+          filterArray([_, value], index, array)
         : true
       : // Case 2: Value is an Object (pruning logic)
         isJsonObject(value)
@@ -84,8 +84,8 @@ export function jsonFilterRecursive(value, filterJson, filterArray) {
           })()
         : // Case 3: Value is a primitive/other
           typeof filterJson !== 'undefined'
-          // @ts-ignore
-          ? filterJson([_, value], index, array)
+          ? // @ts-ignore
+            filterJson([_, value], index, array)
           : true;
 
   return jsonFilter(value, fr);
