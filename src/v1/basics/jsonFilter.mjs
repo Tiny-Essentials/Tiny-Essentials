@@ -99,10 +99,10 @@ export function jsonFilterRecursive(value, filterJson, filterArray) {
 /**
  * @template {Record<RecordKey, any>} T
  * @param {T} item - The source object to be filtered.
- * @param {(RecordKey|[RecordKey, any])[]} keys - An array of keys to keep.
- * @param {any[]} [values] - An array of values to keep the key.
+ * @param {(RecordKey|[RecordKey, any])[]} keys - An array of keys or [key, value] tuples to keep.
+ * @param {any[]} [values] - An array of values to validate against when using simple keys.
  * @returns {Partial<T>} - A new object containing only the specified keys.
- * @throws {TypeError} If the value is not a non-null object or keys is not an array.
+ * @throws {TypeError} If the item is not a non-null object, keys is not an array, or values is not an array.
  */
 export function jsonFilterByKeys(item, keys, values) {
   if (!Array.isArray(keys)) {
@@ -124,7 +124,7 @@ export function jsonFilterByKeys(item, keys, values) {
         }
 
         // Case 2: The element in 'keys' is a simple key (RecordKey)
-        const keyMatches = String(key) === String(k);
+        const keyMatches = key === k;
         const valueMatches = typeof values === 'undefined' || values.includes(value);
 
         return keyMatches && valueMatches;
