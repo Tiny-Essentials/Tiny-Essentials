@@ -53,7 +53,7 @@ export function jsonFilter(value, filterContent) {
  * @param {T} value - The source object to be filtered.
  * @param {EntryPredicate} [filterJson] - Predicate applied to non-array values.
  * @param {EntryPredicate} [filterArray] - Predicate applied to array values.
- * @returns {Record<string, any>} A new filtered structure.
+ * @returns {Partial<T>} A new filtered structure.
  * @throws {TypeError} If filterJson or filterArray are provided but are not functions.
  */
 export function jsonFilterRecursive(value, filterJson, filterArray) {
