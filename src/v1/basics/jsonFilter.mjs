@@ -22,7 +22,7 @@ import { countObj, isJsonObject } from './objChecker.mjs';
  */
 export function jsonFilter(value, filterContent) {
   // Argument validation
-  if (typeof value !== 'object' || value === null) {
+  if (Array.isArray(value) || typeof value !== 'object' || value === null) {
     throw new TypeError('The first argument must be a non-null object.');
   }
 
