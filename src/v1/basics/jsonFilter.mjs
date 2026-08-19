@@ -1,4 +1,4 @@
-import { countObj, isJsonObject } from './objChecker.mjs';
+import { countObj, isJsonObject, isValidObj } from './objChecker.mjs';
 
 /**
  * A predicate function used to filter object entries. It receives the current entry as a [key, value] tuple,
@@ -22,7 +22,7 @@ import { countObj, isJsonObject } from './objChecker.mjs';
  */
 export function jsonFilter(value, filterContent) {
   // Argument validation
-  if (Array.isArray(value) || typeof value !== 'object' || value === null) {
+  if (!isValidObj(value)) {
     throw new TypeError('The first argument must be a non-null object.');
   }
 
