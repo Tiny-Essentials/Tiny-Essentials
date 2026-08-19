@@ -97,10 +97,14 @@ export function jsonFilterRecursive(value, filterJson, filterArray) {
 }
 
 /**
+ * @typedef {(value: any) => boolean} ValueTypeValidator
+ */
+
+/**
  * @template {Record<RecordKey, any>} T
  * @param {T} item - The source object to be filtered.
- * @param {(RecordKey|[RecordKey, any])[]} keys - An array of keys or [key, value] tuples to keep.
- * @param {any[]} [values] - An array of values to validate against when using simple keys.
+ * @param {(RecordKey|[RecordKey, any|ValueTypeValidator])[]} keys - An array of keys or [key, value] tuples to keep.
+ * @param {(any|ValueTypeValidator)[]} [values] - An array of values to validate against when using simple keys.
  * @returns {Partial<T>} - A new object containing only the specified keys.
  * @throws {TypeError} If the item is not a non-null object, keys is not an array, or values is not an array.
  */
@@ -116,19 +120,29 @@ export function jsonFilterByKeys(item, keys, values) {
     item,
     // @ts-ignore
     ([key, value]) => {
-      return keys.some((k) => {
-        // Case 1: The element in 'keys' is a tuple [targetKey, targetValue]
-        if (Array.isArray(k)) {
-          const [targetKey, targetValue] = k;
-          return key === targetKey && value === targetValue;
-        }
+      if (keys.length > 0)
+        return keys.some((k) => {
+          // Case 1: The element in 'keys' is a tuple [targetKey, targetValue]
+          if (Array.isArray(k)) {
+            const [targetKey, targetValue] = k;
+            return (
+              key === targetKey &&
+              (typeof targetValue !== 'function' ? value === targetValue : targetValue(value))
+            );
+          }
 
-        // Case 2: The element in 'keys' is a simple key (RecordKey)
-        const keyMatches = key === k;
-        const valueMatches = typeof values === 'undefined' || values.includes(value);
+          // Case 2: The element in 'keys' is a simple key (RecordKey)
+          const keyMatches = key === k;
+          const valueMatches = typeof values === 'undefined' || values.includes(value);
 
-        return keyMatches && valueMatches;
-      });
+          return keyMatches && valueMatches;
+        });
+      if (typeof values !== 'undefined')
+        return values.some((k) => {
+          // Case 2: The element in 'keys' is a simple key (RecordKey)
+          return values.includes(k);
+        });
+      throw new Error('');
     },
   );
 }
