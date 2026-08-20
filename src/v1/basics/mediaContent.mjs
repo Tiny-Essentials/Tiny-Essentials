@@ -936,8 +936,11 @@ export const extractMediaId3Tags = async (url, parseFile, convertBase64toBlob = 
       stik: common?.stik,
       playCounter: common?.playCounter,
     },
-    ([_, value]) => value !== null && typeof value !== 'undefined',
-    ([_, value]) => value.length > 0,
+    {
+      value: ([_, value]) => value !== null && typeof value !== 'undefined',
+      obj: (value) => countObj(value) > 0,
+      array: ([_, value]) => value.length > 0,
+    },
   );
 
   result._fetchData = metadata;

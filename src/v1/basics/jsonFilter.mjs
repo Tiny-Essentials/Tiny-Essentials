@@ -43,8 +43,9 @@ export function jsonFilter(value, filterContent) {
 }
 
 /**
+ * @template T
  * @callback EntryPredicate
- * @param {[string, any]} entry - The current [key, value] pair.
+ * @param {T} entry - The current [key, value] pair.
  * @param {number} index - The current index.
  * @param {any[]} array - The array of entries being processed.
  * @returns {boolean}
@@ -52,22 +53,26 @@ export function jsonFilter(value, filterContent) {
 
 /**
  * Recursively filters an object.
- * If an object is encountered, it is only kept if its filtered content is not empty.
  *
  * @template {Record<RecordKey, any>} T
  * @param {T} value - The source object to be filtered.
- * @param {EntryPredicate} [filterJson] - Predicate applied to non-array values.
- * @param {EntryPredicate} [filterArray] - Predicate applied to array values.
+ * @param {Object} filter
+ * @param {EntryPredicate<[string, any]>} [filter.value] - Predicate applied to values.
+ * @param {EntryPredicate<Record<RecordKey, any>>} [filter.obj] - Predicate applied to non-array values.
+ * @param {EntryPredicate<[string, any]>} [filter.array] - Predicate applied to array values.
  * @returns {Partial<T>} A new filtered structure.
  * @throws {TypeError} If filterJson or filterArray are provided but are not functions.
  */
-export function jsonFilterRecursive(value, filterJson, filterArray) {
+export function jsonFilterRecursive(value, filter) {
   // Validation for optional functional arguments
-  if (filterJson !== undefined && typeof filterJson !== 'function') {
-    throw new TypeError('filterJson must be a function if provided.');
+  if (filter.obj !== undefined && typeof filter.obj !== 'function') {
+    throw new TypeError('filter.obj must be a function if provided.');
   }
-  if (filterArray !== undefined && typeof filterArray !== 'function') {
-    throw new TypeError('filterArray must be a function if provided.');
+  if (filter.value !== undefined && typeof filter.value !== 'function') {
+    throw new TypeError('filter.value must be a function if provided.');
+  }
+  if (filter.array !== undefined && typeof filter.array !== 'function') {
+    throw new TypeError('filter.array must be a function if provided.');
   }
 
   /** @type {JsonFilterCallback<any>} */
@@ -75,28 +80,28 @@ export function jsonFilterRecursive(value, filterJson, filterArray) {
   const fr = ([_, value], index, array) =>
     // Case 1: Value is an Array
     Array.isArray(value)
-      ? typeof filterArray !== 'undefined'
+      ? typeof filter.array !== 'undefined'
         ? // @ts-ignore
-          filterArray([_, value], index, array)
+          filter.array([_, value], index, array)
         : true
       : // Case 2: Value is an Object (pruning logic)
-        isJsonObject(value)
+        isValidObj(value)
         ? (() => {
             value;
-            const d = jsonFilterRecursive(value, filterJson, filterArray);
-            const amount = countObj(d);
-            return amount > 0;
+            const d = jsonFilterRecursive(value, filter);
+            return typeof filter.obj !== 'undefined' ? filter.obj(d, index, array) : true;
           })()
         : // Case 3: Value is a primitive/other
-          typeof filterJson !== 'undefined'
+          typeof filter.value !== 'undefined'
           ? // @ts-ignore
-            filterJson([_, value], index, array)
+            filter.value([_, value], index, array)
           : true;
 
   return jsonFilter(value, fr);
 }
 
 /**
+ * A predicate function used to validate whether a given value satisfies a specific condition or type requirement.
  * @typedef {(value: any) => boolean} ValueTypeValidator
  */
 
