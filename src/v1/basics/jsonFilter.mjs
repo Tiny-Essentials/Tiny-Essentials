@@ -92,6 +92,7 @@ export function jsonFilterRecursive(value, filter) {
   /** @type {JsonFilterCallback<any>} */
   // @ts-ignore
   const arrFr = ([_, value], index, array) => {
+    if (typeof filter.array === 'undefined') return true;
     const newArr = [];
     for (const arrValue of value) {
       // Case 1: Value is an Array
@@ -111,10 +112,7 @@ export function jsonFilterRecursive(value, filter) {
           newArr.push(arrValue);
       }
     }
-    return typeof filter.array !== 'undefined'
-      ? // @ts-ignore
-        filter.array([_, newArr], index, array)
-      : true;
+    return filter.array([_, newArr], index, array);
   };
 
   /** @type {JsonFilterCallback<any>} */
