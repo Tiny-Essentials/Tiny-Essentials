@@ -89,50 +89,76 @@ export function jsonFilterRecursive(value, filter) {
     throw new TypeError('filter.array must be a function if provided.');
   }
 
-  /** @type {JsonFilterCallback<any>} */
-  // @ts-ignore
-  const arrFr = ([_, value], index, array) => {
-    if (typeof filter.array === 'undefined') return true;
+  const entries = Object.entries(value);
+  const result = {};
+
+  /**
+   * Helper function to recursively reconstruct and filter arrays
+   * @param {any[]} arr
+   * @param {string} key
+   * @returns {any[]}
+   */
+  const processArray = (arr, key) => {
     const newArr = [];
-    for (const arrValue of value) {
+    for (let i = 0; i < arr.length; i++) {
+      const arrValue = arr[i];
+
       // Case 1: Value is an Array
       if (Array.isArray(arrValue)) {
-        if (arrFr([_, arrValue], index, array)) newArr.push(arrValue);
+        newArr.push(processArray(arrValue, key));
       }
 
       // Case 2: Value is an Object (pruning logic)
-      if (isValidObj(arrValue)) {
+      else if (isValidObj(arrValue)) {
         const d = jsonFilterRecursive(arrValue, filter);
-        if (typeof filter.obj !== 'undefined' ? filter.obj(d, index, array) : true) newArr.push(d);
+        if (typeof filter.obj !== 'undefined' ? filter.obj(d, i, arr) : true) {
+          newArr.push(d);
+        }
       }
 
       // Case 3: Value is a primitive/other
       else {
-        if (typeof filter.value !== 'undefined' ? filter.value([_, arrValue], index, array) : true)
+        if (typeof filter.value !== 'undefined' ? filter.value([key, arrValue], i, arr) : true) {
           newArr.push(arrValue);
+        }
       }
     }
-    return filter.array([_, newArr], index, array);
+    return newArr;
   };
 
-  /** @type {JsonFilterCallback<any>} */
-  // @ts-ignore
-  const fr = ([_, value], index, array) =>
-    // Case 1: Value is an Array
-    Array.isArray(value)
-      ? arrFr([_, value], index, array)
-      : // Case 2: Value is an Object (pruning logic)
-        isValidObj(value)
-        ? (() => {
-            const d = jsonFilterRecursive(value, filter);
-            return typeof filter.obj !== 'undefined' ? filter.obj(d, index, array) : true;
-          })()
-        : // Case 3: Value is a primitive/other
-          typeof filter.value !== 'undefined'
-          ? filter.value([_, value], index, array)
-          : true;
+  // Main loop to build the new object
+  for (let index = 0; index < entries.length; index++) {
+    const [key, val] = entries[index];
 
-  return jsonFilter(value, fr);
+    // Case 1: Value is an Array
+    if (Array.isArray(val)) {
+      const newArr = processArray(val, key);
+      const shouldKeep =
+        typeof filter.array !== 'undefined' ? filter.array([key, newArr], index, entries) : true;
+
+      // @ts-ignore
+      if (shouldKeep) result[key] = newArr;
+    }
+    // Case 2: Value is an Object (pruning logic)
+    else if (isValidObj(val)) {
+      const d = jsonFilterRecursive(val, filter);
+      const shouldKeep = typeof filter.obj !== 'undefined' ? filter.obj(d, index, entries) : true;
+
+      // @ts-ignore
+      if (shouldKeep) result[key] = d;
+    }
+    // Case 3: Value is a primitive/other
+    else {
+      const shouldKeep =
+        typeof filter.value !== 'undefined' ? filter.value([key, val], index, entries) : true;
+
+      // @ts-ignore
+      if (shouldKeep) result[key] = val;
+    }
+  }
+
+  // We use a type cast here because TypeScript infers `result` as `any` initially.
+  return /** @type {Partial<T>} */ (result);
 }
 
 /**
