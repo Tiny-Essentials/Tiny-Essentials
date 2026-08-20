@@ -114,6 +114,10 @@
       "require": "./dist/v1/basics/browserDetector.cjs",
       "import": "./dist/v1/basics/browserDetector.mjs"
     },
+    "./basics/jsonFilter": {
+      "require": "./dist/v1/basics/jsonFilter.cjs",
+      "import": "./dist/v1/basics/jsonFilter.mjs"
+    },
     "./fileManager": {
       "require": "./dist/v1/fileManager/index.cjs",
       "import": "./dist/v1/fileManager/index.mjs"

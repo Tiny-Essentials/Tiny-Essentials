@@ -28,7 +28,7 @@ jsonFilter(value, filterContent);
 Filtering an object to only keep entries where the value is a number greater than 10.
 
 ```javascript
-import { jsonFilter } from './filters.mjs';
+import { jsonFilter } from 'tiny-essentials/basics/jsonFilter';
 
 const data = { a: 5, b: 15, c: 20, d: 'hello' };
 
@@ -64,7 +64,7 @@ jsonFilterRecursive(value, filter);
 Filtering a complex structure containing `Map` and `Set` objects.
 
 ```javascript
-import { jsonFilterRecursive } from './filters.mjs';
+import { jsonFilterRecursive } from 'tiny-essentials/basics/jsonFilter';
 
 const complexData = {
   id: 'Yasmin',
@@ -133,6 +133,8 @@ jsonFilterByKeys(item, keys, values);
 If you provide a list of keys and a list of allowed values.
 
 ```javascript
+import { jsonFilterByKeys } from 'tiny-essentials/basics/jsonFilter';
+
 const data = { status: 'active', type: 'user', age: 25 };
 // Keep only 'status' if it is 'active'
 const result = jsonFilterByKeys(data, ['status'], ['active']); 
@@ -143,6 +145,8 @@ const result = jsonFilterByKeys(data, ['status'], ['active']);
 You can pass a tuple `[key, condition]` where the condition is a value or a function.
 
 ```javascript
+import { jsonFilterByKeys } from 'tiny-essentials/basics/jsonFilter';
+
 const data = {
   id: 101,
   role: 'admin',
@@ -163,6 +167,8 @@ console.log(result);
 You can pass functions to perform complex validation during selection.
 
 ```javascript
+import { jsonFilterByKeys } from 'tiny-essentials/basics/jsonFilter';
+
 const data = {
   name: 'Isabela',
   age: 30,

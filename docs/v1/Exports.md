@@ -60,6 +60,7 @@ Direct access to smaller utilities:
 * `basics/text`
 * `basics/promiseUtils`
 * `basics/browserDetector`
+* `basics/jsonFilter`
 
 Direct access to file utilities:
 
