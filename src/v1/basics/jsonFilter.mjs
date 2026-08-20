@@ -1,4 +1,4 @@
-import { countObj, isJsonObject, isValidObj } from './objChecker.mjs';
+import { isValidObj } from './objChecker.mjs';
 
 /**
  * Represents a valid key for an object, which can be a string, number, or symbol.
@@ -43,25 +43,39 @@ export function jsonFilter(value, filterContent) {
 }
 
 /**
+ * A predicate function used to determine whether an element should be included in the filtered result.
+ *
  * @template T
- * @callback EntryPredicate
- * @param {T} entry - The current [key, value] pair.
- * @param {number} index - The current index.
- * @param {any[]} array - The array of entries being processed.
- * @returns {boolean}
+ * @callback BasePredicate
+ * @param {T} current - The current element being evaluated. Depending on the recursion level, this can be an entry tuple `[key, value]`, a primitive value, or a nested object.
+ * @param {number} index - The zero-based index of the current element within the array being iterated.
+ * @param {any[]} array - The array containing the current element.
+ * @returns {boolean} True if the element satisfies the condition and should be kept; otherwise, false.
  */
 
 /**
- * Recursively filters an object.
+ * Configuration object for the `jsonFilterRecursive` function, containing predicate functions for different data types.
+ *
+ * @typedef {Object} FilterOptions
+ * @property {BasePredicate<[RecordKey, any]>} [value] - A predicate function applied to primitive values. Receives the entry as a `[key, value]` tuple.
+ * @property {BasePredicate<Record<RecordKey, any>>} [obj] - A predicate function applied to nested objects. Receives the filtered sub-object as its first argument.
+ * @property {BasePredicate<[RecordKey, any]>} [array] - A predicate function applied to array elements. Receives the entry as a `[key, value]` tuple.
+ */
+
+/**
+ * Recursively traverses an object and returns a new structure containing only the elements
+ * that satisfy the provided filtering criteria.
+ *
+ * The function applies specific predicates based on the type of the current value:
+ * 1. If the value is an Array, the `filter.array` predicate is applied.
+ * 2. If the value is an Object, the function recurses, and then the `filter.obj` predicate is applied to the result.
+ * 3. If the value is a primitive, the `filter.value` predicate is applied.
  *
  * @template {Record<RecordKey, any>} T
- * @param {T} value - The source object to be filtered.
- * @param {Object} filter
- * @param {EntryPredicate<[string, any]>} [filter.value] - Predicate applied to values.
- * @param {EntryPredicate<Record<RecordKey, any>>} [filter.obj] - Predicate applied to non-array values.
- * @param {EntryPredicate<[string, any]>} [filter.array] - Predicate applied to array values.
- * @returns {Partial<T>} A new filtered structure.
- * @throws {TypeError} If filterJson or filterArray are provided but are not functions.
+ * @param {T} value - The source object to be deeply filtered.
+ * @param {FilterOptions} filter - An object containing optional predicate functions for different data types.
+ * @returns {Partial<T>} A new, deeply filtered version of the original object.
+ * @throws {TypeError} If `filter.value`, `filter.obj`, or `filter.array` are provided but are not functions.
  */
 export function jsonFilterRecursive(value, filter) {
   // Validation for optional functional arguments
@@ -76,25 +90,47 @@ export function jsonFilterRecursive(value, filter) {
   }
 
   /** @type {JsonFilterCallback<any>} */
+  const arrFr = ([_, value], index, array) => {
+    const newArr = [];
+    for (const arrValue of value) {
+      // Case 1: Value is an Array
+      if (Array.isArray(arrValue)) {
+        if (arrFr([_, arrValue], index, array)) newArr.push(arrValue);
+      }
+
+      // Case 2: Value is an Object (pruning logic)
+      if (isValidObj(arrValue)) {
+        const d = jsonFilterRecursive(arrValue, filter);
+        if (typeof filter.obj !== 'undefined' ? filter.obj(d, index, array) : true) newArr.push(d);
+      }
+
+      // Case 3: Value is a primitive/other
+      else {
+        if (typeof filter.value !== 'undefined' ? filter.value([_, arrValue], index, array) : true)
+          newArr.push(arrValue);
+      }
+    }
+    return typeof filter.array !== 'undefined'
+      ? // @ts-ignore
+        filter.array([_, newArr], index, array)
+      : true;
+  };
+
+  /** @type {JsonFilterCallback<any>} */
   // @ts-ignore
   const fr = ([_, value], index, array) =>
     // Case 1: Value is an Array
     Array.isArray(value)
-      ? typeof filter.array !== 'undefined'
-        ? // @ts-ignore
-          filter.array([_, value], index, array)
-        : true
+      ? arrFr([_, value], index, array)
       : // Case 2: Value is an Object (pruning logic)
         isValidObj(value)
         ? (() => {
-            value;
             const d = jsonFilterRecursive(value, filter);
             return typeof filter.obj !== 'undefined' ? filter.obj(d, index, array) : true;
           })()
         : // Case 3: Value is a primitive/other
           typeof filter.value !== 'undefined'
-          ? // @ts-ignore
-            filter.value([_, value], index, array)
+          ? filter.value([_, value], index, array)
           : true;
 
   return jsonFilter(value, fr);
