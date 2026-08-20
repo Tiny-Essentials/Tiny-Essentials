@@ -150,17 +150,19 @@ import { jsonFilterByKeys } from 'tiny-essentials/basics/jsonFilter';
 const data = {
   id: 101,
   role: 'admin',
-  score: 95
+  score: 95,
+  enabled: true
 };
 
-// Keep 'id' and keep 'role' only if it is 'admin'
+// Keep 'id', 'score', and 'role'.
 const result = jsonFilterByKeys(data, [
   'id', 
-  ['role', 'admin']
+  ['role', 'admin'],
+  ['score', (value) => value > 90]
 ]);
 
 console.log(result); 
-// Output: { id: 101, role: 'admin' }
+// Output: { id: 101, role: 'admin', score: 95 }
 ```
 
 #### 3. Using Validators
