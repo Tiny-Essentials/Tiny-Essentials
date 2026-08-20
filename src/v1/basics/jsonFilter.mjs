@@ -103,8 +103,8 @@ export function jsonFilterRecursive(value, filterJson, filterArray) {
 /**
  * @template {Record<RecordKey, any>} T
  * @param {T} item - The source object to be filtered.
- * @param {(RecordKey|[RecordKey, any|ValueTypeValidator])[]} keys - An array of keys or [key, value] tuples to keep.
- * @param {(any|ValueTypeValidator)[]} [values] - An array of values to validate against when using simple keys.
+ * @param {(RecordKey|[RecordKey, any|ValueTypeValidator])[]} keys - An array of keys or [key, value/validator] tuples to keep.
+ * @param {(any|ValueTypeValidator)[]} [values] - An array of values or validators to validate against when using simple keys.
  * @returns {Partial<T>} - A new object containing only the specified keys.
  * @throws {TypeError} If the item is not a non-null object, keys is not an array, or values is not an array.
  */
@@ -122,27 +122,30 @@ export function jsonFilterByKeys(item, keys, values) {
     ([key, value]) => {
       if (keys.length > 0)
         return keys.some((k) => {
-          // Case 1: The element in 'keys' is a tuple [targetKey, targetValue]
+          // Case 1: The element in 'keys' is a tuple [targetKey, targetValueOrValidator]
           if (Array.isArray(k)) {
             const [targetKey, targetValue] = k;
-            return (
-              key === targetKey &&
-              (typeof targetValue !== 'function' ? value === targetValue : targetValue(value))
-            );
+            const keyMatches = key === targetKey;
+            const valueMatches =
+              typeof targetValue === 'function' ? targetValue(value) : value === targetValue;
+
+            return keyMatches && valueMatches;
           }
 
           // Case 2: The element in 'keys' is a simple key (RecordKey)
           const keyMatches = key === k;
-          const valueMatches = typeof values === 'undefined' || values.includes(value);
+
+          // Universal validation: check if value is in 'values' OR matches a validator in 'values'
+          const valueMatches =
+            typeof values === 'undefined' ||
+            values.some((v) => (typeof v === 'function' ? v(value) : v === value));
 
           return keyMatches && valueMatches;
         });
+      // Universal validation: check if value is in 'values' OR matches a validator in 'values'
       if (typeof values !== 'undefined')
-        return values.some((k) => {
-          // Case 2: The element in 'keys' is a simple key (RecordKey)
-          return values.includes(k);
-        });
-      throw new Error('');
+        return values.some((v) => (typeof v === 'function' ? v(value) : v === value));
+      return false;
     },
   );
 }
