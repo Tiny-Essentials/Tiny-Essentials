@@ -90,6 +90,7 @@ export function jsonFilterRecursive(value, filter) {
   }
 
   /** @type {JsonFilterCallback<any>} */
+  // @ts-ignore
   const arrFr = ([_, value], index, array) => {
     const newArr = [];
     for (const arrValue of value) {
