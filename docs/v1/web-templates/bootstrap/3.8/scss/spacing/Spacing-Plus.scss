@@ -1,0 +1,31 @@
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
+
+// 1. Definition of the height values we want to generate
+// We use a map to associate the suffix with the percentage value
+$height-options: (
+  '25': 25%,
+  '50': 50%,
+  '75': 75%,
+  '100': 100%,
+);
+
+// 2. Iteration over Bootstrap breakpoints
+// We use the $grid-breakpoints variable already existing in Bootstrap
+@each $breakpoint, $width in $grid-breakpoints {
+  // Skip 'xs' (extra small) because Bootstrap responsive classes start from 'sm'.
+  // 'xs' is the default (mobile-first) without a media query.
+  @if $breakpoint != xs {
+    // Apply the Bootstrap breakpoint mixin
+    @include media-breakpoint-up($breakpoint) {
+      // 3. Iteration over the height values defined in step 1
+      @each $suffix, $percentage in $height-options {
+        // Generates the class, e.g.: .h-sm-25, .h-md-50, .h-lg-100, etc.
+        .h-#{$breakpoint}-#{$suffix} {
+          height: $percentage !important;
+        }
+      }
+    }
+  }
+}
