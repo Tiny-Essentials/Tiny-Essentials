@@ -268,11 +268,6 @@ class BootstrapDialogs {
   }
 }
 
-// Global Override
-window.alert = (msg) => BootstrapDialogs.alert(msg);
-window.confirm = (msg) => BootstrapDialogs.confirm(msg);
-window.prompt = (msg, def) => BootstrapDialogs.prompt(msg, def);
-
 export { BootstrapDialogs };
 
 /**
