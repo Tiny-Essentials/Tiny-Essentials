@@ -90,12 +90,13 @@ const checkDestroy = createCheckDestroyed('TinyRadioFm');
  * @property {number} silenceDuration - Gap in ms between tracks.
  * @property {number} queryLimit - Safety lock for max items processed.
  * @property {boolean} voiceAfterMusic - Whether to play voice messages after music tracks.
+ * @property {number} voiceWeight - Weight used to calculate the probability of a voice block occurring.
  * @property {number} voiceMin - Minimum amount of voice messages to play if voiceAfterMusic is true.
  * @property {number} voiceMax - Maximum amount of voice messages to play.
  * @property {number} musicMaxConsecutive - Max times a music track can repeat consecutively (-1 = unlimited, 0 = strictly no repetition).
  * @property {number} musicMinConsecutive - Min times a music track must repeat consecutively (1 = no mandatory repetition).
  * @property {number} voiceMaxConsecutive - Max times a voice track can repeat consecutively (-1 = unlimited, 0 = strictly no repetition).
- * @property {number} voiceMinConsecutive - Min times a voice track must repeat consecutively (1 = no mandatory repetition).
+ * @property {number} voiceMinConsecutive - Min times a voice track can repeat consecutively (1 = no mandatory repetition).
  */
 
 //////////////////////////////////////////////////////////////////
@@ -363,6 +364,7 @@ class TinyRadioFm extends EventEmitter {
     voiceAfterMusic: true,
     voiceMin: 0,
     voiceMax: 1,
+    voiceWeight: 1,
     musicMaxConsecutive: 0,
     musicMinConsecutive: 0,
     voiceMaxConsecutive: 0,
@@ -440,6 +442,7 @@ class TinyRadioFm extends EventEmitter {
       }
     };
 
+    checkRange(config.voiceWeight, 'voiceWeight');
     checkRange(config.voiceMin, 'voiceMin');
     checkRange(config.voiceMax, 'voiceMax');
     checkRange(config.musicMinConsecutive, 'musicMinConsecutive');
@@ -1184,19 +1187,25 @@ class TinyRadioFm extends EventEmitter {
       cycleDuration += music.duration + this.#config.silenceDuration;
 
       if (this.#config.voiceAfterMusic && voiceSeq.length > 0) {
-        const range = this.#config.voiceMax - this.#config.voiceMin + 1;
-        const voiceAmount = Math.floor(mixRandom() * range) + this.#config.voiceMin;
+        // Calculate chance based on weight: P = W / (W + 1)
+        const voiceChance = this.#config.voiceWeight / (this.#config.voiceWeight + 1);
 
-        for (let v = 0; v < voiceAmount; v++) {
-          const voice = voiceSeq[voiceCursor % voiceSeq.length];
-          voiceCursor++;
+        // Only proceed if the random roll is less than the calculated chance
+        if (mixRandom() < voiceChance) {
+          const range = this.#config.voiceMax - this.#config.voiceMin + 1;
+          const voiceAmount = Math.floor(mixRandom() * range) + this.#config.voiceMin;
 
-          block.push({
-            ...voice,
-            cycleStart: cycleDuration,
-            cycleEnd: cycleDuration + voice.duration,
-          });
-          cycleDuration += voice.duration + this.#config.silenceDuration;
+          for (let v = 0; v < voiceAmount; v++) {
+            const voice = voiceSeq[voiceCursor % voiceSeq.length];
+            voiceCursor++;
+
+            block.push({
+              ...voice,
+              cycleStart: cycleDuration,
+              cycleEnd: cycleDuration + voice.duration,
+            });
+            cycleDuration += voice.duration + this.#config.silenceDuration;
+          }
         }
       }
     }

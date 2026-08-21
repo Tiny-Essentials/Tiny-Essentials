@@ -466,6 +466,13 @@
               <label>Silence Gap (ms)</label>
               <input type="number" id="cfg-silence" value="1000" />
             </div>
+            <div class="input-group">
+              <label>Voice Weight</label>
+              <input type="number" id="cfg-voiceWeight" value="1" />
+            </div>
+          </div>
+
+          <div class="grid-2">
             <div class="input-group" style="justify-content: flex-end">
               <label style="margin-bottom: 0.5rem">
                 <input type="checkbox" id="cfg-voiceAfterMusic" checked /> Voice After Music
@@ -969,6 +976,8 @@
               document.getElementById('cfg-voiceMode').value = cfg.voiceMode;
             if (cfg.silenceDuration !== undefined)
               document.getElementById('cfg-silence').value = cfg.silenceDuration;
+            if (cfg.voiceWeight !== undefined)
+              document.getElementById('cfg-voiceWeight').value = cfg.voiceWeight;
             if (cfg.queryLimit !== undefined)
               document.getElementById('cfg-queryLimit').value = cfg.queryLimit;
             if (cfg.voiceAfterMusic !== undefined)
@@ -1076,6 +1085,7 @@
               mode: document.getElementById('cfg-mode').value,
               voiceMode: document.getElementById('cfg-voiceMode').value,
               silenceDuration: parseInt(document.getElementById('cfg-silence').value),
+              voiceWeight: parseFloat(document.getElementById('cfg-voiceWeight').value),
               queryLimit: parseInt(document.getElementById('cfg-queryLimit').value),
               voiceAfterMusic: document.getElementById('cfg-voiceAfterMusic').checked,
               voiceMin: parseInt(document.getElementById('cfg-voiceMin').value),
