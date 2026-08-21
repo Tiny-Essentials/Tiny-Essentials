@@ -1,0 +1,94 @@
+// Bootstrap 5.3.8
+@import 'bootstrap/scss/bootstrap';
+
+/**
+ * Fixes placeholder visibility conflicts
+ * when using dark background utility classes.
+ */
+
+// 1. Variables
+// We define a light color with enough opacity to be visible on dark backgrounds.
+$placeholder-light-color: rgba($white, 0.6);
+
+/**
+ * @mixin fix-placeholder-contrast($color)
+ * A mixin to force placeholder visibility.
+ * @param {Color} $color - The color to apply to the placeholder.
+ */
+@mixin fix-placeholder-contrast($color) {
+  // Standard modern browsers
+  &::placeholder {
+    color: $color !important;
+    opacity: 1; // Crucial: Bootstrap sets a default opacity that makes it too dark.
+  }
+
+  // Webkit browsers (Chrome, Safari, Edge)
+  &::-webkit-input-placeholder {
+    color: $color !important;
+    opacity: 1;
+  }
+
+  // Firefox
+  &::-moz-placeholder {
+    color: $color !important;
+    opacity: 1;
+  }
+
+  // Internet Explorer / Legacy Edge
+  &:-ms-input-placeholder {
+    color: $color !important;
+    opacity: 1;
+  }
+}
+
+/**
+ * 2. Specific Fix for Bootstrap Utility Conflicts
+ * This targets inputs that have both the Bootstrap form class 
+ * and the dark background utility class.
+ */
+.form-control.bg-dark {
+  // We use the mixin to ensure the placeholder is visible against the dark background.
+  @include fix-placeholder-contrast($placeholder-light-color);
+}
+
+// Fix for when using .text-white on inputs to ensure
+// the placeholder doesn't look "muddy"
+.form-control.text-white {
+  @include fix-placeholder-contrast(rgba($white, 0.5));
+}
+
+/**
+ * 3. Proactive usage (Generic Mixin Example)
+ * If you create a custom dark component later, you can simply use:
+ * .my-custom-input { @include fix-placeholder-contrast(white); }
+ */
+
+///////////////////////////////////////////////////////
+
+// 1. Definition of the height values we want to generate
+// We use a map to associate the suffix with the percentage value
+$height-options: (
+  '25': 25%,
+  '50': 50%,
+  '75': 75%,
+  '100': 100%,
+);
+
+// 2. Iteration over Bootstrap breakpoints
+// We use the $grid-breakpoints variable already existing in Bootstrap
+@each $breakpoint, $width in $grid-breakpoints {
+  // Skip 'xs' (extra small) because Bootstrap responsive classes start from 'sm'.
+  // 'xs' is the default (mobile-first) without a media query.
+  @if $breakpoint != xs {
+    // Apply the Bootstrap breakpoint mixin
+    @include media-breakpoint-up($breakpoint) {
+      // 3. Iteration over the height values defined in step 1
+      @each $suffix, $percentage in $height-options {
+        // Generates the class, e.g.: .h-sm-25, .h-md-50, .h-lg-100, etc.
+        .h-#{$breakpoint}-#{$suffix} {
+          height: $percentage !important;
+        }
+      }
+    }
+  }
+}
