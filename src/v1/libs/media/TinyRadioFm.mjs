@@ -8,6 +8,7 @@ import {
 } from '../../basics/mediaContent.mjs';
 import { createCheckDestroyed } from '../utils/tools.mjs';
 import { isJsonObject } from '../../basics/objChecker.mjs';
+import TinyAdvancedRaffle from '../math/TinyAdvancedRaffle.mjs';
 
 const checkDestroy = createCheckDestroyed('TinyRadioFm');
 
@@ -996,11 +997,6 @@ class TinyRadioFm extends EventEmitter {
       };
     }
 
-    /**
-     * Pool of available items for weighted selection.
-     * @type {Array<MediaContent & { weight: number }>}
-     */
-    const pool = list.map((item) => ({ ...item, weight: item.weight ?? 1 }));
     const random = this._prng(currentSeed);
 
     /**
@@ -1012,6 +1008,30 @@ class TinyRadioFm extends EventEmitter {
     /** @type {string|null} */
     let lastId = initialLastId;
     let consecutiveCount = initialConsecutiveCount;
+
+    // Initializes TinyAdvancedRaffle specifically for this sequence generation
+    const raffle = new TinyAdvancedRaffle({
+      rng: random,
+      normalization: 'relative',
+    });
+
+    // We keep the pool as an array to respect the original structure and support possible
+    // duplicate IDs, if they occur (even though it is rare).
+
+    /** @type {MediaContent[]} */
+    const pool = [...list];
+
+    // Registers all items in the Raffle system
+    pool.forEach((item) => {
+      const itemWeight = item.weight ?? 1;
+      const existing = raffle.getItem(item.id);
+      if (!existing) {
+        raffle.addItem(item.id, { weight: itemWeight });
+      } else {
+        // If the ID already exists, we add its weight to maintain the correct proportion
+        raffle.setBaseWeight(item.id, existing.baseWeight + itemWeight);
+      }
+    });
 
     while (pool.length > 0) {
       /** @type {MediaContent|null} */
@@ -1030,34 +1050,31 @@ class TinyRadioFm extends EventEmitter {
         }
       }
 
-      // 2. Maximum repetition logic and random draw
+      // 2. Maximum repetition logic and drawing using the Raffle
       if (!selectedItem) {
-        let validPool = pool;
+        let excludedId = null;
 
         if (lastId !== null && maxConsecutive !== -1 && consecutiveCount >= maxConsecutive) {
-          validPool = pool.filter((item) => item.id !== lastId);
-        }
-
-        if (validPool.length === 0) {
-          validPool = pool;
-        }
-
-        const totalWeight = validPool.reduce((sum, item) => sum + item.weight, 0);
-
-        if (totalWeight <= 0) {
-          selectedItem = validPool[0];
-          selectedIndex = pool.findIndex((p) => p.id === selectedItem?.id);
-        } else {
-          const r = random() * totalWeight;
-          let sum = 0;
-          for (let i = 0; i < validPool.length; i++) {
-            sum += validPool[i].weight;
-            if (r <= sum) {
-              selectedItem = validPool[i];
-              selectedIndex = pool.findIndex((p) => p.id === selectedItem?.id);
-              break;
-            }
+          // Checks if there are other different items in the pool before preventing the last one
+          const hasOtherItems = pool.some((item) => item.id !== lastId);
+          if (hasOtherItems) {
+            raffle.excludeItem(lastId);
+            excludedId = lastId;
           }
+        }
+
+        const drawResult = raffle.drawOne();
+
+        if (drawResult) {
+          selectedIndex = pool.findIndex((item) => item.id === drawResult.id);
+          if (selectedIndex !== -1) {
+            selectedItem = pool[selectedIndex];
+          }
+        }
+
+        // Removes the exclusion to avoid breaking future draws
+        if (excludedId) {
+          raffle.includeItem(excludedId);
         }
       }
 
@@ -1069,8 +1086,23 @@ class TinyRadioFm extends EventEmitter {
 
       sequence.push(selectedItem);
 
+      // Updates the pool and the Raffle after the item has been drawn and used
       if (selectedIndex !== -1) {
         pool.splice(selectedIndex, 1);
+
+        // If this item is no longer in the pool permanently, remove it from the Raffle
+        const stillInPool = pool.some((item) => item.id === selectedItem.id);
+        if (!stillInPool) {
+          raffle.removeItem(selectedItem.id);
+        } else {
+          // If it still exists, we reduce the weight proportionally to continue the draw fairly
+          const existing = raffle.getItem(selectedItem.id);
+          if (existing) {
+            const newWeight = Math.max(0, existing.baseWeight - (selectedItem.weight ?? 1));
+            if (newWeight <= 0) raffle.removeItem(selectedItem.id);
+            else raffle.setBaseWeight(selectedItem.id, newWeight);
+          }
+        }
       }
 
       if (selectedItem.id === lastId) {
@@ -1080,6 +1112,8 @@ class TinyRadioFm extends EventEmitter {
         consecutiveCount = 1;
       }
     }
+
+    raffle.destroy(); // Ensures memory is cleared at the end of each cycle
 
     return { items: sequence, lastId, consecutiveCount };
   }
