@@ -12,9 +12,9 @@
 * **🎵 Dual-Stream Logic:** Manages separate playlists for `music` and `voice`, with configurable interaction rules (e.g., playing voices after music).
 * **📅 Scheduled Mutations:** Schedule tasks to `add`, `remove`, or `move` items in the playlist at specific future timestamps.
 * **⚡ Custom Injections:** Inject "Custom Positions" into the timeline that interrupt the standard cycle.
-* **🧠 Smart Queuing:** Intelligent logic to prevent audio overlaps by automatically adjusting timestamps to the end of currently playing content.
+* **🧠 Smart Queuing:** Intelligent logic to prevent audio overlaps by automatically adjusting timestamps to the end of the currently playing content.
 * **💾 State Persistence:** Full export/import capabilities, including automatic conversion of Blob URLs to Base64 for easy storage.
-* **🧹 Memory Management:** Proactive cleanup of Blob URLs and event listeners to prevent memory leaks.
+* **🧹 Memory Management:** Proactive cleanup of Blob URLs and event listeners to prevent memory leaks, with configurable optimization for media and pictures.
 
 ---
 
@@ -31,6 +31,7 @@ The behavior of the engine is controlled via the `RadioConfig` object.
 | `voiceAfterMusic` | `boolean` | `true` | If `true`, voice messages play after music tracks. |
 | `voiceMin` | `number` | `0` | Minimum number of voice messages to play in a cycle. |
 | `voiceMax` | `number` | `1` | Maximum number of voice messages to play in a cycle. |
+| `voiceWeight` | `number` | `1` | Weight used to calculate the probability of a voice block occurring ($P = W / (W + 1)$). |
 | `musicMinConsecutive`| `number` | `0` | Min times a music track must repeat consecutively. |
 | `musicMaxConsecutive`| `number` | `0` | Max consecutive music repeats (`-1` = unlimited, `0` = no repeats). |
 | `voiceMinConsecutive`| `number` | `0` | Min times a voice track must repeat consecutively. |
@@ -50,11 +51,41 @@ Prepares a `MediaContent` object by extracting metadata from an audio source.
     * `metadata`: Optional manual overrides.
     * `parseFile`: Internal helper for file parsing.
     * `callbacks`: Object containing `onProgress` and `onError` handlers.
-    * `convertBase64toBlob`: If true, the image content will be converted directly into a high-performance Blob URL, use this method.
+    * `convertBase64toBlob`: If true, the image content will be converted directly into a high-performance Blob URL.
 * **Returns:** `Promise<MediaContent>`
 * **Throws:** `MediaLoadingError`
 
----
+#### `static get/set unknownArtist(value)`
+Gets or sets the identifier used when an artist cannot be determined.
+* **Value:** A `string` or a `function` that returns a `string`.
+* **Throws:** `TypeError` if the value is not a string or a function.
+
+### 📋 Properties (Getters & Setters)
+
+#### **System State & Lifecycle**
+* `destroyed`: Returns `true` if the instance has been destroyed.
+* `size`: Total count of all content items (music + voice).
+* `seed`: Gets/Sets the core randomness seed.
+* `anchorDate`: Gets the absolute timestamp used as the timeline anchor.
+* `cycleCacheSize`: Returns the number of items currently stored in the cycle cache.
+
+#### **Playlist Access (Returns Deep Clones)**
+* `musicList`: Returns a deep clone of the music playlist.
+* `voiceList`: Returns a deep clone of the voice playlist.
+* `allList`: Returns a deep clone of the combined music and voice playlists.
+* `customPositions`: Returns a deep clone of the custom position injections.
+* `scheduledTasks`: Returns a deep clone of the pending scheduled tasks.
+
+#### **Counters**
+* `musicSize`: Total number of items in the music playlist.
+* `voiceSize`: Total number of items in the voice playlist.
+* `customPosSize`: Number of active custom position injections.
+* `tasksSize`: Number of pending scheduled tasks.
+
+#### **Configuration & Optimization**
+* `config`: Gets/Sets the current `RadioConfig` object.
+* `optimizeMediaMemory`: Gets/Sets whether Blob URLs for media should be converted to Base64 during export.
+* `optimizePictureMemory`: Gets/Sets whether Blob URLs for pictures should be converted to Base64 during export.
 
 ### 📥 Content Management
 
@@ -67,11 +98,9 @@ Adds new content to the engine immediately.
 * **Emits:** `contentAdded`
 
 #### `remove(id)`
-Instantly removes content by its unique ID across all lists, custom positions, and pending tasks. It also revokes associated Blob URLs.
+Instantly removes content by its unique ID across all lists, custom positions, and pending tasks. It also revokes associated Blob URLs to free memory.
 * **Parameters:** `id` (string)
 * **Emits:** `contentRemoved`
-
----
 
 ### 📅 Task & Config Management
 
@@ -90,8 +119,6 @@ Performs a partial or full update of the engine configuration.
 * **Parameters:** `config` (Partial or full `RadioConfig` object).
 * **Emits:** `configChanged`
 
----
-
 ### 🔍 Timeline & Querying
 
 #### `getCurrentEvent()`
@@ -106,7 +133,9 @@ Predicts upcoming events from a specific date forward using a virtual sandbox to
 * **Returns:** `RadioEvent[]`
 * **Throws:** `TypeError` or `RangeError` if limit is invalid.
 
----
+#### `searchCustomPositions()`
+Returns a shallow copy of all active custom positions currently injected into the timeline.
+* **Returns:** `CustomPosition[]`
 
 ### 💾 Persistence & Lifecycle
 
