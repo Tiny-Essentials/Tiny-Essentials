@@ -7,11 +7,11 @@
  */
 
 /**
- * @typedef {Object} ModalOptions
- * @property {string} [title]
- * @property {string} [confirmText]
- * @property {string} [cancelText]
- * @property {string} [defaultValue]
+ * @typedef {Object} ModalOptions - Configuration options for the dialog content and buttons.
+ * @property {string} [title] - The text to be displayed in the modal header.
+ * @property {string} [confirmText] - The text to be displayed on the primary confirmation button.
+ * @property {string} [cancelText] - The text to be displayed on the secondary cancel button.
+ * @property {string} [defaultValue] - The initial value for the input field (used in prompts).
  */
 
 /**
@@ -35,20 +35,30 @@ class BootstrapDialogs {
   /** @type {ModalClass|null} */
   static #Modal = null;
 
-  /** @param {ModalClass} Modal */
+  /**
+   * Sets the Modal class constructor (e.g., Bootstrap's Modal).
+   * @param {ModalClass} Modal - The Bootstrap Modal class constructor.
+   * @throws {Error} If a Modal class has already been set.
+   */
   static set Modal(Modal) {
-    if (BootstrapDialogs.#Modal !== null) throw new Error();
+    if (BootstrapDialogs.#Modal !== null)
+      throw new Error('Modal class has already been initialized.');
     BootstrapDialogs.#Modal = Modal;
   }
 
-  /** @returns {ModalClass} */
+  /**
+   * Gets the currently set Modal class constructor.
+   * @returns {ModalClass} The currently configured Modal class.
+   * @throws {Error} If no Modal class has been set.
+   */
   static get Modal() {
-    if (BootstrapDialogs.#Modal === null) throw new Error();
+    if (BootstrapDialogs.#Modal === null) throw new Error('Modal class has not been initialized.');
     return BootstrapDialogs.#Modal;
   }
 
   /**
    * Helper to forcefully clean up body styles injected by Bootstrap JS.
+   * @returns {void}
    */
   static _restoreBody() {
     const hasDialog = this._modalElement;
@@ -64,9 +74,10 @@ class BootstrapDialogs {
   }
 
   /**
-   * @param {string} message
-   * @param {ModalOptions} [options]
-   * @returns {Promise<void>}
+   * Displays a simple alert modal.
+   * @param {string} message - The text message to be displayed to the user.
+   * @param {ModalOptions} [options={}] - Configuration options for the alert modal.
+   * @returns {Promise<void>} A promise that resolves when the alert is closed.
    */
   static async alert(message, options = {}) {
     /** @type {string} */
@@ -77,9 +88,10 @@ class BootstrapDialogs {
   }
 
   /**
-   * @param {string} message
-   * @param {ModalOptions} [options]
-   * @returns {Promise<boolean>}
+   * Displays a confirmation modal.
+   * @param {string} message - The question or message to be displayed to the user.
+   * @param {ModalOptions} [options={}] - Configuration options for the confirmation modal.
+   * @returns {Promise<boolean>} A promise that resolves with true if confirmed, or false if cancelled.
    */
   static async confirm(message, options = {}) {
     /** @type {string} */
@@ -92,10 +104,11 @@ class BootstrapDialogs {
   }
 
   /**
-   * @param {string} message
-   * @param {string} [defaultValue='']
-   * @param {ModalOptions} [options]
-   * @returns {Promise<string|null>}
+   * Displays a prompt modal with an input field.
+   * @param {string} message - The instruction or question for the user.
+   * @param {string} [defaultValue=''] - The initial value for the input field.
+   * @param {ModalOptions} [options={}] - Configuration options for the prompt modal.
+   * @returns {Promise<string|null>} A promise that resolves with the input value, or null if cancelled.
    */
   static async prompt(message, defaultValue = '', options = {}) {
     /** @type {string} */
@@ -123,7 +136,8 @@ class BootstrapDialogs {
 
   /**
    * Displays a global, non-dismissible loading overlay for background/DB tasks.
-   * @param {string} [message='Processing...'] - The message to display while loading.
+   * @param {string} [message='Processing...'] - The text to display while the loading state is active.
+   * @returns {void}
    */
   static showLoading(message = 'Processing...') {
     if (this._loadingInstance) return; // Prevent multiple loading overlays
@@ -171,6 +185,7 @@ class BootstrapDialogs {
 
   /**
    * Hides and destroys the active loading overlay.
+   * @returns {void}
    */
   static hideLoading() {
     if (this._loadingInstance) {
@@ -189,11 +204,11 @@ class BootstrapDialogs {
 
   /**
    * Core method to build the modal DOM structure safely.
-   * @param {string} titleText
-   * @param {HTMLElement|string} bodyContent - Either a text string or a DOM Node.
-   * @param {boolean} showCancel
-   * @param {string} confirmText
-   * @param {string|null} [cancelText='Cancel']
+   * @param {string} titleText - The text to be placed in the modal header.
+   * @param {HTMLElement|string} bodyContent - The content to be placed in the modal body (DOM node or text).
+   * @param {boolean} showCancel - Whether to display the cancel button.
+   * @param {string} confirmText - The text for the confirmation button.
+   * @param {string|null} [cancelText='Cancel'] - The text for the cancel button.
    * @returns {HTMLElement} The constructed modal element.
    */
   static _buildModalElement(
@@ -271,6 +286,7 @@ class BootstrapDialogs {
 
   /**
    * Clean up any existing modal and resolve its promise.
+   * @returns {void}
    */
   static _cleanup() {
     if (this._activeResolve) {
@@ -297,13 +313,14 @@ class BootstrapDialogs {
   }
 
   /**
-   * @param {string} title
-   * @param {HTMLElement|string} bodyContent
-   * @param {boolean} showCancel
-   * @param {string} confirmText
-   * @param {string|null} [cancelText='Cancel']
-   * @param {'alert'|'confirm'|'prompt'} [type='alert']
-   * @returns {Promise<any>}
+   * Internal method to initialize the modal instance and handle lifecycle.
+   * @param {string} title - The title text for the modal.
+   * @param {HTMLElement|string} bodyContent - The content to be placed in the modal body.
+   * @param {boolean} showCancel - Whether to include a cancel button.
+   * @param {string} confirmText - The text for the confirmation button.
+   * @param {string|null} [cancelText='Cancel'] - The text for the cancel button.
+   * @param {'alert'|'confirm'|'prompt'} [type='alert'] - The type of dialog being shown.
+   * @returns {Promise<any>} A promise that resolves with the user's action.
    */
   static _show(title, bodyContent, showCancel, confirmText, cancelText, type = 'alert') {
     this._cleanup();
@@ -385,7 +402,7 @@ export { BootstrapDialogs };
 
 /**
  * @param {string} msg - The message to display.
- * @param {ModalOptions} [options] - Optional configuration for title and buttons.
+ * @param {ModalOptions} [options] - Configuration options for the alert.
  * @returns {Promise<void>}
  */
 export const alert = (msg, options) => BootstrapDialogs.alert(msg, options);
@@ -393,21 +410,26 @@ export const alert = (msg, options) => BootstrapDialogs.alert(msg, options);
 /**
  * @param {string} msg - The message to display.
  * @param {string} [def] - The default value for the input field.
- * @param {ModalOptions} [options] - Optional configuration for title and buttons.
+ * @param {ModalOptions} [options] - Configuration options for the prompt.
  * @returns {Promise<string|null>}
  */
 export const prompt = (msg, def, options) => BootstrapDialogs.prompt(msg, def, options);
 
 /**
  * @param {string} msg - The message to display.
- * @param {ModalOptions} [options] - Optional configuration for title and buttons.
+ * @param {ModalOptions} [options] - Configuration options for the confirmation.
  * @returns {Promise<boolean>}
  */
 export const confirm = (msg, options) => BootstrapDialogs.confirm(msg, options);
 
 /**
  * @param {string} msg - The message to display.
+ * @returns {void}
  */
 export const showLoading = (msg) => BootstrapDialogs.showLoading(msg);
 
+/**
+ * Hides and destroys the active loading overlay.
+ * @returns {void}
+ */
 export const hideLoading = () => BootstrapDialogs.hideLoading();
