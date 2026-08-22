@@ -8,7 +8,7 @@
 
 /**
  * @typedef {Object} CustomElementConfig
- * @property {string} [className] - CSS classes to be added to the element.
+ * @property {string | string[]} [className] - CSS classes to be added to the element (as a string or an array of strings).
  * @property {Object<string, string|null>} [styles] - CSS properties and values (e.g., { 'background-color': '#000' }).
  */
 
@@ -238,10 +238,16 @@ class BootstrapDialogs {
    * @private
    */
   static _applyCustomizations(element, defaultConfig, userConfig) {
+    // Helper to normalize className into a flat array of strings
+    const normalizeClasses = (/** @type {string | string[] | undefined} */ val) => {
+      if (!val) return [];
+      if (Array.isArray(val)) return val.filter(Boolean);
+      return val.split(' ').filter(Boolean);
+    };
+
     // 1. Apply Classes (Additive)
-    const defaultClasses = defaultConfig?.className?.split(' ').filter(Boolean) ?? [];
-    const userClasses = userConfig?.className?.split(' ').filter(Boolean) ?? [];
-    // Splits by space and filters out empty strings to handle multiple classes correctly
+    const defaultClasses = normalizeClasses(defaultConfig?.className);
+    const userClasses = normalizeClasses(userConfig?.className);
     element.classList.add(...defaultClasses, ...userClasses);
 
     // 2. Apply Styles (User overrides defaults)
@@ -287,8 +293,8 @@ class BootstrapDialogs {
         if (typeof config !== 'object' || config === null) {
           throw new TypeError(`The property "${key}" must be an object.`);
         }
-        if (config.className !== undefined && typeof config.className !== 'string') {
-          throw new TypeError(`The "className" property in "${key}" must be a string.`);
+        if (config.className !== undefined && typeof config.className !== 'string' && !Array.isArray(config.className)) {
+          throw new TypeError(`The "className" property in "${key}" must be a string or an array of strings.`);
         }
         if (config.styles !== undefined) {
           if (typeof config.styles !== 'object' || config.styles === null) {
