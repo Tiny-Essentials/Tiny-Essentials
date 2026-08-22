@@ -50,11 +50,15 @@
     "./css/TinyDraggerExample.min.css": "./dist/v1/css/TinyDraggerExample.min.css",
     "./css/TinyNotify.min.css": "./dist/v1/css/TinyNotify.min.css",
     "./css/TinyLoadingScreen.min.css": "./dist/v1/css/TinyLoadingScreen.min.css",
-    "./web-templates/bootstrap/3.8/scss/input/Placeholder-Colors-Fix.scss": "./dist/v1/web-templates/bootstrap/3.8/scss/input/Placeholder-Colors-Fix.scss",
-    "./web-templates/bootstrap/3.8/scss/spacing/Spacing-Plus.scss": "./dist/v1/web-templates/bootstrap/3.8/scss/spacing/Spacing-Plus.scss",
+    "./webTemplates/bootstrap/5.3/scss/input/Placeholder-Colors-Fix.scss": "./dist/v1/webTemplates/bootstrap/5.3/scss/input/Placeholder-Colors-Fix.scss",
+    "./webTemplates/bootstrap/5.3/scss/spacing/Spacing-Plus.scss": "./dist/v1/webTemplates/bootstrap/5.3/scss/spacing/Spacing-Plus.scss",
     ".": {
       "require": "./dist/v1/index.cjs",
       "import": "./dist/v1/index.mjs"
+    },
+    "./webTemplates/bootstrap/5.3/html/BootstrapDialogs": {
+      "require": "./dist/v1/webTemplates/bootstrap/5.3/html/BootstrapDialogs.cjs",
+      "import": "./dist/v1/webTemplates/bootstrap/5.3/html/BootstrapDialogs.mjs"
     },
     "./basics": {
       "require": "./dist/v1/basics/index.cjs",
