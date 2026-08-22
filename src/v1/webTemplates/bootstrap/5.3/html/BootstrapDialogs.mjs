@@ -62,7 +62,10 @@ class BootstrapDialogs {
     headerConfig: { className: '', styles: {} },
     titleConfig: { className: '', styles: {} },
     closeBtnConfig: { className: '', styles: {} },
-    bodyConfig: { className: '', styles: {} },
+    bodyConfig: {
+      className: '',
+      styles: { 'white-space': 'pre-wrap', 'overflow-wrap': 'anywhere' },
+    },
     footerConfig: { className: '', styles: {} },
     confirmBtnConfig: { className: '', styles: {} },
     cancelBtnConfig: { className: '', styles: {} },
@@ -479,7 +482,6 @@ class BootstrapDialogs {
     // Body
     const body = document.createElement('div');
     body.className = 'modal-body';
-    body.style.whiteSpace = 'pre-wrap';
     this._applyCustomizations(body, this.#defaultConfig.bodyConfig, options.bodyConfig);
 
     if (bodyContent instanceof Node) {
