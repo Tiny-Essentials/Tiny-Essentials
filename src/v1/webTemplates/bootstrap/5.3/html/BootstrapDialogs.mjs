@@ -139,44 +139,74 @@ class BootstrapDialogs {
   // --- Individual Configuration Setters ---
 
   /** @param {CustomElementConfig} cfg */
-  static setModalConfig(cfg) {
+  static set modalConfig(cfg) {
     this._updateConfigKey('modalConfig', cfg);
   }
+  static get modalConfig() {
+    return structuredClone(this.#defaultConfig.modalConfig);
+  }
   /** @param {CustomElementConfig} cfg */
-  static setHeaderConfig(cfg) {
+  static set headerConfig(cfg) {
     this._updateConfigKey('headerConfig', cfg);
   }
+  static get headerConfig() {
+    return structuredClone(this.#defaultConfig.headerConfig);
+  }
   /** @param {CustomElementConfig} cfg */
-  static setTitleConfig(cfg) {
+  static set titleConfig(cfg) {
     this._updateConfigKey('titleConfig', cfg);
   }
+  static get titleConfig() {
+    return structuredClone(this.#defaultConfig.titleConfig);
+  }
   /** @param {CustomElementConfig} cfg */
-  static setCloseBtnConfig(cfg) {
+  static set closeBtnConfig(cfg) {
     this._updateConfigKey('closeBtnConfig', cfg);
   }
+  static get closeBtnConfig() {
+    return structuredClone(this.#defaultConfig.closeBtnConfig);
+  }
   /** @param {CustomElementConfig} cfg */
-  static setBodyConfig(cfg) {
+  static set bodyConfig(cfg) {
     this._updateConfigKey('bodyConfig', cfg);
   }
+  static get bodyConfig() {
+    return structuredClone(this.#defaultConfig.bodyConfig);
+  }
   /** @param {CustomElementConfig} cfg */
-  static setFooterConfig(cfg) {
+  static set footerConfig(cfg) {
     this._updateConfigKey('footerConfig', cfg);
   }
+  static get footerConfig() {
+    return structuredClone(this.#defaultConfig.footerConfig);
+  }
   /** @param {CustomElementConfig} cfg */
-  static setConfirmBtnConfig(cfg) {
+  static set confirmBtnConfig(cfg) {
     this._updateConfigKey('confirmBtnConfig', cfg);
   }
+  static get confirmBtnConfig() {
+    return structuredClone(this.#defaultConfig.confirmBtnConfig);
+  }
   /** @param {CustomElementConfig} cfg */
-  static setCancelBtnConfig(cfg) {
+  static set cancelBtnConfig(cfg) {
     this._updateConfigKey('cancelBtnConfig', cfg);
   }
-  /** @param {CustomElementConfig} cfg */
-  static setContentConfig(cfg) {
-    this._updateConfigKey('contentConfig', cfg);
+  static get cancelBtnConfig() {
+    return structuredClone(this.#defaultConfig.cancelBtnConfig);
   }
   /** @param {CustomElementConfig} cfg */
-  static setDialogConfig(cfg) {
+  static set contentConfig(cfg) {
+    this._updateConfigKey('contentConfig', cfg);
+  }
+  static get contentConfig() {
+    return structuredClone(this.#defaultConfig.contentConfig);
+  }
+  /** @param {CustomElementConfig} cfg */
+  static set dialogConfig(cfg) {
     this._updateConfigKey('dialogConfig', cfg);
+  }
+  static get dialogConfig() {
+    return structuredClone(this.#defaultConfig.dialogConfig);
   }
 
   /**
