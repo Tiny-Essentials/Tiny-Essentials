@@ -1,4 +1,10 @@
-import { Modal } from 'bootstrap/dist/js/bootstrap.bundle.min.js';
+/**
+ * @typedef {import('bootstrap').Modal} Modal
+ */
+
+/**
+ * @typedef {typeof import('bootstrap').Modal} ModalClass
+ */
 
 /**
  * @typedef {Object} ModalOptions
@@ -25,6 +31,21 @@ class BootstrapDialogs {
   static _activeResolve = null;
   /** @type {'alert'|'confirm'|'prompt'|null} */
   static _activeType = null;
+
+  /** @type {ModalClass|null} */
+  static #Modal = null;
+
+  /** @param {ModalClass} Modal */
+  static set Modal(Modal) {
+    if (BootstrapDialogs.#Modal !== null) throw new Error();
+    BootstrapDialogs.#Modal = Modal;
+  }
+
+  /** @returns {ModalClass} */
+  static get Modal() {
+    if (BootstrapDialogs.#Modal === null) throw new Error();
+    return BootstrapDialogs.#Modal;
+  }
 
   /**
    * Helper to forcefully clean up body styles injected by Bootstrap JS.
@@ -141,7 +162,10 @@ class BootstrapDialogs {
 
     document.body.appendChild(modal);
     this._loadingElement = modal;
-    this._loadingInstance = new Modal(modal, { backdrop: 'static', keyboard: false });
+    this._loadingInstance = new BootstrapDialogs.Modal(modal, {
+      backdrop: 'static',
+      keyboard: false,
+    });
     this._loadingInstance.show();
   }
 
@@ -305,7 +329,7 @@ class BootstrapDialogs {
         throw new Error('Critical Error: Confirm button not found in modal template.');
       }
 
-      this._activeInstance = new Modal(modalElement);
+      this._activeInstance = new BootstrapDialogs.Modal(modalElement);
       /** @type {boolean} */
       let isConfirmed = false;
 
@@ -321,7 +345,7 @@ class BootstrapDialogs {
         else if (type === 'confirm') value = true;
         else value = true; // For alerts
 
-        this._activeInstance.hide();
+        this._activeInstance?.hide();
         resolve(value);
       };
 
