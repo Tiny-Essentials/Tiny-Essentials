@@ -10,12 +10,17 @@ import { Modal } from 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 /**
  * Utility to replace native alert/confirm/prompt with Bootstrap 5 modals.
+ * Built with strict DOM manipulation to prevent XSS.
  */
 class BootstrapDialogs {
   /** @type {Modal|null} */
   static _activeInstance = null;
   /** @type {Modal|null} */
   static _loadingInstance = null;
+  /** @type {HTMLElement|null} */
+  static _modalElement = null;
+  /** @type {HTMLElement|null} */
+  static _loadingElement = null;
   /** @type {Function|null} */
   static _activeResolve = null;
   /** @type {'alert'|'confirm'|'prompt'|null} */
@@ -23,12 +28,10 @@ class BootstrapDialogs {
 
   /**
    * Helper to forcefully clean up body styles injected by Bootstrap JS.
-   * This is necessary because React modals in this app don't use Bootstrap JS,
-   * so Bootstrap gets confused when it detects them and leaves the body locked.
    */
   static _restoreBody() {
-    const hasDialog = document.getElementById('bs-custom-modal');
-    const hasLoading = document.getElementById('bs-loading-modal');
+    const hasDialog = this._modalElement;
+    const hasLoading = this._loadingElement;
 
     // If no modal managed by this class is open, force body cleaning
     if (!hasDialog && !hasLoading) {
@@ -49,9 +52,7 @@ class BootstrapDialogs {
     const title = options.title || 'Alert';
     /** @type {string} */
     const confirmText = options.confirmText || 'OK';
-
-    const html = this._createTemplate(title, message, false, confirmText);
-    await this._show(html, 'alert');
+    await this._show(title, message, false, confirmText, null, 'alert');
   }
 
   /**
@@ -66,14 +67,12 @@ class BootstrapDialogs {
     const confirmText = options.confirmText || 'Yes';
     /** @type {string} */
     const cancelText = options.cancelText || 'No';
-
-    const html = this._createTemplate(title, message, true, confirmText, cancelText);
-    return await this._show(html, 'confirm');
+    return await this._show(title, message, true, confirmText, cancelText, 'confirm');
   }
 
   /**
    * @param {string} message
-   * @param {string} [defaultValue]
+   * @param {string} [defaultValue='']
    * @param {ModalOptions} [options]
    * @returns {Promise<string|null>}
    */
@@ -85,11 +84,20 @@ class BootstrapDialogs {
     /** @type {string} */
     const cancelText = options.cancelText || 'Cancel';
 
-    const inputHtml = `<input type="text" class="form-control mt-2" id="bs-prompt-input" value="${defaultValue}">`;
-    const bodyContent = `${message}${inputHtml}`;
+    // Build prompt body with an input element
+    const bodyContainer = document.createElement('div');
+    const textNode = document.createElement('div');
+    textNode.textContent = message;
 
-    const html = this._createTemplate(title, bodyContent, true, confirmText, cancelText);
-    return await this._show(html, 'prompt');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'form-control mt-2';
+    input.id = 'bs-prompt-input';
+    input.value = defaultValue;
+
+    bodyContainer.append(textNode, input);
+
+    return await this._show(title, bodyContainer, true, confirmText, cancelText, 'prompt');
   }
 
   /**
@@ -99,21 +107,41 @@ class BootstrapDialogs {
   static showLoading(message = 'Processing...') {
     if (this._loadingInstance) return; // Prevent multiple loading overlays
 
-    const html = `
-      <div class="modal fade" id="bs-loading-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
-          <div class="modal-dialog modal-dialog-centered modal-sm">
-              <div class="modal-content bg-transparent border-0 shadow-none">
-                  <div class="modal-body text-center d-flex flex-column align-items-center justify-content-center">
-                      <div class="spinner-border text-primary shadow-sm mb-3" role="status" style="width: 4rem; height: 4rem;"></div>
-                      <h5 class="fw-bold text-white shadow-sm px-4 py-2 rounded bg-dark bg-opacity-75">${message}</h5>
-                  </div>
-              </div>
-          </div>
-      </div>`;
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = 'bs-loading-modal';
+    modal.setAttribute('data-bs-backdrop', 'static');
+    modal.setAttribute('data-bs-keyboard', 'false');
+    modal.style.zIndex = '1070';
 
-    document.body.insertAdjacentHTML('beforeend', html);
-    const element = document.getElementById('bs-loading-modal');
-    this._loadingInstance = new Modal(element, { backdrop: 'static', keyboard: false });
+    const dialog = document.createElement('div');
+    dialog.className = 'modal-dialog modal-dialog-centered modal-sm';
+
+    const content = document.createElement('div');
+    content.className = 'modal-content bg-transparent border-0 shadow-none';
+
+    const body = document.createElement('div');
+    body.className =
+      'modal-body text-center d-flex flex-column align-items-center justify-content-center';
+
+    const spinner = document.createElement('div');
+    spinner.className = 'spinner-border text-primary shadow-sm mb-3';
+    spinner.setAttribute('role', 'status');
+    spinner.style.width = '4rem';
+    spinner.style.height = '4rem';
+
+    const title = document.createElement('h5');
+    title.className = 'fw-bold text-white shadow-sm px-4 py-2 rounded bg-dark bg-opacity-75';
+    title.textContent = message;
+
+    body.append(spinner, title);
+    content.appendChild(body);
+    dialog.appendChild(content);
+    modal.appendChild(dialog);
+
+    document.body.appendChild(modal);
+    this._loadingElement = modal;
+    this._loadingInstance = new Modal(modal, { backdrop: 'static', keyboard: false });
     this._loadingInstance.show();
   }
 
@@ -127,42 +155,94 @@ class BootstrapDialogs {
       this._loadingInstance = null;
     }
 
-    const element = document.getElementById('bs-loading-modal');
-    if (element) element.remove();
+    if (this._loadingElement) {
+      this._loadingElement.remove();
+      this._loadingElement = null;
+    }
 
     this._restoreBody();
   }
 
   /**
-   * @param {string} title
-   * @param {string} body
+   * Core method to build the modal DOM structure safely.
+   * @param {string} titleText
+   * @param {HTMLElement|string} bodyContent - Either a text string or a DOM Node.
    * @param {boolean} showCancel
    * @param {string} confirmText
-   * @param {string} [cancelText]
-   * @returns {string}
+   * @param {string} [cancelText='Cancel']
+   * @returns {HTMLElement} The constructed modal element.
    */
-  static _createTemplate(title, body, showCancel, confirmText, cancelText = 'Cancel') {
-    /** @type {string} */
-    const cancelBtn = showCancel
-      ? `<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${cancelText}</button>`
-      : '';
+  static _buildModalElement(
+    titleText,
+    bodyContent,
+    showCancel,
+    confirmText,
+    cancelText = 'Cancel',
+  ) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.setAttribute('tabindex', '-1');
+    modal.setAttribute('aria-hidden', 'true');
+    modal.style.zIndex = '1065';
 
-    return `
-            <div class="modal fade" id="bs-custom-modal" tabindex="-1" aria-hidden="true" style="z-index: 1065;">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content shadow-lg border-0">
-                        <div class="modal-header bg-body-tertiary">
-                            <h5 class="modal-title fw-bold">${title}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body" style="white-space: pre-wrap;">${body}</div>
-                        <div class="modal-footer border-top-0 pt-0">
-                            ${cancelBtn}
-                            <button type="button" class="btn btn-primary fw-bold px-4" id="bs-modal-confirm">${confirmText}</button>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
+    const dialog = document.createElement('div');
+    dialog.className = 'modal-dialog modal-dialog-centered';
+
+    const content = document.createElement('div');
+    content.className = 'modal-content shadow-lg border-0';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'modal-header bg-body-tertiary';
+
+    const title = document.createElement('h5');
+    title.className = 'modal-title fw-bold';
+    title.textContent = titleText;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'btn-close';
+    closeBtn.setAttribute('data-bs-dismiss', 'modal');
+    closeBtn.setAttribute('aria-label', 'Close');
+
+    header.append(title, closeBtn);
+
+    // Body
+    const body = document.createElement('div');
+    body.className = 'modal-body';
+    body.style.whiteSpace = 'pre-wrap';
+
+    if (bodyContent instanceof Node) {
+      body.appendChild(bodyContent);
+    } else {
+      body.textContent = bodyContent;
+    }
+
+    // Footer
+    const footer = document.createElement('div');
+    footer.className = 'modal-footer border-top-0 pt-0';
+
+    if (showCancel) {
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.className = 'btn btn-secondary';
+      cancelBtn.setAttribute('data-bs-dismiss', 'modal');
+      cancelBtn.textContent = cancelText;
+      footer.appendChild(cancelBtn);
+    }
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.type = 'button';
+    confirmBtn.className = 'btn btn-primary fw-bold px-4';
+    confirmBtn.id = 'bs-modal-confirm';
+    confirmBtn.textContent = confirmText;
+    footer.appendChild(confirmBtn);
+
+    content.append(header, body, footer);
+    dialog.appendChild(content);
+    modal.appendChild(dialog);
+
+    return modal;
   }
 
   /**
@@ -184,33 +264,46 @@ class BootstrapDialogs {
       this._activeInstance = null;
     }
 
-    /** @type {HTMLElement|null} */
-    const element = document.getElementById('bs-custom-modal');
-    if (element) element.remove();
+    if (this._modalElement) {
+      this._modalElement.remove();
+      this._modalElement = null;
+    }
 
     this._restoreBody();
   }
 
   /**
-   * @param {string} html
+   * @param {string} title
+   * @param {HTMLElement|string} bodyContent
+   * @param {boolean} showCancel
+   * @param {string} confirmText
+   * @param {string} [cancelText='Cancel']
    * @param {'alert'|'confirm'|'prompt'} type
    * @returns {Promise<any>}
    */
-  static _show(html, type) {
+  static _show(title, bodyContent, showCancel, confirmText, cancelText, type) {
     this._cleanup();
 
     return new Promise((resolve) => {
       this._activeResolve = resolve;
       this._activeType = type;
 
-      document.body.insertAdjacentHTML('beforeend', html);
+      const modalElement = this._buildModalElement(
+        title,
+        bodyContent,
+        showCancel,
+        confirmText,
+        cancelText,
+      );
+      this._modalElement = modalElement;
+      document.body.appendChild(modalElement);
 
-      /** @type {HTMLElement} */
-      const modalElement = document.getElementById('bs-custom-modal');
-      /** @type {HTMLElement} */
-      const confirmBtn = document.getElementById('bs-modal-confirm');
-      /** @type {HTMLInputElement|null} */
-      const inputField = document.getElementById('bs-prompt-input');
+      const confirmBtn = modalElement.querySelector('#bs-modal-confirm');
+      const inputField = modalElement.querySelector('#bs-prompt-input');
+
+      if (!confirmBtn) {
+        throw new Error('Critical Error: Confirm button not found in modal template.');
+      }
 
       this._activeInstance = new Modal(modalElement);
       /** @type {boolean} */
@@ -223,8 +316,9 @@ class BootstrapDialogs {
         isConfirmed = true;
         /** @type {any} */
         let value;
-        if (type === 'prompt') value = inputField.value;
+        if (type === 'prompt') value = inputField?.value;
         else if (type === 'confirm') value = true;
+        else value = true; // For alerts
 
         this._activeInstance.hide();
         resolve(value);
@@ -240,6 +334,7 @@ class BootstrapDialogs {
             let value;
             if (type === 'prompt') value = null;
             else if (type === 'confirm') value = false;
+            else value = undefined;
             resolve(value);
           }
           this._activeResolve = null;
@@ -289,5 +384,4 @@ export const confirm = (msg, options) => BootstrapDialogs.confirm(msg, options);
  */
 export const showLoading = (msg) => BootstrapDialogs.showLoading(msg);
 
-/** */
 export const hideLoading = () => BootstrapDialogs.hideLoading();
