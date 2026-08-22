@@ -1,5 +1,5 @@
 # Remove original repository data
-dist/v1/build
+build
 dist/v1/libs/utils/examples
 src
 test
