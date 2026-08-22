@@ -50,6 +50,8 @@
     "./css/TinyDraggerExample.min.css": "./dist/v1/css/TinyDraggerExample.min.css",
     "./css/TinyNotify.min.css": "./dist/v1/css/TinyNotify.min.css",
     "./css/TinyLoadingScreen.min.css": "./dist/v1/css/TinyLoadingScreen.min.css",
+    "./web-templates/bootstrap/3.8/scss/input/Placeholder-Colors-Fix.scss": "./dist/v1/web-templates/bootstrap/3.8/scss/input/Placeholder-Colors-Fix.scss",
+    "./web-templates/bootstrap/3.8/scss/spacing/Spacing-Plus.scss": "./dist/v1/web-templates/bootstrap/3.8/scss/spacing/Spacing-Plus.scss",
     ".": {
       "require": "./dist/v1/index.cjs",
       "import": "./dist/v1/index.mjs"
@@ -621,6 +623,7 @@
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-typescript": "^12.3.0",
+    "@types/bootstrap": "^5.2.11",
     "@types/lodash": "^4.17.16",
     "@types/md5": "^2.3.6",
     "@types/node": "^26.1.0",

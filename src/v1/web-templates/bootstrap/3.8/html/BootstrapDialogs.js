@@ -9,14 +9,6 @@ import { Modal } from 'bootstrap/dist/js/bootstrap.bundle.min.js';
  */
 
 /**
- * @typedef {Object} ModalOptions
- * @property {string} [title]
- * @property {string} [confirmText]
- * @property {string} [cancelText]
- * @property {string} [defaultValue]
- */
-
-/**
  * Utility to replace native alert/confirm/prompt with Bootstrap 5 modals.
  */
 class BootstrapDialogs {
