@@ -32,7 +32,7 @@
     "build:js": "tsc -p tsconfig.json && rollup -c && webpack --mode production",
     "build-clean": "npm run clean && npm run build",
     "build-dist": "npm run build",
-    "build:css": "node build/sass.mjs",
+    "build:css": "node build/sass.mjs && node build/scss.mjs",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run build"
   },
