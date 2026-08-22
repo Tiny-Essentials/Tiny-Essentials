@@ -169,7 +169,7 @@ class BootstrapDialogs {
    * @param {HTMLElement|string} bodyContent - Either a text string or a DOM Node.
    * @param {boolean} showCancel
    * @param {string} confirmText
-   * @param {string} [cancelText='Cancel']
+   * @param {string|null} [cancelText='Cancel']
    * @returns {HTMLElement} The constructed modal element.
    */
   static _buildModalElement(
@@ -277,11 +277,11 @@ class BootstrapDialogs {
    * @param {HTMLElement|string} bodyContent
    * @param {boolean} showCancel
    * @param {string} confirmText
-   * @param {string} [cancelText='Cancel']
-   * @param {'alert'|'confirm'|'prompt'} type
+   * @param {string|null} [cancelText='Cancel']
+   * @param {'alert'|'confirm'|'prompt'} [type='alert']
    * @returns {Promise<any>}
    */
-  static _show(title, bodyContent, showCancel, confirmText, cancelText, type) {
+  static _show(title, bodyContent, showCancel, confirmText, cancelText, type = 'alert') {
     this._cleanup();
 
     return new Promise((resolve) => {
@@ -316,7 +316,8 @@ class BootstrapDialogs {
         isConfirmed = true;
         /** @type {any} */
         let value;
-        if (type === 'prompt') value = inputField?.value;
+        if (type === 'prompt')
+          value = inputField instanceof HTMLInputElement ? inputField.value : null;
         else if (type === 'confirm') value = true;
         else value = true; // For alerts
 
@@ -347,6 +348,7 @@ class BootstrapDialogs {
       this._activeInstance.show();
       if (type === 'prompt' && inputField) {
         modalElement.addEventListener('shown.bs.modal', () => {
+          if (!(inputField instanceof HTMLInputElement)) return;
           inputField.focus();
           inputField.select();
         });
