@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TinyRouter Test Environment</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #121212;
+        color: #e0e0e0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+      .card {
+        background-color: #1e1e1e;
+        border: 1px solid #333;
+        color: #e0e0e0;
+        margin-bottom: 1rem;
+      }
+      .card-header {
+        background-color: #2d2d2d;
+        border-bottom: 1px solid #444;
+        font-weight: bold;
+        color: #00d4ff;
+      }
+      .log-container {
+        height: 300px;
+        overflow-y: auto;
+        background-color: #000;
+        font-family: monospace;
+        padding: 10px;
+        font-size: 0.85rem;
+        border: 1px solid #444;
+      }
+      .log-entry {
+        border-bottom: 1px solid #222;
+        padding: 4px 0;
+      }
+      .log-entry span {
+        color: #888;
+      }
+      .status-badge {
+        font-family: monospace;
+        font-size: 1.2rem;
+        color: #00ff88;
+      }
+      pre {
+        margin-bottom: 0;
+        color: #ffcc00;
+      }
+      .nav-btn {
+        margin-bottom: 5px;
+        text-align: left;
+      }
+      code {
+        color: #ff79c6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid py-4">
+      <header class="mb-4">
+        <h1 class="display-5 fw-bold">TinyRouter <span class="text-info">Test Lab</span></h1>
+        <p class="text-secondary">
+          Testing: Static Routes, Dynamic Params, Query Strings, and History API.
+        </p>
+      </header>
+
+      <div class="row">
+        <!-- COLUNA 1: CONTROLES DE NAVEGAÇÃO -->
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-header">Navigation Controls</div>
+            <div class="card-body">
+              <button class="btn btn-outline-primary w-100 nav-btn" id="btn-home">
+                🏠 Home (<code>/</code>)
+              </button>
+              <button class="btn btn-outline-primary w-100 nav-btn" id="btn-settings">
+                ⚙️ Settings (<code>/settings</code>)
+              </button>
+              <button class="btn btn-outline-primary w-100 nav-btn" id="btn-search">
+                🔍 Search (<code>/search?q=anime</code>)
+              </button>
+              <hr />
+              <div class="form-label small text-secondary">Manual Search Query:</div>
+              <div class="input-group mb-3">
+                <input
+                  type="text"
+                  id="manual-query"
+                  class="form-control form-control-sm bg-dark text-white border-secondary"
+                  placeholder="e.g. pony"
+                />
+                <button class="btn btn-primary btn-sm" id="btn-manual-search">Go</button>
+              </div>
+              <hr />
+              <div class="form-label small text-secondary">Dynamic Params Test:</div>
+              <button class="btn btn-outline-info w-100 nav-btn" id="btn-img">
+                🖼️ Image (<code>/:host/images/:id</code>)
+              </button>
+              <button class="btn btn-outline-info w-100 nav-btn" id="btn-prof">
+                👤 Profile (<code>/:host/profiles/:username</code>)
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">Browser History</div>
+            <div class="card-body text-center">
+              <p class="small mb-1">
+                Use os botões <span class="badge bg-secondary">Back</span> /
+                <span class="badge bg-secondary">Forward</span> do seu navegador para testar o
+                <code>popstate</code>.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUNA 2: ESTADO ATUAL -->
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-header">Current Route Match</div>
+            <div class="card-body">
+              <label class="small text-secondary">Path:</label>
+              <div id="display-path" class="status-badge mb-2">/</div>
+
+              <label class="small text-secondary">Params (Dynamic):</label>
+              <pre id="display-params">{}</pre>
+
+              <label class="small text-secondary mt-2">Query String:</label>
+              <pre id="display-query">none</pre>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">Current URL</div>
+            <div class="card-body">
+              <code id="display-url">window.location.href</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUNA 3: LOG DE EVENTOS -->
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              Event Log
+              <button class="btn btn-sm btn-outline-secondary py-0" id="btn-clear-log">
+                Clear
+              </button>
+            </div>
+            <div class="card-body p-0">
+              <div id="event-log" class="log-container">
+                <div class="log-entry"><span>[System]</span> Ready.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { TinyRouter } from '/src/v1/libs/router/TinyRouter.mjs';
+
+      // --- Seletores de UI ---
+      const el = {
+        path: document.getElementById('display-path'),
+        params: document.getElementById('display-params'),
+        query: document.getElementById('display-query'),
+        url: document.getElementById('display-url'),
+        log: document.getElementById('event-log'),
+        manualQuery: document.getElementById('manual-query'),
+      };
+
+      // --- Funções de UI ---
+      function log(message, data = null) {
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        const time = new Date().toLocaleTimeString();
+        entry.innerHTML = `<span>[${time}]</span> <strong>${message}</strong>${data ? `<pre>${JSON.stringify(data, null, 2)}</pre>` : ''}`;
+        el.log.prepend(entry);
+      }
+
+      function updateUI(match) {
+        el.path.textContent = match.path;
+        el.params.textContent = JSON.stringify(match.params, null, 2);
+        el.query.textContent = match.query.toString() || 'none';
+        el.url.textContent = window.location.href;
+      }
+
+      // --- Inicialização do Roteador ---
+      const router = new TinyRouter({
+        onRouteChanged: (match) => {
+          log(`Route Changed: ${match.path}`, match);
+          updateUI(match);
+        },
+      });
+
+      // --- Registro de Rotas de Teste ---
+      router.addRoute('/', (match) => {
+        log('Matched: Home');
+      });
+
+      router.addRoute('/settings', (match) => {
+        log('Matched: Settings');
+      });
+
+      router.addRoute('/search', (match) => {
+        log('Matched: Search');
+      });
+
+      // Rota com parâmetros dinâmicos
+      router.addRoute('/:host/images/:id', (match) => {
+        log('Matched: Image Viewer', match.params);
+      });
+
+      router.addRoute('/:host/profiles/:username', (match) => {
+        log('Matched: Profile', match.params);
+      });
+
+      // Inicia o roteador
+      router.start();
+
+      // --- Event Listeners dos Botões ---
+      document.getElementById('btn-home').onclick = () => router.navigate('/');
+      document.getElementById('btn-settings').onclick = () => router.navigate('/settings');
+      document.getElementById('btn-search').onclick = () => router.navigate('/search?q=anime');
+
+      document.getElementById('btn-manual-search').onclick = () => {
+        const q = el.manualQuery.value;
+        router.navigate(`/search?q=${encodeURIComponent(q)}`);
+      };
+
+      document.getElementById('btn-img').onclick = () => {
+        // Simula navegação para uma imagem de um booru específico
+        router.navigate('/derpibooru.org/images/987654321');
+      };
+
+      document.getElementById('btn-prof').onclick = () => {
+        router.navigate('/derpibooru.org/profiles/user_test');
+      };
+
+      document.getElementById('btn-clear-log').onclick = () => {
+        el.log.innerHTML = '<div class="log-entry"><span>[System]</span> Log cleared.</div>';
+      };
+    </script>
+  </body>
+</html>
