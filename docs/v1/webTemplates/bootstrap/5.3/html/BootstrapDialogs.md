@@ -19,12 +19,35 @@ It provides a non-blocking, Promise-based workflow and features a robust configu
 To use this library, you must have **Bootstrap 5** (JavaScript and CSS) included in your project. You must also initialize the library with the Bootstrap Modal class.
 
 ```javascript
-import { BootstrapDialogs } from './BootstrapDialogs.js';
+import { BootstrapDialogs } from 'tiny-essentials/webTemplates/bootstrap/5.3/html/BootstrapDialogs';
 import { Modal } from 'bootstrap';
 
 // 1. Initialize the Modal class
 BootstrapDialogs.Modal = Modal;
 ```
+
+## 🔄 Global Replacement (Monkey Patching)
+
+If you want to automatically use Bootstrap modals instead of the default browser dialogs throughout your entire application, you can "monkey patch" the global `window` object.
+
+```javascript
+import { BootstrapDialogs } from 'tiny-essentials/webTemplates/bootstrap/5.3/html/BootstrapDialogs';
+
+window.alert = (msg) => BootstrapDialogs.alert(msg);
+window.confirm = (msg) => BootstrapDialogs.confirm(msg);
+window.prompt = (msg, def) => BootstrapDialogs.prompt(msg, def);
+```
+
+> [!WARNING]
+> **⚠️ Breaking Change Alert:** Native `window.confirm` and `window.prompt` are **synchronous** (they pause code execution). `BootstrapDialogs` methods are **asynchronous** (they return a `Promise`).
+>
+> If you use this replacement, you **must** update your existing code to use `await` when calling these functions.
+>
+> **❌ Old (Synchronous):**
+> `if (confirm("Are you sure?")) { ... }`
+>
+> **✅ New (Asynchronous):**
+> `if (await confirm("Are you sure?")) { ... }`
 
 ---
 
@@ -109,7 +132,7 @@ Removes the loading overlay.
 ## 💡 Usage Example
 
 ```javascript
-import { confirm, prompt, showLoading, hideLoading } from './BootstrapDialogs.js';
+import { confirm, prompt, showLoading, hideLoading } from 'tiny-essentials/webTemplates/bootstrap/5.3/html/BootstrapDialogs';
 
 async function handleDeleteUser(userId) {
   // 1. Show loading state
