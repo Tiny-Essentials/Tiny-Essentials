@@ -123,7 +123,13 @@ Here, you can navigate through different sections of the project. Below are the 
 * ⚙️ **[TinyClassManager](./libs/tools/TinyClassManager.md)** — A lightweight, immutable manager designed to linearly compose a base class with multiple modular plugins, featuring automatic dependency verification and duplicate conflict protection.
 * 🛠️ **[TinyPluginInliner](./libs/tools/TinyClassManager/TinyPluginInliner.md)** — A powerful build-time utility that inlines plugin code into a single bundle, automatically rewriting import paths and hoisting dependencies for seamless deployment.
 
-### 3. **`fileManager/`**
+### 3. **`webTemplates/`**
+
+#### 3.1. **`webTemplates/bootstrap/`**
+
+- 🖼️ **[BootstrapDialogs](./webTemplates/bootstrap/5.3/html/BootstrapDialogs.md)** — An asynchronous JavaScript utility designed to replace native browser dialogs with customizable Bootstrap 5 Modals.
+
+### 4. **`fileManager/`**
 
 * 📁 **[Main](./fileManager/main.md)** — A Node.js file/directory utility module with support for JSON, backups, renaming, size analysis, and more.
 

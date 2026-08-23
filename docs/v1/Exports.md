@@ -225,6 +225,16 @@ Each library can be imported separately:
 
 ---
 
+## 🎨 Web Templates
+
+### Bootstrap 5.3 🅱️
+
+* `webTemplates/bootstrap/5.3/html/BootstrapDialogs`
+* `webTemplates/bootstrap/5.3/scss/input/Placeholder-Colors-Fix.scss`
+* `webTemplates/bootstrap/5.3/scss/spacing/Spacing-Plus.scss`
+
+---
+
 ## ✅ Import Examples
 
 **ESM (modern projects)**
