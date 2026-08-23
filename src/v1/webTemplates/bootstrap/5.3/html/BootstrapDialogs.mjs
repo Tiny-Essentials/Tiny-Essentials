@@ -56,19 +56,19 @@ class BootstrapDialogs {
    * @type {Object<string, CustomElementConfig>}
    */
   static #defaultConfig = {
-    modalConfig: { className: '', styles: {} },
-    dialogConfig: { className: '', styles: {} },
-    contentConfig: { className: '', styles: {} },
-    headerConfig: { className: '', styles: {} },
-    titleConfig: { className: '', styles: {} },
-    closeBtnConfig: { className: '', styles: {} },
+    modalConfig: { className: ['modal', 'fade'], styles: { 'z-index': '1065' } },
+    dialogConfig: { className: ['modal-dialog', 'modal-dialog-centered'], styles: {} },
+    contentConfig: { className: ['modal-content', 'shadow-lg', 'border-0'], styles: {} },
+    headerConfig: { className: ['modal-header', 'bg-body-tertiary'], styles: {} },
+    titleConfig: { className: ['modal-title', 'fw-bold'], styles: {} },
+    closeBtnConfig: { className: ['btn-close'], styles: {} },
     bodyConfig: {
-      className: '',
+      className: ['modal-body'],
       styles: { 'white-space': 'pre-wrap', 'overflow-wrap': 'anywhere' },
     },
-    footerConfig: { className: '', styles: {} },
-    confirmBtnConfig: { className: '', styles: {} },
-    cancelBtnConfig: { className: '', styles: {} },
+    footerConfig: { className: ['modal-footer', 'border-top-0', 'pt-0'], styles: {} },
+    confirmBtnConfig: { className: ['btn', 'btn-primary', 'fw-bold', 'px-4'], styles: {} },
+    cancelBtnConfig: { className: ['btn', 'btn-secondary'], styles: {} },
   };
 
   /**
@@ -293,8 +293,14 @@ class BootstrapDialogs {
         if (typeof config !== 'object' || config === null) {
           throw new TypeError(`The property "${key}" must be an object.`);
         }
-        if (config.className !== undefined && typeof config.className !== 'string' && !Array.isArray(config.className)) {
-          throw new TypeError(`The "className" property in "${key}" must be a string or an array of strings.`);
+        if (
+          config.className !== undefined &&
+          typeof config.className !== 'string' &&
+          !Array.isArray(config.className)
+        ) {
+          throw new TypeError(
+            `The "className" property in "${key}" must be a string or an array of strings.`,
+          );
         }
         if (config.styles !== undefined) {
           if (typeof config.styles !== 'object' || config.styles === null) {
@@ -452,33 +458,26 @@ class BootstrapDialogs {
     options = {},
   ) {
     const modal = document.createElement('div');
-    modal.className = 'modal fade';
     modal.setAttribute('tabindex', '-1');
     modal.setAttribute('aria-hidden', 'true');
-    modal.style.zIndex = '1065';
     this._applyCustomizations(modal, this.#defaultConfig.modalConfig, options.modalConfig);
 
     const dialog = document.createElement('div');
-    dialog.className = 'modal-dialog modal-dialog-centered';
     this._applyCustomizations(dialog, this.#defaultConfig.dialogConfig, options.dialogConfig);
 
     const content = document.createElement('div');
-    content.className = 'modal-content shadow-lg border-0';
     this._applyCustomizations(content, this.#defaultConfig.contentConfig, options.contentConfig);
 
     // Header
     const header = document.createElement('div');
-    header.className = 'modal-header bg-body-tertiary';
     this._applyCustomizations(header, this.#defaultConfig.headerConfig, options.headerConfig);
 
     const title = document.createElement('h5');
-    title.className = 'modal-title fw-bold';
     title.textContent = titleText;
     this._applyCustomizations(title, this.#defaultConfig.titleConfig, options.titleConfig);
 
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
-    closeBtn.className = 'btn-close';
     closeBtn.setAttribute('data-bs-dismiss', 'modal');
     closeBtn.setAttribute('aria-label', 'Close');
     this._applyCustomizations(closeBtn, this.#defaultConfig.closeBtnConfig, options.closeBtnConfig);
@@ -487,7 +486,6 @@ class BootstrapDialogs {
 
     // Body
     const body = document.createElement('div');
-    body.className = 'modal-body';
     this._applyCustomizations(body, this.#defaultConfig.bodyConfig, options.bodyConfig);
 
     if (bodyContent instanceof Node) {
@@ -498,13 +496,11 @@ class BootstrapDialogs {
 
     // Footer
     const footer = document.createElement('div');
-    footer.className = 'modal-footer border-top-0 pt-0';
     this._applyCustomizations(footer, this.#defaultConfig.footerConfig, options.footerConfig);
 
     if (showCancel) {
       const cancelBtn = document.createElement('button');
       cancelBtn.type = 'button';
-      cancelBtn.className = 'btn btn-secondary';
       cancelBtn.setAttribute('data-bs-dismiss', 'modal');
       cancelBtn.textContent = cancelText;
       this._applyCustomizations(
@@ -517,7 +513,6 @@ class BootstrapDialogs {
 
     const confirmBtn = document.createElement('button');
     confirmBtn.type = 'button';
-    confirmBtn.className = 'btn btn-primary fw-bold px-4';
     confirmBtn.id = 'bs-modal-confirm';
     confirmBtn.textContent = confirmText;
     this._applyCustomizations(
