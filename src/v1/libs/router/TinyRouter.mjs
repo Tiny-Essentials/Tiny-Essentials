@@ -65,26 +65,26 @@ class TinyRouter {
    * @param {string} path - The target path.
    * @param {Object} [state] - Optional state object to associate with the history entry.
    */
-  navigate(path, state = {}) {
+  async navigate(path, state = {}) {
     // Prevent redundant navigation if the path is the same
     if (window.location.pathname + window.location.search === path) return;
 
     window.history.pushState(state, '', path);
-    this.#resolve();
+    await this.#resolve();
   }
 
   /**
    * Triggers the initial route resolution (for deep linking on page load).
    */
-  start() {
+  async start() {
     if (this.#started) throw new Error('');
-    this.#resolve();
+    await this.#resolve();
   }
 
   /**
    * Internal method to match the current URL against registered routes.
    */
-  #resolve() {
+  async #resolve() {
     const path = window.location.pathname;
     const search = window.location.search;
     const query = new URLSearchParams(search);
@@ -100,14 +100,10 @@ class TinyRouter {
           params[name] = decodeURIComponent(match[index + 1]);
         });
 
-        const matchResult = {
-          path,
-          params,
-          query,
-        };
+        const matchResult = { path, params, query };
 
         // Execute the route's specific callback
-        route.callback(matchResult);
+        await route.callback(matchResult);
 
         // Notify the global listener
         this.#onRouteChanged(matchResult);
