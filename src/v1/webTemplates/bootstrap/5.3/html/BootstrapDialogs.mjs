@@ -373,11 +373,36 @@ class BootstrapDialogs {
 
   /**
    * Displays a global, non-dismissible loading overlay for background/DB tasks.
+   * If a loading overlay is already active, it updates the existing message and styles.
    * @param {string} [message='Processing...'] - The text to display while the loading state is active.
+   * @param {CustomElementConfig} [config] - Customization for the loading message element.
    * @returns {void}
    */
-  static showLoading(message = 'Processing...') {
-    if (this._loadingInstance) return; // Prevent multiple loading overlays
+  static showLoading(message = 'Processing...', config = {}) {
+    // Base configuration for the loading text
+    const defaultTitleConfig = {
+      className: [
+        'fw-bold',
+        'text-white',
+        'shadow-sm',
+        'px-4',
+        'py-2',
+        'rounded',
+        'bg-dark',
+        'bg-opacity-75',
+      ],
+    };
+
+    // If a loading modal is already active, update the text and apply new styles/classes
+    if (this._loadingInstance) {
+      const titleElement = this._loadingElement?.querySelector('h5');
+      if (titleElement) {
+        titleElement.textContent = message;
+        // Apply extra classes/styles to the existing element
+        this._applyCustomizations(titleElement, defaultTitleConfig, config);
+      }
+      return;
+    }
 
     const modal = document.createElement('div');
     modal.className = 'modal fade';
@@ -403,7 +428,7 @@ class BootstrapDialogs {
     spinner.style.height = '4rem';
 
     const title = document.createElement('h5');
-    title.className = 'fw-bold text-white shadow-sm px-4 py-2 rounded bg-dark bg-opacity-75';
+    this._applyCustomizations(title, defaultTitleConfig, config);
     title.textContent = message;
 
     body.append(spinner, title);
@@ -681,9 +706,10 @@ export const confirm = (msg, options) => BootstrapDialogs.confirm(msg, options);
 
 /**
  * @param {string} msg - The message to display.
+ * @param {CustomElementConfig} [config] - Customization for the loading message.
  * @returns {void}
  */
-export const showLoading = (msg) => BootstrapDialogs.showLoading(msg);
+export const showLoading = (msg, config) => BootstrapDialogs.showLoading(msg, config);
 
 /**
  * Hides and destroys the active loading overlay.
