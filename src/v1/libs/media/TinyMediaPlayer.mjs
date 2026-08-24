@@ -39,7 +39,7 @@ const checkDestroy = createCheckDestroyed('TinyMediaPlayer');
  * @property {boolean} [smoothStopVolume=false] - If true, volume fades smoothly to zero when stopping.
  * @property {boolean} [debugMode=false] - Whether to enable internal debug logging.
  * @property {boolean} [useLogColors=false] - Whether to enable log color support.
- * @property {Console} [logger=console] - A custom logger object (must implement console methods).
+ * @property {Partial<Console>} [logger=console] - A custom logger object (must implement console methods).
  */
 
 /**

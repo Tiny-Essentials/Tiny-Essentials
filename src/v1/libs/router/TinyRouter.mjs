@@ -1,3 +1,5 @@
+import TinyDebugger from '../tools/TinyDebugger.mjs';
+
 /**
  * @typedef {Object} RouteMatch
  * @property {string} path - The matched path.
@@ -6,8 +8,19 @@
  */
 
 /**
+ * @typedef {Object} RouteNotFoundData
+ * @property {string} path - The matched path.
+ * @property {URLSearchParams} query - The URL search parameters.
+ */
+
+/**
  * @callback RouteCallback
  * @param {RouteMatch} match - The object containing path, params, and query.
+ */
+
+/**
+ * @callback RouteNotFoundCallback
+ * @param {RouteNotFoundData} match - The object containing path and query.
  */
 
 /**
@@ -20,20 +33,34 @@
 /**
  * A lightweight, framework-agnostic router for managing client-side navigation.
  */
-class TinyRouter {
+class TinyRouter extends TinyDebugger {
   /** @type {Router[]} */
   #routes = [];
   /** @type {RouteCallback} */
   #onRouteChanged;
+  /** @type {RouteNotFoundCallback} */
+  #onRouteNotFound;
   /** @type {boolean} */
   #started = false;
 
   /**
    * @param {Object} options
+   * @param {boolean} [options.debugMode=false] - Whether to enable internal debug logging.
+   * @param {boolean} [options.useLogColors=false] - Whether to enable log color support.
+   * @param {Partial<Console>} [options.logger=console] - A custom logger object (must implement console methods).
    * @param {RouteCallback} [options.onRouteChanged] - Callback executed whenever the route changes.
+   * @param {RouteNotFoundCallback} [options.onRouteNotFound]
    */
   constructor(options = {}) {
+    super({
+      id: '[_blue_TinyRouter_reset_] :debug:',
+      logger: options.logger ?? console,
+      debugMode: options.debugMode ?? false,
+      useLogColors: options.useLogColors ?? false,
+    });
+
     this.#onRouteChanged = options.onRouteChanged || (() => {});
+    this.#onRouteNotFound = options.onRouteNotFound || (() => {});
 
     // Bind the popstate event to handle browser back/forward buttons
     window.addEventListener('popstate', () => this.#resolve());
@@ -58,6 +85,7 @@ class TinyRouter {
       paramNames,
       callback,
     });
+    this.log('info', '');
   }
 
   /**
@@ -71,6 +99,7 @@ class TinyRouter {
 
     window.history.pushState(state, '', path);
     await this.#resolve();
+    this.log('info', '');
   }
 
   /**
@@ -79,6 +108,7 @@ class TinyRouter {
   async start() {
     if (this.#started) throw new Error('');
     await this.#resolve();
+    this.log('info', '');
   }
 
   /**
@@ -107,18 +137,17 @@ class TinyRouter {
 
         // Notify the global listener
         this.#onRouteChanged(matchResult);
+        this.emit('RouteChanged', matchResult);
+        this.log('info', '');
         return;
       }
     }
 
     // If no route matches, you could implement a 404 logic here
-    this.#handleNotFound();
-  }
-
-  /**
-   */
-  #handleNotFound() {
-    console.warn('TinyRouter: No route matched the current URL.');
+    const matchResult = { path, query };
+    this.#onRouteNotFound(matchResult);
+    this.emit('RouteNotFound', matchResult);
+    this.log('warn', 'No route matched the current URL.');
   }
 }
 
