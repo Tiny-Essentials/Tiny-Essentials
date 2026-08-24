@@ -256,6 +256,10 @@
       "require": "./dist/v1/libs/router/TinyRouter.cjs",
       "import": "./dist/v1/libs/router/TinyRouter.mjs"
     },
+    "./libs/router/TinyServiceWorker": {
+      "require": "./dist/v1/libs/router/TinyServiceWorker.cjs",
+      "import": "./dist/v1/libs/router/TinyServiceWorker.mjs"
+    },
     "./libs/color/TinyColorValidator": {
       "require": "./dist/v1/libs/color/TinyColorValidator.cjs",
       "import": "./dist/v1/libs/color/TinyColorValidator.mjs"

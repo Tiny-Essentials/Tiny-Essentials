@@ -182,9 +182,11 @@ import TinyPkgExportValidator from './libs/tools/TinyPkgExportValidator.mjs';
 import { jsonFilter, jsonFilterRecursive, jsonFilterByKeys } from './basics/jsonFilter.mjs';
 import TinyRouter from './libs/router/TinyRouter.mjs';
 import TinyMapCache from './libs/router/TinyMapCache.mjs';
+import { TinyServiceWorker } from './build/TinyServiceWorker.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
+  TinyServiceWorker,
   TinyMapCache,
   TinyRouter,
   TinyDebugger,
