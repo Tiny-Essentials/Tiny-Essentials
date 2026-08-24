@@ -6,11 +6,13 @@
  */
 
 /**
+ * A Map collection where keys are strings and values are CacheEntry objects.
  * @template T
  * @typedef {Map<string, CacheEntry<T>>} CacheMap
  */
 
 /**
+ * A plain object representation of the cache, where keys are strings and values are CacheEntry objects.
  * @template T
  * @typedef {Object.<string, CacheEntry<T>>} CacheObject
  */
