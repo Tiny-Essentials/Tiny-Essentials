@@ -29,7 +29,7 @@ class TinyServiceWorker extends TinyDebugger {
   #messageHandler = null;
   /** @type {BeforeInstallPromptEvent | null} */
   #deferredPrompt = null;
-  /** @type {string} */
+  /** @type {'twa' | 'standalone' | 'browser'} */
   #displayMode = 'browser';
 
   /** @type {((evt: MediaQueryListEvent) => void) | null} */
@@ -122,7 +122,6 @@ class TinyServiceWorker extends TinyDebugger {
    * Valida se um tipo de evento é um nome reservado para o ciclo de vida interno.
    * @param {string} type - O nome do evento para validar.
    * @throws {TypeError} Se o nome do evento estiver na lista de reservados.
-   * @private
    */
   #validateEventType(type) {
     if (this.#reservedEvents.includes(type)) {
@@ -134,7 +133,6 @@ class TinyServiceWorker extends TinyDebugger {
 
   /**
    * Updates the internal displayMode state and emits an event.
-   * @private
    */
   #updateDisplayMode() {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
@@ -142,6 +140,7 @@ class TinyServiceWorker extends TinyDebugger {
 
     if (isTwa) {
       this.#displayMode = 'twa';
+    // @ts-ignore
     } else if (navigator.standalone || isStandalone) {
       this.#displayMode = 'standalone';
     } else {
@@ -154,7 +153,6 @@ class TinyServiceWorker extends TinyDebugger {
 
   /**
    * Sets up listeners for PWA lifecycle events.
-   * @private
    */
   #setupPwaListeners() {
     // 1. Handle Display Mode Changes
@@ -165,6 +163,7 @@ class TinyServiceWorker extends TinyDebugger {
 
     // 2. Handle Before Install Prompt
     this.#beforeInstallPromptHandler = (e) => {
+      // @ts-ignore
       this.#deferredPrompt = e;
       super.emit('beforeInstallPrompt', e);
       this.log('info', 'beforeinstallprompt event fired.');
@@ -273,9 +272,13 @@ class TinyServiceWorker extends TinyDebugger {
     // Security check: prevent sending messages that collide with internal events
     this.#validateEventType(type);
 
-    if (this.isSwAvailable) {
+    if ('serviceWorker' in navigator && !!navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({ type, data });
-    } else this.#noSwControllerWarn();
+      return true;
+    } else {
+      this.#noSwControllerWarn();
+      return false;
+    }
   }
 
   /**
@@ -300,7 +303,7 @@ class TinyServiceWorker extends TinyDebugger {
     // Security check: prevent sending messages that collide with internal events
     this.#validateEventType(payload.type);
 
-    if (this.isSwAvailable) {
+    if ('serviceWorker' in navigator && !!navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage(payload);
     } else this.#noSwControllerWarn();
   }
