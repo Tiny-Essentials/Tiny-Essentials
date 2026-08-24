@@ -180,9 +180,13 @@ import {
 import TinyUploadClicker from './libs/html/upload/TinyUploadClicker.mjs';
 import TinyPkgExportValidator from './libs/tools/TinyPkgExportValidator.mjs';
 import { jsonFilter, jsonFilterRecursive, jsonFilterByKeys } from './basics/jsonFilter.mjs';
+import TinyRouter from './libs/router/TinyRouter.mjs';
+import TinyMapCache from './libs/router/TinyMapCache.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
+  TinyMapCache,
+  TinyRouter,
   TinyDebugger,
   TinyMediaPlayer,
   TinyRadioFm,

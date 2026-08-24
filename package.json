@@ -248,6 +248,14 @@
       "require": "./dist/v1/libs/html/templates/TinyLoadingScreen.cjs",
       "import": "./dist/v1/libs/html/templates/TinyLoadingScreen.mjs"
     },
+    "./libs/router/TinyMapCache": {
+      "require": "./dist/v1/libs/router/TinyMapCache.cjs",
+      "import": "./dist/v1/libs/router/TinyMapCache.mjs"
+    },
+    "./libs/router/TinyRouter": {
+      "require": "./dist/v1/libs/router/TinyRouter.cjs",
+      "import": "./dist/v1/libs/router/TinyRouter.mjs"
+    },
     "./libs/color/TinyColorValidator": {
       "require": "./dist/v1/libs/color/TinyColorValidator.cjs",
       "import": "./dist/v1/libs/color/TinyColorValidator.mjs"

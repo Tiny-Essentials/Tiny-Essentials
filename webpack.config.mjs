@@ -106,5 +106,7 @@ addModule(1, './src/v1/build/TinyClassManager.mjs', 'TinyClassManager', true);
 addModule(1, './src/v1/build/TinyRadioFm.mjs', 'TinyRadioFm', true);
 addModule(1, './src/v1/build/TinyMediaPlayer.mjs', 'TinyMediaPlayer', true);
 addModule(1, './src/v1/build/TinyDebugger.mjs', 'TinyDebugger', true);
+addModule(1, './src/v1/build/TinyMapCache.mjs', 'TinyMapCache', true);
+addModule(1, './src/v1/build/TinyRouter.mjs', 'TinyRouter', true);
 
 export default modules;

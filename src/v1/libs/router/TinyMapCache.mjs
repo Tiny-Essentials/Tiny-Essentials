@@ -76,7 +76,7 @@ class TinyMapCache {
 
   /**
    * Checks if a specific key exists in the cache.
-   * 
+   *
    * Note: This method triggers a full purge of all expired items in the cache.
    * @param {string} key - The identifier for the data.
    * @returns {boolean} True if the key exists, false otherwise.
@@ -92,7 +92,7 @@ class TinyMapCache {
 
   /**
    * Removes the item associated with the specified key from the cache.
-   * 
+   *
    * Note: This method triggers a full purge of all expired items in the cache.
    * @param {string} key - The identifier for the data.
    * @returns {boolean} True if an element in the Map existed and has been removed, false otherwise.
@@ -108,7 +108,7 @@ class TinyMapCache {
 
   /**
    * Saves an item to the cache.
-   * 
+   *
    * Note: This method triggers a full purge of all expired items in the cache.
    * @template T
    * @param {string} key - The identifier for the data.
@@ -128,7 +128,7 @@ class TinyMapCache {
 
   /**
    * Retrieves an item if it is still valid.
-   * 
+   *
    * Note: This method triggers a full purge of all expired items in the cache.
    * @template T
    * @param {string} key - The identifier for the data.
