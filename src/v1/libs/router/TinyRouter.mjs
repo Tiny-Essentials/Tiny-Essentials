@@ -36,6 +36,7 @@ import TinyDebugger from '../tools/TinyDebugger.mjs';
 
 /**
  * @typedef {Object} RouteDefinition
+ * @property {string} pattern - The original path pattern string.
  * @property {RegExp} regex - The regular expression used for matching the path.
  * @property {string[]} paramNames - The names of the dynamic parameters.
  * @property {RouteCallback} callback - The function to execute on match.
@@ -53,6 +54,8 @@ class TinyRouter extends TinyDebugger {
   #onRouteNotFound;
   /** @type {boolean} */
   #started = false;
+  /** @type {EventListenerOrEventListenerObject} */
+  #popstateHandler;
 
   /**
    * @param {RouterOptions} [options={}] - Configuration options for the router.
@@ -83,8 +86,9 @@ class TinyRouter extends TinyDebugger {
     this.#onRouteChanged = options.onRouteChanged || (() => {});
     this.#onRouteNotFound = options.onRouteNotFound || (() => {});
 
-    // Bind the popstate event to handle browser back/forward buttons
-    window.addEventListener('popstate', () => this.#resolve());
+    // Bind the popstate event and store the reference for later removal
+    this.#popstateHandler = this.#resolve.bind(this);
+    window.addEventListener('popstate', this.#popstateHandler);
   }
 
   /** @returns {RouteCallback} */
@@ -115,6 +119,22 @@ class TinyRouter extends TinyDebugger {
   }
 
   /**
+   * Returns the current number of registered routes.
+   * @returns {number}
+   */
+  get size() {
+    return this.#routes.length;
+  }
+
+  /**
+   * Returns an array of all registered path patterns.
+   * @returns {string[]} An array of path pattern strings.
+   */
+  get routes() {
+    return this.#routes.map((route) => route.pattern);
+  }
+
+  /**
    * Registers a new route pattern.
    * @param {string} pathPattern - The path pattern (e.g., '/images/:host/:id').
    * @param {RouteCallback} callback - Function to execute when this route is matched.
@@ -123,6 +143,11 @@ class TinyRouter extends TinyDebugger {
   addRoute(pathPattern, callback) {
     if (typeof pathPattern !== 'string') throw new TypeError('pathPattern must be a string.');
     if (typeof callback !== 'function') throw new TypeError('callback must be a function.');
+
+    // Prevent duplicate route registration
+    if (this.has(pathPattern)) {
+      throw new Error(`Route with pattern "${pathPattern}" is already registered.`);
+    }
 
     /** @type {string[]} */
     const paramNames = [];
@@ -133,12 +158,43 @@ class TinyRouter extends TinyDebugger {
     });
 
     this.#routes.push({
+      pattern: pathPattern, // Stored to allow removal by string
       regex: new RegExp(`^${regexPath}$`),
       paramNames,
       callback,
     });
     this.emit('RouteAdded', pathPattern);
     this.log('info', 'New route registered: ' + pathPattern);
+  }
+
+  /**
+   * Removes a registered route by its original pattern string.
+   * @param {string} pathPattern - The pattern to remove.
+   * @throws {TypeError} If pathPattern is not a string.
+   */
+  removeRoute(pathPattern) {
+    if (typeof pathPattern !== 'string') throw new TypeError('pathPattern must be a string.');
+
+    const initialLength = this.#routes.length;
+    this.#routes = this.#routes.filter((route) => route.pattern !== pathPattern);
+
+    if (this.#routes.length === initialLength) {
+      this.log('warn', `Attempted to remove non-existent route: ${pathPattern}`);
+    } else {
+      this.emit('RouteRemoved', pathPattern);
+      this.log('info', `Route removed: ${pathPattern}`);
+    }
+  }
+
+  /**
+   * Checks if a route pattern is already registered.
+   * @param {string} pathPattern - The pattern to check.
+   * @returns {boolean} True if the route exists, false otherwise.
+   * @throws {TypeError} If pathPattern is not a string.
+   */
+  has(pathPattern) {
+    if (typeof pathPattern !== 'string') throw new TypeError('pathPattern must be a string.');
+    return this.#routes.some((route) => route.pattern === pathPattern);
   }
 
   /**
@@ -209,6 +265,26 @@ class TinyRouter extends TinyDebugger {
     this.#onRouteNotFound(matchResult);
     this.emit('RouteNotFound', matchResult);
     this.log('warn', `No route matched the current URL: ${path}`);
+  }
+
+  /**
+   * Cleans up the router, removes event listeners, and stops the router.
+   */
+  stop() {
+    window.removeEventListener('popstate', this.#popstateHandler);
+    this.#started = false;
+    this.clear();
+    this.emit('RouterDestroyed');
+    this.log('info', 'Router stopped and event listeners removed.');
+  }
+
+  /**
+   * Removes all registered routes.
+   */
+  clear() {
+    this.#routes = [];
+    this.emit('RoutesCleared');
+    this.log('info', 'All routes have been cleared.');
   }
 }
 
