@@ -62,6 +62,16 @@ class TinyRouter extends TinyDebugger {
     if (typeof options !== 'object' || options === null) {
       throw new TypeError('Options must be a non-null object.');
     }
+    if (
+      typeof options.onRouteChanged !== 'undefined' &&
+      typeof options.onRouteChanged !== 'function'
+    )
+      throw new TypeError('onRouteChanged must be a function.');
+    if (
+      typeof options.onRouteNotFound !== 'undefined' &&
+      typeof options.onRouteNotFound !== 'function'
+    )
+      throw new TypeError('onRouteNotFound must be a function.');
 
     super({
       id: '[_blue_TinyRouter_reset_] :debug:',
