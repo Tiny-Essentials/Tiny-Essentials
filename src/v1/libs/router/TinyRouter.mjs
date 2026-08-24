@@ -1,7 +1,13 @@
 import TinyDebugger from '../tools/TinyDebugger.mjs';
 
 /**
- * @typedef {{pattern: string, regex: RegExp, paramNames: string[]}} AddRouteOptions
+ * @typedef {Object} AddRouteOptions
+ * @property {string} pattern - A human-readable string representation of the route.
+ *    Used for identification, debugging, and for the `remove()` method.
+ * @property {RegExp} regex - The regular expression used to test the current URL path.
+ *    It should include capture groups `()` for any dynamic segments.
+ * @property {string[]} paramNames - An array of strings representing the keys for the dynamic parameters.
+ *    The order of these names must strictly match the order of the capture groups defined in the `regex`.
  */
 
 /**
