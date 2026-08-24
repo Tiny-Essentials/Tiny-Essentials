@@ -22,6 +22,21 @@
  * In-memory cache manager to prevent duplicate requests.
  */
 class TinyMapCache {
+  /**
+   * A private collection of all active `TinyMapCache` instances.
+   * This set is used to facilitate cascaded operations (like `purgeExpired`) across all existing cache instances.
+   * @type {Set<TinyMapCache<any>>}
+   */
+  static #instances = new Set();
+
+  /**
+   * Returns the total number of active `TinyMapCache` instances currently being tracked.
+   * @returns {number} The count of active instances.
+   */
+  static get instancesAmount() {
+    return TinyMapCache.#instances.size;
+  }
+
   /** @type {CacheMap<T>} */
   #cache = new Map();
   /**
@@ -89,7 +104,7 @@ class TinyMapCache {
     if (typeof key !== 'string') {
       throw new TypeError('The cache key must be a string.');
     }
-    this.purgeExpired();
+    this.purgeExpired(true);
     return this.#cache.has(key);
   }
 
@@ -105,7 +120,7 @@ class TinyMapCache {
     if (typeof key !== 'string') {
       throw new TypeError('The cache key must be a string.');
     }
-    this.purgeExpired();
+    this.purgeExpired(true);
     return this.#cache.delete(key);
   }
 
@@ -121,7 +136,8 @@ class TinyMapCache {
     if (typeof key !== 'string') {
       throw new TypeError('The cache key must be a string.');
     }
-    this.purgeExpired();
+    this.purgeExpired(true);
+    if (!TinyMapCache.#instances.has(this)) TinyMapCache.#instances.add(this);
     this.#cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -140,7 +156,7 @@ class TinyMapCache {
     if (typeof key !== 'string') {
       throw new TypeError('The cache key must be a string.');
     }
-    this.purgeExpired();
+    this.purgeExpired(true);
     const cached = this.#cache.get(key);
     if (!cached) return null;
 
@@ -148,16 +164,23 @@ class TinyMapCache {
   }
 
   /**
-   * Iterates through the entire cache and removes all entries that have expired.
+   * Iterates through the current cache and removes all entries that have exceeded the TTL.
+   * @param {boolean} [clearAll=true] - If true, triggers a purge on all other active cache instances.
    * @returns {void}
    */
-  purgeExpired() {
+  purgeExpired(clearAll = false) {
     const now = Date.now();
     for (const [key, entry] of this.#cache.entries()) {
       if (now - entry.timestamp > this.#ttl) {
         this.#cache.delete(key);
       }
     }
+    if (this.#cache.size < 1) TinyMapCache.#instances.delete(this);
+
+    if (clearAll)
+      TinyMapCache.#instances.forEach((i) => {
+        if (i !== this) i.purgeExpired(false);
+      });
   }
 
   /**
@@ -165,6 +188,7 @@ class TinyMapCache {
    * @returns {void}
    */
   clear() {
+    TinyMapCache.#instances.delete(this);
     this.#cache.clear();
   }
 }
