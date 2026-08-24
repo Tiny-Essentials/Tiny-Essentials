@@ -227,6 +227,17 @@ class TinyRouter extends TinyDebugger {
   }
 
   /**
+   * Cleans up the router, removes event listeners, and stops the router.
+   */
+  stop() {
+    window.removeEventListener('popstate', this.#popstateHandler);
+    this.#started = false;
+    this.clear();
+    this.emit('RouterDestroyed');
+    this.log('info', 'Router stopped and event listeners removed.');
+  }
+
+  /**
    * Internal method to match the current URL against registered routes.
    * @returns {Promise<void>}
    */
@@ -265,17 +276,6 @@ class TinyRouter extends TinyDebugger {
     this.#onRouteNotFound(matchResult);
     this.emit('RouteNotFound', matchResult);
     this.log('warn', `No route matched the current URL: ${path}`);
-  }
-
-  /**
-   * Cleans up the router, removes event listeners, and stops the router.
-   */
-  stop() {
-    window.removeEventListener('popstate', this.#popstateHandler);
-    this.#started = false;
-    this.clear();
-    this.emit('RouterDestroyed');
-    this.log('info', 'Router stopped and event listeners removed.');
   }
 
   /**
