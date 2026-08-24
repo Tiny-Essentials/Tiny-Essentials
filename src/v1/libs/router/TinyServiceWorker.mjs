@@ -8,9 +8,10 @@ import TinyDebugger from '../tools/TinyDebugger.mjs';
 
 /**
  * @typedef {Object} BeforeInstallPromptEvent
- * @property {() => Promise<void>} preventDefault
- * @property {() => Promise<void>} userChoice
- * @property {boolean} canShare
+ * @property {() => void} preventDefault - Prevents the default browser behavior.
+ * @property {Promise<{ outcome: 'accepted' | 'dismissed' }>} userChoice - A promise that resolves with the user's choice.
+ * @property {() => Promise<void>} prompt - The method to show the native installation prompt.
+ * @property {boolean} canShare - Indicates if the event can be shared.
  */
 
 /**
@@ -76,6 +77,17 @@ class TinyServiceWorker extends TinyDebugger {
     'noSwControllerWarn',
   ];
 
+  /** @type {Set<EventListener>} */
+  #eventListeners = new Set();
+
+  /**
+   * Retorna uma lista de todos os callbacks de eventos registrados.
+   * @returns {EventListener[]}
+   */
+  get eventListeners() {
+    return Array.from(this.#eventListeners);
+  }
+
   /**
    * Determines the current PWA display mode.
    *
@@ -140,7 +152,7 @@ class TinyServiceWorker extends TinyDebugger {
 
     if (isTwa) {
       this.#displayMode = 'twa';
-    // @ts-ignore
+      // @ts-ignore
     } else if (navigator.standalone || isStandalone) {
       this.#displayMode = 'standalone';
     } else {
@@ -310,22 +322,29 @@ class TinyServiceWorker extends TinyDebugger {
 
   /**
    * Adds an event listener for messages from the Service Worker.
-   * @param {EventListenerOrEventListenerObject} callback - The callback function.
+   * @param {EventListener} callback - The callback function.
    */
   addEventListener(callback) {
+    if (typeof callback !== 'function') {
+      throw new TypeError('The callback must be a function.');
+    }
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('message', callback);
+      this.#eventListeners.add(callback);
     } else this.#noSwControllerWarn();
   }
 
   /**
    * Removes an event listener for messages from the Service Worker.
-   * @param {EventListenerOrEventListenerObject} callback - The callback function.
+   * @param {EventListener} callback - The callback function.
    */
   removeEventListener(callback) {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.removeEventListener('message', callback);
+      return this.#eventListeners.delete(callback);
     } else this.#noSwControllerWarn();
+    return false;
   }
 
   /**
@@ -334,9 +353,15 @@ class TinyServiceWorker extends TinyDebugger {
    */
   destroy() {
     // 1. Remove native Service Worker listener
-    if (this.#messageHandler && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.removeEventListener('message', this.#messageHandler);
-      this.#messageHandler = null;
+    if ('serviceWorker' in navigator) {
+      if (this.#messageHandler) {
+        navigator.serviceWorker.removeEventListener('message', this.#messageHandler);
+        this.#messageHandler = null;
+      }
+      for (const callback of this.#eventListeners) {
+        navigator.serviceWorker.removeEventListener('message', callback);
+      }
+      this.#eventListeners.clear();
     }
 
     // 2. Remove Window Listeners (Crucial for preventing memory leaks)
