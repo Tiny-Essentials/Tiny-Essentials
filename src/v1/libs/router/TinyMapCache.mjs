@@ -76,6 +76,8 @@ class TinyMapCache {
 
   /**
    * Checks if a specific key exists in the cache.
+   * 
+   * Note: This method triggers a full purge of all expired items in the cache.
    * @param {string} key - The identifier for the data.
    * @returns {boolean} True if the key exists, false otherwise.
    * @throws {TypeError} If the key is not a string.
@@ -84,11 +86,14 @@ class TinyMapCache {
     if (typeof key !== 'string') {
       throw new TypeError('The cache key must be a string.');
     }
+    this.purgeExpired();
     return this.#cache.has(key);
   }
 
   /**
    * Removes the item associated with the specified key from the cache.
+   * 
+   * Note: This method triggers a full purge of all expired items in the cache.
    * @param {string} key - The identifier for the data.
    * @returns {boolean} True if an element in the Map existed and has been removed, false otherwise.
    * @throws {TypeError} If the key is not a string.
@@ -97,11 +102,14 @@ class TinyMapCache {
     if (typeof key !== 'string') {
       throw new TypeError('The cache key must be a string.');
     }
+    this.purgeExpired();
     return this.#cache.delete(key);
   }
 
   /**
    * Saves an item to the cache.
+   * 
+   * Note: This method triggers a full purge of all expired items in the cache.
    * @template T
    * @param {string} key - The identifier for the data.
    * @param {T} data - The data to be stored.
@@ -111,7 +119,7 @@ class TinyMapCache {
     if (typeof key !== 'string') {
       throw new TypeError('The cache key must be a string.');
     }
-
+    this.purgeExpired();
     this.#cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -120,6 +128,7 @@ class TinyMapCache {
 
   /**
    * Retrieves an item if it is still valid.
+   * 
    * Note: This method triggers a full purge of all expired items in the cache.
    * @template T
    * @param {string} key - The identifier for the data.
@@ -130,7 +139,6 @@ class TinyMapCache {
     if (typeof key !== 'string') {
       throw new TypeError('The cache key must be a string.');
     }
-
     this.purgeExpired();
     const cached = this.#cache.get(key);
     if (!cached) return null;
