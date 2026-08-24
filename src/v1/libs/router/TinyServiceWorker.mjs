@@ -1,4 +1,7 @@
 import TinyDebugger from '../tools/TinyDebugger.mjs';
+import { createCheckDestroyed } from '../utils/tools.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyServiceWorker');
 
 /**
  * @typedef {Object} ServiceWorkerMessagePayload
@@ -40,32 +43,43 @@ class TinyServiceWorker extends TinyDebugger {
   /** @type {(() => void) | null} */
   #appInstalledHandler = null;
 
+  #isDestroyed = false;
+
+  get isDestroyed() {
+    return this.#isDestroyed;
+  }
+
   #noSwControllerWarn() {
     super.emit('noSwControllerWarn');
     this.log('warn', 'No active controller to receive message.');
   }
 
   get isSwAvailable() {
+    checkDestroy(this.#isDestroyed);
     return 'serviceWorker' in navigator && !!navigator.serviceWorker.controller;
   }
 
   /** @returns {string} */
   get id() {
+    checkDestroy(this.#isDestroyed);
     return this.#id;
   }
 
   /** @returns {string} */
   get swUrl() {
+    checkDestroy(this.#isDestroyed);
     return this.#swUrl;
   }
 
   /** @returns {string} */
   get version() {
+    checkDestroy(this.#isDestroyed);
     return this.#version;
   }
 
   /** @returns {ServiceWorkerRegistration | null} */
   get registration() {
+    checkDestroy(this.#isDestroyed);
     return this.#registration;
   }
 
@@ -85,6 +99,7 @@ class TinyServiceWorker extends TinyDebugger {
    * @returns {EventListener[]}
    */
   get eventListeners() {
+    checkDestroy(this.#isDestroyed);
     return Array.from(this.#eventListeners);
   }
 
@@ -94,6 +109,7 @@ class TinyServiceWorker extends TinyDebugger {
    * @returns {'twa' | 'standalone' | 'browser'}
    */
   get displayMode() {
+    checkDestroy(this.#isDestroyed);
     return this.#displayMode;
   }
 
@@ -197,6 +213,7 @@ class TinyServiceWorker extends TinyDebugger {
    * @throws {Error} If the prompt cannot be shown.
    */
   async promptInstallation() {
+    checkDestroy(this.#isDestroyed);
     if (!this.#deferredPrompt) {
       throw new Error('Cannot show installation prompt: beforeinstallprompt event has not fired.');
     }
@@ -212,6 +229,7 @@ class TinyServiceWorker extends TinyDebugger {
    * @throws {Error} If registration fails.
    */
   async register() {
+    checkDestroy(this.#isDestroyed);
     if (!('serviceWorker' in navigator)) {
       this.log('warn', 'Service Worker is not supported in this browser.');
       return;
@@ -274,6 +292,7 @@ class TinyServiceWorker extends TinyDebugger {
    * @throws {TypeError} If the payload does not match ServiceWorkerMessagePayload structure or uses a reserved type.
    */
   emit(type, data) {
+    checkDestroy(this.#isDestroyed);
     if (typeof type !== 'string') {
       throw new TypeError('Payload.type must be a string.');
     }
@@ -299,6 +318,7 @@ class TinyServiceWorker extends TinyDebugger {
    * @throws {TypeError} If the payload does not match ServiceWorkerMessagePayload structure or uses a reserved type.
    */
   postMessage(payload) {
+    checkDestroy(this.#isDestroyed);
     if (!payload || typeof payload !== 'object') {
       throw new TypeError('Payload must be an object.');
     }
@@ -325,6 +345,7 @@ class TinyServiceWorker extends TinyDebugger {
    * @param {EventListener} callback - The callback function.
    */
   addEventListener(callback) {
+    checkDestroy(this.#isDestroyed);
     if (typeof callback !== 'function') {
       throw new TypeError('The callback must be a function.');
     }
@@ -340,6 +361,7 @@ class TinyServiceWorker extends TinyDebugger {
    * @param {EventListener} callback - The callback function.
    */
   removeEventListener(callback) {
+    checkDestroy(this.#isDestroyed);
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.removeEventListener('message', callback);
       return this.#eventListeners.delete(callback);
@@ -352,6 +374,7 @@ class TinyServiceWorker extends TinyDebugger {
    * @returns {void}
    */
   destroy() {
+    if (this.#isDestroyed) return;
     // 1. Remove native Service Worker listener
     if ('serviceWorker' in navigator) {
       if (this.#messageHandler) {
@@ -387,6 +410,7 @@ class TinyServiceWorker extends TinyDebugger {
     this.#registration = null;
     this.#deferredPrompt = null;
 
+    this.#isDestroyed = true;
     this.log('info', `[${this.#id}] Destroyed successfully.`);
   }
 }
