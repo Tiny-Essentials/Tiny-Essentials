@@ -286,6 +286,43 @@ class TinyServiceWorker extends TinyDebugger {
   }
 
   /**
+   * Unregisters the Service Worker from the browser and destroys the manager instance.
+   *
+   * @returns {Promise<boolean>} A promise that resolves to `true` if the Service Worker
+   * was successfully unregistered, or `false` otherwise.
+   * @throws {Error} If an unexpected error occurs during the unregistration process.
+   */
+  async unregister() {
+    checkDestroy(this.#isDestroyed);
+
+    if (!this.#registration) {
+      this.log('warn', 'No active ServiceWorkerRegistration found to unregister.');
+      this.destroy();
+      return false;
+    }
+
+    try {
+      const success = await this.#registration.unregister();
+
+      if (success) {
+        this.log('info', 'Service Worker unregistered successfully.');
+      } else {
+        this.log(
+          'warn',
+          'The unregister() method returned false (the worker might already be inactive).',
+        );
+      }
+
+      // Call destroy to clean up event listeners and references
+      this.destroy();
+      return success;
+    } catch (error) {
+      this.log('error', 'Error during Service Worker unregistration:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Sends a message to the active Service Worker controller.
    * @param {string} type - The identifier for the message type.
    * @param {Record<any, any>} [data] - The actual data content of the message.
