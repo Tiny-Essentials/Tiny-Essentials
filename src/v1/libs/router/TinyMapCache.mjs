@@ -30,10 +30,19 @@ class TinyMapCache {
   static #instances = new Set();
 
   /**
+   * A collection of all active `TinyMapCache` instances.
+   * This collection is used to facilitate cascaded operations (like `purgeExpired`) across all existing cache instances.
+   * @type {Array<TinyMapCache<any>>}
+   */
+  static get activeInstances() {
+    return Array.from(TinyMapCache.#instances);
+  }
+
+  /**
    * Returns the total number of active `TinyMapCache` instances currently being tracked.
    * @returns {number} The count of active instances.
    */
-  static get instancesAmount() {
+  static get activeInstancesSize() {
     return TinyMapCache.#instances.size;
   }
 
