@@ -202,16 +202,17 @@ class TinyRouter extends TinyDebugger {
       );
     }
 
-    // 3. Final Validation and Registration
+    // 3. Callback Validation
     if (typeof callback !== 'function') {
       throw new TypeError('The callback must be a function.');
     }
 
-    // Prevent duplicate route registration
+    // 4. Prevent duplicate route registration
     if (this.has(pathPattern)) {
       throw new Error(`Route with pattern "${pathPattern}" is already registered.`);
     }
 
+    // 5. Final Registration
     this.#routes.push({
       pattern: pathPattern, // Stored to allow removal by string
       regex,
