@@ -137,6 +137,7 @@ class TinyRouter extends TinyDebugger {
       paramNames,
       callback,
     });
+    this.emit('RouteAdded', pathPattern);
     this.log('info', 'New route registered: ' + pathPattern);
   }
 
@@ -165,6 +166,7 @@ class TinyRouter extends TinyDebugger {
     if (this.#started) throw new Error('Router has already been started.');
     this.#started = true;
     await this.#resolve();
+    this.emit('RouterStarted');
     this.log('info', 'Router started successfully.');
   }
 
@@ -191,11 +193,12 @@ class TinyRouter extends TinyDebugger {
         const matchResult = { path, params, query };
 
         // Execute the route's specific callback
+        this.emit('BeforeRouteChanged', matchResult);
         await route.callback(matchResult);
 
         // Notify the global listener
         this.#onRouteChanged(matchResult);
-        this.emit('RouteChanged', matchResult);
+        this.emit('AfterRouteChanged', matchResult);
         this.log('info', `Route matched: ${path}`);
         return;
       }
