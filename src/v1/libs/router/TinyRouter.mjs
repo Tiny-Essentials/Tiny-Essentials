@@ -1,6 +1,10 @@
 import TinyDebugger from '../tools/TinyDebugger.mjs';
 
 /**
+ * @typedef {{pattern: string, regex: RegExp, paramNames: string[]}} AddRouteOptions
+ */
+
+/**
  * @typedef {Object} RouteMatch
  * @property {string} path - The matched URL path.
  * @property {Record<string, string>} params - The dynamic parameters extracted from the path.
@@ -136,35 +140,80 @@ class TinyRouter extends TinyDebugger {
 
   /**
    * Registers a new route pattern.
-   * @param {string} pathPattern - The path pattern (e.g., '/images/:host/:id').
+   * @param {string | AddRouteOptions} patternOrOptions -
+   *    A path pattern string (e.g., '/user/:id') OR a configuration object for custom regex.
    * @param {RouteCallback} callback - Function to execute when this route is matched.
-   * @throws {TypeError} If pathPattern is not a string or callback is not a function.
+   * @throws {TypeError} If arguments are invalid.
+   * @throws {Error} If the route pattern is already registered.
    */
-  add(pathPattern, callback) {
-    if (typeof pathPattern !== 'string') throw new TypeError('pathPattern must be a string.');
-    if (typeof callback !== 'function') throw new TypeError('callback must be a function.');
+  add(patternOrOptions, callback) {
+    /** @type {string} */
+    let pathPattern;
+    /** @type {RegExp} */
+    let regex;
+    /** @type {string[]} */
+    let paramNames = [];
+
+    // 1. Handle String Input (Legacy/Simple Mode)
+    if (typeof patternOrOptions === 'string') {
+      pathPattern = patternOrOptions;
+
+      // Regex to find segments starting with ':' (e.g., ':id)
+      const regexPath = pathPattern.replace(/:([^/]+)/g, (_, paramName) => {
+        paramNames.push(paramName);
+        return '([^/]+)';
+      });
+      regex = new RegExp(`^${regexPath}$`);
+
+      // 2. Handle Object Input (Advanced/Custom Regex Mode)
+    } else if (
+      typeof patternOrOptions === 'object' &&
+      patternOrOptions !== null &&
+      'pattern' in patternOrOptions &&
+      'regex' in patternOrOptions &&
+      'paramNames' in patternOrOptions
+    ) {
+      pathPattern = patternOrOptions.pattern;
+      regex = patternOrOptions.regex;
+      paramNames = patternOrOptions.paramNames;
+
+      // Strict runtime validation for the custom configuration object
+      if (typeof pathPattern !== 'string') {
+        throw new TypeError('The "pattern" property in the options object must be a string.');
+      }
+      if (!(regex instanceof RegExp)) {
+        throw new TypeError(
+          'The "regex" property in the options object must be an instance of RegExp.',
+        );
+      }
+      if (!Array.isArray(paramNames) || !paramNames.every((name) => typeof name === 'string')) {
+        throw new TypeError('The "paramNames" property must be an array of strings.');
+      }
+    } else {
+      throw new TypeError(
+        'The first argument must be a string (e.g., "/user/:id") or an object ' +
+          '(e.g., { pattern: "/user/(\\d+)", regex: /^\\/user\\/(\\d+)$/, paramNames: ["id"] }).',
+      );
+    }
+
+    // 3. Final Validation and Registration
+    if (typeof callback !== 'function') {
+      throw new TypeError('The callback must be a function.');
+    }
 
     // Prevent duplicate route registration
     if (this.has(pathPattern)) {
       throw new Error(`Route with pattern "${pathPattern}" is already registered.`);
     }
 
-    /** @type {string[]} */
-    const paramNames = [];
-    // Regex to find segments starting with ':' (e.g., ':id)
-    const regexPath = pathPattern.replace(/:([^/]+)/g, (_, paramName) => {
-      paramNames.push(paramName);
-      return '([^/]+)';
-    });
-
     this.#routes.push({
       pattern: pathPattern, // Stored to allow removal by string
-      regex: new RegExp(`^${regexPath}$`),
+      regex,
       paramNames,
       callback,
     });
     this.emit('RouteAdded', pathPattern);
-    this.log('info', 'New route registered: ' + pathPattern);
+    this.log('info', `New route registered: ${pathPattern}`);
   }
 
   /**
