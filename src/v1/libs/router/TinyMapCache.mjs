@@ -16,10 +16,11 @@
  */
 
 /**
+ * @template {any} T
  * In-memory cache manager to prevent duplicate requests.
  */
 class TinyMapCache {
-  /** @type {CacheMap<any>} */
+  /** @type {CacheMap<T>} */
   #cache = new Map();
   /**
    * Time-to-live: 5 minutes in milliseconds
@@ -53,10 +54,10 @@ class TinyMapCache {
 
   /**
    * Returns a deep-cloned plain object representation of the cache.
-   * @returns {CacheObject<any>} An object where keys are cache keys and values are deep-cloned entries.
+   * @returns {CacheObject<T>} An object where keys are cache keys and values are deep-cloned entries.
    */
   get cache() {
-    /** @type {CacheObject<any>} */
+    /** @type {CacheObject<T>} */
     const cacheObject = {};
     for (const [key, entry] of this.#cache.entries()) {
       // structuredClone ensures a deep copy of the entry and its nested data
@@ -110,7 +111,6 @@ class TinyMapCache {
    * Saves an item to the cache.
    *
    * Note: This method triggers a full purge of all expired items in the cache.
-   * @template T
    * @param {string} key - The identifier for the data.
    * @param {T} data - The data to be stored.
    * @throws {TypeError} If the key is not a string.
@@ -130,7 +130,6 @@ class TinyMapCache {
    * Retrieves an item if it is still valid.
    *
    * Note: This method triggers a full purge of all expired items in the cache.
-   * @template T
    * @param {string} key - The identifier for the data.
    * @returns {T | null} The data if valid, or null if expired/not found.
    * @throws {TypeError} If the key is not a string.
