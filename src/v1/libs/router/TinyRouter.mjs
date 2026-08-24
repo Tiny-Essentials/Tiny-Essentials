@@ -140,7 +140,7 @@ class TinyRouter extends TinyDebugger {
    * @param {RouteCallback} callback - Function to execute when this route is matched.
    * @throws {TypeError} If pathPattern is not a string or callback is not a function.
    */
-  addRoute(pathPattern, callback) {
+  add(pathPattern, callback) {
     if (typeof pathPattern !== 'string') throw new TypeError('pathPattern must be a string.');
     if (typeof callback !== 'function') throw new TypeError('callback must be a function.');
 
@@ -172,7 +172,7 @@ class TinyRouter extends TinyDebugger {
    * @param {string} pathPattern - The pattern to remove.
    * @throws {TypeError} If pathPattern is not a string.
    */
-  removeRoute(pathPattern) {
+  remove(pathPattern) {
     if (typeof pathPattern !== 'string') throw new TypeError('pathPattern must be a string.');
 
     const initialLength = this.#routes.length;

@@ -209,24 +209,24 @@
       window.router = router;
 
       // --- Registro de Rotas de Teste ---
-      router.addRoute('/', (match) => {
+      router.add('/', (match) => {
         log('Matched: Home');
       });
 
-      router.addRoute('/settings', (match) => {
+      router.add('/settings', (match) => {
         log('Matched: Settings');
       });
 
-      router.addRoute('/search', (match) => {
+      router.add('/search', (match) => {
         log('Matched: Search');
       });
 
       // Rota com parâmetros dinâmicos
-      router.addRoute('/:host/images/:id', (match) => {
+      router.add('/:host/images/:id', (match) => {
         log('Matched: Image Viewer', match.params);
       });
 
-      router.addRoute('/:host/profiles/:username', (match) => {
+      router.add('/:host/profiles/:username', (match) => {
         log('Matched: Profile', match.params);
       });
 
