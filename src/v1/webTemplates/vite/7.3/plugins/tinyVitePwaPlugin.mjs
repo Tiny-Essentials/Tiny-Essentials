@@ -12,6 +12,7 @@ const __dirname = dirname(__filename);
  * @property {string} manifestPath - The URL path where the manifest should be served.
  * @property {string} srcDir - The source directory containing the Service Worker.
  * @property {string} filename - The name of the Service Worker file.
+ * @property {boolean} [injectRegister=true] - Optional. Whether to automatically inject the SW registration script into the HTML <head>.
  */
 
 // ANSI Color Codes
@@ -76,7 +77,12 @@ const tinyVitePwaPlugin = (options) => {
     throw new TypeError('The "filename" property must be a string.');
   }
 
+  if (options.injectRegister !== undefined && typeof options.injectRegister !== 'boolean') {
+    throw new TypeError('The "injectRegister" property must be a boolean.');
+  }
+
   const { manifest, manifestPath, srcDir, filename } = options;
+  const injectRegister = options.injectRegister ?? true;
 
   const swSourcePath = resolve(__dirname, srcDir, filename);
   /** @type {import('vite').ResolvedConfig} */
@@ -136,6 +142,27 @@ const tinyVitePwaPlugin = (options) => {
       }
     },
 
+    // INJECT HTML SCRIPT: Inject the SW registration code into the output HTML
+    transformIndexHtml() {
+      if (!injectRegister) return;
+
+      // In production mode, we append a timestamp to the URL to force cache busting.
+      // In development mode, we omit the timestamp to avoid generating unnecessary logs on every reload.
+      const isBuild = viteConfig && viteConfig.command === 'build';
+      const versionQuery = isBuild ? `?v=${Date.now()}` : '';
+      const swUrl = `/${filename}${versionQuery}`;
+
+      logger.info(`Injecting Service Worker registration script into HTML (URL: ${swUrl})`);
+
+      return [
+        {
+          tag: 'script',
+          injectTo: 'head',
+          children: `if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('${swUrl}', { type: 'classic' })${!isBuild ? `.then(() => console.log('[tiny-vite-pwa] SW registered.')).catch(err => console.error('[tiny-vite-pwa] SW error:', err))` : ''}; }); }`,
+        },
+      ];
+    },
+
     // REQUIREMENT 1 (PROD Mode): Save the manifest to the dist directory
     generateBundle() {
       // Remove the leading slash from the path to prevent Rollup errors
@@ -163,14 +190,16 @@ const tinyVitePwaPlugin = (options) => {
 
         logger.dim('--------------------------------------------------');
         logger.log(` Mode:       ${colors.bright}${viteConfig.mode}${colors.reset}`);
-        
-        // Relatório do Manifest
-        logger.log(` Manifest:   ${colors.cyan}${relativeDestManifest}${colors.reset} (from [Config Object])`);
-        
-        // Relatório do Service Worker
+
+        // Manifest Info
+        logger.log(
+          ` Manifest:   ${colors.cyan}${relativeDestManifest}${colors.reset} (from [Config Object])`,
+        );
+
+        // Service Worker Info
         logger.log(` SW Source:  ${colors.cyan}${relativeSourceSW}${colors.reset}`);
         logger.log(` SW Dest:    ${colors.cyan}${relativeDestSW}${colors.reset}`);
-        
+
         logger.dim('--------------------------------------------------');
 
         try {
