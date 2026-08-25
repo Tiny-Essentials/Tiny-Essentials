@@ -56,9 +56,9 @@
       "require": "./dist/v1/webTemplates/bootstrap/5.3/html/BootstrapDialogs.cjs",
       "import": "./dist/v1/webTemplates/bootstrap/5.3/html/BootstrapDialogs.mjs"
     },
-    "./webTemplates/vite/TinyVitePwa": {
-      "require": "./dist/v1/webTemplates/vite/TinyVitePwa.cjs",
-      "import": "./dist/v1/webTemplates/vite/TinyVitePwa.mjs"
+    "./webTemplates/vite/7.3/plugins/tinyVitePwaPlugin": {
+      "require": "./dist/v1/webTemplates/vite/7.3/plugins/tinyVitePwaPlugin.cjs",
+      "import": "./dist/v1/webTemplates/vite/7.3/plugins/tinyVitePwaPlugin.mjs"
     },
     "./basics": {
       "require": "./dist/v1/basics/index.cjs",
