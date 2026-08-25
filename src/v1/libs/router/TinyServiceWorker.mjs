@@ -18,17 +18,14 @@ const checkDestroy = createCheckDestroyed('TinyServiceWorker');
  */
 
 /**
- * The path to the service worker file.
- * @typedef {string | URL} SwUrl
- */
-
-/**
+ * @template {string} IdWorker
+ * @template {string | URL} SwUrl
  * Manages Service Worker registration, versioning, and messaging.
  */
 class TinyServiceWorker extends TinyDebugger {
   /** @type {ServiceWorkerRegistration | null} */
   #registration = null;
-  /** @type {string} */
+  /** @type {IdWorker} */
   #id;
   /** @type {SwUrl} */
   #swUrl;
@@ -64,7 +61,7 @@ class TinyServiceWorker extends TinyDebugger {
     return 'serviceWorker' in navigator && !!navigator.serviceWorker.controller;
   }
 
-  /** @returns {string} */
+  /** @returns {IdWorker} */
   get id() {
     checkDestroy(this.#isDestroyed);
     return this.#id;
@@ -120,7 +117,7 @@ class TinyServiceWorker extends TinyDebugger {
 
   /**
    * @param {Object} options - Configuration options for the instance.
-   * @param {string} options.id - The unique identifier for this manager instance.
+   * @param {IdWorker} options.id - The unique identifier for this manager instance.
    * @param {SwUrl} options.swUrl - The path to the service worker file.
    * @param {string} options.version - The current application version.
    * @param {boolean} [options.debugMode=false] - Whether to enable internal debug logging.
