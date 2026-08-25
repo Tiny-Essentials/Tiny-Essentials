@@ -119,21 +119,21 @@ class TinyServiceWorker extends TinyDebugger {
   }
 
   /**
-   * @param {string} id - The unique identifier for this manager instance.
-   * @param {SwUrl} swUrl - The path to the service worker file.
-   * @param {string} version - The current application version.
-   * @param {Object} [options={}] - Configuration options for the logger.
+   * @param {Object} options - Configuration options for the instance.
+   * @param {string} options.id - The unique identifier for this manager instance.
+   * @param {SwUrl} options.swUrl - The path to the service worker file.
+   * @param {string} options.version - The current application version.
    * @param {boolean} [options.debugMode=false] - Whether to enable internal debug logging.
    * @param {boolean} [options.useLogColors=false] - Whether to enable log color support.
    * @param {Partial<Console>} [options.logger=console] - A custom logger object (must implement console methods).
    * @throws {TypeError} If parameters are not the correct types or if id is empty.
    */
-  constructor(id, swUrl, version, options = {}) {
+  constructor({ id, swUrl, version, logger, debugMode, useLogColors }) {
     super({
       id: '[_blue_TinyServiceWorker_reset_] :debug:',
-      logger: options.logger ?? console,
-      debugMode: options.debugMode ?? false,
-      useLogColors: options.useLogColors ?? false,
+      logger: logger ?? console,
+      debugMode: debugMode ?? false,
+      useLogColors: useLogColors ?? false,
     });
     if (typeof id !== 'string' || id.trim() === '') {
       throw new TypeError('The "id" parameter must be a non-empty string.');
