@@ -56,6 +56,10 @@
       "require": "./dist/v1/webTemplates/bootstrap/5.3/html/BootstrapDialogs.cjs",
       "import": "./dist/v1/webTemplates/bootstrap/5.3/html/BootstrapDialogs.mjs"
     },
+    "./webTemplates/vite/TinyVitePwa": {
+      "require": "./dist/v1/webTemplates/vite/TinyVitePwa.cjs",
+      "import": "./dist/v1/webTemplates/vite/TinyVitePwa.mjs"
+    },
     "./basics": {
       "require": "./dist/v1/basics/index.cjs",
       "import": "./dist/v1/basics/index.mjs"
@@ -658,6 +662,7 @@
     "tslib": "^2.8.1",
     "type-fest": "^5.7.0",
     "typescript": "^7.0.2",
+    "vite": "^7.3.1",
     "webpack": "^5.99.6",
     "webpack-cli": "^7.1.0"
   }
