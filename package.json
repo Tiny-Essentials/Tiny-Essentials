@@ -60,6 +60,10 @@
       "require": "./dist/v1/webTemplates/vite/7.3/plugins/tinyVitePwaPlugin.cjs",
       "import": "./dist/v1/webTemplates/vite/7.3/plugins/tinyVitePwaPlugin.mjs"
     },
+    "./webTemplates/vite/7.3/plugins/githubUtils": {
+      "require": "./dist/v1/webTemplates/vite/7.3/plugins/githubUtils.cjs",
+      "import": "./dist/v1/webTemplates/vite/7.3/plugins/githubUtils.mjs"
+    },
     "./basics": {
       "require": "./dist/v1/basics/index.cjs",
       "import": "./dist/v1/basics/index.mjs"
