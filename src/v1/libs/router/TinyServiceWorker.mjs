@@ -18,6 +18,11 @@ const checkDestroy = createCheckDestroyed('TinyServiceWorker');
  */
 
 /**
+ * The path to the service worker file.
+ * @typedef {string | URL} SwUrl
+ */
+
+/**
  * Manages Service Worker registration, versioning, and messaging.
  */
 class TinyServiceWorker extends TinyDebugger {
@@ -25,7 +30,7 @@ class TinyServiceWorker extends TinyDebugger {
   #registration = null;
   /** @type {string} */
   #id;
-  /** @type {string} */
+  /** @type {SwUrl} */
   #swUrl;
   /** @type {string} */
   #version;
@@ -65,7 +70,7 @@ class TinyServiceWorker extends TinyDebugger {
     return this.#id;
   }
 
-  /** @returns {string} */
+  /** @returns {SwUrl} */
   get swUrl() {
     checkDestroy(this.#isDestroyed);
     return this.#swUrl;
@@ -115,7 +120,7 @@ class TinyServiceWorker extends TinyDebugger {
 
   /**
    * @param {string} id - The unique identifier for this manager instance.
-   * @param {string} swUrl - The path to the service worker file.
+   * @param {SwUrl} swUrl - The path to the service worker file.
    * @param {string} version - The current application version.
    * @param {Object} [options={}] - Configuration options for the logger.
    * @param {boolean} [options.debugMode=false] - Whether to enable internal debug logging.
@@ -133,8 +138,8 @@ class TinyServiceWorker extends TinyDebugger {
     if (typeof id !== 'string' || id.trim() === '') {
       throw new TypeError('The "id" parameter must be a non-empty string.');
     }
-    if (typeof swUrl !== 'string') {
-      throw new TypeError('The "swUrl" parameter must be a string.');
+    if (typeof swUrl !== 'string' && !(swUrl instanceof URL)) {
+      throw new TypeError('The "swUrl" parameter must be a string or URL.');
     }
     if (typeof version !== 'string') {
       throw new TypeError('The "version" parameter must be a string.');
@@ -225,10 +230,11 @@ class TinyServiceWorker extends TinyDebugger {
 
   /**
    * Registers the service worker and handles version updates.
+   * @param {RegistrationOptions} [options]
    * @returns {Promise<void>}
    * @throws {Error} If registration fails.
    */
-  async register() {
+  async register(options) {
     checkDestroy(this.#isDestroyed);
     if (!('serviceWorker' in navigator)) {
       this.log('warn', 'Service Worker is not supported in this browser.');
@@ -256,7 +262,7 @@ class TinyServiceWorker extends TinyDebugger {
         }
       }
 
-      this.#registration = await navigator.serviceWorker.register(this.#swUrl);
+      this.#registration = await navigator.serviceWorker.register(this.#swUrl, options);
 
       // Existing message handler logic
       this.#messageHandler = (event) => {
