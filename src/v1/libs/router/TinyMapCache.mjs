@@ -1,3 +1,37 @@
+import { EventEmitter } from 'events';
+
+/**
+ * @template T
+ * @typedef {Object} SetEventPayload
+ * @property {string} key - The key that was set.
+ * @property {T} data - The data that was set.
+ */
+
+/**
+ * @template T
+ * @typedef {Object} GetEventPayload
+ * @property {string} key - The key that was accessed.
+ * @property {boolean} hit - True if the key was found and is valid, false otherwise.
+ */
+
+/**
+ * @template T
+ * @typedef {Object} DeleteEventPayload
+ * @property {string} key - The key that was removed.
+ */
+
+/**
+ * @template T
+ * @typedef {Object} ExpireEventPayload
+ * @property {string} key - The key that expired.
+ * @property {T} data - The data that was removed due to expiration.
+ */
+
+/**
+ * @typedef {Object} PurgeEventPayload
+ * @property {number} count - The number of items removed during purge.
+ */
+
 /**
  * @template T
  * @typedef {Object} CacheEntry
@@ -21,7 +55,7 @@
  * @template {any} T
  * In-memory cache manager to prevent duplicate requests.
  */
-class TinyMapCache {
+class TinyMapCache extends EventEmitter {
   /**
    * A private collection of all active `TinyMapCache` instances.
    * This set is used to facilitate cascaded operations (like `purgeExpired`) across all existing cache instances.
@@ -44,6 +78,10 @@ class TinyMapCache {
    */
   static get activeInstancesSize() {
     return TinyMapCache.#instances.size;
+  }
+
+  constructor() {
+    super();
   }
 
   /** @type {CacheMap<T>} */
@@ -130,7 +168,13 @@ class TinyMapCache {
       throw new TypeError('The cache key must be a string.');
     }
     this.purgeExpired(true);
-    return this.#cache.delete(key);
+    const deleted = this.#cache.delete(key);
+    if (deleted) {
+      /** @type {DeleteEventPayload<T>} */
+      const payload = { key };
+      this.emit('delete', payload);
+    }
+    return deleted;
   }
 
   /**
@@ -147,10 +191,15 @@ class TinyMapCache {
     }
     this.purgeExpired(true);
     if (!TinyMapCache.#instances.has(this)) TinyMapCache.#instances.add(this);
+
     this.#cache.set(key, {
       data,
       timestamp: Date.now(),
     });
+
+    /** @type {SetEventPayload<T>} */
+    const payload = { key, data };
+    this.emit('set', payload);
   }
 
   /**
@@ -179,11 +228,25 @@ class TinyMapCache {
    */
   purgeExpired(clearAll = false) {
     const now = Date.now();
+    let purgedCount = 0;
+
     for (const [key, entry] of this.#cache.entries()) {
       if (now - entry.timestamp > this.#ttl) {
         this.#cache.delete(key);
+        purgedCount++;
+
+        /** @type {ExpireEventPayload<T>} */
+        const expirePayload = { key, data: entry.data };
+        this.emit('expire', expirePayload);
       }
     }
+
+    if (purgedCount > 0) {
+      /** @type {PurgeEventPayload} */
+      const purgePayload = { count: purgedCount };
+      this.emit('purge', purgePayload);
+    }
+
     if (this.#cache.size < 1) TinyMapCache.#instances.delete(this);
 
     if (clearAll)
@@ -199,6 +262,7 @@ class TinyMapCache {
   clear() {
     TinyMapCache.#instances.delete(this);
     this.#cache.clear();
+    this.emit('clear');
   }
 }
 
