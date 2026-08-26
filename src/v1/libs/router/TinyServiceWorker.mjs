@@ -33,6 +33,8 @@ class TinyServiceWorker extends TinyDebugger {
   #version;
   /** @type {boolean} */
   #isReady = false;
+  /** @type {boolean} */
+  #isFailed = false;
   /** @type {((event: MessageEvent) => void) | null} */
   #messageHandler = null;
   /** @type {BeforeInstallPromptEvent | null} */
@@ -51,6 +53,10 @@ class TinyServiceWorker extends TinyDebugger {
 
   get isReady() {
     return this.#isReady;
+  }
+
+  get isFailed() {
+    return this.#isFailed;
   }
 
   get isDestroyed() {
@@ -290,8 +296,8 @@ class TinyServiceWorker extends TinyDebugger {
 
       this.log('info', 'Registered successfully.');
     } catch (error) {
+      this.#isFailed = true;
       this.log('error', 'Registration error:', error);
-      throw error;
     }
   }
 

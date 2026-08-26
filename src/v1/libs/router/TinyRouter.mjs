@@ -39,6 +39,7 @@ import TinyDebugger from '../tools/TinyDebugger.mjs';
  * @typedef {Object} RouterOptions
  * @property {boolean} [debugMode=false] - Whether to enable internal debug logging.
  * @property {boolean} [useLogColors=false] - Whether to enable log color support.
+ * @property {boolean} [detectHistoryChange=true] - Whether to detect if the history navigation actually changed the URL.
  * @property {Partial<Console>} [logger=console] - A custom logger object (must implement console methods).
  * @property {RouteCallback} [onRouteChanged] - Callback executed whenever the route changes.
  * @property {RouteNotFoundCallback} [onRouteNotFound] - Callback executed when no route matches.
@@ -66,6 +67,8 @@ class TinyRouter extends TinyDebugger {
   #started = false;
   /** @type {EventListenerOrEventListenerObject} */
   #popstateHandler;
+  /** @type {boolean} */
+  #detectHistoryChange;
 
   /**
    * @param {RouterOptions} [options={}] - Configuration options for the router.
@@ -75,6 +78,11 @@ class TinyRouter extends TinyDebugger {
     if (typeof options !== 'object' || options === null) {
       throw new TypeError('Options must be a non-null object.');
     }
+    if (
+      typeof options.detectHistoryChange !== 'undefined' &&
+      typeof options.detectHistoryChange !== 'boolean'
+    )
+      throw new TypeError('detectHistoryChange must be a boolean.');
     if (
       typeof options.onRouteChanged !== 'undefined' &&
       typeof options.onRouteChanged !== 'function'
@@ -95,10 +103,22 @@ class TinyRouter extends TinyDebugger {
 
     this.#onRouteChanged = options.onRouteChanged || (() => {});
     this.#onRouteNotFound = options.onRouteNotFound || (() => {});
+    this.#detectHistoryChange = options.detectHistoryChange ?? true;
 
     // Bind the popstate event and store the reference for later removal
     this.#popstateHandler = this.#resolve.bind(this);
     window.addEventListener('popstate', this.#popstateHandler);
+  }
+
+  /** @returns {boolean} */
+  get detectHistoryChange() {
+    return this.#detectHistoryChange;
+  }
+
+  /** @param {boolean} value */
+  set detectHistoryChange(value) {
+    if (typeof value !== 'boolean') throw new TypeError('detectHistoryChange must be a boolean.');
+    this.#detectHistoryChange = value;
   }
 
   /** @returns {RouteCallback} */
@@ -294,31 +314,67 @@ class TinyRouter extends TinyDebugger {
   }
 
   /**
-   * Navigates to the previous entry in the browser's history stack.
-   * This triggers the 'popstate' event, which the router listens to.
-   * @returns {void}
+   * Navigates to a specific number of steps in the browser's history.
+   * @param {number} delta - The number of steps to move (positive for forward, negative for backward).
+   * @returns {Promise<boolean>} A promise that resolves to true if the URL changed, false otherwise.
+   * @throws {TypeError} If delta is not an integer.
    */
-  back() {
+  async go(delta) {
     if (!this.#started) {
-      this.log('warn', 'Attempted to navigate back while the router is stopped.');
-      return;
+      this.log('warn', 'Attempted to navigate while the router is stopped.');
+      return false;
     }
-    window.history.back();
-    this.log('info', 'Navigation command: back');
+
+    if (!Number.isInteger(delta)) {
+      throw new TypeError('The "delta" parameter must be an integer.');
+    }
+
+    if (!this.#detectHistoryChange) {
+      window.history.go(delta);
+      this.log('info', `Navigation command: go(${delta}) (detection disabled)`);
+      return true;
+    }
+
+    const oldUrl = window.location.pathname + window.location.search;
+
+    return new Promise((resolve) => {
+      // We use a temporary handler to detect the 'popstate' event
+      const handler = () => {
+        window.removeEventListener('popstate', handler);
+        const newUrl = window.location.pathname + window.location.search;
+        // Returns true if the URL actually changed
+        resolve(oldUrl !== newUrl);
+      };
+
+      window.addEventListener('popstate', handler);
+
+      // Safety mechanism: If 'popstate' is not triggered (e.g., no history to move to),
+      // we wait for a very short time and then check if the URL changed anyway.
+      setTimeout(() => {
+        window.removeEventListener('popstate', handler);
+        const currentUrl = window.location.pathname + window.location.search;
+        resolve(oldUrl !== currentUrl);
+      }, 100);
+
+      window.history.go(delta);
+      this.log('info', `Navigation command: go(${delta})`);
+    });
+  }
+
+  /**
+   * Navigates to the previous entry in the browser's history stack.
+   * @returns {Promise<boolean>} A promise that resolves to true if the URL changed, false otherwise.
+   */
+  async back() {
+    return this.go(-1);
   }
 
   /**
    * Navigates to the next entry in the browser's history stack.
-   * This triggers the 'popstate' event, which the router listens to.
-   * @returns {void}
+   * @returns {Promise<boolean>} A promise that resolves to true if the URL changed, false otherwise.
    */
-  forward() {
-    if (!this.#started) {
-      this.log('warn', 'Attempted to navigate forward while the router is stopped.');
-      return;
-    }
-    window.history.forward();
-    this.log('info', 'Navigation command: forward');
+  async forward() {
+    return this.go(1);
   }
 
   /**
