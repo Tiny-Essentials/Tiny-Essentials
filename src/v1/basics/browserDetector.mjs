@@ -27,6 +27,10 @@ const VALID_BROWSERS = ['chrome', 'firefox', 'ie', 'edge', 'safari', 'opera', 'y
  * @returns {BrowserDetected} The detected browser name.
  */
 export function isBrowserAgent() {
+  if (typeof navigator === 'undefined') {
+    return 'other';
+  }
+
   const ua = navigator.userAgent;
 
   // CHROME

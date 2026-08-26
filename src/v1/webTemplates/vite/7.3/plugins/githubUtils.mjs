@@ -6,9 +6,9 @@ import { existsSync, copyFileSync } from 'fs';
  * @returns {import('vite').Plugin}
  */
 export const copyIndexTo404 = () => {
-  /** 
+  /**
    * Variable to store the output directory captured from Vite
-   * @type {string} 
+   * @type {string}
    */
   let outDir;
 
