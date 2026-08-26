@@ -31,6 +31,8 @@ class TinyServiceWorker extends TinyDebugger {
   #swUrl;
   /** @type {string} */
   #version;
+  /** @type {boolean} */
+  #isReady = false;
   /** @type {((event: MessageEvent) => void) | null} */
   #messageHandler = null;
   /** @type {BeforeInstallPromptEvent | null} */
@@ -46,6 +48,10 @@ class TinyServiceWorker extends TinyDebugger {
   #appInstalledHandler = null;
 
   #isDestroyed = false;
+
+  get isReady() {
+    return this.#isReady;
+  }
 
   get isDestroyed() {
     return this.#isDestroyed;
@@ -280,6 +286,7 @@ class TinyServiceWorker extends TinyDebugger {
 
       // Initialize PWA listeners
       this.#setupPwaListeners();
+      this.#isReady = true;
 
       this.log('info', 'Registered successfully.');
     } catch (error) {
