@@ -294,6 +294,34 @@ class TinyRouter extends TinyDebugger {
   }
 
   /**
+   * Navigates to the previous entry in the browser's history stack.
+   * This triggers the 'popstate' event, which the router listens to.
+   * @returns {void}
+   */
+  back() {
+    if (!this.#started) {
+      this.log('warn', 'Attempted to navigate back while the router is stopped.');
+      return;
+    }
+    window.history.back();
+    this.log('info', 'Navigation command: back');
+  }
+
+  /**
+   * Navigates to the next entry in the browser's history stack.
+   * This triggers the 'popstate' event, which the router listens to.
+   * @returns {void}
+   */
+  forward() {
+    if (!this.#started) {
+      this.log('warn', 'Attempted to navigate forward while the router is stopped.');
+      return;
+    }
+    window.history.forward();
+    this.log('info', 'Navigation command: forward');
+  }
+
+  /**
    * Internal method to match the current URL against registered routes.
    * @returns {Promise<void>}
    */
