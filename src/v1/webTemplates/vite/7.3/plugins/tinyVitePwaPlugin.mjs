@@ -47,6 +47,8 @@ const logger = {
  * Custom PWA Plugin.
  * Resolves Manifest, Dev HMR, and Service Worker bundling.
  *
+ * NOTE: The Service Worker file is always served from the root directory of the website.
+ *
  * @param {TinyVitePwaOptions} options - The configuration options for the plugin.
  * @returns {import('vite').Plugin} The Vite plugin object.
  */
@@ -95,9 +97,24 @@ const tinyVitePwaPlugin = (options) => {
 
     // REQUIREMENTS 1 & 4 (DEV Mode): Serve the manifest and the Service Worker
     configureServer(server) {
+      // Extract server info to build a clickable URL
+      const { host, port } = server.config.server;
+      const protocol = server.config.server.https ? 'https' : 'http';
+      // If host is 0.0.0.0, use localhost so the link is clickable in the terminal
+      const displayHost = host === '0.0.0.0' ? 'localhost' : host;
+      const baseUrl = `${protocol}://${displayHost}:${port}`;
+
+      const normalizedManifestPath = manifestPath.startsWith('/')
+        ? manifestPath
+        : `/${manifestPath}`;
+      const swUrl = `/${filename}`;
+
+      logger.info(`Manifest available at: ${baseUrl}${normalizedManifestPath}`);
+      logger.info(`Service Worker available at: ${baseUrl}${swUrl}`);
+
       server.middlewares.use(async (req, res, next) => {
         // Serve manifest.json dynamically
-        if (req.url === manifestPath) {
+        if (req.url === normalizedManifestPath) {
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify(manifest, null, 2));
           return;

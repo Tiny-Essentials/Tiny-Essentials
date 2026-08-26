@@ -1,9 +1,0 @@
-{
-  "compilerOptions": {
-    "module": "NodeNext",
-    "target": "ESNext",
-    "lib": ["ESNext", "WebWorker"],
-    "moduleResolution": "nodenext",
-    "checkJs": true
-  }
-}
