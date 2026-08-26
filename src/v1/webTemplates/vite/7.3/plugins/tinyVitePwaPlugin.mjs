@@ -212,14 +212,11 @@ const tinyVitePwaPlugin = (options) => {
         : `/${manifestPath}`;
       const manifestUrl = `${normalizedManifestHref}${versionQuery}`;
 
-      logger.info(
-        `Injecting Service Worker and Manifest into HTML (SW: ${swUrl}, Manifest: ${manifestUrl})`,
-      );
-
       /** @type {import('vite').HtmlTagDescriptor[]} */
       const insertData = [];
 
       // Manifest
+      logger.info(`Injecting Manifest into HTML: ${manifestUrl}`);
       insertData.push({
         tag: 'link',
         injectTo: 'head',
@@ -231,6 +228,7 @@ const tinyVitePwaPlugin = (options) => {
 
       // SW
       if (injectRegister) {
+        logger.info(`Injecting Service Worker into HTML: ${swUrl}`);
         insertData.push({
           tag: 'script',
           injectTo: 'head',
