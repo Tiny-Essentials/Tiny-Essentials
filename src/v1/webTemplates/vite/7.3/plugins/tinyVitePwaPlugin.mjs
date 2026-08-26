@@ -205,7 +205,6 @@ const tinyVitePwaPlugin = (options) => {
         try {
           await build({
             configFile: false, // Ignore the main vite.config.js to prevent infinite loops
-            envFile: false,
             mode: viteConfig.mode,
             build: {
               outDir: viteConfig.build.outDir,
