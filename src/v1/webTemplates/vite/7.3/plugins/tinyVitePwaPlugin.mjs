@@ -98,8 +98,19 @@ const tinyVitePwaPlugin = (options) => {
     // REQUIREMENTS 1 & 4 (DEV Mode): Serve the manifest and the Service Worker
     configureServer(server) {
       // Extract server info to build a clickable URL
-      const { host, port } = server.config.server;
-      const protocol = server.config.server.https ? 'https' : 'http';
+      const serverConfig = server.config.server || {};
+      let host = serverConfig.host;
+      if (host === true) {
+        host = '0.0.0.0';
+      } else if (typeof host !== 'string') {
+        host = 'localhost';
+      }
+
+      const port = serverConfig.port;
+      const isHttps = serverConfig.https ? true : false;
+
+      const protocol = isHttps ? 'https' : 'http';
+      
       // If host is 0.0.0.0, use localhost so the link is clickable in the terminal
       const displayHost = host === '0.0.0.0' ? 'localhost' : host;
       const baseUrl = `${protocol}://${displayHost}:${port}`;
