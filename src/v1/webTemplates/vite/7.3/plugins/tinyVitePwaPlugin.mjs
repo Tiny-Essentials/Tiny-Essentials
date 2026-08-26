@@ -8,6 +8,7 @@ import { build } from 'vite';
  * @property {string} srcDir - The source directory containing the Service Worker.
  * @property {string} filename - The name of the Service Worker file.
  * @property {boolean} [injectRegister=true] - Optional. Whether to automatically inject the SW registration script into the HTML <head>.
+ * @property {boolean} [injectManifestToGlobal=true] - Optional. Whether to inject the manifest into the global scope via Vite's `define`.
  */
 
 // ANSI Color Codes
@@ -49,6 +50,17 @@ const logger = {
  *
  * NOTE: The Service Worker file is always served from the root directory of the website.
  *
+ * TypeScript Support: To enable IntelliSense and avoid type errors when using
+ * the injected '__TINY_PWA_MANIFEST__' global variable, add the following to your `env.d.ts` file:
+ *
+ * ```typescript
+ * declare global {
+ *   interface Window {
+ *     __TINY_PWA_MANIFEST__: Record<string, any>;
+ *   }
+ * }
+ * ```
+ *
  * @param {TinyVitePwaOptions} options - The configuration options for the plugin.
  * @returns {import('vite').Plugin} The Vite plugin object.
  */
@@ -78,8 +90,16 @@ const tinyVitePwaPlugin = (options) => {
     throw new TypeError('The "injectRegister" property must be a boolean.');
   }
 
+  if (
+    options.injectManifestToGlobal !== undefined &&
+    typeof options.injectManifestToGlobal !== 'boolean'
+  ) {
+    throw new TypeError('The "injectManifestToGlobal" property must be a boolean.');
+  }
+
   const { manifest, manifestPath, srcDir, filename } = options;
   const injectRegister = options.injectRegister ?? true;
+  const injectManifestToGlobal = options.injectManifestToGlobal ?? true;
 
   /** @type {string} */
   let swSourcePath;
@@ -93,6 +113,12 @@ const tinyVitePwaPlugin = (options) => {
     configResolved(config) {
       viteConfig = config;
       swSourcePath = resolve(config.root, srcDir, filename);
+    },
+
+    config(config) {
+      const define = { ...config.define };
+      if (injectManifestToGlobal) define.__TINY_PWA_MANIFEST__ = JSON.stringify(manifest);
+      return { ...config, define };
     },
 
     // REQUIREMENTS 1 & 4 (DEV Mode): Serve the manifest and the Service Worker
