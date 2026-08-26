@@ -4,6 +4,9 @@
  * @typedef {'chrome'|'firefox'|'ie'|'edge'|'safari'|'opera'|'yandex'|'other'} BrowserDetected
  */
 
+const win =
+  typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : null;
+
 /**
  * @typedef {Object} DuckTypingResult
  * @property {boolean} isOpera - True if Opera is detected.
@@ -63,10 +66,12 @@ export function isBrowserAgent() {
  * @returns {'gecko'|'webkit'|'trident'|'other'} The detected CSS engine prefix.
  */
 export function getBrowserCssPrefix() {
-  const prefix = (Array.prototype.slice
-    .call(window.getComputedStyle(document.documentElement, ''))
-    .join('')
-    .match(/-(moz|webkit|ms)-/) ?? ['', ''])[1];
+  const prefix = !!win?.getComputedStyle
+    ? (Array.prototype.slice
+        .call(win.getComputedStyle(document.documentElement, ''))
+        .join('')
+        .match(/-(moz|webkit|ms)-/) ?? ['', ''])[1]
+    : '';
 
   // Firefox (Gecko engine)
   if (prefix === 'moz') {
@@ -95,7 +100,7 @@ export function getDuckTyping() {
   // OPERA 8.0+
   const isOpera =
     // @ts-ignore
-    (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+    (!!win?.opr && !!opr.addons) || !!win?.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
 
   // FIREFOX 1.0+
   // @ts-ignore
@@ -103,12 +108,13 @@ export function getDuckTyping() {
 
   // SAFARI 3.0+
   const isSafari =
-    // @ts-ignore
-    /constructor/i.test(window.HTMLElement) ||
+    (!!win?.HTMLElement &&
+      // @ts-ignore
+      /constructor/i.test(win.HTMLElement)) ||
     (function (p) {
       return p.toString() === '[object SafariRemoteNotification]';
       // @ts-ignore
-    })(!window['safari'] || (typeof safari !== 'undefined' && safari.pushNotification));
+    })(!win['safari'] || (typeof safari !== 'undefined' && safari.pushNotification));
 
   // INTERNET EXPLORER 6-11
   // @ts-ignore
@@ -116,14 +122,14 @@ export function getDuckTyping() {
 
   // EDGE 20+
   // @ts-ignore
-  const isEdge = !isIE && !!window.StyleMedia;
+  const isEdge = !isIE && !!win?.StyleMedia;
 
   // CHROME 1+
   // @ts-ignore
-  const isChrome = !!window.chrome;
+  const isChrome = !!win?.chrome;
 
   // BLINK ENGINE DETECTION
-  const isBlink = (isChrome || isOpera) && !!window.CSS;
+  const isBlink = (isChrome || isOpera) && !!win?.CSS;
 
   return { isOpera, isFirefox, isSafari, isIE, isEdge, isChrome, isBlink };
 }
