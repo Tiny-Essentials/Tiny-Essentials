@@ -29,14 +29,14 @@ const colors = {
 const logger = {
   prefix: `${colors.cyan}[tiny-vite-pwa]${colors.reset}`,
   info: (/** @type {string} */ msg) =>
-    console.log(`${logger.prefix} ${colors.blue}INFO:${colors.reset} ${msg}`),
+    console.log(`${logger.prefix} ${colors.blue}[INFO]${colors.reset} ${msg}`),
   success: (/** @type {string} */ msg) =>
-    console.log(`${colors.green}${logger.prefix} SUCCESS:${colors.reset} ${msg}${colors.reset}`),
+    console.log(`${logger.prefix} ${colors.green}[SUCCESS]${colors.reset} ${msg}${colors.reset}`),
   warn: (/** @type {string} */ msg) =>
-    console.warn(`${colors.yellow}${logger.prefix} WARN:${colors.reset} ${msg}${colors.reset}`),
+    console.warn(`${logger.prefix} ${colors.yellow}[WARN]${colors.reset} ${msg}${colors.reset}`),
   error: (/** @type {string} */ msg, /** @type {Error} */ err) =>
     console.error(
-      `${colors.red}${logger.prefix} ERROR:${colors.reset} ${msg}${colors.reset}`,
+      `${logger.prefix} ${colors.red}[ERROR]${colors.reset} ${msg}${colors.reset}`,
       err || '',
     ),
   log: (/** @type {string} */ msg) => console.log(msg),
