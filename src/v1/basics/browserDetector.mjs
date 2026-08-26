@@ -6,6 +6,7 @@
 
 const win =
   typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : null;
+const doc = typeof document !== 'undefined' ? document : null;
 
 /**
  * @typedef {Object} DuckTypingResult
@@ -118,7 +119,7 @@ export function getDuckTyping() {
 
   // INTERNET EXPLORER 6-11
   // @ts-ignore
-  const isIE = /*@cc_on!@*/ false || !!document.documentMode;
+  const isIE = /*@cc_on!@*/ false || !!doc?.documentMode;
 
   // EDGE 20+
   // @ts-ignore

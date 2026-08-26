@@ -1,4 +1,4 @@
-import { dirname, resolve, relative } from 'path';
+import { resolve, relative } from 'path';
 import { build } from 'vite';
 
 /**
