@@ -198,25 +198,47 @@ const tinyVitePwaPlugin = (options) => {
       }
     },
 
-    // INJECT HTML SCRIPT: Inject the SW registration code into the output HTML
+    // INJECT HTML SCRIPT: Inject the SW registration code and the Manifest link into the output HTML
     transformIndexHtml() {
-      if (!injectRegister) return;
-
       // In production mode, we append a timestamp to the URL to force cache busting.
       // In development mode, we omit the timestamp to avoid generating unnecessary logs on every reload.
       const isBuild = viteConfig && viteConfig.command === 'build';
       const versionQuery = isBuild ? `?v=${Date.now()}` : '';
       const swUrl = `/${filename}${versionQuery}`;
 
-      logger.info(`Injecting Service Worker registration script into HTML (URL: ${swUrl})`);
+      // Prepare the manifest URL with cache busting for production to ensure updates are picked up
+      const normalizedManifestHref = manifestPath.startsWith('/')
+        ? manifestPath
+        : `/${manifestPath}`;
+      const manifestUrl = `${normalizedManifestHref}${versionQuery}`;
 
-      return [
-        {
+      logger.info(
+        `Injecting Service Worker and Manifest into HTML (SW: ${swUrl}, Manifest: ${manifestUrl})`,
+      );
+
+      /** @type {import('vite').HtmlTagDescriptor[]} */
+      const insertData = [];
+
+      // Manifest
+      insertData.push({
+        tag: 'link',
+        injectTo: 'head',
+        attrs: {
+          rel: 'manifest',
+          href: manifestUrl,
+        },
+      });
+
+      // SW
+      if (injectRegister) {
+        insertData.push({
           tag: 'script',
           injectTo: 'head',
           children: `if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('${swUrl}', { type: 'classic' })${!isBuild ? `.then(() => console.log('[tiny-vite-pwa] SW registered.')).catch(err => console.error('[tiny-vite-pwa] SW error:', err))` : ''}; }); }`,
-        },
-      ];
+        });
+      }
+
+      return insertData;
     },
 
     // REQUIREMENT 1 (PROD Mode): Save the manifest to the dist directory

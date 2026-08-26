@@ -5,7 +5,7 @@ import { existsSync, copyFileSync } from 'fs';
  * Plugin to copy index.html to 404.html for GitHub Pages compatibility.
  * @returns {import('vite').Plugin}
  */
-export const copyIndexTo404 = () => {
+export const copyIndexToGithub404 = () => {
   /**
    * Variable to store the output directory captured from Vite
    * @type {string}
