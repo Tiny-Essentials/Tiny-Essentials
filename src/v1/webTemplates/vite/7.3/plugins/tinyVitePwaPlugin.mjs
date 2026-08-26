@@ -1,10 +1,5 @@
 import { dirname, resolve, relative } from 'path';
-import { fileURLToPath } from 'url';
 import { build } from 'vite';
-
-// Fix for __dirname in ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 /**
  * @typedef {Object} TinyVitePwaOptions
@@ -84,7 +79,8 @@ const tinyVitePwaPlugin = (options) => {
   const { manifest, manifestPath, srcDir, filename } = options;
   const injectRegister = options.injectRegister ?? true;
 
-  const swSourcePath = resolve(__dirname, srcDir, filename);
+  /** @type {string} */
+  let swSourcePath;
   /** @type {import('vite').ResolvedConfig} */
   let viteConfig;
 
@@ -94,6 +90,7 @@ const tinyVitePwaPlugin = (options) => {
     // Capture Vite configuration to use during build mode
     configResolved(config) {
       viteConfig = config;
+      swSourcePath = resolve(config.root, srcDir, filename);
     },
 
     // REQUIREMENTS 1 & 4 (DEV Mode): Serve the manifest and the Service Worker
@@ -128,7 +125,7 @@ const tinyVitePwaPlugin = (options) => {
 
     // REQUIREMENT 3: Monitor SW changes and notify the frontend
     handleHotUpdate({ file, server }) {
-      if (file.startsWith(resolve(__dirname, srcDir))) {
+      if (file.startsWith(resolve(viteConfig.root, srcDir))) {
         logger.info('Service Worker change detected. Notifying frontend...');
         // Send a custom event via Vite's WebSocket
         server.ws.send({
