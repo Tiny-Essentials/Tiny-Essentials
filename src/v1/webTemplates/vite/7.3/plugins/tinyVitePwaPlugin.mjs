@@ -110,7 +110,7 @@ const tinyVitePwaPlugin = (options) => {
       const isHttps = serverConfig.https ? true : false;
 
       const protocol = isHttps ? 'https' : 'http';
-      
+
       // If host is 0.0.0.0, use localhost so the link is clickable in the terminal
       const displayHost = host === '0.0.0.0' ? 'localhost' : host;
       const baseUrl = `${protocol}://${displayHost}:${port}`;
@@ -119,9 +119,6 @@ const tinyVitePwaPlugin = (options) => {
         ? manifestPath
         : `/${manifestPath}`;
       const swUrl = `/${filename}`;
-
-      logger.info(`Manifest available at: ${baseUrl}${normalizedManifestPath}`);
-      logger.info(`Service Worker available at: ${baseUrl}${swUrl}`);
 
       server.middlewares.use(async (req, res, next) => {
         // Serve manifest.json dynamically
@@ -149,6 +146,14 @@ const tinyVitePwaPlugin = (options) => {
         }
         next();
       });
+
+      logger.success(`Manifest available at: ${baseUrl}${normalizedManifestPath}`);
+      logger.success(`Service Worker available at: ${baseUrl}${swUrl}`);
+
+      // Warning regarding client-side routing interception
+      logger.warn(
+        `NOTE: If your Service Worker implements client-side routing, ensure it is configured to bypass interception for the manifest and SW files. Improper routing configuration may cause 404 errors in the browser, even though the server is serving the files correctly.`,
+      );
     },
 
     // REQUIREMENT 3: Monitor SW changes and notify the frontend
