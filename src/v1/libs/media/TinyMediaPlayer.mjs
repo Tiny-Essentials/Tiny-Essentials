@@ -287,7 +287,7 @@ class TinyMediaPlayer extends TinyDebugger {
 
     // Debug Configuration
     super({
-      id: '[_blue_TinyMediaPlayer_reset_] :debug:',
+      id: '[_blue_TinyMediaPlayer_reset_]',
       logger: options.logger ?? console,
       debugMode: options.debugMode ?? false,
       useLogColors: options.useLogColors ?? false,
