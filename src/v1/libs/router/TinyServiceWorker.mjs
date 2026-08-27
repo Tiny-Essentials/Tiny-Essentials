@@ -268,6 +268,7 @@ class TinyServiceWorker extends TinyDebugger {
 
         // 2. Signal the current Service Worker to begin downloading the new version
         this.emit('PREPARE_UPDATE');
+        // Update localStorage so subsequent manual refreshes recognize the new version
         localStorage.setItem(idVersion, this.#version);
       }
 
@@ -280,12 +281,13 @@ class TinyServiceWorker extends TinyDebugger {
       }
 
       this.#registration = await navigator.serviceWorker.register(swUrl.toString(), options);
+      // Listen for when the new Service Worker takes control
       navigator.serviceWorker.addEventListener('controllerchange', (event) => {
         super.emit('newVersionReady', { event });
         this.log('info', 'New Service Worker is now in control.');
       });
 
-      // Existing message handler logic
+      // Existing message handler and lifecycle logic
       this.#messageHandler = (event) => {
         /** @type {ServiceWorkerMessagePayload} */
         const payload = event.data;
