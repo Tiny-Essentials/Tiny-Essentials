@@ -256,17 +256,17 @@ class TinyServiceWorker extends TinyDebugger {
       const idVersion = `${this.#id}_sw_version`;
       const savedVersion = localStorage.getItem(idVersion);
 
+      // Check if a version mismatch exists
       if (savedVersion !== this.#version) {
         this.log(
           'warn',
           `Version mismatch detected: ${savedVersion} -> ${this.#version}. Signaling update...`,
         );
 
-        // 1. Avisamos a UI que há uma nova versão disponível (para mostrar o botão)
+        // 1. Notify the UI that a new version is available (to show the update button)
         super.emit('versionUpdateAvailable');
 
-        // 2. Avisamos o Service Worker atual para começar a baixar a nova versão
-        // Usamos o postMessage para falar com o worker que já está rodando
+        // 2. Signal the current Service Worker to begin downloading the new version
         this.emit('PREPARE_UPDATE');
         localStorage.setItem(idVersion, this.#version);
       }
