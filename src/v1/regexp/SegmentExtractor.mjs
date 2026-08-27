@@ -9,9 +9,15 @@
  */
 
 /**
+ * @typedef {Object} SegExData
+ * @property {PathParams} params
+ * @property {boolean} match
+ */
+
+/**
  * @callback SegExExec
  * @param {string} path - The URL path to be processed.
- * @returns {PathParams} An object containing the parameters extracted from the path.
+ * @returns {SegExData} An object containing the parameters extracted from the path.
  */
 
 /**
@@ -36,12 +42,16 @@
  */
 
 /**
+ * @typedef {(pathPattern: string) => SegExResult} SegExFunction
+ */
+
+/**
  * Factory to create a path segment extractor based on a specific pattern.
  *
  * @param {string|RegExp} searchValue - The search pattern (string or RegExp) used to identify dynamic segments.
  * @param {SegExReplacer} replaceValue - The function defining how to transform a segment into a capture group.
  * @param {SegExErrorConfig} errorConfig - Optional configuration to customize error messages.
- * @returns {(pathPattern: string) => SegExResult} A function that accepts a path pattern string and returns a SegExResult.
+ * @returns {SegExFunction} A function that accepts a path pattern string and returns a SegExResult.
  * @throws {TypeError} If `searchValue` is not a string or RegExp, or if `replaceValue` is not a function.
  */
 export const makeSegmentExtractor = (searchValue, replaceValue, errorConfig) => {
@@ -98,14 +108,14 @@ export const makeSegmentExtractor = (searchValue, replaceValue, errorConfig) => 
       const match = path.match(regex);
       used = true;
 
-      if (!match) return params;
+      if (!match) return { params, match: false };
 
       // Extract dynamic parameters based on the order they were found in the regex
       paramNames.forEach((name, index) => {
         params[name] = decodeURIComponent(match[index + 1]);
       });
 
-      return params;
+      return { params, match: true };
     };
 
     /**
@@ -119,7 +129,7 @@ export const makeSegmentExtractor = (searchValue, replaceValue, errorConfig) => 
 
 /**
  * Standard implementation for extracting parameters in the `:paramName` format (e.g., "/user/:id").
- * @type {(pathPattern: string) => SegExResult}
+ * @type {SegExFunction}
  */
 export const segmentExtractorV1 = makeSegmentExtractor(
   /:([^/]+)/g,

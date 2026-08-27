@@ -1,14 +1,27 @@
-import { segmentExtractorV1 } from '../../regexp/SegmentExtractor.mjs';
+import { makeSegmentExtractor, segmentExtractorV1 } from '../../regexp/SegmentExtractor.mjs';
 import TinyDebugger from '../tools/TinyDebugger.mjs';
 
 /**
+ * @typedef {Object} SegExResultExtra
+ * @property {string} [pattern] - Stored to allow removal by string.
+ */
+
+/**
+ * @typedef {Object} AddRouteOptionsWithFunction
+ * @property {import('../../regexp/SegmentExtractor.mjs').SegExFunction} callback
+ * @property {string} pattern - Stored to allow removal by string.
+ */
+
+/**
+ * @typedef {import('../../regexp/SegmentExtractor.mjs').SegExResult & SegExResultExtra} SegExResult
+ */
+
+/**
  * @typedef {Object} AddRouteOptions
- * @property {string} pattern - A human-readable string representation of the route.
- *    Used for identification, debugging, and for the `remove()` method.
- * @property {RegExp} regex - The regular expression used to test the current URL path.
- *    It should include capture groups `()` for any dynamic segments.
- * @property {string[]} paramNames - An array of strings representing the keys for the dynamic parameters.
- *    The order of these names must strictly match the order of the capture groups defined in the `regex`.
+ * @property {string} pattern - Stored to allow removal by string.
+ * @property {string|RegExp} searchValue - The search pattern (string or RegExp) used to identify dynamic segments.
+ * @property {import('../../regexp/SegmentExtractor.mjs').SegExReplacer} replaceValue - The function defining how to transform a segment into a capture group.
+ * @property {import('../../regexp/SegmentExtractor.mjs').SegExErrorConfig} errorConfig - Optional configuration to customize error messages.
  */
 
 /**
@@ -48,9 +61,7 @@ import TinyDebugger from '../tools/TinyDebugger.mjs';
 
 /**
  * @typedef {Object} RouteDefinition
- * @property {string} pattern - The original path pattern string.
- * @property {RegExp} regex - The regular expression used for matching the path.
- * @property {string[]} paramNames - The names of the dynamic parameters.
+ * @property {SegExResult} segmentExtractor
  * @property {RouteCallback} callback - The function to execute on match.
  */
 
@@ -162,60 +173,48 @@ class TinyRouter extends TinyDebugger {
    * @returns {string[]} An array of path pattern strings.
    */
   get routes() {
-    return this.#routes.map((route) => route.pattern);
+    return this.#routes.map((route) => route.segmentExtractor.pattern ?? '');
   }
 
   /**
    * Registers a new route pattern.
-   * @param {string | AddRouteOptions} patternOrOptions -
+   * @param {string | AddRouteOptions | AddRouteOptionsWithFunction} patternOrOptions -
    *    A path pattern string (e.g., '/user/:id') OR a configuration object for custom regex.
    * @param {RouteCallback} callback - Function to execute when this route is matched.
    * @throws {TypeError} If arguments are invalid.
    * @throws {Error} If the route pattern is already registered.
    */
   add(patternOrOptions, callback) {
-    /** @type {string} */
-    let pathPattern;
-    /** @type {RegExp} */
-    let regex;
-    /** @type {string[]} */
-    let paramNames = [];
+    /** @type {SegExResult} */
+    // @ts-ignore
+    let se = {};
 
     // 1. Handle String Input (Legacy/Simple Mode)
     if (typeof patternOrOptions === 'string') {
-      pathPattern = patternOrOptions;
-      const r = segmentExtractorV1(patternOrOptions);
-      regex = r.regex;
-      paramNames = r.paramNames;
-
+      se = segmentExtractorV1(patternOrOptions);
+      se.pattern = patternOrOptions;
       // 2. Handle Object Input (Advanced/Custom Regex Mode)
-    } else if (
-      typeof patternOrOptions === 'object' &&
-      patternOrOptions !== null &&
-      'pattern' in patternOrOptions &&
-      'regex' in patternOrOptions &&
-      'paramNames' in patternOrOptions
-    ) {
-      pathPattern = patternOrOptions.pattern;
-      regex = patternOrOptions.regex;
-      paramNames = patternOrOptions.paramNames;
-
-      // Strict runtime validation for the custom configuration object
-      if (typeof pathPattern !== 'string') {
-        throw new TypeError('The "pattern" property in the options object must be a string.');
+    } else if (typeof patternOrOptions === 'object' && patternOrOptions !== null) {
+      // @ts-ignore
+      if (typeof patternOrOptions.callback === 'function') {
+        /** @type {AddRouteOptionsWithFunction} */
+        // @ts-ignore
+        const options = patternOrOptions;
+        options.callback(options.pattern);
+      } else {
+        /** @type {AddRouteOptions} */
+        // @ts-ignore
+        const options = patternOrOptions;
+        se = makeSegmentExtractor(
+          options.searchValue,
+          options.replaceValue,
+          options.errorConfig,
+        )(options.pattern);
       }
-      if (!(regex instanceof RegExp)) {
-        throw new TypeError(
-          'The "regex" property in the options object must be an instance of RegExp.',
-        );
-      }
-      if (!Array.isArray(paramNames) || !paramNames.every((name) => typeof name === 'string')) {
-        throw new TypeError('The "paramNames" property must be an array of strings.');
-      }
+      se.pattern = patternOrOptions.pattern;
     } else {
       throw new TypeError(
-        'The first argument must be a string (e.g., "/user/:id") or an object ' +
-          '(e.g., { pattern: "/user/(\\d+)", regex: /^\\/user\\/(\\d+)$/, paramNames: ["id"] }).',
+        'The first argument must be a string (e.g., "/user/:id") or an object of SegmentExtractor maker.',
       );
     }
 
@@ -225,19 +224,14 @@ class TinyRouter extends TinyDebugger {
     }
 
     // 4. Prevent duplicate route registration
-    if (this.has(pathPattern)) {
-      throw new Error(`Route with pattern "${pathPattern}" is already registered.`);
+    if (this.has(se.pattern)) {
+      throw new Error(`Route with pattern "${se.pattern}" is already registered.`);
     }
 
     // 5. Final Registration
-    this.#routes.push({
-      pattern: pathPattern, // Stored to allow removal by string
-      regex,
-      paramNames,
-      callback,
-    });
-    this.emit('RouteAdded', pathPattern);
-    this.log('info', `New route registered: ${pathPattern}`);
+    this.#routes.push({ segmentExtractor: se, callback });
+    this.emit('RouteAdded', se.pattern);
+    this.log('info', `New route registered: ${se.pattern}`);
   }
 
   /**
@@ -249,7 +243,7 @@ class TinyRouter extends TinyDebugger {
     if (typeof pathPattern !== 'string') throw new TypeError('pathPattern must be a string.');
 
     const initialLength = this.#routes.length;
-    this.#routes = this.#routes.filter((route) => route.pattern !== pathPattern);
+    this.#routes = this.#routes.filter((route) => route.segmentExtractor.pattern !== pathPattern);
 
     if (this.#routes.length === initialLength) {
       this.log('warn', `Attempted to remove non-existent route: ${pathPattern}`);
@@ -267,7 +261,7 @@ class TinyRouter extends TinyDebugger {
    */
   has(pathPattern) {
     if (typeof pathPattern !== 'string') throw new TypeError('pathPattern must be a string.');
-    return this.#routes.some((route) => route.pattern === pathPattern);
+    return this.#routes.some((route) => route.segmentExtractor.pattern === pathPattern);
   }
 
   /**
@@ -384,18 +378,10 @@ class TinyRouter extends TinyDebugger {
     const query = new URLSearchParams(search);
 
     for (const route of this.#routes) {
-      const match = path.match(route.regex);
+      const { params, match } = route.segmentExtractor.exec(path);
 
       if (match) {
-        /** @type {Record<string, string>} */
-        const params = {};
-        // Extract dynamic parameters based on the order they were found in the regex
-        route.paramNames.forEach((name, index) => {
-          params[name] = decodeURIComponent(match[index + 1]);
-        });
-
         const matchResult = { path, params, query };
-
         // Execute the route's specific callback
         this.emit('BeforeRouteChanged', matchResult);
         await route.callback(matchResult);
