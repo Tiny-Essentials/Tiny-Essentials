@@ -103,7 +103,8 @@ class TinyServiceWorker extends TinyDebugger {
     'beforeInstallPrompt',
     'appInstalled',
     'noSwControllerWarn',
-    'controllerChange',
+    'newVersionReady',
+    'versionUpdateAvailable',
   ];
 
   /** @type {Set<EventListener>} */
@@ -256,13 +257,17 @@ class TinyServiceWorker extends TinyDebugger {
       const savedVersion = localStorage.getItem(idVersion);
 
       if (savedVersion !== this.#version) {
-        this.log('warn', `Version mismatch: ${savedVersion} -> ${this.#version}. Cleaning up...`);
+        this.log(
+          'warn',
+          `Version mismatch detected: ${savedVersion} -> ${this.#version}. Signaling update...`,
+        );
 
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-          await registration.unregister();
-        }
+        // 1. Avisamos a UI que há uma nova versão disponível (para mostrar o botão)
+        super.emit('versionUpdateAvailable');
 
+        // 2. Avisamos o Service Worker atual para começar a baixar a nova versão
+        // Usamos o postMessage para falar com o worker que já está rodando
+        this.emit('PREPARE_UPDATE');
         localStorage.setItem(idVersion, this.#version);
       }
 
@@ -276,9 +281,8 @@ class TinyServiceWorker extends TinyDebugger {
 
       this.#registration = await navigator.serviceWorker.register(swUrl.toString(), options);
       navigator.serviceWorker.addEventListener('controllerchange', (event) => {
-        super.emit('controllerChange', { event });
-        this.log('info', 'New Service Worker activated. Reloading page to sync...');
-        window.location.reload();
+        super.emit('newVersionReady', { event });
+        this.log('info', 'New Service Worker is now in control.');
       });
 
       // Existing message handler logic
