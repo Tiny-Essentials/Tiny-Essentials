@@ -190,7 +190,7 @@ class TinyServiceWorker extends TinyDebugger {
       this.#displayMode = 'browser';
     }
 
-    super.emit('displayModeChanged', this.#displayMode);
+    super.emit('displayModeChanged', { displayMode: this.#displayMode });
     this.log('info', `DISPLAY_MODE_CHANGED: ${this.#displayMode}`);
   }
 
@@ -208,7 +208,7 @@ class TinyServiceWorker extends TinyDebugger {
     this.#beforeInstallPromptHandler = (e) => {
       // @ts-ignore
       this.#deferredPrompt = e;
-      super.emit('beforeInstallPrompt', e);
+      super.emit('beforeInstallPrompt', { event: e });
       this.log('info', 'beforeinstallprompt event fired.');
     };
     window.addEventListener('beforeinstallprompt', this.#beforeInstallPromptHandler);
@@ -276,7 +276,7 @@ class TinyServiceWorker extends TinyDebugger {
 
       this.#registration = await navigator.serviceWorker.register(swUrl.toString(), options);
       navigator.serviceWorker.addEventListener('controllerchange', (event) => {
-        super.emit('controllerChange', event);
+        super.emit('controllerChange', { event });
         this.log('info', 'New Service Worker activated. Reloading page to sync...');
         window.location.reload();
       });
