@@ -1,4 +1,4 @@
-import { makeSegmentGetterV1 } from '../../regexp/segmentGetter.mjs';
+import { segmentExtractorV1 } from '../../regexp/segmentGetter.mjs';
 import TinyDebugger from '../tools/TinyDebugger.mjs';
 
 /**
@@ -184,7 +184,7 @@ class TinyRouter extends TinyDebugger {
     // 1. Handle String Input (Legacy/Simple Mode)
     if (typeof patternOrOptions === 'string') {
       pathPattern = patternOrOptions;
-      const r = makeSegmentGetterV1(patternOrOptions);
+      const r = segmentExtractorV1(patternOrOptions);
       regex = r.regex;
       paramNames = r.paramNames;
 

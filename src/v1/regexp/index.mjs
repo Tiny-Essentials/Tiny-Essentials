@@ -1,3 +1,3 @@
-import { makeSegmentGetterTemplate, makeSegmentGetterV1 } from './segmentGetter.mjs';
+import { makeSegmentExtractor, segmentExtractorV1 } from './segmentGetter.mjs';
 
-export { makeSegmentGetterTemplate, makeSegmentGetterV1 };
+export { makeSegmentExtractor, segmentExtractorV1 };

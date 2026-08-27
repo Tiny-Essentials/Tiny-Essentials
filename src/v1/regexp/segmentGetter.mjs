@@ -44,7 +44,7 @@
  * @returns {(pathPattern: string) => SegmentGetterResult} A function that accepts a path pattern string and returns a SegmentGetterResult.
  * @throws {TypeError} If `searchValue` is not a string or RegExp, or if `replaceValue` is not a function.
  */
-export const makeSegmentGetterTemplate = (searchValue, replaceValue, errorConfig) => {
+export const makeSegmentExtractor = (searchValue, replaceValue, errorConfig) => {
   // Validate searchValue
   if (
     searchValue === null ||
@@ -121,7 +121,7 @@ export const makeSegmentGetterTemplate = (searchValue, replaceValue, errorConfig
  * Standard implementation for extracting parameters in the `:paramName` format (e.g., "/user/:id").
  * @type {(pathPattern: string) => SegmentGetterResult}
  */
-export const makeSegmentGetterV1 = makeSegmentGetterTemplate(
+export const segmentExtractorV1 = makeSegmentExtractor(
   /:([^/]+)/g,
   /**
    * @param {string[]} paramNames - The accumulated list of parameter names.
