@@ -9,9 +9,10 @@
  */
 
 /**
+ * Represents the result of a path execution, containing extracted parameters and the match status.
  * @typedef {Object} SegExData
- * @property {PathParams} params
- * @property {boolean} match
+ * @property {PathParams} params - The extracted parameters as a key-value mapping.
+ * @property {boolean} match - Indicates whether the path successfully matched the pattern.
  */
 
 /**
@@ -30,7 +31,6 @@
  * @property {RegExp} regex - The compiled regular expression for the path pattern.
  * @property {string[]} paramNames - The list of parameter names extracted from the pattern.
  * @property {SegExExec} exec - Function to extract parameters from a real path.
- * @property {SegExIsUsed} isUsed - Function to check if the template has been used.
  */
 
 /**
@@ -42,6 +42,7 @@
  */
 
 /**
+ *  A function that accepts a path pattern string and returns a SegExResult object.
  * @typedef {(pathPattern: string) => SegExResult} SegExFunction
  */
 
@@ -100,6 +101,7 @@ export const makeSegmentExtractor = (searchValue, replaceValue, errorConfig) => 
 
     /**
      * @type {SegExExec}
+     * Function to perform the regex matching and extract parameters from a given path.
      */
     const exec = (path) => {
       /** @type {PathParams} */
@@ -118,12 +120,7 @@ export const makeSegmentExtractor = (searchValue, replaceValue, errorConfig) => 
       return { params, match: true };
     };
 
-    /**
-     * @type {SegExIsUsed}
-     */
-    const isUsed = () => used;
-
-    return { regex, paramNames, exec, isUsed };
+    return { regex, paramNames, exec };
   };
 };
 

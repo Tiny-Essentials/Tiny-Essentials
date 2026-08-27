@@ -10,11 +10,12 @@ const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
 
 /**
  * @typedef {Object} AddRouteOptionsWithFunction
- * @property {import('../../regexp/SegmentExtractor.mjs').SegExFunction} callback
+ * @property {import('../../regexp/SegmentExtractor.mjs').SegExFunction} callback - A function used to process the pattern.
  * @property {string} pattern - Stored to allow removal by string.
  */
 
 /**
+ * The result of a segment extraction combined with additional metadata.
  * @typedef {import('../../regexp/SegmentExtractor.mjs').SegExResult & SegExResultExtra} SegExResult
  */
 
@@ -42,7 +43,7 @@ const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
 /**
  * @callback RouteCallback
  * @param {RouteMatch} match - The object containing path, params, and query.
- * @returns {Promise<void>|void}
+ * @returns {Promise<void>|void} - A promise or void indicating completion.
  */
 
 /**
@@ -63,7 +64,7 @@ const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
 
 /**
  * @typedef {Object} RouteDefinition
- * @property {SegExResult} segmentExtractor
+ * @property {SegExResult} segmentExtractor - The extraction logic and metadata used to match the path and retrieve parameters.
  * @property {RouteCallback} callback - The function to execute on match.
  */
 
@@ -72,17 +73,17 @@ const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
  */
 class TinyRouter extends TinyDebugger {
   static SegmentExtractor = SegmentExtractor;
-  /** @type {RouteDefinition[]} */
+  /** @type {RouteDefinition[]} The collection of registered routes. */
   #routes = [];
-  /** @type {RouteCallback} */
+  /** @type {RouteCallback} The callback function triggered on route changes. */
   #onRouteChanged;
-  /** @type {RouteNotFoundCallback} */
+  /** @type {RouteNotFoundCallback} The callback function triggered when no route matches. */
   #onRouteNotFound;
-  /** @type {boolean} */
+  /** @type {boolean} Indicates whether the router has been started. */
   #started = false;
-  /** @type {EventListenerOrEventListenerObject} */
+  /** @type {EventListenerOrEventListenerObject} The event handler for the popstate event. */
   #popstateHandler;
-  /** @type {boolean} */
+  /** @type {boolean} Flag to determine if history navigation changes should be detected. */
   #detectHistoryChange;
 
   /**
