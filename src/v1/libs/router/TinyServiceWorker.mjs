@@ -285,11 +285,11 @@ class TinyServiceWorker extends TinyDebugger {
       this.#messageHandler = (event) => {
         /** @type {ServiceWorkerMessagePayload} */
         const payload = event.data;
-        if (!payload || typeof payload !== 'object') return;
+        if (Array.isArray(payload) || typeof payload !== 'object'  || payload === null) return;
         if (typeof payload.type !== 'string') return;
         if (
           typeof payload.data !== 'undefined' &&
-          (typeof payload.data !== 'object' || payload.data === null)
+          (Array.isArray(payload.data) || typeof payload.data !== 'object' || payload.data === null)
         )
           return;
         if (this.#reservedEvents.includes(payload.type)) return;
@@ -357,7 +357,7 @@ class TinyServiceWorker extends TinyDebugger {
     if (typeof type !== 'string') {
       throw new TypeError('Payload.type must be a string.');
     }
-    if (typeof data !== 'undefined' && (typeof data !== 'object' || data === null)) {
+    if (typeof data !== 'undefined' && (Array.isArray(data) || typeof data !== 'object' || data === null)) {
       throw new TypeError('Payload.data must be a non-null object.');
     }
 
@@ -380,7 +380,7 @@ class TinyServiceWorker extends TinyDebugger {
    */
   postMessage(payload) {
     checkDestroy(this.#isDestroyed);
-    if (!payload || typeof payload !== 'object') {
+    if (Array.isArray(payload) || typeof payload !== 'object' || payload === null) {
       throw new TypeError('Payload must be an object.');
     }
     if (typeof payload.type !== 'string') {
@@ -388,7 +388,7 @@ class TinyServiceWorker extends TinyDebugger {
     }
     if (
       typeof payload.data !== 'undefined' &&
-      (typeof payload.data !== 'object' || payload.data === null)
+      (Array.isArray(payload.data) || typeof payload.data !== 'object' || payload.data === null)
     ) {
       throw new TypeError('Payload.data must be a non-null object.');
     }
