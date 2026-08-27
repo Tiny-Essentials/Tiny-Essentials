@@ -100,7 +100,7 @@ const tinyVitePwaPlugin = (options) => {
   const filenamePattern = /^[a-zA-Z0-9._-]+$/;
   if (!filenamePattern.test(options.filename)) {
     throw new RangeError(
-      'The "filename" property contains invalid characters. To prevent injection, only alphanumeric characters, dots (.), underscores (_), and hyphens (-) are allowed.'
+      'The "filename" property contains invalid characters. To prevent injection, only alphanumeric characters, dots (.), underscores (_), and hyphens (-) are allowed.',
     );
   }
 
@@ -154,15 +154,21 @@ const tinyVitePwaPlugin = (options) => {
       const swUrl = `/${filename}`;
 
       server.middlewares.use(async (req, res, next) => {
+        // We parse the incoming request URL to extract only the pathname.
+        // This ensures that requests with query parameters (e.g., /sw.js?v=123)
+        // are correctly matched to the file paths.
+        const requestUrl = new URL(req.url ?? '', 'http://localhost');
+        const pathname = requestUrl.pathname;
+
         // Serve manifest.json dynamically
-        if (req.url === normalizedManifestPath) {
+        if (pathname === normalizedManifestPath) {
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify(manifest, null, 2));
           return;
         }
 
         // Serve the Service Worker in Dev mode using Vite's transformer
-        if (req.url === `/${filename}`) {
+        if (pathname === `/${filename}`) {
           try {
             const transformed = await server.transformRequest(swSourcePath);
             if (transformed) {
@@ -217,14 +223,14 @@ const tinyVitePwaPlugin = (options) => {
        * @returns {string} The URL path with the 'v' parameter appended correctly.
        */
       const getVersionedUrl = (urlStr) => {
-        // We use a dummy base ('http://localhost') because the URL constructor 
+        // We use a dummy base ('http://localhost') because the URL constructor
         // requires an absolute URL to parse relative paths correctly.
         const url = new URL(urlStr, 'http://localhost');
-        
+
         // .set() is smart: it uses '?' if no params exist, or '&' if they do.
         url.searchParams.set('v', Date.now().toString());
-        
-        // We return only the pathname and search (e.g., "/sw.js?v=123") 
+
+        // We return only the pathname and search (e.g., "/sw.js?v=123")
         // to keep the injection relative for the HTML.
         return url.pathname + url.search;
       };
@@ -262,7 +268,10 @@ const tinyVitePwaPlugin = (options) => {
             window.addEventListener('load', () => { 
               navigator.serviceWorker.register('${swUrl}', { type: 'classic' })${!isBuild ? `.then(() => console.log('[tiny-vite-pwa] SW registered.')).catch(err => console.error('[tiny-vite-pwa] SW error:', err))` : ''}; 
             }); 
-          }`.replace(/\n/g, '').replace(/  /g, '').trim(),
+          }`
+            .replace(/\n/g, '')
+            .replace(/  /g, '')
+            .trim(),
         });
       }
 
