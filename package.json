@@ -64,6 +64,14 @@
       "require": "./dist/v1/webTemplates/vite/7.3/plugins/githubUtils.cjs",
       "import": "./dist/v1/webTemplates/vite/7.3/plugins/githubUtils.mjs"
     },
+    "./regexp": {
+      "require": "./dist/v1/regexp/index.cjs",
+      "import": "./dist/v1/regexp/index.mjs"
+    },
+    "./regexp/SegmentExtractor": {
+      "require": "./dist/v1/regexp/SegmentExtractor.cjs",
+      "import": "./dist/v1/regexp/SegmentExtractor.mjs"
+    },
     "./basics": {
       "require": "./dist/v1/basics/index.cjs",
       "import": "./dist/v1/basics/index.mjs"

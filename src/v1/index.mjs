@@ -183,6 +183,7 @@ import { jsonFilter, jsonFilterRecursive, jsonFilterByKeys } from './basics/json
 import TinyRouter from './libs/router/TinyRouter.mjs';
 import TinyMapCache from './libs/router/TinyMapCache.mjs';
 import { TinyServiceWorker } from './build/TinyServiceWorker.mjs';
+import { makeSegmentExtractor, segmentExtractorV1 } from './regexp/SegmentExtractor.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
@@ -236,6 +237,8 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  segmentExtractorV1,
+  makeSegmentExtractor,
   jsonFilter,
   jsonFilterRecursive,
   jsonFilterByKeys,
