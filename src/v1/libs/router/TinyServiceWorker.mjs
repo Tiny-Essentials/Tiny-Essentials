@@ -103,6 +103,7 @@ class TinyServiceWorker extends TinyDebugger {
     'beforeInstallPrompt',
     'appInstalled',
     'noSwControllerWarn',
+    'controllerChange',
   ];
 
   /** @type {Set<EventListener>} */
@@ -263,12 +264,6 @@ class TinyServiceWorker extends TinyDebugger {
         }
 
         localStorage.setItem(idVersion, this.#version);
-
-        if (savedVersion !== null) {
-          this.log('warn', 'Old workers removed. Reloading...');
-          window.location.reload();
-          return;
-        }
       }
 
       const swUrl = new URL(this.#swUrl, location.origin);
@@ -280,12 +275,17 @@ class TinyServiceWorker extends TinyDebugger {
       }
 
       this.#registration = await navigator.serviceWorker.register(swUrl.toString(), options);
+      navigator.serviceWorker.addEventListener('controllerchange', (event) => {
+        super.emit('controllerChange', event);
+        this.log('info', 'New Service Worker activated. Reloading page to sync...');
+        window.location.reload();
+      });
 
       // Existing message handler logic
       this.#messageHandler = (event) => {
         /** @type {ServiceWorkerMessagePayload} */
         const payload = event.data;
-        if (Array.isArray(payload) || typeof payload !== 'object'  || payload === null) return;
+        if (Array.isArray(payload) || typeof payload !== 'object' || payload === null) return;
         if (typeof payload.type !== 'string') return;
         if (
           typeof payload.data !== 'undefined' &&
@@ -357,7 +357,10 @@ class TinyServiceWorker extends TinyDebugger {
     if (typeof type !== 'string') {
       throw new TypeError('Payload.type must be a string.');
     }
-    if (typeof data !== 'undefined' && (Array.isArray(data) || typeof data !== 'object' || data === null)) {
+    if (
+      typeof data !== 'undefined' &&
+      (Array.isArray(data) || typeof data !== 'object' || data === null)
+    ) {
       throw new TypeError('Payload.data must be a non-null object.');
     }
 
