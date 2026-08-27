@@ -4,31 +4,31 @@
  */
 
 /**
- * @typedef {Object} SegmentGetterErrorConfig
+ * @typedef {Object} SegExErrorConfig
  * @property {string} pathPatternErrorMsg - Custom error message used when the pathPattern is not a string.
  */
 
 /**
- * @callback SegmentGetterExec
+ * @callback SegExExec
  * @param {string} path - The URL path to be processed.
  * @returns {PathParams} An object containing the parameters extracted from the path.
  */
 
 /**
- * @callback SegmentGetterIsUsed
+ * @callback SegExIsUsed
  * @returns {boolean} Returns true if the template has been used to perform a match.
  */
 
 /**
- * @typedef {Object} SegmentGetterResult
+ * @typedef {Object} SegExResult
  * @property {RegExp} regex - The compiled regular expression for the path pattern.
  * @property {string[]} paramNames - The list of parameter names extracted from the pattern.
- * @property {SegmentGetterExec} exec - Function to extract parameters from a real path.
- * @property {SegmentGetterIsUsed} isUsed - Function to check if the template has been used.
+ * @property {SegExExec} exec - Function to extract parameters from a real path.
+ * @property {SegExIsUsed} isUsed - Function to check if the template has been used.
  */
 
 /**
- * @callback SegmentGetterReplacer
+ * @callback SegExReplacer
  * @param {string[]} paramNames - The accumulated list of parameter names.
  * @param {string} substring - The original substring found by the search.
  * @param {...any} args - Additional arguments captured by the RegExp (capture groups).
@@ -39,9 +39,9 @@
  * Factory to create a path segment extractor based on a specific pattern.
  *
  * @param {string|RegExp} searchValue - The search pattern (string or RegExp) used to identify dynamic segments.
- * @param {SegmentGetterReplacer} replaceValue - The function defining how to transform a segment into a capture group.
- * @param {SegmentGetterErrorConfig} errorConfig - Optional configuration to customize error messages.
- * @returns {(pathPattern: string) => SegmentGetterResult} A function that accepts a path pattern string and returns a SegmentGetterResult.
+ * @param {SegExReplacer} replaceValue - The function defining how to transform a segment into a capture group.
+ * @param {SegExErrorConfig} errorConfig - Optional configuration to customize error messages.
+ * @returns {(pathPattern: string) => SegExResult} A function that accepts a path pattern string and returns a SegExResult.
  * @throws {TypeError} If `searchValue` is not a string or RegExp, or if `replaceValue` is not a function.
  */
 export const makeSegmentExtractor = (searchValue, replaceValue, errorConfig) => {
@@ -68,7 +68,7 @@ export const makeSegmentExtractor = (searchValue, replaceValue, errorConfig) => 
 
   /**
    * @param {string} pathPattern - The path pattern to compile.
-   * @returns {SegmentGetterResult} The extraction logic object.
+   * @returns {SegExResult} The extraction logic object.
    * @throws {TypeError} If pathPattern is not a string.
    */
   return (pathPattern) => {
@@ -89,7 +89,7 @@ export const makeSegmentExtractor = (searchValue, replaceValue, errorConfig) => 
     const regex = new RegExp(`^${regexPath}$`);
 
     /**
-     * @type {SegmentGetterExec}
+     * @type {SegExExec}
      */
     const exec = (path) => {
       /** @type {PathParams} */
@@ -109,7 +109,7 @@ export const makeSegmentExtractor = (searchValue, replaceValue, errorConfig) => 
     };
 
     /**
-     * @type {SegmentGetterIsUsed}
+     * @type {SegExIsUsed}
      */
     const isUsed = () => used;
 
@@ -119,7 +119,7 @@ export const makeSegmentExtractor = (searchValue, replaceValue, errorConfig) => 
 
 /**
  * Standard implementation for extracting parameters in the `:paramName` format (e.g., "/user/:id").
- * @type {(pathPattern: string) => SegmentGetterResult}
+ * @type {(pathPattern: string) => SegExResult}
  */
 export const segmentExtractorV1 = makeSegmentExtractor(
   /:([^/]+)/g,
