@@ -1,3 +1,4 @@
+import { makeSegmentGetterV1 } from '../../regexp/segmentGetter.mjs';
 import TinyDebugger from '../tools/TinyDebugger.mjs';
 
 /**
@@ -183,13 +184,9 @@ class TinyRouter extends TinyDebugger {
     // 1. Handle String Input (Legacy/Simple Mode)
     if (typeof patternOrOptions === 'string') {
       pathPattern = patternOrOptions;
-
-      // Regex to find segments starting with ':' (e.g., ':id)
-      const regexPath = pathPattern.replace(/:([^/]+)/g, (_, paramName) => {
-        paramNames.push(paramName);
-        return '([^/]+)';
-      });
-      regex = new RegExp(`^${regexPath}$`);
+      const r = makeSegmentGetterV1(patternOrOptions);
+      regex = r.regex;
+      paramNames = r.paramNames;
 
       // 2. Handle Object Input (Advanced/Custom Regex Mode)
     } else if (
