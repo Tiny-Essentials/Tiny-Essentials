@@ -271,7 +271,14 @@ class TinyServiceWorker extends TinyDebugger {
         }
       }
 
-      this.#registration = await navigator.serviceWorker.register(this.#swUrl, options);
+      const swUrl = new URL(this.#swUrl);
+      if (this.debugMode) {
+        // Using searchParams.set is more robust than manual string concatenation.
+        // It automatically handles whether to use '?' or '&' as a separator.
+        swUrl.searchParams.set('t', Date.now().toString());
+      }
+
+      this.#registration = await navigator.serviceWorker.register(swUrl.toString(), options);
 
       // Existing message handler logic
       this.#messageHandler = (event) => {

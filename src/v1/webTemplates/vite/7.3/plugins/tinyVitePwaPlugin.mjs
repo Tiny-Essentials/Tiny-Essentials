@@ -97,6 +97,13 @@ const tinyVitePwaPlugin = (options) => {
     throw new TypeError('The "injectManifestToGlobal" property must be a boolean.');
   }
 
+  const filenamePattern = /^[a-zA-Z0-9._-]+$/;
+  if (!filenamePattern.test(options.filename)) {
+    throw new RangeError(
+      'The "filename" property contains invalid characters. To prevent injection, only alphanumeric characters, dots (.), underscores (_), and hyphens (-) are allowed.'
+    );
+  }
+
   const { manifest, manifestPath, srcDir, filename } = options;
   const injectRegister = options.injectRegister ?? true;
   const injectManifestToGlobal = options.injectManifestToGlobal ?? true;
@@ -203,14 +210,32 @@ const tinyVitePwaPlugin = (options) => {
       // In production mode, we append a timestamp to the URL to force cache busting.
       // In development mode, we omit the timestamp to avoid generating unnecessary logs on every reload.
       const isBuild = viteConfig && viteConfig.command === 'build';
-      const versionQuery = isBuild ? `?v=${Date.now()}` : '';
-      const swUrl = `/${filename}${versionQuery}`;
 
-      // Prepare the manifest URL with cache busting for production to ensure updates are picked up
+      /**
+       * Safely appends a cache-busting timestamp to a URL string.
+       * @param {string} urlStr - The base URL path.
+       * @returns {string} The URL path with the 'v' parameter appended correctly.
+       */
+      const getVersionedUrl = (urlStr) => {
+        // We use a dummy base ('http://localhost') because the URL constructor 
+        // requires an absolute URL to parse relative paths correctly.
+        const url = new URL(urlStr, 'http://localhost');
+        
+        // .set() is smart: it uses '?' if no params exist, or '&' if they do.
+        url.searchParams.set('v', Date.now().toString());
+        
+        // We return only the pathname and search (e.g., "/sw.js?v=123") 
+        // to keep the injection relative for the HTML.
+        return url.pathname + url.search;
+      };
+
+      const swUrl = getVersionedUrl(`/${filename}`);
+
+      // Prepare the manifest URL with cache busting for production
       const normalizedManifestHref = manifestPath.startsWith('/')
         ? manifestPath
         : `/${manifestPath}`;
-      const manifestUrl = `${normalizedManifestHref}${versionQuery}`;
+      const manifestUrl = getVersionedUrl(normalizedManifestHref);
 
       /** @type {import('vite').HtmlTagDescriptor[]} */
       const insertData = [];
@@ -232,7 +257,12 @@ const tinyVitePwaPlugin = (options) => {
         insertData.push({
           tag: 'script',
           injectTo: 'head',
-          children: `if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('${swUrl}', { type: 'classic' })${!isBuild ? `.then(() => console.log('[tiny-vite-pwa] SW registered.')).catch(err => console.error('[tiny-vite-pwa] SW error:', err))` : ''}; }); }`,
+          children: `
+          if ('serviceWorker' in navigator) { 
+            window.addEventListener('load', () => { 
+              navigator.serviceWorker.register('${swUrl}', { type: 'classic' })${!isBuild ? `.then(() => console.log('[tiny-vite-pwa] SW registered.')).catch(err => console.error('[tiny-vite-pwa] SW error:', err))` : ''}; 
+            }); 
+          }`.replace(/\n/g, '').replace(/  /g, '').trim(),
         });
       }
 
