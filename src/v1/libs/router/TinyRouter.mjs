@@ -1,4 +1,4 @@
-import { segmentExtractorV1 } from '../../regexp/segmentGetter.mjs';
+import { segmentExtractorV1 } from '../../regexp/SegmentExtractor.mjs';
 import TinyDebugger from '../tools/TinyDebugger.mjs';
 
 /**
