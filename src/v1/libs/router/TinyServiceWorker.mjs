@@ -64,7 +64,7 @@ class TinyServiceWorker extends TinyDebugger {
   }
 
   #noSwControllerWarn() {
-    super.emit('noSwControllerWarn');
+    super.emit('sw:NoSwControllerWarn');
     this.log('warn', 'No active controller to receive message.');
   }
 
@@ -99,12 +99,12 @@ class TinyServiceWorker extends TinyDebugger {
 
   /** @type {string[]} */
   #reservedEvents = [
-    'displayModeChanged',
-    'beforeInstallPrompt',
-    'appInstalled',
-    'noSwControllerWarn',
-    'newVersionReady',
-    'versionUpdateAvailable',
+    'sw:DisplayModeChanged',
+    'sw:BeforeInstallPrompt',
+    'sw:AppInstalled',
+    'sw:NoSwControllerWarn',
+    'sw:NewVersionReady',
+    'sw:VersionUpdateAvailable',
   ];
 
   /** @type {Set<EventListener>} */
@@ -191,7 +191,7 @@ class TinyServiceWorker extends TinyDebugger {
       this.#displayMode = 'browser';
     }
 
-    super.emit('displayModeChanged', { displayMode: this.#displayMode });
+    super.emit('sw:DisplayModeChanged', { displayMode: this.#displayMode });
     this.log('info', `DISPLAY_MODE_CHANGED: ${this.#displayMode}`);
   }
 
@@ -209,7 +209,7 @@ class TinyServiceWorker extends TinyDebugger {
     this.#beforeInstallPromptHandler = (e) => {
       // @ts-ignore
       this.#deferredPrompt = e;
-      super.emit('beforeInstallPrompt', { event: e });
+      super.emit('sw:BeforeInstallPrompt', { event: e });
       this.log('info', 'beforeinstallprompt event fired.');
     };
     window.addEventListener('beforeinstallprompt', this.#beforeInstallPromptHandler);
@@ -217,7 +217,7 @@ class TinyServiceWorker extends TinyDebugger {
     // 3. Handle App Installed
     this.#appInstalledHandler = () => {
       this.#deferredPrompt = null;
-      super.emit('appInstalled');
+      super.emit('sw:AppInstalled');
       this.log('info', 'PWA was installed');
     };
     window.addEventListener('appinstalled', this.#appInstalledHandler);
@@ -264,10 +264,10 @@ class TinyServiceWorker extends TinyDebugger {
         );
 
         // 1. Notify the UI that a new version is available (to show the update button)
-        super.emit('versionUpdateAvailable');
+        super.emit('sw:VersionUpdateAvailable');
 
         // 2. Signal the current Service Worker to begin downloading the new version
-        this.emit('PREPARE_UPDATE');
+        this.emit('sw:PrepareUpdate');
         // Update localStorage so subsequent manual refreshes recognize the new version
         localStorage.setItem(idVersion, this.#version);
       }
@@ -283,7 +283,7 @@ class TinyServiceWorker extends TinyDebugger {
       this.#registration = await navigator.serviceWorker.register(swUrl.toString(), options);
       // Listen for when the new Service Worker takes control
       navigator.serviceWorker.addEventListener('controllerchange', (event) => {
-        super.emit('newVersionReady', { event });
+        super.emit('sw:NewVersionReady', { event });
         this.log('info', 'New Service Worker is now in control.');
       });
 
