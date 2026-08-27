@@ -4,6 +4,11 @@
  */
 
 /**
+ * @typedef {Object} SegmentGetterErrorConfig
+ * @property {string} pathPatternErrorMsg - Custom error message used when the pathPattern is not a string.
+ */
+
+/**
  * @callback SegmentGetterExec
  * @param {string} path - The URL path to be processed.
  * @returns {PathParams} An object containing the parameters extracted from the path.
@@ -35,10 +40,12 @@
  *
  * @param {string|RegExp} searchValue - The search pattern (string or RegExp) used to identify dynamic segments.
  * @param {SegmentGetterReplacer} replaceValue - The function defining how to transform a segment into a capture group.
+ * @param {SegmentGetterErrorConfig} errorConfig - Optional configuration to customize error messages.
  * @returns {(pathPattern: string) => SegmentGetterResult} A function that accepts a path pattern string and returns a SegmentGetterResult.
  * @throws {TypeError} If `searchValue` is not a string or RegExp, or if `replaceValue` is not a function.
  */
-export const makeSegmentGetterTemplate = (searchValue, replaceValue) => {
+export const makeSegmentGetterTemplate = (searchValue, replaceValue, errorConfig) => {
+  // Validate searchValue
   if (
     searchValue === null ||
     (typeof searchValue !== 'string' && !(searchValue instanceof RegExp))
@@ -46,18 +53,27 @@ export const makeSegmentGetterTemplate = (searchValue, replaceValue) => {
     throw new TypeError('The searchValue must be a string or a RegExp.');
   }
 
+  // Validate replaceValue
   if (typeof replaceValue !== 'function') {
     throw new TypeError('The replaceValue must be a function.');
   }
 
+  // Deep validation for errorConfig
+  if (typeof errorConfig !== 'object' || errorConfig === null) {
+    throw new TypeError('The errorConfig must be an object.');
+  }
+  if (typeof errorConfig.pathPatternErrorMsg !== 'string') {
+    throw new TypeError('The errorConfig.pathPatternErrorMsg property must be a string.');
+  }
+
   /**
-   * @param {string} pathPattern - The path pattern to compile (e.g., "/user/:id").
+   * @param {string} pathPattern - The path pattern to compile.
    * @returns {SegmentGetterResult} The extraction logic object.
    * @throws {TypeError} If pathPattern is not a string.
    */
   return (pathPattern) => {
     if (typeof pathPattern !== 'string') {
-      throw new TypeError('The argument must be a string (e.g., "/user/:id")');
+      throw new TypeError(errorConfig.pathPatternErrorMsg);
     }
 
     /** @type {boolean} */
@@ -102,7 +118,7 @@ export const makeSegmentGetterTemplate = (searchValue, replaceValue) => {
 };
 
 /**
- * Standard implementation for extracting parameters in the `:paramName` format.
+ * Standard implementation for extracting parameters in the `:paramName` format (e.g., "/user/:id").
  * @type {(pathPattern: string) => SegmentGetterResult}
  */
 export const makeSegmentGetterV1 = makeSegmentGetterTemplate(
@@ -117,4 +133,5 @@ export const makeSegmentGetterV1 = makeSegmentGetterTemplate(
     paramNames.push(paramName);
     return '([^/]+)';
   },
+  { pathPatternErrorMsg: 'The argument must be a string (e.g., "/user/:id")' },
 );
