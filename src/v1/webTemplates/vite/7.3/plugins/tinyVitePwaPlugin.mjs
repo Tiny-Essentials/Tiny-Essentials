@@ -9,6 +9,7 @@ import { build } from 'vite';
  * @property {string} filename - The name of the Service Worker file.
  * @property {boolean} [injectRegister=true] - Optional. Whether to automatically inject the SW registration script into the HTML <head>.
  * @property {boolean} [injectManifestToGlobal=true] - Optional. Whether to inject the manifest into the global scope via Vite's `define`.
+ * @property {RegistrationOptions} [swRegistrationOptions] - Optional. Registration options for the Service Worker.
  */
 
 // ANSI Color Codes
@@ -97,6 +98,15 @@ const tinyVitePwaPlugin = (options) => {
     throw new TypeError('The "injectManifestToGlobal" property must be a boolean.');
   }
 
+  if (
+    options.swRegistrationOptions !== undefined &&
+    (typeof options.swRegistrationOptions !== 'object' ||
+      options.swRegistrationOptions === null ||
+      Array.isArray(options.swRegistrationOptions))
+  ) {
+    throw new TypeError('The "swRegistrationOptions" property must be an object.');
+  }
+
   const filenamePattern = /^[a-zA-Z0-9._-]+$/;
   if (!filenamePattern.test(options.filename)) {
     throw new RangeError(
@@ -104,7 +114,7 @@ const tinyVitePwaPlugin = (options) => {
     );
   }
 
-  const { manifest, manifestPath, srcDir, filename } = options;
+  const { manifest, manifestPath, srcDir, filename, swRegistrationOptions } = options;
   const injectRegister = options.injectRegister ?? true;
   const injectManifestToGlobal = options.injectManifestToGlobal ?? true;
 
@@ -260,15 +270,22 @@ const tinyVitePwaPlugin = (options) => {
       // SW
       if (injectRegister) {
         logger.info(`Injecting Service Worker into HTML: ${swUrl}`);
+
+        // Prepare the registration options string safely using JSON.stringify
+        // If no options are provided, swOptionsString remains an empty string.
+        const swOptionsString = swRegistrationOptions
+          ? `, ${JSON.stringify(swRegistrationOptions)}`
+          : '';
+
         insertData.push({
           tag: 'script',
           injectTo: 'head',
           children: `
           if ('serviceWorker' in navigator) { 
             window.addEventListener('load', () => { 
-              navigator.serviceWorker.register('${swUrl}', { type: 'classic' })${!isBuild ? `.then(() => console.log('[tiny-vite-pwa] SW registered.')).catch(err => console.error('[tiny-vite-pwa] SW error:', err))` : ''}; 
+              navigator.serviceWorker.register('${swUrl}'${swOptionsString})${!isBuild ? `.then(() => console.log('[tiny-vite-pwa] SW registered.')).catch(err => console.error('[tiny-vite-pwa] SW error:', err))` : ''}; 
             }); 
-          }`
+          };`
             .replace(/\n/g, '')
             .replace(/  /g, '')
             .trim(),
