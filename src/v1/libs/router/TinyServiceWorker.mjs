@@ -271,7 +271,8 @@ class TinyServiceWorker extends TinyDebugger {
         }
       }
 
-      const swUrl = new URL(this.#swUrl);
+      const swUrl = new URL(this.#swUrl, location.origin);
+      swUrl.searchParams.set('v', this.#version);
       if (this.debugMode) {
         // Using searchParams.set is more robust than manual string concatenation.
         // It automatically handles whether to use '?' or '&' as a separator.
