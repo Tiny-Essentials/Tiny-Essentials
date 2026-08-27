@@ -1,5 +1,7 @@
-import { makeSegmentExtractor, segmentExtractorV1 } from '../../regexp/SegmentExtractor.mjs';
+import * as SegmentExtractor from '../../regexp/SegmentExtractor.mjs';
 import TinyDebugger from '../tools/TinyDebugger.mjs';
+
+const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
 
 /**
  * @typedef {Object} SegExResultExtra
@@ -69,6 +71,7 @@ import TinyDebugger from '../tools/TinyDebugger.mjs';
  * A lightweight, framework-agnostic router for managing client-side navigation.
  */
 class TinyRouter extends TinyDebugger {
+  static SegmentExtractor = SegmentExtractor;
   /** @type {RouteDefinition[]} */
   #routes = [];
   /** @type {RouteCallback} */
