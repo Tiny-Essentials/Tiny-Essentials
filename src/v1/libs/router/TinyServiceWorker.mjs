@@ -26,7 +26,7 @@ class TinyServiceWorker extends TinyDebugger {
   /**
    * Validates if an event type is a reserved name for the internal lifecycle.
    * @param {string} type - The name of the event to validate.
-   * @throws {TypeError} If the event name is in the reserved list.
+   * @throws {TypeError} If the event name starts with the reserved prefix 'sw:'.
    */
   static #validateEventType(type) {
     if (type.startsWith('sw:')) {
@@ -36,86 +36,94 @@ class TinyServiceWorker extends TinyDebugger {
     }
   }
 
-  /** @type {ServiceWorkerRegistration | null} */
+  /** @type {ServiceWorkerRegistration | null} The active Service Worker registration instance. */
   #registration = null;
-  /** @type {IdWorker} */
+  /** @type {IdWorker} The unique identifier for this instance. */
   #id;
-  /** @type {SwUrl} */
+  /** @type {SwUrl} The URL of the service worker file. */
   #swUrl;
-  /** @type {string} */
+  /** @type {string} The current version of the application. */
   #version;
-  /** @type {boolean} */
+  /** @type {boolean} Indicates if the service worker is fully initialized and ready. */
   #isReady = false;
-  /** @type {boolean} */
+  /** @type {boolean} Indicates if the registration process failed. */
   #isFailed = false;
-  /** @type {((event: MessageEvent) => void) | null} */
+  /** @type {((event: MessageEvent) => void) | null} The internal handler for Service Worker messages. */
   #messageHandler = null;
-  /** @type {BeforeInstallPromptEvent | null} */
+  /** @type {BeforeInstallPromptEvent | null} The deferred installation prompt event. */
   #deferredPrompt = null;
-  /** @type {'twa' | 'standalone' | 'browser'} */
+  /** @type {'twa' | 'standalone' | 'browser'} The current PWA display mode. */
   #displayMode = 'browser';
 
-  /** @type {((evt: MediaQueryListEvent) => void) | null} */
+  /** @type {((evt: MediaQueryListEvent) => void) | null} Handler for display mode changes. */
   #displayModeChangeHandler = null;
-  /** @type {((e: Event) => void) | null} */
+  /** @type {((e: Event) => void) | null} Handler for the beforeinstallprompt event. */
   #beforeInstallPromptHandler = null;
-  /** @type {(() => void) | null} */
+  /** @type {(() => void) | null} Handler for the appinstalled event. */
   #appInstalledHandler = null;
 
+  /** @type {boolean} Internal flag to track if the instance has been destroyed. */
   #isDestroyed = false;
 
+  /** @returns {boolean} True if the service worker is ready. */
   get isReady() {
     return this.#isReady;
   }
 
+  /** @returns {boolean} True if the registration process failed. */
   get isFailed() {
     return this.#isFailed;
   }
 
+  /** @returns {boolean} True if the instance has been destroyed. */
   get isDestroyed() {
     return this.#isDestroyed;
   }
 
+  /**
+   * Emits a warning event and logs a message when no Service Worker controller is available.
+   */
   #noSwControllerWarn() {
     super.emit('sw:NoSwControllerWarn');
     this.log('warn', 'No active controller to receive message.');
   }
 
+  /** @returns {boolean} True if a service worker is supported and an active controller exists. */
   get isSwAvailable() {
     checkDestroy(this.#isDestroyed);
     return 'serviceWorker' in navigator && !!navigator.serviceWorker.controller;
   }
 
-  /** @returns {IdWorker} */
+  /** @returns {IdWorker} The instance ID. */
   get id() {
     checkDestroy(this.#isDestroyed);
     return this.#id;
   }
 
-  /** @returns {SwUrl} */
+  /** @returns {SwUrl} The service worker URL. */
   get swUrl() {
     checkDestroy(this.#isDestroyed);
     return this.#swUrl;
   }
 
-  /** @returns {string} */
+  /** @returns {string} The current version. */
   get version() {
     checkDestroy(this.#isDestroyed);
     return this.#version;
   }
 
-  /** @returns {ServiceWorkerRegistration | null} */
+  /** @returns {ServiceWorkerRegistration | null} The current registration object. */
   get registration() {
     checkDestroy(this.#isDestroyed);
     return this.#registration;
   }
 
-  /** @type {Set<EventListener>} */
+  /** @type {Set<EventListener>} A set of registered event listeners. */
   #eventListeners = new Set();
 
   /**
    * Returns a list of all registered event callbacks.
-   * @returns {EventListener[]}
+   * @returns {EventListener[]} An array of event listeners.
    */
   get eventListeners() {
     checkDestroy(this.#isDestroyed);
@@ -124,8 +132,7 @@ class TinyServiceWorker extends TinyDebugger {
 
   /**
    * Determines the current PWA display mode.
-   *
-   * @returns {'twa' | 'standalone' | 'browser'}
+   * @returns {'twa' | 'standalone' | 'browser'} The current display mode.
    */
   get displayMode() {
     checkDestroy(this.#isDestroyed);
@@ -215,8 +222,8 @@ class TinyServiceWorker extends TinyDebugger {
 
   /**
    * Triggers the native PWA installation prompt.
-   * @returns {Promise<void>}
-   * @throws {Error} If the prompt cannot be shown.
+   * @returns {Promise<void>} A promise that resolves when the prompt has been shown.
+   * @throws {Error} If the prompt cannot be shown because the `beforeinstallprompt` event has not fired.
    */
   async promptInstallation() {
     checkDestroy(this.#isDestroyed);
@@ -231,9 +238,9 @@ class TinyServiceWorker extends TinyDebugger {
 
   /**
    * Registers the service worker and handles version updates.
-   * @param {RegistrationOptions} [options]
-   * @returns {Promise<void>}
-   * @throws {Error} If registration fails.
+   * @param {RegistrationOptions} [options] - Standard Service Worker registration options.
+   * @returns {Promise<void>} A promise that resolves when registration is attempted.
+   * @throws {Error} If the registration process encounters an error.
    */
   async register(options) {
     checkDestroy(this.#isDestroyed);
@@ -271,6 +278,7 @@ class TinyServiceWorker extends TinyDebugger {
       }
 
       this.#registration = await navigator.serviceWorker.register(swUrl.toString(), options);
+
       // Listen for when the new Service Worker takes control
       navigator.serviceWorker.addEventListener('controllerchange', (event) => {
         super.emit('sw:NewVersionReady', { event });
@@ -306,7 +314,6 @@ class TinyServiceWorker extends TinyDebugger {
 
   /**
    * Unregisters the Service Worker from the browser and destroys the manager instance.
-   *
    * @returns {Promise<boolean>} A promise that resolves to `true` if the Service Worker
    * was successfully unregistered, or `false` otherwise.
    * @throws {Error} If an unexpected error occurs during the unregistration process.
@@ -346,7 +353,8 @@ class TinyServiceWorker extends TinyDebugger {
    * @param {string} type - The identifier for the message type.
    * @param {Record<any, any>} [data] - The actual data content of the message.
    * @param {boolean} [strictMode=false] - Enable strict mode validator.
-   * @throws {TypeError} If the payload does not match ServiceWorkerMessagePayload structure or uses a reserved type.
+   * @returns {boolean} True if the message was sent, false otherwise.
+   * @throws {TypeError} If the type is not a string or data is not a non-null object.
    */
   #emit(type, data, strictMode = false) {
     checkDestroy(this.#isDestroyed);
@@ -376,16 +384,17 @@ class TinyServiceWorker extends TinyDebugger {
    * Sends a message to the active Service Worker controller.
    * @param {string} type - The identifier for the message type.
    * @param {Record<any, any>} [data] - The actual data content of the message.
-   * @throws {TypeError} If the payload does not match ServiceWorkerMessagePayload structure or uses a reserved type.
+   * @returns {boolean} True if the message was sent, false otherwise.
+   * @throws {TypeError} If the type is not a string or data is not a non-null object.
    */
   emit(type, data) {
     return this.#emit(type, data, true);
   }
 
   /**
-   * Sends a message to the active Service Worker controller.
+   * Sends a message to the active Service Worker controller using a full payload.
    * @param {ServiceWorkerMessagePayload} payload - The message payload.
-   * @throws {TypeError} If the payload does not match ServiceWorkerMessagePayload structure or uses a reserved type.
+   * @throws {TypeError} If the payload is not an object, type is not a string, or data is not a non-null object.
    */
   postMessage(payload) {
     checkDestroy(this.#isDestroyed);
@@ -412,7 +421,8 @@ class TinyServiceWorker extends TinyDebugger {
 
   /**
    * Adds an event listener for messages from the Service Worker.
-   * @param {EventListener} callback - The callback function.
+   * @param {EventListener} callback - The callback function to be invoked.
+   * @throws {TypeError} If the callback is not a function.
    */
   addEventListener(callback) {
     checkDestroy(this.#isDestroyed);
@@ -427,8 +437,9 @@ class TinyServiceWorker extends TinyDebugger {
   }
 
   /**
-   * Removes an event listener for messages from the Service Worker.
-   * @param {EventListener} callback - The callback function.
+   * Removes an event listener from the Service Worker.
+   * @param {EventListener} callback - The callback function to remove.
+   * @returns {boolean} True if an event listener was removed, false otherwise.
    */
   removeEventListener(callback) {
     checkDestroy(this.#isDestroyed);
