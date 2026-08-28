@@ -23,6 +23,7 @@ import {
   objType,
   isObjType,
   objTypeName,
+  getObjTypeOrder,
 } from './objFilter.mjs';
 import { countObj, isJsonObject, isValidObj } from './objChecker.mjs';
 import {
@@ -89,6 +90,7 @@ import {
 } from './browserDetector.mjs';
 import { jsonFilter, jsonFilterRecursive, jsonFilterByKeys } from './jsonFilter.mjs';
 export {
+  getObjTypeOrder,
   jsonFilter,
   jsonFilterRecursive,
   jsonFilterByKeys,

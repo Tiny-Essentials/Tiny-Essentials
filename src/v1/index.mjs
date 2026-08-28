@@ -21,6 +21,7 @@ import {
   checkObj,
   objTypeName,
   isObjType,
+  getObjTypeOrder,
 } from './basics/objFilter.mjs';
 import { countObj, isJsonObject, isValidObj } from './basics/objChecker.mjs';
 import {
@@ -239,6 +240,7 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  getObjTypeOrder,
   segmentExtractorV1,
   makeSegmentExtractor,
   jsonFilter,
