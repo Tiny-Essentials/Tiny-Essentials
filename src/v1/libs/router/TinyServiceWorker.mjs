@@ -24,9 +24,9 @@ const checkDestroy = createCheckDestroyed('TinyServiceWorker');
  */
 class TinyServiceWorker extends TinyDebugger {
   /**
-   * Valida se um tipo de evento é um nome reservado para o ciclo de vida interno.
-   * @param {string} type - O nome do evento para validar.
-   * @throws {TypeError} Se o nome do evento estiver na lista de reservados.
+   * Validates if an event type is a reserved name for the internal lifecycle.
+   * @param {string} type - The name of the event to validate.
+   * @throws {TypeError} If the event name is in the reserved list.
    */
   static #validateEventType(type) {
     if (type.startsWith('sw:')) {
@@ -114,7 +114,7 @@ class TinyServiceWorker extends TinyDebugger {
   #eventListeners = new Set();
 
   /**
-   * Retorna uma lista de todos os callbacks de eventos registrados.
+   * Returns a list of all registered event callbacks.
    * @returns {EventListener[]}
    */
   get eventListeners() {
