@@ -4,6 +4,12 @@
  * @typedef {'chrome'|'firefox'|'ie'|'edge'|'safari'|'opera'|'yandex'|'other'} BrowserDetected
  */
 
+/**
+ * This is determined by checking if the `window` and `document` objects are defined.
+ * @returns {boolean} Indicates if the current execution environment is a web browser.
+ */
+export const isBrowser = () => typeof window !== 'undefined' && typeof window.document !== 'undefined';
+
 const win =
   typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : null;
 const doc = typeof document !== 'undefined' ? document : null;
