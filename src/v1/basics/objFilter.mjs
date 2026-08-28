@@ -14,6 +14,7 @@ const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'u
  *
  */
 const typeValidator = {
+  /** @type {Record<string, (val: any) => any>} */
   items: {},
   /**
    * Evaluation order of the type checkers.
@@ -75,7 +76,6 @@ export function extendObjType(newItems, index) {
     }
 
     if (!typeValidator.items.hasOwnProperty(key)) {
-      // @ts-ignore
       typeValidator.items[key] = fn;
 
       let insertAt = typeof index === 'number' ? index : -1; // Default to -1 if index isn't provided
@@ -156,9 +156,7 @@ export function cloneObjTypeOrder() {
  */
 export const objTypeName = (val) => {
   if (val === null) return 'null';
-  // @ts-ignore
   for (const name of typeValidator.order) {
-    // @ts-ignore
     if (typeof typeValidator.items[name] !== 'function' || typeValidator.items[name](val))
       return name;
   }
@@ -213,9 +211,7 @@ export function checkObj(obj) {
   /** @type {{ valid:*; type: string | null }} */
   const data = { valid: null, type: null };
   for (const name of typeValidator.order) {
-    // @ts-ignore
     if (typeof typeValidator.items[name] === 'function') {
-      // @ts-ignore
       const result = typeValidator.items[name](obj);
       if (result) {
         data.valid = result;
@@ -234,6 +230,12 @@ export function checkObj(obj) {
 export function getCheckObj() {
   return Object.fromEntries(Object.entries(typeValidator.items).map(([key, fn]) => [key, fn]));
 }
+
+/**
+ * Returns a copy of the current order of type validators.
+ * @returns {string[]}
+ */
+export const getObjTypeOrder = () => [...typeValidator.order];
 
 // Insert obj types
 
