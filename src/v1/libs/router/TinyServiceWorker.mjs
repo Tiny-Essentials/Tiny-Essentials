@@ -23,6 +23,19 @@ const checkDestroy = createCheckDestroyed('TinyServiceWorker');
  * Manages Service Worker registration, versioning, and messaging.
  */
 class TinyServiceWorker extends TinyDebugger {
+  /**
+   * Valida se um tipo de evento é um nome reservado para o ciclo de vida interno.
+   * @param {string} type - O nome do evento para validar.
+   * @throws {TypeError} Se o nome do evento estiver na lista de reservados.
+   */
+  static #validateEventType(type) {
+    if (type.startsWith('sw:')) {
+      throw new TypeError(
+        `The event type "${type}" is reserved for internal PWA lifecycle management and cannot be used for Service Worker messaging.`,
+      );
+    }
+  }
+
   /** @type {ServiceWorkerRegistration | null} */
   #registration = null;
   /** @type {IdWorker} */
@@ -150,19 +163,6 @@ class TinyServiceWorker extends TinyDebugger {
     this.#swUrl = swUrl;
     this.#version = version;
     this.#updateDisplayMode();
-  }
-
-  /**
-   * Valida se um tipo de evento é um nome reservado para o ciclo de vida interno.
-   * @param {string} type - O nome do evento para validar.
-   * @throws {TypeError} Se o nome do evento estiver na lista de reservados.
-   */
-  #validateEventType(type) {
-    if (type.startsWith('sw:')) {
-      throw new TypeError(
-        `The event type "${type}" is reserved for internal PWA lifecycle management and cannot be used for Service Worker messaging.`,
-      );
-    }
   }
 
   /**
@@ -361,7 +361,7 @@ class TinyServiceWorker extends TinyDebugger {
     }
 
     // Security check: prevent sending messages that collide with internal events
-    if (strictMode) this.#validateEventType(type);
+    if (strictMode) TinyServiceWorker.#validateEventType(type);
 
     if ('serviceWorker' in navigator && !!navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({ type, data });
@@ -403,7 +403,7 @@ class TinyServiceWorker extends TinyDebugger {
     }
 
     // Security check: prevent sending messages that collide with internal events
-    this.#validateEventType(payload.type);
+    TinyServiceWorker.#validateEventType(payload.type);
 
     if ('serviceWorker' in navigator && !!navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage(payload);
