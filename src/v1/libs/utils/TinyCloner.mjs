@@ -107,6 +107,8 @@ class TinyCloner {
     return item;
   }
 
+  ///////////////////////////////////////////////////////////////////////
+
   /**
    * @private
    * @returns {CloningPlugin<Map<any, any>>}
@@ -117,8 +119,7 @@ class TinyCloner {
       clone: (item, isDeep, cloner) => {
         const result = new Map();
         for (const [key, value] of item.entries()) {
-          // Recursively call the cloner via the passed reference
-          result.set(key, isDeep ? cloner.clone(value) : value);
+          result.set(key, isDeep ? cloner.clone(value, isDeep) : value);
         }
         return result;
       },
@@ -133,7 +134,7 @@ class TinyCloner {
     return {
       canHandle: (item) => Array.isArray(item),
       clone: (item, isDeep, cloner) =>
-        item.map((element) => (isDeep ? cloner.clone(element) : element)),
+        item.map((element) => (isDeep ? cloner.clone(element, isDeep) : element)),
     };
   }
 
@@ -149,11 +150,61 @@ class TinyCloner {
         const result = {};
         for (const key in item) {
           if (Object.prototype.hasOwnProperty.call(item, key)) {
-            result[key] = isDeep ? cloner.clone(item[key]) : item[key];
+            result[key] = isDeep ? cloner.clone(item[key], isDeep) : item[key];
           }
         }
         return result;
       },
+    };
+  }
+
+  /**
+   * @private
+   * @returns {CloningPlugin<Date>}
+   */
+  static _createDatePlugin() {
+    return {
+      canHandle: (item) => item instanceof Date,
+      clone: (item) => new Date(item.getTime()),
+    };
+  }
+
+  /**
+   * @private
+   * @returns {CloningPlugin<RegExp>}
+   */
+  static _createRegExpPlugin() {
+    return {
+      canHandle: (item) => item instanceof RegExp,
+      clone: (item) => new RegExp(item.source, item.flags),
+    };
+  }
+
+  /**
+   * @private
+   * @returns {CloningPlugin<Set<any>>}
+   */
+  static _createSetPlugin() {
+    return {
+      canHandle: (item) => item instanceof Set,
+      clone: (item, isDeep, cloner) => {
+        const result = new Set();
+        for (const value of item) {
+          result.add(isDeep ? cloner.clone(value, isDeep) : value);
+        }
+        return result;
+      },
+    };
+  }
+
+  /**
+   * @private
+   * @returns {CloningPlugin<URL>}
+   */
+  static _createUrlPlugin() {
+    return {
+      canHandle: (item) => item instanceof URL,
+      clone: (item) => new URL(item.href),
     };
   }
 }
@@ -161,7 +212,15 @@ class TinyCloner {
 // Plugins are pre-installed in the exact order
 TinyCloner.defaultPlugins = [
   // @ts-ignore
+  TinyCloner._createDatePlugin(),
+  // @ts-ignore
+  TinyCloner._createRegExpPlugin(),
+  // @ts-ignore
+  TinyCloner._createSetPlugin(),
+  // @ts-ignore
   TinyCloner._createMapPlugin(),
+  // @ts-ignore
+  TinyCloner._createUrlPlugin(),
   // @ts-ignore
   TinyCloner._createArrayPlugin(),
   // @ts-ignore
