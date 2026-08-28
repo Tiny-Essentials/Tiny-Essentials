@@ -97,16 +97,6 @@ class TinyServiceWorker extends TinyDebugger {
     return this.#registration;
   }
 
-  /** @type {string[]} */
-  #reservedEvents = [
-    'sw:DisplayModeChanged',
-    'sw:BeforeInstallPrompt',
-    'sw:AppInstalled',
-    'sw:NoSwControllerWarn',
-    'sw:NewVersionReady',
-    'sw:VersionUpdateAvailable',
-  ];
-
   /** @type {Set<EventListener>} */
   #eventListeners = new Set();
 
@@ -168,7 +158,7 @@ class TinyServiceWorker extends TinyDebugger {
    * @throws {TypeError} Se o nome do evento estiver na lista de reservados.
    */
   #validateEventType(type) {
-    if (this.#reservedEvents.includes(type)) {
+    if (type.startsWith('sw:')) {
       throw new TypeError(
         `The event type "${type}" is reserved for internal PWA lifecycle management and cannot be used for Service Worker messaging.`,
       );
@@ -267,7 +257,7 @@ class TinyServiceWorker extends TinyDebugger {
         super.emit('sw:VersionUpdateAvailable');
 
         // 2. Signal the current Service Worker to begin downloading the new version
-        this.emit('sw:PrepareUpdate');
+        this.#emit('sw:PrepareUpdate');
         // Update localStorage so subsequent manual refreshes recognize the new version
         localStorage.setItem(idVersion, this.#version);
       }
@@ -298,7 +288,6 @@ class TinyServiceWorker extends TinyDebugger {
           (Array.isArray(payload.data) || typeof payload.data !== 'object' || payload.data === null)
         )
           return;
-        if (this.#reservedEvents.includes(payload.type)) return;
         super.emit(payload.type, payload.data);
       };
 
@@ -356,9 +345,10 @@ class TinyServiceWorker extends TinyDebugger {
    * Sends a message to the active Service Worker controller.
    * @param {string} type - The identifier for the message type.
    * @param {Record<any, any>} [data] - The actual data content of the message.
+   * @param {boolean} [strictMode=false] - Enable strict mode validator.
    * @throws {TypeError} If the payload does not match ServiceWorkerMessagePayload structure or uses a reserved type.
    */
-  emit(type, data) {
+  #emit(type, data, strictMode = false) {
     checkDestroy(this.#isDestroyed);
     if (typeof type !== 'string') {
       throw new TypeError('Payload.type must be a string.');
@@ -371,7 +361,7 @@ class TinyServiceWorker extends TinyDebugger {
     }
 
     // Security check: prevent sending messages that collide with internal events
-    this.#validateEventType(type);
+    if (strictMode) this.#validateEventType(type);
 
     if ('serviceWorker' in navigator && !!navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({ type, data });
@@ -380,6 +370,16 @@ class TinyServiceWorker extends TinyDebugger {
       this.#noSwControllerWarn();
       return false;
     }
+  }
+
+  /**
+   * Sends a message to the active Service Worker controller.
+   * @param {string} type - The identifier for the message type.
+   * @param {Record<any, any>} [data] - The actual data content of the message.
+   * @throws {TypeError} If the payload does not match ServiceWorkerMessagePayload structure or uses a reserved type.
+   */
+  emit(type, data) {
+    return this.#emit(type, data, true);
   }
 
   /**
