@@ -184,9 +184,11 @@ import TinyRouter from './libs/router/TinyRouter.mjs';
 import TinyMapCache from './libs/router/TinyMapCache.mjs';
 import { TinyServiceWorker } from './build/TinyServiceWorker.mjs';
 import { makeSegmentExtractor, segmentExtractorV1 } from './regexp/SegmentExtractor.mjs';
+import { TinyCloner } from './build/TinyCloner.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
+  TinyCloner,
   TinyServiceWorker,
   TinyMapCache,
   TinyRouter,

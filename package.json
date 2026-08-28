@@ -200,6 +200,10 @@
       "require": "./dist/v1/libs/tools/TinyDebugger.cjs",
       "import": "./dist/v1/libs/tools/TinyDebugger.mjs"
     },
+    "./libs/utils/TinyCloner": {
+      "require": "./dist/v1/libs/utils/TinyCloner.cjs",
+      "import": "./dist/v1/libs/utils/TinyCloner.mjs"
+    },
     "./libs/utils/UltraRandomMsgGen": {
       "require": "./dist/v1/libs/utils/UltraRandomMsgGen.cjs",
       "import": "./dist/v1/libs/utils/UltraRandomMsgGen.mjs"
