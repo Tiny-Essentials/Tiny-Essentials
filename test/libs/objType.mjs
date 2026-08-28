@@ -39,6 +39,7 @@ const typeTests = [
   ['weakmap', new WeakMap(), '💼'],
   ['weakset', new WeakSet(), '📚'],
   ['promise', Promise.resolve(), '⏳'],
+  ['url', new URL('http://localhost'), '📎'],
   ['object', {}, '🧱'],
   ['object', new Object(), '🧱'],
   ['object', Object.create({}), '🧱'],

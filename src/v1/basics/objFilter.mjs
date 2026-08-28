@@ -343,6 +343,13 @@ extendObjType([
      */
     (val) => val instanceof Promise,
   ],
+  [
+    'url',
+    /**
+     * @param {unknown} val @returns {val is URL}
+     */
+    (val) => val instanceof URL,
+  ],
 ]);
 
 if (isBrowser) {
