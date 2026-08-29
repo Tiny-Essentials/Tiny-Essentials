@@ -67,6 +67,11 @@ class TinySitemapGenerator {
         prefix: 'schemaLocation',
         uri: 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd',
       });
+    } else {
+      this.#namespaces.push({
+        prefix: 'schemaLocation',
+        uri: 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd',
+      });
     }
 
     // If initial entries are provided, add them through the secure method
