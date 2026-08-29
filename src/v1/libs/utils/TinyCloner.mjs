@@ -450,6 +450,8 @@ TinyCloner.plugins = order
   .map((typeName) => ({
     id: typeName,
     canHandle: registry[typeName].validator,
+    /** @type {(val: any, isDeep: boolean, cloner: TinyCloner|typeof TinyCloner) => any} */
+    // @ts-ignore
     clone: registry[typeName].cloner,
   }));
 
