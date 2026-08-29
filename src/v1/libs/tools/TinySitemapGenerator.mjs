@@ -1,6 +1,6 @@
 /**
  * @typedef {Object} SitemapNamespace
- * @property {string} prefix - The namespace prefix (e.g., 'example').
+ * @property {string} [prefix] - The namespace prefix (e.g., 'example').
  * @property {string} uri - The namespace URI (e.g., 'http://www.example.com/schemas/example_schema').
  */
 
@@ -37,6 +37,8 @@ class TinySitemapGenerator {
   #entries;
   /** @type {SitemapNamespace[]} */
   #namespaces; // New private field to store namespaces
+  /** @type {string} */
+  #type = 'normal';
 
   /**
    * @param {SitemapConfig} config
@@ -47,6 +49,16 @@ class TinySitemapGenerator {
     this.#baseUrl = new URL(config.baseUrl);
     this.#entries = [];
     this.#namespaces = config.namespaces ?? []; // Initialize namespaces
+
+    this.#namespaces.push({ uri: 'http://www.sitemaps.org/schemas/sitemap/0.9' });
+    this.#namespaces.push({ prefix: 'xsi', uri: 'http://www.w3.org/2001/XMLSchema-instance' });
+
+    if (this.#type === 'normal') {
+      this.#namespaces.push({
+        prefix: 'schemaLocation',
+        uri: '"http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd',
+      });
+    }
 
     // If initial entries are provided, add them through the secure method
     if (config.entries && config.entries.length > 0) {
@@ -103,11 +115,16 @@ class TinySitemapGenerator {
         throw new TypeError('config.namespaces must be an array.');
       }
       for (const ns of config.namespaces) {
-        if (typeof ns.prefix !== 'string' || typeof ns.uri !== 'string') {
-          throw new TypeError('Each namespace must have a string "prefix" and a string "uri".');
+        if (
+          (typeof ns.prefix !== 'undefined' && typeof ns.prefix !== 'string') ||
+          typeof ns.uri !== 'string'
+        ) {
+          throw new TypeError(
+            'Each namespace must have a optional string "prefix" and a valid string "uri".',
+          );
         }
         // SECURITY: Validating prefix to prevent XML Injection in attribute names
-        if (!xmlNameRegex.test(ns.prefix)) {
+        if (typeof ns.prefix !== 'undefined' && !xmlNameRegex.test(ns.prefix)) {
           throw new TypeError(
             `Invalid namespace prefix: "${ns.prefix}". Prefixes must follow XML Name rules.`,
           );
@@ -297,10 +314,36 @@ class TinySitemapGenerator {
   generateXml() {
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
 
+    const namespaces = [...this.#namespaces];
+
+    if (this.#type === 'normal') {
+      const existsCustomTags =
+        this.#entries.findIndex(
+          (entry) =>
+            entry.customTags &&
+            (typeof entry.customTags.tag === 'string' ||
+              typeof entry.customTags.value === 'string'),
+        ) > -1;
+
+      if (existsCustomTags) {
+        /** @type {SitemapNamespace} */
+        const customTagNs = {
+          uri: 'http://www.example.com/schemas/example_schema',
+          prefix: 'example',
+        };
+        if (
+          namespaces.findIndex(
+            (ns) => ns.prefix === customTagNs.prefix && ns.uri === customTagNs.uri,
+          ) < 0
+        )
+          namespaces.push(customTagNs);
+      }
+    }
+
     // Build the xmlns attributes string
-    let namespaceAttributes = ` xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"`;
-    for (const ns of this.#namespaces) {
-      namespaceAttributes += ` xmlns:${ns.prefix}="${this.#escapeXml(ns.uri)}"`;
+    let namespaceAttributes = '';
+    for (const ns of namespaces) {
+      namespaceAttributes += ` xmlns${typeof ns.prefix !== 'undefined' ? `:${ns.prefix}` : ''}="${this.#escapeXml(ns.uri)}"`;
     }
 
     xml += `<urlset${namespaceAttributes}>\n`;
