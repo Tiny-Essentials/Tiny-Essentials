@@ -113,14 +113,14 @@ class TinyCloner {
   /**
    * @returns {number} The total number of default plugins registered.
    */
-  static get pluginsLength() {
+  static get size() {
     return TinyCloner.#defaultPlugins.length;
   }
 
   /**
    * @returns {string[]} An array containing the unique IDs of all default plugins.
    */
-  static get pluginsIds() {
+  static get ids() {
     return TinyCloner.#defaultPlugins.map((p) => p.id);
   }
 
@@ -209,14 +209,14 @@ class TinyCloner {
   /**
    * @returns {number} The total number of plugins registered in this specific instance.
    */
-  get pluginsLength() {
+  get size() {
     return this.#plugins.length;
   }
 
   /**
    * @returns {string[]} An array containing the unique IDs of all plugins in this instance.
    */
-  get pluginIds() {
+  get ids() {
     return this.#plugins.map((p) => p.id);
   }
 
