@@ -185,6 +185,10 @@ class TinyCloner {
    */
   static addPlugin(plugin, position = 'start', index = 0) {
     TinyCloner.validatePlugin(plugin);
+    if (TinyCloner.hasPlugin(plugin.id))
+      throw new TypeError(
+        `A plugin with the ID "${plugin.id}" already exists in the global registry.`,
+      );
     const pluginCopy = { ...plugin };
 
     if (position === 'start') {
@@ -317,6 +321,8 @@ class TinyCloner {
    */
   addPlugin(plugin, position = 'start', index = 0) {
     TinyCloner.validatePlugin(plugin);
+    if (this.hasPlugin(plugin.id))
+      throw new TypeError(`A plugin with the ID "${plugin.id}" already exists in this instance.`);
     const pluginCopy = { ...plugin };
 
     if (position === 'start') {
