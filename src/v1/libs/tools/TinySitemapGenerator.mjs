@@ -105,10 +105,7 @@ class TinySitemapGenerator {
       );
     }
 
-    const normalizedEntry = {
-      ...entry,
-      loc: resolvedUrl.href,
-    };
+    const normalizedEntry = { ...entry, loc: resolvedUrl.href };
 
     // Validate lastmod
     if (normalizedEntry.lastmod && typeof normalizedEntry.lastmod === 'string') {
@@ -176,8 +173,7 @@ class TinySitemapGenerator {
     // Merge current data with new data to allow partial updates
     const updatedData = { ...this.#entries[index], ...entryData };
     // Re-validate the entire merged object
-    const validated = this.#resolveAndValidate(updatedData);
-    this.#entries[index] = validated;
+    this.#entries[index] = this.#resolveAndValidate(updatedData);
   }
 
   /**
@@ -210,7 +206,7 @@ class TinySitemapGenerator {
    */
   get entries() {
     // Return a shallow copy to prevent external mutation of the array
-    return [...this.#entries.map((entry) => ({ ...entry }))];
+    return this.#entries.map((e) => ({ ...e }));
   }
 
   /**
@@ -220,27 +216,17 @@ class TinySitemapGenerator {
   generateXml() {
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
     xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
-
     for (const entry of this.#entries) {
       xml += `  <url>\n`;
       // All dynamic content is passed through #escapeXml to prevent XML Injection
       xml += `    <loc>${this.#escapeXml(entry.loc)}</loc>\n`;
-
-      if (entry.lastmod) {
-        xml += `    <lastmod>${new Date(entry.lastmod).toISOString()}</lastmod>\n`;
-      }
-
-      if (entry.changefreq) {
+      if (entry.lastmod) xml += `    <lastmod>${new Date(entry.lastmod).toISOString()}</lastmod>\n`;
+      if (entry.changefreq)
         xml += `    <changefreq>${this.#escapeXml(entry.changefreq)}</changefreq>\n`;
-      }
-
-      if (entry.priority !== undefined) {
+      if (entry.priority !== undefined)
         xml += `    <priority>${entry.priority.toFixed(1)}</priority>\n`;
-      }
-
       xml += `  </url>\n`;
     }
-
     xml += `</urlset>`;
     return xml;
   }
