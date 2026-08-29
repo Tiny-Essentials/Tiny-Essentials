@@ -106,21 +106,21 @@ class TinyCloner {
   /**
    * @returns {CloningPlugin<any>[]} A deep copy of the current default plugins array.
    */
-  static get defaultPlugins() {
+  static get plugins() {
     return TinyCloner.#defaultPlugins.map((plugin) => ({ ...plugin }));
   }
 
   /**
    * @returns {number} The total number of default plugins registered.
    */
-  static get defaultPluginsLength() {
+  static get pluginsLength() {
     return TinyCloner.#defaultPlugins.length;
   }
 
   /**
    * @returns {string[]} An array containing the unique IDs of all default plugins.
    */
-  static get defaultPluginIds() {
+  static get pluginsIds() {
     return TinyCloner.#defaultPlugins.map((p) => p.id);
   }
 
@@ -128,7 +128,7 @@ class TinyCloner {
    * @param {CloningPlugin<any>[]} newPlugins - An array of plugins to replace the current ones.
    * @throws {TypeError} If the input is not an array or if plugins do not implement the required interface.
    */
-  static set defaultPlugins(newPlugins) {
+  static set plugins(newPlugins) {
     if (!Array.isArray(newPlugins)) {
       throw new TypeError('The defaultPlugins property must be an array.');
     }
@@ -148,7 +148,7 @@ class TinyCloner {
    * @param {number} [index=0] - The specific index to use if position is set to 'index'.
    * @throws {TypeError} If the plugin is invalid, the position is unrecognized, or index is not a valid integer.
    */
-  static addDefaultPlugin(plugin, position = 'start', index = 0) {
+  static addPlugin(plugin, position = 'start', index = 0) {
     TinyCloner.validatePlugin(plugin);
     const pluginCopy = { ...plugin };
 
@@ -170,7 +170,7 @@ class TinyCloner {
    * Removes default plugins that satisfy the provided predicate.
    * @param {(plugin: CloningPlugin<any>) => boolean} predicate - A function that returns true for plugins to be removed.
    */
-  static filterDefaultPlugins(predicate) {
+  static filterPlugins(predicate) {
     if (typeof predicate !== 'function') throw new TypeError('Predicate must be a function.');
     TinyCloner.#defaultPlugins = TinyCloner.#defaultPlugins.filter((p) => !predicate({ ...p }));
   }
@@ -181,7 +181,7 @@ class TinyCloner {
    * @param {CloningPlugin<any>} plugin - The new plugin configuration.
    * @throws {RangeError} If the index is out of bounds.
    */
-  static updateDefaultPlugin(index, plugin) {
+  static updatePlugin(index, plugin) {
     if (index < 0 || index >= TinyCloner.#defaultPlugins.length) {
       throw new RangeError('Index out of bounds.');
     }
@@ -193,7 +193,7 @@ class TinyCloner {
    * Reorders the default plugins array.
    * @param {((a: CloningPlugin<any>, b: CloningPlugin<any>) => number)} [compareFn] - The function to make the new order of plugins.
    */
-  static reorderDefaultPlugins(compareFn) {
+  static reorderPlugins(compareFn) {
     TinyCloner.#defaultPlugins = TinyCloner.#defaultPlugins.sort(
       compareFn ? (a, b) => compareFn({ ...a }, { ...b }) : undefined,
     );
@@ -333,7 +333,7 @@ class TinyCloner {
 }
 
 // Initializing default plugins
-TinyCloner.defaultPlugins = order
+TinyCloner.plugins = order
   .filter((typeName) => registry[typeName]) // Ensures that the type exists in the record
   .map((typeName) => ({
     id: typeName,
