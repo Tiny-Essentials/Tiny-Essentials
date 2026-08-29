@@ -1,3 +1,8 @@
+import { getObjTypeRegistry, getObjTypeOrder } from '../../basics/objFilter.mjs';
+
+const registry = getObjTypeRegistry();
+const order = getObjTypeOrder();
+
 /**
  * @template {any} Value
  * @typedef {Object} CloningPlugin
@@ -106,125 +111,14 @@ class TinyCloner {
     // Fallback for primitives and null
     return item;
   }
-
-  ///////////////////////////////////////////////////////////////////////
-
-  /**
-   * @private
-   * @returns {CloningPlugin<Map<any, any>>}
-   */
-  static _createMapPlugin() {
-    return {
-      canHandle: (item) => item instanceof Map,
-      clone: (item, isDeep, cloner) => {
-        const result = new Map();
-        for (const [key, value] of item.entries()) {
-          result.set(key, isDeep ? cloner.clone(value, isDeep) : value);
-        }
-        return result;
-      },
-    };
-  }
-
-  /**
-   * @private
-   * @returns {CloningPlugin<any[]>}
-   */
-  static _createArrayPlugin() {
-    return {
-      canHandle: (item) => Array.isArray(item),
-      clone: (item, isDeep, cloner) =>
-        item.map((element) => (isDeep ? cloner.clone(element, isDeep) : element)),
-    };
-  }
-
-  /**
-   * @private
-   * @returns {CloningPlugin<Record<string, any>>}
-   */
-  static _createObjectPlugin() {
-    return {
-      canHandle: (item) => item !== null && typeof item === 'object',
-      clone: (item, isDeep, cloner) => {
-        /** @type {Record<string, any>} */
-        const result = {};
-        for (const key in item) {
-          if (Object.prototype.hasOwnProperty.call(item, key)) {
-            result[key] = isDeep ? cloner.clone(item[key], isDeep) : item[key];
-          }
-        }
-        return result;
-      },
-    };
-  }
-
-  /**
-   * @private
-   * @returns {CloningPlugin<Date>}
-   */
-  static _createDatePlugin() {
-    return {
-      canHandle: (item) => item instanceof Date,
-      clone: (item) => new Date(item.getTime()),
-    };
-  }
-
-  /**
-   * @private
-   * @returns {CloningPlugin<RegExp>}
-   */
-  static _createRegExpPlugin() {
-    return {
-      canHandle: (item) => item instanceof RegExp,
-      clone: (item) => new RegExp(item.source, item.flags),
-    };
-  }
-
-  /**
-   * @private
-   * @returns {CloningPlugin<Set<any>>}
-   */
-  static _createSetPlugin() {
-    return {
-      canHandle: (item) => item instanceof Set,
-      clone: (item, isDeep, cloner) => {
-        const result = new Set();
-        for (const value of item) {
-          result.add(isDeep ? cloner.clone(value, isDeep) : value);
-        }
-        return result;
-      },
-    };
-  }
-
-  /**
-   * @private
-   * @returns {CloningPlugin<URL>}
-   */
-  static _createUrlPlugin() {
-    return {
-      canHandle: (item) => item instanceof URL,
-      clone: (item) => new URL(item.href),
-    };
-  }
 }
 
 // Plugins are pre-installed in the exact order
-TinyCloner.defaultPlugins = [
-  // @ts-ignore
-  TinyCloner._createDatePlugin(),
-  // @ts-ignore
-  TinyCloner._createRegExpPlugin(),
-  // @ts-ignore
-  TinyCloner._createSetPlugin(),
-  // @ts-ignore
-  TinyCloner._createMapPlugin(),
-  // @ts-ignore
-  TinyCloner._createUrlPlugin(),
-  // @ts-ignore
-  TinyCloner._createArrayPlugin(),
-  // @ts-ignore
-  TinyCloner._createObjectPlugin(),
-];
+TinyCloner.defaultPlugins = order
+  .filter((typeName) => registry[typeName]) // Ensures that the type exists in the record
+  .map((typeName) => ({
+    canHandle: registry[typeName].validator,
+    clone: registry[typeName].cloner,
+  }));
 
 export default TinyCloner;

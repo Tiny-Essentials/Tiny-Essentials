@@ -338,10 +338,11 @@ extendObjType([
   ],
   [
     'array',
-    /**
-     * @param {unknown} val @returns {val is unknown[]}
-     */
+    /**  @param {unknown} val @returns {val is unknown[]} */
     (val) => Array.isArray(val),
+    /** @type {ExtendObjTypeCloner<unknown[]>} */
+    (item, isDeep, cloner) =>
+      item.map((element) => (isDeep ? cloner.clone(element, isDeep) : element)),
   ],
 ]);
 
@@ -360,53 +361,63 @@ extendObjType([
     'date',
     /** @param {unknown} val @returns {val is Date} */
     (val) => val instanceof Date,
+    /** @type {ExtendObjTypeCloner<Date>} */
+    (item) => new Date(item.getTime()),
   ],
   [
     'regexp',
     /** @param {unknown} val @returns {val is RegExp} */
     (val) => val instanceof RegExp,
+    /** @type {ExtendObjTypeCloner<RegExp>} */
+    (item) => new RegExp(item.source, item.flags),
   ],
   [
     'map',
-    /**
-     * @param {unknown} val @returns {val is Map<unknown, unknown>}
-     */
+    /** @param {unknown} val @returns {val is Map<unknown, unknown>} */
     (val) => val instanceof Map,
+    /** @type {ExtendObjTypeCloner<Map<unknown, unknown>>} */
+    (item, isDeep, cloner) => {
+      const result = new Map();
+      for (const [key, value] of item.entries()) {
+        result.set(key, isDeep ? cloner.clone(value, isDeep) : value);
+      }
+      return result;
+    },
   ],
   [
     'set',
-    /**
-     * @param {unknown} val @returns {val is Set<unknown>}
-     */
+    /** @param {unknown} val @returns {val is Set<unknown>} */
     (val) => val instanceof Set,
+    /** @type {ExtendObjTypeCloner<Set>} */
+    (item, isDeep, cloner) => {
+      const result = new Set();
+      for (const value of item) {
+        result.add(isDeep ? cloner.clone(value, isDeep) : value);
+      }
+      return result;
+    },
   ],
   [
     'weakmap',
-    /**
-     * @param {unknown} val @returns {val is WeakMap<unknown, unknown>}
-     */
+    /** @param {unknown} val @returns {val is WeakMap<unknown, unknown>} */
     (val) => val instanceof WeakMap,
   ],
   [
     'weakset',
-    /**
-     * @param {unknown} val @returns {val is WeakSet<unknown>}
-     */
+    /** @param {unknown} val @returns {val is WeakSet<unknown>} */
     (val) => val instanceof WeakSet,
   ],
   [
     'promise',
-    /**
-     * @param {unknown} val @returns {val is Promise<unknown>}
-     */
+    /** @param {unknown} val @returns {val is Promise<unknown>} */
     (val) => val instanceof Promise,
   ],
   [
     'url',
-    /**
-     * @param {unknown} val @returns {val is URL}
-     */
+    /** @param {unknown} val @returns {val is URL} */
     (val) => val instanceof URL,
+    /** @type {ExtendObjTypeCloner<URL>} */
+    (item) => new URL(item.href),
   ],
 ]);
 
@@ -423,9 +434,18 @@ if (isBrowser) {
 extendObjType([
   [
     'object',
-    /**
-     * @param {unknown} val @returns {val is Record<string | number | symbol, unknown>}
-     */
+    /** @param {unknown} val @returns {val is Record<string | number | symbol, unknown>} */
     (val) => isJsonObject(val),
+    /** @type {ExtendObjTypeCloner<Record<string | number | symbol, unknown>>} */
+    (item, isDeep, cloner) => {
+      /** @type {Record<string | number | symbol, unknown>} */
+      const result = {};
+      for (const key in item) {
+        if (Object.prototype.hasOwnProperty.call(item, key)) {
+          result[key] = isDeep ? cloner.clone(item[key], isDeep) : item[key];
+        }
+      }
+      return result;
+    },
   ],
 ]);
