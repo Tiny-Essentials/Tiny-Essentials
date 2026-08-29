@@ -25,8 +25,43 @@ class TinyCloner {
   /** @type {boolean} */
   #useDefaultPlugins = false;
 
+  /**
+   * Indicates whether the instance is operating in isolation mode.
+   *
+   * If `true`, the instance is initialized with a snapshot of the current default plugins
+   * and will strictly use only its own plugins during the cloning process, ignoring
+   * any future changes to the global defaults.
+   *
+   * If `false`, the instance will use its own plugins and will fall back to the
+   * global default plugins if no match is found in the instance.
+   *
+   * @returns {boolean} True if the instance is isolated, false if it uses global fallbacks.
+   */
   get useDefaultPlugins() {
     return this.#useDefaultPlugins;
+  }
+
+  /** @type {boolean} */
+  static #defaultIsDeep = true;
+
+  /**
+   * Gets the global default value for the isDeep parameter.
+   * @returns {boolean}
+   */
+  static get defaultIsDeep() {
+    return TinyCloner.#defaultIsDeep;
+  }
+
+  /**
+   * Sets the global default value for the isDeep parameter.
+   * @param {boolean} value - The new default value.
+   * @throws {TypeError} If the value is not a boolean.
+   */
+  static set defaultIsDeep(value) {
+    if (typeof value !== 'boolean') {
+      throw new TypeError('The defaultIsDeep property must be a boolean.');
+    }
+    TinyCloner.#defaultIsDeep = value;
   }
 
   /**
@@ -368,7 +403,7 @@ class TinyCloner {
    * @param {boolean} [isDeep=true] - Whether to perform a deep clone (true) or a shallow clone (false).
    * @returns {Value} The cloned version of the input item.
    */
-  static clone(item, isDeep = true) {
+  static clone(item, isDeep = TinyCloner.#defaultIsDeep) {
     for (const plugin of TinyCloner.#defaultPlugins) {
       if (plugin.canHandle(item)) {
         return plugin.clone(item, isDeep, TinyCloner);
@@ -387,7 +422,7 @@ class TinyCloner {
    * @param {boolean} [isDeep=true] - Whether to perform a deep clone (true) or a shallow clone (false).
    * @returns {Value} The cloned version of the input item.
    */
-  clone(item, isDeep = true) {
+  clone(item, isDeep = TinyCloner.#defaultIsDeep) {
     // 1. Check instance plugins first
     for (const plugin of this.#plugins) {
       if (plugin.canHandle(item)) {
