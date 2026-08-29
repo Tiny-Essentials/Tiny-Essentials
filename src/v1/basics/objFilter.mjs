@@ -488,7 +488,7 @@ if (isBrowser) {
     'htmlelement',
     /** @param {unknown} val @returns {val is HTMLElement} */
     (val) => typeof HTMLElement !== 'undefined' && val instanceof HTMLElement,
-    /** @type {ExtendObjTypeCloner<HTMLElement>} */
+    /** @type {ExtendObjTypeCloner<Node>} */
     (item) => item.cloneNode(true),
   ]);
 }
