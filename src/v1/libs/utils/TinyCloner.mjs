@@ -24,6 +24,10 @@ class TinyCloner {
   /** @type {boolean} */
   #useDefaultPlugins = false;
 
+  get useDefaultPlugins() {
+    return this.#useDefaultPlugins;
+  }
+
   /**
    * Creates an instance of TinyCloner.
    *
@@ -148,6 +152,14 @@ class TinyCloner {
     TinyCloner.#defaultPlugins[index] = { ...plugin };
   }
 
+  /**
+   * Reorders the default plugins array.
+   * @param {((a: CloningPlugin<any>, b: CloningPlugin<any>) => number)} [compareFn] - The function to make the new order of plugins.
+   */
+  static reorderDefaultPlugins(compareFn) {
+    TinyCloner.#defaultPlugins = TinyCloner.#defaultPlugins.sort(compareFn ? (a, b) => compareFn({ ...a }, { ...b }) : undefined);
+  }
+
   // --- Instance Management ---
 
   /**
@@ -209,6 +221,14 @@ class TinyCloner {
     }
     TinyCloner.validatePlugin(plugin);
     this.#plugins[index] = { ...plugin };
+  }
+
+  /**
+   * Reorders the instance's plugins array.
+   * @param {((a: CloningPlugin<any>, b: CloningPlugin<any>) => number)} [compareFn] - The function to make the new order of plugins.
+   */
+  reorderPlugins(compareFn) {
+    this.#plugins = this.#plugins.sort(compareFn ? (a, b) => compareFn({ ...a }, { ...b }) : undefined);
   }
 
   /**
