@@ -167,6 +167,35 @@ class TinyCloner {
   }
 
   /**
+   * Checks if a default plugin with the specified ID exists.
+   *
+   * @param {string} id - The ID of the plugin to search for.
+   * @returns {boolean} True if the plugin exists, false otherwise.
+   * @throws {TypeError} If the id is not a string.
+   */
+  static hasPlugin(id) {
+    if (typeof id !== 'string') throw new TypeError('The ID must be a string.');
+    return TinyCloner.#defaultPlugins.some((p) => p.id === id);
+  }
+
+  /**
+   * Removes a default plugin from the registry by its ID.
+   *
+   * @param {string} id - The ID of the plugin to remove.
+   * @returns {boolean} True if a plugin was removed, false if the plugin was not found.
+   * @throws {TypeError} If the id is not a string.
+   */
+  static removePlugin(id) {
+    if (typeof id !== 'string') throw new TypeError('The ID must be a string.');
+    const index = TinyCloner.#defaultPlugins.findIndex((p) => p.id === id);
+    if (index !== -1) {
+      TinyCloner.#defaultPlugins.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * Removes default plugins that satisfy the provided predicate.
    * @param {(plugin: CloningPlugin<any>) => boolean} predicate - A function that returns true for plugins to be removed.
    */
@@ -267,6 +296,35 @@ class TinyCloner {
     } else {
       throw new TypeError('Position must be "start", "end", or "index".');
     }
+  }
+
+  /**
+   * Checks if a plugin with the specified ID exists in this instance.
+   *
+   * @param {string} id - The ID of the plugin to search for.
+   * @returns {boolean} True if the plugin exists, false otherwise.
+   * @throws {TypeError} If the id is not a string.
+   */
+  hasPlugin(id) {
+    if (typeof id !== 'string') throw new TypeError('The ID must be a string.');
+    return this.#plugins.some((p) => p.id === id);
+  }
+
+  /**
+   * Removes a plugin from this instance by its ID.
+   *
+   * @param {string} id - The ID of the plugin to remove.
+   * @returns {boolean} True if a plugin was removed, false if the plugin was not found.
+   * @throws {TypeError} If the id is not a string.
+   */
+  removePlugin(id) {
+    if (typeof id !== 'string') throw new TypeError('The ID must be a string.');
+    const index = this.#plugins.findIndex((p) => p.id === id);
+    if (index !== -1) {
+      this.#plugins.splice(index, 1);
+      return true;
+    }
+    return false;
   }
 
   /**
