@@ -237,6 +237,12 @@ export function getCheckObj() {
  */
 export const getObjTypeOrder = () => [...typeValidator.order];
 
+/**
+ * Returns a copy of the current type validators.
+ * @returns {Record<string, (val: any) => any>}
+ */
+export const getObjTypeRegistry = () => ({ ...typeValidator.items });
+
 // Insert obj types
 
 extendObjType([

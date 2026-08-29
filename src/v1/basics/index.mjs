@@ -24,6 +24,7 @@ import {
   isObjType,
   objTypeName,
   getObjTypeOrder,
+  getObjTypeRegistry,
 } from './objFilter.mjs';
 import { countObj, isJsonObject, isValidObj } from './objChecker.mjs';
 import {
@@ -90,6 +91,7 @@ import {
 } from './browserDetector.mjs';
 import { jsonFilter, jsonFilterRecursive, jsonFilterByKeys } from './jsonFilter.mjs';
 export {
+  getObjTypeRegistry,
   getObjTypeOrder,
   jsonFilter,
   jsonFilterRecursive,
