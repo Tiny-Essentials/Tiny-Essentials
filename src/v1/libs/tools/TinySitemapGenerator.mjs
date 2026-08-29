@@ -1,14 +1,29 @@
 /**
+ * @typedef {Object} SitemapNamespace
+ * @property {string} prefix - The namespace prefix (e.g., 'example').
+ * @property {string} uri - The namespace URI (e.g., 'http://www.example.com/schemas/example_schema').
+ */
+
+/**
+ * @typedef {Object} CustomTagMap
+ * @property {string} [tag] - The tag name (key in the object, e.g., 'example:tag').
+ * @property {string} [value] - The content of the tag (value in the object).
+ * @description A map where keys are the XML tag names and values are the tag contents.
+ */
+
+/**
  * @typedef {Object} SitemapEntry
  * @property {string} loc - The absolute URL of the page (or relative path).
  * @property {string} [lastmod] - The last modified date in ISO 8601 format (e.g., '2023-10-27T10:00:00Z').
  * @property {'always'|'hourly'|'daily'|'weekly'|'monthly'|'yearly'|'never'} [changefreq] - Frequency of change.
  * @property {number} [priority] - Importance of the URL (0.0 to 1.0).
+ * @property {CustomTagMap} [customTags] - Custom XML tags to include in this entry.
  */
 
 /**
  * @typedef {Object} SitemapConfig
  * @property {string} baseUrl - The base URL of the website.
+ * @property {SitemapNamespace[]} [namespaces] - Custom namespaces to declare in the urlset.
  * @property {SitemapEntry[]} entries - An array of page entries.
  */
 
@@ -20,6 +35,8 @@ class TinySitemapGenerator {
   #baseUrl;
   /** @type {SitemapEntry[]} */
   #entries;
+  /** @type {SitemapNamespace[]} */
+  #namespaces; // New private field to store namespaces
 
   /**
    * @param {SitemapConfig} config
@@ -29,6 +46,7 @@ class TinySitemapGenerator {
     this.#validateConfig(config);
     this.#baseUrl = new URL(config.baseUrl);
     this.#entries = [];
+    this.#namespaces = config.namespaces ?? []; // Initialize namespaces
 
     // If initial entries are provided, add them through the secure method
     if (config.entries && config.entries.length > 0) {
@@ -75,6 +93,26 @@ class TinySitemapGenerator {
       new URL(config.baseUrl);
     } catch {
       throw new TypeError('config.baseUrl must be a valid absolute URL.');
+    }
+
+    // Regex to validate XML Name
+    const xmlNameRegex = /^[a-zA-Z_][\w.-]*$/;
+
+    if (config.namespaces) {
+      if (!Array.isArray(config.namespaces)) {
+        throw new TypeError('config.namespaces must be an array.');
+      }
+      for (const ns of config.namespaces) {
+        if (typeof ns.prefix !== 'string' || typeof ns.uri !== 'string') {
+          throw new TypeError('Each namespace must have a string "prefix" and a string "uri".');
+        }
+        // SECURITY: Validating prefix to prevent XML Injection in attribute names
+        if (!xmlNameRegex.test(ns.prefix)) {
+          throw new TypeError(
+            `Invalid namespace prefix: "${ns.prefix}". Prefixes must follow XML Name rules.`,
+          );
+        }
+      }
     }
   }
 
@@ -137,6 +175,39 @@ class TinySitemapGenerator {
       }
       if (normalizedEntry.priority < 0 || normalizedEntry.priority > 1) {
         throw new RangeError('entry.priority must be between 0.0 and 1.0.');
+      }
+    }
+
+    // Validation for customTags
+    if (entry.customTags) {
+      if (typeof entry.customTags !== 'object' || entry.customTags === null) {
+        throw new TypeError('entry.customTags must be an object.');
+      }
+      for (const [tag, value] of Object.entries(entry.customTags)) {
+        if (typeof value !== 'string') {
+          throw new TypeError(`The content for custom tag "${tag}" must be a string.`);
+        }
+      }
+    }
+
+    // Regex to validate an XML QName (prefix:localName)
+    const xmlNameRegex = /^[a-zA-Z_][\w.-]*$/;
+    const qNameRegex = new RegExp(`^${xmlNameRegex.source}(:${xmlNameRegex.source})?$`);
+
+    // Validation for customTags
+    if (entry.customTags) {
+      if (typeof entry.customTags !== 'object' || entry.customTags === null) {
+        throw new TypeError('entry.customTags must be an object.');
+      }
+      for (const [tag, value] of Object.entries(entry.customTags)) {
+        // SECURITY: Validate that the tag name is a valid XML QName to prevent injection
+        if (!qNameRegex.test(tag)) {
+          throw new TypeError(`Invalid custom tag name: "${tag}". Tag must be a valid XML QName.`);
+        }
+        // Validate content
+        if (typeof value !== 'string') {
+          throw new TypeError(`The content for custom tag "${tag}" must be a string.`);
+        }
       }
     }
 
@@ -225,7 +296,15 @@ class TinySitemapGenerator {
    */
   generateXml() {
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-    xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+
+    // Build the xmlns attributes string
+    let namespaceAttributes = ` xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"`;
+    for (const ns of this.#namespaces) {
+      namespaceAttributes += ` xmlns:${ns.prefix}="${this.#escapeXml(ns.uri)}"`;
+    }
+
+    xml += `<urlset${namespaceAttributes}>\n`;
+
     for (const entry of this.#entries) {
       xml += `  <url>\n`;
       // All dynamic content is passed through #escapeXml to prevent XML Injection
@@ -235,6 +314,14 @@ class TinySitemapGenerator {
         xml += `    <changefreq>${this.#escapeXml(entry.changefreq)}</changefreq>\n`;
       if (entry.priority !== undefined)
         xml += `    <priority>${entry.priority.toFixed(1)}</priority>\n`;
+
+      // Render custom tags
+      if (entry.customTags) {
+        for (const [tag, value] of Object.entries(entry.customTags)) {
+          xml += `    <${tag}>${this.#escapeXml(value)}</${tag}>\n`;
+        }
+      }
+
       xml += `  </url>\n`;
     }
     xml += `</urlset>`;
