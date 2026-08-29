@@ -1,42 +1,44 @@
 /**
  * @typedef {Object} SitemapEntry
- * @property {string} loc - The absolute URL of the page.
+ * @property {string} loc - The absolute URL of the page (or relative path).
  * @property {string} [lastmod] - The last modified date in ISO 8601 format (e.g., '2023-10-27T10:00:00Z').
- * @property {'always'|'hourly'|'daily'|'weekly'|'monthly'|'yearly'|'never'} [changefreq] - How frequently the page is likely to change.
- * @property {number} [priority] - The importance of this URL relative to others (0.0 to 1.0).
+ * @property {'always'|'hourly'|'daily'|'weekly'|'monthly'|'yearly'|'never'} [changefreq] - Frequency of change.
+ * @property {number} [priority] - Importance of the URL (0.0 to 1.0).
  */
 
 /**
  * @typedef {Object} SitemapConfig
- * @property {string} baseUrl - The base URL of the website (e.g., 'https://example.com').
- * @property {SitemapEntry[]} entries - An array of page entries to include in the sitemap.
+ * @property {string} baseUrl - The base URL of the website.
+ * @property {SitemapEntry[]} entries - An array of page entries.
  */
 
 /**
- * A service to generate valid XML sitemaps.
+ * A service to manage and generate secure XML sitemaps.
  */
 class TinySitemapGenerator {
-  /** @type {string} */
+  /** @type {URL} */
   #baseUrl;
   /** @type {SitemapEntry[]} */
   #entries;
 
   /**
    * @param {SitemapConfig} config
-   * @throws {TypeError} If the configuration structure or property types are invalid.
-   * @throws {RangeError} If any entry priority is outside the 0.0 - 1.0 range.
-   * @throws {Error} If the URL provided is malformed.
+   * @throws {TypeError} If the configuration is invalid.
    */
   constructor(config) {
     this.#validateConfig(config);
+    this.#baseUrl = new URL(config.baseUrl);
+    this.#entries = [];
 
-    // Defensive Copy: We store a copy to prevent external mutation of the original array
-    this.#baseUrl = config.baseUrl;
-    this.#entries = config.entries.map((entry) => ({ ...entry }));
+    // If initial entries are provided, add them through the secure method
+    if (config.entries && config.entries.length > 0) {
+      for (const entry of config.entries) {
+        this.addEntry(entry);
+      }
+    }
   }
 
   /**
-   * Sanitizes strings to prevent XML Injection.
    * @param {string} str - The raw string.
    * @returns {string} The escaped string.
    */
@@ -61,43 +63,31 @@ class TinySitemapGenerator {
 
   /**
    * @param {SitemapConfig} config
-   * @throws {TypeError}
    */
   #validateConfig(config) {
     if (typeof config !== 'object' || config === null) {
       throw new TypeError('Configuration must be a non-null object.');
     }
-
     if (typeof config.baseUrl !== 'string') {
       throw new TypeError('config.baseUrl must be a string.');
     }
-
-    let base;
     try {
-      base = new URL(config.baseUrl);
+      new URL(config.baseUrl);
     } catch {
       throw new TypeError('config.baseUrl must be a valid absolute URL.');
-    }
-    this.#baseUrl = base.href; // Store normalized URL
-
-    if (!Array.isArray(config.entries)) {
-      throw new TypeError('config.entries must be an array.');
-    }
-
-    for (const entry of config.entries) {
-      this.#validateEntry(entry, base);
     }
   }
 
   /**
-   * @param {SitemapEntry} entry
-   * @param {URL} baseUrlObj - The parsed base URL for origin comparison.
-   * @throws {TypeError}
-   * @throws {RangeError}
+   * Resolves relative URLs, validates all fields, and returns a new normalized object.
+   * @param {SitemapEntry} entry - The entry to process.
+   * @returns {SitemapEntry} The normalized and validated entry.
+   * @throws {TypeError} If validation fails.
+   * @throws {RangeError} If priority is invalid.
    */
-  #validateEntry(entry, baseUrlObj) {
+  #resolveAndValidate(entry) {
     if (typeof entry !== 'object' || entry === null) {
-      throw new TypeError('Each entry must be a non-null object.');
+      throw new TypeError('Entry must be a non-null object.');
     }
 
     // Validate loc: Must be string, must be valid URL, must match base origin
@@ -105,47 +95,122 @@ class TinySitemapGenerator {
       throw new TypeError('entry.loc must be a string.');
     }
 
-    let entryUrl;
-    try {
-      entryUrl = new URL(entry.loc);
-    } catch {
-      throw new TypeError(`entry.loc "${entry.loc}" is not a valid absolute URL.`);
-    }
+    // Automatically handle relative paths using the baseUrl
+    const resolvedUrl = new URL(entry.loc, this.#baseUrl);
 
-    if (entryUrl.origin !== baseUrlObj.origin) {
+    // Security: Ensure the resolved URL belongs to the same origin
+    if (resolvedUrl.origin !== this.#baseUrl.origin) {
       throw new TypeError(
-        `entry.loc origin must match the base URL origin (${baseUrlObj.origin}).`,
+        `entry.loc "${entry.loc}" must belong to the same origin as ${this.#baseUrl.origin}`,
       );
     }
 
+    const normalizedEntry = {
+      ...entry,
+      loc: resolvedUrl.href,
+    };
+
     // Validate lastmod
-    if (entry.lastmod !== undefined) {
-      if (typeof entry.lastmod !== 'string' || Number.isNaN(Date.parse(entry.lastmod))) {
-        throw new TypeError(
-          `entry.lastmod "${entry.lastmod}" must be a valid ISO 8601 date string.`,
-        );
+    if (normalizedEntry.lastmod && typeof normalizedEntry.lastmod === 'string') {
+      if (Number.isNaN(Date.parse(normalizedEntry.lastmod))) {
+        throw new TypeError(`entry.lastmod "${normalizedEntry.lastmod}" is an invalid date.`);
       }
     }
 
     // Validate changefreq
     const validFreqs = ['always', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'never'];
-    if (entry.changefreq !== undefined && !validFreqs.includes(entry.changefreq)) {
+    if (normalizedEntry.changefreq && !validFreqs.includes(normalizedEntry.changefreq)) {
       throw new TypeError(`entry.changefreq must be one of: ${validFreqs.join(', ')}`);
     }
 
     // Validate priority
-    if (entry.priority !== undefined) {
-      if (typeof entry.priority !== 'number' || Number.isNaN(entry.priority)) {
+    if (normalizedEntry.priority !== undefined) {
+      if (typeof normalizedEntry.priority !== 'number' || Number.isNaN(normalizedEntry.priority)) {
         throw new TypeError('entry.priority must be a number.');
       }
-      if (entry.priority < 0 || entry.priority > 1) {
+      if (normalizedEntry.priority < 0 || normalizedEntry.priority > 1) {
         throw new RangeError('entry.priority must be between 0.0 and 1.0.');
       }
     }
+
+    return normalizedEntry;
   }
 
+  /**
+   * Adds a new entry to the sitemap.
+   * @param {SitemapEntry} entry
+   * @param {number} [index]
+   * @returns {number}
+   */
+  addEntry(entry, index) {
+    const validated = this.#resolveAndValidate(entry);
+    const newSize = this.#entries.push(validated);
+    if (typeof index !== 'undefined') this.moveEntry(newSize - 1, index);
+    return newSize;
+  }
+
+  /**
+   * Removes an entry by its index.
+   * @param {number} index
+   * @returns {boolean}
+   */
+  removeEntry(index) {
+    if (index < 0 || index >= this.#entries.length) {
+      throw new RangeError('Index out of bounds.');
+    }
+    const oldSize = this.#entries.length;
+    this.#entries.splice(index, 1);
+    const newSize = this.#entries.length;
+    return oldSize !== newSize;
+  }
+
+  /**
+   * Updates an existing entry.
+   * @param {number} index - The index of the entry to update.
+   * @param {Partial<SitemapEntry>} entryData - The new data to merge.
+   */
+  updateEntry(index, entryData) {
+    if (index < 0 || index >= this.#entries.length) {
+      throw new RangeError('Index out of bounds.');
+    }
+    // Merge current data with new data to allow partial updates
+    const updatedData = { ...this.#entries[index], ...entryData };
+    // Re-validate the entire merged object
+    const validated = this.#resolveAndValidate(updatedData);
+    this.#entries[index] = validated;
+  }
+
+  /**
+   * Changes the position of an entry in the list.
+   * @param {number} fromIndex - Current position.
+   * @param {number} toIndex - New position.
+   */
+  moveEntry(fromIndex, toIndex) {
+    if (
+      fromIndex < 0 ||
+      fromIndex >= this.#entries.length ||
+      toIndex < 0 ||
+      toIndex >= this.#entries.length
+    ) {
+      throw new RangeError('Index out of bounds.');
+    }
+    const [movedItem] = this.#entries.splice(fromIndex, 1);
+    this.#entries.splice(toIndex, 0, movedItem);
+  }
+
+  /**
+   * @returns {string} The base URL string.
+   */
   get baseUrl() {
-    return this.#baseUrl;
+    return this.#baseUrl.href;
+  }
+
+  /**
+   * @returns {SitemapEntry[]} A copy of the current entries.
+   */
+  get entries() {
+    // Return a shallow copy to prevent external mutation of the array
+    return [...this.#entries.map((entry) => ({ ...entry }))];
   }
 
   /**
