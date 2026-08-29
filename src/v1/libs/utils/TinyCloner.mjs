@@ -95,8 +95,10 @@ class TinyCloner {
         'Each plugin must implement the required interface: canHandle(item) and clone(item, cloner).',
       );
     }
-    if (typeof plugin?.id !== 'string') 
-      throw new TypeError('Each plugin must implement the required interface: the plugin id string.');
+    if (typeof plugin?.id !== 'string')
+      throw new TypeError(
+        'Each plugin must implement the required interface: the plugin id string.',
+      );
   }
 
   // --- Static Management (Global Defaults) ---
@@ -106,6 +108,20 @@ class TinyCloner {
    */
   static get defaultPlugins() {
     return TinyCloner.#defaultPlugins.map((plugin) => ({ ...plugin }));
+  }
+
+  /**
+   * @returns {number} The total number of default plugins registered.
+   */
+  static get defaultPluginsLength() {
+    return TinyCloner.#defaultPlugins.length;
+  }
+
+  /**
+   * @returns {string[]} An array containing the unique IDs of all default plugins.
+   */
+  static get defaultPluginIds() {
+    return TinyCloner.#defaultPlugins.map((p) => p.id);
   }
 
   /**
@@ -125,13 +141,29 @@ class TinyCloner {
   }
 
   /**
-   * Adds a new plugin to the default plugins registry.
+   * Adds a new plugin to the default plugins registry at a specified position.
+   *
    * @param {CloningPlugin<any>} plugin - The plugin to add.
-   * @throws {TypeError} If the plugin is invalid.
+   * @param {'start' | 'end' | 'index'} [position='start'] - The position where the plugin should be inserted.
+   * @param {number} [index=0] - The specific index to use if position is set to 'index'.
+   * @throws {TypeError} If the plugin is invalid, the position is unrecognized, or index is not a valid integer.
    */
-  static addDefaultPlugin(plugin) {
+  static addDefaultPlugin(plugin, position = 'start', index = 0) {
     TinyCloner.validatePlugin(plugin);
-    TinyCloner.#defaultPlugins.push({ ...plugin });
+    const pluginCopy = { ...plugin };
+
+    if (position === 'start') {
+      TinyCloner.#defaultPlugins.unshift(pluginCopy);
+    } else if (position === 'end') {
+      TinyCloner.#defaultPlugins.push(pluginCopy);
+    } else if (position === 'index') {
+      if (!Number.isInteger(index) || index < 0) {
+        throw new TypeError('When position is "index", the index must be a non-negative integer.');
+      }
+      TinyCloner.#defaultPlugins.splice(index, 0, pluginCopy);
+    } else {
+      throw new TypeError('Position must be "start", "end", or "index".');
+    }
   }
 
   /**
@@ -162,7 +194,9 @@ class TinyCloner {
    * @param {((a: CloningPlugin<any>, b: CloningPlugin<any>) => number)} [compareFn] - The function to make the new order of plugins.
    */
   static reorderDefaultPlugins(compareFn) {
-    TinyCloner.#defaultPlugins = TinyCloner.#defaultPlugins.sort(compareFn ? (a, b) => compareFn({ ...a }, { ...b }) : undefined);
+    TinyCloner.#defaultPlugins = TinyCloner.#defaultPlugins.sort(
+      compareFn ? (a, b) => compareFn({ ...a }, { ...b }) : undefined,
+    );
   }
 
   // --- Instance Management ---
@@ -171,6 +205,20 @@ class TinyCloner {
    * @type {CloningPlugin<any>[]}
    */
   #plugins = [];
+
+  /**
+   * @returns {number} The total number of plugins registered in this specific instance.
+   */
+  get pluginsLength() {
+    return this.#plugins.length;
+  }
+
+  /**
+   * @returns {string[]} An array containing the unique IDs of all plugins in this instance.
+   */
+  get pluginIds() {
+    return this.#plugins.map((p) => p.id);
+  }
 
   /**
    * @returns {CloningPlugin<any>[]} A deep copy of the instance's plugins.
@@ -196,13 +244,29 @@ class TinyCloner {
   }
 
   /**
-   * Adds a new plugin to the instance.
+   * Adds a new plugin to the instance at a specified position.
+   *
    * @param {CloningPlugin<any>} plugin - The plugin to add.
-   * @throws {TypeError} If the plugin is invalid.
+   * @param {'start' | 'end' | 'index'} [position='start'] - The position where the plugin should be inserted.
+   * @param {number} [index=0] - The specific index to use if position is set to 'index'.
+   * @throws {TypeError} If the plugin is invalid, the position is unrecognized, or index is not a valid integer.
    */
-  addPlugin(plugin) {
+  addPlugin(plugin, position = 'start', index = 0) {
     TinyCloner.validatePlugin(plugin);
-    this.#plugins.push({ ...plugin });
+    const pluginCopy = { ...plugin };
+
+    if (position === 'start') {
+      this.#plugins.unshift(pluginCopy);
+    } else if (position === 'end') {
+      this.#plugins.push(pluginCopy);
+    } else if (position === 'index') {
+      if (!Number.isInteger(index) || index < 0) {
+        throw new TypeError('When position is "index", the index must be a non-negative integer.');
+      }
+      this.#plugins.splice(index, 0, pluginCopy);
+    } else {
+      throw new TypeError('Position must be "start", "end", or "index".');
+    }
   }
 
   /**
@@ -233,7 +297,9 @@ class TinyCloner {
    * @param {((a: CloningPlugin<any>, b: CloningPlugin<any>) => number)} [compareFn] - The function to make the new order of plugins.
    */
   reorderPlugins(compareFn) {
-    this.#plugins = this.#plugins.sort(compareFn ? (a, b) => compareFn({ ...a }, { ...b }) : undefined);
+    this.#plugins = this.#plugins.sort(
+      compareFn ? (a, b) => compareFn({ ...a }, { ...b }) : undefined,
+    );
   }
 
   /**
