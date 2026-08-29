@@ -5,10 +5,10 @@
  */
 
 /**
+ * A map where keys are the XML tag names and values are the tag contents.
  * @typedef {Object} CustomTagMap
  * @property {string} [tag] - The tag name (key in the object, e.g., 'example:tag').
  * @property {string} [value] - The content of the tag (value in the object).
- * @description A map where keys are the XML tag names and values are the tag contents.
  */
 
 /**
@@ -21,24 +21,31 @@
  */
 
 /**
- * @typedef {Object} SitemapConfig
- * @property {string} baseUrl - The base URL of the website.
- * @property {SitemapNamespace[]} [namespaces] - Custom namespaces to declare in the urlset.
- * @property {SitemapEntry[]} entries - An array of page entries.
+ * @typedef {Object} SitemapIndexEntry
+ * @property {string} loc - The absolute URL of the sitemap file.
+ * @property {string} [lastmod] - The last modified date in ISO 8601 format.
  */
 
 /**
- * A service to manage and generate secure XML sitemaps.
+ * @typedef {Object} SitemapConfig
+ * @property {'normal'|'index'} [type] - The type of sitemap to generate. Defaults to 'normal'.
+ * @property {string} baseUrl - The base URL of the website.
+ * @property {SitemapNamespace[]} [namespaces] - Custom namespaces to declare.
+ * @property {SitemapEntry[] | SitemapIndexEntry[]} entries - Array of entries.
+ */
+
+/**
+ * A service to manage and generate secure XML sitemaps or sitemap indexes.
  */
 class TinySitemapGenerator {
   /** @type {URL} */
   #baseUrl;
-  /** @type {SitemapEntry[]} */
+  /** @type {(SitemapEntry|SitemapIndexEntry)[]} */
   #entries;
   /** @type {SitemapNamespace[]} */
-  #namespaces; // New private field to store namespaces
-  /** @type {string} */
-  #type = 'normal';
+  #namespaces;
+  /** @type {'normal'|'index'} */
+  #type;
 
   /**
    * @param {SitemapConfig} config
@@ -46,17 +53,19 @@ class TinySitemapGenerator {
    */
   constructor(config) {
     this.#validateConfig(config);
+    this.#type = config.type ?? 'normal';
     this.#baseUrl = new URL(config.baseUrl);
     this.#entries = [];
-    this.#namespaces = config.namespaces ?? []; // Initialize namespaces
+    this.#namespaces = [...(config.namespaces ?? [])];
 
+    // Default Namespaces
     this.#namespaces.push({ uri: 'http://www.sitemaps.org/schemas/sitemap/0.9' });
     this.#namespaces.push({ prefix: 'xsi', uri: 'http://www.w3.org/2001/XMLSchema-instance' });
 
     if (this.#type === 'normal') {
       this.#namespaces.push({
         prefix: 'schemaLocation',
-        uri: '"http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd',
+        uri: 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd',
       });
     }
 
@@ -106,6 +115,9 @@ class TinySitemapGenerator {
     } catch {
       throw new TypeError('config.baseUrl must be a valid absolute URL.');
     }
+    if (config.type && !['normal', 'index'].includes(config.type)) {
+      throw new TypeError('config.type must be either "normal" or "index".');
+    }
 
     // Regex to validate XML Name
     const xmlNameRegex = /^[a-zA-Z_][\w.-]*$/;
@@ -120,7 +132,7 @@ class TinySitemapGenerator {
           typeof ns.uri !== 'string'
         ) {
           throw new TypeError(
-            'Each namespace must have a optional string "prefix" and a valid string "uri".',
+            'Each namespace must have an optional string "prefix" and a valid string "uri".',
           );
         }
         // SECURITY: Validating prefix to prevent XML Injection in attribute names
@@ -139,10 +151,21 @@ class TinySitemapGenerator {
    */
   #maxResolvedUrlSize = 2048;
 
+  get maxResolvedUrlSize() {
+    return this.#maxResolvedUrlSize;
+  }
+
+  set maxResolvedUrlSize(value) {
+    if (typeof value !== 'number' || Number.isNaN(value) || !Number.isFinite(value) || value < 0) {
+      throw new TypeError('maxResolvedUrlSize must be a non negative number.');
+    }
+    this.#maxResolvedUrlSize = value;
+  }
+
   /**
    * Resolves relative URLs, validates all fields, and returns a new normalized object.
-   * @param {SitemapEntry} entry - The entry to process.
-   * @returns {SitemapEntry} The normalized and validated entry.
+   * @param {SitemapEntry | SitemapIndexEntry} entry - The entry to process.
+   * @returns {SitemapEntry | SitemapIndexEntry} The normalized and validated entry.
    * @throws {TypeError} If validation fails.
    * @throws {RangeError} If priority is invalid or URL is too long.
    */
@@ -170,61 +193,61 @@ class TinySitemapGenerator {
       throw new RangeError(`entry.loc must be less than ${this.#maxResolvedUrlSize} characters.`);
     }
 
+    /** @type {SitemapEntry} */
     const normalizedEntry = { ...entry, loc: resolvedUrl.href };
 
-    // Validate lastmod
+    // Validate lastmod (Shared by both types)
     if (normalizedEntry.lastmod && typeof normalizedEntry.lastmod === 'string') {
       if (Number.isNaN(Date.parse(normalizedEntry.lastmod))) {
         throw new TypeError(`entry.lastmod "${normalizedEntry.lastmod}" is an invalid date.`);
       }
     }
 
-    // Validate changefreq
-    const validFreqs = ['always', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'never'];
-    if (normalizedEntry.changefreq && !validFreqs.includes(normalizedEntry.changefreq)) {
-      throw new TypeError(`entry.changefreq must be one of: ${validFreqs.join(', ')}`);
-    }
+    // Type-specific validation
+    if (this.#type === 'normal') {
+      // Validate changefreq
+      const validFreqs = ['always', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'never'];
+      if (normalizedEntry.changefreq && !validFreqs.includes(normalizedEntry.changefreq)) {
+        throw new TypeError(`entry.changefreq must be one of: ${validFreqs.join(', ')}`);
+      }
 
-    // Validate priority
-    if (normalizedEntry.priority !== undefined) {
-      if (typeof normalizedEntry.priority !== 'number' || Number.isNaN(normalizedEntry.priority)) {
-        throw new TypeError('entry.priority must be a number.');
-      }
-      if (normalizedEntry.priority < 0 || normalizedEntry.priority > 1) {
-        throw new RangeError('entry.priority must be between 0.0 and 1.0.');
-      }
-    }
-
-    // Validation for customTags
-    if (entry.customTags) {
-      if (typeof entry.customTags !== 'object' || entry.customTags === null) {
-        throw new TypeError('entry.customTags must be an object.');
-      }
-      for (const [tag, value] of Object.entries(entry.customTags)) {
-        if (typeof value !== 'string') {
-          throw new TypeError(`The content for custom tag "${tag}" must be a string.`);
+      // Validate priority
+      if (normalizedEntry.priority !== undefined) {
+        if (
+          typeof normalizedEntry.priority !== 'number' ||
+          Number.isNaN(normalizedEntry.priority)
+        ) {
+          throw new TypeError('entry.priority must be a number.');
+        }
+        if (normalizedEntry.priority < 0 || normalizedEntry.priority > 1) {
+          throw new RangeError('entry.priority must be between 0.0 and 1.0.');
         }
       }
-    }
 
-    // Regex to validate an XML QName (prefix:localName)
-    const xmlNameRegex = /^[a-zA-Z_][\w.-]*$/;
-    const qNameRegex = new RegExp(`^${xmlNameRegex.source}(:${xmlNameRegex.source})?$`);
+      // Validate customTags
+      if (normalizedEntry.customTags) {
+        // Regex to validate an XML QName (prefix:localName)
+        const xmlNameRegex = /^[a-zA-Z_][\w.-]*$/;
+        const qNameRegex = new RegExp(`^${xmlNameRegex.source}(:${xmlNameRegex.source})?$`);
 
-    // Validation for customTags
-    if (entry.customTags) {
-      if (typeof entry.customTags !== 'object' || entry.customTags === null) {
-        throw new TypeError('entry.customTags must be an object.');
+        // Validation for customTags
+        if (typeof normalizedEntry.customTags !== 'object' || normalizedEntry.customTags === null) {
+          throw new TypeError('entry.customTags must be an object.');
+        }
+        for (const [tag, value] of Object.entries(normalizedEntry.customTags)) {
+          // SECURITY: Validate that the tag name is a valid XML QName to prevent injection
+          if (!qNameRegex.test(tag)) throw new TypeError(`Invalid custom tag name: "${tag}".`);
+          // Validate content
+          if (typeof value !== 'string')
+            throw new TypeError(`The content for custom tag "${tag}" must be a string.`);
+        }
       }
-      for (const [tag, value] of Object.entries(entry.customTags)) {
-        // SECURITY: Validate that the tag name is a valid XML QName to prevent injection
-        if (!qNameRegex.test(tag)) {
-          throw new TypeError(`Invalid custom tag name: "${tag}". Tag must be a valid XML QName.`);
-        }
-        // Validate content
-        if (typeof value !== 'string') {
-          throw new TypeError(`The content for custom tag "${tag}" must be a string.`);
-        }
+    } else {
+      // Strict mode for 'index': forbid properties that don't belong to <sitemap>
+      if (normalizedEntry.changefreq || normalizedEntry.priority || normalizedEntry.customTags) {
+        throw new TypeError(
+          'Sitemap Index entries cannot contain changefreq, priority, or customTags.',
+        );
       }
     }
 
@@ -308,8 +331,8 @@ class TinySitemapGenerator {
   }
 
   /**
-   * Generates the sitemap as a valid XML string with sanitized content.
-   * @returns {string} The secure XML content.
+   * Generates the sitemap or sitemap index as a valid XML string.
+   * @returns {string}
    */
   generateXml() {
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
@@ -319,7 +342,7 @@ class TinySitemapGenerator {
     if (this.#type === 'normal') {
       const existsCustomTags =
         this.#entries.findIndex(
-          (entry) =>
+          (/** @type {SitemapEntry} */ entry) =>
             entry.customTags &&
             (typeof entry.customTags.tag === 'string' ||
               typeof entry.customTags.value === 'string'),
@@ -346,28 +369,45 @@ class TinySitemapGenerator {
       namespaceAttributes += ` xmlns${typeof ns.prefix !== 'undefined' ? `:${ns.prefix}` : ''}="${this.#escapeXml(ns.uri)}"`;
     }
 
-    xml += `<urlset${namespaceAttributes}>\n`;
-
-    for (const entry of this.#entries) {
-      xml += `  <url>\n`;
-      // All dynamic content is passed through #escapeXml to prevent XML Injection
-      xml += `    <loc>${this.#escapeXml(entry.loc)}</loc>\n`;
-      if (entry.lastmod) xml += `    <lastmod>${new Date(entry.lastmod).toISOString()}</lastmod>\n`;
-      if (entry.changefreq)
-        xml += `    <changefreq>${this.#escapeXml(entry.changefreq)}</changefreq>\n`;
-      if (entry.priority !== undefined)
-        xml += `    <priority>${entry.priority.toFixed(1)}</priority>\n`;
-
-      // Render custom tags
-      if (entry.customTags) {
-        for (const [tag, value] of Object.entries(entry.customTags)) {
-          xml += `    <${tag}>${this.#escapeXml(value)}</${tag}>\n`;
-        }
+    if (this.#type === 'index') {
+      xml += `<sitemapindex${namespaceAttributes}>\n`;
+      for (const index in this.#entries) {
+        /** @type {SitemapIndexEntry} */
+        const entry = this.#entries[index];
+        xml += `  <sitemap>\n`;
+        xml += `    <loc>${this.#escapeXml(entry.loc)}</loc>\n`;
+        if (entry.lastmod)
+          xml += `    <lastmod>${new Date(entry.lastmod).toISOString()}</lastmod>\n`;
+        xml += `  </sitemap>\n`;
       }
+    } else {
+      xml += `<urlset${namespaceAttributes}>\n`;
 
-      xml += `  </url>\n`;
+      for (const index in this.#entries) {
+        /** @type {SitemapEntry} */
+        const entry = this.#entries[index];
+        xml += `  <url>\n`;
+        // All dynamic content is passed through #escapeXml to prevent XML Injection
+        xml += `    <loc>${this.#escapeXml(entry.loc)}</loc>\n`;
+        if (entry.lastmod)
+          xml += `    <lastmod>${new Date(entry.lastmod).toISOString()}</lastmod>\n`;
+        if (entry.changefreq)
+          xml += `    <changefreq>${this.#escapeXml(entry.changefreq)}</changefreq>\n`;
+        if (entry.priority !== undefined)
+          xml += `    <priority>${entry.priority.toFixed(1)}</priority>\n`;
+
+        // Render custom tags
+        if (entry.customTags) {
+          for (const [tag, value] of Object.entries(entry.customTags)) {
+            xml += `    <${tag}>${this.#escapeXml(value)}</${tag}>\n`;
+          }
+        }
+
+        xml += `  </url>\n`;
+      }
     }
-    xml += `</urlset>`;
+
+    xml += `</${this.#type === 'index' ? 'sitemapindex' : 'urlset'}>`;
     return xml;
   }
 }
