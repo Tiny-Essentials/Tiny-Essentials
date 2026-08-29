@@ -10,7 +10,7 @@ const order = getObjTypeOrder();
  * @typedef {Object} CloningPlugin
  * @property {string} id - The function id.
  * @property {(value: Value) => boolean} canHandle - A function that accepts an item and returns true if the plugin is responsible for that type.
- * @property {(value: Value, isDeep: boolean, cloner: TinyCloner) => Value} clone - A function that accepts the item and the cloner instance, returning the cloned version.
+ * @property {(value: Value, isDeep: boolean, cloner: TinyCloner|typeof TinyCloner) => Value} clone - A function that accepts the item and the cloner instance, returning the cloned version.
  */
 
 /**
@@ -358,6 +358,25 @@ class TinyCloner {
     this.#plugins = this.#plugins.sort(
       compareFn ? (a, b) => compareFn({ ...a }, { ...b }) : undefined,
     );
+  }
+
+  /**
+   * Performs the cloning operation on the provided item.
+   *
+   * @template {any} Value
+   * @param {Value} item - The item to be cloned.
+   * @param {boolean} [isDeep=true] - Whether to perform a deep clone (true) or a shallow clone (false).
+   * @returns {Value} The cloned version of the input item.
+   */
+  static clone(item, isDeep = true) {
+    for (const plugin of TinyCloner.#defaultPlugins) {
+      if (plugin.canHandle(item)) {
+        return plugin.clone(item, isDeep, TinyCloner);
+      }
+    }
+
+    // Fallback for primitives and null
+    return item;
   }
 
   /**

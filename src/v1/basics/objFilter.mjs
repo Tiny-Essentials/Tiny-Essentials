@@ -46,7 +46,7 @@ const typeValidator = {
  * A function type used to clone a value, supporting deep cloning operations.
  *
  * @template {any} Value - The type of the value to be cloned.
- * @typedef {(val: Value, isDeep: boolean, cloner: TinyCloner) => Value} ExtendObjTypeCloner
+ * @typedef {(val: Value, isDeep: boolean, cloner: TinyCloner|typeof TinyCloner) => Value} ExtendObjTypeCloner
  */
 
 /**
