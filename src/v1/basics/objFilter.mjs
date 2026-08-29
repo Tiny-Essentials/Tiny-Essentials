@@ -408,6 +408,8 @@ if (isBrowser) {
     'file',
     /** @param {unknown} val @returns {val is File} */
     (val) => typeof File !== 'undefined' && val instanceof File,
+    /** @type {ExtendObjTypeCloner<File>} */
+    (item) => new File([item], item.name, { type: item.type, lastModified: item.lastModified }),
   ]);
 }
 
@@ -486,6 +488,8 @@ if (isBrowser) {
     'htmlelement',
     /** @param {unknown} val @returns {val is HTMLElement} */
     (val) => typeof HTMLElement !== 'undefined' && val instanceof HTMLElement,
+    /** @type {ExtendObjTypeCloner<HTMLElement>} */
+    (item) => item.cloneNode(true),
   ]);
 }
 
