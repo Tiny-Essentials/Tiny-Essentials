@@ -15,7 +15,7 @@ const order = getObjTypeOrder();
 
 /**
  * @typedef {Object} TinyClonerOptions
- * @property {boolean} [useDefaultPlugins=false] - If true, the instance will be initialized with a copy of the default plugins and will ignore global defaults during the cloning process.
+ * @property {boolean} [isolationMode=false] - If true, the instance will be initialized with a copy of the default plugins and will ignore global defaults during the cloning process.
  */
 
 /**
@@ -23,7 +23,7 @@ const order = getObjTypeOrder();
  */
 class TinyCloner {
   /** @type {boolean} */
-  #useDefaultPlugins = false;
+  #isolationMode = false;
 
   /**
    * Indicates whether the instance is operating in isolation mode.
@@ -37,8 +37,8 @@ class TinyCloner {
    *
    * @returns {boolean} True if the instance is isolated, false if it uses global fallbacks.
    */
-  get useDefaultPlugins() {
-    return this.#useDefaultPlugins;
+  get isolationMode() {
+    return this.#isolationMode;
   }
 
   /** @type {boolean} */
@@ -67,23 +67,23 @@ class TinyCloner {
   /**
    * Creates an instance of TinyCloner.
    *
-   * @param {TinyClonerOptions} [options={ useDefaultPlugins: false }] - Configuration options for the cloner instance.
+   * @param {TinyClonerOptions} [options={ isolationMode: false }] - Configuration options for the cloner instance.
    */
-  constructor(options = { useDefaultPlugins: false }) {
+  constructor(options = { isolationMode: false }) {
     if (typeof options !== 'object' || options === null) {
       throw new TypeError('Options must be a non-null object.');
     }
 
     if (
-      typeof options.useDefaultPlugins !== 'undefined' &&
-      typeof options.useDefaultPlugins !== 'boolean'
+      typeof options.isolationMode !== 'undefined' &&
+      typeof options.isolationMode !== 'boolean'
     ) {
-      throw new TypeError('The property "useDefaultPlugins" must be a boolean.');
+      throw new TypeError('The property "isolationMode" must be a boolean.');
     }
 
-    this.#useDefaultPlugins = !!options.useDefaultPlugins;
+    this.#isolationMode = !!options.isolationMode;
 
-    if (this.#useDefaultPlugins) {
+    if (this.#isolationMode) {
       // Initialize instance with a copy of default plugins
       this.#plugins = TinyCloner.#defaultPlugins.map((p) => ({ ...p }));
     }
@@ -430,8 +430,8 @@ class TinyCloner {
       }
     }
 
-    // 2. If useDefaultPlugins is false, check global defaults
-    if (!this.#useDefaultPlugins) {
+    // 2. If isolationMode is false, check global defaults
+    if (!this.#isolationMode) {
       for (const plugin of TinyCloner.#defaultPlugins) {
         if (plugin.canHandle(item)) {
           return plugin.clone(item, isDeep, this);
