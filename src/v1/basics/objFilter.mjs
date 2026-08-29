@@ -1,6 +1,10 @@
 // @ts-nocheck
 import { isJsonObject } from './objChecker.mjs';
 
+/**
+ * A flag indicating if the current environment is a web browser.
+ * @type {boolean}
+ */
 const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
 
 /**
@@ -11,15 +15,18 @@ const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'u
  *
  * The `order` array defines the priority in which types should be checked,
  * which can be useful for functions that infer types in a consistent manner.
- *
  */
 const typeValidator = {
-  /** @type {Record<string, ObjTypeRegistry<any, any>>} */
+  /**
+   * A registry where keys are type names and values are their validation and cloning logic.
+   * @type {Record<string, ObjTypeRegistry<any, any>>}
+   */
   items: {},
   /**
-   * Evaluation order of the type checkers.
+   * The sequence in which type validators are checked.
+   * The first validator to return true for a value determines the type name.
    * @type {string[]}
-   * */
+   */
   order: [],
 };
 
@@ -28,41 +35,51 @@ const typeValidator = {
  */
 
 /**
- * @template {any} Value
- * @template {any} Result
+ * A function type used to validate a value and return a specific result.
+ *
+ * @template {any} Value - The type of the value being validated.
+ * @template {any} Result - The type of the result returned by the function.
  * @typedef {(val: Value) => Result} ExtendObjTypeFunc
  */
 
 /**
- * @template {any} Value
+ * A function type used to clone a value, supporting deep cloning operations.
+ *
+ * @template {any} Value - The type of the value to be cloned.
  * @typedef {(val: Value, isDeep: boolean, cloner: TinyCloner) => Value} ExtendObjTypeCloner
  */
 
 /**
- * @template {any} Value
+ * A mapping of type names to their corresponding validation functions.
+ *
+ * @template {any} Value - The type of the value being mapped.
  * @typedef {Object.<string, ExtendObjTypeFunc<Value, any>>} ExtendObjType
  */
 
 /**
- * @template {any} Value
- * @template {any} Result
+ * A tuple representing a type definition, containing a key, a validator, and an optional cloner.
+ *
+ * @template {any} Value - The type of the value.
+ * @template {any} Result - The type of the result returned by the validator.
  * @typedef {[string, ExtendObjTypeFunc<Value, Result>, ExtendObjTypeCloner<Value>]|[string, ExtendObjTypeFunc<Value, Result>]} ExtendObjTypeValue
  */
 
 /**
- * @template {any} Value
- * @template {any} Result
+ * A registry object containing the validator and cloner for a specific type.
+ *
+ * @template {any} Value - The type of the value being registered.
+ * @template {any} Result - The type of the result returned by the validator.
  * @typedef {Object} ObjTypeRegistry
- * @property {ExtendObjTypeFunc<Value, Result>} validator
- * @property {ExtendObjTypeCloner<Value>} cloner
+ * @property {ExtendObjTypeFunc<Value, Result>} validator - The function used to validate the type.
+ * @property {ExtendObjTypeCloner<Value>} cloner - The function used to create a clone of the value.
  */
 
 /**
- * Adds new type checkers to the typeValidator without overwriting existing ones.
+ * Adds new type checkers to the `typeValidator` registry.
  *
- * Accepts either an object with named functions, an array of [key, fn] arrays,
- * or a single [key, fn] array.
- * If no index is provided, the type is inserted just before 'object' (if it exists), or at the end.
+ * Accepts an object of functions, an array of [key, validator] tuples, or an array of [key, validator, cloner] tuples.
+ * If an `index` is provided, the new type is inserted at that position.
+ * If no index is provided, it is inserted before the 'object' type or at the end of the registry.
  *
  * @template {any} Value
  * @template {any} Result
@@ -70,10 +87,11 @@ const typeValidator = {
  * - New type validators to be added.
  * @param {number} [index] - Optional. Position at which to insert each new type. Ignored if the type already exists.
  * @returns {string[]} - A list of successfully added type names.
+ * @throws {TypeError} If `ni` is not an object/array, if `index` is not a number, if a key is not a string, or if a validator is not a function.
  *
  * @example
  * extendObjType({
- * htmlElement2: val => typeof HTMLElement !== 'undefined' && val instanceof HTMLElement
+ *   htmlElement2: val => typeof HTMLElement !== 'undefined' && val instanceof HTMLElement
  * });
  *
  * @example
@@ -103,8 +121,8 @@ export function extendObjType(ni, index) {
   //    - If the array is empty, we use an empty array.
   // 2. If ni is an object:
   //    - We use Object.entries to convert it to an array of [key, value] pairs.
+
   /**
-   *
    * @type {[string, ExtendObjTypeFunc<Value, Result>, ExtendObjTypeCloner<Value> | undefined][]}
    */
   let entries;
@@ -242,6 +260,7 @@ export const objTypeName = (val) => {
  * @param {*} obj - The object to check.
  * @param {string} [type] - Checks whether the object matches this type (e.g., "object", "array", "string").
  * @returns {boolean} - Returns `true` if the type matches.
+ * @throws {TypeError} If `type` is not a string.
  */
 export function isObjType(obj, type) {
   if (typeof type !== 'string') throw new TypeError("Argument 'type' must be a string.");
@@ -256,6 +275,7 @@ export function isObjType(obj, type) {
  * @param {string} [type] - Optional. If provided, checks whether the object matches this type (e.g., "object", "array", "string").
  * @returns {boolean|string|null} - Returns `true` if the type matches, `false` if not,
  * the type string if no type is provided, or `null` if the object is `undefined`.
+ * @throws {TypeError} If `type` is provided but is not a string.
  *
  * @example
  * objType([], 'array'); // true
@@ -275,13 +295,19 @@ export function objType(obj, type) {
 }
 
 /**
- * Checks the type of a given object and returns the validation value if a known type is detected.
+ * @typedef {Object} CheckResult
+ * @property {*} valid - The result of the validator function (often the value itself if truthy).
+ * @property {string | null} type - The name of the detected type.
+ */
+
+/**
+ * Evaluates an object against the registered validators and returns the first match.
  *
- * @param {*} obj - The object to check or identify.
- * @returns {{ valid:*; type: string | null }} - Returns the type result.
+ * @param {unknown} obj - The object to check.
+ * @returns {CheckResult} An object containing the validation result and the type name.
  */
 export function checkObj(obj) {
-  /** @type {{ valid:*; type: string | null }} */
+  /** @type {CheckResult} */
   const data = { valid: null, type: null };
   for (const name of typeValidator.order) {
     if (typeof typeValidator.items[name].validator === 'function') {
@@ -297,9 +323,9 @@ export function checkObj(obj) {
 }
 
 /**
- * Creates a clone of the functions from the `typeValidator` object.
- * It returns a new object where the keys are the same and the values are the cloned functions.
- * @returns {Record<string, ObjTypeRegistry<any, any>>}
+ * Returns a shallow clone of the `typeValidator.items` registry.
+ *
+ * @returns {Record<string, ObjTypeRegistry<any, any>>} A new object containing the registry data.
  */
 export function getObjTypeRegistry() {
   return Object.fromEntries(
@@ -308,10 +334,8 @@ export function getObjTypeRegistry() {
 }
 
 /**
- * Creates a clone of the functions from the `typeValidator` object.
- * It returns a new object where the keys are the same and the values are the cloned functions.
- * @returns {Record<string, ExtendObjTypeFunc<any, any>>}
- * @deprecated Function rename! Use {@link getObjTypeRegistry} instead.
+ * @deprecated Use {@link getObjTypeRegistry} instead.
+ * @returns {Record<string, ExtendObjTypeFunc<any, any>>} A registry of validator functions.
  */
 export function getCheckObj() {
   return Object.fromEntries(
@@ -321,11 +345,12 @@ export function getCheckObj() {
 
 /**
  * Returns a copy of the current order of type validators.
- * @returns {string[]}
+ * @returns {string[]} A new array containing the type order.
  */
 export const getObjTypeOrder = () => [...typeValidator.order];
 
-// Insert obj types
+// --- Type Registration ---
+
 extendObjType([
   [
     'undefined',
