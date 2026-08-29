@@ -8,6 +8,7 @@ const order = getObjTypeOrder();
  *
  * @template {any} Value
  * @typedef {Object} CloningPlugin
+ * @property {string} id - The function id.
  * @property {(value: Value) => boolean} canHandle - A function that accepts an item and returns true if the plugin is responsible for that type.
  * @property {(value: Value, isDeep: boolean, cloner: TinyCloner) => Value} clone - A function that accepts the item and the cloner instance, returning the cloned version.
  */
@@ -55,11 +56,13 @@ class TinyCloner {
 
   /**
    * Creates a default plugin specifically designed to handle plain JavaScript objects.
-   *
+   * @param {string} id - The function id.
    * @returns {CloningPlugin<Object.<string, any>>} A plugin object configured for object cloning.
    */
-  static _createObjectPlugin() {
+  static _createObjectPlugin(id) {
+    if (typeof id !== 'string') throw new TypeError('Id must be a string.');
     return {
+      id,
       canHandle: (item) => item !== null && typeof item === 'object',
       clone: (item, isDeep, cloner) => {
         /** @type {Record<string, any>} */
@@ -92,6 +95,8 @@ class TinyCloner {
         'Each plugin must implement the required interface: canHandle(item) and clone(item, cloner).',
       );
     }
+    if (typeof plugin?.id !== 'string') 
+      throw new TypeError('Each plugin must implement the required interface: the plugin id string.');
   }
 
   // --- Static Management (Global Defaults) ---
@@ -265,6 +270,7 @@ class TinyCloner {
 TinyCloner.defaultPlugins = order
   .filter((typeName) => registry[typeName]) // Ensures that the type exists in the record
   .map((typeName) => ({
+    id: typeName,
     canHandle: registry[typeName].validator,
     clone: registry[typeName].cloner,
   }));
