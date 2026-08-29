@@ -4,10 +4,12 @@ const registry = getObjTypeRegistry();
 const order = getObjTypeOrder();
 
 /**
+ * Represents a plugin used by the TinyCloner to identify and clone specific data types.
+ *
  * @template {any} Value
  * @typedef {Object} CloningPlugin
  * @property {(value: Value) => boolean} canHandle - A function that accepts an item and returns true if the plugin is responsible for that type.
- * @property {(value: Value, isDeep: boolean, instance: TinyCloner) => Value} clone - A function that accepts the item and the cloner instance, returning the cloned version.
+ * @property {(value: Value, isDeep: boolean, cloner: TinyCloner) => Value} clone - A function that accepts the item and the cloner instance, returning the cloned version.
  */
 
 /**
@@ -15,7 +17,9 @@ const order = getObjTypeOrder();
  */
 class TinyCloner {
   /**
-   * @returns {CloningPlugin<Object.<string, any>>}
+   * Creates a default plugin specifically designed to handle plain JavaScript objects.
+   *
+   * @returns {CloningPlugin<Object.<string, any>>} A plugin object configured for object cloning.
    */
   static _createObjectPlugin() {
     return {
@@ -39,8 +43,11 @@ class TinyCloner {
   static #defaultPlugins = [];
 
   /**
+   * Validates that a plugin object adheres to the required CloningPlugin interface.
+   *
    * @template {any} T
-   * @param {CloningPlugin<T>} plugin
+   * @param {CloningPlugin<T>} plugin - The plugin object to validate.
+   * @throws {TypeError} If the plugin does not implement the required 'canHandle' and 'clone' methods.
    */
   static validatePlugin(plugin) {
     if (typeof plugin?.canHandle !== 'function' || typeof plugin?.clone !== 'function') {
@@ -106,11 +113,13 @@ class TinyCloner {
   }
 
   /**
+   * Performs the cloning operation on the provided item. It iterates through the instance's
+   * plugins first, then the default plugins, until a matching plugin is found.
+   *
    * @template {any} Value
-   * Performs the deep clone operation.
    * @param {Value} item - The item to be cloned.
-   * @param {boolean} isDeep
-   * @returns {Value} The deep cloned item.
+   * @param {boolean} [isDeep=true] - Whether to perform a deep clone (true) or a shallow clone (false).
+   * @returns {Value} The cloned version of the input item.
    */
   clone(item, isDeep = true) {
     // Iterate through plugins; the first one that returns true for canHandle wins.

@@ -373,6 +373,11 @@ extendObjType([
     (val) => typeof val === 'number' && !Number.isNaN(val),
   ],
   [
+    'nannumber',
+    /** @param {unknown} val @returns {val is number} */
+    (val) => typeof val === 'number' && Number.isNaN(val),
+  ],
+  [
     'bigint',
     /** @param {unknown} val @returns {val is bigint} */
     (val) => typeof val === 'bigint',
