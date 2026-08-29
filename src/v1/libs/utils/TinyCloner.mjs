@@ -15,6 +15,25 @@ const order = getObjTypeOrder();
  */
 class TinyCloner {
   /**
+   * @returns {CloningPlugin<Object.<string, any>>}
+   */
+  static _createObjectPlugin() {
+    return {
+      canHandle: (item) => item !== null && typeof item === 'object',
+      clone: (item, isDeep, cloner) => {
+        /** @type {Record<string, any>} */
+        const result = {};
+        for (const key in item) {
+          if (Object.prototype.hasOwnProperty.call(item, key)) {
+            result[key] = isDeep ? cloner.clone(item[key], isDeep) : item[key];
+          }
+        }
+        return result;
+      },
+    };
+  }
+
+  /**
    * @type {CloningPlugin<any>[]}
    */
   static #defaultPlugins = [];
@@ -110,25 +129,6 @@ class TinyCloner {
 
     // Fallback for primitives and null
     return item;
-  }
-
-  /**
-   * @returns {CloningPlugin<Object.<string, any>>}
-   */
-  static _createObjectPlugin() {
-    return {
-      canHandle: (item) => item !== null && typeof item === 'object',
-      clone: (item, isDeep, cloner) => {
-        /** @type {Record<string, any>} */
-        const result = {};
-        for (const key in item) {
-          if (Object.prototype.hasOwnProperty.call(item, key)) {
-            result[key] = isDeep ? cloner.clone(item[key], isDeep) : item[key];
-          }
-        }
-        return result;
-      },
-    };
   }
 }
 

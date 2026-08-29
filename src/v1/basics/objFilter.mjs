@@ -24,6 +24,10 @@ const typeValidator = {
 };
 
 /**
+ * @typedef {import('../libs/utils/TinyCloner.mjs').default} TinyCloner
+ */
+
+/**
  * @template {any} Value
  * @template {any} Result
  * @typedef {(val: Value) => Result} ExtendObjTypeFunc
@@ -31,19 +35,18 @@ const typeValidator = {
 
 /**
  * @template {any} Value
- * @typedef {(val: Value, isDeep: boolean, cloner: any) => any} ExtendObjTypeCloner
+ * @typedef {(val: Value, isDeep: boolean, cloner: TinyCloner) => Value} ExtendObjTypeCloner
+ */
+
+/**
+ * @template {any} Value
+ * @typedef {Object.<string, ExtendObjTypeFunc<Value, any>>} ExtendObjType
  */
 
 /**
  * @template {any} Value
  * @template {any} Result
- * @typedef {Object.<string, ExtendObjTypeFunc<Value, Result>>} ExtendObjType
- */
-
-/**
- * @template {any} Value
- * @template {any} Result
- * @typedef {Array<[string, ExtendObjTypeFunc<Value, Result>, ExtendObjTypeCloner<Value>]|[string, ExtendObjTypeFunc<Value, Result>]>} ExtendObjTypeArray
+ * @typedef {[string, ExtendObjTypeFunc<Value, Result>, ExtendObjTypeCloner<Value>]|[string, ExtendObjTypeFunc<Value, Result>]} ExtendObjTypeValue
  */
 
 /**
@@ -57,12 +60,13 @@ const typeValidator = {
 /**
  * Adds new type checkers to the typeValidator without overwriting existing ones.
  *
- * Accepts either an object with named functions or an array of [key, fn] arrays.
+ * Accepts either an object with named functions, an array of [key, fn] arrays,
+ * or a single [key, fn] array.
  * If no index is provided, the type is inserted just before 'object' (if it exists), or at the end.
  *
  * @template {any} Value
  * @template {any} Result
- * @param {ExtendObjType<Value, Result>|ExtendObjTypeArray<Value, Result>} newItems
+ * @param {ExtendObjType<Value> | ExtendObjTypeValue<Value, Result>[] | ExtendObjTypeValue<Value, Result>} ni
  * - New type validators to be added.
  * @param {number} [index] - Optional. Position at which to insert each new type. Ignored if the type already exists.
  * @returns {string[]} - A list of successfully added type names.
@@ -77,10 +81,13 @@ const typeValidator = {
  * ['alpha', val => typeof val === 'string'],
  * ['beta', val => Array.isArray(val)]
  * ]);
+ *
+ * @example
+ * extendObjType(['gamma', val => typeof val === 'number']);
  */
-export function extendObjType(newItems, index) {
-  if (typeof newItems !== 'object' || newItems === null) {
-    throw new TypeError("Argument 'newItems' must be an object or an array.");
+export function extendObjType(ni, index) {
+  if (typeof ni !== 'object' || ni === null) {
+    throw new TypeError("Argument 'ni' must be an object or an array.");
   }
 
   if (typeof index !== 'undefined' && typeof index !== 'number') {
@@ -89,11 +96,36 @@ export function extendObjType(newItems, index) {
 
   const added = [];
 
-  const entries = Array.isArray(newItems) ? newItems : Object.entries(newItems);
+  // Normalization logic:
+  // 1. If ni is an array:
+  //    - If the first element is also an array, it is an array of tuples (ExtendObjTypeValue[]).
+  //    - If the first element is not an array, it is a single tuple (ExtendObjTypeValue).
+  //    - If the array is empty, we use an empty array.
+  // 2. If ni is an object:
+  //    - We use Object.entries to convert it to an array of [key, value] pairs.
+  /**
+   *
+   * @type {[string, ExtendObjTypeFunc<Value, Result>, ExtendObjTypeCloner<Value> | undefined][]}
+   */
+  let entries;
+  if (Array.isArray(ni)) {
+    if (ni.length > 0 && Array.isArray(ni[0])) {
+      // @ts-ignore
+      entries = ni;
+    } else if (ni.length > 0) {
+      // @ts-ignore
+      entries = [ni];
+    } else {
+      entries = [];
+    }
+  } else {
+    // @ts-ignore
+    entries = Object.entries(ni);
+  }
 
   for (const entry of entries) {
     if (!Array.isArray(entry) || entry.length < 2) {
-      throw new TypeError("Each item in 'newItems' array must be a [key, function] pair.");
+      throw new TypeError('Each item in the input must be a [key, function] pair.');
     }
 
     const [key, validator, cloner] = entry;
@@ -294,7 +326,6 @@ export function getCheckObj() {
 export const getObjTypeOrder = () => [...typeValidator.order];
 
 // Insert obj types
-
 extendObjType([
   [
     'undefined',
@@ -336,67 +367,70 @@ extendObjType([
     /** @param {unknown} val @returns {val is Function} */
     (val) => typeof val === 'function',
   ],
-  [
-    'array',
-    /**  @param {unknown} val @returns {val is unknown[]} */
-    (val) => Array.isArray(val),
-    /** @type {ExtendObjTypeCloner<unknown[]>} */
-    (item, isDeep, cloner) =>
-      item.map((element) => (isDeep ? cloner.clone(element, isDeep) : element)),
-  ],
+]);
+
+extendObjType([
+  'array',
+  /**  @param {unknown} val @returns {val is unknown[]} */
+  (val) => Array.isArray(val),
+  /** @type {ExtendObjTypeCloner<unknown[]>} */
+  (item, isDeep, cloner) =>
+    item.map((element) => (isDeep ? cloner.clone(element, isDeep) : element)),
 ]);
 
 if (isBrowser) {
   extendObjType([
-    [
-      'file',
-      /** @param {unknown} val @returns {val is File} */
-      (val) => typeof File !== 'undefined' && val instanceof File,
-    ],
+    'file',
+    /** @param {unknown} val @returns {val is File} */
+    (val) => typeof File !== 'undefined' && val instanceof File,
   ]);
 }
 
 extendObjType([
-  [
-    'date',
-    /** @param {unknown} val @returns {val is Date} */
-    (val) => val instanceof Date,
-    /** @type {ExtendObjTypeCloner<Date>} */
-    (item) => new Date(item.getTime()),
-  ],
-  [
-    'regexp',
-    /** @param {unknown} val @returns {val is RegExp} */
-    (val) => val instanceof RegExp,
-    /** @type {ExtendObjTypeCloner<RegExp>} */
-    (item) => new RegExp(item.source, item.flags),
-  ],
-  [
-    'map',
-    /** @param {unknown} val @returns {val is Map<unknown, unknown>} */
-    (val) => val instanceof Map,
-    /** @type {ExtendObjTypeCloner<Map<unknown, unknown>>} */
-    (item, isDeep, cloner) => {
-      const result = new Map();
-      for (const [key, value] of item.entries()) {
-        result.set(key, isDeep ? cloner.clone(value, isDeep) : value);
-      }
-      return result;
-    },
-  ],
-  [
-    'set',
-    /** @param {unknown} val @returns {val is Set<unknown>} */
-    (val) => val instanceof Set,
-    /** @type {ExtendObjTypeCloner<Set>} */
-    (item, isDeep, cloner) => {
-      const result = new Set();
-      for (const value of item) {
-        result.add(isDeep ? cloner.clone(value, isDeep) : value);
-      }
-      return result;
-    },
-  ],
+  'date',
+  /** @param {unknown} val @returns {val is Date} */
+  (val) => val instanceof Date,
+  /** @type {ExtendObjTypeCloner<Date>} */
+  (item) => new Date(item.getTime()),
+]);
+
+extendObjType([
+  'regexp',
+  /** @param {unknown} val @returns {val is RegExp} */
+  (val) => val instanceof RegExp,
+  /** @type {ExtendObjTypeCloner<RegExp>} */
+  (item) => new RegExp(item.source, item.flags),
+]);
+
+extendObjType([
+  'map',
+  /** @param {unknown} val @returns {val is Map<unknown, unknown>} */
+  (val) => val instanceof Map,
+  /** @type {ExtendObjTypeCloner<Map<unknown, unknown>>} */
+  (item, isDeep, cloner) => {
+    const result = new Map();
+    for (const [key, value] of item.entries()) {
+      result.set(key, isDeep ? cloner.clone(value, isDeep) : value);
+    }
+    return result;
+  },
+]);
+
+extendObjType([
+  'set',
+  /** @param {unknown} val @returns {val is Set<unknown>} */
+  (val) => val instanceof Set,
+  /** @type {ExtendObjTypeCloner<Set<any>>} */
+  (item, isDeep, cloner) => {
+    const result = new Set();
+    for (const value of item) {
+      result.add(isDeep ? cloner.clone(value, isDeep) : value);
+    }
+    return result;
+  },
+]);
+
+extendObjType([
   [
     'weakmap',
     /** @param {unknown} val @returns {val is WeakMap<unknown, unknown>} */
@@ -412,40 +446,37 @@ extendObjType([
     /** @param {unknown} val @returns {val is Promise<unknown>} */
     (val) => val instanceof Promise,
   ],
-  [
-    'url',
-    /** @param {unknown} val @returns {val is URL} */
-    (val) => val instanceof URL,
-    /** @type {ExtendObjTypeCloner<URL>} */
-    (item) => new URL(item.href),
-  ],
+]);
+
+extendObjType([
+  'url',
+  /** @param {unknown} val @returns {val is URL} */
+  (val) => val instanceof URL,
+  /** @type {ExtendObjTypeCloner<URL>} */
+  (item) => new URL(item.href),
 ]);
 
 if (isBrowser) {
   extendObjType([
-    [
-      'htmlelement',
-      /** @param {unknown} val @returns {val is HTMLElement} */
-      (val) => typeof HTMLElement !== 'undefined' && val instanceof HTMLElement,
-    ],
+    'htmlelement',
+    /** @param {unknown} val @returns {val is HTMLElement} */
+    (val) => typeof HTMLElement !== 'undefined' && val instanceof HTMLElement,
   ]);
 }
 
 extendObjType([
-  [
-    'object',
-    /** @param {unknown} val @returns {val is Record<string | number | symbol, unknown>} */
-    (val) => isJsonObject(val),
-    /** @type {ExtendObjTypeCloner<Record<string | number | symbol, unknown>>} */
-    (item, isDeep, cloner) => {
-      /** @type {Record<string | number | symbol, unknown>} */
-      const result = {};
-      for (const key in item) {
-        if (Object.prototype.hasOwnProperty.call(item, key)) {
-          result[key] = isDeep ? cloner.clone(item[key], isDeep) : item[key];
-        }
+  'object',
+  /** @param {unknown} val @returns {val is Record<string | number | symbol, unknown>} */
+  (val) => isJsonObject(val),
+  /** @type {ExtendObjTypeCloner<Record<string | number | symbol, unknown>>} */
+  (item, isDeep, cloner) => {
+    /** @type {Record<string | number | symbol, unknown>} */
+    const result = {};
+    for (const key in item) {
+      if (Object.prototype.hasOwnProperty.call(item, key)) {
+        result[key] = isDeep ? cloner.clone(item[key], isDeep) : item[key];
       }
-      return result;
-    },
-  ],
+    }
+    return result;
+  },
 ]);
