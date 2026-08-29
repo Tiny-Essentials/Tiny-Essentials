@@ -14,7 +14,7 @@ const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'u
  *
  */
 const typeValidator = {
-  /** @type {Record<string, (val: any) => any>} */
+  /** @type {Record<string, ObjTypeRegistry>} */
   items: {},
   /**
    * Evaluation order of the type checkers.
@@ -23,8 +23,17 @@ const typeValidator = {
   order: [],
 };
 
-/** @typedef {Object.<string, (val: any) => *>} ExtendObjType */
-/** @typedef {Array<[string, (val: any) => *]>} ExtendObjTypeArray */
+/** @typedef {{ validator: ExtendObjTypeFunc; cloner: ExtendObjTypeCloner; }} ObjTypeRegistry */
+/** @typedef {(val: any) => any} ExtendObjTypeFunc */
+/** @typedef {(val: any, isDeep: boolean, cloner: any) => any} ExtendObjTypeCloner */
+/** @typedef {Object.<string, ExtendObjTypeFunc>} ExtendObjType */
+/** @typedef {Array<[string, ExtendObjTypeFunc, ExtendObjTypeCloner]|[string, ExtendObjTypeFunc]>} ExtendObjTypeArray */
+
+/**
+ * @typedef {Object} TypeDefinition
+ * @property {ExtendObjTypeFunc} validator
+ * @property {ExtendObjTypeCloner} cloner
+ */
 
 /**
  * Adds new type checkers to the typeValidator without overwriting existing ones.
@@ -66,17 +75,25 @@ export function extendObjType(newItems, index) {
       throw new TypeError("Each item in 'newItems' array must be a [key, function] pair.");
     }
 
-    const [key, fn] = entry;
+    const [key, validator, cloner] = entry;
+    if (typeof cloner !== 'undefined' && typeof cloner !== 'function') {
+      throw new TypeError(`Cloner for key '${key}' must be a function.`);
+    }
+    /** @type {ExtendObjTypeCloner} */
+    const effectiveCloner = typeof cloner === 'function' ? cloner : ((val) => val);
 
     if (typeof key !== 'string') {
       throw new TypeError('Validator key must be a string.');
     }
-    if (typeof fn !== 'function') {
+    if (typeof validator !== 'function') {
       throw new TypeError(`Validator for key '${key}' must be a function.`);
     }
 
     if (!typeValidator.items.hasOwnProperty(key)) {
-      typeValidator.items[key] = fn;
+      typeValidator.items[key] = {
+        validator: validator,
+        cloner: effectiveCloner
+      };
 
       let insertAt = typeof index === 'number' ? index : -1; // Default to -1 if index isn't provided
 
@@ -157,7 +174,7 @@ export function cloneObjTypeOrder() {
 export const objTypeName = (val) => {
   if (val === null) return 'null';
   for (const name of typeValidator.order) {
-    if (typeof typeValidator.items[name] !== 'function' || typeValidator.items[name](val))
+    if (typeof typeValidator.items[name].validator !== 'function' || typeValidator.items[name].validator(val))
       return name;
   }
   return 'unknown';
@@ -211,8 +228,8 @@ export function checkObj(obj) {
   /** @type {{ valid:*; type: string | null }} */
   const data = { valid: null, type: null };
   for (const name of typeValidator.order) {
-    if (typeof typeValidator.items[name] === 'function') {
-      const result = typeValidator.items[name](obj);
+    if (typeof typeValidator.items[name].validator === 'function') {
+      const result = typeValidator.items[name].validator(obj);
       if (result) {
         data.valid = result;
         data.type = name;
@@ -226,9 +243,20 @@ export function checkObj(obj) {
 /**
  * Creates a clone of the functions from the `typeValidator` object.
  * It returns a new object where the keys are the same and the values are the cloned functions.
+ * @returns {Record<string, ObjTypeRegistry>}
+ */
+export function getObjTypeRegistry() {
+  return Object.fromEntries(Object.entries(typeValidator.items).map(([key, data]) => [key, { ...data }]));
+}
+
+/**
+ * Creates a clone of the functions from the `typeValidator` object.
+ * It returns a new object where the keys are the same and the values are the cloned functions.
+ * @returns {Record<string, ExtendObjTypeFunc>}
+ * @deprecated Function rename! Use {@link getObjTypeRegistry} instead.
  */
 export function getCheckObj() {
-  return Object.fromEntries(Object.entries(typeValidator.items).map(([key, fn]) => [key, fn]));
+  return Object.fromEntries(Object.entries(typeValidator.items).map(([key, fn]) => [key, fn.validator]));
 }
 
 /**
@@ -236,12 +264,6 @@ export function getCheckObj() {
  * @returns {string[]}
  */
 export const getObjTypeOrder = () => [...typeValidator.order];
-
-/**
- * Returns a copy of the current type validators.
- * @returns {Record<string, (val: any) => any>}
- */
-export const getObjTypeRegistry = () => ({ ...typeValidator.items });
 
 // Insert obj types
 
