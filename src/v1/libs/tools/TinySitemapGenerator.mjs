@@ -79,11 +79,17 @@ class TinySitemapGenerator {
   }
 
   /**
+   * URL must be less than 2,048 characters.
+   * @type {number}
+   */
+  #maxResolvedUrlSize = 2048;
+
+  /**
    * Resolves relative URLs, validates all fields, and returns a new normalized object.
    * @param {SitemapEntry} entry - The entry to process.
    * @returns {SitemapEntry} The normalized and validated entry.
    * @throws {TypeError} If validation fails.
-   * @throws {RangeError} If priority is invalid.
+   * @throws {RangeError} If priority is invalid or URL is too long.
    */
   #resolveAndValidate(entry) {
     if (typeof entry !== 'object' || entry === null) {
@@ -103,6 +109,10 @@ class TinySitemapGenerator {
       throw new TypeError(
         `entry.loc "${entry.loc}" must belong to the same origin as ${this.#baseUrl.origin}`,
       );
+    }
+
+    if (resolvedUrl.href.length >= this.#maxResolvedUrlSize) {
+      throw new RangeError(`entry.loc must be less than ${this.#maxResolvedUrlSize} characters.`);
     }
 
     const normalizedEntry = { ...entry, loc: resolvedUrl.href };
