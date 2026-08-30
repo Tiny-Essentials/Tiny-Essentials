@@ -15,74 +15,73 @@ const checkDestroy = createCheckDestroyed('TinyI18');
 /**
  * Dictionary of translation keys mapped to values.
  *
- * @typedef {Record<string, any>} Dict
+ * @typedef {Record<string, any>} Dict - A collection of key-value pairs for translations.
  */
 
 /**
  * Represents a translation entry as it appears in JSON files.
  *
- * @typedef {{
- *   $pattern: string,
- *   $fn: string,
- *   [key: string]: string
- * }} FileValue
- *
- * `$pattern` - Regex string (will be compiled into RegExp).
- *
- * `$fn` - Helper function name associated with this entry.
+ * @typedef {Object} FileValueBase
+ * @property {string} $pattern - Regex string (will be compiled into RegExp).
+ * @property {string} $fn - Helper function name associated with this entry.
+ * @property {string} [key] - Additional key-value pairs for interpolation or extra metadata.
+ */
 
- * `[key]` - Additional key-value pairs for interpolation or extra metadata.
+/**
+ * @typedef {FileValueBase & { [key: string]: string }} FileValue
  */
 
 /**
  * Represents a valid locale code string.
  * Example: "en", "pt-BR", "fr".
  *
- * @typedef {string} LocaleCode
+ * @typedef {string} LocaleCode - A string representing a valid locale identifier.
  */
 
 /**
- * Value types stored per locale:
- * - string: a direct translation with optional {named} interpolation
- * - Function: (params, helpers) => any (advanced rendering; HTML-safe if you control it)
- * - { $pattern: RegExp, value: string | { $fn: string, args?: any } | Function }
- * - { $fn: string, args?: any }  // in file mode; resolved to a registered function
+ * Value types stored per locale.
+ *
+ * @typedef {string|{ $fn: string; args?: any }} TranslationValue - The type of a value used in a translation entry.
+ */
+
+/**
+ * A resolved translation value.
+ *
+ * @typedef {string|null} SimpleTranslationValue - A resolved translation value, typically a string or null.
  */
 
 /**
  * Represents a single regex-based translation entry.
  *
- * @typedef {Object} PatternEntry
+ * @typedef {Object} PatternEntry - A representation of a translation entry that matches via a regular expression.
  * @property {RegExp} $pattern - Compiled regular expression used for matching.
- * @property {any} value - Translation value or resolver function associated with the pattern.
- * @property {any} elseValue - Translation value or resolver function associated with the pattern.
+ * @property {TranslationValue} value - Translation value or resolver function associated with the pattern.
+ * @property {TranslationValue} elseValue - Translation value or resolver function associated with the pattern.
  */
 
 /**
- * @typedef {Object} FileModeEntryJSON
- * @property {string} [$pattern] - regex as string e.g. "^user\\.(\\d+)$"
- * @property {string|Object} value - string or { $fn: string, args?: any }
- * @property {string|Object} elseValue - string or { $fn: string, args?: any }
- */
-
-/**
- * @typedef {Object} TinyI18Options
+ * Configuration options for the TinyI18 instance.
+ *
+ * @typedef {Object} TinyI18Options - Configuration options for the TinyI18 constructor.
  * @property {ModeTypes} mode
  * @property {LocaleCode} defaultLocale
  * @property {string} [basePath] - Required in file mode. Directory with <locale>.json
  * @property {Dict} [localResources] - Optional initial map { locale: dict } for local mode
  * @property {boolean} [strict=true] - If true, throws on missing keys; else returns key
+ * @property {boolean} [acceptNullResults=false]
  */
 
 /**
- * @typedef {Object} ResolveOptions
+ * Options used to customize the translation resolution process.
+ *
+ * @typedef {Object} ResolveOptions - Options to control the translation resolution process.
  * @property {LocaleCode} [locale] - force resolve using a specific locale first
  */
 
 /**
- * Represents statistics for a specific locale.
+ * Statistics for a specific locale.
  *
- * @typedef {Object} StatLocale
+ * @typedef {Object} StatLocale - Information about the contents and status of a specific locale.
  * @property {string} locale - The locale code (e.g., "en", "pt-BR").
  * @property {number} strings - Total number of static string entries in this locale.
  * @property {number} patterns - Total number of regex-based pattern entries in this locale.
@@ -99,7 +98,7 @@ const checkDestroy = createCheckDestroyed('TinyI18');
  *
  * @template {any} T
  * @template {any} R
- * @typedef {Object} HelpersReadonly
+ * @typedef {Object} HelpersReadonly - A read-only interface for interacting with registered helpers.
  * @property {(name: string) => boolean} [has] - Check if a helper with given name is registered.
  * @property {(name: string, arg: T, extras?: HelpersReadonly<T, R>) => R} [call] -
  * Invoke a helper by name with an argument and optional extras.
@@ -111,9 +110,11 @@ const checkDestroy = createCheckDestroyed('TinyI18');
  * - Receives user-supplied parameters and a read-only facade for calling other helpers.
  * - Must return a string (e.g. processed, interpolated, or formatted output).
  *
+ * @template {any} T
+ * @template {any} R
  * @callback HelperCallback
  * @param {Dict} params - Key-value parameters passed from the translation entry.
- * @param {HelpersReadonly<any, any>} helpers - Read-only access to other registered helpers.
+ * @param {HelpersReadonly<T, R>} helpers - Read-only access to other registered helpers.
  * @returns {string} Processed string result.
  */
 
@@ -192,6 +193,8 @@ class TinyI18 {
   #currentLocale = null;
   /** @type {boolean} */
   #strict;
+  /** @type {boolean} */
+  #acceptNullResults = false;
   /** @type {string|null} */
   #basePath = null;
 
@@ -202,7 +205,7 @@ class TinyI18 {
   #patternTables = new Map(); // array of { $pattern: RegExp, value }
 
   // Helpers registry for function-based entries in both modes.
-  /** @type {Map<string, HelperCallback>} */
+  /** @type {Map<string, HelperCallback<any, any>>} */
   #helpers = new Map();
 
   /** @type {Map<string, RegExp>} */
@@ -247,6 +250,11 @@ class TinyI18 {
   get strict() {
     checkDestroy(this.#destroyed);
     return this.#strict;
+  }
+
+  get acceptNullResults() {
+    checkDestroy(this.#destroyed);
+    return this.#acceptNullResults;
   }
 
   /**
@@ -308,11 +316,11 @@ class TinyI18 {
   /**
    * Deep-cloned view of helpers (Map → Object).
    * Functions are referenced (cannot deep clone functions).
-   * @returns {Record<string, HelperCallback>}
+   * @returns {Record<string, HelperCallback<any, any>>}
    */
   get helpers() {
     checkDestroy(this.#destroyed);
-    /** @type {Record<string, HelperCallback>} */
+    /** @type {Record<string, HelperCallback<any, any>>} */
     const obj = {};
     for (const [name, fn] of this.#helpers.entries()) {
       obj[name] = fn;
@@ -437,7 +445,9 @@ class TinyI18 {
    * - function (params, helpers) => any
    * - { $fn: string, args?: any }   // file mode placeholder resolved via helpers
    *
-   * @param {string | HelperCallback | { $fn: string; args?: any }} value
+   * @template {any} T
+   * @template {any} R
+   * @param {string | HelperCallback<T, R> | { $fn: string; args?: any }} value
    * @param {Dict} [params]
    * @returns {string}
    */
@@ -643,7 +653,7 @@ class TinyI18 {
 
     /**
      * @param {string} prefix
-     * @param {FileValue|string|null} node
+     * @param {FileValue|SimpleTranslationValue} node
      */
     const walk = (prefix, node) => {
       if (node == null) return;
@@ -720,7 +730,7 @@ class TinyI18 {
    * - { $fn: string, args?: any } → preserved for helper resolution
    *
    * @param {string|FileValue} v
-   * @returns {string|{ $fn: string, args?: any }}
+   * @returns {TranslationValue}
    */
   #coerceFileValue(v) {
     // Strings pass through; objects with $fn kept as-is; everything else ignored gracefully
@@ -750,13 +760,22 @@ class TinyI18 {
     if (!options || typeof options !== 'object') {
       throw new TypeError('TinyI18: options must be an object');
     }
-    const { mode, defaultLocale, basePath, localResources, strict = true } = options;
+    const {
+      mode,
+      defaultLocale,
+      basePath,
+      localResources,
+      strict = true,
+      acceptNullResults = false,
+    } = options;
 
     if (mode !== 'local' && mode !== 'file')
       throw new TypeError('TinyI18: "mode" must be "local" or "file"');
     if (typeof defaultLocale !== 'string' || !defaultLocale)
       throw new TypeError('TinyI18: "defaultLocale" must be a non-empty string');
     if (typeof strict !== 'boolean') throw new TypeError('TinyI18: "strict" must be a boolean');
+    if (typeof acceptNullResults !== 'boolean')
+      throw new TypeError('TinyI18: "acceptNullResults" must be a boolean');
 
     if (mode === 'file') {
       if (typeof basePath !== 'string' || !basePath)
@@ -767,6 +786,7 @@ class TinyI18 {
     this.#mode = mode;
     this.#defaultLocale = defaultLocale;
     this.#strict = strict;
+    this.#acceptNullResults = acceptNullResults;
 
     if (mode === 'local' && localResources && typeof localResources === 'object') {
       for (const [loc, data] of Object.entries(localResources)) {
@@ -797,8 +817,10 @@ class TinyI18 {
 
   /**
    * Registers a helper function available to function-based entries and $fn references.
+   * @template {any} T
+   * @template {any} R
    * @param {string} name
-   * @param {HelperCallback} fn
+   * @param {HelperCallback<T, R>} fn
    */
   registerHelper(name, fn) {
     checkDestroy(this.#destroyed);
@@ -873,7 +895,7 @@ class TinyI18 {
    * @param {string} key - Translation key (dot.notation).
    * @param {Dict} [params] - Parameters for string interpolation or helper functions.
    * @param {ResolveOptions} [options] - Override resolution options (e.g., force locale).
-   * @returns {any} - Usually string, but may be HTMLElement, DocumentFragment, or any return type from a helper.
+   * @returns {SimpleTranslationValue} - Usually string, but may be HTMLElement, DocumentFragment, or any return type from a helper.
    */
   t(key, params = undefined, options = undefined) {
     return this.get(key, params, options);
@@ -884,7 +906,7 @@ class TinyI18 {
    * @param {string} key
    * @param {Dict} [params]
    * @param {ResolveOptions} [options]
-   * @returns {any}
+   * @returns {SimpleTranslationValue}
    */
   get(key, params = undefined, options = undefined) {
     checkDestroy(this.#destroyed);
@@ -897,6 +919,7 @@ class TinyI18 {
     let resolved = this.#resolveExact(order, key);
     if (resolved === undefined) {
       if (this.#strict) throw new Error(`TinyI18: missing translation for key "${key}"`);
+      if (this.#acceptNullResults) return null;
       return key; // graceful fallback to key
     }
 
@@ -910,7 +933,7 @@ class TinyI18 {
    *
    * @param {string} key - Input string to test against regex patterns.
    * @param {ResolveOptions} [options] - Override resolution options (e.g., force locale).
-   * @returns {any} - Translation value (string or custom return type).
+   * @returns {SimpleTranslationValue} - Translation value (string or custom return type).
    */
   p(key, options) {
     return this.resolveByPattern(key, options);
@@ -920,7 +943,7 @@ class TinyI18 {
    * Alias of p()
    * @param {string} key
    * @param {ResolveOptions} [options]
-   * @returns {any}
+   * @returns {SimpleTranslationValue}
    */
   resolveByPattern(key, options) {
     checkDestroy(this.#destroyed);
@@ -931,6 +954,7 @@ class TinyI18 {
     let resolved = this.#resolveByPattern(order, key);
     if (resolved === undefined) {
       if (this.#strict) throw new Error(`TinyI18: missing translation for key "${key}"`);
+      if (this.#acceptNullResults) return null;
       return key; // graceful fallback to key
     }
     return resolved;
