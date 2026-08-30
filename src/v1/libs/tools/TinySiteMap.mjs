@@ -60,6 +60,7 @@ class TinySiteMap {
   /** @type {RegExp} Regex to validate XML Names/Prefixes. */
   #xmlNameRegex = /^[a-zA-Z_:][\w:.-]*$/; // From "sitemap.js".
 
+  /** @type {Map<string, string>} */
   static #xmlns = new Map([
     ['ROOT', 'http://www.sitemaps.org/schemas/sitemap/0.9'],
     ['news', 'http://www.google.com/schemas/sitemap-news/0.9'],
@@ -76,6 +77,75 @@ class TinySiteMap {
       'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd',
     ],
   ]);
+
+  /**
+   * Retrieves the URI for a specific namespace ID.
+   * @param {string} id - The namespace identifier.
+   * @returns {string|undefined} The namespace URI or undefined if not found.
+   */
+  static getXmlns(id) {
+    return TinySiteMap.#xmlns.get(id);
+  }
+
+  /**
+   * Sets or updates a namespace URI for a specific ID.
+   * @param {string} id - The namespace identifier.
+   * @param {string} value - The namespace URI.
+   * @throws {TypeError} If the ID or value are not strings.
+   */
+  static setXmlns(id, value) {
+    if (typeof id !== 'string') throw new TypeError('Namespace ID must be a string.');
+    if (typeof value !== 'string') throw new TypeError('Namespace URI must be a string.');
+    TinySiteMap.#xmlns.set(id, value);
+  }
+
+  /**
+   * Checks if a namespace ID exists.
+   * @param {string} id - The namespace identifier.
+   * @returns {boolean} True if it exists, false otherwise.
+   */
+  static hasXmlns(id) {
+    return TinySiteMap.#xmlns.has(id);
+  }
+
+  /**
+   * Gets all namespaces as a plain object.
+   * @returns {Record<string, string>} A map of IDs to URIs.
+   */
+  static get xmlns() {
+    return Object.fromEntries(TinySiteMap.#xmlns);
+  }
+
+  /**
+   * Replaces all current namespaces with a new set.
+   * @param {Record<string, string>} obj - The new namespace mapping.
+   * @throws {TypeError} If the input is not a valid object or contains non-string values.
+   */
+  static set xmlns(obj) {
+    if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
+      throw new TypeError('xmlns must be a non-null object.');
+    }
+
+    const xmlns = TinySiteMap.#xmlns;
+    try {
+      // Validate all values are strings before applying to ensure atomicity
+      TinySiteMap.#xmlns = new Map();
+      for (const [key, value] of Object.entries(obj)) {
+        TinySiteMap.setXmlns(key, value);
+      }
+    } catch (err) {
+      TinySiteMap.#xmlns = xmlns;
+      throw err;
+    }
+  }
+
+  /**
+   * Gets the total number of registered namespaces.
+   * @returns {number} The count of namespaces.
+   */
+  static get xmlnsSize() {
+    return TinySiteMap.#xmlns.size;
+  }
 
   /**
    * @param {SitemapConfig} config - The configuration object.
