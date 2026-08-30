@@ -48,9 +48,9 @@ class TinySiteMap {
   /** @type {URL} The base URL used for resolving relative paths. */
   #baseUrl;
   /** @type {(SitemapEntry|SitemapIndexEntry)[]} The internal list of validated entries. */
-  #entries;
+  #entries = [];
   /** @type {SitemapNamespace[]} The list of manually added namespaces. */
-  #namespaces;
+  #namespaces = [];
   /** @type {NamespaceStrategy | null} The dynamic strategy for generating namespaces. */
   #namespaceStrategy = null;
   /** @type {'normal'|'index'} The mode of the generator. */
@@ -68,8 +68,7 @@ class TinySiteMap {
     this.#validateConfig(config);
     this.#type = config.type ?? 'normal';
     this.#baseUrl = new URL(config.baseUrl);
-    this.#entries = [];
-    this.#namespaces = [...(config.namespaces ?? [])];
+    this.namespaces = config.namespaces ?? [];
     this.namespaceStrategy = config.namespaceStrategy ?? TinySiteMap.defaultStrategy;
 
     if (config.entries && config.entries.length > 0) {
@@ -105,6 +104,9 @@ class TinySiteMap {
    * @throws {TypeError}
    */
   #validateNamespaceSet(namespaces) {
+    if (!Array.isArray(namespaces)) {
+      throw new TypeError('namespaces must be an array.');
+    }
     for (const ns of namespaces) {
       this.#validateNamespace(ns);
     }
@@ -153,15 +155,6 @@ class TinySiteMap {
     }
     if (config.type && !['normal', 'index'].includes(config.type)) {
       throw new TypeError('config.type must be either "normal" or "index".');
-    }
-
-    if (config.namespaces) {
-      if (!Array.isArray(config.namespaces)) {
-        throw new TypeError('config.namespaces must be an array.');
-      }
-      for (const ns of config.namespaces) {
-        this.#validateNamespace(ns);
-      }
     }
   }
 
@@ -264,9 +257,8 @@ class TinySiteMap {
     const exists = this.#namespaces.some(
       (existing) => existing.uri === ns.uri && existing.prefix === ns.prefix,
     );
-    if (!exists) {
-      this.#namespaces.push(ns);
-    }
+    if (exists) throw new Error('');
+    this.#namespaces.push(ns);
   }
 
   /**
@@ -347,6 +339,13 @@ class TinySiteMap {
   }
 
   /**
+   * Clears all manually added entries.
+   */
+  clearEntries() {
+    this.#entries = [];
+  }
+
+  /**
    * Sets a dynamic strategy to provide namespaces based on the instance state.
    * @param {NamespaceStrategy} strategy - The strategy function.
    * @throws {TypeError} If the strategy is not a function.
@@ -368,7 +367,10 @@ class TinySiteMap {
 
   set namespaces(nss) {
     this.#validateNamespaceSet(nss);
-    this.#namespaces = nss;
+    this.#namespaces = [];
+    for (const ns of nss) {
+      this.addNamespace(ns);
+    }
   }
 
   /**
@@ -422,10 +424,10 @@ class TinySiteMap {
   generateXml() {
     // 1. Collect all namespaces (Manual + Dynamic Strategy)
     const dynamicNamespaces = this.#namespaceStrategy ? this.#namespaceStrategy(this) : [];
-    const allNamespaces = [...dynamicNamespaces, ...this.#namespaces];
 
     // 2. SECURITY: Validate all collected namespaces before rendering
-    this.#validateNamespaceSet(allNamespaces);
+    this.#validateNamespaceSet(dynamicNamespaces);
+    const allNamespaces = [...dynamicNamespaces, ...this.#namespaces];
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
 
@@ -482,37 +484,37 @@ class TinySiteMap {
    * @type {NamespaceStrategy}
    */
   static defaultStrategy(instance) {
-      const namespaces = [];
+    const namespaces = [];
 
-      // Base Namespace
-      namespaces.push({ uri: 'http://www.sitemaps.org/schemas/sitemap/0.9' });
+    // Base Namespace
+    namespaces.push({ uri: 'http://www.sitemaps.org/schemas/sitemap/0.9' });
 
-      // XSI
-      namespaces.push({ prefix: 'xsi', uri: 'http://www.w3.org/2001/XMLSchema-instance' });
+    // XSI
+    namespaces.push({ prefix: 'xsi', uri: 'http://www.w3.org/2001/XMLSchema-instance' });
 
-      // Schema Location
-      const schemaUri =
-        instance.type === 'normal'
-          ? 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd'
-          : 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd';
+    // Schema Location
+    const schemaUri =
+      instance.type === 'normal'
+        ? 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd'
+        : 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd';
 
-      namespaces.push({ prefix: 'schemaLocation', uri: schemaUri });
+    namespaces.push({ prefix: 'schemaLocation', uri: schemaUri });
 
-      // Custom Tags logic (original insertNamespaces behavior)
-      if (instance.type === 'normal') {
-        const hasCustomTags = instance.entries.some(
-          (/** @type {SitemapEntry} */ e) => e.customTags && Object.keys(e.customTags).length > 0,
-        );
-        if (hasCustomTags) {
-          namespaces.push({
-            prefix: 'example',
-            uri: 'http://www.example.com/schemas/example_schema',
-          });
-        }
+    // Custom Tags logic (original insertNamespaces behavior)
+    if (instance.type === 'normal') {
+      const hasCustomTags = instance.entries.some(
+        (/** @type {SitemapEntry} */ e) => e.customTags && Object.keys(e.customTags).length > 0,
+      );
+      if (hasCustomTags) {
+        namespaces.push({
+          prefix: 'example',
+          uri: 'http://www.example.com/schemas/example_schema',
+        });
       }
+    }
 
-      return namespaces;
-    };
+    return namespaces;
+  }
 }
 
 export default TinySiteMap;
