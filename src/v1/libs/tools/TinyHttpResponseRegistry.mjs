@@ -11,7 +11,10 @@ import TinyI18 from '../text/TinyI18.mjs';
  * @typedef {Record<number, HttpResponse>} HttpResponses
  */
 
-/** @type {HttpResponses} */
+/**
+ * Credits: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
+ * @type {HttpResponses}
+ */
 const requestCodes = {
   100: {
     name: 'Continue',
@@ -327,9 +330,10 @@ const requestCodes = {
  * The registry is immutable regarding existing entries and ensures data integrity through strict validation.
  */
 class TinyHttpResponseRegistry {
-  /** @type {Set<number>} */
+  /** @type {Set<number>} The set of all registered HTTP status codes. */
   #reqCodes = new Set();
 
+  /** @type {TinyI18} The internationalization instance used for managing localized response data. */
   #i18 = new TinyI18({
     defaultLocale: 'en',
     mode: 'local',
@@ -337,15 +341,17 @@ class TinyHttpResponseRegistry {
     acceptNullResults: true,
   });
 
+  /** @type {string} The current active locale for the registry. */
   #locale = 'en';
 
   /**
-   * @param {HttpResponses} [initialResponses] - An array of initial response objects to populate the registry.
-   * @throws {TypeError} If the input is not an array.
+   * Initializes a new instance of the TinyHttpResponseRegistry.
+   * @param {HttpResponses} [initialResponses] - An object of initial response objects to populate the registry.
+   * @throws {TypeError} If the input is not an object.
    */
   constructor(initialResponses = {}) {
     if (!isJsonObject(initialResponses)) {
-      throw new TypeError('Initial responses must be an array.');
+      throw new TypeError('Initial responses must be an object.');
     }
 
     this.#i18.loadLocaleLocal(this.#locale, {});
@@ -381,7 +387,7 @@ class TinyHttpResponseRegistry {
     }
 
     if (this.#i18.get(String(id))) {
-      throw new Error(`Response with ID ${data.id} already exists in the registry.`);
+      throw new Error(`Response with ID ${id} already exists in the registry.`);
     }
   }
 
@@ -390,7 +396,7 @@ class TinyHttpResponseRegistry {
    * The object is frozen to prevent any modifications to its properties.
    * @param {number} id - The HTTP status code (e.g., 404).
    * @param {HttpResponse} response - The response object to be added.
-   * @param {string} [locale]
+   * @param {string} [locale] - The locale to use for storing the response.
    */
   addResponse(id, response, locale = this.#locale) {
     this.#validateResponse(id, response);
@@ -409,7 +415,7 @@ class TinyHttpResponseRegistry {
    * Retrieves a response by its ID.
    * @param {number} id - The HTTP status code.
    * @returns {HttpResponse | null} The response object or null if not found.
-   * @param {string} [locale]
+   * @param {string} [locale] - The locale to use for retrieval.
    */
   get(id, locale = this.#locale) {
     const name = this.#i18.get(`${id}.name`, {}, { locale });
@@ -428,8 +434,8 @@ class TinyHttpResponseRegistry {
   }
 
   /**
-   * Returns all registered responses as an array.
-   * @returns {HttpResponses} An array of all frozen response objects.
+   * Returns all registered responses as an object.
+   * @returns {HttpResponses} An object containing all registered response objects.
    */
   getAll() {
     /** @type {HttpResponses} */
