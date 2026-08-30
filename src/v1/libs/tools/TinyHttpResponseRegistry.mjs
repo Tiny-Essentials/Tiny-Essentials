@@ -1,5 +1,6 @@
 import { isJsonObject } from '../../basics/objChecker.mjs';
 import TinyI18 from '../text/TinyI18.mjs';
+import RequestCodes from './TinyHttpResponseRegistry/EmptyRequestCodes.mjs';
 
 /**
  * @typedef {import('./TinyHttpResponseRegistry/JsDoc.mjs').HttpResponse} HttpResponse
@@ -12,7 +13,7 @@ import TinyI18 from '../text/TinyI18.mjs';
  */
 class TinyHttpResponseRegistry {
   /** @type {HttpResponses} */
-  static #DefaultRequestCodes = {};
+  static #DefaultRequestCodes = RequestCodes;
 
   /**
    * Getter for the default request codes.

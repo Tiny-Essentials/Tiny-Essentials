@@ -1,13 +1,8 @@
 /**
- * @typedef {import('../JsDoc.mjs').HttpResponse} HttpResponse
- * @typedef {import('../JsDoc.mjs').HttpResponses} HttpResponses
- */
-
-/**
  * A collection of standard HTTP status codes and their corresponding names and descriptions.
  * Credits: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
  * @license CC-BY-SA 2.5
- * @type {HttpResponses}
+ * @type {import('../JsDoc.mjs').HttpResponses}
  */
 const RequestCodes = {
   100: {
@@ -382,4 +377,4 @@ const RequestCodes = {
   },
 };
 
-export default RequestCodes;
+export { RequestCodes };

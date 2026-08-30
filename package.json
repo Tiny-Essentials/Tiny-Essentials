@@ -384,9 +384,17 @@
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry.cjs",
       "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry.mjs"
     },
-    "./libs/tools/TinyHttpResponseRegistry/DefaultRequestCodes": {
-      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/DefaultRequestCodes/index.cjs",
-      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/DefaultRequestCodes/index.mjs"
+    "./libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes": {
+      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes/index.cjs",
+      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes/index.mjs"
+    },
+    "./libs/tools/TinyHttpResponseRegistry/EmptyRequestCodes": {
+      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/EmptyRequestCodes.cjs",
+      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/EmptyRequestCodes.mjs"
+    },
+    "./libs/tools/TinyHttpResponseRegistry/RequestCodes": {
+      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/RequestCodes.cjs",
+      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/RequestCodes.mjs"
     },
     "./libs/tools/TinyHttpResponseRegistry/JsDoc": {
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/JsDoc.cjs",
