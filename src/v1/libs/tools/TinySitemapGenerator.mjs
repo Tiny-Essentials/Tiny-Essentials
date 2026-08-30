@@ -36,20 +36,24 @@
 
 /**
  * A service to manage and generate secure XML sitemaps or sitemap indexes.
+ * This class handles URL resolution, namespace management, and XML escaping to prevent injection.
  */
 class TinySitemapGenerator {
-  /** @type {URL} */
+  /** @type {URL} The base URL used for resolving relative paths. */
   #baseUrl;
-  /** @type {(SitemapEntry|SitemapIndexEntry)[]} */
+  /** @type {(SitemapEntry|SitemapIndexEntry)[]} The internal list of validated entries. */
   #entries;
-  /** @type {SitemapNamespace[]} */
+  /** @type {SitemapNamespace[]} The list of XML namespaces to be declared in the root element. */
   #namespaces;
-  /** @type {'normal'|'index'} */
+  /** @type {'normal'|'index'} The mode of the generator (normal sitemap or index). */
   #type;
+  /** @type {number} The maximum allowed length for a resolved URL. */
+  #maxResolvedUrlSize = 2048;
 
   /**
-   * @param {SitemapConfig} config
-   * @throws {TypeError} If the configuration is invalid.
+   * Creates an instance of TinySitemapGenerator.
+   * @param {SitemapConfig} config - The configuration object.
+   * @throws {TypeError} If the configuration is invalid or the baseUrl is not a valid absolute URL.
    */
   constructor(config) {
     this.#validateConfig(config);
@@ -83,8 +87,9 @@ class TinySitemapGenerator {
   }
 
   /**
-   * @param {string} str - The raw string.
-   * @returns {string} The escaped string.
+   * Escapes special XML characters to prevent XML injection.
+   * @param {string} str - The raw string to be escaped.
+   * @returns {string} The escaped string with characters like <, >, &, ", and ' replaced by entities.
    */
   #escapeXml(str) {
     return str.replace(/[<>&"']/g, (char) => {
@@ -106,7 +111,9 @@ class TinySitemapGenerator {
   }
 
   /**
-   * @param {SitemapConfig} config
+   * Validates the initial configuration object.
+   * @param {SitemapConfig} config - The configuration to validate.
+   * @throws {TypeError} If config is not an object, baseUrl is invalid, type is unsupported, or namespaces are malformed.
    */
   #validateConfig(config) {
     if (typeof config !== 'object' || config === null) {
@@ -151,15 +158,18 @@ class TinySitemapGenerator {
   }
 
   /**
-   * URL must be less than 2,048 characters.
-   * @type {number}
+   * Gets the maximum allowed URL size.
+   * @returns {number} The current maximum size.
    */
-  #maxResolvedUrlSize = 2048;
-
   get maxResolvedUrlSize() {
     return this.#maxResolvedUrlSize;
   }
 
+  /**
+   * Sets the maximum allowed URL size.
+   * @param {number} value - The new maximum size.
+   * @throws {TypeError} If the value is not a non-negative finite number.
+   */
   set maxResolvedUrlSize(value) {
     if (typeof value !== 'number' || Number.isNaN(value) || !Number.isFinite(value) || value < 0) {
       throw new TypeError('maxResolvedUrlSize must be a non negative number.');
@@ -169,10 +179,10 @@ class TinySitemapGenerator {
 
   /**
    * Resolves relative URLs, validates all fields, and returns a new normalized object.
-   * @param {SitemapEntry | SitemapIndexEntry} entry - The entry to process.
-   * @returns {SitemapEntry | SitemapIndexEntry} The normalized and validated entry.
-   * @throws {TypeError} If validation fails.
-   * @throws {RangeError} If priority is invalid or URL is too long.
+   * @param {SitemapEntry | SitemapIndexEntry} entry - The entry object to process.
+   * @returns {SitemapEntry | SitemapIndexEntry} A new, normalized, and validated entry object.
+   * @throws {TypeError} If the entry is invalid, if loc is not a string, if origin doesn't match, or if field values are invalid.
+   * @throws {RangeError} If the resolved URL exceeds maxResolvedUrlSize or if priority is outside [0.0, 1.0].
    */
   #resolveAndValidate(entry) {
     if (typeof entry !== 'object' || entry === null) {
@@ -261,9 +271,9 @@ class TinySitemapGenerator {
 
   /**
    * Adds a new entry to the sitemap.
-   * @param {SitemapEntry} entry
-   * @param {number} [index]
-   * @returns {number}
+   * @param {SitemapEntry | SitemapIndexEntry} entry - The entry to add.
+   * @param {number} [index] - The optional index at which to insert the entry.
+   * @returns {number} The new length of the entries array.
    */
   addEntry(entry, index) {
     const validated = this.#resolveAndValidate(entry);
@@ -273,9 +283,10 @@ class TinySitemapGenerator {
   }
 
   /**
-   * Removes an entry by its index.
-   * @param {number} index
-   * @returns {boolean}
+   * Removes an entry from the sitemap by its index.
+   * @param {number} index - The index of the entry to remove.
+   * @returns {boolean} True if an element was removed, false otherwise.
+   * @throws {RangeError} If the index is out of bounds.
    */
   removeEntry(index) {
     if (index < 0 || index >= this.#entries.length) {
@@ -283,14 +294,14 @@ class TinySitemapGenerator {
     }
     const oldSize = this.#entries.length;
     this.#entries.splice(index, 1);
-    const newSize = this.#entries.length;
-    return oldSize !== newSize;
+    return oldSize !== this.#entries.length;
   }
 
   /**
-   * Updates an existing entry.
+   * Updates an existing entry with new data.
    * @param {number} index - The index of the entry to update.
-   * @param {Partial<SitemapEntry>} entryData - The new data to merge.
+   * @param {Partial<SitemapEntry | SitemapIndexEntry>} entryData - The partial data to merge into the existing entry.
+   * @throws {RangeError} If the index is out of bounds.
    */
   updateEntry(index, entryData) {
     if (index < 0 || index >= this.#entries.length) {
@@ -303,9 +314,10 @@ class TinySitemapGenerator {
   }
 
   /**
-   * Changes the position of an entry in the list.
-   * @param {number} fromIndex - Current position.
-   * @param {number} toIndex - New position.
+   * Changes the position of an entry within the list.
+   * @param {number} fromIndex - The current index of the entry.
+   * @param {number} toIndex - The new index for the entry.
+   * @throws {RangeError} If either index is out of bounds.
    */
   moveEntry(fromIndex, toIndex) {
     if (
@@ -321,23 +333,32 @@ class TinySitemapGenerator {
   }
 
   /**
-   * @returns {string} The base URL string.
+   * Gets the sitemap type.
+   * @returns {'normal'|'index'} The type of sitemap.
+   */
+  get type() {
+    return this.#type;
+  }
+
+  /**
+   * Gets the base URL string.
+   * @returns {string} The href of the base URL.
    */
   get baseUrl() {
     return this.#baseUrl.href;
   }
 
   /**
-   * @returns {SitemapEntry[]} A copy of the current entries.
+   * Gets a shallow copy of the current entries.
+   * @returns {SitemapEntry[] | SitemapIndexEntry[]} A copy of the entries array.
    */
   get entries() {
-    // Return a shallow copy to prevent external mutation of the array
     return this.#entries.map((e) => ({ ...e }));
   }
 
   /**
    * Generates the sitemap or sitemap index as a valid XML string.
-   * @returns {string}
+   * @returns {string} The generated XML content.
    */
   generateXml() {
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
@@ -348,9 +369,7 @@ class TinySitemapGenerator {
       const existsCustomTags =
         this.#entries.findIndex(
           (/** @type {SitemapEntry} */ entry) =>
-            entry.customTags &&
-            (typeof entry.customTags.tag === 'string' ||
-              typeof entry.customTags.value === 'string'),
+            entry.customTags && Object.keys(entry.customTags).length > 0,
         ) > -1;
 
       if (existsCustomTags) {
