@@ -38,7 +38,7 @@
  * A service to manage and generate secure XML sitemaps or sitemap indexes.
  * This class handles URL resolution, namespace management, and XML escaping to prevent injection.
  */
-class TinySitemapGenerator {
+class TinySiteMap {
   /** @type {URL} The base URL used for resolving relative paths. */
   #baseUrl;
   /** @type {(SitemapEntry|SitemapIndexEntry)[]} The internal list of validated entries. */
@@ -51,7 +51,7 @@ class TinySitemapGenerator {
   #maxResolvedUrlSize = 2048;
 
   /**
-   * Creates an instance of TinySitemapGenerator.
+   * Creates an instance of TinySiteMap.
    * @param {SitemapConfig} config - The configuration object.
    * @throws {TypeError} If the configuration is invalid or the baseUrl is not a valid absolute URL.
    */
@@ -436,4 +436,4 @@ class TinySitemapGenerator {
   }
 }
 
-export default TinySitemapGenerator;
+export default TinySiteMap;
