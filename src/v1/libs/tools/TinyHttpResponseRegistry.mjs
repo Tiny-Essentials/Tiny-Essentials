@@ -12,6 +12,60 @@ import RequestCodes from './TinyHttpResponseRegistry/RequestCodes.mjs';
  * The registry is immutable regarding existing entries and ensures data integrity through strict validation.
  */
 class TinyHttpResponseRegistry {
+  /** @type {HttpResponses} */
+  static #DefaultRequestCodes = RequestCodes;
+
+  /**
+   * Getter for the default request codes.
+   * Returns a deep clone to prevent external mutation of the private state.
+   *
+   * @returns {HttpResponses} A deep copy of the current status codes.
+   */
+  static get defaultRequestCodes() {
+    return structuredClone(TinyHttpResponseRegistry.#DefaultRequestCodes);
+  }
+
+  /**
+   * Setter for the default request codes.
+   * Performs deep validation and stores a deep clone to prevent external mutation.
+   *
+   * @param {HttpResponses} newCodes - The new mapping of HTTP responses.
+   * @throws {TypeError} If the input is not a valid HttpResponses object.
+   */
+  static set defaultRequestCodes(newCodes) {
+    // 1. Validate that the input is a non-null object
+    if (typeof newCodes !== 'object' || newCodes === null || Array.isArray(newCodes)) {
+      throw new TypeError('The value must be a non-null object.');
+    }
+
+    // 2. Deep validation of the object structure
+    for (const [key, response] of Object.entries(newCodes)) {
+      // Validate that the key represents a valid number
+      if (Number.isNaN(Number(key))) {
+        throw new TypeError(`Invalid key: "${key}". Status code keys must be numeric.`);
+      }
+
+      // Validate that the value is a valid object
+      if (typeof response !== 'object' || response === null || Array.isArray(response)) {
+        throw new TypeError(`The value for status code ${key} must be an object.`);
+      }
+
+      // Validate internal properties of the HttpResponse object
+      if (typeof response.name !== 'string') {
+        throw new TypeError(`Property 'name' in status ${key} must be a string.`);
+      }
+      if (typeof response.summary !== 'string') {
+        throw new TypeError(`Property 'summary' in status ${key} must be a string.`);
+      }
+      if (typeof response.description !== 'string') {
+        throw new TypeError(`Property 'description' in status ${key} must be a string.`);
+      }
+    }
+
+    // 3. Store a deep clone to ensure the class owns the data entirely
+    TinyHttpResponseRegistry.#DefaultRequestCodes = structuredClone(newCodes);
+  }
+
   /** @type {Set<number>} The set of all registered HTTP status codes. */
   #reqCodes = new Set();
 
@@ -37,8 +91,8 @@ class TinyHttpResponseRegistry {
     }
 
     this.#i18.loadLocaleLocal(this.#locale, {});
-    for (const id in RequestCodes) {
-      const response = RequestCodes[id];
+    for (const id in TinyHttpResponseRegistry.#DefaultRequestCodes) {
+      const response = TinyHttpResponseRegistry.#DefaultRequestCodes[id];
       this.addResponse(Number(id), response);
     }
     for (const id in initialResponses) {
