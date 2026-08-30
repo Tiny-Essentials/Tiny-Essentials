@@ -5,6 +5,11 @@
  */
 
 /**
+ * @typedef {(instance: TinySiteMap) => SitemapNamespace[]} NamespaceStrategy
+ * A function that receives the TinySiteMap instance and returns an array of namespaces.
+ */
+
+/**
  * A map where keys are the XML tag names and values are the tag contents.
  * @typedef {Object} CustomTagMap
  * @property {string} [tag] - The tag name (key in the object, e.g., 'example:tag').
@@ -30,7 +35,8 @@
  * @typedef {Object} SitemapConfig
  * @property {'normal'|'index'} [type] - The type of sitemap to generate. Defaults to 'normal'.
  * @property {string} baseUrl - The base URL of the website.
- * @property {SitemapNamespace[]} [namespaces] - Custom namespaces to declare.
+ * @property {SitemapNamespace[]} [namespaces] - Initial manual namespaces.
+ * @property {NamespaceStrategy} [namespaceStrategy] - Dynamic logic to provide namespaces.
  * @property {SitemapEntry[] | SitemapIndexEntry[]} entries - Array of entries.
  */
 
@@ -43,17 +49,20 @@ class TinySiteMap {
   #baseUrl;
   /** @type {(SitemapEntry|SitemapIndexEntry)[]} The internal list of validated entries. */
   #entries;
-  /** @type {SitemapNamespace[]} The list of XML namespaces to be declared in the root element. */
+  /** @type {SitemapNamespace[]} The list of manually added namespaces. */
   #namespaces;
-  /** @type {'normal'|'index'} The mode of the generator (normal sitemap or index). */
+  /** @type {NamespaceStrategy | null} The dynamic strategy for generating namespaces. */
+  #namespaceStrategy = null;
+  /** @type {'normal'|'index'} The mode of the generator. */
   #type;
   /** @type {number} The maximum allowed length for a resolved URL. */
   #maxResolvedUrlSize = 2048;
+  /** @type {RegExp} Regex to validate XML Names/Prefixes. */
+  #xmlNameRegex = /[a-zA-Z_][\w.-]*/;
 
   /**
-   * Creates an instance of TinySiteMap.
    * @param {SitemapConfig} config - The configuration object.
-   * @throws {TypeError} If the configuration is invalid or the baseUrl is not a valid absolute URL.
+   * @throws {TypeError} If the configuration is invalid.
    */
   constructor(config) {
     this.#validateConfig(config);
@@ -61,28 +70,43 @@ class TinySiteMap {
     this.#baseUrl = new URL(config.baseUrl);
     this.#entries = [];
     this.#namespaces = [...(config.namespaces ?? [])];
+    this.namespaceStrategy = config.namespaceStrategy ?? TinySiteMap.defaultStrategy;
 
-    // Default Namespaces
-    this.#namespaces.push({ uri: 'http://www.sitemaps.org/schemas/sitemap/0.9' });
-    this.#namespaces.push({ prefix: 'xsi', uri: 'http://www.w3.org/2001/XMLSchema-instance' });
-
-    if (this.#type === 'normal') {
-      this.#namespaces.push({
-        prefix: 'schemaLocation',
-        uri: 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd',
-      });
-    } else {
-      this.#namespaces.push({
-        prefix: 'schemaLocation',
-        uri: 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd',
-      });
-    }
-
-    // If initial entries are provided, add them through the secure method
     if (config.entries && config.entries.length > 0) {
       for (const entry of config.entries) {
         this.addEntry(entry);
       }
+    }
+  }
+
+  /**
+   * Validates a single namespace object.
+   * @param {SitemapNamespace} ns
+   * @throws {TypeError}
+   */
+  #validateNamespace(ns) {
+    if (typeof ns !== 'object' || ns === null) {
+      throw new TypeError('Namespace must be a non-null object.');
+    }
+    if (typeof ns.uri !== 'string') {
+      throw new TypeError('Namespace URI must be a string.');
+    }
+    if (ns.prefix !== undefined && typeof ns.prefix !== 'string') {
+      throw new TypeError('Namespace prefix must be a string.');
+    }
+    if (ns.prefix && !this.#xmlNameRegex.test(ns.prefix)) {
+      throw new TypeError(`Invalid namespace prefix: "${ns.prefix}".`);
+    }
+  }
+
+  /**
+   * Validates a collection of namespaces.
+   * @param {SitemapNamespace[]} namespaces
+   * @throws {TypeError}
+   */
+  #validateNamespaceSet(namespaces) {
+    for (const ns of namespaces) {
+      this.#validateNamespace(ns);
     }
   }
 
@@ -131,50 +155,14 @@ class TinySiteMap {
       throw new TypeError('config.type must be either "normal" or "index".');
     }
 
-    // Regex to validate XML Name
-    const xmlNameRegex = /^[a-zA-Z_][\w.-]*$/;
-
     if (config.namespaces) {
       if (!Array.isArray(config.namespaces)) {
         throw new TypeError('config.namespaces must be an array.');
       }
       for (const ns of config.namespaces) {
-        if (
-          (typeof ns.prefix !== 'undefined' && typeof ns.prefix !== 'string') ||
-          typeof ns.uri !== 'string'
-        ) {
-          throw new TypeError(
-            'Each namespace must have an optional string "prefix" and a valid string "uri".',
-          );
-        }
-        // SECURITY: Validating prefix to prevent XML Injection in attribute names
-        if (typeof ns.prefix !== 'undefined' && !xmlNameRegex.test(ns.prefix)) {
-          throw new TypeError(
-            `Invalid namespace prefix: "${ns.prefix}". Prefixes must follow XML Name rules.`,
-          );
-        }
+        this.#validateNamespace(ns);
       }
     }
-  }
-
-  /**
-   * Gets the maximum allowed URL size.
-   * @returns {number} The current maximum size.
-   */
-  get maxResolvedUrlSize() {
-    return this.#maxResolvedUrlSize;
-  }
-
-  /**
-   * Sets the maximum allowed URL size.
-   * @param {number} value - The new maximum size.
-   * @throws {TypeError} If the value is not a non-negative finite number.
-   */
-  set maxResolvedUrlSize(value) {
-    if (typeof value !== 'number' || Number.isNaN(value) || !Number.isFinite(value) || value < 0) {
-      throw new TypeError('maxResolvedUrlSize must be a non negative number.');
-    }
-    this.#maxResolvedUrlSize = value;
   }
 
   /**
@@ -241,17 +229,14 @@ class TinySiteMap {
 
       // Validate customTags
       if (normalizedEntry.customTags) {
-        // Regex to validate an XML QName (prefix:localName)
-        const xmlNameBase = /[a-zA-Z_][\w.-]*/;
-        const qNameRegex = new RegExp(`^${xmlNameBase.source}(:${xmlNameBase.source})?$`);
-
         // Validation for customTags
         if (typeof normalizedEntry.customTags !== 'object' || normalizedEntry.customTags === null) {
           throw new TypeError('entry.customTags must be an object.');
         }
         for (const [tag, value] of Object.entries(normalizedEntry.customTags)) {
           // SECURITY: Validate that the tag name is a valid XML QName to prevent injection
-          if (!qNameRegex.test(tag)) throw new TypeError(`Invalid custom tag name: "${tag}".`);
+          if (!this.#xmlNameRegex.test(tag))
+            throw new TypeError(`Invalid custom tag name: "${tag}".`);
           // Validate content
           if (typeof value !== 'string')
             throw new TypeError(`The content for custom tag "${tag}" must be a string.`);
@@ -267,6 +252,35 @@ class TinySiteMap {
     }
 
     return normalizedEntry;
+  }
+
+  /**
+   * @param {SitemapNamespace} ns - The namespace to add.
+   * @throws {TypeError} If the namespace format is invalid.
+   */
+  addNamespace(ns) {
+    this.#validateNamespace(ns);
+    // Prevent duplicates by prefix/uri combination
+    const exists = this.#namespaces.some(
+      (existing) => existing.uri === ns.uri && existing.prefix === ns.prefix,
+    );
+    if (!exists) {
+      this.#namespaces.push(ns);
+    }
+  }
+
+  /**
+   * @param {string} prefix - The prefix to remove.
+   */
+  removeNamespace(prefix) {
+    this.#namespaces = this.#namespaces.filter((ns) => ns.prefix !== prefix);
+  }
+
+  /**
+   * Clears all manually added namespaces.
+   */
+  clearNamespaces() {
+    this.#namespaces = [];
   }
 
   /**
@@ -333,6 +347,31 @@ class TinySiteMap {
   }
 
   /**
+   * Sets a dynamic strategy to provide namespaces based on the instance state.
+   * @param {NamespaceStrategy} strategy - The strategy function.
+   * @throws {TypeError} If the strategy is not a function.
+   */
+  set namespaceStrategy(strategy) {
+    if (typeof strategy !== 'function') {
+      throw new TypeError('namespaceStrategy must be a function.');
+    }
+    this.#namespaceStrategy = strategy;
+  }
+
+  /**
+   * Returns a copy of the manually added namespaces.
+   * @returns {SitemapNamespace[]}
+   */
+  get namespaces() {
+    return this.#namespaces.map((i) => ({ ...i }));
+  }
+
+  set namespaces(nss) {
+    this.#validateNamespaceSet(nss);
+    this.#namespaces = nss;
+  }
+
+  /**
    * Gets the sitemap type.
    * @returns {'normal'|'index'} The type of sitemap.
    */
@@ -357,40 +396,43 @@ class TinySiteMap {
   }
 
   /**
+   * Gets the maximum allowed URL size.
+   * @returns {number} The current maximum size.
+   */
+  get maxResolvedUrlSize() {
+    return this.#maxResolvedUrlSize;
+  }
+
+  /**
+   * Sets the maximum allowed URL size.
+   * @param {number} value - The new maximum size.
+   * @throws {TypeError} If the value is not a non-negative finite number.
+   */
+  set maxResolvedUrlSize(value) {
+    if (typeof value !== 'number' || Number.isNaN(value) || !Number.isFinite(value) || value < 0) {
+      throw new TypeError('maxResolvedUrlSize must be a non-negative number.');
+    }
+    this.#maxResolvedUrlSize = value;
+  }
+
+  /**
    * Generates the sitemap or sitemap index as a valid XML string.
    * @returns {string} The generated XML content.
    */
   generateXml() {
+    // 1. Collect all namespaces (Manual + Dynamic Strategy)
+    const dynamicNamespaces = this.#namespaceStrategy ? this.#namespaceStrategy(this) : [];
+    const allNamespaces = [...dynamicNamespaces, ...this.#namespaces];
+
+    // 2. SECURITY: Validate all collected namespaces before rendering
+    this.#validateNamespaceSet(allNamespaces);
+
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
 
-    const namespaces = [...this.#namespaces];
-
-    if (this.#type === 'normal') {
-      const existsCustomTags =
-        this.#entries.findIndex(
-          (/** @type {SitemapEntry} */ entry) =>
-            entry.customTags && Object.keys(entry.customTags).length > 0,
-        ) > -1;
-
-      if (existsCustomTags) {
-        /** @type {SitemapNamespace} */
-        const customTagNs = {
-          uri: 'http://www.example.com/schemas/example_schema',
-          prefix: 'example',
-        };
-        if (
-          namespaces.findIndex(
-            (ns) => ns.prefix === customTagNs.prefix && ns.uri === customTagNs.uri,
-          ) < 0
-        )
-          namespaces.push(customTagNs);
-      }
-    }
-
-    // Build the xmlns attributes string
     let namespaceAttributes = '';
-    for (const ns of namespaces) {
-      namespaceAttributes += ` xmlns${typeof ns.prefix !== 'undefined' ? `:${ns.prefix}` : ''}="${this.#escapeXml(ns.uri)}"`;
+    for (const ns of allNamespaces) {
+      const prefixPart = ns.prefix ? `:${ns.prefix}` : '';
+      namespaceAttributes += ` xmlns${prefixPart}="${this.#escapeXml(ns.uri)}"`;
     }
 
     if (this.#type === 'index') {
@@ -404,6 +446,7 @@ class TinySiteMap {
           xml += `    <lastmod>${new Date(entry.lastmod).toISOString()}</lastmod>\n`;
         xml += `  </sitemap>\n`;
       }
+      xml += `</sitemapindex>`;
     } else {
       xml += `<urlset${namespaceAttributes}>\n`;
 
@@ -426,14 +469,50 @@ class TinySiteMap {
             xml += `    <${tag}>${this.#escapeXml(value)}</${tag}>\n`;
           }
         }
-
         xml += `  </url>\n`;
       }
+      xml += `</urlset>`;
     }
 
-    xml += `</${this.#type === 'index' ? 'sitemapindex' : 'urlset'}>`;
     return xml;
   }
+
+  /**
+   * Static helper to provide the original default namespace logic as a strategy.
+   * @type {NamespaceStrategy}
+   */
+  static defaultStrategy(instance) {
+      const namespaces = [];
+
+      // Base Namespace
+      namespaces.push({ uri: 'http://www.sitemaps.org/schemas/sitemap/0.9' });
+
+      // XSI
+      namespaces.push({ prefix: 'xsi', uri: 'http://www.w3.org/2001/XMLSchema-instance' });
+
+      // Schema Location
+      const schemaUri =
+        instance.type === 'normal'
+          ? 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd'
+          : 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd';
+
+      namespaces.push({ prefix: 'schemaLocation', uri: schemaUri });
+
+      // Custom Tags logic (original insertNamespaces behavior)
+      if (instance.type === 'normal') {
+        const hasCustomTags = instance.entries.some(
+          (/** @type {SitemapEntry} */ e) => e.customTags && Object.keys(e.customTags).length > 0,
+        );
+        if (hasCustomTags) {
+          namespaces.push({
+            prefix: 'example',
+            uri: 'http://www.example.com/schemas/example_schema',
+          });
+        }
+      }
+
+      return namespaces;
+    };
 }
 
 export default TinySiteMap;
