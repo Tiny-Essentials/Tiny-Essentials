@@ -1,10 +1,10 @@
 import { isJsonObject } from '../../basics/objChecker.mjs';
 import TinyI18 from '../text/TinyI18.mjs';
-import RequestCodes from './TinyHttpResponseRegistry/RequestCodes.mjs';
+import RequestCodes from './TinyHttpResponseRegistry/RequestCodes/index.mjs';
 
 /**
- * @typedef {import('./TinyHttpResponseRegistry/RequestCodes.mjs').HttpResponse} HttpResponse
- * @typedef {import('./TinyHttpResponseRegistry/RequestCodes.mjs').HttpResponses} HttpResponses
+ * @typedef {import('./TinyHttpResponseRegistry/RequestCodes/index.mjs').HttpResponse} HttpResponse
+ * @typedef {import('./TinyHttpResponseRegistry/RequestCodes/index.mjs').HttpResponses} HttpResponses
  */
 
 /**
