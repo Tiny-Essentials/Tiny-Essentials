@@ -155,12 +155,13 @@ class TinyHttpResponseRegistry {
    * Retrieves a response by its ID.
    * @param {number} id - The HTTP status code.
    * @returns {HttpResponse | null} The response object or null if not found.
+   * @param {import('../text/TinyI18.mjs').Dict} [params]
    * @param {string} [locale] - The locale to use for retrieval.
    */
-  get(id, locale = this.#locale) {
-    const name = this.#i18.get(`${id}.name`, {}, { locale });
-    const summary = this.#i18.get(`${id}.summary`, {}, { locale });
-    const description = this.#i18.get(`${id}.description`, {}, { locale });
+  get(id, params = {}, locale = this.#locale) {
+    const name = this.#i18.get(`${id}.name`, params, { locale });
+    const summary = this.#i18.get(`${id}.summary`, params, { locale });
+    const description = this.#i18.get(`${id}.description`, params, { locale });
 
     if (typeof name !== 'string' || typeof summary !== 'string' || typeof description !== 'string')
       return null;
