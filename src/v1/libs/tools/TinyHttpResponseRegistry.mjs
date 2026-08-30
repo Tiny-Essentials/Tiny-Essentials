@@ -17,6 +17,7 @@ import TinyI18 from '../text/TinyI18.mjs';
 /**
  * A collection of standard HTTP status codes and their corresponding names and descriptions.
  * Credits: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
+ * @license CC-BY-SA 2.5
  * @type {HttpResponses}
  */
 const requestCodes = {
