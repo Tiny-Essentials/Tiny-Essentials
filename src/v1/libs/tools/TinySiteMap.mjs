@@ -391,10 +391,18 @@ class TinySiteMap {
   }
 
   set namespaces(nss) {
-    this.#validateNamespaceSet(nss);
-    this.#namespaces = [];
-    for (const ns of nss) {
-      this.addNamespace(ns);
+    if (!Array.isArray(nss)) {
+      throw new TypeError('namespaces must be an array.');
+    }
+    const oldNamespaces = this.#namespaces;
+    try {
+      this.#namespaces = [];
+      for (const ns of nss) {
+        this.addNamespace(ns);
+      }
+    } catch (err) {
+      this.#namespaces = oldNamespaces;
+      throw err;
     }
   }
 
@@ -420,6 +428,22 @@ class TinySiteMap {
    */
   get entries() {
     return this.#entries.map((e) => ({ ...e }));
+  }
+
+  set entries(entries) {
+    if (!Array.isArray(entries)) {
+      throw new TypeError('entries must be an array.');
+    }
+    const oldEntries = this.#entries;
+    try {
+      this.#entries = [];
+      for (const entry of entries) {
+        this.addEntry(entry);
+      }
+    } catch (err) {
+      this.#entries = oldEntries;
+      throw err;
+    }
   }
 
   /**
