@@ -339,6 +339,7 @@
 
       // --- TEST SUITE LOGIC ---
 
+      window.TinySiteMap = TinySiteMap;
       let generator = null;
       let xmlEditor = null;
 
@@ -406,6 +407,7 @@
           };
 
           generator = new TinySiteMap(config);
+          window.env = generator;
           const xml = generator.generateXml();
 
           // Update the CodeMirror editor

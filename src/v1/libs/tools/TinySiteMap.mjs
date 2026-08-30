@@ -58,7 +58,7 @@ class TinySiteMap {
   /** @type {number} The maximum allowed length for a resolved URL. */
   #maxResolvedUrlSize = 2048;
   /** @type {RegExp} Regex to validate XML Names/Prefixes. */
-  #xmlNameRegex = /[a-zA-Z_][\w.-]*/;
+  #xmlNameRegex = /^[a-zA-Z_:][\w:.-]*$/; // From "sitemap.js".
 
   /**
    * @param {SitemapConfig} config - The configuration object.
@@ -118,22 +118,28 @@ class TinySiteMap {
    * @returns {string} The escaped string with characters like <, >, &, ", and ' replaced by entities.
    */
   #escapeXml(str) {
-    return str.replace(/[<>&"']/g, (char) => {
-      switch (char) {
-        case '<':
-          return '&lt;';
-        case '>':
-          return '&gt;';
-        case '&':
-          return '&amp;';
-        case '"':
-          return '&quot;';
-        case "'":
-          return '&apos;';
-        default:
-          return char;
-      }
-    });
+    return str
+      .replace(/[<>&"']/g, (char) => {
+        switch (char) {
+          case '<':
+            return '&lt;';
+          case '>':
+            return '&gt;';
+          case '&':
+            return '&amp;';
+          case '"':
+            return '&quot;';
+          case "'":
+            return '&apos;';
+          default:
+            return char;
+        }
+      })
+      // From "sitemap.js".
+      .replace(
+        /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u0084\u0086-\u009F\uD800-\uDFFF\p{NChar}]/gu,
+        '',
+      );
   }
 
   /**
