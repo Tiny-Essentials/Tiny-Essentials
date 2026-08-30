@@ -47,7 +47,7 @@ const checkDestroy = createCheckDestroyed('TinyI18');
 /**
  * A resolved translation value.
  *
- * @typedef {string|null} SimpleTranslationValue - A resolved translation value, typically a string or null.
+ * @typedef {string|null} TranslateResult - A resolved translation value, typically a string or null.
  */
 
 /**
@@ -654,7 +654,7 @@ class TinyI18 {
 
     /**
      * @param {string} prefix
-     * @param {FileValue|SimpleTranslationValue} node
+     * @param {FileValue|TranslateResult} node
      */
     const walk = (prefix, node) => {
       if (node == null) return;
@@ -897,7 +897,7 @@ class TinyI18 {
    * @param {string} key - Translation key (dot.notation).
    * @param {Dict} [params] - Parameters for string interpolation or helper functions.
    * @param {ResolveOptions} [options] - Override resolution options (e.g., force locale).
-   * @returns {SimpleTranslationValue} - Usually string, but may be HTMLElement, DocumentFragment, or any return type from a helper.
+   * @returns {TranslateResult} - Usually string, but may be HTMLElement, DocumentFragment, or any return type from a helper.
    */
   t(key, params = undefined, options = undefined) {
     return this.get(key, params, options);
@@ -908,7 +908,7 @@ class TinyI18 {
    * @param {string} key - Translation key (dot.notation).
    * @param {Dict} [params] - Parameters for string interpolation or helper functions.
    * @param {ResolveOptions} [options] - Override resolution options (e.g., force locale).
-   * @returns {SimpleTranslationValue} - Usually string, but may be HTMLElement, DocumentFragment, or any return type from a helper.
+   * @returns {TranslateResult} - Usually string, but may be HTMLElement, DocumentFragment, or any return type from a helper.
    */
   get(key, params = undefined, options = undefined) {
     checkDestroy(this.#destroyed);
@@ -935,7 +935,7 @@ class TinyI18 {
    *
    * @param {string} key - Input string to test against regex patterns.
    * @param {ResolveOptions} [options] - Override resolution options (e.g., force locale).
-   * @returns {SimpleTranslationValue} - Translation value (string or custom return type).
+   * @returns {TranslateResult} - Translation value (string or custom return type).
    */
   p(key, options) {
     return this.resolveByPattern(key, options);
@@ -945,7 +945,7 @@ class TinyI18 {
    * Alias of p()
    * @param {string} key - Input string to test against regex patterns.
    * @param {ResolveOptions} [options] - Override resolution options (e.g., force locale).
-   * @returns {SimpleTranslationValue} - Translation value (string or custom return type).
+   * @returns {TranslateResult} - Translation value (string or custom return type).
    */
   resolveByPattern(key, options) {
     checkDestroy(this.#destroyed);
