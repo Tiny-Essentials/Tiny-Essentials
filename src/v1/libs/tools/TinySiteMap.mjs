@@ -242,8 +242,8 @@ class TinySiteMap {
       // Validate customTags
       if (normalizedEntry.customTags) {
         // Regex to validate an XML QName (prefix:localName)
-        const xmlNameRegex = /^[a-zA-Z_][\w.-]*$/;
-        const qNameRegex = new RegExp(`^${xmlNameRegex.source}(:${xmlNameRegex.source})?$`);
+        const xmlNameBase = /[a-zA-Z_][\w.-]*/;
+        const qNameRegex = new RegExp(`^${xmlNameBase.source}(:${xmlNameBase.source})?$`);
 
         // Validation for customTags
         if (typeof normalizedEntry.customTags !== 'object' || normalizedEntry.customTags === null) {
