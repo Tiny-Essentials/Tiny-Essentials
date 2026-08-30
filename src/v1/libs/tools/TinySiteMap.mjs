@@ -60,6 +60,23 @@ class TinySiteMap {
   /** @type {RegExp} Regex to validate XML Names/Prefixes. */
   #xmlNameRegex = /^[a-zA-Z_:][\w:.-]*$/; // From "sitemap.js".
 
+  static #xmlns = new Map([
+    ['ROOT', 'http://www.sitemaps.org/schemas/sitemap/0.9'],
+    ['news', 'http://www.google.com/schemas/sitemap-news/0.9'],
+    ['xhtml', 'http://www.google.com/schemas/sitemap-news/0.9'],
+    ['image', 'http://www.google.com/schemas/sitemap-news/0.9'],
+    ['video', 'http://www.google.com/schemas/sitemap-news/0.9'],
+    ['xsi', 'http://www.w3.org/2001/XMLSchema-instance'],
+    [
+      'schemaLocation:normal',
+      'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd',
+    ],
+    [
+      'schemaLocation:index',
+      'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd',
+    ],
+  ]);
+
   /**
    * @param {SitemapConfig} config - The configuration object.
    * @throws {TypeError} If the configuration is invalid.
@@ -118,28 +135,30 @@ class TinySiteMap {
    * @returns {string} The escaped string with characters like <, >, &, ", and ' replaced by entities.
    */
   #escapeXml(str) {
-    return str
-      .replace(/[<>&"']/g, (char) => {
-        switch (char) {
-          case '<':
-            return '&lt;';
-          case '>':
-            return '&gt;';
-          case '&':
-            return '&amp;';
-          case '"':
-            return '&quot;';
-          case "'":
-            return '&apos;';
-          default:
-            return char;
-        }
-      })
-      // From "sitemap.js".
-      .replace(
-        /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u0084\u0086-\u009F\uD800-\uDFFF\p{NChar}]/gu,
-        '',
-      );
+    return (
+      str
+        .replace(/[<>&"']/g, (char) => {
+          switch (char) {
+            case '<':
+              return '&lt;';
+            case '>':
+              return '&gt;';
+            case '&':
+              return '&amp;';
+            case '"':
+              return '&quot;';
+            case "'":
+              return '&apos;';
+            default:
+              return char;
+          }
+        })
+        // From "sitemap.js".
+        .replace(
+          /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u0084\u0086-\u009F\uD800-\uDFFF\p{NChar}]/gu,
+          '',
+        )
+    );
   }
 
   /**
@@ -493,16 +512,16 @@ class TinySiteMap {
     const namespaces = [];
 
     // Base Namespace
-    namespaces.push({ uri: 'http://www.sitemaps.org/schemas/sitemap/0.9' });
+    namespaces.push({ uri: TinySiteMap.#xmlns.get('ROOT') ?? '' });
 
     // XSI
-    namespaces.push({ prefix: 'xsi', uri: 'http://www.w3.org/2001/XMLSchema-instance' });
+    namespaces.push({ prefix: 'xsi', uri: TinySiteMap.#xmlns.get('xsi') ?? '' });
 
     // Schema Location
     const schemaUri =
       instance.type === 'normal'
-        ? 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd'
-        : 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd';
+        ? (TinySiteMap.#xmlns.get('schemaLocation:normal') ?? '')
+        : (TinySiteMap.#xmlns.get('schemaLocation:index') ?? '');
 
     namespaces.push({ prefix: 'schemaLocation', uri: schemaUri });
 
