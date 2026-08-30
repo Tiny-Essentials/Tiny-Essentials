@@ -111,5 +111,6 @@ addModule(1, './src/v1/build/TinyMapCache.mjs', 'TinyMapCache', true);
 addModule(1, './src/v1/build/TinyRouter.mjs', 'TinyRouter', true);
 addModule(1, './src/v1/build/TinyServiceWorker.mjs', 'TinyServiceWorker', true);
 addModule(1, './src/v1/build/TinyCloner.mjs', 'TinyCloner', true);
+addModule(1, './src/v1/build/TinyHttpResponseRegistry.mjs', 'TinyHttpResponseRegistry', true);
 
 export default modules;
