@@ -19,9 +19,9 @@ According to both the LGPL v3 and CC-BY-SA-2.5 guidelines, this implementation q
 
 Portions of the text content inside the JSON data are derived from [MDN Web Docs](https://mozilla.org) by individual mozilla.org contributors.
 
-* **Original Source:** [MDN HTTP Response Status Codes Reference](https://mozilla.org)
+* **Original Source:** [MDN HTTP Response Status Codes Reference](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status)
 * **Copyright:** © 1998-2026 by individual mozilla.org contributors.
-* **Data License:** [Creative Commons Attribution-ShareAlike 2.5 Generic (CC-BY-SA-2.5)](https://creativecommons.org)
+* **Data License:** [Creative Commons Attribution-ShareAlike 2.5 Generic (CC-BY-SA-2.5)](https://creativecommons.org/licenses/by-sa/2.5/deed.en)
 
 ## Modifications
 
