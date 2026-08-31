@@ -1,5 +1,5 @@
 import stringify from 'safe-stable-stringify';
-import { ColorSafeStringify } from '../../dist/v1/index.mjs';
+import ColorSafeStringify from '../../dist/v1/libs/color/ColorSafeStringify.mjs';
 
 const testColorSafeStringify = () => {
   const colorizer = new ColorSafeStringify();

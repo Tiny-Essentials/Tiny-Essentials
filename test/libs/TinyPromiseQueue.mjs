@@ -1,4 +1,4 @@
-import { TinyPromiseQueue } from '../../dist/v1/index.mjs';
+import TinyPromiseQueue from '../../dist/v1/libs/utils/TinyPromiseQueue.mjs';
 
 const executeTinyPromiseQueue = async () => {
   await new Promise((resolve) => {

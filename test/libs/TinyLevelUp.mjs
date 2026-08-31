@@ -1,4 +1,4 @@
-import { TinyLevelUp } from '../../dist/v1/index.mjs';
+import TinyLevelUp from '../../dist/v1/libs/game/TinyLevelUp.mjs';
 
 /**
  * Helper to deep clone user object to avoid mutation side-effects during testing

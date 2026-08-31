@@ -1,11 +1,6 @@
-import {
-  checkObj,
-  cloneObjTypeOrder,
-  ColorSafeStringify,
-  isJsonObject,
-  objTypeName,
-  isValidObj,
-} from '../../dist/v1/index.mjs';
+import ColorSafeStringify from '../../dist/v1/libs/color/ColorSafeStringify.mjs';
+import { isJsonObject, isValidObj } from '../../dist/v1/basics/objChecker.mjs';
+import { checkObj, cloneObjTypeOrder, objTypeName } from '../../dist/v1/basics/objFilter.mjs';
 
 const colorizer = new ColorSafeStringify();
 const color = {

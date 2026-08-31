@@ -1,4 +1,5 @@
-import { TinyRateLimiter, ColorSafeStringify } from '../../dist/v1/index.mjs';
+import TinyRateLimiter from '../../dist/v1/libs/math/TinyRateLimiter.mjs';
+import ColorSafeStringify from '../../dist/v1/libs/color/ColorSafeStringify.mjs';
 
 const colorizer = new ColorSafeStringify();
 const stringifyJson = (json, space = 0) => colorizer.colorize(JSON.stringify(json, null, space));
