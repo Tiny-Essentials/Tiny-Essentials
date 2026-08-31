@@ -318,31 +318,35 @@ class TinyPkgExportValidator {
    *
    * @param {Record<string, () => Promise<void> | void>} actions - An object where keys are
    * command names (passed via CLI) and values are the functions to be executed.
+   * @param {string[]} [args=process.argv] - The array of command-line arguments.
+   * Defaults to `process.argv` if not provided.
    * @throws {TypeError} If the `actions` argument is not a non-null object.
    */
-  async execCommandTester(actions) {
+  async execCommandTester(actions, args = process.argv) {
     if (typeof actions !== 'object' || actions === null || Array.isArray(actions)) {
       throw new TypeError('The "actions" argument must be a non-null object.');
     }
 
-    const arg = process.argv[2];
+    // We use the 'args' parameter instead of the global 'process.argv'
+    // to allow for better dependency tracking by bundlers like Webpack.
+    const arg = args[2];
     const availableCommands = Object.keys(actions);
 
     // Case 1: No argument provided - Run all actions
     if (!arg) {
       this.#log('cyan', 'header');
       this.#log('dim', 'Running all registered commands...');
-      
+
       for (const commandName of availableCommands) {
         this.#log('cyan', `> Executing: ${commandName}`);
         await actions[commandName]();
       }
-    } 
+    }
     // Case 2: Specific command provided and it exists
     else if (typeof actions[arg] === 'function') {
       this.#log('cyan', `> Executing: ${arg}`);
       await actions[arg]();
-    } 
+    }
     // Case 3: Argument provided but not found in actions
     else {
       this.#log('error', 'errorUnexpected', { message: `Unknown argument: "${arg}"` });

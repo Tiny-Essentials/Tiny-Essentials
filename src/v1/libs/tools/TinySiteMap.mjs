@@ -316,8 +316,8 @@ class TinySiteMap {
         ) {
           throw new TypeError('entry.priority must be a number.');
         }
-        if (normalizedEntry.priority < 0 || normalizedEntry.priority > 1) {
-          throw new RangeError('entry.priority must be between 0.0 and 1.0.');
+        if (normalizedEntry.priority < 0) {
+          throw new RangeError('entry.priority must be greater than -1.');
         }
       }
 
