@@ -8,8 +8,10 @@ import RequestCodes from './TinyHttpResponseRegistry/RequestCodes.mjs';
  */
 
 /**
- * Manages a collection of HTTP response codes.
- * The registry is immutable regarding existing entries and ensures data integrity through strict validation.
+ * A centralized registry designed for managing HTTP response metadata.
+ * It provides strict data validation and integrated internationalization (i18n) support,
+ * enabling the retrieval of localized response names, summaries, and descriptions
+ * while preventing accidental state mutation.
  */
 class TinyHttpResponseRegistry {
   /** @type {HttpResponses} */
