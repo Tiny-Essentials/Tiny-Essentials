@@ -57,8 +57,26 @@ class TinySiteMap {
   #type;
   /** @type {number} The maximum allowed length for a resolved URL. */
   #maxResolvedUrlSize = 2048;
-  /** @type {RegExp} Regex to validate XML Names/Prefixes. */
-  #xmlNameRegex = /^[a-zA-Z_:][\w:.-]*$/; // From package "sitemap.js" by Eugene Kalinin.
+
+  /**
+   * @type {RegExp} Regex to validate XML Names/Prefixes.
+   *
+   * From package "sitemap.js" by Eugene Kalinin.
+   * @reference https://github.com/ekalinin/sitemap.js/blob/1a782cf41e0d391299029c9e00c8bfa8cdaad212/lib/sitemap-xml.ts
+   *
+   */
+  static #xmlNameRegex = /^[a-zA-Z_:][\w:.-]*$/;
+
+  /**
+   * @type {RegExp} Regex to validate XML Names/Prefixes.
+   *
+   * From package "sitemap.js" by Eugene Kalinin.
+   * @reference https://github.com/ekalinin/sitemap.js/blob/1a782cf41e0d391299029c9e00c8bfa8cdaad212/lib/sitemap-xml.ts
+   *
+   */
+  static get xmlNameRegex() {
+    return new RegExp(TinySiteMap.#xmlNameRegex.source, TinySiteMap.#xmlNameRegex.flags);
+  }
 
   /**
    * A static map storing predefined XML namespace identifiers and their corresponding URIs.
@@ -176,7 +194,7 @@ class TinySiteMap {
    * @param {RegExp} regex
    * @throws {TypeError}
    */
-  #validateNamespace(ns, regex = this.#xmlNameRegex) {
+  #validateNamespace(ns, regex = TinySiteMap.#xmlNameRegex) {
     if (typeof ns !== 'object' || ns === null)
       throw new TypeError('Namespace must be a non-null object.');
     if (typeof ns.uri !== 'string') throw new TypeError('Namespace URI must be a string.');
@@ -375,7 +393,7 @@ class TinySiteMap {
       this.#baseUrl,
       this.#type,
       this.#maxResolvedUrlSize,
-      this.#xmlNameRegex,
+      TinySiteMap.#xmlNameRegex,
     );
   }
 

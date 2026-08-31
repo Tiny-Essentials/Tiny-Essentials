@@ -326,7 +326,7 @@ class TinyPkgExportValidator {
     if (typeof actions !== 'object' || actions === null || Array.isArray(actions)) {
       throw new TypeError('The "actions" argument must be a non-null object.');
     }
-    if (!Array.isArray(args) || !args.every(arg => typeof arg === 'string')) {
+    if (!Array.isArray(args) || !args.every((arg) => typeof arg === 'string')) {
       throw new TypeError('The "args" argument must be a string array.');
     }
 
