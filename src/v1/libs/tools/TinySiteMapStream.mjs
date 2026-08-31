@@ -111,7 +111,7 @@ class TinySiteMapStream extends Transform {
     let namespaceAttributes = '';
     for (const ns of namespaces) {
       const prefixPart = ns.prefix ? `:${ns.prefix}` : '';
-      namespaceAttributes += ` xmlns${prefixPart}="${TinySiteMap.escapeXml(ns.uri)}"`;
+      namespaceAttributes += ` xmlns${prefixPart}="${TinySiteMap.escapeXml(ns.uri ?? '')}"`;
     }
 
     xml +=
