@@ -100,7 +100,7 @@ class TinySiteMap {
    * A static map storing predefined XML namespace identifiers and their corresponding URIs.
    * @type {Map<string, string>}
    */
-  static #xmlns = new Map([
+  static #attrValues = new Map([
     ['ROOT', 'http://www.sitemaps.org/schemas/sitemap/0.9'],
     ['exampleSchema', 'http://www.example.com/schemas/example_schema'],
     ['news', 'http://www.google.com/schemas/sitemap-news/0.9'],
@@ -123,8 +123,8 @@ class TinySiteMap {
    * @param {string} id - The namespace identifier.
    * @returns {string|undefined} The namespace URI or undefined if not found.
    */
-  static getXmlns(id) {
-    return TinySiteMap.#xmlns.get(id);
+  static getAttrVal(id) {
+    return TinySiteMap.#attrValues.get(id);
   }
 
   /**
@@ -133,10 +133,10 @@ class TinySiteMap {
    * @param {string} value - The namespace URI.
    * @throws {TypeError} If the ID or value are not strings.
    */
-  static setXmlns(id, value) {
+  static setAttrVal(id, value) {
     if (typeof id !== 'string') throw new TypeError('Namespace ID must be a string.');
     if (typeof value !== 'string') throw new TypeError('Namespace URI must be a string.');
-    TinySiteMap.#xmlns.set(id, value);
+    TinySiteMap.#attrValues.set(id, value);
   }
 
   /**
@@ -144,16 +144,16 @@ class TinySiteMap {
    * @param {string} id - The namespace identifier.
    * @returns {boolean} True if it exists, false otherwise.
    */
-  static hasXmlns(id) {
-    return TinySiteMap.#xmlns.has(id);
+  static hasAttrVal(id) {
+    return TinySiteMap.#attrValues.has(id);
   }
 
   /**
    * Gets all namespaces as a plain object.
    * @returns {Record<string, string>} A map of IDs to URIs.
    */
-  static get xmlns() {
-    return Object.fromEntries(TinySiteMap.#xmlns);
+  static get attrValues() {
+    return Object.fromEntries(TinySiteMap.#attrValues);
   }
 
   /**
@@ -161,20 +161,20 @@ class TinySiteMap {
    * @param {Record<string, string>} obj - The new namespace mapping.
    * @throws {TypeError} If the input is not a valid object or contains non-string values.
    */
-  static set xmlns(obj) {
+  static set attrValues(obj) {
     if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
-      throw new TypeError('xmlns must be a non-null object.');
+      throw new TypeError('attrValues must be a non-null object.');
     }
 
-    const xmlns = TinySiteMap.#xmlns;
+    const attrValues = TinySiteMap.#attrValues;
     try {
       // Validate all values are strings before applying to ensure atomicity
-      TinySiteMap.#xmlns = new Map();
+      TinySiteMap.#attrValues = new Map();
       for (const [key, value] of Object.entries(obj)) {
-        TinySiteMap.setXmlns(key, value);
+        TinySiteMap.setAttrVal(key, value);
       }
     } catch (err) {
-      TinySiteMap.#xmlns = xmlns;
+      TinySiteMap.#attrValues = attrValues;
       throw err;
     }
   }
@@ -183,8 +183,8 @@ class TinySiteMap {
    * Gets the total number of registered namespaces.
    * @returns {number} The count of namespaces.
    */
-  static get xmlnsSize() {
-    return TinySiteMap.#xmlns.size;
+  static get attrValuesSize() {
+    return TinySiteMap.#attrValues.size;
   }
 
   /**
@@ -725,11 +725,27 @@ class TinySiteMap {
   static kaliStrategy() {
     /** @type {SitemapNamespace[]} */
     const namespaces = [];
-    namespaces.push({ type: 'xmlns', uri: TinySiteMap.#xmlns.get('ROOT') ?? '' });
-    namespaces.push({ type: 'xmlns', uri: TinySiteMap.#xmlns.get('news') ?? '', prefix: 'news' });
-    namespaces.push({ type: 'xmlns', uri: TinySiteMap.#xmlns.get('xhtml') ?? '', prefix: 'xhtml' });
-    namespaces.push({ type: 'xmlns', uri: TinySiteMap.#xmlns.get('image') ?? '', prefix: 'image' });
-    namespaces.push({ type: 'xmlns', uri: TinySiteMap.#xmlns.get('video') ?? '', prefix: 'video' });
+    namespaces.push({ type: 'xmlns', uri: TinySiteMap.#attrValues.get('ROOT') ?? '' });
+    namespaces.push({
+      type: 'xmlns',
+      uri: TinySiteMap.#attrValues.get('news') ?? '',
+      prefix: 'news',
+    });
+    namespaces.push({
+      type: 'xmlns',
+      uri: TinySiteMap.#attrValues.get('xhtml') ?? '',
+      prefix: 'xhtml',
+    });
+    namespaces.push({
+      type: 'xmlns',
+      uri: TinySiteMap.#attrValues.get('image') ?? '',
+      prefix: 'image',
+    });
+    namespaces.push({
+      type: 'xmlns',
+      uri: TinySiteMap.#attrValues.get('video') ?? '',
+      prefix: 'video',
+    });
     return namespaces;
   }
 
@@ -738,7 +754,7 @@ class TinySiteMap {
    * @type {NamespaceStrategy}
    */
   static simpleStrategy() {
-    return [{ type: 'xmlns', uri: TinySiteMap.#xmlns.get('ROOT') ?? '' }];
+    return [{ type: 'xmlns', uri: TinySiteMap.#attrValues.get('ROOT') ?? '' }];
   }
 
   /**
@@ -752,16 +768,20 @@ class TinySiteMap {
     const namespaces = [];
 
     // Default xmlns
-    namespaces.push({ type: 'xmlns', uri: TinySiteMap.#xmlns.get('ROOT') ?? '' });
+    namespaces.push({ type: 'xmlns', uri: TinySiteMap.#attrValues.get('ROOT') ?? '' });
 
     // xmlns:xsi
-    namespaces.push({ type: 'xmlns', prefix: 'xsi', uri: TinySiteMap.#xmlns.get('xsi') ?? '' });
+    namespaces.push({
+      type: 'xmlns',
+      prefix: 'xsi',
+      uri: TinySiteMap.#attrValues.get('xsi') ?? '',
+    });
 
     // Schema Location
     const schemaUri =
       instance.type === 'normal'
-        ? (TinySiteMap.#xmlns.get('schemaLocation:normal') ?? '')
-        : (TinySiteMap.#xmlns.get('schemaLocation:index') ?? '');
+        ? (TinySiteMap.#attrValues.get('schemaLocation:normal') ?? '')
+        : (TinySiteMap.#attrValues.get('schemaLocation:index') ?? '');
 
     namespaces.push({ type: 'attribute', name: 'xsi:schemaLocation', value: schemaUri });
 
@@ -774,7 +794,7 @@ class TinySiteMap {
         namespaces.push({
           type: 'xmlns',
           prefix: 'example',
-          uri: TinySiteMap.#xmlns.get('exampleSchema') ?? '',
+          uri: TinySiteMap.#attrValues.get('exampleSchema') ?? '',
         });
       }
     }
