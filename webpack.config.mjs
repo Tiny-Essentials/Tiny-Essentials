@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import webpack from 'webpack';
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
@@ -112,5 +113,41 @@ addModule(1, './src/v1/build/TinyRouter.mjs', 'TinyRouter', true);
 addModule(1, './src/v1/build/TinyServiceWorker.mjs', 'TinyServiceWorker', true);
 addModule(1, './src/v1/build/TinyCloner.mjs', 'TinyCloner', true);
 addModule(1, './src/v1/build/TinyHttpResponseRegistry.mjs', 'TinyHttpResponseRegistry', true);
+
+/**
+ * Recursively scans the source directory for LICENSE files and copies them to the dist directory.
+ * 
+ * @param {string} srcDir - The base directory to scan (e.g., './src').
+ * @param {string} distDir - The base directory for the destination (e.g., './dist').
+ * @returns {Promise<void>}
+ */
+const syncLicenseFiles = async (srcDir, distDir) => {
+  try {
+    const entries = await fs.readdir(srcDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const srcPath = path.join(srcDir, entry.name);
+      const distPath = path.join(distDir, entry.name);
+
+      if (entry.isDirectory()) {
+        // If it is a directory, descend into it (recursion)
+        await syncLicenseFiles(srcPath, distPath);
+      } else if (entry.isFile() && entry.name === 'LICENSE') {
+        // If it is a file named LICENSE, ensure the destination directory exists and copy it
+        await fs.mkdir(path.dirname(distPath), { recursive: true });
+        await fs.copyFile(srcPath, distPath);
+      }
+    }
+  } catch (error) {
+    // If the source directory does not exist, ignore the error silently
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+  }
+};
+
+// Executes the license synchronization
+// Note: Since this is an ES module, execution occurs when the file is imported.
+syncLicenseFiles(path.resolve(__dirname, './src'), path.resolve(__dirname, './dist'));
 
 export default modules;
