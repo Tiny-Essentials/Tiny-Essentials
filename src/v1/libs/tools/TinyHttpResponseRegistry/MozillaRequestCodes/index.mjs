@@ -2,7 +2,7 @@
  * A collection of standard HTTP status codes and their corresponding names and descriptions.
  * 
  * Credits: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
- * @license CC-BY-SA 2.5
+ * @license CC-BY-SA 2.5 - https://creativecommons.org/licenses/by-sa/2.5/deed.en
  * @type {import('../JsDoc.mjs').HttpResponses}
  */
 const RequestCodes = {
