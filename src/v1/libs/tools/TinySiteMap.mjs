@@ -58,9 +58,12 @@ class TinySiteMap {
   /** @type {number} The maximum allowed length for a resolved URL. */
   #maxResolvedUrlSize = 2048;
   /** @type {RegExp} Regex to validate XML Names/Prefixes. */
-  #xmlNameRegex = /^[a-zA-Z_:][\w:.-]*$/; // From "sitemap.js".
+  #xmlNameRegex = /^[a-zA-Z_:][\w:.-]*$/; // From package "sitemap.js" by Eugene Kalinin.
 
-  /** @type {Map<string, string>} */
+  /**
+   * A static map storing predefined XML namespace identifiers and their corresponding URIs.
+   * @type {Map<string, string>}
+   */
   static #xmlns = new Map([
     ['ROOT', 'http://www.sitemaps.org/schemas/sitemap/0.9'],
     ['exampleSchema', 'http://www.example.com/schemas/example_schema'],
@@ -149,6 +152,7 @@ class TinySiteMap {
   }
 
   /**
+   * Initializes a new instance of the TinySiteMap class with the provided configuration.
    * @param {SitemapConfig} config - The configuration object.
    * @throws {TypeError} If the configuration is invalid.
    */
@@ -157,7 +161,7 @@ class TinySiteMap {
     this.#type = config.type ?? 'normal';
     this.#baseUrl = new URL(config.baseUrl);
     this.namespaces = config.namespaces ?? [];
-    this.namespaceStrategy = config.namespaceStrategy ?? TinySiteMap.defaultStrategy;
+    this.namespaceStrategy = config.namespaceStrategy ?? TinySiteMap.simpleStrategy;
 
     if (config.entries && config.entries.length > 0) {
       for (const entry of config.entries) {
@@ -224,7 +228,7 @@ class TinySiteMap {
               return char;
           }
         })
-        // From "sitemap.js".
+        // From package "sitemap.js" by Eugene Kalinin.
         .replace(
           /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u0084\u0086-\u009F\uD800-\uDFFF\p{NChar}]/gu,
           '',
@@ -600,10 +604,43 @@ class TinySiteMap {
   }
 
   /**
-   * Static helper to provide the original default namespace logic as a strategy.
+   * Returns a namespace strategy that includes standard Google sitemaps namespaces (news, xhtml, image, and video).
+   * 
+   * The function name is a fun reference to name of Eugene Kalinin. This strategy is inspired in the original "sitemap.js" package.
+   * @reference https://github.com/ekalinin/sitemap.js/blob/1a782cf41e0d391299029c9e00c8bfa8cdaad212/lib/sitemap-stream.ts
    * @type {NamespaceStrategy}
    */
-  static defaultStrategy(instance) {
+  static kaliStrategy() {
+    const namespaces = [];
+    namespaces.push({ uri: TinySiteMap.#xmlns.get('ROOT') ?? '' });
+    namespaces.push({ uri: TinySiteMap.#xmlns.get('news') ?? '', prefix: 'news' });
+    namespaces.push({ uri: TinySiteMap.#xmlns.get('xhtml') ?? '', prefix: 'xhtml' });
+    namespaces.push({ uri: TinySiteMap.#xmlns.get('image') ?? '', prefix: 'image' });
+    namespaces.push({ uri: TinySiteMap.#xmlns.get('video') ?? '', prefix: 'video' });
+
+    return namespaces;
+  }
+
+  /**
+   * Returns a basic namespace strategy that only includes the default XML sitemap ROOT namespace.
+   * @type {NamespaceStrategy}
+   */
+  static simpleStrategy() {
+    const namespaces = [];
+
+    // Base Namespace
+    namespaces.push({ uri: TinySiteMap.#xmlns.get('ROOT') ?? '' });
+
+    return namespaces;
+  }
+
+  /**
+   * Returns a comprehensive namespace strategy that includes the ROOT, XSI, and schemaLocation namespaces,
+   * and conditionally includes custom namespaces based on the sitemap instance state.
+   * @reference https://www.sitemaps.org/protocol.html
+   * @type {NamespaceStrategy}
+   */
+  static protocolStrategy(instance) {
     const namespaces = [];
 
     // Base Namespace

@@ -404,6 +404,7 @@
             type: document.getElementById('cfg-type').value,
             maxResolvedUrlSize: parseInt(document.getElementById('cfg-max-size').value),
             entries: JSON.parse(document.getElementById('data-json').value),
+            namespaceStrategy: TinySiteMap.kaliStrategy,
           };
 
           generator = new TinySiteMap(config);
