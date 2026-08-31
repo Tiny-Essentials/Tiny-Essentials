@@ -1,385 +1,322 @@
 /**
- * A collection of HTTP response status codes and empty associated metadata.
+ * A collection of HTTP response status codes and their associated metadata.
  * Each code maps to an object containing its name, summary, and description.
  *
  * @type {import('./JsDoc.mjs').HttpResponses}
  */
 const RequestCodes = {
-  /** Continue */
   100: {
-    name: '',
+    name: 'Continue',
     summary: '',
     description: '',
   },
-  /** Switching Protocols */
   101: {
-    name: '',
+    name: 'Switching Protocols',
     summary: '',
     description: '',
   },
-  /** Processing */
   102: {
-    name: '',
+    name: 'Processing',
     summary: '',
     description: '',
   },
-  /** Early Hints */
   103: {
-    name: '',
+    name: 'Early Hints',
     summary: '',
     description: '',
   },
-  /** OK */
   200: {
-    name: '',
+    name: 'OK',
     summary: '',
     description: '',
   },
-  /** Created */
   201: {
-    name: '',
+    name: 'Created',
     summary: '',
     description: '',
   },
-  /** Accepted */
   202: {
-    name: '',
+    name: 'Accepted',
     summary: '',
     description: '',
   },
-  /** Non-Authoritative Information */
   203: {
-    name: '',
+    name: 'Non-Authoritative Information',
     summary: '',
     description: '',
   },
-  /** No Content */
   204: {
-    name: '',
+    name: 'No Content',
     summary: '',
     description: '',
   },
-  /** Reset Content */
   205: {
-    name: '',
+    name: 'Reset Content',
     summary: '',
     description: '',
   },
-  /** Partial Content */
   206: {
-    name: '',
+    name: 'Partial Content',
     summary: '',
     description: '',
   },
-  /** Multi-Status */
   207: {
-    name: '',
+    name: 'Multi-Status',
     summary: '',
     description: '',
   },
-  /** Already Reported */
   208: {
-    name: '',
+    name: 'Already Reported',
     summary: '',
     description: '',
   },
-  /** IM Used */
   226: {
-    name: '',
+    name: 'IM Used',
     summary: '',
     description: '',
   },
-  /** Multiple Choices */
   300: {
-    name: '',
+    name: 'Multiple Choices',
     summary: '',
     description: '',
   },
-  /** Moved Permanently */
   301: {
-    name: '',
+    name: 'Moved Permanently',
     summary: '',
     description: '',
   },
-  /** Found */
   302: {
-    name: '',
+    name: 'Found',
     summary: '',
     description: '',
   },
-  /** See Other */
   303: {
-    name: '',
+    name: 'See Other',
     summary: '',
     description: '',
   },
-  /** Not Modified */
   304: {
-    name: '',
+    name: 'Not Modified',
     summary: '',
     description: '',
   },
-  /** Use Proxy */
   305: {
-    name: '',
+    name: 'Use Proxy',
     summary: '',
     description: '',
   },
-  /** HSTS (Deprecated) */
   306: {
-    name: '',
+    name: 'Unused',
     summary: '',
     description: '',
   },
-  /** Temporary Redirect */
   307: {
-    name: '',
+    name: 'Temporary Redirect',
     summary: '',
     description: '',
   },
-  /** Permanent Redirect */
   308: {
-    name: '',
+    name: 'Permanent Redirect',
     summary: '',
     description: '',
   },
-  /** Bad Request */
   400: {
-    name: '',
+    name: 'Bad Request',
     summary: '',
     description: '',
   },
-  /** Unauthorized */
   401: {
-    name: '',
+    name: 'Unauthorized',
     summary: '',
     description: '',
   },
-  /** Payment Required */
   402: {
-    name: '',
+    name: 'Payment Required',
     summary: '',
     description: '',
   },
-  /** Forbidden */
   403: {
-    name: '',
+    name: 'Forbidden',
     summary: '',
     description: '',
   },
-  /** Not Found */
   404: {
-    name: '',
+    name: 'Not Found',
     summary: '',
     description: '',
   },
-  /** Method Not Allowed */
   405: {
-    name: '',
+    name: 'Method Not Allowed',
     summary: '',
     description: '',
   },
-  /** Not Acceptable */
   406: {
-    name: '',
+    name: 'Not Acceptable',
     summary: '',
     description: '',
   },
-  /** Proxy Authentication Required */
   407: {
-    name: '',
+    name: 'Proxy Authentication Required',
     summary: '',
     description: '',
   },
-  /** Request Timeout */
   408: {
-    name: '',
+    name: 'Request Timeout',
     summary: '',
     description: '',
   },
-  /** Conflict */
   409: {
-    name: '',
+    name: 'Conflict',
     summary: '',
     description: '',
   },
-  /** Gone */
   410: {
-    name: '',
+    name: 'Gone',
     summary: '',
     description: '',
   },
-  /** Length Required */
   411: {
-    name: '',
+    name: 'Length Required',
     summary: '',
     description: '',
   },
-  /** Precondition Failed */
   412: {
-    name: '',
+    name: 'Precondition Failed',
     summary: '',
     description: '',
   },
-  /** Payload Too Large */
   413: {
-    name: '',
+    name: 'Content Too Large',
     summary: '',
     description: '',
   },
-  /** URI Too Long */
   414: {
-    name: '',
+    name: 'URI Too Long',
     summary: '',
     description: '',
   },
-  /** Unsupported Media Type */
   415: {
-    name: '',
+    name: 'Unsupported Media Type',
     summary: '',
     description: '',
   },
-  /** Range Not Satisfiable */
   416: {
-    name: '',
+    name: 'Range Not Satisfiable',
     summary: '',
     description: '',
   },
-  /** Expectation Failed */
   417: {
-    name: '',
+    name: 'Expectation Failed',
     summary: '',
     description: '',
   },
-  /** I'm a teapot */
   418: {
-    name: '',
+    name: "I'm a teapot",
     summary: '',
     description: '',
   },
-  /** Misdirected Request */
   421: {
-    name: '',
+    name: 'Misdirected Request',
     summary: '',
     description: '',
   },
-  /** Unprocessable Entity */
   422: {
-    name: '',
+    name: 'Unprocessable Content',
     summary: '',
     description: '',
   },
-  /** Locked */
   423: {
-    name: '',
+    name: 'Locked',
     summary: '',
     description: '',
   },
-  /** Failed Dependency */
   424: {
-    name: '',
+    name: 'Failed Dependency',
     summary: '',
     description: '',
   },
-  /** Too Early */
   425: {
-    name: '',
+    name: 'Too Early',
     summary: '',
     description: '',
   },
-  /** Upgrade Required */
   426: {
-    name: '',
+    name: 'Upgrade Required',
     summary: '',
     description: '',
   },
-  /** Precondition Required */
   428: {
-    name: '',
+    name: 'Precondition Required',
     summary: '',
     description: '',
   },
-  /** Too Many Requests */
   429: {
-    name: '',
+    name: 'Too Many Requests',
     summary: '',
     description: '',
   },
-  /** Request Header Fields Too Large */
   431: {
-    name: '',
+    name: 'Request Header Fields Too Large',
     summary: '',
     description: '',
   },
-  /** Unavailable For Legal Reasons */
   451: {
-    name: '',
+    name: 'Unavailable For Legal Reasons',
     summary: '',
     description: '',
   },
-  /** Internal Server Error */
   500: {
-    name: '',
+    name: 'Internal Server Error',
     summary: '',
     description: '',
   },
-  /** Not Implemented */
   501: {
-    name: '',
+    name: 'Not Implemented',
     summary: '',
     description: '',
   },
-  /** Bad Gateway */
   502: {
-    name: '',
+    name: 'Bad Gateway',
     summary: '',
     description: '',
   },
-  /** Service Unavailable */
   503: {
-    name: '',
+    name: 'Service Unavailable',
     summary: '',
     description: '',
   },
-  /** Gateway Timeout */
   504: {
-    name: '',
+    name: 'Gateway Timeout',
     summary: '',
     description: '',
   },
-  /** HTTP Version Not Supported */
   505: {
-    name: '',
+    name: 'HTTP Version Not Supported',
     summary: '',
     description: '',
   },
-  /** Variant Also Negotiates */
   506: {
-    name: '',
+    name: 'Variant Also Negotiates',
     summary: '',
     description: '',
   },
-  /** Insufficient Storage */
   507: {
-    name: '',
+    name: 'Insufficient Storage',
     summary: '',
     description: '',
   },
-  /** Loop Detected */
   508: {
-    name: '',
+    name: 'Loop Detected',
     summary: '',
     description: '',
   },
-  /** Not Extended */
   510: {
-    name: '',
+    name: 'Not Extended',
     summary: '',
     description: '',
   },
-  /** Network Authentication Required */
   511: {
-    name: '',
+    name: 'Network Authentication Required',
     summary: '',
     description: '',
   },

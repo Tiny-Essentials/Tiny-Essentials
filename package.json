@@ -388,6 +388,10 @@
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes/index.cjs",
       "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes/index.mjs"
     },
+    "./libs/tools/TinyHttpResponseRegistry/RequestCodes": {
+      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/RequestCodes.cjs",
+      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/RequestCodes.mjs"
+    },
     "./libs/tools/TinyHttpResponseRegistry/EmptyRequestCodes": {
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/EmptyRequestCodes.cjs",
       "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/EmptyRequestCodes.mjs"

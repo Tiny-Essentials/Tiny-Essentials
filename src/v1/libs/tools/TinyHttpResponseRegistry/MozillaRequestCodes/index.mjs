@@ -5,7 +5,7 @@
  * @license CC-BY-SA 2.5 - https://creativecommons.org/licenses/by-sa/2.5/deed.en
  * @type {import('../JsDoc.mjs').HttpResponses}
  */
-const RequestCodes = {
+const RequestCodes = Object.freeze({
   100: {
     name: 'Continue',
     summary: 'The client should continue the request.',
@@ -376,7 +376,7 @@ const RequestCodes = {
     summary: 'The client needs to authenticate to gain network access.',
     description: 'Indicates that the client needs to authenticate to gain network access.',
   },
-};
+});
 
 /**
  * @typedef {Object} AboutPageInfo
@@ -388,10 +388,10 @@ const RequestCodes = {
  * Information displayed on the about page, including title and licensing description.
  * @type {AboutPageInfo}
  */
-const AboutPageInfo = {
+const AboutPageInfo = Object.freeze({
   title: 'HTTP Reference Content',
   description:
     'The HTTP status code definitions and error messages displayed throughout this site are derived from [MDN Web Docs](https://mozilla.org). This reference data is used as an independent dataset and is licensed under the [Creative Commons Attribution-ShareAlike 2.5 Generic (CC-BY-SA-2.5)](https://creativecommons.org) license. Copyright © 1998-2026 by individual mozilla.org contributors.',
-};
+});
 
 export { RequestCodes, AboutPageInfo };
