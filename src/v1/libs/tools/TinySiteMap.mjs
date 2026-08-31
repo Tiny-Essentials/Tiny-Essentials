@@ -620,54 +620,64 @@ class TinySiteMap {
     this.#validateNamespaceSet(dynamicNamespaces);
     const allNamespaces = [...dynamicNamespaces, ...this.#namespaces];
 
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    const xmlChunks = [`<?xml version="1.0" encoding="UTF-8"?>\n`];
+    let rootAttributes = '';
 
-    let namespaceAttributes = '';
     for (const ns of allNamespaces) {
-      const prefixPart = ns.prefix ? `:${ns.prefix}` : '';
-      namespaceAttributes += ` xmlns${prefixPart}="${TinySiteMap.#escapeXml(ns.uri)}"`;
+      // Handles the schemaLocation properly as an attribute, not an xmlns prefix
+      if (ns.prefix === 'schemaLocation') {
+        rootAttributes += ` xsi:schemaLocation="${TinySiteMap.#escapeXml(ns.uri)}"`;
+      } else {
+        const prefixPart = ns.prefix ? `:${ns.prefix}` : '';
+        rootAttributes += ` xmlns${prefixPart}="${TinySiteMap.#escapeXml(ns.uri)}"`;
+      }
     }
 
     if (this.#type === 'index') {
-      xml += `<sitemapindex${namespaceAttributes}>\n`;
+      xmlChunks.push(`<sitemapindex${rootAttributes}>\n`);
       for (const index in this.#entries) {
         /** @type {SitemapIndexEntry} */
         const entry = this.#entries[index];
-        xml += `  <sitemap>\n`;
-        xml += `    <loc>${TinySiteMap.#escapeXml(entry.loc)}</loc>\n`;
-        if (entry.lastmod)
-          xml += `    <lastmod>${new Date(entry.lastmod).toISOString()}</lastmod>\n`;
-        xml += `  </sitemap>\n`;
+        xmlChunks.push(`  <sitemap>\n`);
+        xmlChunks.push(`    <loc>${TinySiteMap.#escapeXml(entry.loc)}</loc>\n`);
+        if (entry.lastmod) {
+          xmlChunks.push(`    <lastmod>${new Date(entry.lastmod).toISOString()}</lastmod>\n`);
+        }
+        xmlChunks.push(`  </sitemap>\n`);
       }
-      xml += `</sitemapindex>`;
+      xmlChunks.push(`</sitemapindex>`);
     } else {
-      xml += `<urlset${namespaceAttributes}>\n`;
-
+      xmlChunks.push(`<urlset${rootAttributes}>\n`);
       for (const index in this.#entries) {
         /** @type {SitemapEntry} */
         const entry = this.#entries[index];
-        xml += `  <url>\n`;
+        xmlChunks.push(`  <url>\n`);
         // All dynamic content is passed through #escapeXml to prevent XML Injection
-        xml += `    <loc>${TinySiteMap.#escapeXml(entry.loc)}</loc>\n`;
-        if (entry.lastmod)
-          xml += `    <lastmod>${new Date(entry.lastmod).toISOString()}</lastmod>\n`;
-        if (entry.changefreq)
-          xml += `    <changefreq>${TinySiteMap.#escapeXml(entry.changefreq)}</changefreq>\n`;
-        if (entry.priority !== undefined)
-          xml += `    <priority>${entry.priority.toFixed(1)}</priority>\n`;
+        xmlChunks.push(`    <loc>${TinySiteMap.#escapeXml(entry.loc)}</loc>\n`);
+        if (entry.lastmod) {
+          xmlChunks.push(`    <lastmod>${new Date(entry.lastmod).toISOString()}</lastmod>\n`);
+        }
+        if (entry.changefreq) {
+          xmlChunks.push(
+            `    <changefreq>${TinySiteMap.#escapeXml(entry.changefreq)}</changefreq>\n`,
+          );
+        }
+        if (entry.priority !== undefined) {
+          xmlChunks.push(`    <priority>${entry.priority.toFixed(1)}</priority>\n`);
+        }
 
         // Render custom tags
         if (entry.customTags) {
           for (const [tag, value] of Object.entries(entry.customTags)) {
-            xml += `    <${tag}>${TinySiteMap.#escapeXml(value)}</${tag}>\n`;
+            xmlChunks.push(`    <${tag}>${TinySiteMap.#escapeXml(value)}</${tag}>\n`);
           }
         }
-        xml += `  </url>\n`;
+        xmlChunks.push(`  </url>\n`);
       }
-      xml += `</urlset>`;
+      xmlChunks.push(`</urlset>`);
     }
 
-    return xml;
+    return xmlChunks.join('');
   }
 
   /**
