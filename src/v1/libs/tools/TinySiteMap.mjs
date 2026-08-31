@@ -173,21 +173,17 @@ class TinySiteMap {
   /**
    * Validates a single namespace object.
    * @param {SitemapNamespace} ns
+   * @param {RegExp} regex
    * @throws {TypeError}
    */
-  #validateNamespace(ns) {
-    if (typeof ns !== 'object' || ns === null) {
+  #validateNamespace(ns, regex = this.#xmlNameRegex) {
+    if (typeof ns !== 'object' || ns === null)
       throw new TypeError('Namespace must be a non-null object.');
-    }
-    if (typeof ns.uri !== 'string') {
-      throw new TypeError('Namespace URI must be a string.');
-    }
-    if (ns.prefix !== undefined && typeof ns.prefix !== 'string') {
+    if (typeof ns.uri !== 'string') throw new TypeError('Namespace URI must be a string.');
+    if (ns.prefix !== undefined && typeof ns.prefix !== 'string')
       throw new TypeError('Namespace prefix must be a string.');
-    }
-    if (ns.prefix && !this.#xmlNameRegex.test(ns.prefix)) {
+    if (ns.prefix && !regex.test(ns.prefix))
       throw new TypeError(`Invalid namespace prefix: "${ns.prefix}".`);
-    }
   }
 
   /**
@@ -196,44 +192,48 @@ class TinySiteMap {
    * @throws {TypeError}
    */
   #validateNamespaceSet(namespaces) {
-    if (!Array.isArray(namespaces)) {
-      throw new TypeError('namespaces must be an array.');
-    }
-    for (const ns of namespaces) {
-      this.#validateNamespace(ns);
-    }
+    if (!Array.isArray(namespaces)) throw new TypeError('namespaces must be an array.');
+    for (const ns of namespaces) this.#validateNamespace(ns);
   }
 
   /**
    * Escapes special XML characters to prevent XML injection.
    * @param {string} str - The raw string to be escaped.
+   * @reference https://github.com/ekalinin/sitemap.js/blob/1a782cf41e0d391299029c9e00c8bfa8cdaad212/lib/sitemap-xml.ts
    * @returns {string} The escaped string with characters like <, >, &, ", and ' replaced by entities.
    */
-  #escapeXml(str) {
-    return (
-      str
-        .replace(/[<>&"']/g, (char) => {
-          switch (char) {
-            case '<':
-              return '&lt;';
-            case '>':
-              return '&gt;';
-            case '&':
-              return '&amp;';
-            case '"':
-              return '&quot;';
-            case "'":
-              return '&apos;';
-            default:
-              return char;
-          }
-        })
-        // From package "sitemap.js" by Eugene Kalinin.
-        .replace(
-          /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u0084\u0086-\u009F\uD800-\uDFFF\p{NChar}]/gu,
-          '',
-        )
-    );
+  static #escapeXml(str) {
+    return str
+      .replace(/[<>&"']/g, (char) => {
+        switch (char) {
+          case '<':
+            return '&lt;';
+          case '>':
+            return '&gt;';
+          case '&':
+            return '&amp;';
+          case '"':
+            return '&quot;';
+          case "'":
+            return '&apos;';
+          default:
+            return char;
+        }
+      })
+      .replace(
+        /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u0084\u0086-\u009F\uD800-\uDFFF\p{NChar}]/gu,
+        '',
+      );
+  }
+
+  /**
+   * Escapes special XML characters to prevent XML injection.
+   * @param {string} str - The raw string to be escaped.
+   * @reference https://github.com/ekalinin/sitemap.js/blob/1a782cf41e0d391299029c9e00c8bfa8cdaad212/lib/sitemap-xml.ts
+   * @returns {string} The escaped string with characters like <, >, &, ", and ' replaced by entities.
+   */
+  static escapeXml(str) {
+    return this.#escapeXml(str);
   }
 
   /**
@@ -261,32 +261,33 @@ class TinySiteMap {
   /**
    * Resolves relative URLs, validates all fields, and returns a new normalized object.
    * @param {SitemapEntry | SitemapIndexEntry} entry - The entry object to process.
+   * @param {URL} baseUrl
+   * @param {'normal'|'index'} type
+   * @param {number} maxUrlSize
+   * @param {RegExp} regex
    * @returns {SitemapEntry | SitemapIndexEntry} A new, normalized, and validated entry object.
    * @throws {TypeError} If the entry is invalid, if loc is not a string, if origin doesn't match, or if field values are invalid.
    * @throws {RangeError} If the resolved URL exceeds maxResolvedUrlSize or if priority is outside [0.0, 1.0].
    */
-  #resolveAndValidate(entry) {
-    if (typeof entry !== 'object' || entry === null) {
+  static #resolveAndValidate(entry, baseUrl, type, maxUrlSize, regex) {
+    if (typeof entry !== 'object' || entry === null)
       throw new TypeError('Entry must be a non-null object.');
-    }
 
     // Validate loc: Must be string, must be valid URL, must match base origin
-    if (typeof entry.loc !== 'string') {
-      throw new TypeError('entry.loc must be a string.');
-    }
+    if (typeof entry.loc !== 'string') throw new TypeError('entry.loc must be a string.');
 
     // Automatically handle relative paths using the baseUrl
-    const resolvedUrl = new URL(entry.loc, this.#baseUrl);
+    const resolvedUrl = new URL(entry.loc, baseUrl);
 
     // Security: Ensure the resolved URL belongs to the same origin
-    if (resolvedUrl.origin !== this.#baseUrl.origin) {
+    if (resolvedUrl.origin !== baseUrl.origin) {
       throw new TypeError(
-        `entry.loc "${entry.loc}" must belong to the same origin as ${this.#baseUrl.origin}`,
+        `entry.loc "${entry.loc}" must belong to the same origin as ${baseUrl.origin}`,
       );
     }
 
-    if (resolvedUrl.href.length >= this.#maxResolvedUrlSize) {
-      throw new RangeError(`entry.loc must be less than ${this.#maxResolvedUrlSize} characters.`);
+    if (resolvedUrl.href.length >= maxUrlSize) {
+      throw new RangeError(`entry.loc must be less than ${maxUrlSize} characters.`);
     }
 
     /** @type {SitemapEntry} */
@@ -300,7 +301,7 @@ class TinySiteMap {
     }
 
     // Type-specific validation
-    if (this.#type === 'normal') {
+    if (type === 'normal') {
       // Validate changefreq
       const validFreqs = ['always', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'never'];
       if (normalizedEntry.changefreq && !validFreqs.includes(normalizedEntry.changefreq)) {
@@ -328,14 +329,13 @@ class TinySiteMap {
         }
         for (const [tag, value] of Object.entries(normalizedEntry.customTags)) {
           // SECURITY: Validate that the tag name is a valid XML QName to prevent injection
-          if (!this.#xmlNameRegex.test(tag))
-            throw new TypeError(`Invalid custom tag name: "${tag}".`);
+          if (!regex.test(tag)) throw new TypeError(`Invalid custom tag name: "${tag}".`);
           // Validate content
           if (typeof value !== 'string')
             throw new TypeError(`The content for custom tag "${tag}" must be a string.`);
         }
       }
-    } else {
+    } else if (type === 'index') {
       // Strict mode for 'index': forbid properties that don't belong to <sitemap>
       if (normalizedEntry.changefreq || normalizedEntry.priority || normalizedEntry.customTags) {
         throw new TypeError(
@@ -345,6 +345,38 @@ class TinySiteMap {
     }
 
     return normalizedEntry;
+  }
+
+  /**
+   * Resolves relative URLs, validates all fields, and returns a new normalized object.
+   * @param {SitemapEntry | SitemapIndexEntry} entry - The entry object to process.
+   * @param {URL} baseUrl
+   * @param {'normal'|'index'} type
+   * @param {number} maxUrlSize
+   * @param {RegExp} regex
+   * @returns {SitemapEntry | SitemapIndexEntry} A new, normalized, and validated entry object.
+   * @throws {TypeError} If the entry is invalid, if loc is not a string, if origin doesn't match, or if field values are invalid.
+   * @throws {RangeError} If the resolved URL exceeds maxResolvedUrlSize or if priority is outside [0.0, 1.0].
+   */
+  static resolveAndValidate(entry, baseUrl, type, maxUrlSize, regex) {
+    return TinySiteMap.#resolveAndValidate(entry, baseUrl, type, maxUrlSize, regex);
+  }
+
+  /**
+   * Resolves relative URLs, validates all fields, and returns a new normalized object.
+   * @param {SitemapEntry | SitemapIndexEntry} entry - The entry object to process.
+   * @returns {SitemapEntry | SitemapIndexEntry} A new, normalized, and validated entry object.
+   * @throws {TypeError} If the entry is invalid, if loc is not a string, if origin doesn't match, or if field values are invalid.
+   * @throws {RangeError} If the resolved URL exceeds maxResolvedUrlSize or if priority is outside [0.0, 1.0].
+   */
+  #rav(entry) {
+    return TinySiteMap.#resolveAndValidate(
+      entry,
+      this.#baseUrl,
+      this.#type,
+      this.#maxResolvedUrlSize,
+      this.#xmlNameRegex,
+    );
   }
 
   /**
@@ -382,7 +414,7 @@ class TinySiteMap {
    * @returns {number} The new length of the entries array.
    */
   addEntry(entry, index) {
-    const validated = this.#resolveAndValidate(entry);
+    const validated = this.#rav(entry);
     const newSize = this.#entries.push(validated);
     if (typeof index !== 'undefined') this.moveEntry(newSize - 1, index);
     return newSize;
@@ -416,7 +448,7 @@ class TinySiteMap {
     // Merge current data with new data to allow partial updates
     const updatedData = { ...this.#entries[index], ...entryData };
     // Re-validate the entire merged object
-    this.#entries[index] = this.#resolveAndValidate(updatedData);
+    this.#entries[index] = this.#rav(updatedData);
   }
 
   /**
@@ -558,7 +590,7 @@ class TinySiteMap {
     let namespaceAttributes = '';
     for (const ns of allNamespaces) {
       const prefixPart = ns.prefix ? `:${ns.prefix}` : '';
-      namespaceAttributes += ` xmlns${prefixPart}="${this.#escapeXml(ns.uri)}"`;
+      namespaceAttributes += ` xmlns${prefixPart}="${TinySiteMap.#escapeXml(ns.uri)}"`;
     }
 
     if (this.#type === 'index') {
@@ -567,7 +599,7 @@ class TinySiteMap {
         /** @type {SitemapIndexEntry} */
         const entry = this.#entries[index];
         xml += `  <sitemap>\n`;
-        xml += `    <loc>${this.#escapeXml(entry.loc)}</loc>\n`;
+        xml += `    <loc>${TinySiteMap.#escapeXml(entry.loc)}</loc>\n`;
         if (entry.lastmod)
           xml += `    <lastmod>${new Date(entry.lastmod).toISOString()}</lastmod>\n`;
         xml += `  </sitemap>\n`;
@@ -581,18 +613,18 @@ class TinySiteMap {
         const entry = this.#entries[index];
         xml += `  <url>\n`;
         // All dynamic content is passed through #escapeXml to prevent XML Injection
-        xml += `    <loc>${this.#escapeXml(entry.loc)}</loc>\n`;
+        xml += `    <loc>${TinySiteMap.#escapeXml(entry.loc)}</loc>\n`;
         if (entry.lastmod)
           xml += `    <lastmod>${new Date(entry.lastmod).toISOString()}</lastmod>\n`;
         if (entry.changefreq)
-          xml += `    <changefreq>${this.#escapeXml(entry.changefreq)}</changefreq>\n`;
+          xml += `    <changefreq>${TinySiteMap.#escapeXml(entry.changefreq)}</changefreq>\n`;
         if (entry.priority !== undefined)
           xml += `    <priority>${entry.priority.toFixed(1)}</priority>\n`;
 
         // Render custom tags
         if (entry.customTags) {
           for (const [tag, value] of Object.entries(entry.customTags)) {
-            xml += `    <${tag}>${this.#escapeXml(value)}</${tag}>\n`;
+            xml += `    <${tag}>${TinySiteMap.#escapeXml(value)}</${tag}>\n`;
           }
         }
         xml += `  </url>\n`;
@@ -605,7 +637,7 @@ class TinySiteMap {
 
   /**
    * Returns a namespace strategy that includes standard Google sitemaps namespaces (news, xhtml, image, and video).
-   * 
+   *
    * The function name is a fun reference to name of Eugene Kalinin. This strategy is inspired in the original "sitemap.js" package.
    * @reference https://github.com/ekalinin/sitemap.js/blob/1a782cf41e0d391299029c9e00c8bfa8cdaad212/lib/sitemap-stream.ts
    * @type {NamespaceStrategy}
