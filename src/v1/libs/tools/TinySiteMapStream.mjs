@@ -6,7 +6,7 @@ import TinySiteMap from './TinySiteMap.mjs';
  * @property {string} [hostname] - Base URL for relative paths.
  * @property {'silent'|'warn'|'error'} [level] - Error handling level. Defaults to 'warn'.
  * @property {boolean} [lastmodDateOnly] - Format lastmod as date only (YYYY-MM-DD).
- * @property {import('./TinySiteMap.mjs').SitemapNamespace[]} [xmlns] - XML namespaces to include.
+ * @property {import('./TinySiteMap.mjs').SitemapNamespace[]} [xmlns] - XML namespaces or attributes to include.
  * @property {string} [xslUrl] - URL to XSL stylesheet.
  */
 
@@ -55,8 +55,19 @@ class TinySiteMapStream extends Transform {
       regex: TinySiteMap.xmlNameRegex,
     };
 
-    // Puxa as namespaces passadas nas opções ou herda as manuais da instância
-    this.#namespaces = this.#options.xmlns || instance.namespaces;
+    // Mirrors the exact namespace resolution logic from TinySiteMap.generateXml()
+    if (this.#options.xmlns) {
+      this.#namespaces = this.#options.xmlns;
+    } else {
+      // Safely access the instance property. In a real scenario you might need an accessor
+      // in TinySiteMap if namespaceStrategy is fully private, but assuming it's accessible:
+      const dynamicNamespaces =
+        typeof instance.namespaceStrategy === 'function'
+          ? instance.namespaceStrategy(instance)
+          : [];
+
+      this.#namespaces = [...dynamicNamespaces, ...instance.namespaces];
+    }
   }
 
   /**
@@ -77,7 +88,9 @@ class TinySiteMapStream extends Transform {
     }
 
     if (type === 'index') {
-      return `  <sitemap>\n    <loc>${TinySiteMap.escapeXml(e.loc)}</loc>\n    ${lastmodStr ? `<lastmod>${lastmodStr}</lastmod>\n` : ''}  </sitemap>\n`;
+      return `  <sitemap>\n    <loc>${TinySiteMap.escapeXml(e.loc)}</loc>\n${
+        lastmodStr ? `    <lastmod>${lastmodStr}</lastmod>\n` : ''
+      }  </sitemap>\n`;
     }
 
     let xml = `  <url>\n    <loc>${TinySiteMap.escapeXml(e.loc)}</loc>\n`;
@@ -108,16 +121,20 @@ class TinySiteMapStream extends Transform {
       xml += `<?xml-stylesheet type="text/xsl" href="${TinySiteMap.escapeXml(xslUrl)}"?>\n`;
     }
 
-    let namespaceAttributes = '';
+    let rootAttributes = '';
     for (const ns of namespaces) {
-      const prefixPart = ns.prefix ? `:${ns.prefix}` : '';
-      namespaceAttributes += ` xmlns${prefixPart}="${TinySiteMap.escapeXml(ns.uri ?? '')}"`;
+      const nsType = ns.type ?? 'xmlns';
+      const val = ns.value ?? ns.uri ?? '';
+
+      if (nsType === 'attribute') {
+        rootAttributes += ` ${ns.name}="${TinySiteMap.escapeXml(val)}"`;
+      } else {
+        const prefixPart = ns.prefix ? `:${ns.prefix}` : '';
+        rootAttributes += ` xmlns${prefixPart}="${TinySiteMap.escapeXml(val)}"`;
+      }
     }
 
-    xml +=
-      type === 'index'
-        ? `<sitemapindex${namespaceAttributes}>\n`
-        : `<urlset${namespaceAttributes}>\n`;
+    xml += type === 'index' ? `<sitemapindex${rootAttributes}>\n` : `<urlset${rootAttributes}>\n`;
     return xml;
   }
 
@@ -153,19 +170,18 @@ class TinySiteMapStream extends Transform {
       );
 
       this.push(xmlFragment);
-      callback();
+      callback(); // Success
     } catch (e) {
       const err = e instanceof Error ? e : new Error(String(e));
-      // Tratamento de erros baseado no nível configurado
+
       if (this.#options.level === 'error') {
-        callback();
+        // Emit the error properly in the Node.js Stream
+        callback(err);
       } else {
         if (this.#options.level === 'warn') {
-          console.warn(
-            `[TinySiteMapStream Warn]: Falha ao processar entrada. Motivo: ${err.message}`,
-          );
+          console.warn(`[TinySiteMapStream Warn]: Failed to process entry. Reason: ${err.message}`);
         }
-        // Se for 'silent', simplesmente ignoramos o erro e o chunk inválido não vai pro XML.
+        // If 'silent', we ignore the error and the invalid chunk is skipped.
         callback();
       }
     }
@@ -176,7 +192,7 @@ class TinySiteMapStream extends Transform {
    */
   _flush(cb) {
     if (!this.#hasHeadOutput) {
-      // Se nada foi escrito (stream vazio), gera o header antes de fechar
+      // If nothing was written (empty stream), generate the header before closing
       const header = TinySiteMapStream.generateHeader(
         this.#namespaces,
         this.#options.xslUrl,
