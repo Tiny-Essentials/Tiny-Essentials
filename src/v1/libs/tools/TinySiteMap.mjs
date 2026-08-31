@@ -1,7 +1,10 @@
 /**
  * @typedef {Object} SitemapNamespace
- * @property {string} [prefix] - The namespace prefix (e.g., 'example').
- * @property {string} uri - The namespace URI (e.g., 'http://www.example.com/schemas/example_schema').
+ * @property {'xmlns'|'attribute'} [type] - Defines if it's a namespace declaration or a raw root attribute. Defaults to 'xmlns'.
+ * @property {string} [prefix] - The namespace prefix (e.g., 'example'). Used only if type is 'xmlns'.
+ * @property {string} [name] - The exact attribute name (e.g., 'xsi:schemaLocation'). Required if type is 'attribute'.
+ * @property {string} [uri] - The namespace URI. Used if type is 'xmlns'.
+ * @property {string} [value] - The attribute value. Used if type is 'attribute' (acts as an alias to 'uri' for flexibility).
  */
 
 /**
@@ -35,21 +38,21 @@
  * @typedef {Object} SitemapConfig
  * @property {'normal'|'index'} [type] - The type of sitemap to generate. Defaults to 'normal'.
  * @property {string} baseUrl - The base URL of the website.
- * @property {SitemapNamespace[]} [namespaces] - Initial manual namespaces.
+ * @property {SitemapNamespace[]} [namespaces] - Initial manual namespaces or root attributes.
  * @property {NamespaceStrategy} [namespaceStrategy] - Dynamic logic to provide namespaces.
  * @property {SitemapEntry[] | SitemapIndexEntry[]} entries - Array of entries.
  */
 
 /**
  * A service to manage and generate secure XML sitemaps or sitemap indexes.
- * This class handles URL resolution, namespace management, and XML escaping to prevent injection.
+ * This class handles URL resolution, root attributes management, and XML escaping to prevent injection.
  */
 class TinySiteMap {
   /** @type {URL} The base URL used for resolving relative paths. */
   #baseUrl;
   /** @type {(SitemapEntry|SitemapIndexEntry)[]} The internal list of validated entries. */
   #entries = [];
-  /** @type {SitemapNamespace[]} The list of manually added namespaces. */
+  /** @type {SitemapNamespace[]} The list of manually added namespaces/attributes. */
   #namespaces = [];
   /** @type {NamespaceStrategy | null} The dynamic strategy for generating namespaces. */
   #namespaceStrategy = null;
@@ -211,12 +214,28 @@ class TinySiteMap {
    */
   #validateNamespace(ns, regex = TinySiteMap.#xmlNameRegex) {
     if (typeof ns !== 'object' || ns === null)
-      throw new TypeError('Namespace must be a non-null object.');
-    if (typeof ns.uri !== 'string') throw new TypeError('Namespace URI must be a string.');
-    if (ns.prefix !== undefined && typeof ns.prefix !== 'string')
-      throw new TypeError('Namespace prefix must be a string.');
-    if (ns.prefix && !regex.test(ns.prefix))
-      throw new TypeError(`Invalid namespace prefix: "${ns.prefix}".`);
+      throw new TypeError('Namespace or Attribute must be a non-null object.');
+
+    const type = ns.type ?? 'xmlns';
+    if (!['xmlns', 'attribute'].includes(type))
+      throw new TypeError('Type must be either "xmlns" or "attribute".');
+
+    const val = ns.value ?? ns.uri;
+    if (typeof val !== 'string')
+      throw new TypeError('Namespace URI or Attribute value must be a string.');
+
+    if (type === 'xmlns') {
+      if (ns.prefix !== undefined && typeof ns.prefix !== 'string')
+        throw new TypeError('Namespace prefix must be a string.');
+
+      if (ns.prefix && !regex.test(ns.prefix))
+        throw new TypeError(`Invalid namespace prefix: "${ns.prefix}".`);
+    } else if (type === 'attribute') {
+      if (typeof ns.name !== 'string')
+        throw new TypeError('Attribute name must be a string when type is "attribute".');
+
+      if (!regex.test(ns.name)) throw new TypeError(`Invalid attribute name: "${ns.name}".`);
+    }
   }
 
   /**
@@ -418,23 +437,36 @@ class TinySiteMap {
    */
   addNamespace(ns) {
     this.#validateNamespace(ns);
-    // Prevent duplicates by prefix/uri combination
-    const exists = this.#namespaces.some(
-      (existing) => existing.uri === ns.uri && existing.prefix === ns.prefix,
-    );
+    const newType = ns.type ?? 'xmlns';
+
+    // Prevent duplicate attributes or prefixes
+    const exists = this.#namespaces.some((existing) => {
+      const existingType = existing.type ?? 'xmlns';
+      if (existingType !== newType) return false;
+
+      if (newType === 'attribute') {
+        return existing.name === ns.name;
+      }
+      return existing.prefix === ns.prefix;
+    });
+
     if (exists) {
-      throw new Error(
-        `Namespace with prefix "${ns.prefix || 'ROOT'}" and URI "${ns.uri}" already exists.`,
-      );
+      const identifier = newType === 'attribute' ? ns.name : ns.prefix || 'ROOT';
+      throw new Error(`Root declaration with identifier "${identifier}" already exists.`);
     }
+
     this.#namespaces.push(ns);
   }
 
   /**
-   * @param {string} prefix - The prefix to remove.
+   * @param {string} identifier - The identifier to remove.
    */
-  removeNamespace(prefix) {
-    this.#namespaces = this.#namespaces.filter((ns) => ns.prefix !== prefix);
+  removeNamespace(identifier) {
+    this.#namespaces = this.#namespaces.filter((ns) => {
+      const type = ns.type ?? 'xmlns';
+      if (type === 'attribute') return ns.name !== identifier;
+      return ns.prefix !== identifier;
+    });
   }
 
   /**
@@ -624,12 +656,15 @@ class TinySiteMap {
     let rootAttributes = '';
 
     for (const ns of allNamespaces) {
+      const type = ns.type ?? 'xmlns';
+      const val = ns.value ?? ns.uri ?? '';
+
       // Handles the schemaLocation properly as an attribute, not an xmlns prefix
-      if (ns.prefix === 'schemaLocation') {
-        rootAttributes += ` xsi:schemaLocation="${TinySiteMap.#escapeXml(ns.uri)}"`;
+      if (type === 'attribute') {
+        rootAttributes += ` ${ns.name}="${TinySiteMap.#escapeXml(val)}"`;
       } else {
         const prefixPart = ns.prefix ? `:${ns.prefix}` : '';
-        rootAttributes += ` xmlns${prefixPart}="${TinySiteMap.#escapeXml(ns.uri)}"`;
+        rootAttributes += ` xmlns${prefixPart}="${TinySiteMap.#escapeXml(val)}"`;
       }
     }
 
@@ -688,12 +723,13 @@ class TinySiteMap {
    * @type {NamespaceStrategy}
    */
   static kaliStrategy() {
+    /** @type {SitemapNamespace[]} */
     const namespaces = [];
-    namespaces.push({ uri: TinySiteMap.#xmlns.get('ROOT') ?? '' });
-    namespaces.push({ uri: TinySiteMap.#xmlns.get('news') ?? '', prefix: 'news' });
-    namespaces.push({ uri: TinySiteMap.#xmlns.get('xhtml') ?? '', prefix: 'xhtml' });
-    namespaces.push({ uri: TinySiteMap.#xmlns.get('image') ?? '', prefix: 'image' });
-    namespaces.push({ uri: TinySiteMap.#xmlns.get('video') ?? '', prefix: 'video' });
+    namespaces.push({ type: 'xmlns', uri: TinySiteMap.#xmlns.get('ROOT') ?? '' });
+    namespaces.push({ type: 'xmlns', uri: TinySiteMap.#xmlns.get('news') ?? '', prefix: 'news' });
+    namespaces.push({ type: 'xmlns', uri: TinySiteMap.#xmlns.get('xhtml') ?? '', prefix: 'xhtml' });
+    namespaces.push({ type: 'xmlns', uri: TinySiteMap.#xmlns.get('image') ?? '', prefix: 'image' });
+    namespaces.push({ type: 'xmlns', uri: TinySiteMap.#xmlns.get('video') ?? '', prefix: 'video' });
     return namespaces;
   }
 
@@ -702,7 +738,7 @@ class TinySiteMap {
    * @type {NamespaceStrategy}
    */
   static simpleStrategy() {
-    return [{ uri: TinySiteMap.#xmlns.get('ROOT') ?? '' }];
+    return [{ type: 'xmlns', uri: TinySiteMap.#xmlns.get('ROOT') ?? '' }];
   }
 
   /**
@@ -712,13 +748,14 @@ class TinySiteMap {
    * @type {NamespaceStrategy}
    */
   static protocolStrategy(instance) {
+    /** @type {SitemapNamespace[]} */
     const namespaces = [];
 
-    // Base Namespace
-    namespaces.push({ uri: TinySiteMap.#xmlns.get('ROOT') ?? '' });
+    // Default xmlns
+    namespaces.push({ type: 'xmlns', uri: TinySiteMap.#xmlns.get('ROOT') ?? '' });
 
-    // XSI
-    namespaces.push({ prefix: 'xsi', uri: TinySiteMap.#xmlns.get('xsi') ?? '' });
+    // xmlns:xsi
+    namespaces.push({ type: 'xmlns', prefix: 'xsi', uri: TinySiteMap.#xmlns.get('xsi') ?? '' });
 
     // Schema Location
     const schemaUri =
@@ -726,7 +763,7 @@ class TinySiteMap {
         ? (TinySiteMap.#xmlns.get('schemaLocation:normal') ?? '')
         : (TinySiteMap.#xmlns.get('schemaLocation:index') ?? '');
 
-    namespaces.push({ prefix: 'schemaLocation', uri: schemaUri });
+    namespaces.push({ type: 'attribute', name: 'xsi:schemaLocation', value: schemaUri });
 
     // Custom Tags logic (original insertNamespaces behavior)
     if (instance.type === 'normal') {
@@ -734,7 +771,11 @@ class TinySiteMap {
         (/** @type {SitemapEntry} */ e) => e.customTags && Object.keys(e.customTags).length > 0,
       );
       if (hasCustomTags) {
-        namespaces.push({ prefix: 'example', uri: TinySiteMap.#xmlns.get('exampleSchema') ?? '' });
+        namespaces.push({
+          type: 'xmlns',
+          prefix: 'example',
+          uri: TinySiteMap.#xmlns.get('exampleSchema') ?? '',
+        });
       }
     }
 
