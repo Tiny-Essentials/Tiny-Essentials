@@ -16,6 +16,67 @@ class TinyHttpResponseRegistry {
   static #DefaultRequestCodes = RequestCodes;
 
   /**
+   * A collection of utility methods to check HTTP status code ranges.
+   */
+  static codeIs = Object.freeze({
+    /**
+     * Checks if the status code is in the 1xx (Informational) range.
+     * @param {number} code - The HTTP status code to evaluate.
+     * @returns {boolean} True if the code is between 100 and 199, inclusive.
+     * @throws {TypeError} If the provided code is not a number or is NaN.
+     */
+    info: (code) => {
+      if (typeof code !== 'number' || Number.isNaN(code))
+        throw new TypeError('The status code must be a valid number.');
+      return code >= 100 && code <= 199;
+    },
+    /**
+     * Checks if the status code is in the 2xx (Success) range.
+     * @param {number} code - The HTTP status code to evaluate.
+     * @returns {boolean} True if the code is between 200 and 299, inclusive.
+     * @throws {TypeError} If the provided code is not a number or is NaN.
+     */
+    success: (code) => {
+      if (typeof code !== 'number' || Number.isNaN(code))
+        throw new TypeError('The status code must be a valid number.');
+      return code >= 200 && code <= 299;
+    },
+    /**
+     * Checks if the status code is in the 3xx (Redirection) range.
+     * @param {number} code - The HTTP status code to evaluate.
+     * @returns {boolean} True if the code is between 300 and 399, inclusive.
+     * @throws {TypeError} If the provided code is not a number or is NaN.
+     */
+    redirect: (code) => {
+      if (typeof code !== 'number' || Number.isNaN(code))
+        throw new TypeError('The status code must be a valid number.');
+      return code >= 300 && code <= 399;
+    },
+    /**
+     * Checks if the status code is in the 4xx (Client Error) range.
+     * @param {number} code - The HTTP status code to evaluate.
+     * @returns {boolean} True if the code is between 400 and 499, inclusive.
+     * @throws {TypeError} If the provided code is not a number or is NaN.
+     */
+    clientError: (code) => {
+      if (typeof code !== 'number' || Number.isNaN(code))
+        throw new TypeError('The status code must be a valid number.');
+      return code >= 400 && code <= 499;
+    },
+    /**
+     * Checks if the status code is in the 5xx (Server Error) range.
+     * @param {number} code - The HTTP status code to evaluate.
+     * @returns {boolean} True if the code is between 500 and 599, inclusive.
+     * @throws {TypeError} If the provided code is not a number or is NaN.
+     */
+    serverError: (code) => {
+      if (typeof code !== 'number' || Number.isNaN(code))
+        throw new TypeError('The status code must be a valid number.');
+      return code >= 500 && code <= 599;
+    },
+  });
+
+  /**
    * Getter for the default request codes.
    * Returns a deep clone to prevent external mutation of the private state.
    *
