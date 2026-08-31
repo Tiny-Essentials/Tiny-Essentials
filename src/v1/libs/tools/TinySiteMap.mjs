@@ -63,6 +63,7 @@ class TinySiteMap {
   /** @type {Map<string, string>} */
   static #xmlns = new Map([
     ['ROOT', 'http://www.sitemaps.org/schemas/sitemap/0.9'],
+    ['exampleSchema', 'http://www.example.com/schemas/example_schema'],
     ['news', 'http://www.google.com/schemas/sitemap-news/0.9'],
     ['xhtml', 'http://www.google.com/schemas/sitemap-news/0.9'],
     ['image', 'http://www.google.com/schemas/sitemap-news/0.9'],
@@ -625,10 +626,7 @@ class TinySiteMap {
         (/** @type {SitemapEntry} */ e) => e.customTags && Object.keys(e.customTags).length > 0,
       );
       if (hasCustomTags) {
-        namespaces.push({
-          prefix: 'example',
-          uri: 'http://www.example.com/schemas/example_schema',
-        });
+        namespaces.push({ prefix: 'example', uri: TinySiteMap.#xmlns.get('exampleSchema') ?? '' });
       }
     }
 
