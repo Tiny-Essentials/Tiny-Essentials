@@ -377,4 +377,20 @@ const RequestCodes = {
   },
 };
 
-export { RequestCodes };
+/**
+ * @typedef {Object} AboutPageInfo
+ * @property {string} title - The title of the about page.
+ * @property {string} description - The detailed description and licensing information for the about page.
+ */
+
+/**
+ * Information displayed on the about page, including title and licensing description.
+ * @type {AboutPageInfo}
+ */
+const aboutPageInfo = {
+  title: 'HTTP Reference Content',
+  description:
+    'The HTTP status code definitions and error messages displayed throughout this site are derived from [MDN Web Docs](https://mozilla.org). This reference data is used as an independent dataset and is licensed under the [Creative Commons Attribution-ShareAlike 2.5 Generic (CC-BY-SA-2.5)](https://creativecommons.org) license. Copyright © 1998-2026 by individual mozilla.org contributors.',
+};
+
+export { RequestCodes, aboutPageInfo };
