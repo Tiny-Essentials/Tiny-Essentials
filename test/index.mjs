@@ -18,5 +18,5 @@ new TinyPkgExportValidator('../package.json', '../')
     levelUp: testLevelUp,
     sitemap: testTinySiteMap,
     i18: testI18,
-  })
+  }, process.argv)
   .finally(() => process.exit(0));

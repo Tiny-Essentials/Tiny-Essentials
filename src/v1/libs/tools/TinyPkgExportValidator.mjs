@@ -318,13 +318,16 @@ class TinyPkgExportValidator {
    *
    * @param {Record<string, () => Promise<void> | void>} actions - An object where keys are
    * command names (passed via CLI) and values are the functions to be executed.
-   * @param {string[]} [args=process.argv] - The array of command-line arguments.
+   * @param {string[]} args - The array of command-line arguments.
    * Defaults to `process.argv` if not provided.
    * @throws {TypeError} If the `actions` argument is not a non-null object.
    */
-  async execCommandTester(actions, args = process.argv) {
+  async execCommandTester(actions, args) {
     if (typeof actions !== 'object' || actions === null || Array.isArray(actions)) {
       throw new TypeError('The "actions" argument must be a non-null object.');
+    }
+    if (!Array.isArray(args) || !args.every(arg => typeof arg === 'string')) {
+      throw new TypeError('The "args" argument must be a string array.');
     }
 
     // We use the 'args' parameter instead of the global 'process.argv'
