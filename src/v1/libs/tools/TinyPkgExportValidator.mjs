@@ -310,6 +310,47 @@ class TinyPkgExportValidator {
   }
 
   /**
+   * Provides a CLI-based testing interface to execute specific methods or tasks
+   * defined in the `actions` object via command-line arguments.
+   *
+   * If no command-line argument is provided, all actions in the object will be executed
+   * sequentially. If an argument is provided, only the corresponding action will run.
+   *
+   * @param {Record<string, () => Promise<void> | void>} actions - An object where keys are
+   * command names (passed via CLI) and values are the functions to be executed.
+   * @throws {TypeError} If the `actions` argument is not a non-null object.
+   */
+  async execCommandTester(actions) {
+    if (typeof actions !== 'object' || actions === null || Array.isArray(actions)) {
+      throw new TypeError('The "actions" argument must be a non-null object.');
+    }
+
+    const arg = process.argv[2];
+    const availableCommands = Object.keys(actions);
+
+    // Case 1: No argument provided - Run all actions
+    if (!arg) {
+      this.#log('cyan', 'header');
+      this.#log('dim', 'Running all registered commands...');
+      
+      for (const commandName of availableCommands) {
+        this.#log('cyan', `> Executing: ${commandName}`);
+        await actions[commandName]();
+      }
+    } 
+    // Case 2: Specific command provided and it exists
+    else if (typeof actions[arg] === 'function') {
+      this.#log('cyan', `> Executing: ${arg}`);
+      await actions[arg]();
+    } 
+    // Case 3: Argument provided but not found in actions
+    else {
+      this.#log('error', 'errorUnexpected', { message: `Unknown argument: "${arg}"` });
+      this.#log('dim', `Valid arguments are: ${availableCommands.join(', ')}`);
+    }
+  }
+
+  /**
    * Loads and parses the package.json file from the specified path.
    *
    * @returns {Promise<void>} A promise that resolves when the package data is loaded.
