@@ -59,11 +59,26 @@ class TinySiteMap {
   #maxResolvedUrlSize = 2048;
 
   /**
+   * Official limit established by sitemaps.org
+   * @type {number}
+   */
+  static #MAX_URLS = 50000;
+
+  static get maxUrls() {
+    return TinySiteMap.#MAX_URLS;
+  }
+
+  static set maxUrls(value) {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      throw new TypeError('entry.priority must be a number.');
+    }
+    TinySiteMap.#MAX_URLS = value;
+  }
+
+  /**
    * @type {RegExp} Regex to validate XML Names/Prefixes.
-   *
    * From package "sitemap.js" by Eugene Kalinin.
    * @reference https://github.com/ekalinin/sitemap.js/blob/1a782cf41e0d391299029c9e00c8bfa8cdaad212/lib/sitemap-xml.ts
-   *
    */
   static #xmlNameRegex = /^[a-zA-Z_:][\w:.-]*$/;
 
@@ -407,7 +422,11 @@ class TinySiteMap {
     const exists = this.#namespaces.some(
       (existing) => existing.uri === ns.uri && existing.prefix === ns.prefix,
     );
-    if (exists) throw new Error('');
+    if (exists) {
+      throw new Error(
+        `Namespace with prefix "${ns.prefix || 'ROOT'}" and URI "${ns.uri}" already exists.`,
+      );
+    }
     this.#namespaces.push(ns);
   }
 
@@ -432,6 +451,9 @@ class TinySiteMap {
    * @returns {number} The new length of the entries array.
    */
   addEntry(entry, index) {
+    if (this.#entries.length >= TinySiteMap.#MAX_URLS) {
+      throw new RangeError(`Sitemaps cannot exceed ${TinySiteMap.#MAX_URLS} entries.`);
+    }
     const validated = this.#rav(entry);
     const newSize = this.#entries.push(validated);
     if (typeof index !== 'undefined') this.moveEntry(newSize - 1, index);
@@ -516,15 +538,11 @@ class TinySiteMap {
   }
 
   set namespaces(nss) {
-    if (!Array.isArray(nss)) {
-      throw new TypeError('namespaces must be an array.');
-    }
+    if (!Array.isArray(nss)) throw new TypeError('namespaces must be an array.');
     const oldNamespaces = this.#namespaces;
     try {
       this.#namespaces = [];
-      for (const ns of nss) {
-        this.addNamespace(ns);
-      }
+      for (const ns of nss) this.addNamespace(ns);
     } catch (err) {
       this.#namespaces = oldNamespaces;
       throw err;
@@ -552,19 +570,18 @@ class TinySiteMap {
    * @returns {SitemapEntry[] | SitemapIndexEntry[]} A copy of the entries array.
    */
   get entries() {
-    return this.#entries.map((e) => ({ ...e }));
+    return this.#entries.map((/** @type {SitemapEntry} */ e) => ({
+      ...e,
+      ...(e.customTags ? { customTags: { ...e.customTags } } : {}),
+    }));
   }
 
   set entries(entries) {
-    if (!Array.isArray(entries)) {
-      throw new TypeError('entries must be an array.');
-    }
+    if (!Array.isArray(entries)) throw new TypeError('entries must be an array.');
     const oldEntries = this.#entries;
     try {
       this.#entries = [];
-      for (const entry of entries) {
-        this.addEntry(entry);
-      }
+      for (const entry of entries) this.addEntry(entry);
     } catch (err) {
       this.#entries = oldEntries;
       throw err;
@@ -667,7 +684,6 @@ class TinySiteMap {
     namespaces.push({ uri: TinySiteMap.#xmlns.get('xhtml') ?? '', prefix: 'xhtml' });
     namespaces.push({ uri: TinySiteMap.#xmlns.get('image') ?? '', prefix: 'image' });
     namespaces.push({ uri: TinySiteMap.#xmlns.get('video') ?? '', prefix: 'video' });
-
     return namespaces;
   }
 
@@ -676,12 +692,7 @@ class TinySiteMap {
    * @type {NamespaceStrategy}
    */
   static simpleStrategy() {
-    const namespaces = [];
-
-    // Base Namespace
-    namespaces.push({ uri: TinySiteMap.#xmlns.get('ROOT') ?? '' });
-
-    return namespaces;
+    return [{ uri: TinySiteMap.#xmlns.get('ROOT') ?? '' }];
   }
 
   /**
