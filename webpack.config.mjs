@@ -116,7 +116,7 @@ addModule(1, './src/v1/build/TinyHttpResponseRegistry.mjs', 'TinyHttpResponseReg
 
 /**
  * Recursively scans the source directory for LICENSE files and copies them to the dist directory.
- * 
+ *
  * @param {string} srcDir - The base directory to scan (e.g., './src').
  * @param {string} distDir - The base directory for the destination (e.g., './dist').
  * @returns {Promise<void>}
