@@ -251,41 +251,36 @@ class TinySiteMap {
   /**
    * Escapes special XML characters to prevent XML injection.
    * @param {string} str - The raw string to be escaped.
+   * @param {boolean} isOtag
    * @reference https://github.com/ekalinin/sitemap.js/blob/1a782cf41e0d391299029c9e00c8bfa8cdaad212/lib/sitemap-xml.ts
    * @returns {string} The escaped string with characters like <, >, &, ", and ' replaced by entities.
    */
-  static #escapeXml(str) {
-    return str
-      .replace(/[<>&"']/g, (char) => {
-        switch (char) {
-          case '<':
-            return '&lt;';
-          case '>':
-            return '&gt;';
-          case '&':
-            return '&amp;';
-          case '"':
-            return '&quot;';
-          case "'":
-            return '&apos;';
-          default:
-            return char;
-        }
-      })
-      .replace(
-        /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u0084\u0086-\u009F\uD800-\uDFFF\p{NChar}]/gu,
-        '',
-      );
+  static #escapeXml(str, isOtag) {
+    const amp = /&/g;
+    const lt = /</g;
+    const gt = />/g;
+    const apos = /'/g;
+    const quot = /"/g;
+    let result = str;
+    result = result.replace(amp, '&amp;').replace(lt, '&lt;').replace(gt, '&gt;');
+    if (isOtag) {
+      result = result.replace(apos, '&apos;').replace(quot, '&quot;');
+    }
+    return result.replace(
+      /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u0084\u0086-\u009F\uD800-\uDFFF\p{NChar}]/gu,
+      '',
+    );
   }
 
   /**
    * Escapes special XML characters to prevent XML injection.
    * @param {string} str - The raw string to be escaped.
+   * @param {boolean} isOtag
    * @reference https://github.com/ekalinin/sitemap.js/blob/1a782cf41e0d391299029c9e00c8bfa8cdaad212/lib/sitemap-xml.ts
    * @returns {string} The escaped string with characters like <, >, &, ", and ' replaced by entities.
    */
-  static escapeXml(str) {
-    return this.#escapeXml(str);
+  static escapeXml(str, isOtag) {
+    return this.#escapeXml(str, isOtag);
   }
 
   /**
@@ -368,8 +363,8 @@ class TinySiteMap {
         ) {
           throw new TypeError('entry.priority must be a number.');
         }
-        if (normalizedEntry.priority < 0) {
-          throw new RangeError('entry.priority must be greater than -1.');
+        if (normalizedEntry.priority < 0 || normalizedEntry.priority > 1) {
+          throw new RangeError('entry.priority must be between 0.0 and 1.0.');
         }
       }
 
@@ -661,10 +656,10 @@ class TinySiteMap {
 
       // Handles the schemaLocation properly as an attribute, not an xmlns prefix
       if (type === 'attribute') {
-        rootAttributes += ` ${ns.name}="${TinySiteMap.#escapeXml(val)}"`;
+        rootAttributes += ` ${ns.name}="${TinySiteMap.#escapeXml(val, true)}"`;
       } else {
         const prefixPart = ns.prefix ? `:${ns.prefix}` : '';
-        rootAttributes += ` xmlns${prefixPart}="${TinySiteMap.#escapeXml(val)}"`;
+        rootAttributes += ` xmlns${prefixPart}="${TinySiteMap.#escapeXml(val, true)}"`;
       }
     }
 
@@ -674,7 +669,7 @@ class TinySiteMap {
         /** @type {SitemapIndexEntry} */
         const entry = this.#entries[index];
         xmlChunks.push(`  <sitemap>\n`);
-        xmlChunks.push(`    <loc>${TinySiteMap.#escapeXml(entry.loc)}</loc>\n`);
+        xmlChunks.push(`    <loc>${TinySiteMap.#escapeXml(entry.loc, false)}</loc>\n`);
         if (entry.lastmod) {
           xmlChunks.push(`    <lastmod>${new Date(entry.lastmod).toISOString()}</lastmod>\n`);
         }
@@ -688,13 +683,13 @@ class TinySiteMap {
         const entry = this.#entries[index];
         xmlChunks.push(`  <url>\n`);
         // All dynamic content is passed through #escapeXml to prevent XML Injection
-        xmlChunks.push(`    <loc>${TinySiteMap.#escapeXml(entry.loc)}</loc>\n`);
+        xmlChunks.push(`    <loc>${TinySiteMap.#escapeXml(entry.loc, false)}</loc>\n`);
         if (entry.lastmod) {
           xmlChunks.push(`    <lastmod>${new Date(entry.lastmod).toISOString()}</lastmod>\n`);
         }
         if (entry.changefreq) {
           xmlChunks.push(
-            `    <changefreq>${TinySiteMap.#escapeXml(entry.changefreq)}</changefreq>\n`,
+            `    <changefreq>${TinySiteMap.#escapeXml(entry.changefreq, false)}</changefreq>\n`,
           );
         }
         if (entry.priority !== undefined) {
@@ -704,7 +699,7 @@ class TinySiteMap {
         // Render custom tags
         if (entry.customTags) {
           for (const [tag, value] of Object.entries(entry.customTags)) {
-            xmlChunks.push(`    <${tag}>${TinySiteMap.#escapeXml(value)}</${tag}>\n`);
+            xmlChunks.push(`    <${TinySiteMap.#escapeXml(tag, true)}>${TinySiteMap.#escapeXml(value, false)}</${tag}>\n`);
           }
         }
         xmlChunks.push(`  </url>\n`);

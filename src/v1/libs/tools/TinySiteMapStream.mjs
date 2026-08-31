@@ -88,20 +88,20 @@ class TinySiteMapStream extends Transform {
     }
 
     if (type === 'index') {
-      return `  <sitemap>\n    <loc>${TinySiteMap.escapeXml(e.loc)}</loc>\n${
+      return `  <sitemap>\n    <loc>${TinySiteMap.escapeXml(e.loc, false)}</loc>\n${
         lastmodStr ? `    <lastmod>${lastmodStr}</lastmod>\n` : ''
       }  </sitemap>\n`;
     }
 
-    let xml = `  <url>\n    <loc>${TinySiteMap.escapeXml(e.loc)}</loc>\n`;
+    let xml = `  <url>\n    <loc>${TinySiteMap.escapeXml(e.loc, false)}</loc>\n`;
     if (lastmodStr) xml += `    <lastmod>${lastmodStr}</lastmod>\n`;
     if (e.changefreq)
-      xml += `    <changefreq>${TinySiteMap.escapeXml(e.changefreq)}</changefreq>\n`;
+      xml += `    <changefreq>${TinySiteMap.escapeXml(e.changefreq, false)}</changefreq>\n`;
     if (e.priority !== undefined) xml += `    <priority>${e.priority.toFixed(1)}</priority>\n`;
 
     if (e.customTags) {
       for (const [tag, value] of Object.entries(e.customTags)) {
-        xml += `    <${tag}>${TinySiteMap.escapeXml(value)}</${tag}>\n`;
+        xml += `    <${TinySiteMap.escapeXml(tag, true)}>${TinySiteMap.escapeXml(value, false)}</${tag}>\n`;
       }
     }
     xml += `  </url>\n`;
@@ -118,7 +118,7 @@ class TinySiteMapStream extends Transform {
   static generateHeader(namespaces, xslUrl, type) {
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
     if (xslUrl) {
-      xml += `<?xml-stylesheet type="text/xsl" href="${TinySiteMap.escapeXml(xslUrl)}"?>\n`;
+      xml += `<?xml-stylesheet type="text/xsl" href="${TinySiteMap.escapeXml(xslUrl, true)}"?>\n`;
     }
 
     let rootAttributes = '';
@@ -127,10 +127,10 @@ class TinySiteMapStream extends Transform {
       const val = ns.value ?? ns.uri ?? '';
 
       if (nsType === 'attribute') {
-        rootAttributes += ` ${ns.name}="${TinySiteMap.escapeXml(val)}"`;
+        rootAttributes += ` ${ns.name}="${TinySiteMap.escapeXml(val, true)}"`;
       } else {
         const prefixPart = ns.prefix ? `:${ns.prefix}` : '';
-        rootAttributes += ` xmlns${prefixPart}="${TinySiteMap.escapeXml(val)}"`;
+        rootAttributes += ` xmlns${prefixPart}="${TinySiteMap.escapeXml(val, true)}"`;
       }
     }
 
