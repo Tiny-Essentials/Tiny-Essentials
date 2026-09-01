@@ -215,7 +215,7 @@ class TinySiteMap {
     this.#validateConfig(config);
     this.#type = config.type ?? 'normal';
     this.#baseUrl = new URL(config.baseUrl);
-    this.#xslUrl = config.xslUrl ? new URL(config.xslUrl) : null;
+    this.#xslUrl = config.xslUrl ? new URL(config.xslUrl, this.#baseUrl.origin) : null;
     this.lastmodDateOnly = config.lastmodDateOnly ?? false;
     this.namespaces = config.namespaces ?? [];
     this.namespaceStrategy = config.namespaceStrategy ?? TinySiteMap.simpleStrategy;
@@ -714,7 +714,7 @@ class TinySiteMap {
     if (value !== null && typeof value !== 'string') {
       throw new TypeError('xslUrl must be a string or null.');
     }
-    this.#xslUrl = value ? new URL(value) : null;
+    this.#xslUrl = value ? new URL(value, this.#baseUrl.origin) : null;
   }
 
   get entriesSize() {
