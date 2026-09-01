@@ -35,6 +35,12 @@ class TinyURLSecurityVerifier {
   #allowedDomains;
 
   /**
+   * Instance whitelist mode.
+   * @type {boolean}
+   */
+  #isWhitelistMode = false;
+
+  /**
    * Retrieves the current global default protocols as an array.
    * @returns {Protocol[]} An array of default protocols.
    */
@@ -125,6 +131,28 @@ class TinyURLSecurityVerifier {
    */
   get protocolsSize() {
     return this.#protocols.size;
+  }
+
+  /**
+   * Indicates if the protocols list should act as a whitelist.
+   * If true, only protocols in the list are considered safe.
+   * If false, protocols in the list are considered dangerous (blacklist mode).
+   * @returns {boolean}
+   */
+  get isWhitelistMode() {
+    return this.#isWhitelistMode;
+  }
+
+  /**
+   * Sets the mode of the protocol list.
+   * @param {boolean} value - True for whitelist mode, false for blacklist mode.
+   * @throws {TypeError} If the value is not a boolean.
+   */
+  set isWhitelistMode(value) {
+    if (typeof value !== 'boolean') {
+      throw new TypeError('isWhitelistMode must be a boolean.');
+    }
+    this.#isWhitelistMode = value;
   }
 
   /**
@@ -304,37 +332,48 @@ class TinyURLSecurityVerifier {
   /**
    * Checks if the URL's primary protocol is in the local dangerous list.
    * @param {Href} href - The href address or URL instance to check.
-   * @returns {boolean} True if the protocol is dangerous, false otherwise.
+   * @returns {boolean} True if the protocol is considered dangerous, false otherwise.
    * @throws {TypeError} If the provided argument is not a valid URL.
    */
   isProtocolDangerous(href) {
     const url = TinyURLSecurityVerifier.#hrefToUrl(href);
 
     // url.protocol returns format "scheme:" (e.g., "javascript:"), so we remove the colon.
-    const protocol = url.protocol.replace(':', '');
-    return this.#protocols.has(protocol);
+    const protocol = url.protocol.replace(':', '').toLowerCase();
+    const isMatch = this.#protocols.has(protocol);
+
+    // If whitelist mode: it is dangerous if the protocol is NOT in the set.
+    // If blacklist mode: it is dangerous if the protocol IS in the set.
+    return this.#isWhitelistMode ? !isMatch : isMatch;
   }
 
   /**
-   * Checks if any of the local dangerous protocols are present within the URL's search parameters.
+   * Checks if any protocol present within the URL's search parameters is considered dangerous.
    * @param {Href} href - The href address or URL instance to check.
    * @returns {boolean} True if a dangerous protocol is found in search params, false otherwise.
    * @throws {TypeError} If the provided argument is not a valid URL.
    */
   isSearchParamDangerous(href) {
     const url = TinyURLSecurityVerifier.#hrefToUrl(href);
-
     const params = url.searchParams;
 
     // Iterate through all values in the search parameters
     for (const value of params.values()) {
-      for (const dangerousProtocol of this.#protocols) {
-        // We check if the value contains the dangerous protocol followed by a colon
-        // to avoid false positives (e.g., "myjavascript" vs "javascript:")
-        if (value.includes(`${dangerousProtocol}:`)) {
-          return true;
+      // Regex to find a protocol pattern (e.g., "javascript:" or "https:")
+      const match = value.match(/([a-z0-9+.-]+):/ig);
+      let isDangerous = false;
+
+      if (match) {
+        for (const foundProtocol of match) {
+          const inSet = this.#protocols.has(foundProtocol.toLowerCase());
+          isDangerous = this.#isWhitelistMode ? !inSet : inSet;
+          if (isDangerous) break;
         }
       }
+
+      // If whitelist mode: dangerous if the found protocol is NOT in the set.
+      // If blacklist mode: dangerous if the found protocol IS in the set.
+      return isDangerous;
     }
     return false;
   }
