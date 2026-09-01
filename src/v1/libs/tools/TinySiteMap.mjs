@@ -699,7 +699,9 @@ class TinySiteMap {
         // Render custom tags
         if (entry.customTags) {
           for (const [tag, value] of Object.entries(entry.customTags)) {
-            xmlChunks.push(`    <${TinySiteMap.#escapeXml(tag, true)}>${TinySiteMap.#escapeXml(value, false)}</${tag}>\n`);
+            xmlChunks.push(
+              `    <${TinySiteMap.#escapeXml(tag, true)}>${TinySiteMap.#escapeXml(value, false)}</${tag}>\n`,
+            );
           }
         }
         xmlChunks.push(`  </url>\n`);
