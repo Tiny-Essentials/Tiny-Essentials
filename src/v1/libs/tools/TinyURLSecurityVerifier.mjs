@@ -145,6 +145,14 @@ class TinyURLSecurityVerifier {
   // --- Instance Domain Management ---
 
   /**
+   * Returns the current list of allowed domains for this specific instance.
+   * @returns {Domain[]} An array of domains.
+   */
+  get allowedDomains() {
+    return Array.from(this.#allowedDomains);
+  }
+
+  /**
    * Adds a domain to the instance-specific blacklist.
    * @param {Domain} domain - The domain to block.
    * @throws {TypeError} If domain is not a string.
@@ -163,6 +171,14 @@ class TinyURLSecurityVerifier {
   removeBlacklistedDomain(domain) {
     if (typeof domain !== 'string') throw new TypeError('Domain must be a string.');
     return this.#blacklistedDomains.delete(domain.toLowerCase());
+  }
+
+  /**
+   * Returns the current list of blacklisted domains for this specific instance.
+   * @returns {Domain[]} An array of domains.
+   */
+  get blacklistedDomains() {
+    return Array.from(this.#blacklistedDomains);
   }
 
   /**
