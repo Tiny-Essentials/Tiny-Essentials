@@ -5,7 +5,6 @@ import TinySiteMap from './TinySiteMap.mjs';
  * @typedef {Object} TinySiteMapStreamOptions
  * @property {URL} [hostname] - Base URL for relative paths.
  * @property {'silent'|'warn'|'error'} [level] - Error handling level. Defaults to 'warn'.
- * @property {boolean} [lastmodDateOnly] - Format lastmod as date only (YYYY-MM-DD).
  * @property {import('./TinySiteMap.mjs').SitemapNamespace[]} [xmlns] - XML namespaces or attributes to include.
  * @property {string} [xslUrl] - URL to XSL stylesheet.
  */
@@ -38,7 +37,6 @@ class TinySiteMapStream extends Transform {
     this.#instance = instance;
     this.#options = {
       level: 'warn',
-      lastmodDateOnly: false,
       ...options,
     };
   }
@@ -76,7 +74,7 @@ class TinySiteMapStream extends Transform {
       const xmlFragment = TinySiteMap._generateEntry(
         validated,
         this.#instance.type,
-        this.#options.lastmodDateOnly,
+        this.#instance.lastmodDateOnly,
       );
 
       this.push(xmlFragment);

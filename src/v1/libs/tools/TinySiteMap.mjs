@@ -60,6 +60,8 @@ class TinySiteMap {
   #type;
   /** @type {number} The maximum allowed length for a resolved URL. */
   #maxResolvedUrlSize = 2048;
+  /** @type {boolean} Determines if the 'lastmod' field is formatted as a simple date (YYYY-MM-DD) instead of full ISO 8601. */
+  #lastmodDateOnly = false;
 
   /**
    * Official limit established by sitemaps.org
@@ -655,6 +657,26 @@ class TinySiteMap {
   }
 
   /**
+   * Gets the current configuration state for 'lastmod' date formatting.
+   * @returns {boolean} True if date-only formatting is enabled, false otherwise.
+   */
+  get lastmodDateOnly() {
+    return this.#lastmodDateOnly;
+  }
+
+  /**
+   * Sets whether the 'lastmod' field should be formatted as a simple date (YYYY-MM-DD).
+   * @param {boolean} value - True to use YYYY-MM-DD format, false to use full ISO 8601.
+   * @throws {TypeError} If the provided value is not a boolean.
+   */
+  set lastmodDateOnly(value) {
+    if (typeof value !== 'boolean') {
+      throw new TypeError('lastmodDateOnly must be a boolean.');
+    }
+    this.#lastmodDateOnly = value;
+  }
+
+  /**
    * Generates the XML header.
    * @param {SitemapNamespace[]} namespaces
    * @param {string} [xslUrl]
@@ -786,7 +808,7 @@ class TinySiteMap {
 
     // 4. Add entries
     for (const entry of this.#entries) {
-      xmlChunks.push(TinySiteMap.#generateEntry(entry, this.#type));
+      xmlChunks.push(TinySiteMap.#generateEntry(entry, this.#type, this.#lastmodDateOnly));
     }
 
     // 5. Add o footer
