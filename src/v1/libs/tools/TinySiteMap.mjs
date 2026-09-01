@@ -1,3 +1,5 @@
+import TinyURLSecurityVerifier from './TinyURLSecurityVerifier.mjs';
+
 /**
  * @typedef {Object} SitemapNamespace
  * @property {'xmlns'|'attribute'} [type] - Defines if it's a namespace declaration or a raw root attribute. Defaults to 'xmlns'.
@@ -50,6 +52,8 @@
  * This class handles URL resolution, root attributes management, and XML escaping to prevent injection.
  */
 class TinySiteMap {
+  /** @type {TinyURLSecurityVerifier} */
+  #urlVerifier = new TinyURLSecurityVerifier();
   /** @type {URL} The base URL used for resolving relative paths. */
   #baseUrl;
   /** @type {(SitemapEntry|SitemapIndexEntry)[]} The internal list of validated entries. */
@@ -329,11 +333,12 @@ class TinySiteMap {
    * @param {'normal'|'index'} type
    * @param {number} maxUrlSize
    * @param {RegExp} regex
+   * @param {TinyURLSecurityVerifier} urlVerifier
    * @returns {SitemapEntry | SitemapIndexEntry} A new, normalized, and validated entry object.
    * @throws {TypeError} If the entry is invalid, if loc is not a string, if origin doesn't match, or if field values are invalid.
    * @throws {RangeError} If the resolved URL exceeds maxResolvedUrlSize or if priority is outside [0.0, 1.0].
    */
-  static #resolveAndValidate(entry, baseUrl, type, maxUrlSize, regex) {
+  static #resolveAndValidate(entry, baseUrl, type, maxUrlSize, regex, urlVerifier) {
     if (typeof entry !== 'object' || entry === null)
       throw new TypeError('Entry must be a non-null object.');
 
@@ -352,6 +357,10 @@ class TinySiteMap {
 
     if (resolvedUrl.href.length >= maxUrlSize) {
       throw new RangeError(`entry.loc must be less than ${maxUrlSize} characters.`);
+    }
+
+    if (urlVerifier.isDangerous(resolvedUrl)) {
+      throw new Error('');
     }
 
     /** @type {SitemapEntry} */
@@ -418,12 +427,13 @@ class TinySiteMap {
    * @param {'normal'|'index'} type
    * @param {number} maxUrlSize
    * @param {RegExp} regex
+   * @param {TinyURLSecurityVerifier} urlVerifier
    * @returns {SitemapEntry | SitemapIndexEntry} A new, normalized, and validated entry object.
    * @throws {TypeError} If the entry is invalid, if loc is not a string, if origin doesn't match, or if field values are invalid.
    * @throws {RangeError} If the resolved URL exceeds maxResolvedUrlSize or if priority is outside [0.0, 1.0].
    */
-  static resolveAndValidate(entry, baseUrl, type, maxUrlSize, regex) {
-    return TinySiteMap.#resolveAndValidate(entry, baseUrl, type, maxUrlSize, regex);
+  static resolveAndValidate(entry, baseUrl, type, maxUrlSize, regex, urlVerifier) {
+    return TinySiteMap.#resolveAndValidate(entry, baseUrl, type, maxUrlSize, regex, urlVerifier);
   }
 
   /**
@@ -440,6 +450,7 @@ class TinySiteMap {
       this.#type,
       this.#maxResolvedUrlSize,
       TinySiteMap.#xmlNameRegex,
+      this.#urlVerifier,
     );
   }
 
@@ -561,6 +572,10 @@ class TinySiteMap {
    */
   clearEntries() {
     this.#entries = [];
+  }
+
+  get urlVerifier() {
+    return this.#urlVerifier;
   }
 
   /**
@@ -700,6 +715,14 @@ class TinySiteMap {
       throw new TypeError('xslUrl must be a string or null.');
     }
     this.#xslUrl = value ? new URL(value) : null;
+  }
+
+  get entriesSize() {
+    return this.#entries.length;
+  }
+
+  get namespacesSize() {
+    return this.#namespaces.length;
   }
 
   /**
