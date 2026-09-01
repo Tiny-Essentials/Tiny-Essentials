@@ -304,11 +304,6 @@ class TinyURLSecurityVerifier {
    */
   isDangerous(href) {
     const url = TinyURLSecurityVerifier.#hrefToUrl(href);
-    // If a whitelist is configured, any domain not in the whitelist is considered dangerous
-    if (this.#allowedDomains.size > 0 && !this.isWhitelisted(url)) {
-      return true;
-    }
-
     return (
       this.isProtocolDangerous(url) ||
       this.isSearchParamDangerous(url) ||
