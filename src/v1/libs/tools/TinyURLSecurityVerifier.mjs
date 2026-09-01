@@ -35,7 +35,7 @@ class TinyURLSecurityVerifier {
   #allowedDomains;
 
   /**
-   * Static getter to retrieve the current default protocols as an array.
+   * Retrieves the current global default protocols as an array.
    * @returns {Protocol[]} An array of default protocols.
    */
   static get defaultProtocols() {
@@ -43,7 +43,7 @@ class TinyURLSecurityVerifier {
   }
 
   /**
-   * Static setter to replace the entire list of default protocols.
+   * Replaces the global default protocols with a new array of protocols.
    * @param {Protocol[]} protocols - An array of protocol strings.
    * @throws {TypeError} If the input is not an array or contains non-string elements.
    */
@@ -63,7 +63,7 @@ class TinyURLSecurityVerifier {
   }
 
   /**
-   * Static method to add a protocol to the global default list.
+   * Adds a new protocol to the global default list.
    * @param {Protocol} protocol - The protocol to add.
    * @throws {TypeError} If the protocol is not a string.
    */
@@ -75,7 +75,7 @@ class TinyURLSecurityVerifier {
   }
 
   /**
-   * Static method to remove a protocol from the global default list.
+   * Removes a protocol from the global default list.
    * @param {Protocol} protocol - The protocol to remove.
    * @throws {TypeError} If the protocol is not a string.
    */
@@ -87,8 +87,10 @@ class TinyURLSecurityVerifier {
   }
 
   /**
-   * @param {Href} href
-   * @returns {URL}
+   * Converts a string or URL instance into a standard URL object.
+   * @param {Href} href - The href address or URL instance.
+   * @returns {URL} A URL instance.
+   * @throws {TypeError} If the argument is neither a string nor a URL instance.
    */
   static #hrefToUrl(href) {
     if (href instanceof URL) return href;
@@ -98,7 +100,7 @@ class TinyURLSecurityVerifier {
   }
 
   /**
-   * Creates an instance of URLSecurityVerifier.
+   * Creates an instance of TinyURLSecurityVerifier.
    * Initializes the instance protocols with a copy of the current static default protocols.
    */
   constructor() {
@@ -115,6 +117,14 @@ class TinyURLSecurityVerifier {
    */
   get protocols() {
     return Array.from(this.#protocols);
+  }
+
+  /**
+   * Returns the total count of protocols configured in this instance.
+   * @returns {number} The number of protocols.
+   */
+  get protocolsSize() {
+    return this.#protocols.size;
   }
 
   /**
@@ -153,6 +163,14 @@ class TinyURLSecurityVerifier {
   }
 
   /**
+   * Returns the total count of allowed domains in this instance.
+   * @returns {number} The number of allowed domains.
+   */
+  get allowedDomainsSize() {
+    return this.#allowedDomains.size;
+  }
+
+  /**
    * Adds a domain to the instance-specific blacklist.
    * @param {Domain} domain - The domain to block.
    * @throws {TypeError} If domain is not a string.
@@ -164,7 +182,7 @@ class TinyURLSecurityVerifier {
 
   /**
    * Removes a domain from the instance-specific blacklist.
-   * @param {Domain} domain - The domain to block.
+   * @param {Domain} domain - The domain to remove.
    * @throws {TypeError} If domain is not a string.
    * @returns {boolean} Returns `true` if the domain existed and was successfully removed, or `false` if the domain did not exist.
    */
@@ -175,10 +193,18 @@ class TinyURLSecurityVerifier {
 
   /**
    * Returns the current list of blacklisted domains for this specific instance.
-   * @returns {Domain[]} An array of domains.
+   * @returns {Domain[]} An array of blacklisted domains.
    */
   get blacklistedDomains() {
     return Array.from(this.#blacklistedDomains);
+  }
+
+  /**
+   * Returns the total count of blacklisted domains in this instance.
+   * @returns {number} The number of blacklisted domains.
+   */
+  get blacklistedDomainsSize() {
+    return this.#blacklistedDomains.size;
   }
 
   /**
@@ -193,7 +219,7 @@ class TinyURLSecurityVerifier {
 
   /**
    * Removes a domain from the instance-specific whitelist.
-   * @param {Domain} domain - The domain to allow.
+   * @param {Domain} domain - The domain to remove.
    * @throws {TypeError} If domain is not a string.
    * @returns {boolean} Returns `true` if the domain existed and was successfully removed, or `false` if the domain did not exist.
    */
@@ -207,9 +233,9 @@ class TinyURLSecurityVerifier {
   /**
    * Checks if the URL contains user credentials in the authority component.
    * (e.g., https://user:pass@example.com)
-   * @param {Href} href - The href address.
+   * @param {Href} href - The href address or URL instance.
    * @returns {boolean} True if credentials are present.
-   * @throws {TypeError} If argument is not a URL instance.
+   * @throws {TypeError} If the argument is not a URL instance or valid href.
    */
   hasCredentials(href) {
     const url = TinyURLSecurityVerifier.#hrefToUrl(href);
@@ -218,9 +244,9 @@ class TinyURLSecurityVerifier {
 
   /**
    * Checks if the hostname is an IPv4 address.
-   * @param {Href} href - The href address.
+   * @param {Href} href - The href address or URL instance.
    * @returns {boolean} True if the hostname is an IPv4 address.
-   * @throws {TypeError} If argument is not a URL instance.
+   * @throws {TypeError} If the argument is not a URL instance or valid href.
    */
   isIPv4Address(href) {
     const url = TinyURLSecurityVerifier.#hrefToUrl(href);
@@ -230,9 +256,9 @@ class TinyURLSecurityVerifier {
 
   /**
    * Checks if the hostname is an IPv6 address.
-   * @param {Href} href - The href address.
+   * @param {Href} href - The href address or URL instance.
    * @returns {boolean} True if the hostname is an IPv6 address.
-   * @throws {TypeError} If argument is not a URL instance.
+   * @throws {TypeError} If the argument is not a URL instance or valid href.
    */
   isIPv6Address(href) {
     const url = TinyURLSecurityVerifier.#hrefToUrl(href);
@@ -243,10 +269,10 @@ class TinyURLSecurityVerifier {
   }
 
   /**
-   * Checks if the hostname is an IPv4 or IPv6 address.
-   * @param {Href} href - The href address.
+   * Checks if the hostname is either an IPv4 or an IPv6 address.
+   * @param {Href} href - The href address or URL instance.
    * @returns {boolean} True if the hostname is an IP address.
-   * @throws {TypeError} If argument is not a URL instance.
+   * @throws {TypeError} If the argument is not a URL instance or valid href.
    */
   isIPAddress(href) {
     const url = TinyURLSecurityVerifier.#hrefToUrl(href);
@@ -254,9 +280,10 @@ class TinyURLSecurityVerifier {
   }
 
   /**
-   * @param {Href} href - The href address.
-   * @returns {boolean}
-   * @throws {TypeError} If argument is not a URL instance.
+   * Checks if the domain is present in the instance's blacklist.
+   * @param {Href} href - The href address or URL instance.
+   * @returns {boolean} True if the domain is blacklisted.
+   * @throws {TypeError} If the argument is not a URL instance or valid href.
    */
   isBlacklisted(href) {
     const url = TinyURLSecurityVerifier.#hrefToUrl(href);
@@ -264,9 +291,10 @@ class TinyURLSecurityVerifier {
   }
 
   /**
-   * @param {Href} href - The href address.
-   * @returns {boolean}
-   * @throws {TypeError} If argument is not a URL instance.
+   * Checks if the domain is present in the instance's whitelist.
+   * @param {Href} href - The href address or URL instance.
+   * @returns {boolean} True if the domain is whitelisted.
+   * @throws {TypeError} If the argument is not a URL instance or valid href.
    */
   isWhitelisted(href) {
     const url = TinyURLSecurityVerifier.#hrefToUrl(href);
@@ -275,9 +303,9 @@ class TinyURLSecurityVerifier {
 
   /**
    * Checks if the URL's primary protocol is in the local dangerous list.
-   * @param {Href} href - The href address to check.
+   * @param {Href} href - The href address or URL instance to check.
    * @returns {boolean} True if the protocol is dangerous, false otherwise.
-   * @throws {TypeError} If the provided argument is not an instance of URL.
+   * @throws {TypeError} If the provided argument is not a valid URL.
    */
   isProtocolDangerous(href) {
     const url = TinyURLSecurityVerifier.#hrefToUrl(href);
@@ -289,9 +317,9 @@ class TinyURLSecurityVerifier {
 
   /**
    * Checks if any of the local dangerous protocols are present within the URL's search parameters.
-   * @param {Href} href - The href address to check.
+   * @param {Href} href - The href address or URL instance to check.
    * @returns {boolean} True if a dangerous protocol is found in search params, false otherwise.
-   * @throws {TypeError} If the provided argument is not an instance of URL.
+   * @throws {TypeError} If the provided argument is not a valid URL.
    */
   isSearchParamDangerous(href) {
     const url = TinyURLSecurityVerifier.#hrefToUrl(href);
@@ -308,15 +336,14 @@ class TinyURLSecurityVerifier {
         }
       }
     }
-
     return false;
   }
 
   /**
-   * The main verification method.
-   * @param {Href} href - The href address to check.
-   * @returns {boolean} True if the URL is dangerous, false if it is safe.
-   * @throws {TypeError} If the provided argument is not an instance of URL.
+   * Performs a comprehensive security scan on the provided href.
+   * @param {Href} href - The href address or URL instance to check.
+   * @returns {boolean} True if the URL is considered dangerous, false if it is safe.
+   * @throws {TypeError} If the provided argument is not a valid URL.
    */
   isDangerous(href) {
     const url = TinyURLSecurityVerifier.#hrefToUrl(href);
