@@ -67,10 +67,19 @@ class TinySiteMap {
    */
   static #MAX_URLS = 50000;
 
+  /**
+   * Gets the maximum number of URLs allowed in a single sitemap.
+   * @returns {number}
+   */
   static get maxUrls() {
     return TinySiteMap.#MAX_URLS;
   }
 
+  /**
+   * Sets the maximum number of URLs allowed in a single sitemap.
+   * @param {number} value
+   * @throws {TypeError} If the value is not a number.
+   */
   static set maxUrls(value) {
     if (typeof value !== 'number' || Number.isNaN(value)) {
       throw new TypeError('entry.priority must be a number.');
@@ -207,7 +216,7 @@ class TinySiteMap {
   }
 
   /**
-   * Validates a single namespace object.
+   * Validates a single namespace object for correct structure and XML naming compliance.
    * @param {SitemapNamespace} ns
    * @param {RegExp} regex
    * @throws {TypeError}
@@ -239,7 +248,7 @@ class TinySiteMap {
   }
 
   /**
-   * Validates a collection of namespaces.
+   * Validates a collection of namespace objects.
    * @param {SitemapNamespace[]} namespaces
    * @throws {TypeError}
    */
@@ -427,6 +436,7 @@ class TinySiteMap {
   }
 
   /**
+   * Adds a namespace to the sitemap, preventing duplicate prefixes or attribute names.
    * @param {SitemapNamespace} ns - The namespace to add.
    * @throws {TypeError} If the namespace format is invalid.
    */
@@ -454,6 +464,7 @@ class TinySiteMap {
   }
 
   /**
+   * Removes a namespace from the sitemap list by its identifier (prefix or name).
    * @param {string} identifier - The identifier to remove.
    */
   removeNamespace(identifier) {
@@ -564,6 +575,10 @@ class TinySiteMap {
     return this.#namespaces.map((i) => ({ ...i }));
   }
 
+  /**
+   * Sets the manual namespaces for the sitemap.
+   * @param {SitemapNamespace[]} nss - The array of namespaces to set.
+   */
   set namespaces(nss) {
     if (!Array.isArray(nss)) throw new TypeError('namespaces must be an array.');
     const oldNamespaces = this.#namespaces;
@@ -603,6 +618,10 @@ class TinySiteMap {
     }));
   }
 
+  /**
+   * Sets the sitemap entries, validating each one via the addEntry method.
+   * @param {SitemapEntry[] | SitemapIndexEntry[]} entries - The entries to set.
+   */
   set entries(entries) {
     if (!Array.isArray(entries)) throw new TypeError('entries must be an array.');
     const oldEntries = this.#entries;

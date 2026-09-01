@@ -21,11 +21,11 @@ import TinySiteMap from './TinySiteMap.mjs';
  * @extends Transform
  */
 class TinySiteMapStream extends Transform {
-  /** @type {boolean} */
+  /** Indicates whether the XML declaration and header have already been pushed to the stream. @type {boolean} */
   #hasHeadOutput = false;
-  /** @type {TinySiteMapStreamOptions} */
+  /** The configuration options applied to the stream. @type {TinySiteMapStreamOptions} */
   #options;
-  /** @type {TinySiteMap} */
+  /** The parent TinySiteMap instance used for configuration inheritance. @type {TinySiteMap} */
   #instance;
 
   /**
@@ -44,6 +44,7 @@ class TinySiteMapStream extends Transform {
   }
 
   /**
+   * Processes a sitemap entry, validates its content, and pushes the resulting XML fragment to the stream.
    * @param {SitemapEntry | SitemapIndexEntry} entry
    * @param {string} encoding
    * @param {import('node:stream').TransformCallback} callback
@@ -51,9 +52,15 @@ class TinySiteMapStream extends Transform {
   _transform(entry, encoding, callback) {
     try {
       if (!this.#hasHeadOutput) {
-        // O Stream envia a declaração XML e o header como os primeiros chunks
+        // Stream sends XML declaration and header
         this.push('<?xml version="1.0" encoding="UTF-8"?>\n');
-        this.push(TinySiteMap._generateHeader(this.#instance.namespaces, this.#options.xslUrl, this.#instance.type));
+        this.push(
+          TinySiteMap._generateHeader(
+            this.#instance.namespaces,
+            this.#options.xslUrl,
+            this.#instance.type,
+          ),
+        );
         this.#hasHeadOutput = true;
       }
 
@@ -65,7 +72,7 @@ class TinySiteMapStream extends Transform {
         TinySiteMap.xmlNameRegex,
       );
 
-      // Usa o método estático que já lida com a lógica de cada entrada
+      // Use the static method that already handles the logic on each input
       const xmlFragment = TinySiteMap._generateEntry(
         validated,
         this.#instance.type,
@@ -91,15 +98,22 @@ class TinySiteMapStream extends Transform {
   }
 
   /**
-   * @param {import('node:stream').TransformCallback } cb
+   * Finalizes the stream by ensuring the XML footer is appended.
+   * @param {import('node:stream').TransformCallback} cb
    */
   _flush(cb) {
     if (!this.#hasHeadOutput) {
       this.push('<?xml version="1.0" encoding="UTF-8"?>\n');
-      this.push(TinySiteMap._generateHeader(this.#instance.namespaces, this.#options.xslUrl, this.#instance.type));
+      this.push(
+        TinySiteMap._generateHeader(
+          this.#instance.namespaces,
+          this.#options.xslUrl,
+          this.#instance.type,
+        ),
+      );
     }
 
-    // Usa o método estático para o footer
+    // Use static method to footer
     this.push(TinySiteMap._generateFooter(this.#instance.type));
     cb();
   }
