@@ -64,7 +64,7 @@ class TinySiteMap {
   #maxResolvedUrlSize = 2048;
   /** @type {boolean} Determines if the 'lastmod' field is formatted as a simple date (YYYY-MM-DD) instead of full ISO 8601. */
   #lastmodDateOnly = false;
-  /** @type {string|null} The URL of the XSL stylesheet used to style the XML output in web browsers. */
+  /** @type {URL|null} The URL of the XSL stylesheet used to style the XML output in web browsers. */
   #xslUrl = null;
 
   /**
@@ -211,7 +211,7 @@ class TinySiteMap {
     this.#validateConfig(config);
     this.#type = config.type ?? 'normal';
     this.#baseUrl = new URL(config.baseUrl);
-    this.#xslUrl = config.xslUrl ?? null;
+    this.#xslUrl = config.xslUrl ? new URL(config.xslUrl) : null;
     this.lastmodDateOnly = config.lastmodDateOnly ?? false;
     this.namespaces = config.namespaces ?? [];
     this.namespaceStrategy = config.namespaceStrategy ?? TinySiteMap.simpleStrategy;
@@ -687,7 +687,7 @@ class TinySiteMap {
    * @returns {string|null} The XSL stylesheet URL or null.
    */
   get xslUrl() {
-    return this.#xslUrl;
+    return this.#xslUrl?.href ?? null;
   }
 
   /**
@@ -699,7 +699,7 @@ class TinySiteMap {
     if (value !== null && typeof value !== 'string') {
       throw new TypeError('xslUrl must be a string or null.');
     }
-    this.#xslUrl = value;
+    this.#xslUrl = value ? new URL(value) : null;
   }
 
   /**
@@ -712,7 +712,7 @@ class TinySiteMap {
   static #generateHeader(namespaces, xslUrl, type) {
     let header = '';
     if (xslUrl) {
-      header += `<?xml-stylesheet type="text/xsl" href="${TinySiteMap.escapeXml(xslUrl, true)}"?>\n`;
+      header += `<?xml-stylesheet type="text/xsl" href="${TinySiteMap.#escapeXml(xslUrl, true)}"?>\n`;
     }
 
     let rootAttributes = '';
@@ -831,7 +831,11 @@ class TinySiteMap {
 
     // 3. Add header (Stylesheet + Root Tag)
     xmlChunks.push(
-      TinySiteMap.#generateHeader(allNamespaces, this.#xslUrl ?? undefined, this.#type),
+      TinySiteMap.#generateHeader(
+        allNamespaces,
+        this.#xslUrl ? this.#xslUrl.href : undefined,
+        this.#type,
+      ),
     );
 
     // 4. Add entries
