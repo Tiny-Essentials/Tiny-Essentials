@@ -67,6 +67,7 @@ class TinySiteMapStream extends Transform {
         this.#instance.type,
         this.#instance.maxResolvedUrlSize,
         TinySiteMap.xmlNameRegex,
+        this.#instance.urlVerifier,
       );
 
       // Use the static method that already handles the logic on each input
