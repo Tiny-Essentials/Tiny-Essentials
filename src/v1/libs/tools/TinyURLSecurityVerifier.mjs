@@ -1,14 +1,17 @@
 /**
+ * @typedef {string|URL} Href
  * @typedef {string} Protocol
+ * @typedef {string} Domain
  */
 
 /**
- * Class representing a security verifier for URLs.
- * Supports global configuration via static methods and local configuration via instance methods.
+ * Class representing an advanced security verifier for URLs.
+ * Provides multi-layered protection including protocol, parameters,
+ * credentials, IP addresses, and domain reputation (blacklist/whitelist).
  */
 class TinyURLSecurityVerifier {
   /**
-   * Private static storage for the default protocols to allow getter/setter usage.
+   * Private static storage for the default protocols.
    * @type {Set<Protocol>}
    */
   static #defaultProtocols = new Set(['javascript', 'data', 'vbscript', 'file', 'about']);
@@ -18,6 +21,18 @@ class TinyURLSecurityVerifier {
    * @type {Set<Protocol>}
    */
   #protocols;
+
+  /**
+   * Private instance storage for blacklisted domains.
+   * @type {Set<Domain>}
+   */
+  #blacklistedDomains;
+
+  /**
+   * Private instance storage for whitelisted domains.
+   * @type {Set<Domain>}
+   */
+  #allowedDomains;
 
   /**
    * Static getter to retrieve the current default protocols as an array.
@@ -72,12 +87,27 @@ class TinyURLSecurityVerifier {
   }
 
   /**
+   * @param {Href} href
+   * @returns {URL}
+   */
+  static #hrefToUrl(href) {
+    if (href instanceof URL) return href;
+    if (typeof href !== 'string')
+      throw new TypeError('Argument must be a URL instance or href address.');
+    return new URL(href);
+  }
+
+  /**
    * Creates an instance of URLSecurityVerifier.
    * Initializes the instance protocols with a copy of the current static default protocols.
    */
   constructor() {
     this.#protocols = new Set(Array.from(TinyURLSecurityVerifier.#defaultProtocols));
+    this.#blacklistedDomains = new Set();
+    this.#allowedDomains = new Set();
   }
+
+  // --- Instance Protocol Management ---
 
   /**
    * Returns the current list of protocols for this specific instance.
@@ -111,16 +141,107 @@ class TinyURLSecurityVerifier {
     this.#protocols.delete(protocol.toLowerCase());
   }
 
+  // --- Instance Domain Management ---
+
+  /**
+   * Adds a domain to the instance-specific blacklist.
+   * @param {Domain} domain - The domain to block.
+   * @throws {TypeError} If domain is not a string.
+   */
+  addBlacklistedDomain(domain) {
+    if (typeof domain !== 'string') throw new TypeError('Domain must be a string.');
+    this.#blacklistedDomains.add(domain.toLowerCase());
+  }
+
+  /**
+   * Adds a domain to the instance-specific whitelist.
+   * @param {Domain} domain - The domain to allow.
+   * @throws {TypeError} If domain is not a string.
+   */
+  addAllowedDomain(domain) {
+    if (typeof domain !== 'string') throw new TypeError('Domain must be a string.');
+    this.#allowedDomains.add(domain.toLowerCase());
+  }
+
+  // --- Security Check Methods ---
+
+  /**
+   * Checks if the URL contains user credentials in the authority component.
+   * (e.g., https://user:pass@example.com)
+   * @param {Href} href - The href address.
+   * @returns {boolean} True if credentials are present.
+   * @throws {TypeError} If argument is not a URL instance.
+   */
+  hasCredentials(href) {
+    const url = TinyURLSecurityVerifier.#hrefToUrl(href);
+    return url.username !== '' || url.password !== '';
+  }
+
+  /**
+   * Checks if the hostname is an IPv4 address.
+   * @param {Href} href - The href address.
+   * @returns {boolean} True if the hostname is an IPv4 address.
+   * @throws {TypeError} If argument is not a URL instance.
+   */
+  isIPv4Address(href) {
+    const url = TinyURLSecurityVerifier.#hrefToUrl(href);
+    // Regex for IPv4
+    return /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(url.hostname);
+  }
+
+  /**
+   * Checks if the hostname is an IPv6 address.
+   * @param {Href} href - The href address.
+   * @returns {boolean} True if the hostname is an IPv6 address.
+   * @throws {TypeError} If argument is not a URL instance.
+   */
+  isIPv6Address(href) {
+    const url = TinyURLSecurityVerifier.#hrefToUrl(href);
+    // Simplified Regex for IPv6
+    return /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/.test(
+      url.hostname,
+    );
+  }
+
+  /**
+   * Checks if the hostname is an IPv4 or IPv6 address.
+   * @param {Href} href - The href address.
+   * @returns {boolean} True if the hostname is an IP address.
+   * @throws {TypeError} If argument is not a URL instance.
+   */
+  isIPAddress(href) {
+    const url = TinyURLSecurityVerifier.#hrefToUrl(href);
+    return this.isIPv4Address(url) || this.isIPv6Address(url);
+  }
+
+  /**
+   * @param {Href} href - The href address.
+   * @returns {boolean}
+   * @throws {TypeError} If argument is not a URL instance.
+   */
+  isBlacklisted(href) {
+    const url = TinyURLSecurityVerifier.#hrefToUrl(href);
+    return this.#blacklistedDomains.has(url.hostname.toLowerCase());
+  }
+
+  /**
+   * @param {Href} href - The href address.
+   * @returns {boolean}
+   * @throws {TypeError} If argument is not a URL instance.
+   */
+  isWhitelisted(href) {
+    const url = TinyURLSecurityVerifier.#hrefToUrl(href);
+    return this.#allowedDomains.has(url.hostname.toLowerCase());
+  }
+
   /**
    * Checks if the URL's primary protocol is in the local dangerous list.
-   * @param {URL} url - The URL instance to check.
+   * @param {Href} href - The href address to check.
    * @returns {boolean} True if the protocol is dangerous, false otherwise.
    * @throws {TypeError} If the provided argument is not an instance of URL.
    */
-  isProtocolDangerous(url) {
-    if (!(url instanceof URL)) {
-      throw new TypeError('The argument must be an instance of URL.');
-    }
+  isProtocolDangerous(href) {
+    const url = TinyURLSecurityVerifier.#hrefToUrl(href);
 
     // url.protocol returns format "scheme:" (e.g., "javascript:"), so we remove the colon.
     const protocol = url.protocol.replace(':', '');
@@ -129,14 +250,12 @@ class TinyURLSecurityVerifier {
 
   /**
    * Checks if any of the local dangerous protocols are present within the URL's search parameters.
-   * @param {URL} url - The URL instance to check.
+   * @param {Href} href - The href address to check.
    * @returns {boolean} True if a dangerous protocol is found in search params, false otherwise.
    * @throws {TypeError} If the provided argument is not an instance of URL.
    */
-  isSearchParamDangerous(url) {
-    if (!(url instanceof URL)) {
-      throw new TypeError('The argument must be an instance of URL.');
-    }
+  isSearchParamDangerous(href) {
+    const url = TinyURLSecurityVerifier.#hrefToUrl(href);
 
     const params = url.searchParams;
 
@@ -156,12 +275,24 @@ class TinyURLSecurityVerifier {
 
   /**
    * The main verification method.
-   * @param {URL} url - The URL instance to check.
+   * @param {Href} href - The href address to check.
    * @returns {boolean} True if the URL is dangerous, false if it is safe.
    * @throws {TypeError} If the provided argument is not an instance of URL.
    */
-  isDangerous(url) {
-    return this.isProtocolDangerous(url) || this.isSearchParamDangerous(url);
+  isDangerous(href) {
+    const url = TinyURLSecurityVerifier.#hrefToUrl(href);
+    // If a whitelist is configured, any domain not in the whitelist is considered dangerous
+    if (this.#allowedDomains.size > 0 && !this.isWhitelisted(url)) {
+      return true;
+    }
+
+    return (
+      this.isProtocolDangerous(url) ||
+      this.isSearchParamDangerous(url) ||
+      this.hasCredentials(url) ||
+      this.isBlacklisted(url) ||
+      this.isIPAddress(url)
+    );
   }
 }
 
