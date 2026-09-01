@@ -39,6 +39,7 @@ import TinyURLSecurityVerifier from './TinyURLSecurityVerifier.mjs';
 /**
  * @typedef {Object} SitemapConfig
  * @property {string} [xslUrl] - URL to XSL stylesheet.
+ * @property {boolean} [xslUrlPathnameOnly=true]
  * @property {boolean} [lastmodDateOnly] - Format lastmod as date only (YYYY-MM-DD).
  * @property {'normal'|'index'} [type] - The type of sitemap to generate. Defaults to 'normal'.
  * @property {string} baseUrl - The base URL of the website.
@@ -70,6 +71,8 @@ class TinySiteMap {
   #lastmodDateOnly = false;
   /** @type {URL|null} The URL of the XSL stylesheet used to style the XML output in web browsers. */
   #xslUrl = null;
+  /** @type {boolean} */
+  #xslUrlPathnameOnly = true;
 
   /**
    * Official limit established by sitemaps.org
@@ -215,7 +218,12 @@ class TinySiteMap {
     this.#validateConfig(config);
     this.#type = config.type ?? 'normal';
     this.#baseUrl = new URL(config.baseUrl);
-    this.#xslUrl = config.xslUrl ? new URL(config.xslUrl, this.#baseUrl.origin) : null;
+    this.xslUrlPathnameOnly = config.xslUrlPathnameOnly ?? true;
+    this.#xslUrl = config.xslUrl
+      ? this.#xslUrlPathnameOnly
+        ? new URL(config.xslUrl, this.#baseUrl.origin)
+        : new URL(config.xslUrl)
+      : null;
     this.lastmodDateOnly = config.lastmodDateOnly ?? false;
     this.namespaces = config.namespaces ?? [];
     this.namespaceStrategy = config.namespaceStrategy ?? TinySiteMap.simpleStrategy;
@@ -702,7 +710,9 @@ class TinySiteMap {
    * @returns {string|null} The XSL stylesheet URL or null.
    */
   get xslUrl() {
-    return this.#xslUrl?.href ?? null;
+    return this.#xslUrlPathnameOnly
+      ? (this.#xslUrl?.pathname ?? null)
+      : (this.#xslUrl?.href ?? null);
   }
 
   /**
@@ -714,7 +724,22 @@ class TinySiteMap {
     if (value !== null && typeof value !== 'string') {
       throw new TypeError('xslUrl must be a string or null.');
     }
-    this.#xslUrl = value ? new URL(value, this.#baseUrl.origin) : null;
+    this.#xslUrl = value
+      ? this.#xslUrlPathnameOnly
+        ? new URL(value, this.#baseUrl.origin)
+        : new URL(value)
+      : null;
+  }
+
+  get xslUrlPathnameOnly() {
+    return this.#xslUrlPathnameOnly;
+  }
+
+  set xslUrlPathnameOnly(value) {
+    if (value !== null && typeof value !== 'boolean') {
+      throw new TypeError('xslUrlPathnameOnly must be a boolean or null.');
+    }
+    this.#xslUrlPathnameOnly = value;
   }
 
   get entriesSize() {

@@ -138,7 +138,7 @@ const testTinySiteMap = async () => {
 
     // Assertions
     assert.ok(
-      streamXml.includes('<?xml-stylesheet type="text/xsl" href="https://exemple.com/estilo.xsl"?>'),
+      streamXml.includes('<?xml-stylesheet type="text/xsl" href="/estilo.xsl"?>'),
       'XSLT header missing',
     );
     assert.ok(
