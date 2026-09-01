@@ -37,7 +37,7 @@ const testTinySiteMap = async () => {
     console.log('Running Test 1: In-Memory Normal Sitemap & Escaping...');
 
     const memSitemap = new TinySiteMap({
-      baseUrl: 'https://meusite.com.br',
+      baseUrl: 'https://exemple.com',
       type: 'normal',
       namespaceStrategy: TinySiteMap.protocolStrategy,
     });
@@ -62,7 +62,7 @@ const testTinySiteMap = async () => {
       'Missing schemaLocation attribute',
     );
     assert.ok(
-      memXml.includes('<loc>https://meusite.com.br/path-with-&amp;s-and-%3Ctags%3E</loc>'),
+      memXml.includes('<loc>https://exemple.com/path-with-&amp;s-and-%3Ctags%3E</loc>'),
       'XML escaping failed on URL',
     );
     assert.ok(
@@ -78,7 +78,7 @@ const testTinySiteMap = async () => {
     console.log('Running Test 2: Index Mode Strict Validation...');
 
     const indexSitemap = new TinySiteMap({
-      baseUrl: 'https://meusite.com.br',
+      baseUrl: 'https://exemple.com',
       type: 'index',
     });
 
@@ -102,7 +102,7 @@ const testTinySiteMap = async () => {
     console.log('Running Test 3: Stream Output (lastmodDateOnly & Warn Level)...');
 
     const baseSiteMap = new TinySiteMap({
-      baseUrl: 'https://meusite.com.br',
+      baseUrl: 'https://exemple.com',
       type: 'normal',
       namespaceStrategy: TinySiteMap.protocolStrategy,
     });

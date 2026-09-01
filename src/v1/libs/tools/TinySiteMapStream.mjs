@@ -3,7 +3,7 @@ import TinySiteMap from './TinySiteMap.mjs';
 
 /**
  * @typedef {Object} TinySiteMapStreamOptions
- * @property {string} [hostname] - Base URL for relative paths.
+ * @property {URL} [hostname] - Base URL for relative paths.
  * @property {'silent'|'warn'|'error'} [level] - Error handling level. Defaults to 'warn'.
  * @property {boolean} [lastmodDateOnly] - Format lastmod as date only (YYYY-MM-DD).
  * @property {import('./TinySiteMap.mjs').SitemapNamespace[]} [xmlns] - XML namespaces or attributes to include.
@@ -23,14 +23,10 @@ import TinySiteMap from './TinySiteMap.mjs';
 class TinySiteMapStream extends Transform {
   /** @type {boolean} */
   #hasHeadOutput = false;
-  /** @type {'normal'|'index'} */
-  #type;
-  /** @type {string} */
-  #hostname;
   /** @type {TinySiteMapStreamOptions} */
   #options;
-  /** @type {SitemapNamespace[]} */
-  #namespaces;
+  /** @type {TinySiteMap} */
+  #instance;
 
   /**
    * @param {TinySiteMap} instance - An instance of TinySiteMap to inherit configuration.
@@ -39,133 +35,40 @@ class TinySiteMapStream extends Transform {
   constructor(instance, options = {}) {
     super({ objectMode: true });
 
-    this.#type = instance.type;
-    this.#hostname = options.hostname || instance.baseUrl;
+    this.#instance = instance;
     this.#options = {
       level: 'warn',
       lastmodDateOnly: false,
       ...options,
     };
-
-    // Replicate the TinySiteMap state securely
-    this._config = {
-      baseUrl: new URL(this.#hostname),
-      type: this.#type,
-      maxResolvedUrlSize: instance.maxResolvedUrlSize || 2048,
-      regex: TinySiteMap.xmlNameRegex,
-    };
-
-    // Mirrors the exact namespace resolution logic from TinySiteMap.generateXml()
-    if (this.#options.xmlns) {
-      this.#namespaces = this.#options.xmlns;
-    } else {
-      // Safely access the instance property. In a real scenario you might need an accessor
-      // in TinySiteMap if namespaceStrategy is fully private, but assuming it's accessible:
-      const dynamicNamespaces =
-        typeof instance.namespaceStrategy === 'function'
-          ? instance.namespaceStrategy(instance)
-          : [];
-
-      this.#namespaces = [...dynamicNamespaces, ...instance.namespaces];
-    }
   }
 
   /**
-   * Generates the XML fragment for a single entry.
-   * @param {SitemapEntry|SitemapIndexEntry} entry
-   * @param {'normal'|'index'} type
-   * @param {boolean} [lastmodDateOnly]
-   * @returns {string}
-   */
-  static generateEntryXml(entry, type, lastmodDateOnly = false) {
-    /** @type {SitemapEntry} */
-    const e = entry;
-
-    let lastmodStr = '';
-    if (e.lastmod) {
-      const dateObj = new Date(e.lastmod);
-      lastmodStr = lastmodDateOnly ? dateObj.toISOString().split('T')[0] : dateObj.toISOString();
-    }
-
-    if (type === 'index') {
-      return `  <sitemap>\n    <loc>${TinySiteMap.escapeXml(e.loc, false)}</loc>\n${
-        lastmodStr ? `    <lastmod>${lastmodStr}</lastmod>\n` : ''
-      }  </sitemap>\n`;
-    }
-
-    let xml = `  <url>\n    <loc>${TinySiteMap.escapeXml(e.loc, false)}</loc>\n`;
-    if (lastmodStr) xml += `    <lastmod>${lastmodStr}</lastmod>\n`;
-    if (e.changefreq)
-      xml += `    <changefreq>${TinySiteMap.escapeXml(e.changefreq, false)}</changefreq>\n`;
-    if (e.priority !== undefined) xml += `    <priority>${e.priority.toFixed(1)}</priority>\n`;
-
-    if (e.customTags) {
-      for (const [tag, value] of Object.entries(e.customTags)) {
-        xml += `    <${TinySiteMap.escapeXml(tag, true)}>${TinySiteMap.escapeXml(value, false)}</${tag}>\n`;
-      }
-    }
-    xml += `  </url>\n`;
-    return xml;
-  }
-
-  /**
-   * Generates the XML header.
-   * @param {SitemapNamespace[]} namespaces
-   * @param {string} [xslUrl]
-   * @param {'normal'|'index'} [type]
-   * @returns {string}
-   */
-  static generateHeader(namespaces, xslUrl, type) {
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-    if (xslUrl) {
-      xml += `<?xml-stylesheet type="text/xsl" href="${TinySiteMap.escapeXml(xslUrl, true)}"?>\n`;
-    }
-
-    let rootAttributes = '';
-    for (const ns of namespaces) {
-      const nsType = ns.type ?? 'xmlns';
-      const val = ns.value ?? ns.uri ?? '';
-
-      if (nsType === 'attribute') {
-        rootAttributes += ` ${ns.name}="${TinySiteMap.escapeXml(val, true)}"`;
-      } else {
-        const prefixPart = ns.prefix ? `:${ns.prefix}` : '';
-        rootAttributes += ` xmlns${prefixPart}="${TinySiteMap.escapeXml(val, true)}"`;
-      }
-    }
-
-    xml += type === 'index' ? `<sitemapindex${rootAttributes}>\n` : `<urlset${rootAttributes}>\n`;
-    return xml;
-  }
-
-  /**
-   * @param {import('./TinySiteMap.mjs').SitemapEntry | import('./TinySiteMap.mjs').SitemapIndexEntry} entry
+   * @param {SitemapEntry | SitemapIndexEntry} entry
    * @param {string} encoding
    * @param {import('node:stream').TransformCallback} callback
    */
   _transform(entry, encoding, callback) {
     try {
       if (!this.#hasHeadOutput) {
-        const header = TinySiteMapStream.generateHeader(
-          this.#namespaces,
-          this.#options.xslUrl,
-          this.#type,
-        );
-        this.push(header);
+        // O Stream envia a declaração XML e o header como os primeiros chunks
+        this.push('<?xml version="1.0" encoding="UTF-8"?>\n');
+        this.push(TinySiteMap._generateHeader(this.#instance.namespaces, this.#options.xslUrl, this.#instance.type));
         this.#hasHeadOutput = true;
       }
 
       const validated = TinySiteMap.resolveAndValidate(
         entry,
-        this._config.baseUrl,
-        this.#type,
-        this._config.maxResolvedUrlSize,
-        this._config.regex,
+        this.#instance.baseUrl,
+        this.#instance.type,
+        this.#instance.maxResolvedUrlSize,
+        TinySiteMap.xmlNameRegex,
       );
 
-      const xmlFragment = TinySiteMapStream.generateEntryXml(
+      // Usa o método estático que já lida com a lógica de cada entrada
+      const xmlFragment = TinySiteMap._generateEntry(
         validated,
-        this.#type,
+        this.#instance.type,
         this.#options.lastmodDateOnly,
       );
 
@@ -192,17 +95,12 @@ class TinySiteMapStream extends Transform {
    */
   _flush(cb) {
     if (!this.#hasHeadOutput) {
-      // If nothing was written (empty stream), generate the header before closing
-      const header = TinySiteMapStream.generateHeader(
-        this.#namespaces,
-        this.#options.xslUrl,
-        this.#type,
-      );
-      this.push(header);
+      this.push('<?xml version="1.0" encoding="UTF-8"?>\n');
+      this.push(TinySiteMap._generateHeader(this.#instance.namespaces, this.#options.xslUrl, this.#instance.type));
     }
 
-    const footer = this.#type === 'index' ? '</sitemapindex>' : '</urlset>';
-    this.push(footer);
+    // Usa o método estático para o footer
+    this.push(TinySiteMap._generateFooter(this.#instance.type));
     cb();
   }
 }
