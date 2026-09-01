@@ -2,7 +2,6 @@ import assert from 'node:assert';
 import { Writable } from 'node:stream';
 import TinySiteMap from '../../dist/v1/libs/tools/TinySiteMap.mjs';
 import TinySiteMapStream from '../../dist/v1/libs/tools/TinySiteMapStream.mjs';
-import TinyURLSecurityVerifier from '../../dist/v1/libs/tools/TinyURLSecurityVerifier.mjs';
 
 /**
  * Helper function to capture stream output into a single string.

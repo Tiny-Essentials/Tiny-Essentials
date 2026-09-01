@@ -133,12 +133,13 @@ class TinyURLSecurityVerifier {
    * Removes a protocol from this specific instance's list.
    * @param {Protocol} protocol - The protocol to remove.
    * @throws {TypeError} If the protocol is not a string.
+   * @returns {boolean} Returns `true` if the protocol existed and was successfully removed, or `false` if the protocol did not exist.
    */
   removeProtocol(protocol) {
     if (typeof protocol !== 'string') {
       throw new TypeError('The protocol must be a string.');
     }
-    this.#protocols.delete(protocol.toLowerCase());
+    return this.#protocols.delete(protocol.toLowerCase());
   }
 
   // --- Instance Domain Management ---
@@ -154,6 +155,17 @@ class TinyURLSecurityVerifier {
   }
 
   /**
+   * Removes a domain from the instance-specific blacklist.
+   * @param {Domain} domain - The domain to block.
+   * @throws {TypeError} If domain is not a string.
+   * @returns {boolean} Returns `true` if the domain existed and was successfully removed, or `false` if the domain did not exist.
+   */
+  removeBlacklistedDomain(domain) {
+    if (typeof domain !== 'string') throw new TypeError('Domain must be a string.');
+    return this.#blacklistedDomains.delete(domain.toLowerCase());
+  }
+
+  /**
    * Adds a domain to the instance-specific whitelist.
    * @param {Domain} domain - The domain to allow.
    * @throws {TypeError} If domain is not a string.
@@ -161,6 +173,17 @@ class TinyURLSecurityVerifier {
   addAllowedDomain(domain) {
     if (typeof domain !== 'string') throw new TypeError('Domain must be a string.');
     this.#allowedDomains.add(domain.toLowerCase());
+  }
+
+  /**
+   * Removes a domain from the instance-specific whitelist.
+   * @param {Domain} domain - The domain to allow.
+   * @throws {TypeError} If domain is not a string.
+   * @returns {boolean} Returns `true` if the domain existed and was successfully removed, or `false` if the domain did not exist.
+   */
+  removeAllowedDomain(domain) {
+    if (typeof domain !== 'string') throw new TypeError('Domain must be a string.');
+    return this.#allowedDomains.delete(domain.toLowerCase());
   }
 
   // --- Security Check Methods ---
