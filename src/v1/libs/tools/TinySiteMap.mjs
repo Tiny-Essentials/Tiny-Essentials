@@ -36,6 +36,8 @@
 
 /**
  * @typedef {Object} SitemapConfig
+ * @property {string} [xslUrl] - URL to XSL stylesheet.
+ * @property {boolean} [lastmodDateOnly] - Format lastmod as date only (YYYY-MM-DD).
  * @property {'normal'|'index'} [type] - The type of sitemap to generate. Defaults to 'normal'.
  * @property {string} baseUrl - The base URL of the website.
  * @property {SitemapNamespace[]} [namespaces] - Initial manual namespaces or root attributes.
@@ -62,6 +64,8 @@ class TinySiteMap {
   #maxResolvedUrlSize = 2048;
   /** @type {boolean} Determines if the 'lastmod' field is formatted as a simple date (YYYY-MM-DD) instead of full ISO 8601. */
   #lastmodDateOnly = false;
+  /** @type {string|null} The URL of the XSL stylesheet used to style the XML output in web browsers. */
+  #xslUrl = null;
 
   /**
    * Official limit established by sitemaps.org
@@ -207,6 +211,8 @@ class TinySiteMap {
     this.#validateConfig(config);
     this.#type = config.type ?? 'normal';
     this.#baseUrl = new URL(config.baseUrl);
+    this.#xslUrl = config.xslUrl ?? null;
+    this.lastmodDateOnly = config.lastmodDateOnly ?? false;
     this.namespaces = config.namespaces ?? [];
     this.namespaceStrategy = config.namespaceStrategy ?? TinySiteMap.simpleStrategy;
 
@@ -677,6 +683,26 @@ class TinySiteMap {
   }
 
   /**
+   * Gets the URL of the XSL stylesheet used to style the XML output.
+   * @returns {string|null} The XSL stylesheet URL or null.
+   */
+  get xslUrl() {
+    return this.#xslUrl;
+  }
+
+  /**
+   * Sets the URL of the XSL stylesheet used to style the XML output.
+   * @param {string|null} value - The XSL stylesheet URL or null.
+   * @throws {TypeError} If the value is provided but is not a string.
+   */
+  set xslUrl(value) {
+    if (value !== null && typeof value !== 'string') {
+      throw new TypeError('xslUrl must be a string or null.');
+    }
+    this.#xslUrl = value;
+  }
+
+  /**
    * Generates the XML header.
    * @param {SitemapNamespace[]} namespaces
    * @param {string} [xslUrl]
@@ -804,7 +830,9 @@ class TinySiteMap {
     const xmlChunks = [`<?xml version="1.0" encoding="UTF-8"?>\n`];
 
     // 3. Add header (Stylesheet + Root Tag)
-    xmlChunks.push(TinySiteMap.#generateHeader(allNamespaces, undefined, this.#type));
+    xmlChunks.push(
+      TinySiteMap.#generateHeader(allNamespaces, this.#xslUrl ?? undefined, this.#type),
+    );
 
     // 4. Add entries
     for (const entry of this.#entries) {

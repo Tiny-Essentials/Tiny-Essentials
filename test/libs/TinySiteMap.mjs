@@ -104,12 +104,12 @@ const testTinySiteMap = async () => {
     const baseSiteMap = new TinySiteMap({
       baseUrl: 'https://exemple.com',
       type: 'normal',
+      lastmodDateOnly: true,
+      xslUrl: '/estilo.xsl',
       namespaceStrategy: TinySiteMap.protocolStrategy,
     });
 
     const stream = new TinySiteMapStream(baseSiteMap, {
-      xslUrl: '/estilo.xsl',
-      lastmodDateOnly: true,
       level: 'warn',
     });
 

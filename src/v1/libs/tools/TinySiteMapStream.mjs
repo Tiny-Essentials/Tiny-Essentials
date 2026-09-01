@@ -6,7 +6,6 @@ import TinySiteMap from './TinySiteMap.mjs';
  * @property {URL} [hostname] - Base URL for relative paths.
  * @property {'silent'|'warn'|'error'} [level] - Error handling level. Defaults to 'warn'.
  * @property {import('./TinySiteMap.mjs').SitemapNamespace[]} [xmlns] - XML namespaces or attributes to include.
- * @property {string} [xslUrl] - URL to XSL stylesheet.
  */
 
 /**
@@ -55,7 +54,7 @@ class TinySiteMapStream extends Transform {
         this.push(
           TinySiteMap._generateHeader(
             this.#instance.namespaces,
-            this.#options.xslUrl,
+            this.#instance.xslUrl ?? undefined,
             this.#instance.type,
           ),
         );
@@ -105,7 +104,7 @@ class TinySiteMapStream extends Transform {
       this.push(
         TinySiteMap._generateHeader(
           this.#instance.namespaces,
-          this.#options.xslUrl,
+          this.#instance.xslUrl ?? undefined,
           this.#instance.type,
         ),
       );
