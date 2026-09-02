@@ -51,7 +51,7 @@ export const blueSkyProtocol = Object.freeze({
 export const discordProtocol = Object.freeze({
   /**
    * Modern Discord Usernames (Handles)
-   * Formato: @username
+   * Format: username
    * @type {UsernameRegexOptions}
    */
   userName: {
@@ -60,8 +60,8 @@ export const discordProtocol = Object.freeze({
     length: [2, 32],
   },
   /**
-   * Código de Menção de Usuário Padrão
-   * Formato: <@USER_ID>
+   * Standard User Mention Code
+   * Format: <@USER_ID>
    * @type {UsernameRegexOptions}
    */
   userMention: {
@@ -71,8 +71,8 @@ export const discordProtocol = Object.freeze({
     domain: '>',
   },
   /**
-   * Código de Menção de Usuário (Apelido/Nickname no Servidor)
-   * Formato: <@!USER_ID>
+   * User Mention Code (Nickname/Server Nickname)
+   * Format: <@!USER_ID>
    * @type {UsernameRegexOptions}
    */
   nicknameMention: {
@@ -82,8 +82,8 @@ export const discordProtocol = Object.freeze({
     domain: '>',
   },
   /**
-   * Código de Menção de Cargo (Role)
-   * Formato: <@&ROLE_ID>
+   * Role Mention Code
+   * Format: <@&ROLE_ID>
    * @type {UsernameRegexOptions}
    */
   roleMention: {
@@ -93,8 +93,8 @@ export const discordProtocol = Object.freeze({
     domain: '>',
   },
   /**
-   * Código de Menção de Canal (Cobre todos os tipos: Texto, Voz, Fórum, Palco, etc.)
-   * Formato: <#CHANNEL_ID>
+   * Channel Mention Code (Covers all types: Text, Voice, Forum, Stage, etc.)
+   * Format: <#CHANNEL_ID>
    * @type {UsernameRegexOptions}
    */
   channelMention: {
@@ -104,8 +104,8 @@ export const discordProtocol = Object.freeze({
     domain: '>',
   },
   /**
-   * Código de Emoji Personalizado Padrão
-   * Formato: <:name:ID>
+   * Standard Custom Emoji Code
+   * Format: <:name:ID>
    * @type {UsernameRegexOptions}
    */
   customEmoji: {
@@ -115,8 +115,8 @@ export const discordProtocol = Object.freeze({
     domainPattern: ':[0-9]{17,22}>',
   },
   /**
-   * Código de Emoji Personalizado Animado
-   * Formato: <a:name:ID>
+   * Animated Custom Emoji Code
+   * Format: <a:name:ID>
    * @type {UsernameRegexOptions}
    */
   animatedEmoji: {
@@ -126,8 +126,8 @@ export const discordProtocol = Object.freeze({
     domainPattern: ':[0-9]{17,22}>',
   },
   /**
-   * Código de Menção de Comandos de Barra (Slash Commands)
-   * Formato: </name:ID> ou </name subcommand:ID>
+   * Slash Command Mention Code
+   * Format: </name:ID> or </name subcommand:ID>
    * @type {UsernameRegexOptions}
    */
   slashCommand: {
