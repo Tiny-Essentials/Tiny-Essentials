@@ -73,6 +73,10 @@
       "require": "./dist/v1/regexp/SegmentExtractor.cjs",
       "import": "./dist/v1/regexp/SegmentExtractor.mjs"
     },
+    "./regexp/UrlDetector": {
+      "require": "./dist/v1/regexp/UrlDetector.cjs",
+      "import": "./dist/v1/regexp/UrlDetector.mjs"
+    },
     "./regexp/Ipv4": {
       "require": "./dist/v1/regexp/Ipv4.cjs",
       "import": "./dist/v1/regexp/Ipv4.mjs"
