@@ -53,7 +53,7 @@ import TinyURLSecurityVerifier from './TinyURLSecurityVerifier.mjs';
  * This class handles URL resolution, root attributes management, and XML escaping to prevent injection.
  */
 class TinySiteMap {
-  /** @type {TinyURLSecurityVerifier} */
+  /** The security verifier used to validate URLs. @type {TinyURLSecurityVerifier} */
   #urlVerifier = new TinyURLSecurityVerifier();
   /** @type {URL} The base URL used for resolving relative paths. */
   #baseUrl;
@@ -558,8 +558,8 @@ class TinySiteMap {
 
   /**
    * Changes the position of an entry within the list.
-   * @param {number} fromIndex - The current index of the entry.
-   * @param {number} toIndex - The new index for the entry.
+   * @param {number} fromIndex - The index of the entry to move.
+   * @param {number} toIndex - The index to move the entry to.
    * @throws {RangeError} If either index is out of bounds.
    */
   moveEntry(fromIndex, toIndex) {
@@ -582,6 +582,10 @@ class TinySiteMap {
     this.#entries = [];
   }
 
+  /**
+   * Gets the URL security verifier.
+   * @returns {TinyURLSecurityVerifier}
+   */
   get urlVerifier() {
     return this.#urlVerifier;
   }
@@ -609,6 +613,7 @@ class TinySiteMap {
   /**
    * Sets the manual namespaces for the sitemap.
    * @param {SitemapNamespace[]} nss - The array of namespaces to set.
+   * @throws {TypeError} If the namespaces array is invalid.
    */
   set namespaces(nss) {
     if (!Array.isArray(nss)) throw new TypeError('namespaces must be an array.');
@@ -652,6 +657,7 @@ class TinySiteMap {
   /**
    * Sets the sitemap entries, validating each one via the addEntry method.
    * @param {SitemapEntry[] | SitemapIndexEntry[]} entries - The entries to set.
+   * @throws {TypeError} If the entries is not an array.
    */
   set entries(entries) {
     if (!Array.isArray(entries)) throw new TypeError('entries must be an array.');
@@ -676,7 +682,7 @@ class TinySiteMap {
   /**
    * Sets the maximum allowed URL size.
    * @param {number} value - The new maximum size.
-   * @throws {TypeError} If the value is not a non-negative finite number.
+   * @throws {TypeError} If the provided value is not a non-negative number.
    */
   set maxResolvedUrlSize(value) {
     if (typeof value !== 'number' || Number.isNaN(value) || !Number.isFinite(value) || value < 0) {
@@ -694,7 +700,7 @@ class TinySiteMap {
   }
 
   /**
-   * Sets whether the 'lastmod' field should be formatted as a simple date (YYYY-MM-DD).
+   * Sets whether the 'lastmod' field should be formatted as a simple date (YYYY-MM-DD) instead of full ISO 8601.
    * @param {boolean} value - True to use YYYY-MM-DD format, false to use full ISO 8601.
    * @throws {TypeError} If the provided value is not a boolean.
    */
@@ -717,8 +723,8 @@ class TinySiteMap {
 
   /**
    * Sets the URL of the XSL stylesheet used to style the XML output.
-   * @param {string|null} value - The XSL stylesheet URL or null.
-   * @throws {TypeError} If the value is provided but is not a string.
+   * @param {string|null} value - The URL of the XSL stylesheet used to style the XML output.
+   * @throws {TypeError} If the value is not a string or null.
    */
   set xslUrl(value) {
     if (value !== null && typeof value !== 'string') {
@@ -731,10 +737,19 @@ class TinySiteMap {
       : null;
   }
 
+  /**
+   * Gets whether the XSL URL is treated as a pathname only.
+   * @returns {boolean}
+   */
   get xslUrlPathnameOnly() {
     return this.#xslUrlPathnameOnly;
   }
 
+  /**
+   * Sets whether the XSL URL is treated as a pathname only.
+   * @param {boolean} value - Sets whether the XSL URL is treated as a pathname only.
+   * @throws {TypeError} If the value is not a boolean.
+   */
   set xslUrlPathnameOnly(value) {
     if (value !== null && typeof value !== 'boolean') {
       throw new TypeError('xslUrlPathnameOnly must be a boolean or null.');
@@ -742,10 +757,18 @@ class TinySiteMap {
     this.#xslUrlPathnameOnly = value;
   }
 
+  /**
+   * Gets the total number of entries in the sitemap.
+   * @returns {number}
+   */
   get entriesSize() {
     return this.#entries.length;
   }
 
+  /**
+   * Gets the total number of namespaces in the sitemap.
+   * @returns {number}
+   */
   get namespacesSize() {
     return this.#namespaces.length;
   }
