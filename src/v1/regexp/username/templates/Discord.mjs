@@ -5,7 +5,7 @@
 /**
  * Discord Protocol
  */
- const Discord = Object.freeze({
+const Discord = Object.freeze({
   /**
    * Modern Discord Usernames (Handles)
    * Format: username

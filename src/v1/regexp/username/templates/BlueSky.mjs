@@ -2,7 +2,6 @@
  * @typedef {import('../jsDoc.mjs').UsernameRegexTemplate} UsernameRegexTemplate
  */
 
-
 /**
  * Bluesky / AT Protocol
  */
@@ -49,7 +48,7 @@ const BlueSky = Object.freeze({
     prefix: '#',
     validValues: '[a-zA-Z0-9_]',
     length: [1, 64],
-  }
+  },
 });
 
 export default BlueSky;

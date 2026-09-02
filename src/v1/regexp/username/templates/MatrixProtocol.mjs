@@ -6,7 +6,7 @@
  * Matrix Protocol (matrix.org)
  * Official Documentation: https://spec.matrix.org/latest/appendices/#identifier-grammar
  */
- const MatrixProtocol = Object.freeze({
+const MatrixProtocol = Object.freeze({
   /**
    * User ID
    * Format: @localpart:domain
