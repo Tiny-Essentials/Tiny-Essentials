@@ -197,6 +197,13 @@ import {
   urlRegex,
   urlStringRegexBuilder,
 } from './regexp/UrlDetector.mjs';
+import {
+  usernameStringRegexBuilder,
+  usernameRegex,
+  isValidUsername,
+  findUsernameRegex,
+  extractUsernames,
+} from './regexp/Login.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
@@ -252,6 +259,11 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  usernameStringRegexBuilder,
+  usernameRegex,
+  isValidUsername,
+  findUsernameRegex,
+  extractUsernames,
   urlStringRegexBuilder,
   urlRegex,
   isValidUrl,
