@@ -188,6 +188,7 @@ import { TinyServiceWorker } from './build/TinyServiceWorker.mjs';
 import { makeSegmentExtractor, segmentExtractorV1 } from './regexp/SegmentExtractor.mjs';
 import { TinyCloner } from './build/TinyCloner.mjs';
 import { TinyHttpResponseRegistry } from './build/TinyHttpResponseRegistry.mjs';
+import { ipv4Regex, isValidIPv4, findIPv4Regex, extractIPsV4 } from './regexp/Ipv4.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
@@ -243,6 +244,10 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  ipv4Regex,
+  isValidIPv4,
+  findIPv4Regex,
+  extractIPsV4,
   getObjTypeRegistry,
   getObjTypeOrder,
   segmentExtractorV1,

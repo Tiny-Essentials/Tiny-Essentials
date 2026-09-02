@@ -16,6 +16,7 @@
     "test:mjs:jsoncolor": "node test/index.mjs colorStringify",
     "test:mjs:ratelimit": "node test/index.mjs rateLimit",
     "test:mjs:levelup": "node test/index.mjs levelUp",
+    "test:mjs:sitemap": "node test/index.mjs sitemap",
     "test:mjs:filemanager": "node test/index.mjs fileManager",
     "test:mjs:i18": "node test/index.mjs i18",
     "fix:prettier": "npm run fix:prettier:src && npm run fix:prettier:build && npm run fix:prettier:test && npm run fix:prettier:rollup.config && npm run fix:prettier:webpack.config && npm run fix:prettier:tiny_fork && npm run fix:prettier:check_exports",
@@ -71,6 +72,10 @@
     "./regexp/SegmentExtractor": {
       "require": "./dist/v1/regexp/SegmentExtractor.cjs",
       "import": "./dist/v1/regexp/SegmentExtractor.mjs"
+    },
+    "./regexp/Ipv4": {
+      "require": "./dist/v1/regexp/Ipv4.cjs",
+      "import": "./dist/v1/regexp/Ipv4.mjs"
     },
     "./basics": {
       "require": "./dist/v1/basics/index.cjs",

@@ -1,3 +1,5 @@
+import { isValidIPv4 } from '../../regexp/Ipv4.mjs';
+
 /**
  * @typedef {string|URL} Href
  * @typedef {string} Protocol
@@ -279,7 +281,7 @@ class TinyURLSecurityVerifier {
   isIPv4Address(href) {
     const url = TinyURLSecurityVerifier.#hrefToUrl(href);
     // Regex for IPv4
-    return /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(url.hostname);
+    return isValidIPv4(url.hostname);
   }
 
   /**
@@ -360,7 +362,7 @@ class TinyURLSecurityVerifier {
     // Iterate through all values in the search parameters
     for (const value of params.values()) {
       // Regex to find a protocol pattern (e.g., "javascript:" or "https:")
-      const match = value.match(/([a-z0-9+.-]+):/ig);
+      const match = value.match(/([a-z0-9+.-]+):/gi);
       let isDangerous = false;
 
       if (match) {
