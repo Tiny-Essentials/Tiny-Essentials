@@ -1,7 +1,8 @@
 /**
  * @typedef {Object} UrlRegexOptions
  * @property {string} [protocol='https?']
- * @property {string} [subdomain='www']
+ * @property {string} [subDomain='']
+ * @property {boolean} [subDomainOptional=true]
  * @property {[number, number]} [nameMaxLength=[1, 256]]
  * @property {[number, number]} [topLevelDomainLength=[1, 6]]
  */
@@ -11,11 +12,12 @@
  */
 export const urlStringRegexBuilder = ({
   protocol = 'https?',
-  subdomain = 'www',
+  subDomain = '',
+  subDomainOptional = true,
   nameMaxLength = [1, 256],
   topLevelDomainLength = [1, 6],
 } = {}) => {
-  return `${protocol}:\\/\\/(${subdomain}\\.)?[-a-zA-Z0-9@:%._\\+~#=]{${String(nameMaxLength[0])},${String(nameMaxLength[1])}}\\.[a-zA-Z0-9()]{${String(topLevelDomainLength[0])},${String(topLevelDomainLength[1])}}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)`;
+  return `${protocol}:\\/\\/${subDomain ? `(${subDomain}\\.)${subDomainOptional ? '?' : ''}` : ''}[-a-zA-Z0-9@:%._\\+~#=]{${String(nameMaxLength[0])},${String(nameMaxLength[1])}}\\.[a-zA-Z0-9()]{${String(topLevelDomainLength[0])},${String(topLevelDomainLength[1])}}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)`;
 };
 
 /**
