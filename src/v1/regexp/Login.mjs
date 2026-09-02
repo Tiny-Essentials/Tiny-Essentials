@@ -23,7 +23,7 @@ const escapeRegExp = (string) => String(string).replace(/[.*+?^${}()|[\]\\]/g, '
  * @param {UsernameRegexOptions} [options]
  * @throws {TypeError} If validation fails.
  */
-const validateOptions = (options) => {
+const validateUsernameOptions = (options) => {
   if (options === undefined) return;
   if (typeof options !== 'object' || options === null) {
     throw new TypeError('Options must be an object.');
@@ -81,7 +81,7 @@ export const usernameStringRegexBuilder = ({
   validValues = '[a-zA-Z0-9_]',
   length = [3, 20],
 } = {}) => {
-  validateOptions({ validValues, length });
+  validateUsernameOptions({ validValues, length });
   return `${validValues}{${String(length[0])},${String(length[1])}}`;
 };
 
@@ -90,7 +90,7 @@ export const usernameStringRegexBuilder = ({
  * @returns {RegExp}
  */
 export function usernameRegex(options) {
-  validateOptions(options);
+  validateUsernameOptions(options);
   const prefix = getPrefix(options);
   const core = usernameStringRegexBuilder(options);
   const domainPart = getDomainPart(options);
@@ -115,7 +115,7 @@ export function isValidUsername(s, options) {
  * @returns {RegExp}
  */
 export function findUsernameRegex(options) {
-  validateOptions(options);
+  validateUsernameOptions(options);
   const prefix = getPrefix(options);
   const core = usernameStringRegexBuilder(options);
   const domainPart = getDomainPart(options);
