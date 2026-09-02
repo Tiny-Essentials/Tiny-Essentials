@@ -3,13 +3,18 @@ const emailPattern = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
 const passwordPattern = '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$';
 
 /**
+ * Transformation applied to the extracted usernames.
+ * @typedef {'lowercase' | 'uppercase' | ((username: string) => string) | null} UsernameTransform
+ */
+
+/**
  * @typedef {Object} UsernameRegexOptions
  * @property {string} [validValues='[a-zA-Z0-9_]'] The allowed characters for the username part.
  * @property {[number, number]} [length=[3, 20]] The [min, max] length of the username part.
  * @property {string} [prefix=null] An optional prefix like '@' or '#'.
  * @property {string} [domain=null] A literal domain string (e.g., '@matrix.org'). Will be escaped automatically.
  * @property {string} [domainPattern=null] A regex pattern for a domain (e.g., '@[a-z0-9.-]+\\.[a-z]{2,}').
- * @property {'lowercase' | 'uppercase' | ((username: string) => string) | null} [transform=null] Optional transformation applied to the extracted usernames.
+ * @property {UsernameTransform} [transform=null] Optional transformation applied to the extracted usernames.
  */
 
 /**
@@ -22,7 +27,7 @@ const escapeRegExp = (string) => String(string).replace(/[.*+?^${}()|[\]\\]/g, '
 /**
  * Applies the requested transformation to a matched string.
  * @param {string} username The matched username string.
- * @param {'lowercase' | 'uppercase' | ((username: string) => string) | null} [transform] The transformation rule.
+ * @param {UsernameTransform} [transform] The transformation rule.
  * @returns {string} The transformed username.
  */
 const applyTransform = (username, transform) => {
