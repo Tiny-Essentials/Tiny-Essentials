@@ -13,13 +13,13 @@ export const matrixProtocol = Object.freeze({
   /** @type {UsernameRegexOptions} */
   userName: {
     prefix: '@',
-    validValues: '[a-z0-9._=-]+',
+    validValues: '[a-z0-9._=-]',
     domainPattern: ':[a-z0-9.-]+\\.[a-z]{2,}',
   },
   /** @type {UsernameRegexOptions} */
   roomName: {
     prefix: '#',
-    validValues: '[a-z0-9._=-]+',
+    validValues: '[a-z0-9._=-]',
     domainPattern: ':[a-z0-9.-]+\\.[a-z]{2,}',
   },
 });
@@ -31,7 +31,7 @@ export const blueSkyProtocol = Object.freeze({
   /** @type {UsernameRegexOptions} */
   handle: {
     prefix: '@',
-    validValues: '[a-zA-Z0-9-]+',
+    validValues: '[a-zA-Z0-9-]',
     length: [1, 63],
     domainPattern: '(?:\\.[a-zA-Z0-9-]+)+',
   },
