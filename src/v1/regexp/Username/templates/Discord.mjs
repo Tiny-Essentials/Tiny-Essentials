@@ -12,6 +12,7 @@ const DiscordRegex = Object.freeze({
    * @type {UsernameRegexTemplate}
    */
   userName: {
+    start: '(?<!<)',
     prefix: '@',
     validValues: '[a-z0-9_.]',
     length: [2, 32],

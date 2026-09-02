@@ -8,6 +8,8 @@
  * @typedef {Object} UsernameRegexOptions
  * @property {string} [validValues='[a-zA-Z0-9_]'] The allowed characters for the username part.
  * @property {[number, number]} [length=[3, 20]] The [min, max] length of the username part.
+ * @property {string} [start=null] A regex pattern defining the required characters at the start of the username.
+ * @property {string} [end=null] A regex pattern defining the required characters at the end of the username.
  * @property {string} [prefix=null] An optional prefix like '@' or '#'.
  * @property {string} [domain=null] A literal domain string (e.g., '@matrix.org'). Will be escaped automatically.
  * @property {string} [domainPattern=null] A regex pattern for a domain (e.g., '@[a-z0-9.-]+\\.[a-z]{2,}').
@@ -61,7 +63,10 @@ const validateUsernameOptions = (options) => {
  * @param {UsernameRegexOptions} [options] The options containing domain or domainPattern.
  * @returns {string} The regex-ready domain portion as a string.
  */
-function getDomainPart({ domain, domainPattern } = {}) {
+function getDomainPart({ domain, domainPattern, end } = {}) {
+  if (end !== undefined && typeof end !== 'string') {
+    throw new TypeError('The "end" property must be a string.');
+  }
   if (domain !== undefined && typeof domain !== 'string') {
     throw new TypeError('The "domain" property must be a string.');
   }
@@ -71,11 +76,11 @@ function getDomainPart({ domain, domainPattern } = {}) {
 
   // Priority: domainPattern (regex) > domain (literal)
   if (domainPattern) {
-    return `(?:${domainPattern})`;
+    return `(?:${domainPattern})${end ?? ''}`;
   } else if (domain) {
-    return `(?:${escapeRegExp(domain)})`;
+    return `(?:${escapeRegExp(domain)})${end ?? ''}`;
   }
-  return '';
+  return end ?? '';
 }
 
 /**
@@ -83,11 +88,14 @@ function getDomainPart({ domain, domainPattern } = {}) {
  * @param {UsernameRegexOptions} [options] The options containing the prefix.
  * @returns {string} The escaped prefix string.
  */
-function getPrefix({ prefix } = {}) {
+function getPrefix({ prefix, start } = {}) {
+  if (start !== undefined && typeof start !== 'string') {
+    throw new TypeError('The "start" property must be a string.');
+  }
   if (prefix !== undefined && typeof prefix !== 'string') {
     throw new TypeError('The "prefix" property must be a string.');
   }
-  return prefix ? escapeRegExp(prefix) : '';
+  return `${start ?? ''}${prefix ? escapeRegExp(prefix) : ''}`;
 }
 
 /**
