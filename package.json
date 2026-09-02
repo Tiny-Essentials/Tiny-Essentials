@@ -77,10 +77,6 @@
       "require": "./dist/v1/regexp/UrlDetector.cjs",
       "import": "./dist/v1/regexp/UrlDetector.mjs"
     },
-    "./regexp/LoginRegexTemplates": {
-      "require": "./dist/v1/regexp/LoginRegexTemplates.cjs",
-      "import": "./dist/v1/regexp/LoginRegexTemplates.mjs"
-    },
     "./regexp/Ipv4": {
       "require": "./dist/v1/regexp/Ipv4.cjs",
       "import": "./dist/v1/regexp/Ipv4.mjs"
