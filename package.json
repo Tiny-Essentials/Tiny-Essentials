@@ -77,6 +77,10 @@
       "require": "./dist/v1/regexp/Ipv4.cjs",
       "import": "./dist/v1/regexp/Ipv4.mjs"
     },
+    "./regexp/Ipv6": {
+      "require": "./dist/v1/regexp/Ipv6.cjs",
+      "import": "./dist/v1/regexp/Ipv6.mjs"
+    },
     "./basics": {
       "require": "./dist/v1/basics/index.cjs",
       "import": "./dist/v1/basics/index.mjs"
