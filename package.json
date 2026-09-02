@@ -97,6 +97,10 @@
       "require": "./dist/v1/regexp/Username/templates/Discord.cjs",
       "import": "./dist/v1/regexp/Username/templates/Discord.mjs"
     },
+    "./regexp/Username/templates/deprecated/Discord": {
+      "require": "./dist/v1/regexp/Username/templates/deprecated/Discord.cjs",
+      "import": "./dist/v1/regexp/Username/templates/deprecated/Discord.mjs"
+    },
     "./regexp/Username/templates/MatrixProtocol": {
       "require": "./dist/v1/regexp/Username/templates/MatrixProtocol.cjs",
       "import": "./dist/v1/regexp/Username/templates/MatrixProtocol.mjs"

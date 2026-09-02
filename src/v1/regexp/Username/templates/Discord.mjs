@@ -7,17 +7,6 @@
  */
 const DiscordRegex = Object.freeze({
   /**
-   * Modern Discord Usernames (Handles)
-   * Format: username
-   * @type {UsernameRegexTemplate}
-   */
-  userName: {
-    start: '(?<!<)',
-    prefix: '@',
-    validValues: '[a-z0-9_.]',
-    length: [2, 32],
-  },
-  /**
    * Standard User Mention Code
    * Format: <@USER_ID>
    * @type {UsernameRegexTemplate}
