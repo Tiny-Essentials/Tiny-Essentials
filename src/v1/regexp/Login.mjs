@@ -25,8 +25,8 @@ const escapeRegExp = (string) => String(string).replace(/[.*+?^${}()|[\]\\]/g, '
  */
 const validateUsernameOptions = (options) => {
   if (options === undefined) return;
-  if (typeof options !== 'object' || options === null) {
-    throw new TypeError('Options must be an object.');
+  if (typeof options !== 'object' || options === null || Array.isArray(options)) {
+    throw new TypeError('Options must be a plain object.');
   }
   if (options.validValues !== undefined && typeof options.validValues !== 'string') {
     throw new TypeError('The "validValues" property must be a string.');
@@ -38,6 +38,14 @@ const validateUsernameOptions = (options) => {
       typeof options.length[1] !== 'number'
     ) {
       throw new TypeError('The "length" property must be an array of two numbers.');
+    }
+    if (options.length[0] > options.length[1]) {
+      throw new RangeError(
+        'The minimum length (length[0]) cannot be greater than the maximum length (length[1]).',
+      );
+    }
+    if (options.length[0] < 0) {
+      throw new RangeError('The length cannot be negative.');
     }
   }
   if (options.prefix !== undefined && typeof options.prefix !== 'string') {
@@ -82,7 +90,7 @@ export const usernameStringRegexBuilder = ({
   length = [3, 20],
 } = {}) => {
   validateUsernameOptions({ validValues, length });
-  return `${validValues}{${String(length[0])},${String(length[1])}}`;
+  return `(?:${validValues}){${String(length[0])},${String(length[1])}}`;
 };
 
 /**
