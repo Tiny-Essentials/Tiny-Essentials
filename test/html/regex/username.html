@@ -1,291 +1,366 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Username Regex Tester | Professional Debugger</title>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --panel-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
-            --accent: #38bdf8;
-            --accent-hover: #0ea5e9;
-            --border: #334155;
-            --success: #22c55e;
-            --error: #ef4444;
-            --warning: #f59e0b;
+      :root {
+        --bg-color: #0f172a;
+        --panel-bg: #1e293b;
+        --text-main: #f8fafc;
+        --text-dim: #94a3b8;
+        --accent: #38bdf8;
+        --accent-hover: #0ea5e9;
+        --border: #334155;
+        --success: #22c55e;
+        --error: #ef4444;
+        --warning: #f59e0b;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          'Inter',
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        line-height: 1.5;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* Header */
+      header {
+        padding: 1rem 2rem;
+        background-color: var(--panel-bg);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      header h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--accent);
+      }
+      .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        background: var(--border);
+      }
+
+      /* Main Layout */
+      main {
+        display: grid;
+        grid-template-columns: 350px 1fr 400px;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      /* Sidebar Controls */
+      .sidebar {
+        padding: 1.5rem;
+        background-color: var(--panel-bg);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        overflow-y: auto;
+      }
+
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-dim);
+      }
+
+      select,
+      textarea,
+      button {
+        padding: 0.6rem;
+        border-radius: 0.375rem;
+        border: 1px solid var(--border);
+        background: var(--bg-color);
+        color: var(--text-main);
+        font-size: 0.9rem;
+        width: 100%;
+      }
+
+      button {
+        background-color: var(--accent);
+        color: var(--bg-color);
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: background 0.2s;
+        margin-top: 0.5rem;
+      }
+
+      button:hover {
+        background-color: var(--accent-hover);
+      }
+      button.secondary {
+        background-color: transparent;
+        border: 1px solid var(--accent);
+        color: var(--accent);
+      }
+      button.secondary:hover {
+        background-color: var(--accent);
+        color: var(--bg-color);
+      }
+
+      /* Editor Area */
+      .editor-container {
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem;
+        gap: 1rem;
+      }
+
+      textarea#testInput {
+        flex: 1;
+        font-family: 'Fira Code', 'Courier New', monospace;
+        font-size: 1rem;
+        resize: none;
+        padding: 1rem;
+        line-height: 1.6;
+      }
+
+      /* Results Area */
+      .results-container {
+        padding: 1.5rem;
+        background-color: var(--panel-bg);
+        border-left: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+
+      #resultsList {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .match-card {
+        background: var(--bg-color);
+        border: 1px solid var(--border);
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        animation: slideIn 0.2s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(20px);
+          opacity: 0;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            line-height: 1.5;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
+        to {
+          transform: translateX(0);
+          opacity: 1;
         }
+      }
 
-        /* Header */
-        header {
-            padding: 1rem 2rem;
-            background-color: var(--panel-bg);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+      .match-card .tag {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--accent);
+        display: block;
+        margin-bottom: 0.25rem;
+      }
 
-        header h1 { font-size: 1.25rem; font-weight: 600; color: var(--accent); }
-        .status-badge { font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: 1rem; background: var(--border); }
+      .match-card .value {
+        font-family: 'Fira Code', monospace;
+        font-size: 0.9rem;
+        word-break: break-all;
+      }
 
-        /* Main Layout */
-        main {
-            display: grid;
-            grid-template-columns: 350px 1fr 400px;
-            flex: 1;
-            overflow: hidden;
-        }
+      .empty-state {
+        text-align: center;
+        color: var(--text-dim);
+        margin-top: 3rem;
+        font-style: italic;
+      }
 
-        /* Sidebar Controls */
-        .sidebar {
-            padding: 1.5rem;
-            background-color: var(--panel-bg);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            overflow-y: auto;
-        }
+      input[type='text'] {
+        padding: 0.6rem;
+        border-radius: 0.375rem;
+        border: 1px solid var(--border);
+        background: var(--bg-color);
+        color: var(--text-main);
+        font-size: 0.9rem;
+        width: 100%;
+        outline: none;
+      }
 
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
+      input[type='text']:focus {
+        border-color: var(--accent);
+      }
 
-        label { font-size: 0.875rem; font-weight: 500; color: var(--text-dim); }
+      .sandbox-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding-top: 0.5rem;
+      }
 
-        select, textarea, button {
-            padding: 0.6rem;
-            border-radius: 0.375rem;
-            border: 1px solid var(--border);
-            background: var(--bg-color);
-            color: var(--text-main);
-            font-size: 0.9rem;
-            width: 100%;
-        }
-
-        button {
-            background-color: var(--accent);
-            color: var(--bg-color);
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            transition: background 0.2s;
-            margin-top: 0.5rem;
-        }
-
-        button:hover { background-color: var(--accent-hover); }
-        button.secondary { background-color: transparent; border: 1px solid var(--accent); color: var(--accent); }
-        button.secondary:hover { background-color: var(--accent); color: var(--bg-color); }
-
-        /* Editor Area */
-        .editor-container {
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem;
-            gap: 1rem;
-        }
-
-        textarea#testInput {
-            flex: 1;
-            font-family: 'Fira Code', 'Courier New', monospace;
-            font-size: 1rem;
-            resize: none;
-            padding: 1rem;
-            line-height: 1.6;
-        }
-
-        /* Results Area */
-        .results-container {
-            padding: 1.5rem;
-            background-color: var(--panel-bg);
-            border-left: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .results-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        #resultsList {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .match-card {
-            background: var(--bg-color);
-            border: 1px solid var(--border);
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            animation: slideIn 0.2s ease-out;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(20px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        .match-card .tag {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            font-weight: 700;
-            color: var(--accent);
-            display: block;
-            margin-bottom: 0.25rem;
-        }
-
-        .match-card .value {
-            font-family: 'Fira Code', monospace;
-            font-size: 0.9rem;
-            word-break: break-all;
-        }
-
-        .empty-state {
-            text-align: center;
-            color: var(--text-dim);
-            margin-top: 3rem;
-            font-style: italic;
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-color); }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg-color);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 4px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <header>
+      <h1>Username Regex <span style="font-weight: 300; color: var(--text-dim)">Debugger</span></h1>
+      <div class="status-badge" id="status">Ready</div>
+    </header>
 
-<header>
-    <h1>Username Regex <span style="font-weight: 300; color: var(--text-dim);">Debugger</span></h1>
-    <div class="status-badge" id="status">Ready</div>
-</header>
-
-<main>
-    <!-- Sidebar: Configuration -->
-    <section class="sidebar">
+    <main>
+      <!-- Sidebar: Configuration -->
+      <section class="sidebar">
         <div class="control-group">
-            <label for="protocolSelect">Protocol Template</label>
-            <select id="protocolSelect">
-                <option value="all">-- Run All Protocols --</option>
-                <optgroup label="Default" id="opt-default"></optgroup>
-                <optgroup label="BlueSky / AT" id="opt-bluesky"></optgroup>
-                <optgroup label="Discord" id="opt-discord"></optgroup>
-                <optgroup label="Matrix" id="opt-matrix"></optgroup>
-            </select>
+          <label for="protocolSelect">Protocol Template</label>
+          <select id="protocolSelect">
+            <option value="all">-- Run All Protocols --</option>
+            <optgroup label="Default" id="opt-default"></optgroup>
+            <optgroup label="BlueSky / AT" id="opt-bluesky"></optgroup>
+            <optgroup label="Discord" id="opt-discord"></optgroup>
+            <optgroup label="Matrix" id="opt-matrix"></optgroup>
             <option value="custom">Custom (Manual Config)</option>
-            </select>
+          </select>
         </div>
 
         <div class="control-group">
-            <label for="transformSelect">Transformation</label>
-            <select id="transformSelect">
-                <option value="null">None</option>
-                <option value="lowercase">lowercase</option>
-                <option value="uppercase">uppercase</option>
-            </select>
+          <label for="transformSelect">Transformation</label>
+          <select id="transformSelect">
+            <option value="null">None</option>
+            <option value="lowercase">lowercase</option>
+            <option value="uppercase">uppercase</option>
+          </select>
         </div>
 
-        <hr style="border: 0; border-top: 1px solid var(--border);">
+        <hr style="border: 0; border-top: 1px solid var(--border)" />
 
         <div class="control-group">
-            <label>Quick Test Data</label>
-            <button class="secondary" onclick="loadExample('bluesky')">Load BlueSky Example</button>
-            <button class="secondary" onclick="loadExample('discord')">Load Discord Example</button>
-            <button class="secondary" onclick="loadExample('matrix')">Load Matrix Example</button>
+          <label>Quick Test Data</label>
+          <button class="secondary" onclick="loadExample('bluesky')">Load BlueSky Example</button>
+          <button class="secondary" onclick="loadExample('discord')">Load Discord Example</button>
+          <button class="secondary" onclick="loadExample('matrix')">Load Matrix Example</button>
         </div>
 
         <button id="runBtn">Run Extraction</button>
-    </section>
+      </section>
 
-    <!-- Editor: Input -->
-    <section class="editor-container">
+      <!-- Editor: Input -->
+      <section class="editor-container">
         <label>Input Text to Scan</label>
-        <textarea id="testInput" placeholder="Enter text containing usernames to test..."></textarea>
-    </section>
+        <textarea
+          id="testInput"
+          placeholder="Enter text containing usernames to test..."
+        ></textarea>
+      </section>
 
-    <!-- Results: Output -->
-    <section class="results-container">
+      <!-- Results: Output -->
+      <section class="results-container">
         <div class="results-header">
-            <label>Extraction Results</label>
-            <span id="matchCount" style="font-size: 0.75rem; color: var(--text-dim);">0 matches</span>
+          <label>Extraction Results</label>
+          <span id="matchCount" style="font-size: 0.75rem; color: var(--text-dim)">0 matches</span>
         </div>
         <div id="resultsList">
-            <div class="empty-state">No matches found. Run the extraction to see results.</div>
+          <div class="empty-state">No matches found. Run the extraction to see results.</div>
         </div>
-    </section>
-</main>
+      </section>
+    </main>
 
-<script type="module">
-    /** 
-     * IMPORTING YOUR MODULES
-     * Note: The paths must match your local directory structure.
-     */
-    import { extractUsernames } from '/src/v1/regexp/Username/index.mjs';
-    import { BlueSkyRegex } from '/src/v1/regexp/Username/templates/BlueSky.mjs';
-    import { DiscordRegex } from '/src/v1/regexp/Username/templates/Discord.mjs';
-    import { MatrixProtocolRegex } from '/src/v1/regexp/Username/templates/MatrixProtocol.mjs';
+    <script type="module">
+      /**
+       * IMPORTING YOUR MODULES
+       * Note: The paths must match your local directory structure.
+       */
+      import { extractUsernames } from '/src/v1/regexp/Username/index.mjs';
+      import { BlueSkyRegex } from '/src/v1/regexp/Username/templates/BlueSky.mjs';
+      import { DiscordRegex } from '/src/v1/regexp/Username/templates/Discord.mjs';
+      import { MatrixProtocolRegex } from '/src/v1/regexp/Username/templates/MatrixProtocol.mjs';
 
-    // DOM Elements
-    const testInput = document.getElementById('testInput');
-    const runBtn = document.getElementById('runBtn');
-    const resultsList = document.getElementById('resultsList');
-    const matchCount = document.getElementById('matchCount');
-    const protocolSelect = document.getElementById('protocolSelect');
-    const transformSelect = document.getElementById('transformSelect');
-    const status = document.getElementById('status');
+      // DOM Elements
+      const testInput = document.getElementById('testInput');
+      const runBtn = document.getElementById('runBtn');
+      const resultsList = document.getElementById('resultsList');
+      const matchCount = document.getElementById('matchCount');
+      const protocolSelect = document.getElementById('protocolSelect');
+      const transformSelect = document.getElementById('transformSelect');
+      const status = document.getElementById('status');
 
-    // Populate Select Options
-    const populateOptions = () => {
+      // Populate Select Options
+      const populateOptions = () => {
         const optDF = document.getElementById('opt-default');
         const optBS = document.getElementById('opt-bluesky');
         const optDC = document.getElementById('opt-discord');
         const optMX = document.getElementById('opt-matrix');
 
         optDF.appendChild(new Option('default', `default`));
-        Object.keys(BlueSkyRegex).forEach(k => optBS.appendChild(new Option(k, `bsky:${k}`)));
-        Object.keys(DiscordRegex).forEach(k => optDC.appendChild(new Option(k, `discord:${k}`)));
-        Object.keys(MatrixProtocolRegex).forEach(k => optMX.appendChild(new Option(k, `matrix:${k}`)));
-    };
+        Object.keys(BlueSkyRegex).forEach((k) => optBS.appendChild(new Option(k, `bsky:${k}`)));
+        Object.keys(DiscordRegex).forEach((k) => optDC.appendChild(new Option(k, `discord:${k}`)));
+        Object.keys(MatrixProtocolRegex).forEach((k) =>
+          optMX.appendChild(new Option(k, `matrix:${k}`)),
+        );
+      };
 
-    // Test Data
-    const examples = {
-        bluesky: "Check my profile @yasmin.pony.house or my DID did:plc:12345abc. Also look at #hashtag!",
-        discord: "Mention me <@123456789012345678> or check the channel <#123456789012345678>. Use @username or <@!123456789012345678>.",
-        matrix: "Hello @yasmin:pony.house! Join my room #general:pony.house or check event $abc123def456:pony.house."
-    };
+      // Test Data
+      const examples = {
+        bluesky:
+          'Check my profile @yasmin.pony.house or my DID did:plc:12345abc. Also look at #hashtag!',
+        discord:
+          'Mention me <@123456789012345678> or check the channel <#123456789012345678>. Use @username or <@!123456789012345678>.',
+        matrix:
+          'Hello @yasmin:pony.house! Join my room #general:pony.house or check event $abc123def456:pony.house.',
+      };
 
-    window.loadExample = (key) => {
+      window.loadExample = (key) => {
         testInput.value = examples[key];
         runExtraction();
-    };
+      };
 
-    // Core Logic
-    async function runExtraction() {
+      // Core Logic
+      async function runExtraction() {
         const text = testInput.value;
         const protocolVal = protocolSelect.value;
         const transformVal = transformSelect.value === 'null' ? null : transformSelect.value;
@@ -297,85 +372,86 @@
 
         // Use setTimeout to allow UI to update "Scanning..." before heavy work
         setTimeout(() => {
-            try {
-                let allMatches = [];
+          try {
+            let allMatches = [];
 
-                // Helper to process a specific template
-                const processTemplate = (template, label) => {
-                    try {
-                        const extracted = extractUsernames(text, { ...template, transform: transformVal });
-                        if (extracted.length > 0) {
-                            allMatches.push({ label, values: extracted });
-                        }
-                    } catch (e) {
-                        console.error(`Error in template ${label}:`, e);
-                    }
-                };
-
-                if (protocolVal === 'all') {
-                    // BlueSky
-                    Object.entries(BlueSkyRegex).forEach(([k, v]) => processTemplate(v, `BlueSky: ${k}`));
-                    // Discord
-                    Object.entries(DiscordRegex).forEach(([k, v]) => processTemplate(v, `Discord: ${k}`));
-                    // Matrix
-                    Object.entries(MatrixProtocolRegex).forEach(([k, v]) => processTemplate(v, `Matrix: ${k}`));
-                } else if (protocolVal.includes(':')) {
-                    const [proto, key] = protocolVal.split(':');
-                    let template;
-                    if (proto === 'bsky') template = BlueSkyRegex[key];
-                    if (proto === 'discord') template = DiscordRegex[key];
-                    if (proto === 'matrix') template = MatrixProtocolRegex[key];
-                    
-                    if (template) {
-                        const extracted = extractUsernames(text, { ...template, transform: transformVal });
-                        if (extracted.length > 0) {
-                            allMatches.push({ label: protocolVal.replace(':', ' '), values: extracted });
-                        }
-                    }
-                } else if (protocolVal === 'default') {
-                    processTemplate({ prefix: '@' }, `Default`);
+            // Helper to process a specific template
+            const processTemplate = (template, label) => {
+              try {
+                const extracted = extractUsernames(text, { ...template, transform: transformVal });
+                if (extracted.length > 0) {
+                  allMatches.push({ label, values: extracted });
                 }
+              } catch (e) {
+                console.error(`Error in template ${label}:`, e);
+              }
+            };
 
-                renderResults(allMatches);
-                status.textContent = 'Ready';
-                status.style.color = 'var(--success)';
-            } catch (err) {
-                console.error(err);
-                status.textContent = 'Error';
-                status.style.color = 'var(--error)';
-                resultsList.innerHTML = `<div class="empty-state" style="color: var(--error)">Error: ${err.message}</div>`;
+            if (protocolVal === 'all') {
+              // BlueSky
+              Object.entries(BlueSkyRegex).forEach(([k, v]) => processTemplate(v, `BlueSky: ${k}`));
+              // Discord
+              Object.entries(DiscordRegex).forEach(([k, v]) => processTemplate(v, `Discord: ${k}`));
+              // Matrix
+              Object.entries(MatrixProtocolRegex).forEach(([k, v]) =>
+                processTemplate(v, `Matrix: ${k}`),
+              );
+            } else if (protocolVal.includes(':')) {
+              const [proto, key] = protocolVal.split(':');
+              let template;
+              if (proto === 'bsky') template = BlueSkyRegex[key];
+              if (proto === 'discord') template = DiscordRegex[key];
+              if (proto === 'matrix') template = MatrixProtocolRegex[key];
+
+              if (template) {
+                const extracted = extractUsernames(text, { ...template, transform: transformVal });
+                if (extracted.length > 0) {
+                  allMatches.push({ label: protocolVal.replace(':', ' '), values: extracted });
+                }
+              }
+            } else if (protocolVal === 'default') {
+              processTemplate({ prefix: '@' }, `Default`);
             }
-        }, 50);
-    }
 
-    function renderResults(matchGroups) {
+            renderResults(allMatches);
+            status.textContent = 'Ready';
+            status.style.color = 'var(--success)';
+          } catch (err) {
+            console.error(err);
+            status.textContent = 'Error';
+            status.style.color = 'var(--error)';
+            resultsList.innerHTML = `<div class="empty-state" style="color: var(--error)">Error: ${err.message}</div>`;
+          }
+        }, 50);
+      }
+
+      function renderResults(matchGroups) {
         if (matchGroups.length === 0) {
-            resultsList.innerHTML = '<div class="empty-state">No matches found.</div>';
-            matchCount.textContent = '0 matches';
-            return;
+          resultsList.innerHTML = '<div class="empty-state">No matches found.</div>';
+          matchCount.textContent = '0 matches';
+          return;
         }
 
         let total = 0;
-        matchGroups.forEach(group => {
-            const groupDiv = document.createElement('div');
-            groupDiv.innerHTML = `<div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 10px; margin-bottom: 5px;">[${group.label}]</div>`;
-            
-            group.values.forEach(val => {
-                total++;
-                const card = document.createElement('div');
-                card.className = 'match-card';
-                card.innerHTML = `<span class="value">${val}</span>`;
-                groupDiv.appendChild(card);
-            });
-            resultsList.appendChild(groupDiv);
+        matchGroups.forEach((group) => {
+          const groupDiv = document.createElement('div');
+          groupDiv.innerHTML = `<div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 10px; margin-bottom: 5px;">[${group.label}]</div>`;
+
+          group.values.forEach((val) => {
+            total++;
+            const card = document.createElement('div');
+            card.className = 'match-card';
+            card.innerHTML = `<span class="value">${val}</span>`;
+            groupDiv.appendChild(card);
+          });
+          resultsList.appendChild(groupDiv);
         });
 
         matchCount.textContent = `${total} matches found`;
-    }
+      }
 
-    runBtn.addEventListener('click', runExtraction);
-    populateOptions();
-</script>
-
-</body>
+      runBtn.addEventListener('click', runExtraction);
+      populateOptions();
+    </script>
+  </body>
 </html>
