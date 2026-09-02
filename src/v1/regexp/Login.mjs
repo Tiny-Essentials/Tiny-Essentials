@@ -8,6 +8,7 @@ const passwordPattern = '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d
  */
 
 /**
+ * Configuration options for constructing username regular expressions.
  * @typedef {Object} UsernameRegexOptions
  * @property {string} [validValues='[a-zA-Z0-9_]'] The allowed characters for the username part.
  * @property {[number, number]} [length=[3, 20]] The [min, max] length of the username part.
@@ -19,16 +20,16 @@ const passwordPattern = '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d
 
 /**
  * Escapes special regex characters to be used in a literal string.
- * @param {string} string
- * @returns {string}
+ * @param {string} string The string to be escaped.
+ * @returns {string} The escaped string.
  */
 const escapeRegExp = (string) => String(string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
  * Applies the requested transformation to a matched string.
  * @param {string} username The matched username string.
- * @param {UsernameTransform} [transform] The transformation rule.
- * @returns {string} The transformed username.
+ * @param {UsernameTransform} [transform] The transformation rule to apply.
+ * @returns {string} The transformed username string.
  */
 const applyTransform = (username, transform) => {
   // Validation for the new transform property deeply inspecting its value
@@ -47,8 +48,8 @@ const applyTransform = (username, transform) => {
 };
 
 /**
- * Validates the UsernameRegexOptions object deeply.
- * @param {UsernameRegexOptions} [options]
+ * Validates the UsernameRegexOptions object for correct types and structure.
+ * @param {UsernameRegexOptions} [options] The options object to validate.
  * @throws {TypeError} If validation fails due to wrong types.
  * @throws {RangeError} If validation fails due to out-of-bounds values.
  */
@@ -60,8 +61,9 @@ const validateUsernameOptions = (options) => {
 };
 
 /**
- * @param {UsernameRegexOptions} [options]
- * @returns {string}
+ * Generates the domain portion of a regular expression.
+ * @param {UsernameRegexOptions} [options] The options containing domain or domainPattern.
+ * @returns {string} The regex-ready domain portion as a string.
  */
 function getDomainPart({ domain, domainPattern } = {}) {
   if (domain !== undefined && typeof domain !== 'string') {
@@ -81,8 +83,9 @@ function getDomainPart({ domain, domainPattern } = {}) {
 }
 
 /**
- * @param {UsernameRegexOptions} [options]
- * @returns {string}
+ * Generates the prefix portion of a regular expression.
+ * @param {UsernameRegexOptions} [options] The options containing the prefix.
+ * @returns {string} The escaped prefix string.
  */
 function getPrefix({ prefix } = {}) {
   if (prefix !== undefined && typeof prefix !== 'string') {
@@ -92,8 +95,9 @@ function getPrefix({ prefix } = {}) {
 }
 
 /**
- * @param {UsernameRegexOptions} [options]
- * @returns {string}
+ * Builds the core part of a username regular expression based on character rules and length.
+ * @param {UsernameRegexOptions} [options] The options for the core pattern.
+ * @returns {string} The regex string for the core username part.
  */
 export const usernameStringRegexBuilder = ({
   validValues = '[a-zA-Z0-9_]',
@@ -122,8 +126,9 @@ export const usernameStringRegexBuilder = ({
 };
 
 /**
- * @param {UsernameRegexOptions} [options]
- * @returns {RegExp}
+ * Constructs a complete regular expression for matching a username.
+ * @param {UsernameRegexOptions} [options] The options for constructing the regex.
+ * @returns {RegExp} The constructed regular expression object.
  */
 export function usernameRegex(options) {
   validateUsernameOptions(options);
@@ -134,10 +139,11 @@ export function usernameRegex(options) {
 }
 
 /**
- * @param {string} s
- * @param {UsernameRegexOptions} [options]
- * @returns {boolean}
- * @throws {TypeError}
+ * Validates whether a string matches the specified username pattern.
+ * @param {string} s The input string to validate.
+ * @param {UsernameRegexOptions} [options] The regex construction options.
+ * @returns {boolean} True if the string is a valid username, false otherwise.
+ * @throws {TypeError} If the input is not a string.
  */
 export function isValidUsername(s, options) {
   if (typeof s !== 'string') {
@@ -147,8 +153,9 @@ export function isValidUsername(s, options) {
 }
 
 /**
- * @param {UsernameRegexOptions} [options]
- * @returns {RegExp}
+ * Generates a global regular expression to find usernames within a text.
+ * @param {UsernameRegexOptions} [options] The options for the regex.
+ * @returns {RegExp} The global regular expression for finding usernames.
  */
 export function findUsernameRegex(options) {
   validateUsernameOptions(options);
@@ -166,10 +173,11 @@ export function findUsernameRegex(options) {
 }
 
 /**
- * @param {string} text
- * @param {UsernameRegexOptions} [options]
- * @returns {string[]}
- * @throws {TypeError}
+ * Extracts usernames from a text and applies optional transformations.
+ * @param {string} text The text to search through.
+ * @param {UsernameRegexOptions} [options] The options for extraction.
+ * @returns {string[]} An array of extracted and transformed usernames.
+ * @throws {TypeError} If the input text is not a string.
  */
 export function extractUsernames(text, options) {
   if (typeof text !== 'string') {

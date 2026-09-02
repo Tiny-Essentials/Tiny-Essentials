@@ -1,8 +1,10 @@
 /**
+ * Represents the type for transformations applied to extracted usernames.
  * @typedef {import('./Login.mjs').UsernameTransform} UsernameTransform
  */
 
 /**
+ * Configuration options for constructing username regular expressions.
  * @typedef {Object} UsernameRegexOptions
  * @property {string} validValues The allowed characters for the username part.
  * @property {[number, number]} [length] The [min, max] length of the username part.
