@@ -5,7 +5,7 @@
 /**
  * Bluesky / AT Protocol
  */
-const BlueSky = Object.freeze({
+const BlueSkyRegex = Object.freeze({
   /**
    * User Identifier (Handle)
    * Format: @user.bsky.social (or custom domains)
@@ -51,4 +51,4 @@ const BlueSky = Object.freeze({
   },
 });
 
-export default BlueSky;
+export default BlueSkyRegex;

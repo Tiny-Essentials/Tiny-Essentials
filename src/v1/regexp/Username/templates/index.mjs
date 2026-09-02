@@ -1,5 +1,5 @@
-import BlueSky from './BlueSky.mjs';
-import Discord from './Discord.mjs';
-import MatrixProtocol from './MatrixProtocol.mjs';
+import BlueSkyRegex from './BlueSky.mjs';
+import DiscordRegex from './Discord.mjs';
+import MatrixProtocolRegex from './MatrixProtocol.mjs';
 
-export { BlueSky, Discord, MatrixProtocol };
+export { BlueSkyRegex, DiscordRegex, MatrixProtocolRegex };

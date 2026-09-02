@@ -5,7 +5,7 @@
 /**
  * Discord Protocol
  */
-const Discord = Object.freeze({
+const DiscordRegex = Object.freeze({
   /**
    * Modern Discord Usernames (Handles)
    * Format: username
@@ -95,4 +95,4 @@ const Discord = Object.freeze({
   },
 });
 
-export default Discord;
+export default DiscordRegex;

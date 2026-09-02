@@ -6,7 +6,7 @@
  * Matrix Protocol (matrix.org)
  * Official Documentation: https://spec.matrix.org/latest/appendices/#identifier-grammar
  */
-const MatrixProtocol = Object.freeze({
+const MatrixProtocolRegex = Object.freeze({
   /**
    * User ID
    * Format: @localpart:domain
@@ -68,4 +68,4 @@ const MatrixProtocol = Object.freeze({
   },
 });
 
-export default MatrixProtocol;
+export default MatrixProtocolRegex;
