@@ -19,7 +19,9 @@ export function ipv4Regex() {
  * @returns {boolean} - True if the string is a valid IPv4 address, false otherwise.
  */
 export function isValidIPv4(s) {
-  if (typeof s !== 'string') return false;
+  if (typeof s !== 'string') {
+    throw new TypeError('The input must be a string.');
+  }
   return ipv4Regex().test(s);
 }
 
@@ -39,5 +41,8 @@ export function findIPv4Regex() {
  * @returns {RegExpMatchArray | null} - An array of all matched IP addresses, or null if no matches are found.
  */
 export function extractIPsV4(text) {
+  if (typeof text !== 'string') {
+    throw new TypeError('The input must be a string.');
+  }
   return text.match(findIPv4Regex());
 }
