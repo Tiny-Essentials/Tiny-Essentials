@@ -1,9 +1,14 @@
 /**
+ * @typedef {import('./Login.mjs').UsernameTransform} UsernameTransform
+ */
+
+/**
  * @typedef {Object} UsernameRegexOptions
  * @property {string} validValues The allowed characters for the username part.
  * @property {[number, number]} [length] The [min, max] length of the username part.
  * @property {string} prefix An prefix like '@' or '#'.
  * @property {string} domainPattern A regex pattern for a domain.
+ * @property {UsernameTransform} [transform=null] Optional transformation applied to the extracted usernames.
  */
 
 /**
@@ -19,7 +24,7 @@ export const matrixProtocol = Object.freeze({
   /** @type {UsernameRegexOptions} */
   roomName: {
     prefix: '#',
-    validValues: '[a-z0-9._=-]',
+    validValues: '[a-zA-Z0-9._=-]',
     domainPattern: ':[a-z0-9.-]+\\.[a-z]{2,}',
   },
 });
