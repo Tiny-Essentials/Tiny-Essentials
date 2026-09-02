@@ -5,7 +5,7 @@
 
 /**
  * Configuration options for constructing username regular expressions.
- * @typedef {Object} UsernameRegexOptions
+ * @typedef {Object} UsernameRegexTemplate
  * @property {string} validValues The allowed characters for the username part.
  * @property {[number, number]} [length] The [min, max] length of the username part.
  * @property {string} prefix An prefix like '@' or '#'.
@@ -18,13 +18,13 @@
  * Matrix Protocol (matrix.org)
  */
 export const matrixProtocol = Object.freeze({
-  /** @type {UsernameRegexOptions} */
+  /** @type {UsernameRegexTemplate} */
   userName: {
     prefix: '@',
     validValues: '[a-z0-9._=-]',
     domainPattern: ':[a-z0-9.-]+\\.[a-z]{2,}',
   },
-  /** @type {UsernameRegexOptions} */
+  /** @type {UsernameRegexTemplate} */
   roomName: {
     prefix: '#',
     validValues: '[a-zA-Z0-9._=-]',
@@ -36,7 +36,7 @@ export const matrixProtocol = Object.freeze({
  * Bluesky / AT Protocol
  */
 export const blueSkyProtocol = Object.freeze({
-  /** @type {UsernameRegexOptions} */
+  /** @type {UsernameRegexTemplate} */
   handle: {
     prefix: '@',
     validValues: '[a-zA-Z0-9-]',
@@ -52,7 +52,7 @@ export const discordProtocol = Object.freeze({
   /**
    * Modern Discord Usernames (Handles)
    * Format: username
-   * @type {UsernameRegexOptions}
+   * @type {UsernameRegexTemplate}
    */
   userName: {
     prefix: '@',
@@ -62,7 +62,7 @@ export const discordProtocol = Object.freeze({
   /**
    * Standard User Mention Code
    * Format: <@USER_ID>
-   * @type {UsernameRegexOptions}
+   * @type {UsernameRegexTemplate}
    */
   userMention: {
     prefix: '<@',
@@ -73,7 +73,7 @@ export const discordProtocol = Object.freeze({
   /**
    * User Mention Code (Nickname/Server Nickname)
    * Format: <@!USER_ID>
-   * @type {UsernameRegexOptions}
+   * @type {UsernameRegexTemplate}
    */
   nicknameMention: {
     prefix: '<@!',
@@ -84,7 +84,7 @@ export const discordProtocol = Object.freeze({
   /**
    * Role Mention Code
    * Format: <@&ROLE_ID>
-   * @type {UsernameRegexOptions}
+   * @type {UsernameRegexTemplate}
    */
   roleMention: {
     prefix: '<@&',
@@ -95,7 +95,7 @@ export const discordProtocol = Object.freeze({
   /**
    * Channel Mention Code (Covers all types: Text, Voice, Forum, Stage, etc.)
    * Format: <#CHANNEL_ID>
-   * @type {UsernameRegexOptions}
+   * @type {UsernameRegexTemplate}
    */
   channelMention: {
     prefix: '<#',
@@ -106,7 +106,7 @@ export const discordProtocol = Object.freeze({
   /**
    * Standard Custom Emoji Code
    * Format: <:name:ID>
-   * @type {UsernameRegexOptions}
+   * @type {UsernameRegexTemplate}
    */
   customEmoji: {
     prefix: '<:',
@@ -117,7 +117,7 @@ export const discordProtocol = Object.freeze({
   /**
    * Animated Custom Emoji Code
    * Format: <a:name:ID>
-   * @type {UsernameRegexOptions}
+   * @type {UsernameRegexTemplate}
    */
   animatedEmoji: {
     prefix: '<a:',
@@ -128,7 +128,7 @@ export const discordProtocol = Object.freeze({
   /**
    * Slash Command Mention Code
    * Format: </name:ID> or </name subcommand:ID>
-   * @type {UsernameRegexOptions}
+   * @type {UsernameRegexTemplate}
    */
   slashCommand: {
     prefix: '</',
