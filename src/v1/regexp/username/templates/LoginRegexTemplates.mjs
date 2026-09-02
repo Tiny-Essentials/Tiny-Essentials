@@ -1,6 +1,6 @@
 /**
  * Represents the type for transformations applied to extracted usernames.
- * @typedef {import('./Login.mjs').UsernameTransform} UsernameTransform
+ * @typedef {import('../index.mjs').UsernameTransform} UsernameTransform
  */
 
 /**

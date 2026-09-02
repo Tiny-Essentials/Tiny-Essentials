@@ -6,8 +6,7 @@ import {
   isValidUsername,
   findUsernameRegex,
   extractUsernames,
-} from './Login.mjs';
-import { blueSkyProtocol, matrixProtocol } from './LoginRegexTemplates.mjs';
+} from './username/index.mjs';
 import { makeSegmentExtractor, segmentExtractorV1 } from './SegmentExtractor.mjs';
 import {
   extractUrls,
@@ -18,8 +17,6 @@ import {
 } from './UrlDetector.mjs';
 
 export {
-  blueSkyProtocol,
-  matrixProtocol,
   usernameStringRegexBuilder,
   usernameRegex,
   isValidUsername,
