@@ -190,6 +190,13 @@ import { TinyCloner } from './build/TinyCloner.mjs';
 import { TinyHttpResponseRegistry } from './build/TinyHttpResponseRegistry.mjs';
 import { ipv4Regex, isValidIPv4, findIPv4Regex, extractIPsV4 } from './regexp/Ipv4.mjs';
 import { ipv6Regex, isValidIPv6, findIPv6Regex, extractIPsV6 } from './regexp/Ipv6.mjs';
+import {
+  extractUrls,
+  findUrlRegex,
+  isValidUrl,
+  urlRegex,
+  urlStringRegexBuilder,
+} from './regexp/UrlDetector.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
@@ -245,6 +252,11 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  urlStringRegexBuilder,
+  urlRegex,
+  isValidUrl,
+  findUrlRegex,
+  extractUrls,
   ipv6Regex,
   isValidIPv6,
   findIPv6Regex,
