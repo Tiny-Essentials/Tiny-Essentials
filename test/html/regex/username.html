@@ -66,7 +66,7 @@
       /* Main Layout */
       main {
         display: grid;
-        grid-template-columns: 350px 1fr 400px;
+        grid-template-columns: 380px 1fr 400px;
         flex: 1;
         overflow: hidden;
       }
@@ -78,13 +78,37 @@
         border-right: 1px solid var(--border);
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 1.2rem;
         overflow-y: auto;
       }
 
       .control-group {
         display: flex;
         flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .sandbox-section {
+        border: 1px solid var(--border);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background-color: rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+      }
+
+      .sandbox-section h3 {
+        font-size: 0.85rem;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 0.5rem;
       }
 
@@ -96,14 +120,22 @@
 
       select,
       textarea,
+      input,
       button {
         padding: 0.6rem;
         border-radius: 0.375rem;
         border: 1px solid var(--border);
         background: var(--bg-color);
         color: var(--text-main);
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         width: 100%;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: 1px solid var(--accent);
+        border-color: var(--accent);
       }
 
       button {
@@ -212,28 +244,6 @@
         font-style: italic;
       }
 
-      input[type='text'] {
-        padding: 0.6rem;
-        border-radius: 0.375rem;
-        border: 1px solid var(--border);
-        background: var(--bg-color);
-        color: var(--text-main);
-        font-size: 0.9rem;
-        width: 100%;
-        outline: none;
-      }
-
-      input[type='text']:focus {
-        border-color: var(--accent);
-      }
-
-      .sandbox-container {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        padding-top: 0.5rem;
-      }
-
       /* Scrollbar */
       ::-webkit-scrollbar {
         width: 8px;
@@ -275,6 +285,52 @@
             <option value="lowercase">lowercase</option>
             <option value="uppercase">uppercase</option>
           </select>
+        </div>
+
+        <!-- SANDBOX SECTION: Only visible when 'Custom' is selected -->
+        <div id="customConfig" class="sandbox-section" style="display: none">
+          <h3>Custom Sandbox</h3>
+
+          <div class="control-group">
+            <label>Prefix (e.g. @)</label>
+            <input type="text" id="customPrefix" placeholder="@" />
+          </div>
+
+          <div class="control-group">
+            <label>Start Regex</label>
+            <input type="text" id="customStart" placeholder="" />
+          </div>
+
+          <div class="control-group">
+            <label>Valid Characters (Regex)</label>
+            <input type="text" id="customValidValues" value="[a-zA-Z0-9_]" />
+          </div>
+
+          <div class="grid-2">
+            <div class="control-group">
+              <label>Min Length</label>
+              <input type="number" id="customMinLen" value="3" />
+            </div>
+            <div class="control-group">
+              <label>Max Length</label>
+              <input type="number" id="customMaxLen" value="20" />
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label>End Regex (e.g. >)</label>
+            <input type="text" id="customEnd" placeholder="" />
+          </div>
+
+          <div class="control-group">
+            <label>Domain (Literal)</label>
+            <input type="text" id="customDomain" placeholder="matrix.org" />
+          </div>
+
+          <div class="control-group">
+            <label>Domain Pattern (Regex)</label>
+            <input type="text" id="customDomainPattern" placeholder="@[a-z]+\.[a-z]{2,}" />
+          </div>
         </div>
 
         <hr style="border: 0; border-top: 1px solid var(--border)" />
@@ -328,6 +384,7 @@
       const protocolSelect = document.getElementById('protocolSelect');
       const transformSelect = document.getElementById('transformSelect');
       const status = document.getElementById('status');
+      const customConfig = document.getElementById('customConfig');
 
       // Populate Select Options
       const populateOptions = () => {
@@ -343,6 +400,15 @@
           optMX.appendChild(new Option(k, `matrix:${k}`)),
         );
       };
+
+      // Toggle Sandbox Visibility
+      protocolSelect.addEventListener('change', () => {
+        if (protocolSelect.value === 'custom') {
+          customConfig.style.display = 'flex';
+        } else {
+          customConfig.style.display = 'none';
+        }
+      });
 
       // Test Data
       const examples = {
@@ -411,6 +477,21 @@
               }
             } else if (protocolVal === 'default') {
               processTemplate({ prefix: '@' }, `Default`);
+            } else if (protocolVal === 'custom') {
+              // BUILDING CUSTOM TEMPLATE FROM SANDBOX INPUTS
+              const customTemplate = {
+                prefix: document.getElementById('customPrefix').value || undefined,
+                start: document.getElementById('customStart').value || undefined,
+                validValues: document.getElementById('customValidValues').value || '[a-zA-Z0-9_]',
+                length: [
+                  parseInt(document.getElementById('customMinLen').value) || 3,
+                  parseInt(document.getElementById('customMaxLen').value) || 20,
+                ],
+                end: document.getElementById('customEnd').value || undefined,
+                domain: document.getElementById('customDomain').value || undefined,
+                domainPattern: document.getElementById('customDomainPattern').value || undefined,
+              };
+              processTemplate(customTemplate, `Custom Sandbox`);
             }
 
             renderResults(allMatches);
