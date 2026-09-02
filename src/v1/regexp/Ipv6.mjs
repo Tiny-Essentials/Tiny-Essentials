@@ -8,7 +8,7 @@
 const hexGroup = '[0-9a-fA-F]{1,4}';
 
 /**
- * A robust pattern to match standard IPv6 addresses, including compressed formats.
+ * A pattern to match standard IPv6 addresses.
  * @type {string}
  */
 const ipv6Pattern = `((${hexGroup}:){7}${hexGroup}|(${hexGroup}:){1,7}:|(${hexGroup}:){1,6}:${hexGroup}|(${hexGroup}:){1,5}(:${hexGroup}){1,2}|(${hexGroup}:){1,4}(:${hexGroup}){1,3}|(${hexGroup}:){1,3}(:${hexGroup}){1,4}|(${hexGroup}:){1,2}(:${hexGroup}){1,5}|${hexGroup}:((:${hexGroup}){1,6})|:((:${hexGroup}){1,7}|:))`;
