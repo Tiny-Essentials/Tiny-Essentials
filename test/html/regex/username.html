@@ -192,6 +192,7 @@
             <label for="protocolSelect">Protocol Template</label>
             <select id="protocolSelect">
                 <option value="all">-- Run All Protocols --</option>
+                <optgroup label="Default" id="opt-default"></optgroup>
                 <optgroup label="BlueSky / AT" id="opt-bluesky"></optgroup>
                 <optgroup label="Discord" id="opt-discord"></optgroup>
                 <optgroup label="Matrix" id="opt-matrix"></optgroup>
@@ -260,10 +261,12 @@
 
     // Populate Select Options
     const populateOptions = () => {
+        const optDF = document.getElementById('opt-default');
         const optBS = document.getElementById('opt-bluesky');
         const optDC = document.getElementById('opt-discord');
         const optMX = document.getElementById('opt-matrix');
 
+        optDF.appendChild(new Option('default', `default`));
         Object.keys(BlueSkyRegex).forEach(k => optBS.appendChild(new Option(k, `bsky:${k}`)));
         Object.keys(DiscordRegex).forEach(k => optDC.appendChild(new Option(k, `discord:${k}`)));
         Object.keys(MatrixProtocolRegex).forEach(k => optMX.appendChild(new Option(k, `matrix:${k}`)));
@@ -329,6 +332,8 @@
                             allMatches.push({ label: protocolVal.replace(':', ' '), values: extracted });
                         }
                     }
+                } else if (protocolVal === 'default') {
+                    processTemplate({ prefix: '@' }, `Default`);
                 }
 
                 renderResults(allMatches);

@@ -8,12 +8,12 @@
  * @typedef {Object} UsernameRegexOptions
  * @property {string} [validValues='[a-zA-Z0-9_]'] The allowed characters for the username part.
  * @property {[number, number]} [length=[3, 20]] The [min, max] length of the username part.
- * @property {string} [start=null] A regex pattern defining the required characters at the start of the username.
- * @property {string} [end=null] A regex pattern defining the required characters at the end of the username.
- * @property {string} [prefix=null] An optional prefix like '@' or '#'.
- * @property {string} [domain=null] A literal domain string (e.g., '@matrix.org'). Will be escaped automatically.
- * @property {string} [domainPattern=null] A regex pattern for a domain (e.g., '@[a-z0-9.-]+\\.[a-z]{2,}').
- * @property {UsernameTransform} [transform=null] Optional transformation applied to the extracted usernames.
+ * @property {string} [start] A regex pattern defining the required characters at the start of the username.
+ * @property {string} [end] A regex pattern defining the required characters at the end of the username.
+ * @property {string} [prefix] An optional prefix like '@' or '#'.
+ * @property {string} [domain] A literal domain string (e.g., '@matrix.org'). Will be escaped automatically.
+ * @property {string} [domainPattern] A regex pattern for a domain (e.g., '@[a-z0-9.-]+\\.[a-z]{2,}').
+ * @property {UsernameTransform} [transform] Optional transformation applied to the extracted usernames.
  */
 
 /**
