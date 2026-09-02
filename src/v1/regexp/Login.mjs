@@ -7,7 +7,8 @@ const passwordPattern = '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d
  * @property {string} [validValues='[a-zA-Z0-9_]'] The allowed characters for the username part.
  * @property {[number, number]} [length=[3, 20]] The [min, max] length of the username part.
  * @property {string} [prefix=null] An optional prefix like '@' or '#'.
- * @property {string} [domainPattern=null] An optional regex pattern for a domain (e.g., '@matrix.org').
+ * @property {string} [domain=null] A literal domain string (e.g., '@matrix.org'). Will be escaped automatically.
+ * @property {string} [domainPattern=null] A regex pattern for a domain (e.g., '@[a-z0-9.-]+\\.[a-z]{2,}').
  */
 
 /**
@@ -42,10 +43,35 @@ const validateOptions = (options) => {
   if (options.prefix !== undefined && typeof options.prefix !== 'string') {
     throw new TypeError('The "prefix" property must be a string.');
   }
+  if (options.domain !== undefined && typeof options.domain !== 'string') {
+    throw new TypeError('The "domain" property must be a string.');
+  }
   if (options.domainPattern !== undefined && typeof options.domainPattern !== 'string') {
     throw new TypeError('The "domainPattern" property must be a string.');
   }
 };
+
+/**
+ * @param {UsernameRegexOptions} [options]
+ * @returns {string}
+ */
+function getDomainPart(options) {
+  // Priority: domainPattern (regex) > domain (literal)
+  if (options?.domainPattern) {
+    return `(?:${options.domainPattern})`;
+  } else if (options?.domain) {
+    return `(?:${escapeRegExp(options.domain)})`;
+  }
+  return '';
+}
+
+/**
+ * @param {UsernameRegexOptions} [options]
+ * @returns {string}
+ */
+function getPrefix(options) {
+  return options?.prefix ? escapeRegExp(options.prefix) : '';
+}
 
 /**
  * @param {UsernameRegexOptions} [options]
@@ -65,11 +91,10 @@ export const usernameStringRegexBuilder = ({
  */
 export function usernameRegex(options) {
   validateOptions(options);
-  const prefix = options?.prefix ? escapeRegExp(options.prefix) : '';
+  const prefix = getPrefix(options);
   const core = usernameStringRegexBuilder(options);
-  const domain = options?.domainPattern ? `(?:${options.domainPattern})` : '';
-
-  return new RegExp(`^${prefix}${core}${domain}$`);
+  const domainPart = getDomainPart(options);
+  return new RegExp(`^${prefix}${core}${domainPart}$`);
 }
 
 /**
@@ -91,16 +116,17 @@ export function isValidUsername(s, options) {
  */
 export function findUsernameRegex(options) {
   validateOptions(options);
-  const prefix = options?.prefix ? escapeRegExp(options.prefix) : '';
+  const prefix = getPrefix(options);
   const core = usernameStringRegexBuilder(options);
-  const domain = options?.domainPattern ? `(?:${options.domainPattern})` : '';
+  const domainPart = getDomainPart(options);
 
-  // If a prefix is used (like @ or #), we use the prefix itself to anchor the search.
-  // Otherwise, we use word boundaries (\b).
-  const boundaryStart = options?.prefix ? '' : '\\b';
-  const boundaryEnd = '\\b';
+  // FIX: \b fails when the prefix is a non-word character (like @).
+  // We use a lookbehind for non-word characters or start of string,
+  // and a lookahead for non-word characters or end of string.
+  const boundaryStart = options?.prefix ? '(?:^|(?<=\\W))' : '\\b';
+  const boundaryEnd = options?.prefix ? '(?=\\W|$)' : '\\b';
 
-  return new RegExp(`${boundaryStart}${prefix}${core}${domain}${boundaryEnd}`, 'g');
+  return new RegExp(`${boundaryStart}${prefix}${core}${domainPart}${boundaryEnd}`, 'g');
 }
 
 /**

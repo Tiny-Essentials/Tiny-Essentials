@@ -7,6 +7,7 @@ import {
   findUsernameRegex,
   extractUsernames,
 } from './Login.mjs';
+import { matrixProtocol } from './LoginRegexTemplates.mjs';
 import { makeSegmentExtractor, segmentExtractorV1 } from './SegmentExtractor.mjs';
 import {
   extractUrls,
@@ -17,6 +18,7 @@ import {
 } from './UrlDetector.mjs';
 
 export {
+  matrixProtocol,
   usernameStringRegexBuilder,
   usernameRegex,
   isValidUsername,
