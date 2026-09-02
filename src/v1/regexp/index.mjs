@@ -6,7 +6,7 @@ import {
   isValidUsername,
   findUsernameRegex,
   extractUsernames,
-} from './username/index.mjs';
+} from './Username/index.mjs';
 import { makeSegmentExtractor, segmentExtractorV1 } from './SegmentExtractor.mjs';
 import {
   extractUrls,

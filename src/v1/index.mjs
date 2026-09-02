@@ -203,7 +203,7 @@ import {
   isValidUsername,
   findUsernameRegex,
   extractUsernames,
-} from './regexp/username/index.mjs';
+} from './regexp/Username/index.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
