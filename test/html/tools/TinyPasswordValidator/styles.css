@@ -1,0 +1,197 @@
+/* --- Color Palette --- */
+:root {
+  /* Base Palette */
+  --color-bg: #f4f7f6;
+  --color-card-bg: #ffffff;
+  --color-text-main: #2c3e50;
+  --color-text-muted: #7f8c8d;
+  --color-border: #dcdde1;
+
+  /* Status Colors */
+  --color-success: #27ae60; /* Used for strong strength and passing tests */
+  --color-warning: #f39c12; /* Used for medium strength and pending tests */
+  --color-danger: #e74c3c; /* Used for weak strength, errors, and failed tests */
+
+  /* UI Colors */
+  --color-primary: #3498db; /* Used for primary buttons */
+  --color-primary-hover: #2980b9; /* Used for primary button hover states */
+}
+
+/* --- Layout & Reset --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  line-height: 1.6;
+  padding: 2rem;
+}
+
+#app-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+header h1 {
+  font-size: 2rem;
+  color: var(--color-text-main);
+}
+
+header p {
+  color: var(--color-text-muted);
+}
+
+/* --- Components --- */
+.card {
+  background: var(--color-card-bg);
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--color-bg);
+  padding-bottom: 0.5rem;
+}
+
+/* --- Form Elements --- */
+.input-group,
+.input-field {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+input[type='text'],
+input[type='number'] {
+  padding: 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.number-inputs {
+  display: flex;
+  gap: 20px;
+}
+
+.number-inputs .input-field {
+  flex: 1;
+}
+
+/* --- Results & Console --- */
+.results-display {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 4px;
+  background: var(--color-bg);
+  min-height: 100px;
+}
+
+.strength-badge {
+  display: inline-block;
+  padding: 0.2rem 0.8rem;
+  border-radius: 20px;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.strength-strong {
+  background: var(--color-success);
+  color: white;
+}
+.strength-medium {
+  background: var(--color-warning);
+  color: white;
+}
+.strength-weak {
+  background: var(--color-danger);
+  color: white;
+}
+
+.error-list {
+  color: var(--color-danger);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  list-style-type: disc;
+  padding-left: 1.2rem;
+}
+
+.console {
+  background: #2d3436;
+  color: #dfe6e9;
+  font-family: 'Courier New', Courier, monospace;
+  padding: 1rem;
+  border-radius: 4px;
+  height: 200px;
+  overflow-y: auto;
+}
+
+.console-line {
+  margin-bottom: 0.25rem;
+  border-left: 3px solid transparent;
+  padding-left: 8px;
+}
+
+.console-line.error {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+.console-line.success {
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+.console-line.info {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* --- Buttons --- */
+.primary-btn {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.primary-btn:hover {
+  background-color: var(--color-primary-hover);
+}

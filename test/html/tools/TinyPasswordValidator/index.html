@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TinyPasswordValidator Test Suite</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="app-container">
+      <header>
+        <h1>TinyPasswordValidator Tester</h1>
+        <p>Professional Testing Environment</p>
+      </header>
+
+      <section id="playground">
+        <div class="card">
+          <h2>Password Input</h2>
+          <div class="input-group">
+            <label for="password-input">Test Password:</label>
+            <input
+              type="text"
+              id="password-input"
+              placeholder="Enter password to test..."
+              autocomplete="off"
+            />
+          </div>
+
+          <div id="realtime-results" class="results-display">
+            <!-- Real-time validation data will be injected here -->
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Rule Configuration</h2>
+          <form id="rules-form">
+            <div class="checkbox-group">
+              <label><input type="checkbox" name="requireLowercase" checked /> Lowercase</label>
+              <label><input type="checkbox" name="requireUppercase" checked /> Uppercase</label>
+              <label><input type="checkbox" name="requireNumbers" checked /> Numbers</label>
+              <label><input type="checkbox" name="requireSpecial" checked /> Special</label>
+            </div>
+            <div class="number-inputs">
+              <div class="input-field">
+                <label for="min-len">Min Length:</label>
+                <input type="number" id="min-len" value="8" />
+              </div>
+              <div class="input-field">
+                <label for="max-len">Max Length:</label>
+                <input type="number" id="max-len" value="128" />
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="test-suite-section">
+        <div class="card">
+          <div class="card-header">
+            <h2>Automated Test Suite</h2>
+            <button id="run-tests-btn" class="primary-btn">Run All Tests</button>
+          </div>
+          <div id="console-output" class="console">
+            <div class="console-line">Waiting for test execution...</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
