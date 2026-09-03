@@ -278,9 +278,9 @@
       "require": "./dist/v1/libs/utils/TinyPromiseQueue.cjs",
       "import": "./dist/v1/libs/utils/TinyPromiseQueue.mjs"
     },
-    "./libs/utils/TinyPasswordValidator": {
-      "require": "./dist/v1/libs/utils/TinyPasswordValidator.cjs",
-      "import": "./dist/v1/libs/utils/TinyPasswordValidator.mjs"
+    "./libs/tools/TinyPasswordValidator": {
+      "require": "./dist/v1/libs/tools/TinyPasswordValidator.cjs",
+      "import": "./dist/v1/libs/tools/TinyPasswordValidator.mjs"
     },
     "./libs/html/notification/TinyNotifyCenter": {
       "require": "./dist/v1/libs/html/notification/TinyNotifyCenter.cjs",
