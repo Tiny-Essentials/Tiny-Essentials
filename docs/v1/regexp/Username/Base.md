@@ -102,6 +102,7 @@ const matrixOptions = {
 
 const text = "Check in with @alice@matrix.org and @bob@matrix.org";
 const users = extractUsernames(text, matrixOptions);
+console.log(users);
 // Result: ["@alice@matrix.org", "@bob@matrix.org"]
 ```
 
@@ -116,6 +117,7 @@ const multiOptions = [
 
 const text = "Follow @user and use #coding";
 const matches = extractUsernames(text, multiOptions);
+console.log(matches);
 // Result: ["@user", "#coding"]
 ```
 
