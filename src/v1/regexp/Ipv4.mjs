@@ -38,11 +38,11 @@ export function findIPv4Regex() {
  * Scans the provided text and extracts all occurrences of IPv4 addresses.
  * This function uses a global regular expression to find multiple matches within the input.
  * @param {string} text - The input text content to be searched.
- * @returns {RegExpMatchArray | null} - An array of all matched IP addresses, or null if no matches are found.
+ * @returns {string[]} - An array of all matched IP addresses, or null if no matches are found.
  */
 export function extractIPsV4(text) {
   if (typeof text !== 'string') {
     throw new TypeError('The input must be a string.');
   }
-  return text.match(findIPv4Regex());
+  return text.match(findIPv4Regex()) ?? [];
 }

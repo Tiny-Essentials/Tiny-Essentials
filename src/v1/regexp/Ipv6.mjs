@@ -48,11 +48,11 @@ export function findIPv6Regex() {
  * This function uses a global regular expression to find multiple matches within the input.
  * @param {string} text - The input text content to be searched.
  * @throws {TypeError} If the input is not a string.
- * @returns {string[] | null} - An array of all matched IP addresses, or null if no matches are found.
+ * @returns {string[]} - An array of all matched IP addresses, or null if no matches are found.
  */
 export function extractIPsV6(text) {
   if (typeof text !== 'string') {
     throw new TypeError('The input must be a string.');
   }
-  return text.match(findIPv6Regex());
+  return text.match(findIPv6Regex()) ?? [];
 }

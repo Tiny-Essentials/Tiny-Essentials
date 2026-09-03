@@ -104,12 +104,12 @@ export function findUrlRegex(options) {
  * Extracts all matching URL strings from a given text using the provided configuration.
  * @param {string} text - The text to search.
  * @param {UrlRegexOptions} [options] - The configuration options.
- * @returns {RegExpMatchArray | null} An array of matches or null if no matches are found.
+ * @returns {string[]} An array of matches or null if no matches are found.
  * @throws {TypeError} If the input text is not a string.
  */
 export function extractUrls(text, options) {
   if (typeof text !== 'string') {
     throw new TypeError('The input must be a string.');
   }
-  return text.match(findUrlRegex(options));
+  return text.match(findUrlRegex(options)) ?? [];
 }
