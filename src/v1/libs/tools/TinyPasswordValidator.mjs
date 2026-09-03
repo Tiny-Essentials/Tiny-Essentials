@@ -26,6 +26,7 @@
  */
 
 /**
+ * Defines the structure for a custom password validation object.
  * @typedef {Object} CustomValidator
  * @property {string} id - Unique identifier for the validator.
  * @property {string} name - Human-readable name of the validator.
@@ -33,6 +34,7 @@
  */
 
 /**
+ * Defines the result of executing multiple validators.
  * @typedef {Object} ManagerValidationResult
  * @property {boolean} allPassed - True if all validators returned isValid: true.
  * @property {ValidationResult[]} details - The array of individual ValidationResult objects from each validator.
@@ -66,17 +68,33 @@ class TinyPasswordValidator {
     special: () => /[@$!%*?&]/,
   });
 
+  /**
+   * The raw regex string used for comprehensive pattern matching.
+   * @type {string}
+   */
   static #fullPatternString =
     '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$';
 
+  /**
+   * Creates and returns a new RegExp instance based on the full pattern string.
+   * @returns {RegExp}
+   */
   static #getFullPattern() {
     return new RegExp(TinyPasswordValidator.#fullPatternString);
   }
 
+  /**
+   * Provides access to the raw regex pattern string.
+   * @returns {string}
+   */
   static get fullPatternString() {
     return TinyPasswordValidator.#fullPatternString;
   }
 
+  /**
+   * Provides access to the internal method that generates the RegExp instance.
+   * @returns {function}
+   */
   static get getFullPattern() {
     return TinyPasswordValidator.#getFullPattern;
   }
@@ -94,29 +112,36 @@ class TinyPasswordValidator {
     maxLength: 128,
   };
 
+  /** @returns {boolean} Whether lowercase letters are required. */
   get requireLowercase() {
     return this.#rules.requireLowercase;
   }
 
+  /** @returns {boolean} Whether uppercase letters are required. */
   get requireUppercase() {
     return this.#rules.requireUppercase;
   }
 
+  /** @returns {boolean} Whether numeric digits are required. */
   get requireNumbers() {
     return this.#rules.requireNumbers;
   }
 
+  /** @returns {boolean} Whether special characters are required. */
   get requireSpecial() {
     return this.#rules.requireSpecial;
   }
 
+  /** @returns {number} The minimum allowed length of the password. */
   get minLength() {
     return this.#rules.minLength;
   }
 
+  /** @returns {number} The maximum allowed length of the password. */
   get maxLength() {
     return this.#rules.maxLength;
   }
+
   /**
    * Internal list of registered validators.
    * @type {CustomValidator[]}
@@ -342,9 +367,9 @@ class TinyPasswordValidator {
       throw new TypeError('The password must be a string.');
     }
 
-    /** @type {string[]} */
+    /** @type {string[]} An array of error message strings. */
     const errors = [];
-    /** @type {number[]} */
+    /** @type {number[]} An array of error codes. */
     const errorCodes = [];
     let score = 0;
     let totalPossiblePoints = 1; // Length counts as one base point
@@ -409,7 +434,7 @@ class TinyPasswordValidator {
     }
 
     // Determination of strength based on the proportion of requirements fulfilled
-    /** @type {PasswordStrength} */
+    /** @type {PasswordStrength} The strength classification of the password. */
     let strength = 'weak';
     if (errors.length === 0) {
       strength = 'strong';
