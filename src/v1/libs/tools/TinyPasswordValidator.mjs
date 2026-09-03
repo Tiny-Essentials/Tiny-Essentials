@@ -26,6 +26,19 @@
  */
 
 /**
+ * @typedef {Object} CustomValidator
+ * @property {string} id - Unique identifier for the validator.
+ * @property {string} name - Human-readable name of the validator.
+ * @property {function(string): ValidationResult} validate - A function that takes a string and returns a ValidationResult.
+ */
+
+/**
+ * @typedef {Object} ManagerValidationResult
+ * @property {boolean} allPassed - True if all validators returned isValid: true.
+ * @property {ValidationResult[]} details - The array of individual ValidationResult objects from each validator.
+ */
+
+/**
  * A utility class for validating passwords against customizable security rules.
  */
 class TinyPasswordValidator {
@@ -65,6 +78,119 @@ class TinyPasswordValidator {
     minLength: 8,
     maxLength: 128,
   };
+
+  get requireLowercase() {
+    return this.#rules.requireLowercase;
+  }
+
+  get requireUppercase() {
+    return this.#rules.requireUppercase;
+  }
+
+  get requireNumbers() {
+    return this.#rules.requireNumbers;
+  }
+
+  get requireSpecial() {
+    return this.#rules.requireSpecial;
+  }
+
+  get minLength() {
+    return this.#rules.minLength;
+  }
+
+  get maxLength() {
+    return this.#rules.maxLength;
+  }
+  /**
+   * Internal list of registered validators.
+   * @type {CustomValidator[]}
+   */
+  #validators = [];
+
+  /**
+   * Adds a new validator to the manager.
+   * @param {CustomValidator} validator - The validator object to add.
+   * @throws {TypeError} If the validator does not match the CustomValidator typedef.
+   */
+  add(validator) {
+    if (!validator || typeof validator !== 'object') {
+      throw new TypeError('Validator must be a valid object.');
+    }
+    if (typeof validator.id !== 'string') {
+      throw new TypeError('Validator must have a string "id".');
+    }
+    if (typeof validator.name !== 'string') {
+      throw new TypeError('Validator must have a string "name".');
+    }
+    if (typeof validator.validate !== 'function') {
+      throw new TypeError('Validator must have a "validate" function.');
+    }
+
+    const exists = this.#validators.some((v) => v.id === validator.id);
+    if (exists) {
+      throw new Error(`Validator with id "${validator.id}" already exists.`);
+    }
+
+    this.#validators.push(validator);
+  }
+
+  /**
+   * Removes a validator by its unique ID.
+   * @param {string} id - The ID of the validator to remove.
+   * @throws {TypeError} If the ID is not a string.
+   */
+  remove(id) {
+    if (typeof id !== 'string') {
+      throw new TypeError('The ID to remove must be a string.');
+    }
+
+    const index = this.#validators.findIndex((v) => v.id === id);
+    if (index === -1) {
+      throw new Error(`Validator with id "${id}" not found.`);
+    }
+
+    this.#validators.splice(index, 1);
+  }
+
+  /**
+   * Reorders the validators list by moving an item from one index to another.
+   * @param {number} oldIndex - The current index of the validator.
+   * @param {number} newIndex - The target index for the validator.
+   * @throws {TypeError} If indices are not integers.
+   * @throws {RangeError} If indices are out of bounds.
+   */
+  reorder(oldIndex, newIndex) {
+    if (!Number.isInteger(oldIndex) || !Number.isInteger(newIndex)) {
+      throw new TypeError('Indices must be integers.');
+    }
+
+    if (oldIndex < 0 || oldIndex >= this.#validators.length) {
+      throw new RangeError('oldIndex is out of bounds.');
+    }
+
+    if (newIndex < 0 || newIndex >= this.#validators.length) {
+      throw new RangeError('newIndex is out of bounds.');
+    }
+
+    const [movedItem] = this.#validators.splice(oldIndex, 1);
+    this.#validators.splice(newIndex, 0, movedItem);
+  }
+
+  /**
+   * Clears all validators from the manager.
+   */
+  clear() {
+    this.#validators = [];
+  }
+
+  /**
+   * Gets the total number of validators currently registered.
+   * @returns {number}
+   */
+  get size() {
+    return this.#validators.length;
+  }
 
   /**
    * Initializes a new instance of the TinyPasswordValidator with optional custom rules.
@@ -156,6 +282,26 @@ class TinyPasswordValidator {
     const mergedRules = { ...this.#rules, ...newRules };
     this.#validateRulesConfig(mergedRules);
     this.#rules = mergedRules;
+  }
+
+  /**
+   * Executes all registered validators against a single password.
+   * @param {string} password - The password to be validated.
+   * @returns {ManagerValidationResult}
+   * @throws {TypeError} If the password is not a string.
+   */
+  execute(password) {
+    if (typeof password !== 'string') {
+      throw new TypeError('The password must be a string.');
+    }
+
+    const details = this.#validators.map((validator) => validator.validate(password));
+    const allPassed = details.every((result) => result.isValid);
+
+    return {
+      allPassed,
+      details,
+    };
   }
 
   /**
