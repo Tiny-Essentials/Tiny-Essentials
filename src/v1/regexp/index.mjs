@@ -15,8 +15,20 @@ import {
   urlRegex,
   urlStringRegexBuilder,
 } from './UrlDetector.mjs';
+import {
+  emailStringRegexBuilder,
+  emailRegex,
+  isValidEmail,
+  findEmailRegex,
+  extractEmails,
+} from './EmailLogin.mjs';
 
 export {
+  emailStringRegexBuilder,
+  emailRegex,
+  isValidEmail,
+  findEmailRegex,
+  extractEmails,
   usernameStringRegexBuilder,
   usernameRegex,
   isValidUsername,

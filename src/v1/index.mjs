@@ -198,6 +198,13 @@ import {
   urlStringRegexBuilder,
 } from './regexp/UrlDetector.mjs';
 import {
+  emailStringRegexBuilder,
+  emailRegex,
+  isValidEmail,
+  findEmailRegex,
+  extractEmails,
+} from './regexp/EmailLogin.mjs';
+import {
   usernameStringRegexBuilder,
   usernameRegex,
   isValidUsername,
@@ -259,6 +266,11 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  emailStringRegexBuilder,
+  emailRegex,
+  isValidEmail,
+  findEmailRegex,
+  extractEmails,
   usernameStringRegexBuilder,
   usernameRegex,
   isValidUsername,
