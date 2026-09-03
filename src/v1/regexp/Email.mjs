@@ -1,16 +1,18 @@
 /**
+ * A function type used to define custom validation logic for an email address.
  * @typedef {(email: string) => boolean} EmailValidatorFn
  */
 
 /**
+ * Configuration options for customizing email regex patterns and validation rules.
  * @typedef {Object} EmailRegexOptions
- * @property {string} [validName]
- * @property {string} [validDomain]
- * @property {string[]} [blacklistDomains]
- * @property {string[]} [whitelistDomains]
- * @property {string[]} [blacklistUsernames]
- * @property {string[]} [whitelistUsernames]
- * @property {EmailValidatorFn} [customValidator]
+ * @property {string} [validName] - The regular expression pattern used to match the username portion of the email.
+ * @property {string} [validDomain] - The regular expression pattern used to match the domain portion of the email.
+ * @property {string[]} [blacklistDomains] - An array of domain strings that are explicitly forbidden during validation.
+ * @property {string[]} [whitelistDomains] - An array of domain strings that are the only permitted domains.
+ * @property {string[]} [blacklistUsernames] - An array of username strings that are explicitly forbidden during validation.
+ * @property {string[]} [whitelistUsernames] - An array of username strings that are the only permitted usernames.
+ * @property {EmailValidatorFn} [customValidator] - A callback function that receives the email string and returns a boolean to perform custom validation logic.
  */
 
 /**
@@ -76,6 +78,8 @@ export function emailRegex(options) {
 }
 
 /**
+ * Performs deep validation of an email string against specified whitelist and blacklist rules for domains and usernames.
+ *
  * @param {string} s - The string to validate.
  * @param {EmailRegexOptions} [options={}] - The configuration options.
  * @returns {boolean} True if the string is a valid email, false otherwise.
