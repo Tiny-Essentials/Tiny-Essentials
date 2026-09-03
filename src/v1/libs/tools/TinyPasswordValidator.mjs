@@ -29,7 +29,7 @@
  * @typedef {Object} CustomValidator
  * @property {string} id - Unique identifier for the validator.
  * @property {string} name - Human-readable name of the validator.
- * @property {function(string): ValidationResult} validate - A function that takes a string and returns a ValidationResult.
+ * @property {(value: string) => ValidationResult} validate - A function that takes a string and returns a ValidationResult.
  */
 
 /**
@@ -175,6 +175,18 @@ class TinyPasswordValidator {
 
     const [movedItem] = this.#validators.splice(oldIndex, 1);
     this.#validators.splice(newIndex, 0, movedItem);
+  }
+
+  /**
+   * Sorts the validators using a custom comparator function.
+   * @param {(a: CustomValidator, b: CustomValidator) => number} comparator - A function that defines the sort order.
+   * @throws {TypeError} If the comparator is not a function.
+   */
+  sort(comparator) {
+    if (typeof comparator !== 'function') {
+      throw new TypeError('The comparator must be a function.');
+    }
+    this.#validators.sort(comparator);
   }
 
   /**
