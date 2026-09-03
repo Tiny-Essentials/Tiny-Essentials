@@ -96,6 +96,14 @@ class TinyURLSecurityVerifier {
   }
 
   /**
+   * Resets the global default protocols list to an empty set.
+   * @returns {void}
+   */
+  static clearDefaultProtocols() {
+    this.#defaultProtocols.clear();
+  }
+
+  /**
    * Converts a string or URL instance into a standard URL object.
    * @param {Href} href - The href address or URL instance.
    * @returns {URL} A URL instance.
@@ -183,6 +191,14 @@ class TinyURLSecurityVerifier {
     return this.#protocols.delete(protocol.toLowerCase());
   }
 
+  /**
+   * Clears all protocols from the instance-specific list.
+   * @returns {void}
+   */
+  clearProtocols() {
+    this.#protocols.clear();
+  }
+
   // --- Instance Domain Management ---
 
   /**
@@ -257,6 +273,22 @@ class TinyURLSecurityVerifier {
   removeAllowedDomain(domain) {
     if (typeof domain !== 'string') throw new TypeError('Domain must be a string.');
     return this.#allowedDomains.delete(domain.toLowerCase());
+  }
+
+  /**
+   * Clears all domains from the instance-specific whitelist.
+   * @returns {void}
+   */
+  clearAllowedDomains() {
+    this.#allowedDomains.clear();
+  }
+
+  /**
+   * Clears all domains from the instance-specific blacklist.
+   * @returns {void}
+   */
+  clearBlacklistedDomains() {
+    this.#blacklistedDomains.clear();
   }
 
   // --- Security Check Methods ---
@@ -392,6 +424,18 @@ class TinyURLSecurityVerifier {
       this.isBlacklisted(url) ||
       this.isIPAddress(url)
     );
+  }
+
+  // --- Instance Reset Management ---
+
+  /**
+   * Resets all instance-specific lists (protocols, blacklisted domains, and allowed domains).
+   * @returns {void}
+   */
+  clearAll() {
+    this.clearProtocols();
+    this.clearAllowedDomains();
+    this.clearBlacklistedDomains();
   }
 }
 
