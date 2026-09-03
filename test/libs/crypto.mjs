@@ -1,4 +1,4 @@
-import { hashText } from '../../dist/v1/basics/text.mjs';
+import { hashText } from '../../dist/v1/basics/crypto.mjs';
 
 /**
  * @typedef {Object} CryptoTestResult
