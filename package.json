@@ -11,6 +11,7 @@
     "test:cjs": "node test/index.cjs",
     "test:mjs": "node test/index.mjs",
     "test:mjs:web": "node test/express.mjs",
+    "test:mjs:crypto": "node test/index.mjs crypto",
     "test:mjs:promisequeue": "node test/index.mjs promiseQueue",
     "test:mjs:objtype": "node test/index.mjs objType",
     "test:mjs:jsoncolor": "node test/index.mjs colorStringify",
@@ -109,6 +110,10 @@
     "./basics": {
       "require": "./dist/v1/basics/index.cjs",
       "import": "./dist/v1/basics/index.mjs"
+    },
+    "./basics/crypto": {
+      "require": "./dist/v1/basics/crypto.cjs",
+      "import": "./dist/v1/basics/crypto.mjs"
     },
     "./basics/mediaContent": {
       "require": "./dist/v1/basics/mediaContent.cjs",

@@ -55,6 +55,7 @@ import {
   toTitleCaseLowerFirst,
   asyncReplace,
 } from './text.mjs';
+import { hashText } from './crypto.mjs';
 import {
   areElsCollTop,
   areElsCollBottom,
@@ -111,6 +112,7 @@ export {
   parseMediaMetadata,
   extractMediaId3Tags,
   diffStrings,
+  hashText,
   diffObjList,
   diffArrayList,
   breakdownDuration,

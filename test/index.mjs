@@ -8,6 +8,7 @@ import testI18 from './libs/TinyI18.mjs';
 import testTinySiteMap from './libs/TinySiteMap.mjs';
 import TinyPkgExportValidator from '../src/v1/libs/tools/TinyPkgExportValidator.mjs';
 import testTinyPasswordValidator from './libs/TinyPasswordValidator.mjs';
+import executeCrypto from './libs/crypto.mjs';
 
 new TinyPkgExportValidator('../package.json', '../')
   .execCommandTester(
@@ -19,6 +20,7 @@ new TinyPkgExportValidator('../package.json', '../')
       rateLimit: testRateLimit,
       levelUp: testLevelUp,
       sitemap: testTinySiteMap,
+      crypto: executeCrypto,
       i18: testI18,
       pwValidator: testTinyPasswordValidator,
     },

@@ -53,6 +53,7 @@ import {
   toTitleCaseLowerFirst,
   asyncReplace,
 } from './basics/text.mjs';
+import { hashText } from './basics/crypto.mjs';
 import ColorSafeStringify from './libs/color/ColorSafeStringify.mjs';
 import TinyPromiseQueue from './libs/utils/TinyPromiseQueue.mjs';
 import TinyRateLimiter from './libs/math/TinyRateLimiter.mjs';
@@ -315,6 +316,7 @@ export {
   trapezoid,
   diffArrayList,
   diffStrings,
+  hashText,
   diffObjList,
   breakdownDuration,
   calculateMarketcap,

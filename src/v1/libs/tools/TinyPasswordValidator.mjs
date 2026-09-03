@@ -15,6 +15,13 @@
  */
 
 /**
+ * Represents an asynchronous callback function used to hash a string.
+ * @callback HashText
+ * @param {string} text - The plain text string to be hashed.
+ * @returns {Promise<string>} A promise that resolves to the resulting hashed string.
+ */
+
+/**
  * Represents the detailed outcome of a password validation check.
  * @typedef {Object} ValidationResult
  * @property {boolean} isValid - Indicates if the password meets all configured requirements.
@@ -97,6 +104,31 @@ class TinyPasswordValidator {
    */
   static get getFullPattern() {
     return TinyPasswordValidator.#getFullPattern;
+  }
+
+  /**
+   * The internal asynchronous function used for hashing text.
+   * @type {HashText}
+   */
+  static #hashText = async (text) => text;
+
+  /**
+   * Provides access to the static hashing function.
+   * @returns {HashText} The current hashing function.
+   */
+  static get hashText() {
+    return TinyPasswordValidator.#hashText;
+  }
+
+  /**
+   * Sets a new static hashing function.
+   * @param {HashText} value - The new hashing function to be used.
+   * @throws {TypeError} If the provided value is not a function.
+   */
+  static set hashText(value) {
+    if (typeof value !== 'function')
+      throw new TypeError('The value provided to hashText must be a function.');
+    TinyPasswordValidator.#hashText = value;
   }
 
   /**
@@ -254,8 +286,9 @@ class TinyPasswordValidator {
    * @param {number} [customRules.minLength=8] - The minimum allowed length of the password.
    * @param {number} [customRules.maxLength=128] - The maximum allowed length of the password.
    */
-  constructor(customRules = {}) {
+  constructor(customRules = {}, hashText = null) {
     this.setRules(customRules);
+    if (hashText) TinyPasswordValidator.hashText = hashText;
   }
 
   /**
