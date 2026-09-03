@@ -64,7 +64,8 @@ const validateEmailRegexOptions = (options) => {
  */
 export const emailStringRegexBuilder = (options = {}) => {
   validateEmailRegexOptions(options);
-  const { validName = '[a-zA-Z0-9._%+-]+', validDomain = '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' } = options;
+  const { validName = '[a-zA-Z0-9._%+-]+', validDomain = '[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}' } =
+    options;
   return `${validName}@${validDomain}`;
 };
 
