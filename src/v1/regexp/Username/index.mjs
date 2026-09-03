@@ -17,6 +17,10 @@
  */
 
 /**
+ * @typedef {UsernameRegexOptions | UsernameRegexOptions[]} UsernameOptionsInput
+ */
+
+/**
  * Escapes special regex characters to be used in a literal string.
  * @param {string} string The string to be escaped.
  * @returns {string} The escaped string.
@@ -43,19 +47,6 @@ const applyTransform = (username, transform) => {
   if (transform === 'lowercase') return username.toLowerCase();
   if (transform === 'uppercase') return username.toUpperCase();
   return username;
-};
-
-/**
- * Validates the UsernameRegexOptions object for correct types and structure.
- * @param {UsernameRegexOptions} [options] The options object to validate.
- * @throws {TypeError} If validation fails due to wrong types.
- * @throws {RangeError} If validation fails due to out-of-bounds values.
- */
-const validateUsernameOptions = (options) => {
-  if (options === undefined) return;
-  if (typeof options !== 'object' || options === null || Array.isArray(options)) {
-    throw new TypeError('Options must be a plain object.');
-  }
 };
 
 /**
@@ -130,22 +121,53 @@ export const usernameStringRegexBuilder = ({
 };
 
 /**
+ * Internal helper to build the pattern for a single configuration object.
+ * @param {UsernameRegexOptions} [options]
+ * @returns {string}
+ */
+function getSinglePattern(options) {
+  const prefix = getPrefix(options);
+  const core = usernameStringRegexBuilder(options);
+  const domainPart = getDomainPart(options);
+  return `${prefix}${core}${domainPart}`;
+}
+
+/**
+ * Validates the UsernameRegexOptions object(s) for correct types and structure.
+ * @param {UsernameOptionsInput} [options] The options object or array to validate.
+ * @throws {TypeError} If validation fails due to wrong types.
+ */
+const validateUsernameOptions = (options) => {
+  if (options === undefined) return;
+  const items = Array.isArray(options) ? options : [options];
+
+  for (const opt of items) {
+    if (typeof opt !== 'object' || opt === null || Array.isArray(opt)) {
+      throw new TypeError('Options must be a plain object or an array of plain objects.');
+    }
+  }
+};
+
+/**
  * Constructs a complete regular expression for matching a username.
- * @param {UsernameRegexOptions} [options] The options for constructing the regex.
+ * @param {UsernameOptionsInput} [options] The options for constructing the regex.
  * @returns {RegExp} The constructed regular expression object.
  */
 export function usernameRegex(options) {
   validateUsernameOptions(options);
-  const prefix = getPrefix(options);
-  const core = usernameStringRegexBuilder(options);
-  const domainPart = getDomainPart(options);
-  return new RegExp(`^${prefix}${core}${domainPart}$`);
+
+  if (Array.isArray(options)) {
+    const combinedPattern = options.map(getSinglePattern).join('|');
+    return new RegExp(`^(?:${combinedPattern})$`);
+  }
+
+  return new RegExp(`^${getSinglePattern(options)}$`);
 }
 
 /**
  * Validates whether a string matches the specified username pattern.
  * @param {string} s The input string to validate.
- * @param {UsernameRegexOptions} [options] The regex construction options.
+ * @param {UsernameOptionsInput} [options] The regex construction options.
  * @returns {boolean} True if the string is a valid username, false otherwise.
  * @throws {TypeError} If the input is not a string.
  */
@@ -158,28 +180,35 @@ export function isValidUsername(s, options) {
 
 /**
  * Generates a global regular expression to find usernames within a text.
- * @param {UsernameRegexOptions} [options] The options for the regex.
+ * @param {UsernameOptionsInput} [options] The options for the regex.
  * @returns {RegExp} The global regular expression for finding usernames.
  */
 export function findUsernameRegex(options) {
   validateUsernameOptions(options);
-  const prefix = getPrefix(options);
-  const core = usernameStringRegexBuilder(options);
-  const domainPart = getDomainPart(options);
+
+  // Determine if we should use word boundaries or non-word character lookarounds.
+  // If an array is passed, we check the first element's prefix to decide.
+  const firstOpt = Array.isArray(options) ? options[0] : options;
+  const hasPrefix = firstOpt?.prefix;
 
   // FIX: \b fails when the prefix is a non-word character (like @).
   // We use a lookbehind for non-word characters or start of string,
   // and a lookahead for non-word characters or end of string.
-  const boundaryStart = options?.prefix ? '(?:^|(?<=\\W))' : '\\b';
-  const boundaryEnd = options?.prefix ? '(?=\\W|$)' : '\\b';
+  const boundaryStart = hasPrefix ? '(?:^|(?<=\\W))' : '\\b';
+  const boundaryEnd = hasPrefix ? '(?=\\W|$)' : '\\b';
 
-  return new RegExp(`${boundaryStart}${prefix}${core}${domainPart}${boundaryEnd}`, 'g');
+  if (Array.isArray(options)) {
+    const combinedPattern = options.map(getSinglePattern).join('|');
+    return new RegExp(`${boundaryStart}(?:${combinedPattern})${boundaryEnd}`, 'g');
+  }
+
+  return new RegExp(`${boundaryStart}${getSinglePattern(options)}${boundaryEnd}`, 'g');
 }
 
 /**
  * Extracts usernames from a text and applies optional transformations.
  * @param {string} text The text to search through.
- * @param {UsernameRegexOptions} [options] The options for extraction.
+ * @param {UsernameOptionsInput} [options] The options for extraction.
  * @returns {string[]} An array of extracted and transformed usernames.
  * @throws {TypeError} If the input text is not a string.
  */
@@ -191,10 +220,11 @@ export function extractUsernames(text, options) {
   const matches = text.match(findUsernameRegex(options));
   if (!matches) return [];
 
-  // Apply the transformation if requested by the developer
-  if (options?.transform) {
-    return matches.map((match) => applyTransform(match, options.transform));
-  }
+  // If an array is provided, we use the transform from the first element
+  // because a single combined regex cannot distinguish which rule matched.
+  const transform = Array.isArray(options) ? options[0]?.transform : options?.transform;
+
+  if (transform) return matches.map((match) => applyTransform(match, transform));
 
   return matches;
 }
