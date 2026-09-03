@@ -9,7 +9,6 @@ import TinySiteMap from './TinySiteMap.mjs';
 
 /**
  * @typedef {Object} TinySiteMapStreamOptions
- * @property {URL} [hostname] - Base URL for relative paths.
  * @property {'silent'|'warn'|'error'} [level] - Error handling level. Defaults to 'warn'.
  * @property {import('./TinySiteMap.mjs').SitemapNamespace[]} [xmlns] - XML namespaces or attributes to include.
  */
