@@ -30,6 +30,30 @@
  */
 class TinyPasswordValidator {
   /**
+   * Internal error messages, frozen to prevent runtime tampering.
+   * @type {Readonly<{ [key: number]: string }>}
+   */
+  static #ERROR_MESSAGES = Object.freeze({
+    1: `Password must have at least {value} characters.`,
+    2: `Password cannot exceed {value} characters.`,
+    3: 'Password must contain at least one lowercase letter.',
+    4: 'Password must contain at least one uppercase letter.',
+    5: 'Password must contain at least one number.',
+    6: 'Password must contain at least one special character (@$!%*?&).',
+  });
+
+  /**
+   * Static regex patterns to prevent recompilation and ensure consistency.
+   * @type {Readonly<{ lowercase: () => RegExp, uppercase: () => RegExp, numbers: () => RegExp, special: () => RegExp }>}
+   */
+  static #PATTERNS = Object.freeze({
+    lowercase: () => /[a-z]/,
+    uppercase: () => /[A-Z]/,
+    numbers: () => /\d/,
+    special: () => /[@$!%*?&]/,
+  });
+
+  /**
    * The internal configuration object containing the validation rules.
    * @type {PasswordRules}
    */
@@ -46,6 +70,9 @@ class TinyPasswordValidator {
    * @param {number} [customRules.maxLength=128] - The maximum allowed length of the password.
    */
   constructor(customRules = {}) {
+    // Ensure customRules is an object to prevent crashes on null/undefined
+    const rulesToApply = customRules && typeof customRules === 'object' ? customRules : {};
+
     this.#rules = {
       requireLowercase: true,
       requireUppercase: true,
@@ -53,29 +80,43 @@ class TinyPasswordValidator {
       requireSpecial: true,
       minLength: 8,
       maxLength: 128,
-      ...customRules,
+      ...rulesToApply,
     };
     this.#validateRulesConfig(this.#rules);
   }
 
   /**
-   * Validates if the rules configuration is valid.
+   * Validates the rules configuration with strict type checking.
    * @param {PasswordRules} rules
-   * @throws {TypeError} If a data type is incorrect.
+   * @throws {TypeError} If a property type is incorrect or missing.
    * @throws {RangeError} If numeric values are invalid.
    */
   #validateRulesConfig(rules) {
-    if (
-      typeof rules.requireLowercase !== 'boolean' ||
-      typeof rules.requireUppercase !== 'boolean' ||
-      typeof rules.requireNumbers !== 'boolean' ||
-      typeof rules.requireSpecial !== 'boolean'
-    ) {
-      throw new TypeError('Requirement properties must be boolean.');
+    if (!rules || typeof rules !== 'object') {
+      throw new TypeError('Rules must be a valid object.');
     }
 
+    // Strict boolean validation
+    const booleanProps = [
+      'requireLowercase',
+      'requireUppercase',
+      'requireNumbers',
+      'requireSpecial',
+    ];
+    for (const prop of booleanProps) {
+      // @ts-ignore
+      if (typeof rules[prop] !== 'boolean') {
+        throw new TypeError(`Property "${prop}" must be a boolean.`);
+      }
+    }
+
+    // Strict number validation
     if (typeof rules.minLength !== 'number' || typeof rules.maxLength !== 'number') {
       throw new TypeError('minLength and maxLength must be numbers.');
+    }
+
+    if (!Number.isInteger(rules.minLength) || !Number.isInteger(rules.maxLength)) {
+      throw new TypeError('minLength and maxLength must be integers.');
     }
 
     if (rules.minLength < 0 || rules.maxLength < 0) {
@@ -97,26 +138,17 @@ class TinyPasswordValidator {
 
   /**
    * Setter to update rules with strict validation.
-   * @param {PasswordRules} newRules - New configuration.
+   * @param {Partial<PasswordRules>} newRules - New configuration to merge.
+   * @throws {TypeError} If the provided rules are invalid.
    */
   set rules(newRules) {
+    if (!newRules || typeof newRules !== 'object') {
+      throw new TypeError('New rules must be an object.');
+    }
     const mergedRules = { ...this.#rules, ...newRules };
     this.#validateRulesConfig(mergedRules);
     this.#rules = mergedRules;
   }
-
-  /**
-   * A private mapping of error codes to their corresponding human-readable error messages.
-   * @type {Object.<number, string>}
-   */
-  #errorMessages = {
-    1: `Password must have at least {value} characters.`,
-    2: `Password cannot exceed {value} characters.`,
-    3: 'Password must contain at least one lowercase letter.',
-    4: 'Password must contain at least one uppercase letter.',
-    5: 'Password must contain at least one number.',
-    6: 'Password must contain at least one special character (@$!%*?&).',
-  };
 
   /**
    * Validates a password based on the configured rules.
@@ -139,10 +171,14 @@ class TinyPasswordValidator {
     // 1. Length Validation
     if (password.length < this.#rules.minLength) {
       errorCodes.push(1);
-      errors.push(this.#errorMessages[1].replace('{value}', String(this.#rules.minLength)));
+      errors.push(
+        TinyPasswordValidator.#ERROR_MESSAGES[1].replace('{value}', String(this.#rules.minLength)),
+      );
     } else if (password.length > this.#rules.maxLength) {
       errorCodes.push(2);
-      errors.push(this.#errorMessages[2].replace('{value}', String(this.#rules.maxLength)));
+      errors.push(
+        TinyPasswordValidator.#ERROR_MESSAGES[2].replace('{value}', String(this.#rules.maxLength)),
+      );
     } else {
       score += 1;
     }
@@ -150,44 +186,44 @@ class TinyPasswordValidator {
     // 2. Lowercase Validation
     if (this.#rules.requireLowercase) {
       totalPossiblePoints++;
-      if (/[a-z]/.test(password)) {
+      if (TinyPasswordValidator.#PATTERNS.lowercase().test(password)) {
         score++;
       } else {
         errorCodes.push(3);
-        errors.push(this.#errorMessages[3]);
+        errors.push(TinyPasswordValidator.#ERROR_MESSAGES[3]);
       }
     }
 
     // 3. Uppercase Validation
     if (this.#rules.requireUppercase) {
       totalPossiblePoints++;
-      if (/[A-Z]/.test(password)) {
+      if (TinyPasswordValidator.#PATTERNS.uppercase().test(password)) {
         score++;
       } else {
         errorCodes.push(4);
-        errors.push(this.#errorMessages[4]);
+        errors.push(TinyPasswordValidator.#ERROR_MESSAGES[4]);
       }
     }
 
     // 4. Numbers Validation
     if (this.#rules.requireNumbers) {
       totalPossiblePoints++;
-      if (/\d/.test(password)) {
+      if (TinyPasswordValidator.#PATTERNS.numbers().test(password)) {
         score++;
       } else {
         errorCodes.push(5);
-        errors.push(this.#errorMessages[5]);
+        errors.push(TinyPasswordValidator.#ERROR_MESSAGES[5]);
       }
     }
 
     // 5. Special Characters Validation
     if (this.#rules.requireSpecial) {
       totalPossiblePoints++;
-      if (/[@$!%*?&]/.test(password)) {
+      if (TinyPasswordValidator.#PATTERNS.special().test(password)) {
         score++;
       } else {
         errorCodes.push(6);
-        errors.push(this.#errorMessages[6]);
+        errors.push(TinyPasswordValidator.#ERROR_MESSAGES[6]);
       }
     }
 
