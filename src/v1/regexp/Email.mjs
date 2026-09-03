@@ -95,18 +95,34 @@ function verifyEmail(s, options = {}) {
   const [username, domain] = s.split('@');
 
   // Whitelist checks: If a whitelist exists, the value MUST be in it.
-  if (Array.isArray(options.whitelistDomains) && !options.whitelistDomains.includes(domain)) {
+  if (
+    Array.isArray(options.whitelistDomains) &&
+    options.whitelistDomains.length > 0 &&
+    !options.whitelistDomains.includes(domain)
+  ) {
     return false;
   }
-  if (Array.isArray(options.whitelistUsernames) && !options.whitelistUsernames.includes(username)) {
+  if (
+    Array.isArray(options.whitelistUsernames) &&
+    options.whitelistUsernames.length > 0 &&
+    !options.whitelistUsernames.includes(username)
+  ) {
     return false;
   }
 
   // Blacklist checks: If a blacklist exists, the value MUST NOT be in it.
-  if (Array.isArray(options.blacklistDomains) && options.blacklistDomains.includes(domain)) {
+  if (
+    Array.isArray(options.blacklistDomains) &&
+    options.blacklistDomains.length > 0 &&
+    options.blacklistDomains.includes(domain)
+  ) {
     return false;
   }
-  if (Array.isArray(options.blacklistUsernames) && options.blacklistUsernames.includes(username)) {
+  if (
+    Array.isArray(options.blacklistUsernames) &&
+    options.blacklistUsernames.length > 0 &&
+    options.blacklistUsernames.includes(username)
+  ) {
     return false;
   }
 
