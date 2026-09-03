@@ -4,6 +4,12 @@ import TinyDebugger from '../tools/TinyDebugger.mjs';
 const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
 
 /**
+ * @typedef {Object} RouterHistoryEntry
+ * @property {string} path - The URL path recorded in history.
+ * @property {number} timestamp - The Unix timestamp when this path was visited.
+ */
+
+/**
  * @typedef {Object} SegExResultExtra
  * @property {string} [pattern] - Stored to allow removal by string.
  */
@@ -85,6 +91,8 @@ class TinyRouter extends TinyDebugger {
   #popstateHandler;
   /** @type {boolean} Flag to determine if history navigation changes should be detected. */
   #detectHistoryChange;
+  /** @type {RouterHistoryEntry[]} The internal record of visited paths. */
+  #history = [];
 
   /**
    * @param {RouterOptions} [options={}] - Configuration options for the router.
@@ -178,6 +186,41 @@ class TinyRouter extends TinyDebugger {
    */
   get routes() {
     return this.#routes.map((route) => route.segmentExtractor.pattern ?? '');
+  }
+
+  /**
+   * Returns a copy of the current navigation history.
+   * @returns {RouterHistoryEntry[]} An array of history entries.
+   */
+  get history() {
+    return this.#history.map((i) => ({ ...i }));
+  }
+
+  /**
+   * Imports and validates a history log to restore previous navigation state.
+   * @param {RouterHistoryEntry[]} historyData - The array of history entries to import.
+   * @throws {TypeError} If historyData is not an array or if any entry is invalid.
+   */
+  set history(historyData) {
+    if (!Array.isArray(historyData)) {
+      throw new TypeError('History data must be an array.');
+    }
+
+    // Deep validation of every entry
+    for (const entry of historyData) {
+      if (typeof entry !== 'object' || entry === null) {
+        throw new TypeError('Each history entry must be an object.');
+      }
+      if (typeof entry.path !== 'string') {
+        throw new TypeError('Each history entry must have a string "path" property.');
+      }
+      if (typeof entry.timestamp !== 'number') {
+        throw new TypeError('Each history entry must have a number "timestamp" property.');
+      }
+    }
+
+    this.#history = historyData.map((i) => ({ ...i }));
+    this.log('info', 'History has been successfully imported.');
   }
 
   /**
@@ -373,6 +416,17 @@ class TinyRouter extends TinyDebugger {
   }
 
   /**
+   * Internal method to record a successful navigation.
+   * @param {string} path - The path to record.
+   */
+  #recordHistory(path) {
+    this.#history.push({
+      path,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
    * Internal method to match the current URL against registered routes.
    * @returns {Promise<void>}
    */
@@ -386,6 +440,10 @@ class TinyRouter extends TinyDebugger {
 
       if (match) {
         const matchResult = { path, params, query };
+
+        // Record the successful navigation in our private history
+        this.#recordHistory(path);
+
         // Execute the route's specific callback
         this.emit('BeforeRouteChanged', matchResult);
         await route.callback(matchResult);
