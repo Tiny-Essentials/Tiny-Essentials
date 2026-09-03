@@ -7,6 +7,7 @@ import executeObjType from './libs/objType.mjs';
 import testI18 from './libs/TinyI18.mjs';
 import testTinySiteMap from './libs/TinySiteMap.mjs';
 import TinyPkgExportValidator from '../src/v1/libs/tools/TinyPkgExportValidator.mjs';
+import testTinyPasswordValidator from './libs/TinyPasswordValidator.mjs';
 
 new TinyPkgExportValidator('../package.json', '../')
   .execCommandTester(
@@ -19,6 +20,7 @@ new TinyPkgExportValidator('../package.json', '../')
       levelUp: testLevelUp,
       sitemap: testTinySiteMap,
       i18: testI18,
+      pwValidator: testTinyPasswordValidator,
     },
     process.argv,
   )

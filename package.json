@@ -17,6 +17,7 @@
     "test:mjs:ratelimit": "node test/index.mjs rateLimit",
     "test:mjs:levelup": "node test/index.mjs levelUp",
     "test:mjs:sitemap": "node test/index.mjs sitemap",
+    "test:mjs:pwvalidator": "node test/index.mjs pwValidator",
     "test:mjs:filemanager": "node test/index.mjs fileManager",
     "test:mjs:i18": "node test/index.mjs i18",
     "fix:prettier": "npm run fix:prettier:src && npm run fix:prettier:build && npm run fix:prettier:test && npm run fix:prettier:rollup.config && npm run fix:prettier:webpack.config && npm run fix:prettier:tiny_fork && npm run fix:prettier:check_exports",
@@ -276,6 +277,10 @@
     "./libs/utils/TinyPromiseQueue": {
       "require": "./dist/v1/libs/utils/TinyPromiseQueue.cjs",
       "import": "./dist/v1/libs/utils/TinyPromiseQueue.mjs"
+    },
+    "./libs/utils/TinyPasswordValidator": {
+      "require": "./dist/v1/libs/utils/TinyPasswordValidator.cjs",
+      "import": "./dist/v1/libs/utils/TinyPasswordValidator.mjs"
     },
     "./libs/html/notification/TinyNotifyCenter": {
       "require": "./dist/v1/libs/html/notification/TinyNotifyCenter.cjs",
