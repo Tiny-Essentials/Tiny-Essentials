@@ -66,6 +66,21 @@ class TinyPasswordValidator {
     special: () => /[@$!%*?&]/,
   });
 
+  static #fullPatternString =
+    '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$';
+
+  static #getFullPattern() {
+    return new RegExp(TinyPasswordValidator.#fullPatternString);
+  }
+
+  static get fullPatternString() {
+    return TinyPasswordValidator.#fullPatternString;
+  }
+
+  static get getFullPattern() {
+    return TinyPasswordValidator.#getFullPattern;
+  }
+
   /**
    * The internal configuration object containing the validation rules.
    * @type {PasswordRules}
