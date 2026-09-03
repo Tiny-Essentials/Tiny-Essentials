@@ -4,73 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TinyArrayPaginator Test</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        background: #f4f6f8;
-        color: #333;
-        padding: 20px;
-      }
-      h1 {
-        color: #444;
-        margin-bottom: 10px;
-      }
-      .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 20px;
-        background: #fff;
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      }
-      .controls label {
-        font-weight: bold;
-        font-size: 0.9em;
-      }
-      .controls input,
-      .controls select {
-        padding: 6px;
-        border-radius: 4px;
-        border: 1px solid #ccc;
-        width: 100%;
-        max-width: 180px;
-      }
-      .results {
-        background: #fff;
-        border-radius: 8px;
-        padding: 15px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      }
-      .result-item {
-        padding: 8px;
-        border-bottom: 1px solid #eee;
-      }
-      .result-item:last-child {
-        border-bottom: none;
-      }
-      .pagination-info {
-        margin-top: 10px;
-        font-size: 0.9em;
-        color: #666;
-      }
-      button {
-        padding: 6px 12px;
-        border-radius: 4px;
-        border: none;
-        background: #0078d4;
-        color: white;
-        cursor: pointer;
-        font-size: 0.9em;
-      }
-      button:hover {
-        background: #005ea2;
-      }
-      .filter-section {
-        flex: 1 1 100%;
-      }
-    </style>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <h1>TinyArrayPaginator Tester</h1>
@@ -98,64 +32,6 @@
 
     <div class="results" id="results"></div>
 
-    <script type="module">
-      import { TinyArrayPaginator } from '/src/v1/libs/array/TinyArrayPaginator.mjs';
-
-      // Example dataset
-      const dataset = Array.from({ length: 50 }, (_, i) => ({
-        id: i + 1,
-        name: `User ${i + 1}`,
-        group: i % 2 === 0 ? 'A' : 'B',
-      }));
-
-      const paginator = new TinyArrayPaginator(dataset);
-      window.paginator = paginator;
-
-      function render() {
-        const page = parseInt(document.getElementById('page').value, 10);
-        const perPage = parseInt(document.getElementById('perPage').value, 10);
-        const filterKey = document.getElementById('filterKey').value.trim();
-        const filterValue = document.getElementById('filterValue').value.trim();
-
-        let filter = null;
-        if (filterKey && filterValue) {
-          filter = { [filterKey]: filterValue };
-        }
-
-        const {
-          items,
-          page: currentPage,
-          totalPages,
-          totalItems,
-          hasPrev,
-          hasNext,
-        } = paginator.get({ page, perPage, filter });
-
-        const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = '';
-
-        if (items.length === 0) {
-          resultsDiv.innerHTML = `<p>No results found.</p>`;
-          return;
-        }
-
-        items.forEach((item) => {
-          const div = document.createElement('div');
-          div.className = 'result-item';
-          div.textContent = JSON.stringify(item);
-          resultsDiv.appendChild(div);
-        });
-
-        const info = document.createElement('div');
-        info.className = 'pagination-info';
-        info.textContent = `Page ${currentPage} of ${totalPages} | Total items: ${totalItems} | Prev: ${hasPrev} | Next: ${hasNext}`;
-        resultsDiv.appendChild(info);
-      }
-
-      document.getElementById('applyBtn').addEventListener('click', render);
-
-      // Initial render
-      render();
-    </script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>

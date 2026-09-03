@@ -1,0 +1,32 @@
+body {
+  font-family: sans-serif;
+  padding: 2em;
+}
+textarea,
+input[type='text'] {
+  width: 100%;
+  padding: 0.5em;
+  margin-bottom: 1em;
+}
+button {
+  margin: 0.2em 0.5em 1em 0;
+  padding: 0.5em 1em;
+  cursor: pointer;
+}
+pre {
+  background: #eee;
+  padding: 1em;
+  max-height: 300px;
+  overflow: auto;
+}
+.paste-preview {
+  margin-top: 1em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+}
+.paste-preview img {
+  max-height: 150px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}

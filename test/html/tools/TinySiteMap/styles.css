@@ -1,0 +1,211 @@
+/* 
+           COLOR VARIABLES 
+           Used for the professional dark theme.
+        */
+:root {
+  --bg-dark: #1e1e1e; /* Main background */
+  --bg-side: #252526; /* Sidebar background */
+  --bg-input: #3c3c3c; /* Input fields */
+  --text-main: #cccccc; /* Primary text color */
+  --text-bright: #ffffff; /* High emphasis text */
+  --accent: #007acc; /* Primary action color (Blue) */
+  --error: #f44336; /* Error color (Red) */
+  --success: #4caf50; /* Success color (Green) */
+  --warning: #ff9800; /* Warning color (Orange) */
+  --xml-tag: #569cd6; /* XML Tag color */
+  --xml-attr: #9cdcfe; /* XML Attribute color */
+  --xml-val: #ce9178; /* XML Value color */
+  --xml-comment: #6a9955; /* XML Comment color */
+  --border: #454545; /* Borders */
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* HEADER */
+header {
+  background-color: var(--bg-side);
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-bright);
+  letter-spacing: 1px;
+}
+
+/* MAIN LAYOUT */
+main {
+  display: grid;
+  grid-template-columns: 350px 1fr 1fr;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 15px;
+}
+
+h2 {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  color: var(--text-main);
+  margin-top: 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+/* FORM ELEMENTS */
+.field-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  font-size: 0.8rem;
+  margin-bottom: 5px;
+  color: #aaa;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-bright);
+  padding: 8px;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.85rem;
+}
+
+input:focus {
+  outline: 1px solid var(--accent);
+}
+
+.btn-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+button {
+  cursor: pointer;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  transition: opacity 0.2s;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+.btn-primary {
+  background-color: var(--accent);
+  color: white;
+}
+.btn-secondary {
+  background-color: #555;
+  color: white;
+}
+.btn-success {
+  background-color: var(--success);
+  color: white;
+}
+.btn-danger {
+  background-color: var(--error);
+  color: white;
+}
+
+/* XML VIEWER */
+#xml-output {
+  background-color: #1e1e1e;
+  padding: 15px;
+  margin: 0;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  flex-grow: 1;
+  overflow: auto;
+}
+
+/* Syntax Highlighting Classes */
+.xml-tag {
+  color: var(--xml-tag);
+}
+.xml-attr {
+  color: var(--xml-attr);
+}
+.xml-val {
+  color: var(--xml-val);
+}
+.xml-text {
+  color: var(--text-bright);
+}
+
+/* CONSOLE */
+#console {
+  height: 150px;
+  background-color: #000;
+  border-top: 3px solid var(--border);
+  padding: 10px;
+  font-family: 'Consolas', monospace;
+  font-size: 0.85rem;
+  overflow-y: auto;
+}
+
+.log-entry {
+  margin-bottom: 4px;
+  border-left: 3px solid #444;
+  padding-left: 8px;
+}
+.log-error {
+  color: var(--error);
+  border-left-color: var(--error);
+}
+.log-success {
+  color: var(--success);
+  border-left-color: var(--success);
+}
+.log-info {
+  color: var(--accent);
+  border-left-color: var(--accent);
+}
+
+.editor-wrapper,
+#data-json,
+#xml-editor-container,
+.CodeMirror {
+  height: 100% !important;
+}
+
+/* CodeMirror Overrides */
+.CodeMirror {
+  font-size: 13px !important;
+}

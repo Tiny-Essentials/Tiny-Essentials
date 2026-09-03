@@ -4,54 +4,7 @@
     <meta charset="UTF-8" />
     <title>TinyHtml Viewport Test</title>
     <script src="/__buffer.js"></script>
-    <script type="module">
-      import { TinyHtml } from '/src/v1/libs/html/TinyHtml.mjs';
-      window.TinyHtml = TinyHtml;
-      TinyHtml.elemDebug = true;
-    </script>
-    <style>
-      body {
-        margin: 0;
-        font-family: sans-serif;
-      }
-
-      .spacer {
-        height: 1200px;
-        background: #eee;
-      }
-
-      .test-element {
-        margin: 50px auto;
-        width: 80%;
-        height: 150px;
-        background: lightcoral;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        color: white;
-        transition: background 0.3s;
-      }
-
-      .visible-partial {
-        background: orange !important;
-      }
-
-      .visible-full {
-        background: green !important;
-      }
-
-      #results {
-        position: fixed;
-        top: 0;
-        left: 0;
-        background: black;
-        color: white;
-        padding: 5px 10px;
-        font-size: 14px;
-        z-index: 100;
-      }
-    </style>
+    <style></style>
   </head>
   <body>
     <div id="results">Scroll to test visibility...</div>
@@ -62,30 +15,6 @@
 
     <div class="spacer"></div>
 
-    <script type="module">
-      const target = TinyHtml.getById('target');
-      const resultDisplay = TinyHtml.getById('results');
-
-      function update() {
-        const isPartial = target.isInViewport();
-        const isFull = target.isScrolledIntoView();
-
-        target.removeClass('visible-partial', 'visible-full');
-
-        if (isFull) {
-          target.addClass('visible-full');
-          resultDisplay.setText('Fully Visible in Viewport');
-        } else if (isPartial) {
-          target.addClass('visible-partial');
-          resultDisplay.setText('Partially Visible in Viewport');
-        } else {
-          resultDisplay.setText('Not Visible in Viewport');
-        }
-      }
-
-      window.addEventListener('scroll', update);
-      window.addEventListener('resize', update);
-      window.addEventListener('load', update);
-    </script>
+    <script type="module"></script>
   </body>
 </html>

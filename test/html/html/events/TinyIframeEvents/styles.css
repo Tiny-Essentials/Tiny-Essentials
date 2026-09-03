@@ -1,0 +1,8 @@
+iframe {
+  width: 600px;
+  height: 200px;
+  border: 2px solid #333;
+}
+button {
+  margin: 5px;
+}

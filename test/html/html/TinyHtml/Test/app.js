@@ -1,0 +1,95 @@
+import { TinyHtml } from '/src/v1/libs/html/TinyHtml.mjs';
+import { TinyHtmlElems } from '/src/v1/libs/html/TinyHtml/index.mjs';
+
+window.TinyHtmlElems = TinyHtmlElems;
+window.TinyHtml = TinyHtml;
+
+TinyHtml.elemDebug = true;
+TinyHtmlElems.Icon.defaultTag = 'span';
+const base = TinyHtml.getById('base');
+
+window.tinyButton = new TinyHtmlElems.Button({ label: 'Mio' }).appendTo(base);
+base.append(TinyHtml.createFrom('br'));
+
+window.tinyIcon = new TinyHtmlElems.Icon('tiny-icon').appendTo(base);
+base.append(TinyHtml.createFrom('br'));
+
+window.tinyLink = new TinyHtmlElems.Anchor({
+  href: 'https://github.com/JasminDreasond',
+  label: 'Pudding',
+  target: '_blank',
+}).appendTo(base);
+base.append(TinyHtml.createFrom('br'));
+
+window.tinyTextarea = new TinyHtmlElems.Textarea({
+  value: '',
+  rows: 7,
+  cols: 50,
+  autocapitalize: 'sentences',
+  placeholder: 'Tiny test',
+}).appendTo(base);
+base.append(TinyHtml.createFrom('br'));
+
+window.tinySelect = new TinyHtmlElems.Select({
+  multiple: false,
+  options: [
+    { value: 'pudding', label: 'Pudding' },
+    { value: 'mio', label: 'Mio' },
+    { value: 'yay', label: 'Yay!' },
+  ],
+}).appendTo(base);
+base.append(TinyHtml.createFrom('br'));
+
+window.tinyForm = new TinyHtmlElems.Form({
+  method: 'post',
+  target: '_blank',
+  action: location.href,
+}).appendTo(base);
+base.append(TinyHtml.createFrom('br'));
+
+window.tinyEmbed = new TinyHtmlElems.Embed({
+  src: '/6c2df338-5257-4a2d-9dea-14f9f4ae8aba.png',
+  height: 300,
+}).appendTo(base);
+base.append(TinyHtml.createFrom('br'));
+
+window.tinyEmbed = new TinyHtmlElems.ImgInput({
+  src: '/f67893c7-e757-4e24-bc31-8f7490ae2098.png',
+  height: 300,
+}).appendTo(base);
+base.append(TinyHtml.createFrom('br'));
+
+/////////////////////////////////////////////////////////////
+
+base.append(TinyHtml.createFrom('br'));
+window.tinyImg = new TinyHtmlElems.Img({
+  src: '/5ec92aff-7a9d-4b86-bcc3-fe715def537a.png',
+  height: 300,
+}).appendTo(base);
+
+base.append(TinyHtml.createFrom('br'));
+window.tinyImg = new TinyHtmlElems.Iframe({
+  src: '/TinyI18.html',
+  height: 500,
+  width: 1000,
+}).appendTo(base);
+
+base.append(TinyHtml.createFrom('br'));
+window.tinyVideo = new TinyHtmlElems.Video({
+  src: '/temp/test.mp4',
+  controls: false,
+  autoplay: false,
+  loop: false,
+  muted: false,
+  volume: 1,
+}).appendTo(base);
+
+base.append(TinyHtml.createFrom('br'));
+window.tinyAudio = new TinyHtmlElems.Audio({
+  src: '/temp/test.mp3',
+  controls: true,
+  autoplay: false,
+  loop: false,
+  muted: false,
+  volume: 1,
+}).appendTo(base);

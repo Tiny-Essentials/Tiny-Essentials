@@ -1,0 +1,31 @@
+body {
+  font-family: sans-serif;
+  padding: 2em;
+}
+.box {
+  padding: 0.5em 1em;
+  margin: 0.5em 0;
+  border: 1px solid #ccc;
+}
+.highlight {
+  background: #f9f871;
+}
+.controls {
+  margin-top: 2em;
+}
+.controls button {
+  display: block;
+  margin: 0.3em 0;
+}
+#listbase {
+  display: flex;
+}
+#list1 {
+  width: 50%;
+  padding-right: 15px;
+  text-align: right;
+}
+#list2 {
+  width: 50%;
+  padding-left: 15px;
+}

@@ -1,0 +1,36 @@
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: #f0f0f0;
+  font-family: sans-serif;
+}
+
+.drag-hidden {
+  opacity: 0;
+  pointer-events: 0;
+}
+
+#wall {
+  position: absolute;
+  top: 150px;
+  left: 300px;
+  width: 200px;
+  height: 200px;
+  background-color: #0077ff;
+}
+
+#box {
+  position: absolute;
+  top: 200px;
+  left: 50px;
+  width: 100px;
+  height: 100px;
+  background-color: red;
+  cursor: grab;
+  transition: box-shadow 0.2s;
+}
+
+#box.colliding {
+  box-shadow: 0 0 10px 4px #ff0000;
+}

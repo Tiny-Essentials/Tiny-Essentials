@@ -4,67 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Marketcap Tools 💰</title>
-    <style>
-      body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: #f0f4f8;
-        padding: 2rem;
-        color: #333;
-      }
-      h1 {
-        text-align: center;
-        color: #2b6cb0;
-      }
-      .toolbox {
-        max-width: 600px;
-        margin: 2rem auto;
-        background: #fff;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
-      }
-      label {
-        display: block;
-        margin: 1rem 0 0.3rem;
-        font-weight: bold;
-      }
-      input[type='number'] {
-        width: 100%;
-        padding: 0.6rem;
-        font-size: 1rem;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-      }
-      button {
-        margin-top: 1.5rem;
-        padding: 0.8rem 1.2rem;
-        font-size: 1rem;
-        border: none;
-        border-radius: 8px;
-        background-color: #2b6cb0;
-        color: white;
-        cursor: pointer;
-      }
-      button:hover {
-        background-color: #225ea8;
-      }
-      .result {
-        margin-top: 1.5rem;
-        padding: 1rem;
-        background: #edf2f7;
-        border-radius: 8px;
-      }
-      .error {
-        color: red;
-        font-weight: bold;
-      }
-      .footer {
-        text-align: center;
-        margin-top: 3rem;
-        font-size: 0.9rem;
-        color: #666;
-      }
-    </style>
+    <style></style>
   </head>
   <body>
     <h1>📊 Marketcap Tools</h1>
@@ -85,35 +25,6 @@
 
     <div class="footer">Made with ❤️ by tiny AI for JasminDreasond</div>
 
-    <script type="module">
-      import { calculateMarketcap, compareMarketcap } from '/src/v1/basics/simpleMath.mjs';
-
-      window.calculate = function () {
-        const originalMarketCap = parseFloat(document.getElementById('originalMarketCap').value);
-        const circulatingSupply = parseFloat(document.getElementById('circulatingSupply').value);
-        const newMarketCap = parseFloat(document.getElementById('newMarketCap').value);
-        const resultBox = document.getElementById('resultBox');
-        resultBox.innerHTML = '';
-
-        try {
-          const originalPrice = calculateMarketcap(originalMarketCap, circulatingSupply);
-          let html = `<p><strong>Original Price:</strong> $${originalPrice.toFixed(6)}</p>`;
-
-          if (!isNaN(newMarketCap)) {
-            const { newPrice, priceChangePercent } = compareMarketcap(
-              originalMarketCap,
-              circulatingSupply,
-              newMarketCap,
-            );
-            html += `<p><strong>New Price:</strong> $${newPrice.toFixed(6)}</p>`;
-            html += `<p><strong>Price Change:</strong> ${priceChangePercent.toFixed(2)}%</p>`;
-          }
-
-          resultBox.innerHTML = html;
-        } catch (err) {
-          resultBox.innerHTML = `<p class="error">⚠️ ${err.message}</p>`;
-        }
-      };
-    </script>
+    <script type="module"></script>
   </body>
 </html>

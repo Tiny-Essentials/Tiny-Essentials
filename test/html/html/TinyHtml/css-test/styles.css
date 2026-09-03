@@ -1,0 +1,14 @@
+body {
+  font-family: sans-serif;
+  padding: 2rem;
+}
+#box {
+  width: 150px;
+  height: 150px;
+  background-color: lightgray;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+button {
+  margin: 0.25rem;
+}

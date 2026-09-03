@@ -1,0 +1,19 @@
+body {
+  font-family: sans-serif;
+  padding: 20px;
+}
+
+button {
+  margin: 5px;
+  padding: 8px 12px;
+}
+
+.test-box {
+  width: 200px;
+  height: 100px;
+  background: lightblue;
+  margin: 10px 0;
+  display: block;
+  opacity: 1;
+  overflow: hidden;
+}

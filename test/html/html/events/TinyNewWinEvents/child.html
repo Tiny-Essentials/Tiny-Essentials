@@ -16,23 +16,6 @@
     <p>Waiting for messages...</p>
     <pre id="log"></pre>
 
-    <script type="module">
-      import { TinyNewWinEvents } from '../src/v1/libs/html/events/TinyNewWinEvents.mjs';
-
-      const log = (msg) => {
-        document.querySelector('#log').textContent += msg + '\n';
-      };
-
-      window.conn = new TinyNewWinEvents();
-
-      conn.on('win:ping', (payload) => {
-        log('Received ping: ' + JSON.stringify(payload));
-        conn.winEmit('pong', { from: 'child', receivedAt: Date.now() });
-      });
-
-      conn.onClose(() => {
-        log('Main window was closed');
-      });
-    </script>
+    <script type="module" src="child.js"></script>
   </body>
 </html>

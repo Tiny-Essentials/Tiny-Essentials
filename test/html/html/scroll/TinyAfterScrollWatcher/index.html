@@ -3,38 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>After Scroll Watcher Test</title>
-    <script type="module">
-      import { TinyAfterScrollWatcher } from '/src/v1/libs/html/scroll/TinyAfterScrollWatcher.mjs';
-      window.TinyAfterScrollWatcher = TinyAfterScrollWatcher;
-    </script>
-    <style>
-      body {
-        height: 200vh;
-        margin: 0;
-        padding: 0;
-        font-family: sans-serif;
-      }
-
-      .scroll-box {
-        width: 90%;
-        max-width: 600px;
-        height: 200px;
-        margin: 40px auto;
-        padding: 10px;
-        border: 2px solid #666;
-        overflow-y: scroll;
-        background: #f0f0f0;
-      }
-
-      .scroll-box .content {
-        height: 800px;
-        background: linear-gradient(#f0f0f0, #d0d0d0);
-      }
-
-      h1 {
-        text-align: center;
-      }
-    </style>
+    <style></style>
   </head>
   <body>
     <h1>🌀 Scroll Watcher Test</h1>
@@ -43,22 +12,6 @@
       <div class="content"></div>
     </div>
 
-    <script type="module">
-      // Watcher for the whole window
-      const windowWatcher = new TinyAfterScrollWatcher(window);
-      window.windowWatcher = windowWatcher;
-      windowWatcher.onStop(() => console.log('[window] Scroll stopped!'));
-
-      // Watcher for the scrollable div
-      const customBox = document.getElementById('customBox');
-      const boxWatcher = new TinyAfterScrollWatcher(customBox);
-      window.boxWatcher = boxWatcher;
-
-      boxWatcher.onScroll(() =>
-        boxWatcher.doAfterScroll(() => {
-          console.log('[customBox] Scroll stopped!');
-        }),
-      );
-    </script>
+    <script type="module"></script>
   </body>
 </html>

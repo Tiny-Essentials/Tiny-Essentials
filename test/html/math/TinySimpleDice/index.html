@@ -4,89 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TinySimpleDice Tester</title>
-    <style>
-      body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: #f4f6f8;
-        color: #333;
-        margin: 0;
-        padding: 0;
-      }
-
-      header {
-        background: #0078d4;
-        color: white;
-        text-align: center;
-        padding: 1.5rem 0;
-        font-size: 1.5rem;
-      }
-
-      main {
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 1rem;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      }
-
-      section {
-        margin-bottom: 2rem;
-      }
-
-      label {
-        display: block;
-        margin: 0.5rem 0 0.2rem;
-        font-weight: bold;
-      }
-
-      input[type='number'] {
-        width: 100%;
-        padding: 0.4rem;
-        font-size: 1rem;
-        border-radius: 4px;
-        border: 1px solid #ccc;
-      }
-
-      input[type='checkbox'] {
-        margin-right: 0.5rem;
-      }
-
-      button {
-        margin-top: 1rem;
-        padding: 0.6rem 1rem;
-        font-size: 1rem;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        background-color: #0078d4;
-        color: white;
-        transition: background-color 0.2s;
-      }
-
-      button:hover {
-        background-color: #005ea1;
-      }
-
-      .output {
-        margin-top: 1rem;
-        padding: 0.8rem;
-        background: #f0f0f0;
-        border-radius: 4px;
-        font-weight: bold;
-        min-height: 1.5rem;
-      }
-
-      .array-input {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-      }
-
-      .array-input input {
-        flex: 1;
-      }
-    </style>
+    <style></style>
   </head>
   <body>
     <header>TinySimpleDice Tester</header>
@@ -120,53 +38,6 @@
       </section>
     </main>
 
-    <script type="module">
-      import { TinySimpleDice } from '/src/v1/libs/math/TinySimpleDice.mjs';
-      let dice = null;
-      window.TinySimpleDice = TinySimpleDice;
-
-      // Create dice
-      document.getElementById('createDice').addEventListener('click', () => {
-        const maxValue = parseInt(document.getElementById('maxValue').value, 10);
-        const allowZero = document.getElementById('allowZero').checked;
-        try {
-          window.dice = dice;
-          dice = new TinySimpleDice({ maxValue, allowZero });
-          document.getElementById('diceStatus').textContent =
-            `Dice created with maxValue=${maxValue}, allowZero=${allowZero}`;
-        } catch (err) {
-          document.getElementById('diceStatus').textContent = `Error: ${err.message}`;
-        }
-      });
-
-      // Roll dice
-      document.getElementById('rollDice').addEventListener('click', () => {
-        if (!dice) {
-          document.getElementById('rollResult').textContent = 'Please create a dice first.';
-          return;
-        }
-        const result = dice.roll();
-        document.getElementById('rollResult').textContent = `Roll result: ${result}`;
-      });
-
-      // Roll array/set index
-      document.getElementById('rollArray').addEventListener('click', () => {
-        const input = document.getElementById('arrayInput').value;
-        const useSet = document.getElementById('useSet').checked;
-        const items = input
-          .split(',')
-          .map((s) => s.trim())
-          .filter((s) => s);
-        let collection = useSet ? new Set(items) : items;
-
-        try {
-          const index = TinySimpleDice.rollArrayIndex(collection);
-          const value = useSet ? Array.from(collection)[index] : collection[index];
-          document.getElementById('arrayResult').textContent = `Index: ${index}, Value: ${value}`;
-        } catch (err) {
-          document.getElementById('arrayResult').textContent = `Error: ${err.message}`;
-        }
-      });
-    </script>
+    <script type="module"></script>
   </body>
 </html>

@@ -1,0 +1,49 @@
+body {
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.card {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  color: #e0e0e0;
+  margin-bottom: 1rem;
+}
+.card-header {
+  background-color: #2d2d2d;
+  border-bottom: 1px solid #444;
+  font-weight: bold;
+  color: #00d4ff;
+}
+.log-container {
+  height: 300px;
+  overflow-y: auto;
+  background-color: #000;
+  font-family: monospace;
+  padding: 10px;
+  font-size: 0.85rem;
+  border: 1px solid #444;
+}
+.log-entry {
+  border-bottom: 1px solid #222;
+  padding: 4px 0;
+}
+.log-entry span {
+  color: #888;
+}
+.status-badge {
+  font-family: monospace;
+  font-size: 1.2rem;
+  color: #00ff88;
+}
+pre {
+  margin-bottom: 0;
+  color: #ffcc00;
+}
+.nav-btn {
+  margin-bottom: 5px;
+  text-align: left;
+}
+code {
+  color: #ff79c6;
+}

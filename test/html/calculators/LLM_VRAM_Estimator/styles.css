@@ -1,0 +1,255 @@
+/* ---------- Base ---------- */
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Ubuntu,
+    Cantarell,
+    'Helvetica Neue',
+    Arial,
+    'Noto Sans',
+    'Apple Color Emoji',
+    'Segoe UI Emoji',
+    'Segoe UI Symbol';
+  line-height: 1.6;
+  background: #0b0d10;
+  color: #e6ebf0;
+}
+a {
+  color: #9ecbff;
+}
+
+/* ---------- Layout ---------- */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px;
+}
+header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: linear-gradient(180deg, rgba(11, 13, 16, 0.95) 85%, rgba(11, 13, 16, 0));
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 0 8px 0;
+  margin-bottom: 8px;
+}
+h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: 0.2px;
+}
+.subtitle {
+  margin: 2px 0 0 0;
+  color: #b9c6d3;
+  font-size: 0.95rem;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 12px;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 960px) {
+  .grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .grid-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+/* ---------- Cards ---------- */
+.card {
+  background: #0f1318;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+    0 8px 30px rgba(0, 0, 0, 0.35);
+}
+.card h2 {
+  margin: 0 0 10px 0;
+  font-size: 1.2rem;
+  color: #d9e2ec;
+}
+.card h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.05rem;
+  color: #d9e2ec;
+}
+
+/* ---------- Controls ---------- */
+label {
+  color: #cbd5e1;
+  font-weight: 600;
+}
+input[type='number'],
+input[type='text'],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0b0f14;
+  color: #e6ebf0;
+  outline: none;
+}
+input[type='checkbox'] {
+  transform: scale(1.2);
+}
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.btn {
+  appearance: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #11161d;
+  color: #e6ebf0;
+  cursor: pointer;
+  font-weight: 700;
+  transition:
+    transform 0.04s ease,
+    background 0.2s ease;
+}
+.btn:hover {
+  background: #151c25;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0b0f14;
+  font-size: 0.85rem;
+  color: #d3deea;
+}
+.hint {
+  color: #9fb1c3;
+  font-size: 0.92rem;
+}
+
+/* ---------- Tables ---------- */
+.table-wrap {
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+  background: #0b0f14;
+}
+th,
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+  text-align: right;
+}
+th:first-child,
+td:first-child {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background: inherit;
+}
+thead th {
+  position: sticky;
+  top: 0;
+  background: #0f1318;
+  z-index: 5;
+}
+tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ---------- Status ---------- */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-weight: 800;
+}
+.ok {
+  color: #c3f0c8;
+  border-color: rgba(99, 255, 153, 0.25);
+  background: rgba(99, 255, 153, 0.06);
+}
+.warn {
+  color: #ffe3a3;
+  border-color: rgba(255, 217, 119, 0.25);
+  background: rgba(255, 217, 119, 0.06);
+}
+.fail {
+  color: #ffc0c0;
+  border-color: rgba(255, 99, 99, 0.25);
+  background: rgba(255, 99, 99, 0.06);
+}
+
+/* ---------- Scrollbars ---------- */
+:root {
+  --scrollbarBG: #0b0f14;
+  --thumbBG: #2b3542;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--scrollbarBG);
+  border-radius: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--thumbBG);
+  border-radius: 10px;
+  border: 2px solid var(--scrollbarBG);
+}
+
+footer {
+  margin: 28px 0 40px 0;
+  color: #95a3b3;
+  font-size: 0.9rem;
+}
+code {
+  background: #0f1318;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}

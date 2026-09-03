@@ -1,0 +1,146 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f5f7fa;
+  color: #333;
+  line-height: 1.5;
+}
+
+header {
+  background: #2d3748;
+  color: #fff;
+  padding: 1rem 2rem;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+main {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+section {
+  margin-bottom: 2.5rem;
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+section h2 {
+  margin-top: 0;
+  font-size: 1.3rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+}
+
+input,
+select,
+button,
+textarea {
+  padding: 0.5rem 0.7rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  border: 1px solid #cbd5e0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+button {
+  background: #2b6cb0;
+  color: white;
+  cursor: pointer;
+  border: none;
+}
+
+button:hover {
+  background: #2c5282;
+}
+
+.results {
+  margin-top: 1rem;
+  background: #edf2f7;
+  padding: 1rem;
+  border-radius: 6px;
+  font-family: monospace;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.flex {
+  display: flex;
+  gap: 1rem;
+}
+.flex > * {
+  flex: 1;
+}
+
+h1 {
+  margin-bottom: 10px;
+}
+textarea,
+input {
+  width: 100%;
+  margin: 5px 0;
+  padding: 8px;
+  font-family: monospace;
+}
+
+.result {
+  margin-top: 15px;
+  border-top: 1px solid #ccc;
+  padding-top: 10px;
+}
+.color-sample {
+  display: inline-block;
+  width: 30px;
+  height: 20px;
+  border: 1px solid #ccc;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.valid {
+  color: green;
+  font-weight: bold;
+}
+.invalid {
+  color: red;
+  font-weight: bold;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  background: white;
+}
+th,
+td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+th {
+  background: #f0f0f0;
+}
+.passed {
+  background: #e0ffe0;
+}
+.failed {
+  background: #ffe0e0;
+}

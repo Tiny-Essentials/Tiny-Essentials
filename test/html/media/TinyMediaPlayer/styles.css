@@ -1,0 +1,236 @@
+/* * CSS Color Variables & Theming
+       * Architecture structured for easy dark/light mode switching.
+       */
+:root {
+  /* Used as the primary background color for the entire page */
+  --bg-base: #121212;
+
+  /* Used for the background of individual control panels and cards */
+  --bg-panel: #1e1e1e;
+
+  /* Used for the primary text color (headings, main labels) */
+  --text-main: #ffffff;
+
+  /* Used for secondary, less emphasized text (logs, descriptions) */
+  --text-muted: #a0a0a0;
+
+  /* Used for primary interactive elements like active buttons and sliders */
+  --accent-primary: #3b82f6;
+
+  /* Used for the hover state of primary interactive elements */
+  --accent-hover: #2563eb;
+
+  /* Used for structural dividers and input borders */
+  --border-color: #333333;
+
+  /* Used for error messages in the console log */
+  --error-color: #ef4444;
+
+  /* Used for success messages in the console log */
+  --success-color: #10b981;
+
+  /* Used for the Event Monitor entries */
+  --event-color: #f59e0b;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-main);
+  padding: 2rem;
+  line-height: 1.5;
+}
+
+header {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Layout Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.panel {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.panel h2 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: var(--accent-primary);
+}
+
+/* Visual Player Styles */
+.visual-player-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  text-align: center;
+}
+
+.now-playing-info {
+  margin-bottom: 0.5rem;
+}
+
+.now-playing-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  display: block;
+}
+
+.now-playing-artist {
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+.progress-wrapper {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.time-display {
+  font-family: monospace;
+  font-size: 0.9rem;
+  min-width: 100px;
+}
+
+input[type='range'] {
+  flex: 1;
+  cursor: pointer;
+  accent-color: var(--accent-primary);
+}
+
+/* Form Elements */
+.control-group {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.control-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+input[type='text'],
+input[type='number'],
+select {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  border-radius: 4px;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  background-color: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: var(--accent-hover);
+}
+
+button:disabled {
+  background-color: var(--border-color);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  background-color: var(--error-color);
+}
+.btn-danger:hover {
+  background-color: #dc2626;
+}
+
+.btn-small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+/* Status Boxes */
+.status-box {
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-color);
+  padding: 1rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+#system-logs {
+  color: var(--success-color);
+}
+#event-monitor {
+  color: var(--event-color);
+}
+
+.playlist-view {
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem;
+  border-radius: 4px;
+  min-height: 100px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.playlist-item {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.playlist-item.active {
+  color: var(--accent-primary);
+  font-weight: bold;
+  border-left: 3px solid var(--accent-primary);
+}
+.playlist-item:last-child {
+  border-bottom: none;
+}

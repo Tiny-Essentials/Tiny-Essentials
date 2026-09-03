@@ -1,0 +1,9 @@
+.box {
+  padding: 10px;
+  margin: 5px;
+  border: 1px solid #ccc;
+  display: inline-block;
+}
+.highlight {
+  background: yellow;
+}

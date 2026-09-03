@@ -10,16 +10,7 @@
         }
       }
     </script>
-    <style>
-      iframe {
-        width: 600px;
-        height: 200px;
-        border: 2px solid #333;
-      }
-      button {
-        margin: 5px;
-      }
-    </style>
+    <style></style>
   </head>
   <body>
     <h1>Parent Page</h1>
@@ -28,38 +19,6 @@
     <button id="sendToIframe">Send Message to Iframe</button>
     <div id="log"></div>
 
-    <script type="module">
-      import { TinyIframeEvents } from '../src/v1/libs/html/events/TinyIframeEvents.mjs';
-
-      const iframe = document.getElementById('myIframe');
-
-      const events = new TinyIframeEvents({
-        targetIframe: iframe,
-      });
-
-      events.secretEventName = '__PUDDING__';
-      window.frameEvents = events;
-
-      // Ouve evento vindo do iframe
-      events.on('win:hello:fromIframe', (payload, meta) => {
-        log('📩 Received from iframe:', payload);
-        console.log('parent', payload, meta);
-      });
-
-      // Envia mensagem para o iframe ao clicar
-      document.getElementById('sendToIframe').onclick = () => {
-        events.winEmit('hello:fromParent', {
-          timestamp: new Date().toISOString(),
-          message: 'Olá iframe!',
-        });
-      };
-
-      function log(...args) {
-        const out = document.getElementById('log');
-        const p = document.createElement('p');
-        p.textContent = args.map((a) => JSON.stringify(a)).join(' ');
-        out.appendChild(p);
-      }
-    </script>
+    <script type="module"></script>
   </body>
 </html>

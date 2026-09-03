@@ -1,0 +1,59 @@
+body {
+  font-family: system-ui, sans-serif;
+  background: #f8f9fb;
+  margin: 0;
+  padding: 0;
+  color: #222;
+}
+header {
+  background: #4a6cf7;
+  color: #fff;
+  padding: 1rem 2rem;
+}
+header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  padding: 2rem;
+}
+section {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+section h2 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+.result {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #f0f4ff;
+  border-radius: 4px;
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+button {
+  background: #4a6cf7;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+  margin: 0.2rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+button:hover {
+  background: #3b57d7;
+}
+.lang-buttons {
+  margin-top: 0.5rem;
+}

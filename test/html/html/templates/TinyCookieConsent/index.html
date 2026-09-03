@@ -4,85 +4,7 @@
     <meta charset="UTF-8" />
     <title>Cookie Consent Test</title>
     <link rel="stylesheet" href="./src/v1/scss/TinyCookieConsent.scss" />
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        background: #f2f2f2;
-        overflow-x: hidden;
-      }
-
-      .content h1 {
-        margin-bottom: 20px;
-        opacity: 0;
-        transform: translateY(-20px);
-        animation: fadeSlideDown 0.8s ease forwards;
-      }
-
-      .content {
-        max-width: 600px;
-        text-align: center;
-      }
-
-      .content p {
-        opacity: 0;
-        transform: translateY(10px);
-        animation: fadeSlideUp 0.8s ease forwards;
-      }
-
-      .content p:nth-of-type(1) {
-        animation-delay: 0.3s;
-      }
-
-      .content p:nth-of-type(2) {
-        animation-delay: 0.6s;
-      }
-
-      /* Preferences Saved popup */
-      #pref_saved {
-        animation: fadeInOut 3s ease forwards;
-      }
-
-      /* Animations */
-      @keyframes fadeSlideDown {
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @keyframes fadeSlideUp {
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @keyframes fadeInOut {
-        0% {
-          opacity: 0;
-          transform: translateY(-10px);
-        }
-        10% {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        90% {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        100% {
-          opacity: 0;
-          transform: translateY(-10px);
-        }
-      }
-    </style>
+    <style></style>
   </head>
   <body>
     <div class="content">
@@ -91,37 +13,6 @@
       <p>Try accepting, rejecting, or customizing cookie categories to see the behavior.</p>
     </div>
 
-    <script type="module">
-      import { TinyCookieConsent } from '/src/v1/libs/html/templates/TinyCookieConsent.mjs';
-
-      const consent = new TinyCookieConsent({
-        animationDuration: 2000,
-        message: 'This site uses cookies to personalize content and analyze traffic.',
-        categories: [
-          { label: 'Necessary', required: true, default: true },
-          { label: 'Analytics', required: false, default: true },
-          { label: 'Ads', required: false, default: false },
-          { label: 'Preferences', required: false, default: false },
-        ],
-        onSave: (prefs) => {
-          console.log('Saved preferences:', prefs);
-          document.body.insertAdjacentHTML(
-            'beforeend',
-            `
-          <div id="pref_saved" style="position:fixed;top:10px;right:10px;background:#fff;padding:10px;border:1px solid #ccc;z-index:3000;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.15)">
-            <strong>Preferences Saved</strong><br>
-            ${Object.entries(prefs)
-              .map(([k, v]) => `${k}: ${v}`)
-              .join('<br>')}
-          </div>
-        `,
-          );
-          setTimeout(() => {
-            document.querySelectorAll('#pref_saved').forEach((el) => el.remove());
-          }, 3000);
-        },
-      });
-      window.tinyCookies = consent;
-    </script>
+    <script type="module"></script>
   </body>
 </html>

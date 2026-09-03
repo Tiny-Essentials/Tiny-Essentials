@@ -1,0 +1,42 @@
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: sans-serif;
+}
+
+#container {
+  position: relative;
+  width: 800px;
+  height: 600px;
+  border: 2px solid #333;
+  background: white;
+}
+
+.box {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: steelblue;
+  transition: border 0.2s ease;
+  user-select: none;
+}
+
+#fixed {
+  top: 250px;
+  left: 350px;
+  background: tomato;
+}
+
+#colliding {
+  cursor: grab;
+}
+
+#colliding.colliding {
+  background: limegreen;
+}

@@ -1,0 +1,98 @@
+:root {
+  --bg-color: #1e1e2e;
+  --panel-bg: #2a2a3f;
+  --text-main: #cdd6f4;
+  --text-muted: #a6adc8;
+  --accent: #cba6f7;
+  --success: #a6e3a1;
+  --danger: #f38ba8;
+  --border: #45475a;
+}
+
+body {
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  margin: 0;
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--accent);
+  margin-top: 0;
+}
+
+.panel {
+  background-color: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.control-group {
+  margin-bottom: 1.5rem;
+}
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+input[type='range'] {
+  width: 100%;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.data-display {
+  background-color: #181825;
+  padding: 1rem;
+  border-radius: 6px;
+  font-family: monospace;
+  white-space: pre-wrap;
+  color: var(--success);
+}
+
+.console-output {
+  height: 400px;
+  overflow-y: auto;
+  background-color: #11111b;
+  padding: 1rem;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+}
+
+.log-pass {
+  color: var(--success);
+}
+.log-fail {
+  color: var(--danger);
+}
+.log-info {
+  color: var(--text-muted);
+}
+
+button {
+  background-color: var(--accent);
+  color: #11111b;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+button:hover {
+  opacity: 0.8;
+}

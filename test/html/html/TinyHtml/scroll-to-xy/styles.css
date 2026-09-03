@@ -1,0 +1,85 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f8f9fa 0%, #dee2e6 100%);
+  overflow: auto;
+}
+
+.controls {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: #1e1e1e;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  z-index: 9999;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.controls input,
+.controls select {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.95rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+.controls button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.95rem;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.controls button:hover {
+  background-color: #45a045;
+}
+
+.scroll-target {
+  width: 3000px;
+  height: 3000px;
+  background: repeating-linear-gradient(45deg, #cce 0px, #eef 100px, #dde 100px, #cce 200px);
+  position: relative;
+  margin-top: 150px;
+  border-top: 4px solid #aaa;
+}
+
+.box {
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  background: #ff4d4d;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+}
+
+.info-panel {
+  position: fixed;
+  top: 100px;
+  left: 0;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  z-index: 9998;
+}

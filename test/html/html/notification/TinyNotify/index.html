@@ -5,62 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TinyNotify Test</title>
     <link rel="stylesheet" href="./src/v1/scss/TinyNotify.scss" />
-    <script type="module">
-      import { TinyNotifyCenter } from '/src/v1/libs/html/notification/TinyNotifyCenter.mjs';
-      import { TinyToastNotify } from '/src/v1/libs/html/notification/TinyToastNotify.mjs';
-      window.TinyNotifyCenter = TinyNotifyCenter;
-      window.TinyToastNotify = TinyToastNotify;
-    </script>
-    <style>
-      body {
-        color: black;
-        height: 100vh;
-        margin: 0px;
-        font-family:
-          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
-          'Open Sans', 'Helvetica Neue', sans-serif;
-        background: #f0f0f0;
-      }
-    </style>
+    <style></style>
   </head>
   <body>
     yaaaay
 
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        TinyNotifyCenter.insertTemplate();
-        const notif = new TinyNotifyCenter();
-        notif.setMarkAllAsReadOnClose(true);
-        notif.add('You received a new message. A message full of pudding for you to eat daily.');
-        notif.add({
-          avatar: 'https://tantabuscdn.net/img/2025/4/27/47404/large.png',
-          message: 'Your system was updated successfully.',
-          title: 'The tiny system test.',
-          onClick: () => {
-            console.log('Tiny test event!');
-            notif.close();
-          },
-        });
-        notif.add('Scheduled task <i>completed</i>.', 'html');
-
-        const toast = new TinyToastNotify('top', 'right', 3000, 60);
-        toast.show('Mensagem rápida');
-        toast.show('Mensagem um pouco mais longa que vai durar mais tempo...');
-        toast.show({
-          title: 'Heads up!',
-          message: 'Something important happened.',
-        });
-        toast.show({
-          html: true,
-          avatar: 'https://tantabuscdn.net/img/2025/4/27/47404/large.png',
-          title: 'Atenção',
-          message: 'Clique para <i>abrir</i> o painel!',
-          onClick: (e, close) => {
-            console.log('Tiny click!');
-            close();
-          },
-        });
-      });
-    </script>
+    <script type="module"></script>
   </body>
 </html>

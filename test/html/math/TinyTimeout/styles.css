@@ -1,0 +1,61 @@
+body {
+  font-family: sans-serif;
+  background: #121212;
+  color: #fff;
+  padding: 2rem;
+}
+h1,
+h2 {
+  color: #90caf9;
+}
+.section {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #1e1e1e;
+  border-radius: 10px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+input[type='number'],
+input[type='text'] {
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 0.3rem 0.6rem;
+  border-radius: 5px;
+  width: 100px;
+}
+button {
+  padding: 0.4rem 1rem;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+button:disabled {
+  background: #555;
+}
+.bar {
+  height: 16px;
+  background: #64ffda;
+  border-radius: 5px;
+  transition: width 0.2s ease;
+}
+.bar-container {
+  background: #333;
+  width: 200px;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-left: 0.5rem;
+}
+.id-panel {
+  margin-top: 1rem;
+}
+.id-panel div {
+  margin-bottom: 0.3rem;
+}

@@ -1,0 +1,97 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: #111;
+  color: #fff;
+}
+
+.section {
+  margin: 40px;
+  border: 2px dashed #888;
+  padding: 30px;
+}
+
+.container {
+  border: 2px solid #4caf50;
+  height: 240px;
+  width: 100%;
+  overflow-y: auto;
+  margin-bottom: 30px;
+  background: #222;
+  position: relative;
+  padding: 10px;
+}
+
+.container-horizontal {
+  overflow-x: auto;
+  white-space: nowrap;
+  height: 120px;
+}
+
+.item {
+  height: 80px;
+  background: #2196f3;
+  text-align: center;
+  line-height: 80px;
+  transition:
+    background 0.3s,
+    outline 0.3s;
+  position: relative;
+}
+
+.wide {
+  width: 300px;
+  display: inline-block;
+}
+
+.nested-container {
+  height: 180px;
+  overflow-y: auto;
+  border: 2px dashed #f44336;
+  background: #333;
+  padding: 10px;
+}
+
+.nested-item {
+  height: 60px;
+  background: #ff9800;
+  margin: 10px 0;
+  text-align: center;
+  line-height: 60px;
+}
+
+.spacer {
+  height: 1000px;
+}
+
+.visible-full {
+  background-color: #4caf50 !important;
+}
+
+.visible-partial {
+  background-color: #ffeb3b !important;
+  color: #000;
+}
+
+.invisible {
+  background-color: #f44336 !important;
+}
+
+.nested-item .status-label {
+  display: none;
+}
+
+.status-label {
+  position: absolute;
+  bottom: 0;
+  right: 0px;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 2px 6px;
+  height: 100%;
+}

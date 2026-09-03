@@ -1,0 +1,32 @@
+body {
+  font-family: sans-serif;
+  padding: 30px;
+  background: #f9f9f9;
+}
+.form-field {
+  margin-bottom: 15px;
+}
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+input,
+select,
+textarea {
+  padding: 6px;
+  width: 300px;
+  font-size: 1rem;
+}
+button {
+  margin-top: 10px;
+  padding: 5px 10px;
+  font-size: 1rem;
+}
+pre {
+  margin-top: 20px;
+  background: #efefef;
+  padding: 10px;
+  border: 1px solid #ccc;
+  white-space: pre-wrap;
+}

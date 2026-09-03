@@ -4,59 +4,7 @@
     <meta charset="UTF-8" />
     <title>Collision Test</title>
     <script src="/__buffer.js"></script>
-    <script type="module">
-      import * as tinyHtml from '/src/v1/basics/html.mjs';
-      import { TinyHtml } from '/src/v1/libs/html/TinyHtml.mjs';
-      import * as tinyCollisions from '/src/v1/basics/collision.mjs';
-      Object.assign(window, tinyCollisions);
-      Object.assign(window, tinyHtml);
-      window.TinyHtml = TinyHtml;
-      TinyHtml.elemDebug = true;
-    </script>
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-        height: 100vh;
-        overflow: hidden;
-        background: #f0f0f0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-family: sans-serif;
-      }
-
-      #container {
-        position: relative;
-        width: 800px;
-        height: 600px;
-        border: 2px solid #333;
-        background: white;
-      }
-
-      .box {
-        position: absolute;
-        width: 100px;
-        height: 100px;
-        background: steelblue;
-        transition: border 0.2s ease;
-        user-select: none;
-      }
-
-      #fixed {
-        top: 250px;
-        left: 350px;
-        background: tomato;
-      }
-
-      #colliding {
-        cursor: grab;
-      }
-
-      #colliding.colliding {
-        background: limegreen;
-      }
-    </style>
+    <style></style>
   </head>
   <body>
     <div id="container">
@@ -64,43 +12,6 @@
       <div id="colliding" class="box" style="top: 50px; left: 50px"></div>
     </div>
 
-    <script type="module">
-      const fixed = TinyHtml.getById('fixed');
-      const colliding = TinyHtml.getById('colliding');
-
-      window.tinyFixed = fixed;
-      window.tinyColliding = colliding;
-
-      let isDragging = false;
-      let offsetX = 0;
-      let offsetY = 0;
-
-      colliding.on('mousedown', (e) => {
-        isDragging = true;
-        offsetX = e.offsetX;
-        offsetY = e.offsetY;
-        colliding.get(0).style.cursor = 'grabbing';
-      });
-
-      document.addEventListener('mouseup', () => {
-        isDragging = false;
-        colliding.get(0).style.cursor = 'grab';
-      });
-
-      document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-
-        const containerRect = document.getElementById('container').getBoundingClientRect();
-        let x = e.clientX - containerRect.left - offsetX;
-        let y = e.clientY - containerRect.top - offsetY;
-
-        const collStyle = colliding.get(0).style;
-        collStyle.left = `${x}px`;
-        collStyle.top = `${y}px`;
-
-        const collided = colliding.isCollWith(fixed);
-        colliding.toggleClass('colliding', collided);
-      });
-    </script>
+    <script type="module"></script>
   </body>
 </html>

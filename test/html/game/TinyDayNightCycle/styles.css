@@ -1,0 +1,223 @@
+/* ---------- Reset & base ---------- */
+:root {
+  --bg: #0f1720;
+  --card: #0f1728;
+  --muted: #9aa6b2;
+  --accent: #6ee7b7;
+  --danger: #ff7b7b;
+  --glass: rgba(255, 255, 255, 0.03);
+  --glass-2: rgba(255, 255, 255, 0.02);
+  --glass-3: rgba(255, 255, 255, 0.015);
+  font-family: Inter, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: linear-gradient(180deg, rgba(10, 12, 16, 1) 0%, rgba(12, 16, 22, 1) 100%);
+  color: #e6eef3;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding: 28px;
+}
+
+/* ---------- Layout ---------- */
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 22px;
+}
+
+header {
+  grid-column: 1/-1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 6px;
+}
+header h1 {
+  font-size: 20px;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ---------- Left panel (controls) ---------- */
+.panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 6px 30px rgba(2, 6, 23, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  height: calc(100vh - 112px);
+  overflow: auto;
+}
+.panel h2 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+}
+.field {
+  margin-bottom: 12px;
+}
+label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+input[type='number'],
+input[type='text'],
+select,
+textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: var(--glass);
+  color: inherit;
+  font-size: 13px;
+  outline: none;
+}
+textarea {
+  min-height: 90px;
+  font-family: monospace;
+  font-size: 12px;
+  resize: vertical;
+}
+.btn {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 0;
+  background: linear-gradient(90deg, rgba(110, 231, 183, 0.14), rgba(110, 231, 183, 0.06));
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+.btn.ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+.btn.danger {
+  background: linear-gradient(90deg, rgba(255, 123, 123, 0.12), rgba(255, 123, 123, 0.04));
+  color: var(--danger);
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* ---------- Right area (status, visuals) ---------- */
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: calc(100vh - 112px);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.card {
+  background: linear-gradient(180deg, var(--glass), var(--glass-2));
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+.card h3 {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.card .big {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* timeline & weather visual */
+.visual {
+  background: linear-gradient(180deg, var(--glass-2), var(--glass-3));
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  min-height: 220px;
+}
+.timeline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+.timeline .hour {
+  width: 48px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+.progress {
+  height: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.progress > .bar {
+  height: 100%;
+  transition: width 0.3s linear;
+  background: linear-gradient(90deg, #6ee7b7, #60a5fa);
+}
+
+/* log */
+.log {
+  background: transparent;
+  border-radius: 8px;
+  padding: 12px;
+  height: 180px;
+  overflow: auto;
+  font-family: monospace;
+  font-size: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.02);
+  color: var(--muted);
+}
+
+footer {
+  grid-column: 1/-1;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+@media (max-width: 980px) {
+  .wrap {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .panel {
+    height: auto;
+  }
+}

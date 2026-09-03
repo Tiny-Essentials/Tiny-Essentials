@@ -1,0 +1,106 @@
+body {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  margin: 0;
+  background: #f4f6f9;
+  color: #333;
+}
+
+header {
+  background: #2c3e50;
+  color: #fff;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1rem;
+  padding: 1rem 2rem;
+}
+
+section {
+  background: #fff;
+  border-radius: 6px;
+  padding: 1rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem 0;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.3rem;
+}
+
+label {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+input,
+select,
+button,
+textarea {
+  width: 100%;
+  margin-top: 0.2rem;
+  padding: 0.4rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+button {
+  cursor: pointer;
+  background: #3498db;
+  color: white;
+  border: none;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: #2980b9;
+}
+
+.need-bar {
+  margin: 0.5rem 0;
+}
+
+.progress {
+  height: 20px;
+  background: #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.3rem;
+}
+
+.progress-inner {
+  height: 100%;
+  background: #2ecc71;
+  transition: width 0.2s ease;
+}
+
+.bar-details {
+  font-size: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.factors-list {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  border-top: 1px solid #eee;
+  padding-top: 0.5rem;
+}
+
+.log {
+  background: #1e272e;
+  color: #d2dae2;
+  font-family: monospace;
+  padding: 0.5rem;
+  height: 200px;
+  overflow-y: auto;
+  border-radius: 4px;
+}
