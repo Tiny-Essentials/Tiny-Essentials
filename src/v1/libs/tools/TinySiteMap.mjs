@@ -210,6 +210,14 @@ class TinySiteMap {
   }
 
   /**
+   * Clears all registered namespaces in the static attribute map.
+   * Note: This affects all instances of TinySiteMap globally.
+   */
+  static clearAttrValues() {
+    TinySiteMap.#attrValues.clear();
+  }
+
+  /**
    * Initializes a new instance of the TinySiteMap class with the provided configuration.
    * @param {SitemapConfig} config - The configuration object.
    * @throws {TypeError} If the configuration is invalid.
@@ -771,6 +779,14 @@ class TinySiteMap {
    */
   get namespacesSize() {
     return this.#namespaces.length;
+  }
+
+  /**
+   * Resets the instance by clearing all entries and namespaces.
+   */
+  clearAll() {
+    this.clearEntries();
+    this.clearNamespaces();
   }
 
   /**
