@@ -66,6 +66,7 @@ const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
  * @property {Partial<Console>} [logger=console] - A custom logger object (must implement console methods).
  * @property {RouteCallback} [onRouteChanged] - Callback executed whenever the route changes.
  * @property {RouteNotFoundCallback} [onRouteNotFound] - Callback executed when no route matches.
+ * @property {number} [historyLimit=100] - Maximum number of history entries. Use -1 for unlimited, or 0 to disable history.
  */
 
 /**
@@ -93,6 +94,8 @@ class TinyRouter extends TinyDebugger {
   #detectHistoryChange;
   /** @type {RouterHistoryEntry[]} The internal record of visited paths. */
   #history = [];
+  /** @type {number} Maximum number of entries to keep in history. */
+  #historyLimit;
 
   /**
    * @param {RouterOptions} [options={}] - Configuration options for the router.
@@ -117,6 +120,8 @@ class TinyRouter extends TinyDebugger {
       typeof options.onRouteNotFound !== 'function'
     )
       throw new TypeError('onRouteNotFound must be a function.');
+    if (typeof options.historyLimit !== 'undefined' && !Number.isInteger(options.historyLimit))
+      throw new TypeError('historyLimit must be an integer.');
 
     super({
       id: '[_blue_TinyRouter_reset_]',
@@ -129,9 +134,33 @@ class TinyRouter extends TinyDebugger {
     this.#onRouteNotFound = options.onRouteNotFound || (() => {});
     this.#detectHistoryChange = options.detectHistoryChange ?? true;
 
+    // Initialize history limit and handle the "0" (disabled) case
+    this.#historyLimit = options.historyLimit ?? 100;
+
     // Bind the popstate event and store the reference for later removal
     this.#popstateHandler = this.#resolve.bind(this);
     window.addEventListener('popstate', this.#popstateHandler);
+  }
+
+  /**
+   * @param {number} value
+   * @throws {TypeError} If value is not an integer.
+   */
+  set historyLimit(value) {
+    if (!Number.isInteger(value)) {
+      throw new TypeError('historyLimit must be an integer.');
+    }
+    this.#historyLimit = value;
+    this.emit('HistoryLimitUpdated', value);
+    if (this.#historyLimit === 0) {
+      this.clearHistory();
+      this.log('info', 'History disabled and cleared.');
+    }
+  }
+
+  /** @returns {number} */
+  get historyLimit() {
+    return this.#historyLimit;
   }
 
   /** @returns {boolean} */
@@ -346,8 +375,8 @@ class TinyRouter extends TinyDebugger {
   stop() {
     window.removeEventListener('popstate', this.#popstateHandler);
     this.#started = false;
-    this.clear();
-    this.emit('RouterDestroyed');
+    this.clearAll();
+    this.emit('RouterStopped');
     this.log('info', 'Router stopped and event listeners removed.');
   }
 
@@ -420,10 +449,22 @@ class TinyRouter extends TinyDebugger {
    * @param {string} path - The path to record.
    */
   #recordHistory(path) {
-    this.#history.push({
+    // If limit is 0, the feature is disabled; do nothing.
+    if (this.#historyLimit === 0) return;
+
+    const newData = {
       path,
       timestamp: Date.now(),
-    });
+    };
+
+    this.#history.push(newData);
+
+    // If limit is greater than 0, maintain the maximum allowed size.
+    // If limit is -1, this condition is never met, allowing unlimited growth.
+    if (this.#historyLimit > 0 && this.#history.length > this.#historyLimit) {
+      this.#history.shift(); // Removes the oldest entry (first element)
+    }
+    this.emit('HistoryRecorded', { ...newData });
   }
 
   /**
@@ -464,12 +505,48 @@ class TinyRouter extends TinyDebugger {
   }
 
   /**
+   * Removes a specific entry from the navigation history by its index.
+   * @param {number} index - The index of the entry to remove.
+   * @throws {TypeError} If index is not an integer.
+   * @throws {RangeError} If the index is out of bounds.
+   */
+  removeHistoryEntry(index) {
+    if (!Number.isInteger(index)) {
+      throw new TypeError('The index must be an integer.');
+    }
+    if (index < 0 || index >= this.#history.length) {
+      throw new RangeError('The provided index is out of bounds.');
+    }
+
+    this.#history.splice(index, 1);
+    this.emit('HistoryEntryRemoved', index);
+    this.log('info', `History entry at index ${index} was removed.`);
+  }
+
+  /**
+   * Clears all entries from the navigation history.
+   */
+  clearHistory() {
+    this.#history = [];
+    this.emit('HistoryCleared');
+    this.log('info', 'Navigation history has been cleared.');
+  }
+
+  /**
    * Removes all registered routes.
    */
   clear() {
     this.#routes = [];
     this.emit('RoutesCleared');
     this.log('info', 'All routes have been cleared.');
+  }
+
+  /**
+   * Removes all instance data.
+   */
+  clearAll() {
+    this.clear();
+    this.clearHistory();
   }
 }
 
