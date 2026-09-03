@@ -543,7 +543,10 @@
             total++;
             const card = document.createElement('div');
             card.className = 'match-card';
-            card.innerHTML = `<span class="value">${val}</span>`;
+            const value = document.createElement('span');
+            value.className = 'value';
+            value.textContent = val;
+            card.appendChild(value);
             groupDiv.appendChild(card);
           });
           resultsList.appendChild(groupDiv);
