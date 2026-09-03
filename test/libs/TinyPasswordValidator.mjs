@@ -22,7 +22,7 @@ const testTinyPasswordValidator = async () => {
   try {
     customValidator.rules = { minLength: 'muito longo' }; // Isso vai disparar um erro
   } catch (e) {
-    console.error(e.name + ': ' + e.message); // TypeError: As propriedades de exigência devem ser booleanas. (ou similar)
+    console.log('[Error Test] ' + e.name + ': ' + e.message); // TypeError: As propriedades de exigência devem ser booleanas. (ou similar)
   }
 };
 
