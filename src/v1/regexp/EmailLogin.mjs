@@ -4,6 +4,10 @@ const passwordPattern = '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d
  * @typedef {Object} EmailRegexOptions
  * @property {string} [validName]
  * @property {string} [validDomain]
+ * @property {string[]} [blacklistDomains]
+ * @property {string[]} [whitelistDomains]
+ * @property {string[]} [blacklistUsernames]
+ * @property {string[]} [whitelistUsernames]
  */
 
 /**
@@ -19,6 +23,30 @@ const validateEmailRegexOptions = (options) => {
   if (typeof options !== 'object' || options === null || Array.isArray(options)) {
     throw new TypeError('Options must be an object.');
   }
+
+  /**
+   * Helper to validate if a property is an array of strings.
+   * @param {any} arr - The array to validate.
+   * @param {string} name - The name of the property for the error message.
+   * @private
+   */
+  const validateArray = (arr, name) => {
+    if (arr !== undefined) {
+      if (!Array.isArray(arr)) {
+        throw new TypeError(`${name} must be an array.`);
+      }
+      for (let i = 0; i < arr.length; i++) {
+        if (typeof arr[i] !== 'string') {
+          throw new TypeError(`All elements in ${name} must be strings.`);
+        }
+      }
+    }
+  };
+
+  validateArray(options.blacklistDomains, 'blacklistDomains');
+  validateArray(options.whitelistDomains, 'whitelistDomains');
+  validateArray(options.blacklistUsernames, 'blacklistUsernames');
+  validateArray(options.whitelistUsernames, 'whitelistUsernames');
 };
 
 /**
@@ -42,17 +70,42 @@ export function emailRegex(options) {
 }
 
 /**
- * Validates whether a given string matches the specified email pattern.
+ * Validates whether a given string matches the specified email pattern and respects blacklist/whitelist rules.
  * @param {string} s - The string to validate.
- * @param {EmailRegexOptions} [options] - The configuration options.
- * @returns {boolean} True if the string is a valid email according to the pattern, false otherwise.
+ * @param {EmailRegexOptions} [options={}] - The configuration options.
+ * @returns {boolean} True if the string is a valid email according to the pattern and filters, false otherwise.
  * @throws {TypeError} If the input string is not a string.
  */
-export function isValidEmail(s, options) {
+export function isValidEmail(s, options = {}) {
   if (typeof s !== 'string') {
     throw new TypeError('The input must be a string.');
   }
-  return emailRegex(options).test(s);
+
+  const pattern = emailRegex(options);
+  if (!pattern.test(s)) {
+    return false;
+  }
+
+  // Since the regex matched, we can safely split the string into username and domain.
+  const [username, domain] = s.split('@');
+
+  // Whitelist checks: If a whitelist exists, the value MUST be in it.
+  if (Array.isArray(options.whitelistDomains) && !options.whitelistDomains.includes(domain)) {
+    return false;
+  }
+  if (Array.isArray(options.whitelistUsernames) && !options.whitelistUsernames.includes(username)) {
+    return false;
+  }
+
+  // Blacklist checks: If a blacklist exists, the value MUST NOT be in it.
+  if (Array.isArray(options.blacklistDomains) && options.blacklistDomains.includes(domain)) {
+    return false;
+  }
+  if (Array.isArray(options.blacklistUsernames) && options.blacklistUsernames.includes(username)) {
+    return false;
+  }
+
+  return true;
 }
 
 /**
