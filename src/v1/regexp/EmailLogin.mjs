@@ -1,6 +1,10 @@
 const passwordPattern = '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$';
 
 /**
+ * @typedef {(email: string) => boolean} EmailValidatorFn
+ */
+
+/**
  * @typedef {Object} EmailRegexOptions
  * @property {string} [validName]
  * @property {string} [validDomain]
@@ -8,6 +12,7 @@ const passwordPattern = '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d
  * @property {string[]} [whitelistDomains]
  * @property {string[]} [blacklistUsernames]
  * @property {string[]} [whitelistUsernames]
+ * @property {EmailValidatorFn} [customValidator]
  */
 
 /**
@@ -47,6 +52,9 @@ const validateEmailRegexOptions = (options) => {
   validateArray(options.whitelistDomains, 'whitelistDomains');
   validateArray(options.blacklistUsernames, 'blacklistUsernames');
   validateArray(options.whitelistUsernames, 'whitelistUsernames');
+  if (options.customValidator !== undefined && typeof options.customValidator !== 'function') {
+    throw new TypeError('customValidator must be a function.');
+  }
 };
 
 /**
@@ -70,10 +78,11 @@ export function emailRegex(options) {
 }
 
 /**
- * Validates whether a given string matches the specified email pattern and respects blacklist/whitelist rules.
+ * Validates whether a given string matches the specified email pattern, 
+ * respects blacklist/whitelist rules, and passes a custom validator if provided.
  * @param {string} s - The string to validate.
  * @param {EmailRegexOptions} [options={}] - The configuration options.
- * @returns {boolean} True if the string is a valid email according to the pattern and filters, false otherwise.
+ * @returns {boolean} True if the string is a valid email, false otherwise.
  * @throws {TypeError} If the input string is not a string.
  */
 export function isValidEmail(s, options = {}) {
@@ -83,6 +92,11 @@ export function isValidEmail(s, options = {}) {
 
   const pattern = emailRegex(options);
   if (!pattern.test(s)) {
+    return false;
+  }
+
+  // Runs custom validation if provided
+  if (typeof options.customValidator === 'function' && !options.customValidator(s)) {
     return false;
   }
 
