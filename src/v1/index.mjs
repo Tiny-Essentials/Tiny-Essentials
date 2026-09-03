@@ -203,7 +203,7 @@ import {
   isValidEmail,
   findEmailRegex,
   extractEmails,
-} from './regexp/EmailLogin.mjs';
+} from './regexp/Email.mjs';
 import {
   usernameStringRegexBuilder,
   usernameRegex,

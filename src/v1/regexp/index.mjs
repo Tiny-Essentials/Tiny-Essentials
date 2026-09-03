@@ -21,7 +21,7 @@ import {
   isValidEmail,
   findEmailRegex,
   extractEmails,
-} from './EmailLogin.mjs';
+} from './Email.mjs';
 
 export {
   emailStringRegexBuilder,
