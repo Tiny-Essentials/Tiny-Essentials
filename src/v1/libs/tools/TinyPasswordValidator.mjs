@@ -57,7 +57,14 @@ class TinyPasswordValidator {
    * The internal configuration object containing the validation rules.
    * @type {PasswordRules}
    */
-  #rules;
+  #rules = {
+    requireLowercase: true,
+    requireUppercase: true,
+    requireNumbers: true,
+    requireSpecial: true,
+    minLength: 8,
+    maxLength: 128,
+  };
 
   /**
    * Initializes a new instance of the TinyPasswordValidator with optional custom rules.
@@ -70,19 +77,7 @@ class TinyPasswordValidator {
    * @param {number} [customRules.maxLength=128] - The maximum allowed length of the password.
    */
   constructor(customRules = {}) {
-    // Ensure customRules is an object to prevent crashes on null/undefined
-    const rulesToApply = customRules && typeof customRules === 'object' ? customRules : {};
-
-    this.#rules = {
-      requireLowercase: true,
-      requireUppercase: true,
-      requireNumbers: true,
-      requireSpecial: true,
-      minLength: 8,
-      maxLength: 128,
-      ...rulesToApply,
-    };
-    this.#validateRulesConfig(this.#rules);
+    this.setRules(customRules);
   }
 
   /**
