@@ -138,10 +138,23 @@ class TinyPasswordValidator {
 
   /**
    * Setter to update rules with strict validation.
-   * @param {Partial<PasswordRules>} newRules - New configuration to merge.
+   * @param {PasswordRules} newRules - New configuration to merge.
    * @throws {TypeError} If the provided rules are invalid.
    */
   set rules(newRules) {
+    if (!newRules || typeof newRules !== 'object') {
+      throw new TypeError('New rules must be an object.');
+    }
+    this.#validateRulesConfig(newRules);
+    this.#rules = newRules;
+  }
+
+  /**
+   * Setter to update rules partialy with strict validation.
+   * @param {Partial<PasswordRules>} newRules - New configuration to merge.
+   * @throws {TypeError} If the provided rules are invalid.
+   */
+  setRules(newRules) {
     if (!newRules || typeof newRules !== 'object') {
       throw new TypeError('New rules must be an object.');
     }
