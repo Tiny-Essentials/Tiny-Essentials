@@ -316,6 +316,40 @@ app.use(express.static(imgDir));
 app.use(express.static(errorsDir));
 app.use('/node_modules', express.static(path.join(__dirname, '../node_modules')));
 
+/**
+ * Middleware to serve index.html if the requested path is a directory.
+ * This is placed before the 404 handler to catch requests that didn't match
+ * any specific file or static route.
+ */
+app.use(async (req, res, next) => {
+  // We only want to intercept GET requests
+  if (req.method !== 'GET') return next();
+
+  // Construct the path to the requested directory relative to the project root
+  const targetPath = path.join(publicDir, req.path);
+  const indexPath = path.join(targetPath, 'index.html');
+
+  try {
+    // Check if the requested path is a directory
+    const stats = await fs.promises.stat(targetPath);
+
+    if (stats.isDirectory()) {
+      // Check if index.html exists inside that directory
+      try {
+        await fs.promises.access(indexPath);
+        // If index.html exists, serve it
+        return res.sendFile(indexPath);
+      } catch (err) {
+        // index.html does not exist in this directory, move to the next middleware (404)
+        return next();
+      }
+    }
+  } catch (err) {
+    // The path is not a directory or doesn't exist, move to the next middleware
+    return next();
+  }
+});
+
 // ---------------------
 // Catch 404 and forward to error handler
 // ---------------------
