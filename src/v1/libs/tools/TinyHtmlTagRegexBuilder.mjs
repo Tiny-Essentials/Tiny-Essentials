@@ -1,10 +1,16 @@
 /**
+ * @typedef {never|string} Attribute
+ */
+
+/**
  * @template {string} TagName
+ * @template {boolean} CaptureAllAttributes
+ * @template {Attribute} Attributes
  * @typedef {Object} HtmlRegexConfig
  * @property {TagName} tagName - The HTML tag name (e.g., 'a', 'div').
- * @property {string[]} [attributes=[]] - An array of attribute names to capture in individual groups.
+ * @property {Attributes[]} [attributes=[]] - An array of attribute names to capture in individual groups.
  * @property {boolean} [freeMode=false] - If true, allows the inner content to contain newlines.
- * @property {boolean} [captureAllAttributes=false] - If true, ignores specific attributes and focuses on the tag structure.
+ * @property {CaptureAllAttributes} captureAllAttributes - If true, ignores specific attributes and focuses on the tag structure.
  * @property {string} [contentPattern='[\s\S]*?'] - The regex pattern for the tag's inner content.
  */
 
@@ -12,21 +18,23 @@
  * Class responsible for constructing highly configurable regular expressions
  * to capture HTML tags and their specific attributes.
  * @template {string} TagName
+ * @template {boolean} CaptureAllAttributes
+ * @template {Attribute} Attributes
  */
 class TinyHtmlTagRegexBuilder {
   /** @type {TagName} */
   #tagName;
-  /** @type {string[]} */
+  /** @type {Attributes[]} */
   #attributes = [];
   /** @type {boolean} */
   #freeMode = false;
-  /** @type {boolean} */
-  #captureAllAttributes = false;
+  /** @type {CaptureAllAttributes} */
+  #captureAllAttributes;
   /** @type {string} */
   #contentPattern = '';
 
   /**
-   * @param {HtmlRegexConfig<TagName>} config - Initial configuration object.
+   * @param {HtmlRegexConfig<TagName, CaptureAllAttributes, Attributes>} config - Initial configuration object.
    */
   constructor(config) {
     const tagName = config.tagName;
@@ -53,8 +61,12 @@ class TinyHtmlTagRegexBuilder {
       this.#attributes = config.attributes;
     }
 
+    if (typeof config.captureAllAttributes !== 'boolean') {
+      throw new TypeError('captureAllAttributes must be a boolean.');
+    }
+    this.#captureAllAttributes = config.captureAllAttributes;
+
     this.freeMode = config.freeMode ?? false;
-    this.captureAllAttributes = config.captureAllAttributes ?? false;
     this.contentPattern = config.contentPattern || (this.#freeMode ? '[\\s\\S]*?' : '.*?');
   }
 
@@ -65,22 +77,9 @@ class TinyHtmlTagRegexBuilder {
     return this.#tagName;
   }
 
-  /** @returns {string[]} */
+  /** @returns {Attributes[]} */
   get attributes() {
     return [...this.#attributes];
-  }
-
-  /** @param {string[]} value */
-  set attributes(value) {
-    if (!Array.isArray(value)) {
-      throw new TypeError('attributes must be an array.');
-    }
-    for (const attr of value) {
-      if (typeof attr !== 'string' || /[<>\s]/.test(attr)) {
-        throw new TypeError('Each attribute must be a single word string.');
-      }
-    }
-    this.#attributes = [...value];
   }
 
   /** @returns {boolean} */
@@ -96,17 +95,9 @@ class TinyHtmlTagRegexBuilder {
     this.#freeMode = value;
   }
 
-  /** @returns {boolean} */
+  /** @returns {CaptureAllAttributes} */
   get captureAllAttributes() {
     return this.#captureAllAttributes;
-  }
-
-  /** @param {boolean} value */
-  set captureAllAttributes(value) {
-    if (typeof value !== 'boolean') {
-      throw new TypeError('captureAllAttributes must be a boolean.');
-    }
-    this.#captureAllAttributes = value;
   }
 
   /** @returns {string} */
