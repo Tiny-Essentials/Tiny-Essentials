@@ -66,13 +66,13 @@ class TinyPasswordValidator {
 
   /**
    * Static regex patterns to prevent recompilation and ensure consistency.
-   * @type {Readonly<{ lowercase: () => RegExp, uppercase: () => RegExp, numbers: () => RegExp, special: () => RegExp }>}
+   * @type {Readonly<{ lowercase: RegExp, uppercase: RegExp, numbers: RegExp, special: RegExp }>}
    */
   static #PATTERNS = Object.freeze({
-    lowercase: () => /[a-z]/,
-    uppercase: () => /[A-Z]/,
-    numbers: () => /\d/,
-    special: () => /[@$!%*?&]/,
+    lowercase: /[a-z]/,
+    uppercase: /[A-Z]/,
+    numbers: /\d/,
+    special: /[@$!%*?&]/,
   });
 
   /**
@@ -425,7 +425,7 @@ class TinyPasswordValidator {
     // 2. Lowercase Validation
     if (this.#rules.requireLowercase) {
       totalPossiblePoints++;
-      if (TinyPasswordValidator.#PATTERNS.lowercase().test(password)) {
+      if (TinyPasswordValidator.#PATTERNS.lowercase.test(password)) {
         score++;
       } else {
         errorCodes.push(3);
@@ -436,7 +436,7 @@ class TinyPasswordValidator {
     // 3. Uppercase Validation
     if (this.#rules.requireUppercase) {
       totalPossiblePoints++;
-      if (TinyPasswordValidator.#PATTERNS.uppercase().test(password)) {
+      if (TinyPasswordValidator.#PATTERNS.uppercase.test(password)) {
         score++;
       } else {
         errorCodes.push(4);
@@ -447,7 +447,7 @@ class TinyPasswordValidator {
     // 4. Numbers Validation
     if (this.#rules.requireNumbers) {
       totalPossiblePoints++;
-      if (TinyPasswordValidator.#PATTERNS.numbers().test(password)) {
+      if (TinyPasswordValidator.#PATTERNS.numbers.test(password)) {
         score++;
       } else {
         errorCodes.push(5);
@@ -458,7 +458,7 @@ class TinyPasswordValidator {
     // 5. Special Characters Validation
     if (this.#rules.requireSpecial) {
       totalPossiblePoints++;
-      if (TinyPasswordValidator.#PATTERNS.special().test(password)) {
+      if (TinyPasswordValidator.#PATTERNS.special.test(password)) {
         score++;
       } else {
         errorCodes.push(6);
