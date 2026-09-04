@@ -296,7 +296,7 @@ class TinyServiceWorker extends TinyDebugger {
           (Array.isArray(payload.data) || typeof payload.data !== 'object' || payload.data === null)
         )
           return;
-        super.emit(payload.type, payload.data);
+        super.emit(payload.type, { data: payload.data, event });
       };
 
       navigator.serviceWorker.addEventListener('message', this.#messageHandler);

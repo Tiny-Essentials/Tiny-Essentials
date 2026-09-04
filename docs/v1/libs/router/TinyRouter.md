@@ -29,6 +29,7 @@ When building Single Page Applications (SPAs), the URL needs to change when the 
 * **🛠️ Debugging Support:** Integrated with `TinyDebugger` for easy troubleshooting.
 * **🔄 History Management:** Full control over navigation history, including limits and manual entry removal.
 * **📡 Lifecycle Hooks:** Hooks for route changes (`onRouteChanged`) and missing routes (`onRouteNotFound`).
+* **⏳ Sequential Operations:** Uses an internal promise queue to handle asynchronous routing operations sequentially.
 
 ---
 
@@ -61,7 +62,7 @@ router.add('/user/:id', (match) => {
 router.start();
 
 // 4. Navigate programmatically
-router.navigate('/user/42?theme=dark');
+await router.navigate('/user/42?theme=dark');
 ```
 
 ---
@@ -79,10 +80,10 @@ Initializes the router instance.
 | `debugMode` | `boolean` | `false` | Enables internal debug logging. |
 | `useLogColors` | `boolean` | `false` | Enables colored console output. |
 | `detectHistoryChange` | `boolean` | `true` | If `true`, ensures the URL actually changed before resolving navigation. |
-| `logger` | `Console` | `console` | A custom logger object. |
-| `onRouteChanged` | `RouteCallback` | `() => {}` | Executed when a route matches successfully. |
-| `onRouteNotFound` | `RouteNotFoundCallback` | `() => {}` | Executed when the current URL matches no registered routes. |
-| `historyLimit` | `number` | `100` | Max history entries. Use `-1` for unlimited, or `0` to disable. |
+| `logger` | `Console` | `console` | A custom logger object (must implement standard console methods). |
+| `onRouteChanged` | `RouteCallback` | `() => {}` | Callback executed when a route matches successfully. |
+| `onRouteNotFound` | `RouteNotFoundCallback` | `() => {}` | Callback executed when the current URL matches no registered routes. |
+| `historyLimit` | `number` | `0` | Max history entries. Use `-1` for unlimited, or `0` to disable history tracking. |
 
 ### ⚙️ Properties (Getters & Setters)
 
@@ -91,11 +92,12 @@ Initializes the router instance.
 | `size` | `number` | Returns the number of registered routes. |
 | `routes` | `string[]` | Returns an array of all registered path patterns. |
 | `history` | `RouterHistoryEntry[]` | **Getter:** Returns a copy of the current history. <br> **Setter:** Imports a validated history array. |
-| `historyLimit` | `number` | Gets the maximum number of history entries. |
+| `historyLimit` | `number` | Gets the maximum number of history entries allowed. |
 | `detectHistoryChange` | `boolean` | Gets/Sets whether to detect if navigation actually changed the URL. |
 | `onRouteChanged` | `RouteCallback` | Gets/Sets the global route change callback. |
 | `onRouteNotFound` | `RouteNotFoundCallback` | Gets/Sets the global "not found" callback. |
 | `started` | `boolean` | Returns `true` if the router is currently running. |
+| `isDestroyed` | `boolean` | Returns `true` if the router instance has been destroyed. |
 
 ### 🛤️ Route Management
 
@@ -110,6 +112,7 @@ Registers a new route.
     Allows custom regex logic via `SegmentExtractor`.
 * **Mode 3: Callback-in-Object**
   `router.add({ pattern: '/path', callback: (p) => console.log(p) });`
+    The callback is executed with the pattern string as its argument.
 
 **Throws:**
 * `TypeError`: If arguments are invalid.
@@ -135,10 +138,12 @@ Clears all routes AND the entire navigation history.
 Moves the browser to a new URL.
 * **`path`**: The target string (e.g., `'/settings'`).
 * **`state`**: An object to store in the browser history.
+* **Returns**: `Promise<void>`
 
 #### `.go(delta)`
 Moves through the history stack.
 * **`delta`**: Integer (e.g., `-1` for back, `1` for forward).
+* **Returns**: `Promise<boolean>` (resolves to `true` if the URL actually changed, `false` otherwise).
 
 #### `.back()` / `.forward()`
 Convenience methods for `go(-1)` and `go(1)`.
@@ -163,6 +168,9 @@ Wipes the current navigation history.
 
 #### `.stop()`
 Stops the router, removes event listeners, and clears all data.
+
+#### `.destroy()`
+Permanently destroys the router instance, stopping it and preventing further use.
 
 ---
 
@@ -204,5 +212,5 @@ const router = new TinyRouter({
 `TinyRouter` uses strict validation to ensure stability.
 
 * **`TypeError`**: Thrown when passing incorrect data types (e.g., non-integer `historyLimit` or invalid `pathPattern`).
-* **`RangeError`**: Thrown when accessing a history index that does not exist.
+* **`RangeError`**: Thrown when attempting to access a history index that is out of bounds.
 * **`Error`**: Thrown when attempting to register a duplicate route or starting a router that is already running.
