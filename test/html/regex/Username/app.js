@@ -166,6 +166,15 @@ async function runExtraction() {
   }, 50);
 }
 
+/**
+ * Renders the extracted matches to the DOM.
+ * Each group shows its total count of matches.
+ * Each unique result shows its total frequency across the entire scan.
+ *
+ * @param {Array<Object>} matchGroups - An array of objects containing labels and values.
+ * @param {string} matchGroups[].label - The label describing the match group.
+ * @param {string[]} matchGroups[].values - An array of extracted strings.
+ */
 function renderResults(matchGroups) {
   if (matchGroups.length === 0) {
     resultsList.innerHTML = '<div class="empty-state">No matches found.</div>';
@@ -173,25 +182,74 @@ function renderResults(matchGroups) {
     return;
   }
 
-  let total = 0;
+  // 1. Create a frequency map to count total occurrences of every value
+  const frequencyMap = new Map();
   matchGroups.forEach((group) => {
-    const groupDiv = document.createElement('div');
-    groupDiv.innerHTML = `<div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 10px; margin-bottom: 5px;">[${group.label}]</div>`;
-
     group.values.forEach((val) => {
-      total++;
-      const card = document.createElement('div');
-      card.className = 'match-card';
-      const value = document.createElement('span');
-      value.className = 'value';
-      value.textContent = val;
-      card.appendChild(value);
-      groupDiv.appendChild(card);
+      const count = frequencyMap.get(val) || 0;
+      frequencyMap.set(val, count + 1);
     });
-    resultsList.appendChild(groupDiv);
   });
 
-  matchCount.textContent = `${total} matches found`;
+  const seenValues = new Set();
+  let totalUniqueMatches = 0;
+
+  // 2. Render groups and unique values
+  matchGroups.forEach((group) => {
+    // Create a list of values from this group that haven't been seen in previous groups
+    const uniqueGroupValues = [];
+    for (const val of group.values) {
+      if (!seenValues.has(val)) {
+        seenValues.add(val);
+        uniqueGroupValues.push(val);
+      }
+    }
+
+    // Only render the group div if it contains at least one new unique value
+    if (uniqueGroupValues.length > 0) {
+      const groupDiv = document.createElement('div');
+
+      // Group header: shows the total number of matches found in this specific category
+      const groupTotal = group.values.length;
+      groupDiv.innerHTML = `
+        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 10px; margin-bottom: 5px; display: flex; justify-content: space-between;">
+          <span>[${group.label}]</span>
+          <span>(${groupTotal} matches)</span>
+        </div>`;
+
+      uniqueGroupValues.forEach((val) => {
+        seenValues.add(val);
+        totalUniqueMatches++;
+
+        const card = document.createElement('div');
+        card.className = 'match-card';
+
+        const valueSpan = document.createElement('span');
+        valueSpan.className = 'value';
+        valueSpan.textContent = val;
+
+        // Value counter: shows how many times this specific value appeared in the whole scan
+        const count = frequencyMap.get(val);
+        const countSpan = document.createElement('span');
+        countSpan.style.cssText =
+          'margin-left: 8px; font-size: 0.75rem; color: var(--text-dim); opacity: 0.8;';
+        countSpan.textContent = `(${count})`;
+
+        card.appendChild(valueSpan);
+        card.appendChild(countSpan);
+        groupDiv.appendChild(card);
+      });
+
+      resultsList.appendChild(groupDiv);
+    }
+  });
+
+  // Handle case where all matches were duplicates of previously seen values
+  if (totalUniqueMatches === 0) {
+    resultsList.innerHTML = '<div class="empty-state">No unique matches found.</div>';
+  }
+
+  matchCount.textContent = `${totalUniqueMatches} unique matches found`;
 }
 
 runBtn.addEventListener('click', runExtraction);
