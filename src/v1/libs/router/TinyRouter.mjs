@@ -1,5 +1,6 @@
 import * as SegmentExtractor from '../../regexp/SegmentExtractor.mjs';
 import TinyDebugger from '../tools/TinyDebugger.mjs';
+import TinyPromiseQueue from '../utils/TinyPromiseQueue.mjs';
 
 const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
 
@@ -98,6 +99,8 @@ class TinyRouter extends TinyDebugger {
   #historyLimit;
   /** @type {number} Current position index in the internal history. */
   #historyIndex = -1;
+  /** @type {TinyPromiseQueue} */
+  #queue = new TinyPromiseQueue();
 
   /**
    * @param {RouterOptions} [options={}] - Configuration options for the router.
@@ -142,19 +145,7 @@ class TinyRouter extends TinyDebugger {
 
     // Initialize history limit and handle the "0" (disabled) case
     this.#historyLimit = options.historyLimit ?? 0;
-
-    // Wrapped handler to synchronize the internal index when popstate is triggered by the browser
-    this.#popstateHandler = () => {
-      const path = window.location.pathname;
-      if (this.#historyLimit !== 0) {
-        const index = this.#history.findIndex((h) => h.path === path);
-        if (index !== -1) {
-          this.#historyIndex = index;
-        }
-      }
-      return this.#resolve();
-    };
-    window.addEventListener('popstate', this.#popstateHandler);
+    this.#popstateHandler = this.#resolve.bind(this);
   }
 
   /** @returns {number} The current position in history. */
@@ -356,7 +347,7 @@ class TinyRouter extends TinyDebugger {
     if (window.location.pathname + window.location.search === path) return;
 
     window.history.pushState(state, '', path);
-    await this.#resolve();
+    await this.#queue.enqueue(() => this.#resolve());
     this.log('info', `Navigated to: ${path}`);
   }
 
@@ -365,12 +356,34 @@ class TinyRouter extends TinyDebugger {
    * @returns {Promise<void>}
    * @throws {Error} If the router has already been started.
    */
-  async start() {
+  start() {
     if (this.#started) throw new Error('Router has already been started.');
+    // Wrapped handler to synchronize the internal index when popstate is triggered by the browser
+    this.#popstateHandler = () => {
+      const path = window.location.pathname;
+      if (this.#historyLimit !== 0) {
+        const index = this.#history.findIndex((h) => h.path === path);
+        if (index !== -1) {
+          this.#historyIndex = index;
+        }
+      }
+      return this.#resolve();
+    };
+
+    window.addEventListener('popstate', this.#popstateHandler);
     this.#started = true;
-    await this.#resolve();
-    this.emit('RouterStarted');
-    this.log('info', 'Router started successfully.');
+    return this.#queue.enqueue(
+      () =>
+        new Promise((resolve, reject) =>
+          this.#resolve()
+            .then(() => {
+              this.emit('RouterStarted');
+              this.log('info', 'Router started successfully.');
+              resolve();
+            })
+            .catch(reject),
+        ),
+    );
   }
 
   /**
@@ -406,7 +419,7 @@ class TinyRouter extends TinyDebugger {
       if (newIndex >= 0 && newIndex < this.#history.length) {
         const targetPath = this.#history[newIndex].path;
         window.history.pushState(null, '', targetPath);
-        await this.#resolve();
+        await this.#queue.enqueue(() => this.#resolve());
         return true;
       }
       return false;
@@ -421,7 +434,7 @@ class TinyRouter extends TinyDebugger {
 
     const oldUrl = window.location.pathname + window.location.search;
 
-    return new Promise((resolve) => {
+    return this.#queue.enqueue(() => new Promise((resolve) => {
       // We use a temporary handler to detect the 'popstate' event
       const handler = () => {
         window.removeEventListener('popstate', handler);
@@ -442,7 +455,7 @@ class TinyRouter extends TinyDebugger {
 
       window.history.go(delta);
       this.log('info', `Navigation command: go(${delta})`);
-    });
+    }));
   }
 
   /**
