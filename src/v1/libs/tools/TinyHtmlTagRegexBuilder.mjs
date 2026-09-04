@@ -1,8 +1,10 @@
 /**
+ * Defines the valid types for an HTML attribute name.
  * @typedef {never|string} Attribute
  */
 
 /**
+ * Configuration object used to define the parameters for the regex builder.
  * @template {string} TagName
  * @template {boolean} CaptureAllAttributes
  * @template {Attribute} Attributes
@@ -15,6 +17,7 @@
  */
 
 /**
+ * Represents the structured result of a parsed HTML tag.
  * @typedef {Object} ParsedHtmlTag
  * @property {Record<string, string|boolean>} attributes - Object containing all parsed attributes.
  * @property {string} child - The inner content of the HTML tag.
@@ -28,18 +31,38 @@
  * @template {Attribute} Attributes
  */
 class TinyHtmlTagRegexBuilder {
-  /** @type {TagName} */
+  /**
+   * The name of the HTML tag to be matched.
+   * @type {TagName}
+   */
   #tagName;
-  /** @type {Attributes[]} */
+
+  /**
+   * The list of specific attribute names to be captured.
+   * @type {Attributes[]}
+   */
   #attributes = [];
-  /** @type {boolean} */
+
+  /**
+   * Indicates if the content pattern should allow newlines.
+   * @type {boolean}
+   */
   #freeMode = false;
-  /** @type {CaptureAllAttributes} */
+
+  /**
+   * Indicates if all attributes should be captured in a single group.
+   * @type {CaptureAllAttributes}
+   */
   #captureAllAttributes;
-  /** @type {string} */
+
+  /**
+   * The regex pattern used for the tag's inner content.
+   * @type {string}
+   */
   #contentPattern = '';
 
   /**
+   * Initializes a new instance of the TinyHtmlTagRegexBuilder.
    * @param {HtmlRegexConfig<TagName, CaptureAllAttributes, Attributes>} config - Initial configuration object.
    */
   constructor(config) {
@@ -78,38 +101,59 @@ class TinyHtmlTagRegexBuilder {
 
   // --- Getters and Setters with Validation ---
 
-  /** @returns {TagName} */
+  /**
+   * Gets the target HTML tag name.
+   * @returns {TagName}
+   */
   get tagName() {
     return this.#tagName;
   }
 
-  /** @returns {Attributes[]} */
+  /**
+   * Gets a copy of the attributes to be captured.
+   * @returns {Attributes[]}
+   */
   get attributes() {
     return [...this.#attributes];
   }
 
-  /** @returns {boolean} */
+  /**
+   * Gets the current free mode status.
+   * @returns {boolean}
+   */
   get freeMode() {
     return this.#freeMode;
   }
 
-  /** @param {boolean} value */
+  /**
+   * Sets the free mode status.
+   * @param {boolean} value
+   */
   set freeMode(value) {
     if (typeof value !== 'boolean') throw new TypeError('freeMode must be a boolean.');
     this.#freeMode = value;
   }
 
-  /** @returns {CaptureAllAttributes} */
+  /**
+   * Gets the attribute capture mode.
+   * @returns {CaptureAllAttributes}
+   */
   get captureAllAttributes() {
     return this.#captureAllAttributes;
   }
 
-  /** @returns {string} */
+  /**
+   * Gets the current regex pattern for the tag's content.
+   * @returns {string}
+   */
   get contentPattern() {
     return this.#contentPattern;
   }
 
-  /** @param {string} value */
+  /**
+   * Sets the regex pattern for the tag's content.
+   * @param {string} value
+   */
   set contentPattern(value) {
     if (typeof value !== 'string') throw new TypeError('contentPattern must be a string.');
     this.#contentPattern = value;
