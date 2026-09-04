@@ -88,10 +88,14 @@ import {
   getBrowserCssPrefix,
   getBrowserPings,
   getDuckTyping,
+  isBrowser,
   isBrowserAgent,
+  isNode,
 } from './browserDetector.mjs';
 import { jsonFilter, jsonFilterRecursive, jsonFilterByKeys } from './jsonFilter.mjs';
 export {
+  isBrowser,
+  isNode,
   getObjTypeRegistry,
   getObjTypeOrder,
   jsonFilter,
