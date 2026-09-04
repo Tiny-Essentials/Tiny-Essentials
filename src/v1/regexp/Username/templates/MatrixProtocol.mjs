@@ -112,10 +112,10 @@ const MatrixProtocolRegex = Object.freeze({
    * @type {UsernameRegexTemplate}
    */
   htmlMention: {
-    start: `<a\\s+(?:[^>]*?\\s+)?href=["\'](?:${matrixToPermalinkBase}|${matrixScheme})${matrixUriTypePattern}${matrixIdPrefixPattern}`,
+    start: `<a\\s+[^>]*?href=["\\'](?:${matrixToPermalinkBase}|${matrixScheme})${matrixUriTypePattern}${matrixIdPrefixPattern}`,
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
-    domainPattern: `${domainSuffixPattern}${urlPathAndQueryPattern}["\\'][^>]*>.*?</a>`,
+    domainPattern: `${domainSuffixPattern}${urlPathAndQueryPattern}["\\'][^>]*>[\\s\\S]*?</a\\s*>`,
   },
 
   /**
