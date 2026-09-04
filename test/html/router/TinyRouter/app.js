@@ -32,6 +32,7 @@ function updateUI(match) {
 const router = new TinyRouter({
   debugMode: true,
   useLogColors: true,
+  historyLimit: 100,
   onRouteChanged: (match) => {
     log(`Route Changed: ${match.path}`, match);
     updateUI(match);
