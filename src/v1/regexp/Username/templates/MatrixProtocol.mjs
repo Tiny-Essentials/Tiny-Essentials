@@ -93,7 +93,7 @@ const MatrixProtocolRegex = Object.freeze({
    * @type {UsernameRegexTemplate}
    */
   matrixUri: {
-    start: 'matrix:(?:u|r|roomid|e)/',
+    start: 'matrix:(?:u/|r/|roomid/|e/)?[@#!$+]?',
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
     domainPattern: `${domainPattern}(?:/[\\w\\$=-]+)?(?:\\?[a-zA-Z0-9_=&%-]+)?`,
@@ -112,6 +112,7 @@ const MatrixProtocolRegex = Object.freeze({
     length: [1, 255],
     domainPattern: `${domainPattern}(?:/[\\w\\$=-]+)?(?:\\?[a-zA-Z0-9_=&%-]+)?["\'][^>]*>.*?</a>`,
   },
+
   /**
    * Matrix Content URI (Media)
    * Format: mxc://server-name/media-id
@@ -120,9 +121,9 @@ const MatrixProtocolRegex = Object.freeze({
    */
   mxcUri: {
     start: 'mxc://',
-    validValues: '[a-zA-Z0-9.:-]', // Nome do servidor (incluindo possíveis portas como :8448)
+    validValues: '[a-zA-Z0-9.:-]',
     length: [1, 255],
-    domainPattern: '/[a-zA-Z0-9_=-]+', // A barra seguida do media-id (geralmente uma string alfanumérica)
+    domainPattern: '/[a-zA-Z0-9_=-]+',
   },
 });
 

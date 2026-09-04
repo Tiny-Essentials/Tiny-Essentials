@@ -185,17 +185,10 @@ export function isValidUsername(s, options) {
  */
 export function findUsernameRegex(options) {
   validateUsernameOptions(options);
-
-  // Determine if we should use word boundaries or non-word character lookarounds.
-  // If an array is passed, we check the first element's prefix to decide.
   const firstOpt = Array.isArray(options) ? options[0] : options;
-  const hasPrefix = firstOpt?.prefix;
-
-  // FIX: \b fails when the prefix is a non-word character (like @).
-  // We use a lookbehind for non-word characters or start of string,
-  // and a lookahead for non-word characters or end of string.
-  const boundaryStart = hasPrefix ? '(?:^|(?<=\\W))' : '\\b';
-  const boundaryEnd = hasPrefix ? '(?=\\W|$)' : '\\b';
+  const needsLookaround = firstOpt?.prefix || firstOpt?.start;
+  const boundaryStart = needsLookaround ? '(?:^|(?<=\\W))' : '\\b';
+  const boundaryEnd = needsLookaround ? '(?=\\W|$)' : '\\b';
 
   if (Array.isArray(options)) {
     const combinedPattern = options.map(getSinglePattern).join('|');
