@@ -84,7 +84,7 @@ const MatrixProtocolRegex = Object.freeze({
     start: '(?:https?://)?(?:www\\.)?matrix\\.to/#/[@#!$+]?',
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
-    domainPattern: `${domainPattern}(?:/[\\w\\$=-]+)?(?:\\?[a-zA-Z0-9_=&%-]+)?`,
+    domainPattern: `${domainPattern}(?:/[\\w=/$+.-]+)?(?:\\?[\\w=&%.$+-]+)?`,
   },
 
   /**
@@ -96,7 +96,7 @@ const MatrixProtocolRegex = Object.freeze({
     start: 'matrix:(?:u/|r/|roomid/|e/)?[@#!$+]?',
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
-    domainPattern: `${domainPattern}(?:/[\\w\\$=-]+)?(?:\\?[a-zA-Z0-9_=&%-]+)?`,
+    domainPattern: `${domainPattern}(?:/[\\w=/$+.-]+)?(?:\\?[\\w=&%.$+-]+)?`,
   },
 
   /**
@@ -110,7 +110,7 @@ const MatrixProtocolRegex = Object.freeze({
       '<a\\s+(?:[^>]*?\\s+)?href=["\'](?:(?:https?://)?(?:www\\.)?matrix\\.to/#/|matrix:)(?:u/|r/|roomid/|e/)?[@#!$+]?',
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
-    domainPattern: `${domainPattern}(?:/[\\w\\$=-]+)?(?:\\?[a-zA-Z0-9_=&%-]+)?["\'][^>]*>.*?</a>`,
+    domainPattern: `${domainPattern}(?:/[\\w=/$+.-]+)?(?:\\?[\\w=&%.$+-]+)?["\'][^>]*>.*?</a>`,
   },
 
   /**
