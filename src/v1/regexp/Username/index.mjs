@@ -168,14 +168,15 @@ export function usernameRegex(options) {
  * Validates whether a string matches the specified username pattern.
  * @param {string} s The input string to validate.
  * @param {UsernameOptionsInput} [options] The regex construction options.
+ * @param {RegExp} [regex] - The regex used to execute the function.
  * @returns {boolean} True if the string is a valid username, false otherwise.
  * @throws {TypeError} If the input is not a string.
  */
-export function isValidUsername(s, options) {
+export function isValidUsername(s, options, regex) {
   if (typeof s !== 'string') {
     throw new TypeError('The input must be a string.');
   }
-  return usernameRegex(options).test(s);
+  return (regex ?? usernameRegex(options)).test(s);
 }
 
 /**
@@ -202,15 +203,16 @@ export function findUsernameRegex(options) {
  * Extracts usernames from a text and applies optional transformations.
  * @param {string} text The text to search through.
  * @param {UsernameOptionsInput} [options] The options for extraction.
+ * @param {RegExp} [regex] - The regex used to execute the function.
  * @returns {string[]} An array of extracted and transformed usernames.
  * @throws {TypeError} If the input text is not a string.
  */
-export function extractUsernames(text, options) {
+export function extractUsernames(text, options, regex) {
   if (typeof text !== 'string') {
     throw new TypeError('The input must be a string.');
   }
 
-  const matches = text.match(findUsernameRegex(options));
+  const matches = text.match(regex ?? findUsernameRegex(options));
   if (!matches) return [];
 
   // If an array is provided, we use the transform from the first element

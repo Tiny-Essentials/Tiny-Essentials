@@ -81,14 +81,15 @@ export function urlRegex(options) {
  * Validates whether a given string matches the specified URL pattern.
  * @param {string} s - The string to validate.
  * @param {UrlRegexOptions} [options] - The configuration options.
+ * @param {RegExp} [regex] - The regex used to execute the function.
  * @returns {boolean} True if the string is a valid URL according to the pattern, false otherwise.
  * @throws {TypeError} If the input string is not a string.
  */
-export function isValidUrl(s, options) {
+export function isValidUrl(s, options, regex) {
   if (typeof s !== 'string') {
     throw new TypeError('The input must be a string.');
   }
-  return urlRegex(options).test(s);
+  return (regex ?? urlRegex(options)).test(s);
 }
 
 /**
@@ -104,12 +105,13 @@ export function findUrlRegex(options) {
  * Extracts all matching URL strings from a given text using the provided configuration.
  * @param {string} text - The text to search.
  * @param {UrlRegexOptions} [options] - The configuration options.
+ * @param {RegExp} [regex] - The regex used to execute the function.
  * @returns {string[]} An array of matches or null if no matches are found.
  * @throws {TypeError} If the input text is not a string.
  */
-export function extractUrls(text, options) {
+export function extractUrls(text, options, regex) {
   if (typeof text !== 'string') {
     throw new TypeError('The input must be a string.');
   }
-  return text.match(findUrlRegex(options)) ?? [];
+  return text.match(regex ?? findUrlRegex(options)) ?? [];
 }

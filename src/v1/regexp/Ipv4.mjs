@@ -16,13 +16,14 @@ export function ipv4Regex() {
  * Validates whether a given input string is a correctly formatted IPv4 address.
  * It checks the string against the IPv4 regular expression pattern and returns a boolean result.
  * @param {string} s - The input string to be validated.
+ * @param {RegExp} [regex] - The regex used to execute the function.
  * @returns {boolean} - True if the string is a valid IPv4 address, false otherwise.
  */
-export function isValidIPv4(s) {
+export function isValidIPv4(s, regex) {
   if (typeof s !== 'string') {
     throw new TypeError('The input must be a string.');
   }
-  return ipv4Regex().test(s);
+  return (regex ?? ipv4Regex()).test(s);
 }
 
 /**
@@ -38,11 +39,12 @@ export function findIPv4Regex() {
  * Scans the provided text and extracts all occurrences of IPv4 addresses.
  * This function uses a global regular expression to find multiple matches within the input.
  * @param {string} text - The input text content to be searched.
+ * @param {RegExp} [regex] - The regex used to execute the function.
  * @returns {string[]} - An array of all matched IP addresses, or null if no matches are found.
  */
-export function extractIPsV4(text) {
+export function extractIPsV4(text, regex) {
   if (typeof text !== 'string') {
     throw new TypeError('The input must be a string.');
   }
-  return text.match(findIPv4Regex()) ?? [];
+  return text.match(regex ?? findIPv4Regex()) ?? [];
 }

@@ -135,15 +135,16 @@ function verifyEmail(s, options = {}) {
  * respects blacklist/whitelist rules, and passes a custom validator if provided.
  * @param {string} s - The string to validate.
  * @param {EmailRegexOptions} [options={}] - The configuration options.
+ * @param {RegExp} [regex] - The regex used to execute the function.
  * @returns {boolean} True if the string is a valid email, false otherwise.
  * @throws {TypeError} If the input string is not a string.
  */
-export function isValidEmail(s, options = {}) {
+export function isValidEmail(s, options = {}, regex) {
   if (typeof s !== 'string') {
     throw new TypeError('The input must be a string.');
   }
 
-  const pattern = emailRegex(options);
+  const pattern = regex ?? emailRegex(options);
   if (!pattern.test(s)) {
     return false;
   }
@@ -164,12 +165,13 @@ export function findEmailRegex(options) {
  * Extracts all matching email strings from a given text using the provided configuration.
  * @param {string} text - The text to search.
  * @param {EmailRegexOptions} [options] - The configuration options.
+ * @param {RegExp} [regex] - The regex used to execute the function.
  * @returns {string[]} An array of matches or null if no matches are found.
  * @throws {TypeError} If the input text is not a string.
  */
-export function extractEmails(text, options) {
+export function extractEmails(text, options, regex) {
   if (typeof text !== 'string') {
     throw new TypeError('The input must be a string.');
   }
-  return text.match(findEmailRegex(options))?.filter((s) => verifyEmail(s, options)) ?? [];
+  return text.match(regex ?? findEmailRegex(options))?.filter((s) => verifyEmail(s, options)) ?? [];
 }

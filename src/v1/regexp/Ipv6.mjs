@@ -24,14 +24,15 @@ export function ipv6Regex() {
 /**
  * Validates whether a given input string is a correctly formatted IPv6 address.
  * @param {string} s - The input string to be validated.
+ * @param {RegExp} [regex] - The regex used to execute the function.
  * @throws {TypeError} If the input is not a string.
  * @returns {boolean} - True if the string is a valid IPv6 address, false otherwise.
  */
-export function isValidIPv6(s) {
+export function isValidIPv6(s, regex) {
   if (typeof s !== 'string') {
     throw new TypeError('The input must be a string.');
   }
-  return ipv6Regex().test(s);
+  return (regex ?? ipv6Regex()).test(s);
 }
 
 /**
@@ -47,12 +48,13 @@ export function findIPv6Regex() {
  * Scans the provided text and extracts all occurrences of IPv6 addresses.
  * This function uses a global regular expression to find multiple matches within the input.
  * @param {string} text - The input text content to be searched.
+ * @param {RegExp} [regex] - The regex used to execute the function.
  * @throws {TypeError} If the input is not a string.
  * @returns {string[]} - An array of all matched IP addresses, or null if no matches are found.
  */
-export function extractIPsV6(text) {
+export function extractIPsV6(text, regex) {
   if (typeof text !== 'string') {
     throw new TypeError('The input must be a string.');
   }
-  return text.match(findIPv6Regex()) ?? [];
+  return text.match(regex ?? findIPv6Regex()) ?? [];
 }
