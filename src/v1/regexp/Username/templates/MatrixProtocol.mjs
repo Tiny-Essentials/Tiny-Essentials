@@ -2,8 +2,9 @@
  * @typedef {import('../jsDoc.mjs').UsernameRegexTemplate} UsernameRegexTemplate
  */
 
-const domainNamePattern = '[a-zA-Z0-9.-]';
-const domainPattern = `\\:${domainNamePattern}+\\.[a-zA-Z]{2,}`;
+const domainCharPattern = '[a-zA-Z0-9.-]';
+const domainSuffixPattern = `\\:${domainCharPattern}+\\.[a-zA-Z]{2,}`;
+const urlPathAndQueryPattern = '(?:/[\\w=/$+.-]+)?(?:\\?[\\w=&%.$+-]+)?';
 
 /**
  * Matrix Protocol (matrix.org)
@@ -19,7 +20,7 @@ const MatrixProtocolRegex = Object.freeze({
     prefix: '@',
     validValues: '[a-z0-9._=-]',
     length: [1, 255],
-    domainPattern,
+    domainPattern: domainSuffixPattern,
   },
 
   /**
@@ -31,7 +32,7 @@ const MatrixProtocolRegex = Object.freeze({
     prefix: '#',
     validValues: '[a-zA-Z0-9._=-]', // Some servers accept uppercase in aliases
     length: [1, 255],
-    domainPattern,
+    domainPattern: domainSuffixPattern,
   },
 
   /**
@@ -43,7 +44,7 @@ const MatrixProtocolRegex = Object.freeze({
     prefix: '!',
     validValues: '[a-zA-Z0-9_-]',
     length: [1, 255],
-    domainPattern,
+    domainPattern: domainSuffixPattern,
   },
 
   /**
@@ -59,7 +60,7 @@ const MatrixProtocolRegex = Object.freeze({
     // We use (?:...)? here to make the domain group optional,
     // as Matrix updated the Event ID format in recent versions
     // to no longer require the ":domain" part at the end of the string.
-    domainPattern: `(?:${domainPattern})?`,
+    domainPattern: `(?:${domainSuffixPattern})?`,
   },
 
   /**
@@ -71,7 +72,7 @@ const MatrixProtocolRegex = Object.freeze({
     prefix: '+',
     validValues: '[a-z0-9._=-]',
     length: [1, 255],
-    domainPattern,
+    domainPattern: domainSuffixPattern,
   },
 
   /**
@@ -84,7 +85,7 @@ const MatrixProtocolRegex = Object.freeze({
     start: '(?:https?://)?(?:www\\.)?matrix\\.to/#/[@#!$+]?',
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
-    domainPattern: `${domainPattern}(?:/[\\w=/$+.-]+)?(?:\\?[\\w=&%.$+-]+)?`,
+    domainPattern: `${domainSuffixPattern}${urlPathAndQueryPattern}`,
   },
 
   /**
@@ -96,7 +97,7 @@ const MatrixProtocolRegex = Object.freeze({
     start: 'matrix:(?:u/|r/|roomid/|e/)?[@#!$+]?',
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
-    domainPattern: `${domainPattern}(?:/[\\w=/$+.-]+)?(?:\\?[\\w=&%.$+-]+)?`,
+    domainPattern: `${domainSuffixPattern}${urlPathAndQueryPattern}`,
   },
 
   /**
@@ -110,7 +111,7 @@ const MatrixProtocolRegex = Object.freeze({
       '<a\\s+(?:[^>]*?\\s+)?href=["\'](?:(?:https?://)?(?:www\\.)?matrix\\.to/#/|matrix:)(?:u/|r/|roomid/|e/)?[@#!$+]?',
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
-    domainPattern: `${domainPattern}(?:/[\\w=/$+.-]+)?(?:\\?[\\w=&%.$+-]+)?["\'][^>]*>.*?</a>`,
+    domainPattern: `${domainSuffixPattern}${urlPathAndQueryPattern}["\\'][^>]*>.*?</a>`,
   },
 
   /**
