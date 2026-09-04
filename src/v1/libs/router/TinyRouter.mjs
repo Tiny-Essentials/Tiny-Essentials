@@ -1,6 +1,9 @@
 import * as SegmentExtractor from '../../regexp/SegmentExtractor.mjs';
 import TinyDebugger from '../tools/TinyDebugger.mjs';
 import TinyPromiseQueue from '../utils/TinyPromiseQueue.mjs';
+import { createCheckDestroyed } from '../utils/tools.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyRouter');
 
 const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
 
@@ -101,6 +104,8 @@ class TinyRouter extends TinyDebugger {
   #historyIndex = -1;
   /** @type {TinyPromiseQueue} */
   #queue = new TinyPromiseQueue();
+  /** @type {boolean} */
+  #isDestroyed = false;
 
   /**
    * @param {RouterOptions} [options={}] - Configuration options for the router.
@@ -148,51 +153,65 @@ class TinyRouter extends TinyDebugger {
     this.#popstateHandler = this.#resolve.bind(this);
   }
 
+  /** @returns {boolean} */
+  get isDestroyed() {
+    return this.#isDestroyed;
+  }
+
   /** @returns {number} The current position in history. */
   get historyIndex() {
+    checkDestroy(this.#isDestroyed);
     return this.#historyIndex;
   }
 
   /** @returns {number} */
   get historyLimit() {
+    checkDestroy(this.#isDestroyed);
     return this.#historyLimit;
   }
 
   /** @returns {boolean} */
   get detectHistoryChange() {
+    checkDestroy(this.#isDestroyed);
     return this.#detectHistoryChange;
   }
 
   /** @param {boolean} value */
   set detectHistoryChange(value) {
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'boolean') throw new TypeError('detectHistoryChange must be a boolean.');
     this.#detectHistoryChange = value;
   }
 
   /** @returns {RouteCallback} */
   get onRouteChanged() {
+    checkDestroy(this.#isDestroyed);
     return this.#onRouteChanged;
   }
 
   /** @param {RouteCallback} value */
   set onRouteChanged(value) {
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'function') throw new TypeError('onRouteChanged must be a function.');
     this.#onRouteChanged = value;
   }
 
   /** @returns {RouteNotFoundCallback} */
   get onRouteNotFound() {
+    checkDestroy(this.#isDestroyed);
     return this.#onRouteNotFound;
   }
 
   /** @param {RouteNotFoundCallback} value */
   set onRouteNotFound(value) {
+    checkDestroy(this.#isDestroyed);
     if (typeof value !== 'function') throw new TypeError('onRouteNotFound must be a function.');
     this.#onRouteNotFound = value;
   }
 
   /** @returns {boolean} */
   get started() {
+    checkDestroy(this.#isDestroyed);
     return this.#started;
   }
 
@@ -201,6 +220,7 @@ class TinyRouter extends TinyDebugger {
    * @returns {number}
    */
   get size() {
+    checkDestroy(this.#isDestroyed);
     return this.#routes.length;
   }
 
@@ -209,6 +229,7 @@ class TinyRouter extends TinyDebugger {
    * @returns {string[]} An array of path pattern strings.
    */
   get routes() {
+    checkDestroy(this.#isDestroyed);
     return this.#routes.map((route) => route.segmentExtractor.pattern ?? '');
   }
 
@@ -217,6 +238,7 @@ class TinyRouter extends TinyDebugger {
    * @returns {RouterHistoryEntry[]} An array of history entries.
    */
   get history() {
+    checkDestroy(this.#isDestroyed);
     return this.#history.map((i) => ({ ...i }));
   }
 
@@ -226,6 +248,7 @@ class TinyRouter extends TinyDebugger {
    * @throws {TypeError} If historyData is not an array or if any entry is invalid.
    */
   set history(historyData) {
+    checkDestroy(this.#isDestroyed);
     if (!Array.isArray(historyData)) {
       throw new TypeError('History data must be an array.');
     }
@@ -256,6 +279,7 @@ class TinyRouter extends TinyDebugger {
    * @throws {Error} If the route pattern is already registered.
    */
   add(patternOrOptions, callback) {
+    checkDestroy(this.#isDestroyed);
     /** @type {SegExResult} */
     // @ts-ignore
     let se = {};
@@ -311,6 +335,7 @@ class TinyRouter extends TinyDebugger {
    * @throws {TypeError} If pathPattern is not a string.
    */
   remove(pathPattern) {
+    checkDestroy(this.#isDestroyed);
     if (typeof pathPattern !== 'string') throw new TypeError('pathPattern must be a string.');
 
     const initialLength = this.#routes.length;
@@ -331,6 +356,7 @@ class TinyRouter extends TinyDebugger {
    * @throws {TypeError} If pathPattern is not a string.
    */
   has(pathPattern) {
+    checkDestroy(this.#isDestroyed);
     if (typeof pathPattern !== 'string') throw new TypeError('pathPattern must be a string.');
     return this.#routes.some((route) => route.segmentExtractor.pattern === pathPattern);
   }
@@ -343,6 +369,7 @@ class TinyRouter extends TinyDebugger {
    * @throws {TypeError} If path is not a string or state is not an object.
    */
   async navigate(path, state = {}) {
+    checkDestroy(this.#isDestroyed);
     // Prevent redundant navigation if the path is the same
     if (window.location.pathname + window.location.search === path) return;
 
@@ -357,7 +384,10 @@ class TinyRouter extends TinyDebugger {
    * @throws {Error} If the router has already been started.
    */
   start() {
-    if (this.#started) throw new Error('Router has already been started.');
+    if (this.#started)
+      return new Promise((resolve, reject) =>
+        reject(new Error('Router has already been started.')),
+      );
     // Wrapped handler to synchronize the internal index when popstate is triggered by the browser
     this.#popstateHandler = () => {
       const path = window.location.pathname;
@@ -374,15 +404,23 @@ class TinyRouter extends TinyDebugger {
     this.#started = true;
     return this.#queue.enqueue(
       () =>
-        new Promise((resolve, reject) =>
+        new Promise((resolve, reject) => {
+          let err;
+          try {
+            checkDestroy(this.#isDestroyed);
+          } catch (error) {
+            err = error;
+          }
+          if (err) return reject(err);
+
           this.#resolve()
             .then(() => {
               this.emit('RouterStarted');
               this.log('info', 'Router started successfully.');
               resolve();
             })
-            .catch(reject),
-        ),
+            .catch(reject);
+        }),
     );
   }
 
@@ -390,6 +428,7 @@ class TinyRouter extends TinyDebugger {
    * Cleans up the router, removes event listeners, and stops the router.
    */
   stop() {
+    checkDestroy(this.#isDestroyed);
     window.removeEventListener('popstate', this.#popstateHandler);
     this.#started = false;
     this.clearAll();
@@ -404,6 +443,7 @@ class TinyRouter extends TinyDebugger {
    * @throws {TypeError} If delta is not an integer.
    */
   async go(delta) {
+    checkDestroy(this.#isDestroyed);
     if (!this.#started) {
       this.log('warn', 'Attempted to navigate while the router is stopped.');
       return false;
@@ -434,28 +474,31 @@ class TinyRouter extends TinyDebugger {
 
     const oldUrl = window.location.pathname + window.location.search;
 
-    return this.#queue.enqueue(() => new Promise((resolve) => {
-      // We use a temporary handler to detect the 'popstate' event
-      const handler = () => {
-        window.removeEventListener('popstate', handler);
-        const newUrl = window.location.pathname + window.location.search;
-        // Returns true if the URL actually changed
-        resolve(oldUrl !== newUrl);
-      };
+    return this.#queue.enqueue(
+      () =>
+        new Promise((resolve) => {
+          // We use a temporary handler to detect the 'popstate' event
+          const handler = () => {
+            window.removeEventListener('popstate', handler);
+            const newUrl = window.location.pathname + window.location.search;
+            // Returns true if the URL actually changed
+            resolve(oldUrl !== newUrl);
+          };
 
-      window.addEventListener('popstate', handler);
+          window.addEventListener('popstate', handler);
 
-      // Safety mechanism: If 'popstate' is not triggered (e.g., no history to move to),
-      // we wait for a very short time and then check if the URL changed anyway.
-      setTimeout(() => {
-        window.removeEventListener('popstate', handler);
-        const currentUrl = window.location.pathname + window.location.search;
-        resolve(oldUrl !== currentUrl);
-      }, 100);
+          // Safety mechanism: If 'popstate' is not triggered (e.g., no history to move to),
+          // we wait for a very short time and then check if the URL changed anyway.
+          setTimeout(() => {
+            window.removeEventListener('popstate', handler);
+            const currentUrl = window.location.pathname + window.location.search;
+            resolve(oldUrl !== currentUrl);
+          }, 100);
 
-      window.history.go(delta);
-      this.log('info', `Navigation command: go(${delta})`);
-    }));
+          window.history.go(delta);
+          this.log('info', `Navigation command: go(${delta})`);
+        }),
+    );
   }
 
   /**
@@ -479,6 +522,7 @@ class TinyRouter extends TinyDebugger {
    * @param {string} path - The path to record.
    */
   #recordHistory(path) {
+    checkDestroy(this.#isDestroyed);
     // If limit is 0, the feature is disabled; do nothing.
     if (this.#historyLimit === 0) return;
 
@@ -509,6 +553,7 @@ class TinyRouter extends TinyDebugger {
    * @returns {Promise<void>}
    */
   async #resolve() {
+    checkDestroy(this.#isDestroyed);
     const path = window.location.pathname;
     const search = window.location.search;
     const query = new URLSearchParams(search);
@@ -548,6 +593,7 @@ class TinyRouter extends TinyDebugger {
    * @throws {RangeError} If the index is out of bounds.
    */
   removeHistoryEntry(index) {
+    checkDestroy(this.#isDestroyed);
     if (!Number.isInteger(index)) {
       throw new TypeError('The index must be an integer.');
     }
@@ -564,6 +610,7 @@ class TinyRouter extends TinyDebugger {
    * Clears all entries from the navigation history.
    */
   clearHistory() {
+    checkDestroy(this.#isDestroyed);
     this.#history = [];
     this.emit('HistoryCleared');
     this.log('info', 'Navigation history has been cleared.');
@@ -573,6 +620,7 @@ class TinyRouter extends TinyDebugger {
    * Removes all registered routes.
    */
   clear() {
+    checkDestroy(this.#isDestroyed);
     this.#routes = [];
     this.emit('RoutesCleared');
     this.log('info', 'All routes have been cleared.');
@@ -582,8 +630,18 @@ class TinyRouter extends TinyDebugger {
    * Removes all instance data.
    */
   clearAll() {
+    checkDestroy(this.#isDestroyed);
     this.clear();
     this.clearHistory();
+  }
+
+  /**
+   * Destroy the instance.
+   */
+  destroy() {
+    if (this.#isDestroyed) return;
+    this.stop();
+    this.#isDestroyed = true;
   }
 }
 
