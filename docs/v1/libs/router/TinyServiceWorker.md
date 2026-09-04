@@ -13,8 +13,11 @@ Instead of dealing with the verbose and often confusing native Service Worker AP
     - [Registration & Automatic Versioning](#registration--automatic-versioning)
     - [Bidirectional Messaging](#bidirectional-messaging)
     - [PWA Lifecycle & Installation](#pwa-lifecycle--installation)
-4. [Memory Management](#memory-management)
-5. [API Reference](#api-reference)
+4. [Event Reference](#event-reference)
+    - [Internal Lifecycle Events](#internal-lifecycle-events)
+    - [Custom Worker Messages](#custom-worker-messages)
+5. [Memory Management](#memory-management)
+6. [API Reference](#api-reference)
 
 ---
 
@@ -69,7 +72,7 @@ One of the most powerful features is the **Version Mismatch Detection**.
 **How it works:**
 1. The manager compares the `version` provided in the constructor with the version stored in `localStorage`.
 2. If they differ, it emits the `sw:VersionUpdateAvailable` event.
-3. It signals the existing worker to prepare for an update.
+3. It signals the current Service Worker to begin preparing for an update via `sw:PrepareUpdate`.
 4. It registers the new worker with a cache-busting timestamp if `debugMode` is enabled.
 
 ### 📩 Bidirectional Messaging
@@ -107,10 +110,46 @@ The manager handles the "tricky" parts of being a Progressive Web App.
 
 * **Installation Prompt:** You can trigger the native browser installation UI by calling `promptInstallation()`. *Note: This must be triggered by a user gesture (like a button click) and only works if the `beforeinstallprompt` event has fired.*
 * **Display Mode:** Automatically detects if your app is running in `standalone` (installed), `twa` (Android Trusted Web Activity), or a standard `browser` tab.
-* **Events Emitted:**
-    * `sw:BeforeInstallPrompt`: Fired when the browser is ready to install the app.
-    * `sw:AppInstalled`: Fired when the user successfully installs the app.
-    * `sw:DisplayModeChanged`: Fired when the user switches from browser to standalone mode.
+
+---
+
+## 📡 Event Reference
+
+The `TinyServiceWorker` instance uses a unified `addEventListener` method. This method captures both **Internal Lifecycle Events** (emitted by the class itself) and **Custom Messages** forwarded from the Service Worker.
+
+### 🛠 Internal Lifecycle Events
+These events are emitted by the `TinyServiceWorker` class to inform your application about its internal state changes.
+
+| Event Name | Payload | Description |
+| :--- | :--- | :--- |
+| `sw:DisplayModeChanged` | `{ displayMode: string }` | Fired when the app switches between `browser`, `standalone`, or `twa`. |
+| `sw:BeforeInstallPrompt` | `{ event: BeforeInstallPromptEvent }` | Fired when the browser is ready to show the installation prompt. |
+| `sw:AppInstalled` | `void` | Fired when the PWA is successfully installed on the device. |
+| `sw:VersionUpdateAvailable` | `void` | Fired when a version mismatch is detected in `localStorage`. |
+| `sw:PrepareUpdate` | `void` | Fired to signal the Service Worker to begin downloading new assets. |
+| `sw:NewVersionReady` | `{ event: Event }` | Fired when the new Service Worker successfully takes control of the page. |
+| `sw:NoSwControllerWarn` | `void` | Fired when a message is attempted but no active Service Worker controller exists. |
+| `{CUSTOM EVENT}` | `{ event: Event, data: Record<string, any>  }` | Fired when a message from `sw.js`is sent. |
+
+### 📨 Custom Worker Messages
+When your Service Worker sends a message using `postMessage`, the class intercepts it and re-emits it as a standard event.
+
+**Service Worker side:**
+```javascript
+// Inside sw.js
+self.postMessage({ type: 'DATA_UPDATED', data: { items: [1, 2, 3] } });
+```
+
+**Main Thread side:**
+```javascript
+swManager.addEventListener((event) => {
+  const type = event.data.type;
+  const data = event.data.data;
+  if (type === 'DATA_UPDATED') {
+    console.log('New items:', data.items);
+  }
+});
+```
 
 ---
 
