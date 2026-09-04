@@ -18,6 +18,7 @@ const MatrixProtocolRegex = Object.freeze({
     length: [1, 255],
     domainPattern: ':[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
   },
+
   /**
    * Room Alias (Human-readable alias)
    * Format: #alias:domain
@@ -29,6 +30,7 @@ const MatrixProtocolRegex = Object.freeze({
     length: [1, 255],
     domainPattern: ':[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
   },
+
   /**
    * Room ID (Internal and immutable ID)
    * Format: !opaque_id:domain
@@ -40,6 +42,7 @@ const MatrixProtocolRegex = Object.freeze({
     length: [1, 255],
     domainPattern: ':[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
   },
+
   /**
    * Event ID (Event/message identifier)
    * Format v1/v2: $opaque_id:domain
@@ -55,6 +58,7 @@ const MatrixProtocolRegex = Object.freeze({
     // to no longer require the ":domain" part at the end of the string.
     domainPattern: '(?:\\:[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})?',
   },
+
   /**
    * Group/Space ID (Legacy/Communities)
    * Format: +group_id:domain
@@ -65,6 +69,41 @@ const MatrixProtocolRegex = Object.freeze({
     validValues: '[a-z0-9._=-]',
     length: [1, 255],
     domainPattern: ':[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
+  },
+
+  /**
+   * Matrix URI (matrix://)
+   * Format: matrix://<server>/#!<user>:<domain>
+   * @type {UsernameRegexTemplate}
+   */
+  matrixUri: {
+    start: 'matrix://[a-zA-Z0-9.-]+/#!',
+    validValues: '[a-zA-Z0-9._=-]',
+    domainPattern: ':[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
+    length: [1, 255],
+  },
+
+  /**
+   * MXC URI (mxc://)
+   * Format: mxc://<server>/<user>
+   * @type {UsernameRegexTemplate}
+   */
+  mxcUri: {
+    start: 'mxc://[a-zA-Z0-9.-]+/',
+    validValues: '[a-zA-Z0-9._=-]',
+    length: [1, 255],
+  },
+
+  /**
+   * HTML Mention
+   * Format: <a href="...">@user:domain.com</a>
+   * @type {UsernameRegexTemplate}
+   */
+  htmlMention: {
+    start: '<a[^>]*>@',
+    validValues: '[a-zA-Z0-9._=-]',
+    domainPattern: ':[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}<\/a>',
+    length: [1, 255],
   },
 });
 
