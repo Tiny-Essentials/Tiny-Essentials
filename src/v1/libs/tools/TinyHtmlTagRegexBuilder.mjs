@@ -1,34 +1,32 @@
 /**
- * const genHtmlRegexString = (freeMode = false) =>
- * freeMode
- *   ? [`<a\\s+[^>]*?href=["\\']`, `["\\'][^>]*>[\\s\\S]*?</a\\s*>`]
- *   : [`<a\\s+(?:[^>]*?\\s+)?href=["\\']`, `["\\'][^>]*>.*?</a>`];
- */
-
-/**
  * @template {string} TagName
  * @typedef {Object} HtmlRegexConfig
- * @property {TagName} tagName - O nome da tag HTML (ex: 'a', 'div').
- * @property {boolean} [freeMode=false] - Se verdadeiro, permite que o conteúdo interno contenha quebras de linha.
- * @property {boolean} [captureAllAttributes=false] - Se verdadeiro, ignora atributos específicos e foca na tag.
- * @property {string} [targetAttribute='href'] - O atributo específico para buscar (ex: 'href', 'src').
- * @property {string} [contentPattern='[\s\S]*?'] - O padrão de regex para o conteúdo interno da tag.
+ * @property {TagName} tagName - The HTML tag name (e.g., 'a', 'div').
+ * @property {string[]} [attributes=[]] - An array of attribute names to capture in individual groups.
+ * @property {boolean} [freeMode=false] - If true, allows the inner content to contain newlines.
+ * @property {boolean} [captureAllAttributes=false] - If true, ignores specific attributes and focuses on the tag structure.
+ * @property {string} [contentPattern='[\s\S]*?'] - The regex pattern for the tag's inner content.
  */
 
 /**
- * Classe responsável por construir expressões regulares para captura de tags HTML
- * de forma altamente configurável.
+ * Class responsible for constructing highly configurable regular expressions
+ * to capture HTML tags and their specific attributes.
  * @template {string} TagName
  */
 class TinyHtmlTagRegexBuilder {
+  /** @type {TagName} */
   #tagName;
+  /** @type {string[]} */
+  #attributes = [];
+  /** @type {boolean} */
   #freeMode = false;
+  /** @type {boolean} */
   #captureAllAttributes = false;
-  #targetAttribute = '';
+  /** @type {string} */
   #contentPattern = '';
 
   /**
-   * @param {HtmlRegexConfig<TagName>} config - Objeto de configuração inicial.
+   * @param {HtmlRegexConfig<TagName>} config - Initial configuration object.
    */
   constructor(config) {
     const tagName = config.tagName;
@@ -39,23 +37,58 @@ class TinyHtmlTagRegexBuilder {
       throw new TypeError('The tagName must be a single word without spaces or < > characters.');
     }
     this.#tagName = tagName;
+
+    // Attribute validation
+    if (config.attributes) {
+      if (!Array.isArray(config.attributes)) {
+        throw new TypeError('The attributes property must be an array of strings.');
+      }
+      for (const attr of config.attributes) {
+        if (typeof attr !== 'string' || /[<>\s]/.test(attr)) {
+          throw new TypeError(
+            'Each attribute name must be a single word string without spaces or < > characters.',
+          );
+        }
+      }
+      this.#attributes = config.attributes;
+    }
+
     this.freeMode = config.freeMode ?? false;
     this.captureAllAttributes = config.captureAllAttributes ?? false;
-    this.targetAttribute = config.targetAttribute || 'href';
     this.contentPattern = config.contentPattern || (this.#freeMode ? '[\\s\\S]*?' : '.*?');
   }
 
-  // --- Getters e Setters com Validação ---
+  // --- Getters and Setters with Validation ---
 
   /** @returns {TagName} */
   get tagName() {
     return this.#tagName;
   }
 
+  /** @returns {string[]} */
+  get attributes() {
+    return [...this.#attributes];
+  }
+
+  /** @param {string[]} value */
+  set attributes(value) {
+    if (!Array.isArray(value)) {
+      throw new TypeError('attributes must be an array.');
+    }
+    for (const attr of value) {
+      if (typeof attr !== 'string' || /[<>\s]/.test(attr)) {
+        throw new TypeError('Each attribute must be a single word string.');
+      }
+    }
+    this.#attributes = [...value];
+  }
+
+  /** @returns {boolean} */
   get freeMode() {
     return this.#freeMode;
   }
 
+  /** @param {boolean} value */
   set freeMode(value) {
     if (typeof value !== 'boolean') {
       throw new TypeError('freeMode must be a boolean.');
@@ -63,10 +96,12 @@ class TinyHtmlTagRegexBuilder {
     this.#freeMode = value;
   }
 
+  /** @returns {boolean} */
   get captureAllAttributes() {
     return this.#captureAllAttributes;
   }
 
+  /** @param {boolean} value */
   set captureAllAttributes(value) {
     if (typeof value !== 'boolean') {
       throw new TypeError('captureAllAttributes must be a boolean.');
@@ -74,21 +109,12 @@ class TinyHtmlTagRegexBuilder {
     this.#captureAllAttributes = value;
   }
 
-  get targetAttribute() {
-    return this.#targetAttribute;
-  }
-
-  set targetAttribute(value) {
-    if (typeof value !== 'string' || value.includes(' ')) {
-      throw new TypeError('targetAttribute must be a single word string.');
-    }
-    this.#targetAttribute = value;
-  }
-
+  /** @returns {string} */
   get contentPattern() {
     return this.#contentPattern;
   }
 
+  /** @param {string} value */
   set contentPattern(value) {
     if (typeof value !== 'string') {
       throw new TypeError('contentPattern must be a string.');
@@ -97,33 +123,44 @@ class TinyHtmlTagRegexBuilder {
   }
 
   /**
-   * Constrói o string do RegExp.
-   * @returns {string} A string da expressão regular configurada.
+   * Constructs the RegExp string.
+   *
+   * Note on Capture Groups:
+   * - For every attribute in the 'attributes' array, two capture groups are added:
+   *   - Group (2n - 1): The value if it is wrapped in quotes (e.g., attr="val").
+   *   - Group (2n): The value if it is unquoted (e.g., attr=val).
+   *   - If the attribute is solitary (e.g., 'disabled'), both groups will be undefined.
+   * - The final capture group is the tag's inner content.
+   *
+   * @returns {string} The constructed regular expression string.
    */
   toString() {
-    // 1. Construção da parte de abertura da tag
-    // Se captureAllAttributes for true, aceita qualquer atributo.
-    // Se false, busca especificamente pelo targetAttribute.
-    const openingTagPattern = this.#captureAllAttributes
-      ? `<${this.#tagName}\\s+[^>]*?>`
-      : `<${this.#tagName}\\s+[^>]*?\\s+${this.#targetAttribute}=["'][^"']*["'][^>]*?>`;
+    let regexString = `<${this.#tagName}`;
 
-    // 2. Construção da parte de fechamento da tag
-    const closingTagPattern = `</${this.#tagName}>`;
+    // If we are not ignoring attributes, add lookaheads for each requested attribute.
+    // Lookaheads allow attributes to appear in any order within the tag.
+    if (!this.#captureAllAttributes) {
+      for (const attr of this.#attributes) {
+        // This pattern handles:
+        // 1. quoted: attr="value" or attr='value'
+        // 2. unquoted: attr=value
+        // 3. solitary: attr
+        regexString += `(?=[^>]*?\\s+${attr}(?:=(?:["']([^"']*)["']|([^"'>\\s]+)))?(?=\\s|>))`;
+      }
+    }
 
-    // 3. Combinação final: <tag> (conteúdo) </tag>
-    // Usamos parênteses ao redor do contentPattern para criar um grupo de captura (Group 1)
-    const fullRegexString = `${openingTagPattern}>(${this.#contentPattern})${closingTagPattern}`;
+    // Close the opening tag and add the content group and closing tag
+    regexString += `>(${this.#contentPattern})</${this.#tagName}>`;
 
-    return fullRegexString;
+    return regexString;
   }
 
   /**
-   * Constrói e retorna o objeto RegExp final.
+   * Constructs and returns the final RegExp object.
    * @param {string} [flag='g']
-   * @returns {RegExp} A expressão regular configurada.
+   * @returns {RegExp} The configured regular expression.
    */
-  toRegExp(flag) {
+  toRegExp(flag = 'g') {
     return new RegExp(this.toString(), flag);
   }
 }
