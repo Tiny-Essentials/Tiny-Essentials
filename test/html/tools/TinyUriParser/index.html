@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TinyUriParser | Test Suite</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <header>
+        <div class="badge">QA Environment</div>
+        <h1>TinyUriParser <span class="subtitle">Test Suite</span></h1>
+        <p>Testing multi-protocol parsing: MXC, Matrix Scheme, Web, and Custom.</p>
+      </header>
+
+      <main>
+        <section class="control-panel">
+          <div class="input-wrapper">
+            <label for="uri-input">URI String to Parse</label>
+            <textarea
+              id="uri-input"
+              placeholder="e.g., matrix:u/alice:example.org or https://matrix.to/#@alice:example.org"
+              spellcheck="false"
+            ></textarea>
+          </div>
+
+          <div class="button-group">
+            <button id="run-btn" class="btn-primary">Execute Parse</button>
+            <button id="example-btn" class="btn-secondary">Load Example</button>
+            <button id="clear-btn" class="btn-ghost">Clear</button>
+          </div>
+        </section>
+
+        <section class="output-panel">
+          <div class="panel-header">
+            <span>Visual Console</span>
+            <div class="status-indicator" id="status-dot"></div>
+          </div>
+          <div class="console-content">
+            <pre id="console-output">Ready for execution...</pre>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- The bridge logic -->
+    <script type="module" src="ui-test.js"></script>
+  </body>
+</html>
