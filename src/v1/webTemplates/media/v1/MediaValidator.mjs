@@ -7,13 +7,24 @@
  */
 
 /**
+ * @typedef {import('stream').Readable} Readable
+ * @typedef {typeof import('stream').Readable} ConstructorReadable
+ */
+
+/**
  * HELPER: Converts a Buffer into a readable stream for libraries that require stream inputs.
  * @param {Buffer} buffer - The file buffer to convert.
- * @param {typeof import('stream').Readable} Readable
+ * @param {ConstructorReadable} Readable
  */
 function bufferToStream(buffer, Readable) {
   return Readable.from(buffer);
 }
+
+/**
+ * 
+ * @typedef {import('file-type').FileTypeOptions} FileTypeOptions
+ * @typedef {import('file-type').FileTypeResult} FileTypeResult
+ */
 
 /**
  * LAYER 1: Fast Binary Validation (Magic Numbers)
@@ -24,7 +35,7 @@ function bufferToStream(buffer, Readable) {
  * @param {Object} options
  * @param {Buffer} options.buffer - The raw file buffer from the upload.
  * @param {'image' | 'audio' | 'video'} options.expectedType - The expected media category.
- * @param {import('file-type').fileTypeFromBuffer} options.fileTypeFromBuffer
+ * @param {(buffer: Uint8Array | ArrayBuffer, options?: FileTypeOptions) => Promise<FileTypeResult | undefined>} options.fileTypeFromBuffer
  * @returns {Promise<string>} Resolves with the confirmed MIME type if valid.
  * @throws {Error} If the file signature does not match the expected type.
  */
@@ -50,6 +61,12 @@ export async function validateMagicNumbers({ buffer, expectedType, fileTypeFromB
 }
 
 /**
+ * @typedef {import('sharp').SharpConstructor} SharpConstructor
+ * @typedef {import('sharp').Sharp} Sharp
+ * @typedef {import('sharp').Metadata} SharpMetadata
+ */
+
+/**
  * LAYER 2 (IMAGE): Structural and metadata validation for images.
  * Forces the decoding engine to parse the image structure to detect hidden exploits.
  *
@@ -58,8 +75,8 @@ export async function validateMagicNumbers({ buffer, expectedType, fileTypeFromB
  * @param {Object} options
  * @param {Buffer} options.buffer - The raw image buffer.
  * @param {string} options.mimeType - Result from {@link validateMagicNumbers}
- * @param {import('sharp').SharpConstructor} options.Sharp
- * @returns {Promise<ValidationResult<{ data: import('sharp').Sharp; metadata: import('sharp').Metadata }>>} The validation outcome.
+ * @param {SharpConstructor} options.Sharp
+ * @returns {Promise<ValidationResult<{ data: Sharp; metadata: SharpMetadata }>>} The validation outcome.
  */
 export async function validateImage({ buffer, mimeType, Sharp }) {
   try {
@@ -79,6 +96,12 @@ export async function validateImage({ buffer, mimeType, Sharp }) {
 }
 
 /**
+ * @typedef {import('music-metadata').IAudioMetadata} IAudioMetadata
+ * @typedef {import('music-metadata').IFileInfo} IFileInfo
+ * @typedef {import('music-metadata').IOptions} IOptions
+ */
+
+/**
  * LAYER 2 (AUDIO/VIDEO): Deep validation for audio files using native JS metadata parsing.
  * Validates audio headers, durations, and container integrity without external tools.
  *
@@ -87,9 +110,9 @@ export async function validateImage({ buffer, mimeType, Sharp }) {
  * @param {Object} options
  * @param {Buffer} options.buffer - The raw media buffer.
  * @param {string} options.mimeType - Result from {@link validateMagicNumbers}
- * @param {import('music-metadata').parseStream} options.parseStream
- * @param {typeof import('stream').Readable} options.Readable
- * @returns {Promise<ValidationResult<import('music-metadata').IAudioMetadata>>} The validation outcome.
+ * @param {(stream: Readable, fileInfo?: IFileInfo | string, options?: IOptions) => Promise<IAudioMetadata>} options.parseStream
+ * @param {ConstructorReadable} options.Readable
+ * @returns {Promise<ValidationResult<IAudioMetadata>>} The validation outcome.
  */
 export async function validateAudioVideo({ buffer, mimeType, parseStream, Readable }) {
   try {
