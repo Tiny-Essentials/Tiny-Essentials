@@ -19,8 +19,8 @@
  * @property {'room' | 'user' | 'event'} type - The type of the matrix resource.
  * @property {string} resourceId - The primary identifier (room ID or user ID).
  * @property {string} [eventId] - The specific event ID (only if type is 'event').
- * @property {string} server - The matrix server domain.
- * @property {string} [via] - The 'via' parameter for server delegation.
+ * @property {string|null} server - The matrix server domain.
+ * @property {Record<string, string>} params - Key-value pairs of query parameters (e.g., { via: 'server.com' }).
  */
 
 /**
@@ -132,10 +132,10 @@ class TinyUriParser {
    * @returns {MatrixSchemeData}
    */
   #parseMatrixScheme(uri) {
-    // Regex handles: matrix:<type>/<resource>[/e/<event>][?via=<via>]
+    // Regex handles: matrix:<type>/<resource>[/e/<event>][<query>]
     // Types supported: r, u, roomid
     const regex =
-      /^matrix:(?<prefix>r|u|roomid)\/(?<resource>[^?/\s]+)(?:\/e\/(?<event>[^?/\s]+))?(?:\?via=(?<via>[^?/\s]+))?$/;
+      /^matrix:(?<prefix>r|u|roomid)\/(?<resource>[^?/\s]+)(?:\/e\/(?<event>[^?/\s]+))?(?<query>\?.*)?$/;
     const match = uri.match(regex);
 
     if (!match) {
@@ -143,16 +143,22 @@ class TinyUriParser {
     }
 
     // @ts-ignore
-    const { prefix, resource, event, via } = match.groups;
+    const { prefix, resource, event, query } = match.groups;
 
     /** @type {MatrixSchemeData} */
     const data = {
       dataType: 'matrix_scheme',
       type: prefix === 'r' || prefix === 'roomid' ? 'room' : 'user',
       resourceId: resource,
-      server: '', // Will be extracted from resource if possible, or left for normalization
-      via: via || undefined,
+      server: null, // Will be extracted from resource if possible, or left for normalization
+      params: {},
     };
+
+    // Transforms the query string into a key/value object
+    if (query) {
+      const searchParams = new URLSearchParams(query);
+      data.params = Object.fromEntries(searchParams.entries());
+    }
 
     if (event) {
       data.type = 'event';
@@ -165,7 +171,7 @@ class TinyUriParser {
       data.server = resource.substring(lastColonIndex + 1);
       data.resourceId = resource.substring(0, lastColonIndex);
     } else {
-      data.server = 'unknown'; // Fallback
+      data.server = null; // Fallback
     }
 
     this.#validateMatrixSchemeData(data);
@@ -231,7 +237,7 @@ class TinyUriParser {
     if (typeof data.resourceId !== 'string' || data.resourceId.length === 0) {
       throw new TypeError('MatrixSchemeData: resourceId must be a non-empty string.');
     }
-    if (typeof data.server !== 'string' || data.server.length === 0) {
+    if (data.server !== null && (typeof data.server !== 'string' || data.server.length === 0)) {
       throw new TypeError('MatrixSchemeData: server must be a non-empty string.');
     }
     if (data.type === 'event' && (typeof data.eventId !== 'string' || data.eventId.length === 0)) {
@@ -239,8 +245,8 @@ class TinyUriParser {
         'MatrixSchemeData: eventId must be a non-empty string when type is "event".',
       );
     }
-    if (data.via && typeof data.via !== 'string') {
-      throw new TypeError('MatrixSchemeData: via must be a string.');
+    if (data.params && typeof data.params !== 'object') {
+      throw new TypeError('MatrixSchemeData: params must be an object.');
     }
   }
 }
