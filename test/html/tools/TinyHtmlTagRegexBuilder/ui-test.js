@@ -110,12 +110,11 @@ class TestEnvironment {
     if (!this.#currentBuilder) return;
 
     const htmlString = this.#elements.htmlInput.value;
-    const regex = this.#currentBuilder.toRegExp('g');
 
     this.#log(`Running test on: "${htmlString}"`, 'system');
 
     try {
-      const matches = [...htmlString.matchAll(regex)];
+      const matches = this.#currentBuilder.parse(htmlString);
 
       if (matches.length === 0) {
         this.#log('No matches found.', 'error');
@@ -129,13 +128,14 @@ class TestEnvironment {
         matchInfo.className = 'console-msg success';
 
         // Create a detailed view of the match and its capture groups
-        let details = `Match ${index + 1}: ${match[0]}\n`;
-        details += `Groups: ${JSON.stringify(match.slice(1), null, 2)}`;
+        let details = `Match ${index + 1}:\n`;
+        details += `Groups: ${JSON.stringify(match, null, 2)}`;
 
         matchInfo.textContent = details;
         this.#elements.console.appendChild(matchInfo);
       });
     } catch (error) {
+      console.error(error);
       this.#log(error.message, 'error');
     }
   }
