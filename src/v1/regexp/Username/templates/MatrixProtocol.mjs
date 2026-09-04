@@ -2,6 +2,10 @@
  * @typedef {import('../jsDoc.mjs').UsernameRegexTemplate} UsernameRegexTemplate
  */
 
+const azAz09Default = '[a-zA-Z0-9._=-]';
+const domainNamePattern = '[a-zA-Z0-9.-]'
+const domainPattern = `\\:${domainNamePattern}+\\.[a-zA-Z]{2,}`;
+
 /**
  * Matrix Protocol (matrix.org)
  * Official Documentation: https://spec.matrix.org/latest/appendices/#identifier-grammar
@@ -16,7 +20,7 @@ const MatrixProtocolRegex = Object.freeze({
     prefix: '@',
     validValues: '[a-z0-9._=-]',
     length: [1, 255],
-    domainPattern: ':[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
+    domainPattern,
   },
 
   /**
@@ -26,9 +30,9 @@ const MatrixProtocolRegex = Object.freeze({
    */
   roomName: {
     prefix: '#',
-    validValues: '[a-zA-Z0-9._=-]', // Some servers accept uppercase in aliases
+    validValues: azAz09Default, // Some servers accept uppercase in aliases
     length: [1, 255],
-    domainPattern: ':[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
+    domainPattern,
   },
 
   /**
@@ -40,7 +44,7 @@ const MatrixProtocolRegex = Object.freeze({
     prefix: '!',
     validValues: '[a-zA-Z0-9_-]',
     length: [1, 255],
-    domainPattern: ':[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
+    domainPattern,
   },
 
   /**
@@ -56,7 +60,7 @@ const MatrixProtocolRegex = Object.freeze({
     // We use (?:...)? here to make the domain group optional,
     // as Matrix updated the Event ID format in recent versions
     // to no longer require the ":domain" part at the end of the string.
-    domainPattern: '(?:\\:[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})?',
+    domainPattern: `(?:${domainPattern})?`,
   },
 
   /**
@@ -68,7 +72,7 @@ const MatrixProtocolRegex = Object.freeze({
     prefix: '+',
     validValues: '[a-z0-9._=-]',
     length: [1, 255],
-    domainPattern: ':[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
+    domainPattern,
   },
 
   /**
@@ -77,9 +81,9 @@ const MatrixProtocolRegex = Object.freeze({
    * @type {UsernameRegexTemplate}
    */
   matrixUri: {
-    start: 'matrix://[a-zA-Z0-9.-]+/#!',
-    validValues: '[a-zA-Z0-9._=-]',
-    domainPattern: ':[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
+    start: `matrix://${domainNamePattern}+/#!`,
+    validValues: azAz09Default,
+    domainPattern,
     length: [1, 255],
   },
 
@@ -89,8 +93,8 @@ const MatrixProtocolRegex = Object.freeze({
    * @type {UsernameRegexTemplate}
    */
   mxcUri: {
-    start: 'mxc://[a-zA-Z0-9.-]+/',
-    validValues: '[a-zA-Z0-9._=-]',
+    start: `mxc://${domainNamePattern}+/`,
+    validValues: azAz09Default,
     length: [1, 255],
   },
 
@@ -101,8 +105,8 @@ const MatrixProtocolRegex = Object.freeze({
    */
   htmlMention: {
     start: '<a[^>]*>@',
-    validValues: '[a-zA-Z0-9._=-]',
-    domainPattern: ':[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}<\/a>',
+    validValues: azAz09Default,
+    domainPattern: `${domainPattern}<\/a>`,
     length: [1, 255],
   },
 });

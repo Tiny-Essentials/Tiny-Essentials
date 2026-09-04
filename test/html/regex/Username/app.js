@@ -41,14 +41,14 @@ protocolSelect.addEventListener('change', () => {
 
 // Test Data
 const examples = {
-  bluesky: `Check my profile @yasmin.pony.house or my DID "did:plc:12345abc". Also look at #hashtag!
+  bluesky: `
           Testing BlueSky / AT protocols:
           Handle: @yasmin.pony.house or @pony.house
           DID: did:plc:1234567890abcdefghi or did:web:mydomain.com
           AT URI: at://did:plc:1234567890abcdefghi/app.bsky.feed.post/3jklmn56pqr2
           Hashtag: #MyLittlePony or #programming
-        `,
-  discord: `Mention me <@123456789012345678> or check the channel <#123456789012345678>. Use @username or <@!123456789012345678>.
+        `.trim().replace(/  /g, ''),
+  discord: `
           Testing Discord mentions:
           User Mention: <@123456789012345678>
           Nickname Mention: <@!123456789012345678>
@@ -58,8 +58,8 @@ const examples = {
           Animated Emoji: <a:rainbow_dash_fly:123456789012345678>
           Slash Command (Simple): </play:123456789012345678>
           Slash Command (With Subcommand): </play music:123456789012345678>
-        `,
-  matrix: `Hello @yasmin:pony.house! Join my room #general:pony.house or check event $abc123def456:pony.house.
+        `.trim().replace(/  /g, ''),
+  matrix: `
           Checking Matrix identifiers:
           User ID: @yasmin:pony.house
           Room Alias: #general-ponies:pony.house
@@ -67,7 +67,10 @@ const examples = {
           Event ID (v1 with domain): $abc123def456:pony.house
           Event ID (v3+ no domain): $aBcdEFgH12345+/AaBbCc=-
           Group ID (Legacy): +mlp-fans:pony.house
-        `,
+          Matrix URI: matrix://matrix.org/#!@yasmin:pony.house
+          MXC URI: mxc://matrix.org/abc123def456
+          HTML Mention: <a href="https://matrix.org/#/@yasmin:pony.house">@yasmin:pony.house</a>
+        `.trim().replace(/  /g, ''),
 };
 
 window.loadExample = (key) => {
