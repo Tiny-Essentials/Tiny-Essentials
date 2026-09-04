@@ -2,7 +2,6 @@
  * @typedef {import('../jsDoc.mjs').UsernameRegexTemplate} UsernameRegexTemplate
  */
 
-const azAz09Default = '[a-zA-Z0-9._=-]';
 const domainNamePattern = '[a-zA-Z0-9.-]'
 const domainPattern = `\\:${domainNamePattern}+\\.[a-zA-Z]{2,}`;
 
@@ -30,7 +29,7 @@ const MatrixProtocolRegex = Object.freeze({
    */
   roomName: {
     prefix: '#',
-    validValues: azAz09Default, // Some servers accept uppercase in aliases
+    validValues: '[a-zA-Z0-9._=-]', // Some servers accept uppercase in aliases
     length: [1, 255],
     domainPattern,
   },
@@ -76,38 +75,41 @@ const MatrixProtocolRegex = Object.freeze({
   },
 
   /**
-   * Matrix URI (matrix://)
-   * Format: matrix://<server>/#!<user>:<domain>
+   * Matrix.to Permalink
+   * Format: https://matrix.to/#/@user:domain or matrix.to/#/!room:domain
+   * Supports optional event IDs and query parameters (like ?via=server.org)
    * @type {UsernameRegexTemplate}
    */
-  matrixUri: {
-    start: `matrix://${domainNamePattern}+/#!`,
-    validValues: azAz09Default,
-    domainPattern,
+  matrixToLink: {
+    start: '(?:https?://)?(?:www\\.)?matrix\\.to/#/[@#!$+]?',
+    validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
+    domainPattern: `${domainPattern}(?:/[\\w\\$=-]+)?(?:\\?[a-zA-Z0-9_=&%-]+)?`,
   },
 
   /**
-   * MXC URI (mxc://)
-   * Format: mxc://<server>/<user>
+   * Matrix URI Scheme (RFC 8922)
+   * Format: matrix:u/user:domain or matrix:roomid/room:domain
    * @type {UsernameRegexTemplate}
    */
-  mxcUri: {
-    start: `mxc://${domainNamePattern}+/`,
-    validValues: azAz09Default,
+  matrixUri: {
+    start: 'matrix:(?:u|r|roomid|e)/',
+    validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
+    domainPattern: `${domainPattern}(?:/[\\w\\$=-]+)?(?:\\?[a-zA-Z0-9_=&%-]+)?`,
   },
 
   /**
    * HTML Mention
-   * Format: <a href="...">@user:domain.com</a>
+   * Format: <a href="https://matrix.to/#/@user:domain">User Name</a>
+   * Matches standard formatted mentions sent by Matrix clients inside HTML bodies.
    * @type {UsernameRegexTemplate}
    */
   htmlMention: {
-    start: '<a[^>]*>@',
-    validValues: azAz09Default,
-    domainPattern: `${domainPattern}<\/a>`,
+    start: '<a\\s+(?:[^>]*?\\s+)?href=["\'](?:(?:https?://)?(?:www\\.)?matrix\\.to/#/|matrix:)(?:u/|r/|roomid/|e/)?[@#!$+]?',
+    validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
+    domainPattern: `${domainPattern}(?:/[\\w\\$=-]+)?(?:\\?[a-zA-Z0-9_=&%-]+)?["\'][^>]*>.*?</a>`,
   },
 });
 
