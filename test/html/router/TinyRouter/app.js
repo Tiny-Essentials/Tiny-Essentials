@@ -41,24 +41,24 @@ const router = new TinyRouter({
 window.router = router;
 
 // --- Registro de Rotas de Teste ---
-router.add('/', (match) => {
+router.add(rootPath, (match) => {
   log('Matched: Home');
 });
 
-router.add('/settings', (match) => {
+router.add(`${rootPath}settings`, (match) => {
   log('Matched: Settings');
 });
 
-router.add('/search', (match) => {
+router.add(`${rootPath}search`, (match) => {
   log('Matched: Search');
 });
 
 // Rota com parâmetros dinâmicos
-router.add('/:host/images/:id', (match) => {
+router.add(`${rootPath}:host/images/:id`, (match) => {
   log('Matched: Image Viewer', match.params);
 });
 
-router.add('/:host/profiles/:username', (match) => {
+router.add(`${rootPath}:host/profiles/:username`, (match) => {
   log('Matched: Profile', match.params);
 });
 
