@@ -136,12 +136,13 @@ class TinyHtmlTagRegexBuilder {
         // 1. quoted: attr="value" or attr='value'
         // 2. unquoted: attr=value
         // 3. solitary: attr
-        regexString += `(?=[^>]*?\\s+${attr}(?:=(?:["']([^"']*)["']|([^"'>\\s]+)))?(?=\\s|>))`;
+        regexString += `(?=[^>]*?\\s+${attr}(?:=(?:["']([^"']*)["']|([^"'>\\s]+)))?(?=\\s|>|\\/))`;
       }
     }
 
-    // Close the opening tag and add the content group and closing tag
-    regexString += `>(${this.#contentPattern})</${this.#tagName}>`;
+    // Close the opening tag by consuming the remaining attributes/spaces with [^>]*
+    // and then add the content group and closing tag.
+    regexString += `[^>]*>(${this.#contentPattern})</${this.#tagName}>`;
 
     return regexString;
   }

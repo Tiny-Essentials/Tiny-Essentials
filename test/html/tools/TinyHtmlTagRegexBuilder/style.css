@@ -1,0 +1,232 @@
+/* 
+   Theme Variables 
+   Organized for easy customization 
+*/
+:root {
+  --bg-color: #121212; /* Main background */
+  --surface-color: #1e1e1e; /* Card background */
+  --primary-color: #3a86ff; /* Primary actions/highlights */
+  --secondary-color: #8338ec; /* Secondary actions */
+  --error-color: #ff006e; /* Errors and invalid states */
+  --success-color: #38b000; /* Success/Matches */
+  --text-main: #e0e0e0; /* Primary text */
+  --text-dim: #a0a0a0; /* Secondary/Label text */
+  --border-color: #333333; /* Borders and separators */
+  --font-mono: 'Fira Code', 'Courier New', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+header h1 {
+  font-size: 1.8rem;
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
+header h1 small {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.card h2 {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+  margin-bottom: 5px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+label {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+input[type='text'],
+textarea {
+  background-color: #2a2a2a;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 10px;
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.checkbox-group {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.checkbox-group input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+button {
+  padding: 12px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    transform 0.1s;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: white;
+}
+.btn-clear {
+  background-color: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border-color);
+  font-size: 0.7rem;
+  padding: 2px 8px;
+}
+
+.regex-output {
+  margin-top: 10px;
+  padding: 10px;
+  background: #000;
+  border-radius: 4px;
+}
+
+.regex-output label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.75rem;
+}
+
+.regex-output code {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--primary-color);
+  word-break: break-all;
+}
+
+/* Console Styles */
+.console-container {
+  margin-top: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  height: 300px;
+}
+
+.console-header {
+  background-color: #252525;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.console-body {
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  overflow-y: auto;
+  flex-grow: 1;
+  background-color: #0a0a0a;
+}
+
+.console-msg {
+  display: block;
+  margin-bottom: 8px;
+}
+.console-msg.error {
+  color: var(--error-color);
+}
+.console-msg.success {
+  color: var(--success-color);
+}
+.console-msg.system {
+  color: var(--text-dim);
+  font-style: italic;
+}
+.console-msg.info {
+  color: var(--primary-color);
+}
+
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin-bottom: 10px;
+}

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TinyHtmlTagRegexBuilder | Test Environment</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" src="ui-test.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>TinyHtmlTagRegexBuilder <small>Testing Suite</small></h1>
+    </header>
+
+    <main class="container">
+      <!-- Configuration Section -->
+      <section class="card config-panel">
+        <h2>1. Configuration</h2>
+        <div class="form-group">
+          <label for="tagName">Tag Name</label>
+          <input type="text" id="tagName" placeholder="e.g., a" value="a" />
+        </div>
+
+        <div class="form-group">
+          <label for="attributes">Attributes (comma-separated)</label>
+          <input
+            type="text"
+            id="attributes"
+            placeholder="e.g., href, class, id"
+            value="href, class"
+          />
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" id="captureAllAttributes" /> Capture All Attributes
+          </label>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label> <input type="checkbox" id="freeMode" /> Free Mode (Allow Newlines) </label>
+        </div>
+
+        <div class="form-group">
+          <label for="contentPattern">Content Pattern (Regex)</label>
+          <input type="text" id="contentPattern" placeholder="e.g., .*?" value=".*?" />
+        </div>
+
+        <button id="buildBtn" class="btn-primary">Generate Regex</button>
+
+        <div class="regex-output">
+          <label>Generated Regex String:</label>
+          <code id="regexStringDisplay">/none/g</code>
+        </div>
+      </section>
+
+      <!-- Testing Section -->
+      <section class="card test-panel">
+        <h2>2. Test Execution</h2>
+        <div class="form-group">
+          <label for="htmlInput">HTML String to Test</label>
+          <textarea
+            id="htmlInput"
+            rows="5"
+            placeholder="<a href='https://google.com' class='link'>Link Content</a>"
+          ></textarea>
+        </div>
+        <button id="runTestBtn" class="btn-secondary" disabled>Run Test</button>
+
+        <div class="console-container">
+          <div class="console-header">
+            <span>Visual Console</span>
+            <button id="clearConsole" class="btn-clear">Clear</button>
+          </div>
+          <div id="consoleOutput" class="console-body">
+            <span class="console-msg system">Waiting for regex generation...</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
