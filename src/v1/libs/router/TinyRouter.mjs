@@ -8,17 +8,20 @@ const checkDestroy = createCheckDestroyed('TinyRouter');
 const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
 
 /**
+ * Represents a single entry in the navigation history.
  * @typedef {Object} RouterHistoryEntry
  * @property {string} path - The URL path recorded in history.
  * @property {number} timestamp - The Unix timestamp when this path was visited.
  */
 
 /**
+ * Additional metadata stored alongside segment extraction results.
  * @typedef {Object} SegExResultExtra
  * @property {string} [pattern] - Stored to allow removal by string.
  */
 
 /**
+ * Configuration for registering a route using a function to generate the pattern.
  * @typedef {Object} AddRouteOptionsWithFunction
  * @property {import('../../regexp/SegmentExtractor.mjs').SegExFunction} callback - A function used to process the pattern.
  * @property {string} pattern - Stored to allow removal by string.
@@ -30,6 +33,7 @@ const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
  */
 
 /**
+ * Configuration for registering a route using a custom segment extraction pattern.
  * @typedef {Object} AddRouteOptions
  * @property {string} pattern - Stored to allow removal by string.
  * @property {string|RegExp} searchValue - The search pattern (string or RegExp) used to identify dynamic segments.
@@ -38,6 +42,7 @@ const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
  */
 
 /**
+ * Data structure containing the results of a successful route match.
  * @typedef {Object} RouteMatch
  * @property {string} path - The matched URL path.
  * @property {Record<string, string>} params - The dynamic parameters extracted from the path.
@@ -45,24 +50,28 @@ const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
  */
 
 /**
+ * Data structure containing details when no route matches the current URL.
  * @typedef {Object} RouteNotFoundData
  * @property {string} path - The path that failed to match.
  * @property {URLSearchParams} query - The URL search parameters.
  */
 
 /**
+ * A function executed when a route is successfully matched.
  * @callback RouteCallback
  * @param {RouteMatch} match - The object containing path, params, and query.
  * @returns {Promise<void>|void} - A promise or void indicating completion.
  */
 
 /**
+ * A function executed when no route matches the current URL.
  * @callback RouteNotFoundCallback
  * @param {RouteNotFoundData} match - The object containing path and query.
  * @returns {void}
  */
 
 /**
+ * Configuration options for initializing the TinyRouter instance.
  * @typedef {Object} RouterOptions
  * @property {boolean} [debugMode=false] - Whether to enable internal debug logging.
  * @property {boolean} [useLogColors=false] - Whether to enable log color support.
@@ -74,6 +83,7 @@ const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
  */
 
 /**
+ * A definition of a route, combining its pattern extractor and its execution callback.
  * @typedef {Object} RouteDefinition
  * @property {SegExResult} segmentExtractor - The extraction logic and metadata used to match the path and retrieve parameters.
  * @property {RouteCallback} callback - The function to execute on match.
@@ -83,6 +93,7 @@ const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
  * A lightweight, framework-agnostic router for managing client-side navigation.
  */
 class TinyRouter extends TinyDebugger {
+  /** The SegmentExtractor module. */
   static SegmentExtractor = SegmentExtractor;
   /** @type {RouteDefinition[]} The collection of registered routes. */
   #routes = [];
@@ -102,9 +113,9 @@ class TinyRouter extends TinyDebugger {
   #historyLimit;
   /** @type {number} Current position index in the internal history. */
   #historyIndex = -1;
-  /** @type {TinyPromiseQueue} */
+  /** @type {TinyPromiseQueue} A promise queue used to handle asynchronous routing operations sequentially. */
   #queue = new TinyPromiseQueue();
-  /** @type {boolean} */
+  /** @type {boolean} A flag indicating if the router instance has been destroyed. */
   #isDestroyed = false;
 
   /**
@@ -153,63 +164,63 @@ class TinyRouter extends TinyDebugger {
     this.#popstateHandler = this.#resolve.bind(this);
   }
 
-  /** @returns {boolean} */
+  /** @returns {boolean} Returns whether the router instance has been destroyed. */
   get isDestroyed() {
     return this.#isDestroyed;
   }
 
-  /** @returns {number} The current position in history. */
+  /** @returns {number} Returns the current position in history. */
   get historyIndex() {
     checkDestroy(this.#isDestroyed);
     return this.#historyIndex;
   }
 
-  /** @returns {number} */
+  /** @returns {number} Returns the maximum number of history entries allowed. */
   get historyLimit() {
     checkDestroy(this.#isDestroyed);
     return this.#historyLimit;
   }
 
-  /** @returns {boolean} */
+  /** @returns {boolean} Returns whether the router detects changes in history navigation. */
   get detectHistoryChange() {
     checkDestroy(this.#isDestroyed);
     return this.#detectHistoryChange;
   }
 
-  /** @param {boolean} value */
+  /** @param {boolean} value Sets whether the router detects changes in history navigation. */
   set detectHistoryChange(value) {
     checkDestroy(this.#isDestroyed);
     if (typeof value !== 'boolean') throw new TypeError('detectHistoryChange must be a boolean.');
     this.#detectHistoryChange = value;
   }
 
-  /** @returns {RouteCallback} */
+  /** @returns {RouteCallback} Returns the callback function for route changes. */
   get onRouteChanged() {
     checkDestroy(this.#isDestroyed);
     return this.#onRouteChanged;
   }
 
-  /** @param {RouteCallback} value */
+  /** @param {RouteCallback} value Sets the callback function for route changes. */
   set onRouteChanged(value) {
     checkDestroy(this.#isDestroyed);
     if (typeof value !== 'function') throw new TypeError('onRouteChanged must be a function.');
     this.#onRouteChanged = value;
   }
 
-  /** @returns {RouteNotFoundCallback} */
+  /** @returns {RouteNotFoundCallback} Returns the callback function for unmatched routes. */
   get onRouteNotFound() {
     checkDestroy(this.#isDestroyed);
     return this.#onRouteNotFound;
   }
 
-  /** @param {RouteNotFoundCallback} value */
+  /** @param {RouteNotFoundCallback} value Sets the callback function for unmatched routes. */
   set onRouteNotFound(value) {
     checkDestroy(this.#isDestroyed);
     if (typeof value !== 'function') throw new TypeError('onRouteNotFound must be a function.');
     this.#onRouteNotFound = value;
   }
 
-  /** @returns {boolean} */
+  /** @returns {boolean} Returns whether the router is currently active. */
   get started() {
     checkDestroy(this.#isDestroyed);
     return this.#started;
