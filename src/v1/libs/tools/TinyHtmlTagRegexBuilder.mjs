@@ -167,10 +167,10 @@ class TinyHtmlTagRegexBuilder {
     let regexString = `<${this.#tagName}`;
 
     if (this.#captureAllAttributes) {
-      // Captura todos os atributos (e os espaços entre eles) em um único grupo de captura.
+      // Captures all attributes (and the spaces between them) in a single capture group.
       regexString += `([^>]*)`;
     } else {
-      // Usa os lookaheads para capturar atributos específicos isoladamente.
+      // Uses lookaheads to capture specific attributes individually.
       for (const attr of this.#attributes) {
         // This pattern handles:
         // 1. quoted: attr="value" or attr='value'
@@ -178,11 +178,11 @@ class TinyHtmlTagRegexBuilder {
         // 3. solitary: attr
         regexString += `(?=[^>]*?\\s+${attr}(?:=(?:["']([^"']*)["']|([^"'>\\s]+)))?(?=\\s|>|\\/))`;
       }
-      // Consome o resto da tag de abertura sem criar um novo grupo de captura
+      // Consumes the rest of the opening tag without creating a new capture group
       regexString += `[^>]*`;
     }
 
-    // Fecha a tag de abertura (o > final), adiciona o grupo de conteúdo e a tag de fechamento
+    // Closes the opening tag (the final >), adds the content group, and the closing tag
     regexString += `>(${this.#contentPattern})</${this.#tagName}>`;
 
     return regexString;
@@ -204,7 +204,7 @@ class TinyHtmlTagRegexBuilder {
    * @returns {ParsedHtmlTag[]} An array containing an object for each matched tag, with its attributes and child.
    */
   parse(htmlString) {
-    // Forçamos a flag 'g' para garantir que possamos iterar sobre todas as ocorrências.
+    // We force the 'g' flag to ensure we can iterate over all occurrences.
     const regex = this.toRegExp('g');
     /** @type {ParsedHtmlTag[]} */
     const results = [];
@@ -219,18 +219,18 @@ class TinyHtmlTagRegexBuilder {
         const attrString = match[1] || '';
         child = match[2] || '';
 
-        // Quebra a string bruta em pares de chave e valor
+        // Splits the raw string into key-value pairs
         const attrRegex = /([^\s=]+)(?:\s*=\s*(?:(?:"([^"]*)")|(?:'([^']*)')|([^\s"'>]+)))?/g;
         let attrMatch;
 
         while ((attrMatch = attrRegex.exec(attrString)) !== null) {
           const attrName = attrMatch[1];
-          // Se o valor existir em algum dos grupos, pegamos. Se não, é um atributo solitário (ex: disabled = true).
+          // If the value exists in any of the groups, we take it. Otherwise, it is a solitary attribute (e.g., disabled = true).
           const attrValue = attrMatch[2] ?? attrMatch[3] ?? attrMatch[4] ?? true;
           attributesObj[attrName] = attrValue;
         }
       } else {
-        // Modo com atributos específicos baseados no array de config
+        // Mode with specific attributes based on the configuration array
         for (let i = 0; i < this.#attributes.length; i++) {
           const attrName = this.#attributes[i];
           const quotedValue = match[i * 2 + 1];
