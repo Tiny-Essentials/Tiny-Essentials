@@ -3,13 +3,19 @@
  */
 
 const domainCharPattern = '[a-zA-Z0-9.-]';
-const domainSuffixPattern = `\\:${domainCharPattern}+\\.[a-zA-Z]{2,}`;
-const urlPathAndQueryPattern = '(?:/[\\w=/$+.-]+)?(?:\\?[\\w=&%.$+-]+)?';
+// Support both literal ':' and encoded '%3A'
+const suffixNormal = '\\:';
+const suffixUri = '(?:\\:|%3A)';
+
+const domainSuffixPattern = `${domainCharPattern}+\\.[a-zA-Z]{2,}`;
+const urlPathAndQueryPattern = '(?:/[\\w=/$+.:%-]+)?(?:\\?[\\w=&%.$+:;-]+)?';
 const matrixToPermalinkBase = '(?:https?://)?(?:www\\.)?matrix\\.to/#/';
 
 const matrixScheme = 'matrix\\:';
 const matrixUriTypePattern = '(?:u/|r/|roomid/|e/)?';
-const matrixIdPrefixPattern = '[@#!$+]?';
+// Support literal prefixes and their URL-encoded equivalents:
+// @ -> %40, # -> %23, ! -> %21, $ -> %24, + -> %2B
+const matrixIdPrefixPattern = '(?:@|%40|#|%23|!|%21|\\$|%24|\\+|%2B)?';
 
 /**
  * Matrix Protocol (matrix.org)
@@ -25,7 +31,7 @@ const MatrixProtocolRegex = Object.freeze({
     prefix: '@',
     validValues: '[a-z0-9._=-]',
     length: [1, 255],
-    domainPattern: domainSuffixPattern,
+    domainPattern: `${suffixNormal}${domainSuffixPattern}`,
   },
 
   /**
@@ -37,7 +43,7 @@ const MatrixProtocolRegex = Object.freeze({
     prefix: '#',
     validValues: '[a-zA-Z0-9._=-]', // Some servers accept uppercase in aliases
     length: [1, 255],
-    domainPattern: domainSuffixPattern,
+    domainPattern: `${suffixNormal}${domainSuffixPattern}`,
   },
 
   /**
@@ -49,7 +55,7 @@ const MatrixProtocolRegex = Object.freeze({
     prefix: '!',
     validValues: '[a-zA-Z0-9_-]',
     length: [1, 255],
-    domainPattern: domainSuffixPattern,
+    domainPattern: `${suffixNormal}${domainSuffixPattern}`,
   },
 
   /**
@@ -65,7 +71,7 @@ const MatrixProtocolRegex = Object.freeze({
     // We use (?:...)? here to make the domain group optional,
     // as Matrix updated the Event ID format in recent versions
     // to no longer require the ":domain" part at the end of the string.
-    domainPattern: `(?:${domainSuffixPattern})?`,
+    domainPattern: `(?:${suffixNormal}${domainSuffixPattern})?`,
   },
 
   /**
@@ -77,7 +83,7 @@ const MatrixProtocolRegex = Object.freeze({
     prefix: '+',
     validValues: '[a-z0-9._=-]',
     length: [1, 255],
-    domainPattern: domainSuffixPattern,
+    domainPattern: `${suffixNormal}${domainSuffixPattern}`,
   },
 
   /**
@@ -90,7 +96,7 @@ const MatrixProtocolRegex = Object.freeze({
     start: `${matrixToPermalinkBase}${matrixIdPrefixPattern}`,
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
-    domainPattern: `${domainSuffixPattern}${urlPathAndQueryPattern}`,
+    domainPattern: `${suffixUri}${domainSuffixPattern}${urlPathAndQueryPattern}`,
   },
 
   /**
@@ -102,7 +108,7 @@ const MatrixProtocolRegex = Object.freeze({
     start: `${matrixScheme}${matrixUriTypePattern}${matrixIdPrefixPattern}`,
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
-    domainPattern: `${domainSuffixPattern}${urlPathAndQueryPattern}`,
+    domainPattern: `${suffixUri}${domainSuffixPattern}${urlPathAndQueryPattern}`,
   },
 
   /**
@@ -115,7 +121,7 @@ const MatrixProtocolRegex = Object.freeze({
     start: `<a\\s+[^>]*?href=["\\'](?:${matrixToPermalinkBase}|${matrixScheme})${matrixUriTypePattern}${matrixIdPrefixPattern}`,
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
-    domainPattern: `${domainSuffixPattern}${urlPathAndQueryPattern}["\\'][^>]*>[\\s\\S]*?</a\\s*>`,
+    domainPattern: `${suffixUri}${domainSuffixPattern}${urlPathAndQueryPattern}["\\'][^>]*>[\\s\\S]*?</a\\s*>`,
   },
 
   /**

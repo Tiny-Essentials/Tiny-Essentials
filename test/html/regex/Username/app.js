@@ -46,7 +46,7 @@ const examples = {
           Handle: @yasmin.pony.house or @pony.house
           DID: did:plc:1234567890abcdefghi or did:web:mydomain.com
           AT URI: at://did:plc:1234567890abcdefghi/app.bsky.feed.post/3jklmn56pqr2
-          Hashtag: #MyLittlePony or #programming
+          Hashtag: #Pudding or #programming
         `
     .trim()
     .replace(/  /g, ''),
@@ -56,8 +56,8 @@ const examples = {
           Nickname Mention: <@!123456789012345678>
           Role Mention: <@&123456789012345678>
           Channel Mention: <#123456789012345678>
-          Custom Emoji: <:twilight_smile:123456789012345678>
-          Animated Emoji: <a:rainbow_dash_fly:123456789012345678>
+          Custom Emoji: <:tinycatface:123456789012345678>
+          Animated Emoji: <a:tinywag:123456789012345678>
           Slash Command (Simple): </play:123456789012345678>
           Slash Command (With Subcommand): </play music:123456789012345678>
         `
@@ -70,13 +70,31 @@ const examples = {
           Room ID (Opaque): !randomOpaqueId123:pony.house
           Event ID (v1 with domain): $abc123def456:pony.house
           Event ID (v3+ no domain): $aBcdEFgH12345+/AaBbCc=-
-          Group ID (Legacy): +mlp-fans:pony.house
+          Group ID (Legacy): +pudding-fans:pony.house
 
           Checking Matrix Links and HTML:
           Matrix.to Link: https://matrix.to/#/@yasmin:pony.house
           Matrix URI: matrix:u/@yasmin:pony.house
           MXC URI: mxc://matrix.org/abc123def456
-          HTML Mention: <a href="https://matrix.to/#/@yasmin:pony.house">Yasmin</a>
+          HTML Mention: <a href="https://matrix.to/#/@yasmin:pony.house">Yasmin Seidel</a>
+
+          Checking Matrix URIs and Deep Links:
+          Link to #tinyhouse:pony.house: matrix:r/tinyhouse:pony.house
+          Link to !friendship:pony.house: matrix:roomid/friendship:pony.house?via=elsewhere.ca
+          Link to $event_abc123 in !friendship:pony.house: matrix:roomid/friendship:pony.house/e/event?via=elsewhere.ca
+          Link to chat with @jasmindreasond:pony.house: matrix:u/jasmindreasond:pony.house?action=chat
+
+          Checking Matrix.to URIs and Encoding:
+          Link to #pony-party:pony.house: https://matrix.to/#/%23pony-party:pony.house
+          Link to !friendship-club:pony.house: https://matrix.to/#/!friendship-club:pony.house?via=elsewhere.ca
+          Link to $magic_moment in !friendship-club:pony.house: https://matrix.to/#/!friendship-club:pony.house/$magic_moment:pony.house?via=elsewhere.ca
+          Link to @jasmindreasond:pony.house: https://matrix.to/#/@jasmindreasond:pony.house
+
+          Note that encoding of characters is REQUIRED by RFC 3986 when they could otherwise be misinterpreted, and OPTIONAL for any other character. Hence the following encoding is also valid:
+          Link to #pony-party:pony.house: https://matrix.to/#/%23pony-party%3Apony.house
+          Link to !friendship-club:pony.house: https://matrix.to/#/%21friendship-club%3Apony.house?via=elsewhere.ca
+          Link to $magic_moment in !friendship-club:pony.house: https://matrix.to/#/%21friendship-club%3Apony.house/%24magic_moment%3Apony.house?via=elsewhere.ca
+          Link to @jasmindreasond:pony.house: https://matrix.to/#/%40jasmindreasond%3Apony.house
         `
     .trim()
     .replace(/  /g, ''),
