@@ -283,6 +283,10 @@
       "require": "./dist/v1/libs/utils/TinyPromiseQueue.cjs",
       "import": "./dist/v1/libs/utils/TinyPromiseQueue.mjs"
     },
+    "./libs/tools/TinyHtmlTagRegexBuilder": {
+      "require": "./dist/v1/libs/tools/TinyHtmlTagRegexBuilder.cjs",
+      "import": "./dist/v1/libs/tools/TinyHtmlTagRegexBuilder.mjs"
+    },
     "./libs/tools/TinyPasswordValidator": {
       "require": "./dist/v1/libs/tools/TinyPasswordValidator.cjs",
       "import": "./dist/v1/libs/tools/TinyPasswordValidator.mjs"

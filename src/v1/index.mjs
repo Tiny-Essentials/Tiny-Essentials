@@ -185,10 +185,10 @@ import TinyPkgExportValidator from './libs/tools/TinyPkgExportValidator.mjs';
 import { jsonFilter, jsonFilterRecursive, jsonFilterByKeys } from './basics/jsonFilter.mjs';
 import TinyRouter from './libs/router/TinyRouter.mjs';
 import TinyMapCache from './libs/router/TinyMapCache.mjs';
-import { TinyServiceWorker } from './build/TinyServiceWorker.mjs';
+import TinyServiceWorker from './libs/router/TinyServiceWorker.mjs';
 import { makeSegmentExtractor, segmentExtractorV1 } from './regexp/SegmentExtractor.mjs';
-import { TinyCloner } from './build/TinyCloner.mjs';
-import { TinyHttpResponseRegistry } from './build/TinyHttpResponseRegistry.mjs';
+import TinyCloner from './libs/utils/TinyCloner.mjs';
+import TinyHttpResponseRegistry from './libs/tools/TinyHttpResponseRegistry.mjs';
 import { ipv4Regex, isValidIPv4, findIPv4Regex, extractIPsV4 } from './regexp/Ipv4.mjs';
 import { ipv6Regex, isValidIPv6, findIPv6Regex, extractIPsV6 } from './regexp/Ipv6.mjs';
 import {
@@ -212,9 +212,11 @@ import {
   findUsernameRegex,
   extractUsernames,
 } from './regexp/Username/index.mjs';
+import TinyHtmlTagRegexBuilder from './libs/tools/TinyHtmlTagRegexBuilder.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
+  TinyHtmlTagRegexBuilder,
   TinyHttpResponseRegistry,
   TinyCloner,
   TinyServiceWorker,
