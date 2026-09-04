@@ -66,7 +66,7 @@ const { makeSegmentExtractor, segmentExtractorV1 } = SegmentExtractor;
  * @property {Partial<Console>} [logger=console] - A custom logger object (must implement console methods).
  * @property {RouteCallback} [onRouteChanged] - Callback executed whenever the route changes.
  * @property {RouteNotFoundCallback} [onRouteNotFound] - Callback executed when no route matches.
- * @property {number} [historyLimit=100] - Maximum number of history entries. Use -1 for unlimited, or 0 to disable history.
+ * @property {number} [historyLimit=0] - Maximum number of history entries. Use -1 for unlimited, or 0 to disable history.
  */
 
 /**
@@ -135,7 +135,7 @@ class TinyRouter extends TinyDebugger {
     this.#detectHistoryChange = options.detectHistoryChange ?? true;
 
     // Initialize history limit and handle the "0" (disabled) case
-    this.#historyLimit = options.historyLimit ?? 100;
+    this.#historyLimit = options.historyLimit ?? 0;
 
     // Bind the popstate event and store the reference for later removal
     this.#popstateHandler = this.#resolve.bind(this);
