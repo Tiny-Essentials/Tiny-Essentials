@@ -1,5 +1,7 @@
 import { TinyRouter } from '/src/v1/libs/router/TinyRouter.mjs';
 
+const rootPath = location.pathname;
+
 // --- Seletores de UI ---
 const el = {
   path: document.getElementById('display-path'),
@@ -64,22 +66,22 @@ router.add('/:host/profiles/:username', (match) => {
 router.start();
 
 // --- Event Listeners dos Botões ---
-document.getElementById('btn-home').onclick = () => router.navigate('/');
-document.getElementById('btn-settings').onclick = () => router.navigate('/settings');
-document.getElementById('btn-search').onclick = () => router.navigate('/search?q=anime');
+document.getElementById('btn-home').onclick = () => router.navigate(rootPath);
+document.getElementById('btn-settings').onclick = () => router.navigate(`${rootPath}settings`);
+document.getElementById('btn-search').onclick = () => router.navigate(`${rootPath}search?q=anime`);
 
 document.getElementById('btn-manual-search').onclick = () => {
   const q = el.manualQuery.value;
-  router.navigate(`/search?q=${encodeURIComponent(q)}`);
+  router.navigate(`${rootPath}search?q=${encodeURIComponent(q)}`);
 };
 
 document.getElementById('btn-img').onclick = () => {
   // Simula navegação para uma imagem de um booru específico
-  router.navigate('/derpibooru.org/images/987654321');
+  router.navigate(`${rootPath}derpibooru.org/images/3725423`);
 };
 
 document.getElementById('btn-prof').onclick = () => {
-  router.navigate('/derpibooru.org/profiles/user_test');
+  router.navigate(`${rootPath}derpibooru.org/profiles/user_test`);
 };
 
 document.getElementById('btn-clear-log').onclick = () => {
