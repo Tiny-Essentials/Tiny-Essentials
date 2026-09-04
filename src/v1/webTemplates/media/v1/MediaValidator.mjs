@@ -21,7 +21,7 @@ function bufferToStream(buffer, Readable) {
 }
 
 /**
- * 
+ *
  * @typedef {import('file-type').FileTypeOptions} FileTypeOptions
  * @typedef {import('file-type').FileTypeResult} FileTypeResult
  */
