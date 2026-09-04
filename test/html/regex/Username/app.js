@@ -47,7 +47,9 @@ const examples = {
           DID: did:plc:1234567890abcdefghi or did:web:mydomain.com
           AT URI: at://did:plc:1234567890abcdefghi/app.bsky.feed.post/3jklmn56pqr2
           Hashtag: #MyLittlePony or #programming
-        `.trim().replace(/  /g, ''),
+        `
+    .trim()
+    .replace(/  /g, ''),
   discord: `
           Testing Discord mentions:
           User Mention: <@123456789012345678>
@@ -58,7 +60,9 @@ const examples = {
           Animated Emoji: <a:rainbow_dash_fly:123456789012345678>
           Slash Command (Simple): </play:123456789012345678>
           Slash Command (With Subcommand): </play music:123456789012345678>
-        `.trim().replace(/  /g, ''),
+        `
+    .trim()
+    .replace(/  /g, ''),
   matrix: `
           Checking Matrix identifiers:
           User ID: @yasmin:pony.house
@@ -67,10 +71,15 @@ const examples = {
           Event ID (v1 with domain): $abc123def456:pony.house
           Event ID (v3+ no domain): $aBcdEFgH12345+/AaBbCc=-
           Group ID (Legacy): +mlp-fans:pony.house
-          Matrix URI: matrix://matrix.org/#!@yasmin:pony.house
+
+          Checking Matrix Links and HTML:
+          Matrix.to Link: https://matrix.to/#/@yasmin:pony.house
+          Matrix URI: matrix:u/@yasmin:pony.house
           MXC URI: mxc://matrix.org/abc123def456
-          HTML Mention: <a href="https://matrix.org/#/@yasmin:pony.house">@yasmin:pony.house</a>
-        `.trim().replace(/  /g, ''),
+          HTML Mention: <a href="https://matrix.to/#/@yasmin:pony.house">Yasmin</a>
+        `
+    .trim()
+    .replace(/  /g, ''),
 };
 
 window.loadExample = (key) => {

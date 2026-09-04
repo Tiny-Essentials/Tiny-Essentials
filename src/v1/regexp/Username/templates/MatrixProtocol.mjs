@@ -2,7 +2,7 @@
  * @typedef {import('../jsDoc.mjs').UsernameRegexTemplate} UsernameRegexTemplate
  */
 
-const domainNamePattern = '[a-zA-Z0-9.-]'
+const domainNamePattern = '[a-zA-Z0-9.-]';
 const domainPattern = `\\:${domainNamePattern}+\\.[a-zA-Z]{2,}`;
 
 /**
@@ -106,10 +106,23 @@ const MatrixProtocolRegex = Object.freeze({
    * @type {UsernameRegexTemplate}
    */
   htmlMention: {
-    start: '<a\\s+(?:[^>]*?\\s+)?href=["\'](?:(?:https?://)?(?:www\\.)?matrix\\.to/#/|matrix:)(?:u/|r/|roomid/|e/)?[@#!$+]?',
+    start:
+      '<a\\s+(?:[^>]*?\\s+)?href=["\'](?:(?:https?://)?(?:www\\.)?matrix\\.to/#/|matrix:)(?:u/|r/|roomid/|e/)?[@#!$+]?',
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
     domainPattern: `${domainPattern}(?:/[\\w\\$=-]+)?(?:\\?[a-zA-Z0-9_=&%-]+)?["\'][^>]*>.*?</a>`,
+  },
+  /**
+   * Matrix Content URI (Media)
+   * Format: mxc://server-name/media-id
+   * Used for avatars, images, and file attachments in the Matrix network.
+   * @type {UsernameRegexTemplate}
+   */
+  mxcUri: {
+    start: 'mxc://',
+    validValues: '[a-zA-Z0-9.:-]', // Nome do servidor (incluindo possíveis portas como :8448)
+    length: [1, 255],
+    domainPattern: '/[a-zA-Z0-9_=-]+', // A barra seguida do media-id (geralmente uma string alfanumérica)
   },
 });
 
