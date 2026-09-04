@@ -91,7 +91,7 @@ Initializes the router instance.
 | `size` | `number` | Returns the number of registered routes. |
 | `routes` | `string[]` | Returns an array of all registered path patterns. |
 | `history` | `RouterHistoryEntry[]` | **Getter:** Returns a copy of the current history. <br> **Setter:** Imports a validated history array. |
-| `historyLimit` | `number` | Gets/Sets the maximum number of history entries. |
+| `historyLimit` | `number` | Gets the maximum number of history entries. |
 | `detectHistoryChange` | `boolean` | Gets/Sets whether to detect if navigation actually changed the URL. |
 | `onRouteChanged` | `RouteCallback` | Gets/Sets the global route change callback. |
 | `onRouteNotFound` | `RouteNotFoundCallback` | Gets/Sets the global "not found" callback. |

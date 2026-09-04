@@ -96,6 +96,8 @@ class TinyRouter extends TinyDebugger {
   #history = [];
   /** @type {number} Maximum number of entries to keep in history. */
   #historyLimit;
+  /** @type {number} Current position index in the internal history. */
+  #historyIndex = -1;
 
   /**
    * @param {RouterOptions} [options={}] - Configuration options for the router.
@@ -120,8 +122,11 @@ class TinyRouter extends TinyDebugger {
       typeof options.onRouteNotFound !== 'function'
     )
       throw new TypeError('onRouteNotFound must be a function.');
-    if (typeof options.historyLimit !== 'undefined' && !Number.isInteger(options.historyLimit))
-      throw new TypeError('historyLimit must be an integer.');
+    if (
+      typeof options.historyLimit !== 'undefined' &&
+      (!Number.isInteger(options.historyLimit) || options.historyLimit < -1)
+    )
+      throw new TypeError('historyLimit must be an integer and greater than or equal to -1.');
 
     super({
       id: '[_blue_TinyRouter_reset_]',
@@ -133,29 +138,28 @@ class TinyRouter extends TinyDebugger {
     this.#onRouteChanged = options.onRouteChanged || (() => {});
     this.#onRouteNotFound = options.onRouteNotFound || (() => {});
     this.#detectHistoryChange = options.detectHistoryChange ?? true;
+    this.#historyIndex = -1;
 
     // Initialize history limit and handle the "0" (disabled) case
     this.#historyLimit = options.historyLimit ?? 0;
 
-    // Bind the popstate event and store the reference for later removal
-    this.#popstateHandler = this.#resolve.bind(this);
+    // Wrapped handler to synchronize the internal index when popstate is triggered by the browser
+    this.#popstateHandler = () => {
+      const path = window.location.pathname;
+      if (this.#historyLimit !== 0) {
+        const index = this.#history.findIndex((h) => h.path === path);
+        if (index !== -1) {
+          this.#historyIndex = index;
+        }
+      }
+      return this.#resolve();
+    };
     window.addEventListener('popstate', this.#popstateHandler);
   }
 
-  /**
-   * @param {number} value
-   * @throws {TypeError} If value is not an integer.
-   */
-  set historyLimit(value) {
-    if (!Number.isInteger(value)) {
-      throw new TypeError('historyLimit must be an integer.');
-    }
-    this.#historyLimit = value;
-    this.emit('HistoryLimitUpdated', value);
-    if (this.#historyLimit === 0) {
-      this.clearHistory();
-      this.log('info', 'History disabled and cleared.');
-    }
+  /** @returns {number} The current position in history. */
+  get historyIndex() {
+    return this.#historyIndex;
   }
 
   /** @returns {number} */
@@ -396,6 +400,19 @@ class TinyRouter extends TinyDebugger {
       throw new TypeError('The "delta" parameter must be an integer.');
     }
 
+    // If history limit is active, navigate using the internal cache
+    if (this.#historyLimit !== 0) {
+      const newIndex = this.#historyIndex + delta;
+      if (newIndex >= 0 && newIndex < this.#history.length) {
+        const targetPath = this.#history[newIndex].path;
+        window.history.pushState(null, '', targetPath);
+        await this.#resolve();
+        return true;
+      }
+      return false;
+    }
+
+    // Native behavior when historyLimit is 0
     if (!this.#detectHistoryChange) {
       window.history.go(delta);
       this.log('info', `Navigation command: go(${delta}) (detection disabled)`);
@@ -452,19 +469,26 @@ class TinyRouter extends TinyDebugger {
     // If limit is 0, the feature is disabled; do nothing.
     if (this.#historyLimit === 0) return;
 
-    const newData = {
-      path,
-      timestamp: Date.now(),
-    };
+    // If we are already at the current path (e.g., via go() or popstate), do not add a duplicate
+    if (this.#historyIndex >= 0 && this.#history[this.#historyIndex].path === path) {
+      return;
+    }
 
-    this.#history.push(newData);
+    // Branching Logic: If we are in the middle of the history and a new route is opened,
+    // remove all entries ahead of the current position.
+    if (this.#historyIndex >= 0) {
+      this.#history = this.#history.slice(0, this.#historyIndex + 1);
+    }
 
-    // If limit is greater than 0, maintain the maximum allowed size.
-    // If limit is -1, this condition is never met, allowing unlimited growth.
+    this.#history.push({ path, timestamp: Date.now() });
+    this.#historyIndex++;
+
+    // Maintain the maximum allowed size for the cache
     if (this.#historyLimit > 0 && this.#history.length > this.#historyLimit) {
       this.#history.shift(); // Removes the oldest entry (first element)
+      this.#historyIndex--;
     }
-    this.emit('HistoryRecorded', { ...newData });
+    this.emit('HistoryRecorded', { ...this.#history[this.#historyIndex] });
   }
 
   /**
