@@ -83,6 +83,23 @@ const DiscordRegex = Object.freeze({
     length: [1, 100],
     domainPattern: ':[0-9]{17,22}>',
   },
+  /**
+   * Server Invite Link
+   * Format: discord.gg/code or https://discord.gg/code
+   * Supports both discord.gg and discord.com/invite/ formats.
+   * @type {UsernameRegexTemplate}
+   */
+  inviteLink: {
+    // Used by moderation bots to detect scammers and invite spammers.
+    pure: [
+      '((discordapp|discord)\\s?\.\\s?co(m)?\\s?\\W\\s?(invite|servers)\\s?\\W)',
+      '(discord\\s?\.\\s?gg\\s?\\W)',
+    ],
+    // Standard URL detectors.
+    start: '(?:https?://)?(?:discord\\.gg/|(discord|discordapp)\\.com/(invite|servers)/)',
+    validValues: '[a-zA-Z0-9]',
+    length: [2, 300],
+  },
 });
 
 export default DiscordRegex;
