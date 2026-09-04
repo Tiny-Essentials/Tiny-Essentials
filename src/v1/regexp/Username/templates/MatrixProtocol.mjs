@@ -5,6 +5,11 @@
 const domainCharPattern = '[a-zA-Z0-9.-]';
 const domainSuffixPattern = `\\:${domainCharPattern}+\\.[a-zA-Z]{2,}`;
 const urlPathAndQueryPattern = '(?:/[\\w=/$+.-]+)?(?:\\?[\\w=&%.$+-]+)?';
+const mentionUrl = '(?:https?://)?(?:www\\.)?matrix\\.to/#/';
+
+const matrixUriPart1 = 'matrix\\:';
+const matrixUriPart2 = '(?:u/|r/|roomid/|e/)?';
+const matrixUriPart3 = '[@#!$+]?';
 
 /**
  * Matrix Protocol (matrix.org)
@@ -82,7 +87,7 @@ const MatrixProtocolRegex = Object.freeze({
    * @type {UsernameRegexTemplate}
    */
   matrixToLink: {
-    start: '(?:https?://)?(?:www\\.)?matrix\\.to/#/[@#!$+]?',
+    start: `${mentionUrl}${matrixUriPart3}`,
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
     domainPattern: `${domainSuffixPattern}${urlPathAndQueryPattern}`,
@@ -94,7 +99,7 @@ const MatrixProtocolRegex = Object.freeze({
    * @type {UsernameRegexTemplate}
    */
   matrixUri: {
-    start: 'matrix:(?:u/|r/|roomid/|e/)?[@#!$+]?',
+    start: `${matrixUriPart1}${matrixUriPart2}${matrixUriPart3}`,
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
     domainPattern: `${domainSuffixPattern}${urlPathAndQueryPattern}`,
@@ -108,7 +113,7 @@ const MatrixProtocolRegex = Object.freeze({
    */
   htmlMention: {
     start:
-      '<a\\s+(?:[^>]*?\\s+)?href=["\'](?:(?:https?://)?(?:www\\.)?matrix\\.to/#/|matrix:)(?:u/|r/|roomid/|e/)?[@#!$+]?',
+      `<a\\s+(?:[^>]*?\\s+)?href=["\'](?:${mentionUrl}|${matrixUriPart1})${matrixUriPart2}${matrixUriPart3}`,
     validValues: '[a-zA-Z0-9._=/%+-]',
     length: [1, 255],
     domainPattern: `${domainSuffixPattern}${urlPathAndQueryPattern}["\\'][^>]*>.*?</a>`,
