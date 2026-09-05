@@ -26,27 +26,56 @@
 
 /**
  * A utility class designed to parse various Matrix-related URI formats into structured objects.
- * @template {ParserPair} Parsers
+ * @template {ParserPair} Parser
  */
 class TinyUriParser {
   /**
    * A collection of parser pairs used to iterate through and match URI strings.
-   * @type {Set<Parsers>}
+   * @type {Set<Parser>}
    */
   #parsers;
 
   /**
    * Initializes the TinyUriParser instance with a collection of parser pairs.
-   * @param {...Parsers} parsers
+   * @param {...Parser} parsers
+   * @throws {TypeError} If any provided parser is not a valid ParserPair.
    */
   constructor(...parsers) {
+    for (const i in parsers) {
+      const parser = parsers[i];
+
+      // 1. Check if the argument is an array (the base of a tuple/ParserPair)
+      if (!Array.isArray(parser)) {
+        throw new TypeError(`Parser at index ${i} must be an array representing a ParserPair.`);
+      }
+
+      // 2. Check if the array has exactly two elements [ParseChecker, ParserCallback]
+      if (parser.length !== 2) {
+        throw new TypeError(`Parser at index ${i} must contain exactly two elements.`);
+      }
+
+      // 3. Validate that the first element is a function (ParseChecker)
+      if (typeof parser[0] !== 'function') {
+        throw new TypeError(
+          `The first element of the parser at index ${i} must be a function (ParseChecker).`,
+        );
+      }
+
+      // 4. Validate that the second element is a function (ParserCallback)
+      if (typeof parser[1] !== 'function') {
+        throw new TypeError(
+          `The second element of the parser at index ${i} must be a function (ParserCallback).`,
+        );
+      }
+    }
+
     this.#parsers = new Set(parsers);
   }
 
   /**
    * Main entry point for parsing.
    * @param {string} uriString - The raw URI string to parse.
-   * @returns {ReturnType<Parsers[1]>} The parsed object.
+   * @returns {ReturnType<Parser[1]>} The parsed object.
    * @throws {TypeError | RangeError | Error} If the input is invalid or parsing fails.
    */
   parse(uriString) {

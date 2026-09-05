@@ -7,7 +7,7 @@ import { TinyUriParser } from '/src/v1/libs/tools/TinyUriParser.mjs';
 import { MatrixProtocolParsers } from '/src/v1/libs/tools/TinyUriParser/MatrixProtocol.mjs';
 
 // 1. Initialize the parser with the custom map
-const parser = new TinyUriParser(MatrixProtocolParsers);
+const parser = new TinyUriParser(...MatrixProtocolParsers);
 
 // DOM Elements
 const inputField = document.getElementById('uri-input');
