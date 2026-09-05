@@ -17,6 +17,7 @@
  * @typedef {Object} MatrixSchemeData
  * @property {'matrix_scheme'} dataType - The category of the data.
  * @property {'roomId' | 'room' | 'user' | 'event'} type - The type of the matrix resource.
+ * @property {null | 'roomId' | 'room' | 'user'} subType - The sub type of the matrix resource.
  * @property {string} resourceId - The primary identifier (room ID or user ID).
  * @property {string} [eventId] - The specific event ID (only if type is 'event').
  * @property {string|null} server - The matrix server domain.
@@ -80,7 +81,16 @@ class TinyUriParser {
     if (uriString.startsWith('matrix:')) {
       return {
         type: 'matrix_scheme',
-        data: this.#parseMatrixScheme(uriString),
+        data: this.#parseMatrixScheme(
+          uriString,
+          uriString.startsWith('matrix:r/')
+            ? 'r'
+            : uriString.startsWith('matrix:roomid/')
+              ? 'roomid'
+              : uriString.startsWith('matrix:u/')
+                ? 'u'
+                : null,
+        ),
       };
     }
 
@@ -99,7 +109,16 @@ class TinyUriParser {
         throw new Error(`Unable to determine the protocol for the provided URI: ${uriString}`);
       return {
         type: 'matrix_scheme',
-        data: this.#parseMatrixScheme(`matrix:${prefix}${uriString.substring(1)}`),
+        data: this.#parseMatrixScheme(
+          `matrix:${prefix}${uriString.substring(1)}`,
+          uriString.startsWith('#')
+            ? 'r'
+            : uriString.startsWith('!')
+              ? 'roomid'
+              : uriString.startsWith('@')
+                ? 'u'
+                : null,
+        ),
       };
     }
 
@@ -148,9 +167,10 @@ class TinyUriParser {
   /**
    * Parses Matrix Scheme URIs (matrix:r/..., matrix:u/..., matrix:e/..., etc).
    * @param {string} uri
+   * @param {'u'|'r'|'roomid'|null} uriType
    * @returns {MatrixSchemeData}
    */
-  #parseMatrixScheme(uri) {
+  #parseMatrixScheme(uri, uriType) {
     // Regex handles: matrix:<type>/<resource>[/e/<event>][<query>]
     // Types supported: r (room), u (user), roomid (room), e (event)
     const regex =
@@ -165,22 +185,24 @@ class TinyUriParser {
     const { prefix, resource, event, query } = match.groups;
     const prefixType =
       prefix === 'r' ? '#' : prefix === 'e' ? '$' : prefix === 'roomid' ? '!' : '@';
+    /** @param {string} p */
+    const genType = (p) =>
+      p === 'r' ? 'room' : p === 'e' ? 'event' : p === 'roomid' ? 'roomId' : 'user';
 
     /** @type {MatrixSchemeData} */
     const data = {
       dataType: 'matrix_scheme',
-      type:
-        prefix === 'r'
-          ? 'room'
-          : prefix === 'e'
-            ? 'event'
-            : prefix === 'roomid'
-              ? 'roomId'
-              : 'user',
+      subType: null,
+      type: genType(prefix),
       resourceId: resource,
       server: null,
       params: {},
     };
+
+    if (uriType !== null) {
+      const subType = genType(uriType);
+      data.subType = subType !== 'event' && data.type !== subType ? subType : null;
+    }
 
     // Transforms the query string into a key/value object
     if (query) {
@@ -192,7 +214,10 @@ class TinyUriParser {
     const lastColonIndex = resource.lastIndexOf(':');
     if (lastColonIndex !== -1) {
       data.server = resource.substring(lastColonIndex + 1);
-      data.resourceId = resource.substring(resource.startsWith(prefixType) ? 1 : 0, lastColonIndex);
+      data.resourceId = resource.substring(
+        !(event || prefix === 'e') && resource.startsWith(prefixType) ? 1 : 0,
+        lastColonIndex,
+      );
     }
 
     if (event) {
@@ -225,17 +250,18 @@ class TinyUriParser {
     if (decodedFragment.startsWith('#') || decodedFragment.startsWith('!')) {
       // It's a room
       const isId = decodedFragment.startsWith('!');
+      const type = !isId ? 'r' : 'roomid';
       const normalizedResource = decodedFragment.startsWith('#')
-        ? `matrix:${!isId ? 'r' : 'roomid'}/${decodedFragment.substring(1)}`
-        : `matrix:${!isId ? 'r' : 'roomid'}/${decodedFragment}`;
-      parsedResource = this.#parseMatrixScheme(normalizedResource);
+        ? `matrix:${type}/${decodedFragment.substring(1)}`
+        : `matrix:${type}/${decodedFragment}`;
+      parsedResource = this.#parseMatrixScheme(normalizedResource, type);
     } else if (decodedFragment.startsWith('@')) {
       // It's a user
       const normalizedResource = `matrix:u/${decodedFragment.substring(1)}`;
-      parsedResource = this.#parseMatrixScheme(normalizedResource);
+      parsedResource = this.#parseMatrixScheme(normalizedResource, 'u');
     } else {
       // Fallback: treat decoded fragment as a direct matrix scheme
-      parsedResource = this.#parseMatrixScheme(`matrix:${decodedFragment}`);
+      parsedResource = this.#parseMatrixScheme(`matrix:${decodedFragment}`, null);
     }
 
     return {
