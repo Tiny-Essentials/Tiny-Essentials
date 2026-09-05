@@ -1,0 +1,215 @@
+/* --- Design Tokens --- */
+:root {
+  /* Color Palette */
+  --bg-color: #0f1114; /* Main background */
+  --surface-color: #1a1d23; /* Card and panel background */
+  --border-color: #30363d; /* Borders and dividers */
+  --text-primary: #e6edf3; /* Primary text */
+  --text-secondary: #8b949e; /* Muted text */
+
+  /* Accent Colors */
+  --accent-blue: #2f81f7; /* Primary actions */
+  --accent-blue-hover: #58a6ff; /* Hover states */
+  --success-green: #3fb950; /* Success messages */
+  --error-red: #f85149; /* Error messages */
+  --warning-orange: #d29922; /* Warning/Info messages */
+
+  /* Spacing & Radius */
+  --radius: 6px;
+  --spacing: 1rem;
+}
+
+/* --- Base Styles --- */
+body {
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+header {
+  padding: var(--spacing) calc(var(--spacing) * 2);
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--surface-color);
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+h2 {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-top: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-weight: normal;
+  font-size: 0.9rem;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: calc(var(--spacing) * 2);
+  display: grid;
+  gap: 2rem;
+}
+
+/* --- Components --- */
+.config-panel,
+.execution-panel,
+.console-panel {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: var(--spacing);
+}
+
+.description {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.input-group {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+  color: var(--text-secondary);
+}
+
+input[type='text'],
+input[type='number'],
+textarea,
+select {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.6rem;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* --- Grid & Buttons --- */
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.test-card {
+  border: 1px solid var(--border-color);
+  padding: 1rem;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.test-card p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.btn-primary {
+  background-color: var(--accent-blue);
+  color: white;
+  border: none;
+  padding: 0.7rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-blue-hover);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: var(--border-color);
+}
+
+.control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.control select {
+  flex-grow: 1;
+}
+
+/* --- Console --- */
+.console-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.console-output {
+  background-color: #000;
+  color: #00ff00; /* Classic terminal green */
+  font-family: 'Consolas', 'Monaco', monospace;
+  padding: 1rem;
+  border-radius: 4px;
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-size: 0.85rem;
+}
+
+.log-entry {
+  margin-bottom: 0.4rem;
+  border-left: 3px solid transparent;
+  padding-left: 0.5rem;
+}
+.log-success {
+  color: var(--success-green);
+  border-left-color: var(--success-green);
+}
+.log-error {
+  color: var(--error-red);
+  border-left-color: var(--error-red);
+}
+.log-info {
+  color: var(--accent-blue);
+  border-left-color: var(--accent-blue);
+}

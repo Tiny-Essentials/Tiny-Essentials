@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Media Validator | Test Suite</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body type="module">
+    <header>
+      <h1>Media Validator <span class="subtitle">Testing Environment</span></h1>
+    </header>
+
+    <main>
+      <section class="config-panel">
+        <h2>1. Test Configuration</h2>
+        <p class="description">Select a real file to test the validation logic.</p>
+
+        <div class="input-group">
+          <label for="file-input-magic">Select File (for Magic Number Test):</label>
+          <input type="file" id="file-input-magic" />
+        </div>
+      </section>
+
+      <section class="execution-panel">
+        <h2>2. Test Execution</h2>
+
+        <div class="button-grid">
+          <div class="test-card">
+            <h3>Magic Numbers</h3>
+            <p>Validates file signatures against MIME type.</p>
+            <div class="control">
+              <label>Expected Type:</label>
+              <select id="expected-type">
+                <option value="image">Image</option>
+                <option value="audio">Audio</option>
+                <option value="video">Video</option>
+              </select>
+            </div>
+            <button id="btn-magic" class="btn-primary">Run Magic Number Test</button>
+          </div>
+
+          <div class="test-card">
+            <h3>Image Structure</h3>
+            <p>Validates metadata/parsing via createImageBitmap.</p>
+            <input type="file" id="file-input-image" style="margin-bottom: 1rem" />
+            <button id="btn-image" class="btn-primary">Run Image Test</button>
+          </div>
+
+          <div class="test-card">
+            <h3>Audio/Video Structure</h3>
+            <p>Validates container integrity via HTML5 Media.</p>
+            <input type="file" id="file-input-av" style="margin-bottom: 1rem" />
+            <button id="btn-audio" class="btn-primary">Run Audio/Video Test</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="console-panel">
+        <div class="console-header">
+          <span>Visual Console</span>
+          <button id="btn-clear" class="btn-secondary">Clear</button>
+        </div>
+        <div id="console-output" class="console-output"></div>
+      </section>
+    </main>
+
+    <!-- The bridge logic -->
+    <script type="module" src="ui-test.js"></script>
+  </body>
+</html>
