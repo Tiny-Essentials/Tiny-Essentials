@@ -109,8 +109,6 @@ exampleBtn.addEventListener('click', () => {
     // $magic_moment in !friendship-club:pony.house
     'https://matrix.to/#/%21friendship-club%3Apony.house/',
 
-    '%24magic_moment%3Apony.house?via=elsewhere.ca',
-
     '@jasmindreasond:pony.house',
     'https://matrix.to/#/%40jasmindreasond%3Apony.house',
   ];
