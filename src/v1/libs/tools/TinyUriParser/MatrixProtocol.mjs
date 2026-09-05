@@ -52,8 +52,7 @@ const matrixSchemeRegex =
 /**
  * Reconstructs a Matrix ID shorthand from MatrixSchemeData.
  *
- * WARNING: This function removes all search parameters (query strings)
- * during the reconstruction process.
+ * This function reconstructs the shorthand and includes any provided query parameters.
  *
  * @param {MatrixSchemeData} parsed - The parsed Matrix scheme data object.
  * @returns {string} The Matrix ID shorthand (e.g., '#room:server.com', '@user:server.com', '$eventid').
@@ -84,7 +83,15 @@ const reconstructMatrixShorthand = (parsed) => {
     resource += `:${parsed.server}`;
   }
 
-  return `${prefix}${resource}`;
+  let result = `${prefix}${resource}`;
+
+  // Append query parameters if the params object is not empty
+  if (parsed.params && Object.keys(parsed.params).length > 0) {
+    const query = new URLSearchParams(parsed.params).toString();
+    result += `?${query}`;
+  }
+
+  return result;
 };
 
 /**

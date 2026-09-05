@@ -55,7 +55,7 @@ const executeParse = () => {
   try {
     // 1. Perform the parsing
     const parsedResult = parser.parse(uriValue);
-    
+
     // 2. Perform the reconstruction (stringify) using the parsed result
     const reconstructedUri = parser.stringify(parsedResult);
 
