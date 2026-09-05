@@ -273,60 +273,68 @@ const validateMatrixSchemeData = (data) => {
   }
 };
 
-/**
- * @type {[ParseChecker, ParserCallback<any, any>][]}
- */
-export const MatrixProtocolParsers = [
-  // MXC
-  [
-    (uriString) => uriString.startsWith('mxc://'),
-    (uriString) => {
-      return {
-        type: 'mxc',
-        data: parseMxc(uriString),
-      };
-    },
-  ],
-
-  //
-  [
-    (uriString) => uriString.startsWith('matrix:'),
-    (uriString) => {
-      return {
-        type: 'matrix_scheme',
-        data: parseMatrixScheme(uriString),
-      };
-    },
-  ],
-
-  // Handle Matrix ID shorthands (#room, !event, $event, @user)
-  [
-    (uriString) =>
-      uriString.startsWith('#') ||
-      uriString.startsWith('!') ||
-      uriString.startsWith('$') ||
-      uriString.startsWith('@'),
-    (uriString) => {
-      const prefixMap = { '#': 'r/', '!': 'roomid/', $: 'e/', '@': 'u/' };
-      // @ts-ignore
-      const prefix = prefixMap[uriString[0]];
-      if (!prefix)
-        throw new Error(`Unable to determine the protocol for the provided URI: ${uriString}`);
-      return {
-        type: 'matrix_scheme',
-        data: parseMatrixScheme(`matrix:${prefix}${uriString.substring(1)}`),
-      };
-    },
-  ],
-
-  // Check for Web URLs (e.g., https://matrix.to/#/...)
-  [
-    (uriString) => uriString.includes('://') && uriString.includes('#/'),
-    (uriString) => {
-      return {
-        type: 'matrix_web_url',
-        data: parseWebUrl(uriString),
-      };
-    },
-  ],
+/** @type {[ParseChecker, ParserCallback<'mxc', MXCData>]} */
+const mcxParser = [
+  (uriString) => uriString.startsWith('mxc://'),
+  (uriString) => {
+    return {
+      type: 'mxc',
+      data: parseMxc(uriString),
+    };
+  },
 ];
+
+/** @type {[ParseChecker, ParserCallback<'matrix_scheme', MatrixSchemeData>]} */
+const schemeParser = [
+  (uriString) => uriString.startsWith('matrix:'),
+  (uriString) => {
+    return {
+      type: 'matrix_scheme',
+      data: parseMatrixScheme(uriString),
+    };
+  },
+];
+
+/**
+ * Handle Matrix ID shorthands (#room, !event, $event, @user)
+ * @type {[ParseChecker, ParserCallback<'matrix_scheme', MatrixSchemeData>]}
+ */
+const schemeParser2 = [
+  (uriString) =>
+    uriString.startsWith('#') ||
+    uriString.startsWith('!') ||
+    uriString.startsWith('$') ||
+    uriString.startsWith('@'),
+  (uriString) => {
+    const prefixMap = { '#': 'r/', '!': 'roomid/', $: 'e/', '@': 'u/' };
+    // @ts-ignore
+    const prefix = prefixMap[uriString[0]];
+    if (!prefix)
+      throw new Error(`Unable to determine the protocol for the provided URI: ${uriString}`);
+    return {
+      type: 'matrix_scheme',
+      data: parseMatrixScheme(`matrix:${prefix}${uriString.substring(1)}`),
+    };
+  },
+];
+
+/**
+ * Check for Web URLs (e.g., https://matrix.to/#/...)
+ * @type {[ParseChecker, ParserCallback<'matrix_web_url', MatrixWebData>]}
+ */
+const webDataParser = [
+  (uriString) => uriString.includes('://') && uriString.includes('#/'),
+  (uriString) => {
+    return {
+      type: 'matrix_web_url',
+      data: parseWebUrl(uriString),
+    };
+  },
+];
+
+export const MatrixProtocolParsers = Object.freeze([
+  mcxParser,
+  schemeParser,
+  schemeParser2,
+  webDataParser,
+]);

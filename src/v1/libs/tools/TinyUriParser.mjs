@@ -18,16 +18,16 @@
  */
 
 /**
- * @template {ParserCallback<any, any>} ParserCabackData
+ * @template {ParserCallback<any, any>} ParserCallbackData
  * A utility class designed to parse various Matrix-related URI formats into structured objects.
  */
 class TinyUriParser {
-  /** @type {Set<[ParseChecker, ParserCabackData]>} */
+  /** @type {Set<[ParseChecker, ParserCallbackData]>} */
   #parsers;
 
   /**
    * Initializes the parser.
-   * @param {[ParseChecker, ParserCabackData][]} parsers
+   * @param {[ParseChecker, ParserCallbackData][]} parsers
    */
   constructor(parsers) {
     this.#parsers = new Set(parsers);
@@ -47,7 +47,6 @@ class TinyUriParser {
     }
     throw new Error(`Unable to determine the protocol for the provided URI: ${uriString}`);
   }
-
 }
 
 export default TinyUriParser;
