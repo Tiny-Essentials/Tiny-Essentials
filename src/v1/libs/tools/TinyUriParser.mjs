@@ -20,13 +20,22 @@
  */
 
 /**
- * A tuple representing a single parsing unit, consisting of a validation function and its corresponding parsing function.
- * @typedef {[ParseChecker, ParserCallback<any, any>]} ParserPair
+ * @template {string} Type
+ * @template {Record<any, any>} Data
+ * @typedef {(parsed: ParsedTemplate<Type, Data>) => string} StringifyCallback
+ */
+
+/**
+ * A tuple representing a single parsing unit, consisting of a validation function,
+ * its corresponding parsing function, and an reconstruction function.
+ * @template {string} Type
+ * @template {Record<any, any>} Data
+ * @typedef {readonly [ParseChecker, ParserCallback<Type, Data>, StringifyCallback<Type, Data>]} ParserPair
  */
 
 /**
  * A utility class designed to parse various Matrix-related URI formats into structured objects.
- * @template {ParserPair} Parser
+ * @template {ParserPair<any, any>} Parser
  */
 class TinyUriParser {
   /**
@@ -60,9 +69,9 @@ class TinyUriParser {
         throw new TypeError(`Parser at index ${i} must be an array representing a ParserPair.`);
       }
 
-      // 2. Check if the array has exactly two elements [ParseChecker, ParserCallback]
-      if (parser.length !== 2) {
-        throw new TypeError(`Parser at index ${i} must contain exactly two elements.`);
+      // 2. Check if the array has exactly three elements [ParseChecker, ParserCallback, StringifyCallback]
+      if (parser.length !== 3) {
+        throw new TypeError(`Parser at index ${i} must contain exactly 3 elements.`);
       }
 
       // 3. Validate that the first element is a function (ParseChecker)
@@ -76,6 +85,13 @@ class TinyUriParser {
       if (typeof parser[1] !== 'function') {
         throw new TypeError(
           `The second element of the parser at index ${i} must be a function (ParserCallback).`,
+        );
+      }
+
+      // 5. Validate that the third element is a function (StringifyCallback)
+      if (typeof parser[2] !== 'function') {
+        throw new TypeError(
+          `The third element of the parser at index ${i} must be a function (StringifyCallback).`,
         );
       }
     }
@@ -98,6 +114,32 @@ class TinyUriParser {
       if (parser[0](uriString)) return parser[1](uriString);
     }
     throw new Error(`Unable to determine the protocol for the provided URI: ${uriString}`);
+  }
+
+  /**
+   * Reconstructs the original URI string from a parsed object.
+   * @param {ReturnType<Parser[1]>} parsedObject - The object returned by the parse method.
+   * @returns {string} The reconstructed URI string.
+   * @throws {TypeError | Error} If the object is invalid or no reconstructor is found.
+   */
+  stringify(parsedObject) {
+    if (!parsedObject || typeof parsedObject.type !== 'string') {
+      throw new TypeError(
+        'The input must be a valid ParsedTemplate object with a "type" property.',
+      );
+    }
+
+    for (const parser of this.#parsers) {
+      const reconstructor = parser[2];
+      if (typeof reconstructor === 'function') {
+        const result = reconstructor(parsedObject);
+        if (typeof result === 'string') {
+          return result;
+        }
+      }
+    }
+
+    throw new Error(`No reconstructor found for the parsed type: ${parsedObject.type}`);
   }
 }
 
