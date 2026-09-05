@@ -14,10 +14,14 @@
  */
 
 /**
+ * @typedef {'roomId' | 'room' | 'user' | 'event'} IdTypes
+ */
+
+/**
  * @typedef {Object} MatrixSchemeData
  * @property {'matrix_scheme'} dataType - The category of the data.
- * @property {'roomId' | 'room' | 'user' | 'event'} type - The type of the matrix resource.
- * @property {null | 'roomId' | 'room' | 'user'} subType - The sub type of the matrix resource.
+ * @property {IdTypes} type - The type of the matrix resource.
+ * @property {null|IdTypes} subType - The sub type of the matrix resource.
  * @property {string} resourceId - The primary identifier (room ID or user ID).
  * @property {string} [eventId] - The specific event ID (only if type is 'event').
  * @property {string|null} server - The matrix server domain.
@@ -81,21 +85,11 @@ class TinyUriParser {
     if (uriString.startsWith('matrix:')) {
       return {
         type: 'matrix_scheme',
-        data: this.#parseMatrixScheme(
-          uriString,
-          uriString.startsWith('matrix:r/')
-            ? 'r'
-            : uriString.startsWith('matrix:roomid/')
-              ? 'roomid'
-              : uriString.startsWith('matrix:u/')
-                ? 'u'
-                : null,
-        ),
+        data: this.#parseMatrixScheme(uriString),
       };
     }
 
     // Handle Matrix ID shorthands (#room, !event, $event, @user)
-    // We convert them to matrix scheme URIs to reuse the existing logic.
     if (
       uriString.startsWith('#') ||
       uriString.startsWith('!') ||
@@ -109,16 +103,7 @@ class TinyUriParser {
         throw new Error(`Unable to determine the protocol for the provided URI: ${uriString}`);
       return {
         type: 'matrix_scheme',
-        data: this.#parseMatrixScheme(
-          `matrix:${prefix}${uriString.substring(1)}`,
-          uriString.startsWith('#')
-            ? 'r'
-            : uriString.startsWith('!')
-              ? 'roomid'
-              : uriString.startsWith('@')
-                ? 'u'
-                : null,
-        ),
+        data: this.#parseMatrixScheme(`matrix:${prefix}${uriString.substring(1)}`),
       };
     }
 
@@ -167,10 +152,9 @@ class TinyUriParser {
   /**
    * Parses Matrix Scheme URIs (matrix:r/..., matrix:u/..., matrix:e/..., etc).
    * @param {string} uri
-   * @param {'u'|'r'|'roomid'|null} uriType
    * @returns {MatrixSchemeData}
    */
-  #parseMatrixScheme(uri, uriType) {
+  #parseMatrixScheme(uri) {
     // Regex handles: matrix:<type>/<resource>[/e/<event>][<query>]
     // Types supported: r (room), u (user), roomid (room), e (event)
     const regex =
@@ -185,24 +169,23 @@ class TinyUriParser {
     const { prefix, resource, event, query } = match.groups;
     const prefixType =
       prefix === 'r' ? '#' : prefix === 'e' ? '$' : prefix === 'roomid' ? '!' : '@';
+
     /** @param {string} p */
     const genType = (p) =>
       p === 'r' ? 'room' : p === 'e' ? 'event' : p === 'roomid' ? 'roomId' : 'user';
+
+    // Capturamos qual é o tipo original (sala, usuário, etc) antes de ver se é um evento
+    const baseType = genType(prefix);
 
     /** @type {MatrixSchemeData} */
     const data = {
       dataType: 'matrix_scheme',
       subType: null,
-      type: genType(prefix),
+      type: baseType,
       resourceId: resource,
       server: null,
       params: {},
     };
-
-    if (uriType !== null) {
-      const subType = genType(uriType);
-      data.subType = subType !== 'event' && data.type !== subType ? subType : null;
-    }
 
     // Transforms the query string into a key/value object
     if (query) {
@@ -210,24 +193,40 @@ class TinyUriParser {
       data.params = Object.fromEntries(searchParams.entries());
     }
 
-    // Extract server from resource (e.g., "somewhere:example.org")
-    const lastColonIndex = resource.lastIndexOf(':');
-    if (lastColonIndex !== -1) {
-      data.server = resource.substring(lastColonIndex + 1);
-      data.resourceId = resource.substring(
-        !(event || prefix === 'e') && resource.startsWith(prefixType) ? 1 : 0,
-        lastColonIndex,
-      );
+    // Remove always o símbolo identificador se ele estiver presente, independente do servidor
+    let actualResource = resource;
+    if (actualResource.startsWith(prefixType)) {
+      actualResource = actualResource.substring(1);
     }
 
+    // Lida com a extração de resourceId e server
+    if (prefix === 'e') {
+      // Se for puramente um evento sem sala
+      data.resourceId = actualResource;
+      data.eventId = actualResource;
+      data.type = 'event';
+      data.subType = null;
+    } else {
+      const lastColonIndex = actualResource.lastIndexOf(':');
+      if (lastColonIndex !== -1) {
+        data.server = actualResource.substring(lastColonIndex + 1);
+        data.resourceId = actualResource.substring(0, lastColonIndex);
+      } else {
+        data.resourceId = actualResource;
+      }
+    }
+
+    // Se a URI contém um evento aninhado (matrix:r/room/e/event)
     if (event) {
-      // Case: matrix:r/resource/e/event
+      let actualEvent = event;
+      if (actualEvent.startsWith('$')) {
+        actualEvent = actualEvent.substring(1);
+      }
+
+      // Aqui a mágica acontece: informamos que é um evento, e que pertence ao tipo base
       data.type = 'event';
-      data.eventId = event;
-    } else if (prefix === 'e') {
-      // Case: matrix:e/event_id (direct event ID)
-      data.type = 'event';
-      data.eventId = data.resourceId;
+      data.subType = baseType;
+      data.eventId = actualEvent;
     }
 
     this.#validateMatrixSchemeData(data);
@@ -244,24 +243,35 @@ class TinyUriParser {
     const fragment = urlObj.hash.substring(2); // Remove '#/'
     const decodedFragment = decodeURIComponent(fragment);
 
+    // Divide em partes para suportar eventos contidos na URL matrix.to
+    // Ex: !room:server.com/$event_id -> mainPart: "!room:server.com", eventPart: "$event_id"
+    const parts = decodedFragment.split('/');
+    const mainPart = parts[0];
+    const eventPart = parts.length > 1 ? parts[1] : null;
+
     let parsedResource;
 
-    // Normalization logic: Convert web shorthand to Matrix Scheme
-    if (decodedFragment.startsWith('#') || decodedFragment.startsWith('!')) {
-      // It's a room
-      const isId = decodedFragment.startsWith('!');
+    if (mainPart.startsWith('#') || mainPart.startsWith('!')) {
+      const isId = mainPart.startsWith('!');
       const type = !isId ? 'r' : 'roomid';
-      const normalizedResource = decodedFragment.startsWith('#')
-        ? `matrix:${type}/${decodedFragment.substring(1)}`
-        : `matrix:${type}/${decodedFragment}`;
-      parsedResource = this.#parseMatrixScheme(normalizedResource, type);
-    } else if (decodedFragment.startsWith('@')) {
+
+      // Constrói sempre removendo o símbolo inicial (!) ou (#)
+      let normalizedResource = `matrix:${type}/${mainPart.substring(1)}`;
+
+      if (eventPart) {
+        // Removemos o '$' caso ele exista para montar a rota do scheme certinha
+        const safeEventPart = eventPart.startsWith('$') ? eventPart.substring(1) : eventPart;
+        normalizedResource += `/e/${safeEventPart}`;
+      }
+
+      parsedResource = this.#parseMatrixScheme(normalizedResource);
+    } else if (mainPart.startsWith('@')) {
       // It's a user
-      const normalizedResource = `matrix:u/${decodedFragment.substring(1)}`;
-      parsedResource = this.#parseMatrixScheme(normalizedResource, 'u');
+      const normalizedResource = `matrix:u/${mainPart.substring(1)}`;
+      parsedResource = this.#parseMatrixScheme(normalizedResource);
     } else {
       // Fallback: treat decoded fragment as a direct matrix scheme
-      parsedResource = this.#parseMatrixScheme(`matrix:${decodedFragment}`, null);
+      parsedResource = this.#parseMatrixScheme(`matrix:${decodedFragment}`);
     }
 
     return {
