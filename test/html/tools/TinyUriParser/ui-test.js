@@ -42,6 +42,7 @@ const updateConsole = (err, data = null) => {
 
 /**
  * Executes the parser on the current input.
+ * Displays both the parsed object and the reconstructed URI string for debugging.
  */
 const executeParse = () => {
   const uriValue = inputField.value.trim();
@@ -52,9 +53,19 @@ const executeParse = () => {
   }
 
   try {
-    const result = parser.parse(uriValue);
-    updateConsole(null, result);
+    // 1. Perform the parsing
+    const parsedResult = parser.parse(uriValue);
+    
+    // 2. Perform the reconstruction (stringify) using the parsed result
+    const reconstructedUri = parser.stringify(parsedResult);
+
+    // 3. Wrap both results in a single object to display them together in the console
+    updateConsole(null, {
+      parsed: parsedResult,
+      reconstructed: reconstructedUri,
+    });
   } catch (error) {
+    // If either parse() or stringify() throws an error, it will be caught here.
     updateConsole(error);
   }
 };
