@@ -8,10 +8,12 @@
  */
 
 /**
+ * A function type used to validate whether a provided URI string matches a specific pattern or protocol.
  * @typedef {(uri: string) => boolean} ParseChecker
  */
 
 /**
+ * A function type that accepts a URI string and returns a structured `ParsedTemplate` object.
  * @template {string} Type
  * @template {Record<any, any>} Data
  * @typedef {(uri: string) => ParsedTemplate<Type, Data>} ParserCallback
@@ -22,7 +24,10 @@
  * A utility class designed to parse various Matrix-related URI formats into structured objects.
  */
 class TinyUriParser {
-  /** @type {Set<[ParseChecker, ParserCallbackData]>} */
+/**
+ * A collection of parser pairs, where each pair consists of a validation function and its corresponding parsing function.
+ * @type {Set<[ParseChecker, ParserCallbackData]>}
+ */
   #parsers;
 
   /**

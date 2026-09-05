@@ -1,14 +1,17 @@
 /**
+ * Represents a structure for a parsed URI, linking a specific type to its data payload.
  * @template {string} Type
  * @template {Record<any, any>} Data
  * @typedef {import('../TinyUriParser.mjs').ParsedTemplate<Type, Data>} ParsedTemplate
  */
 
 /**
+ * Represents a function used to validate if a URI string belongs to a specific protocol.
  * @typedef {import('../TinyUriParser.mjs').ParseChecker} ParseChecker
  */
 
 /**
+ * Represents a callback function responsible for converting a URI string into a typed data object.
  * @template {string} Type
  * @template {Record<any, any>} Data
  * @typedef {import('../TinyUriParser.mjs').ParserCallback<Type, Data>} ParserCallback
@@ -332,6 +335,9 @@ const webDataParser = [
   },
 ];
 
+/**
+ * An array of Matrix Protocol parser pairs, where each pair contains a matching predicate and a parsing callback.
+ */
 export const MatrixProtocolParsers = Object.freeze([
   mcxParser,
   schemeParser,
