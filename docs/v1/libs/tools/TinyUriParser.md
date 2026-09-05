@@ -98,6 +98,14 @@ console.log(originalUri);
 // Output: "@bob:example.com"
 ```
 
+### 5. Resource Cleanup
+To prevent memory leaks in long-running applications, use the `.destroy()` method to clean up the instance.
+
+```javascript
+// Destroys the instance and clears the memory of all stored URI parsers
+parserEngine.destroy();
+```
+
 ---
 
 ## ⚠️ Error Handling
