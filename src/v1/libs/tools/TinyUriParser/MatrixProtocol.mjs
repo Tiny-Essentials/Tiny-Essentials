@@ -369,7 +369,7 @@ export const MatrixSchemeParser = TinyUriParser.buildParserPair(
 /**
  * Handle Matrix ID shorthands (#room, !event, $event, @user)
  */
-export const MatrixSchemeParser2 = TinyUriParser.buildParserPair(
+export const MatrixShortHandParser = TinyUriParser.buildParserPair(
   'matrix_shorthand',
   (uriString) =>
     uriString.startsWith('#') ||
@@ -403,6 +403,6 @@ export const MatrixWebUrlParser = TinyUriParser.buildParserPair(
 export const MatrixProtocolParsers = Object.freeze([
   MatrixMcxParser,
   MatrixSchemeParser,
-  MatrixSchemeParser2,
+  MatrixShortHandParser,
   MatrixWebUrlParser,
 ]);
