@@ -2,7 +2,7 @@ import TinyUriParser from '../TinyUriParser.mjs';
 
 /**
  * Defines the valid types for Matrix resource identifiers.
- * @typedef {'roomId' | 'room' | 'user' | 'event'} IdTypes
+ * @typedef {'roomId' | 'room' | 'user'} IdTypes
  */
 
 /**
@@ -17,7 +17,7 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * Represents the data structure for parsed Matrix scheme URIs.
  * @typedef {Object} MatrixSchemeData
  * @property {'matrix_scheme'} dataType - The category of the data.
- * @property {IdTypes} type - The type of the matrix resource.
+ * @property {IdTypes | 'event'} type - The type of the matrix resource.
  * @property {null|IdTypes} subType - The sub type of the matrix resource.
  * @property {string} resourceId - The primary identifier (room ID or user ID).
  * @property {string} [eventId] - The specific event ID (only if type is 'event').
@@ -41,11 +41,12 @@ const parseMxcRegex = /^mxc:\/\/([^/]+)\/(.+)$/;
 
 /**
  * Regex handles: matrix:<type>/<resource>[/e/<event>][<query>]
- * 
+ *
  * Types supported: r (room), u (user), roomid (room), e (event)
  * @type {RegExp}
  */
-const matrixSchemeRegex = /^matrix:(?<prefix>r|u|roomid|e)\/(?<resource>[^?/\s]+)(?:\/e\/(?<event>[^?/\s]+))?(?<query>\?.*)?$/;
+const matrixSchemeRegex =
+  /^matrix:(?<prefix>r|u|roomid|e)\/(?<resource>[^?/\s]+)(?:\/e\/(?<event>[^?/\s]+))?(?<query>\?.*)?$/;
 
 /**
  * Reconstructs an MXC URI from parsed data.
@@ -85,9 +86,7 @@ const reconstructMatrixScheme = (parsed) => {
 
   if (type === 'event' && eventId) {
     let eventPart = eventId;
-    if (server) {
-      eventPart += `:${server}`;
-    }
+    // if (server) eventPart += `:${server}`;
     result += `/e/${eventPart}`;
   }
 
@@ -209,7 +208,7 @@ const parseMatrixScheme = (uri) => {
     }
 
     data.type = 'event';
-    data.subType = baseType;
+    data.subType = baseType !== 'event' ? baseType : null;
   }
 
   validateMatrixSchemeData(data);
