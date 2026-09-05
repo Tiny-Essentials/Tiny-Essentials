@@ -11,13 +11,6 @@
 export const isBrowser = () =>
   typeof window !== 'undefined' && typeof window.document !== 'undefined';
 
-/**
- * This is determined by checking if the `process` object is defined.
- * @returns {boolean} Indicates if the current execution environment is a node.
- */
-export const isNode = () =>
-  typeof process !== 'undefined' && process.versions && process.versions.node !== undefined;
-
 const win =
   typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : null;
 const doc = typeof document !== 'undefined' ? document : null;

@@ -180,7 +180,6 @@ import {
   getDuckTyping,
   isBrowser,
   isBrowserAgent,
-  isNode,
 } from './basics/browserDetector.mjs';
 import TinyUploadClicker from './libs/html/upload/TinyUploadClicker.mjs';
 import TinyPkgExportValidator from './libs/tools/TinyPkgExportValidator.mjs';
@@ -272,7 +271,6 @@ export {
   TinyPromiseQueue,
   TinyLevelUp,
   isBrowser,
-  isNode,
   emailStringRegexBuilder,
   emailRegex,
   isValidEmail,
