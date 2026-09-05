@@ -35,6 +35,17 @@ class TinyUriParser {
    */
   #parsers;
 
+  /** @type {Parser[]} */
+  get parsers() {
+    /** @type {Parser[]} */
+    return Array.from(this.#parsers).map((parserPair) => [...parserPair]);
+  }
+
+  /** @type {number} */
+  get size() {
+    return this.#parsers.size;
+  }
+
   /**
    * Initializes the TinyUriParser instance with a collection of parser pairs.
    * @param {...Parser} parsers
