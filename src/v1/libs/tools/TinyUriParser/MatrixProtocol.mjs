@@ -35,6 +35,7 @@ import TinyUriParser from '../TinyUriParser.mjs';
  */
 
 /**
+ * Regular expression used to match and extract components from an MXC (Matrix Content) URI.
  * @type {RegExp}
  */
 const parseMxcRegex = /^mxc:\/\/([^/]+)\/(.+)$/;

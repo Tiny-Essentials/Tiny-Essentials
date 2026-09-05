@@ -46,13 +46,14 @@ import { isJsonObject } from '../../basics/objChecker.mjs';
  */
 class TinyUriParser {
   /**
+   * Creates a frozen, immutable tuple containing the type, validation condition, parsing function, and stringification function for a specific URI type.
    * @template {string} Type
    * @template {ParsedData} Data
-   * @param {Type} type
-   * @param {ParseChecker} conditions
-   * @param {(uri: string) => Data} parser
-   * @param {StringifyCallback<Type, Data>} stringify
-   * @returns {ParserPair<Type, Data>}
+   * @param {Type} type - The unique string identifier representing the URI category.
+   * @param {ParseChecker} conditions - A validation function that returns `true` if the URI matches the specific pattern.
+   * @param {(uri: string) => Data} parser - A function that extracts and returns the parsed data from the URI string.
+   * @param {StringifyCallback<Type, Data>} stringify - A function used to convert the parsed data back into a URI string.
+   * @returns {ParserPair<Type, Data>} An immutable tuple containing the type, validation checker, parser, and stringifier.
    */
   static buildParserPair(type, conditions, parser, stringify) {
     return Object.freeze([
@@ -72,13 +73,19 @@ class TinyUriParser {
    */
   #parsers;
 
-  /** @type {Parser[]} */
+  /**
+   * Returns an array containing shallow copies of the registered parser pairs to prevent direct mutation of the internal set.
+   * @type {Parser[]}
+   */
   get parsers() {
     /** @type {Parser[]} */
     return Array.from(this.#parsers).map((parserPair) => [...parserPair]);
   }
 
-  /** @type {number} */
+  /**
+   * Returns the total number of registered parser pairs.
+   * @type {number}
+   */
   get size() {
     return this.#parsers.size;
   }
