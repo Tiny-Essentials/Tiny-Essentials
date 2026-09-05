@@ -20,21 +20,21 @@
  */
 
 /**
- * @template {ParserCallback<any, any>} ParserCallbackData
+ * @template {[ParseChecker, ParserCallback<any, any>]} Parsers
  * A utility class designed to parse various Matrix-related URI formats into structured objects.
  */
 class TinyUriParser {
 /**
  * A collection of parser pairs, where each pair consists of a validation function and its corresponding parsing function.
- * @type {Set<[ParseChecker, ParserCallbackData]>}
+ * @type {Set<Parsers>}
  */
   #parsers;
 
   /**
    * Initializes the parser.
-   * @param {[ParseChecker, ParserCallbackData][]} parsers
+   * @param {...Parsers} parsers
    */
-  constructor(parsers) {
+  constructor(...parsers) {
     this.#parsers = new Set(parsers);
   }
 
