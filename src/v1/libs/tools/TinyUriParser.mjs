@@ -20,8 +20,12 @@
  */
 
 /**
- * @template {[ParseChecker, ParserCallback<any, any>]} Parsers
+ * @typedef {[ParseChecker, ParserCallback<any, any>]} ParserPair
+ */
+
+/**
  * A utility class designed to parse various Matrix-related URI formats into structured objects.
+ * @template {ParserPair} Parsers
  */
 class TinyUriParser {
 /**
@@ -41,10 +45,12 @@ class TinyUriParser {
   /**
    * Main entry point for parsing.
    * @param {string} uriString - The raw URI string to parse.
+   * @returns {ReturnType<Parsers[1]>} The parsed object.
    * @throws {TypeError | RangeError | Error} If the input is invalid or parsing fails.
    */
   parse(uriString) {
     for (const parser of this.#parsers) {
+      // @ts-ignore
       if (parser[0](uriString)) return parser[1](uriString);
     }
     if (typeof uriString !== 'string') {
