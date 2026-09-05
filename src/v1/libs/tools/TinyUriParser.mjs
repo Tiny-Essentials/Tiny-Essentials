@@ -10,13 +10,13 @@
  * @typedef {Object} MXCData
  * @property {'mxc'} dataType - The category of the data.
  * @property {string} server - The Matrix server domain (e.g., 'matrix.org').
- * @property {string} deviceId - The unique identifier for the device or room.
+ * @property {string} dataId - The unique identifier for the data.
  */
 
 /**
  * @typedef {Object} MatrixSchemeData
  * @property {'matrix_scheme'} dataType - The category of the data.
- * @property {'room' | 'user' | 'event'} type - The type of the matrix resource.
+ * @property {'roomId' | 'room' | 'user' | 'event'} type - The type of the matrix resource.
  * @property {string} resourceId - The primary identifier (room ID or user ID).
  * @property {string} [eventId] - The specific event ID (only if type is 'event').
  * @property {string|null} server - The matrix server domain.
@@ -84,6 +84,25 @@ class TinyUriParser {
       };
     }
 
+    // Handle Matrix ID shorthands (#room, !event, $event, @user)
+    // We convert them to matrix scheme URIs to reuse the existing logic.
+    if (
+      uriString.startsWith('#') ||
+      uriString.startsWith('!') ||
+      uriString.startsWith('$') ||
+      uriString.startsWith('@')
+    ) {
+      const prefixMap = { '#': 'r/', '!': 'roomid/', $: 'e/', '@': 'u/' };
+      // @ts-ignore
+      const prefix = prefixMap[uriString[0]];
+      if (!prefix)
+        throw new Error(`Unable to determine the protocol for the provided URI: ${uriString}`);
+      return {
+        type: 'matrix_scheme',
+        data: this.#parseMatrixScheme(`matrix:${prefix}${uriString.substring(1)}`),
+      };
+    }
+
     // Check for Web URLs (e.g., https://matrix.to/#/...)
     if (uriString.includes('://') && uriString.includes('#/')) {
       return {
@@ -118,24 +137,24 @@ class TinyUriParser {
       throw new Error(`Invalid MXC URI format: ${uri}`);
     }
 
-    const [_, server, deviceId] = match;
+    const [_, server, dataId] = match;
 
     /** @type {MXCData} */
-    const data = { server, deviceId, dataType: 'mxc' };
+    const data = { server, dataId, dataType: 'mxc' };
     this.#validateMXCData(data);
     return data;
   }
 
   /**
-   * Parses Matrix Scheme URIs (matrix:r/..., matrix:u/..., etc).
+   * Parses Matrix Scheme URIs (matrix:r/..., matrix:u/..., matrix:e/..., etc).
    * @param {string} uri
    * @returns {MatrixSchemeData}
    */
   #parseMatrixScheme(uri) {
     // Regex handles: matrix:<type>/<resource>[/e/<event>][<query>]
-    // Types supported: r, u, roomid
+    // Types supported: r (room), u (user), roomid (room), e (event)
     const regex =
-      /^matrix:(?<prefix>r|u|roomid)\/(?<resource>[^?/\s]+)(?:\/e\/(?<event>[^?/\s]+))?(?<query>\?.*)?$/;
+      /^matrix:(?<prefix>r|u|roomid|e)\/(?<resource>[^?/\s]+)(?:\/e\/(?<event>[^?/\s]+))?(?<query>\?.*)?$/;
     const match = uri.match(regex);
 
     if (!match) {
@@ -144,13 +163,22 @@ class TinyUriParser {
 
     // @ts-ignore
     const { prefix, resource, event, query } = match.groups;
+    const prefixType =
+      prefix === 'r' ? '#' : prefix === 'e' ? '$' : prefix === 'roomid' ? '!' : '@';
 
     /** @type {MatrixSchemeData} */
     const data = {
       dataType: 'matrix_scheme',
-      type: prefix === 'r' || prefix === 'roomid' ? 'room' : 'user',
+      type:
+        prefix === 'r'
+          ? 'room'
+          : prefix === 'e'
+            ? 'event'
+            : prefix === 'roomid'
+              ? 'roomId'
+              : 'user',
       resourceId: resource,
-      server: null, // Will be extracted from resource if possible, or left for normalization
+      server: null,
       params: {},
     };
 
@@ -160,18 +188,21 @@ class TinyUriParser {
       data.params = Object.fromEntries(searchParams.entries());
     }
 
-    if (event) {
-      data.type = 'event';
-      data.eventId = event;
-    }
-
     // Extract server from resource (e.g., "somewhere:example.org")
     const lastColonIndex = resource.lastIndexOf(':');
     if (lastColonIndex !== -1) {
       data.server = resource.substring(lastColonIndex + 1);
-      data.resourceId = resource.substring(0, lastColonIndex);
-    } else {
-      data.server = null; // Fallback
+      data.resourceId = resource.substring(resource.startsWith(prefixType) ? 1 : 0, lastColonIndex);
+    }
+
+    if (event) {
+      // Case: matrix:r/resource/e/event
+      data.type = 'event';
+      data.eventId = event;
+    } else if (prefix === 'e') {
+      // Case: matrix:e/event_id (direct event ID)
+      data.type = 'event';
+      data.eventId = data.resourceId;
     }
 
     this.#validateMatrixSchemeData(data);
@@ -193,9 +224,10 @@ class TinyUriParser {
     // Normalization logic: Convert web shorthand to Matrix Scheme
     if (decodedFragment.startsWith('#') || decodedFragment.startsWith('!')) {
       // It's a room
+      const isId = decodedFragment.startsWith('!');
       const normalizedResource = decodedFragment.startsWith('#')
-        ? `matrix:r/${decodedFragment.substring(1)}`
-        : `matrix:r/${decodedFragment}`;
+        ? `matrix:${!isId ? 'r' : 'roomid'}/${decodedFragment.substring(1)}`
+        : `matrix:${!isId ? 'r' : 'roomid'}/${decodedFragment}`;
       parsedResource = this.#parseMatrixScheme(normalizedResource);
     } else if (decodedFragment.startsWith('@')) {
       // It's a user
@@ -221,8 +253,8 @@ class TinyUriParser {
     if (typeof data.server !== 'string' || data.server.length === 0) {
       throw new TypeError('MXCData: server must be a non-empty string.');
     }
-    if (typeof data.deviceId !== 'string' || data.deviceId.length === 0) {
-      throw new TypeError('MXCData: deviceId must be a non-empty string.');
+    if (typeof data.dataId !== 'string' || data.dataId.length === 0) {
+      throw new TypeError('MXCData: dataId must be a non-empty string.');
     }
   }
 
@@ -230,7 +262,7 @@ class TinyUriParser {
    * @param {MatrixSchemeData} data
    */
   #validateMatrixSchemeData(data) {
-    const validTypes = ['room', 'user', 'event'];
+    const validTypes = ['roomId', 'room', 'user', 'event'];
     if (!validTypes.includes(data.type)) {
       throw new TypeError(`MatrixSchemeData: Invalid type "${data.type}".`);
     }
