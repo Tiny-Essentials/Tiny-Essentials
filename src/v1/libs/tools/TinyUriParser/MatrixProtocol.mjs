@@ -49,6 +49,44 @@ const matrixSchemeRegex =
   /^matrix:(?<prefix>r|u|roomid|e)\/(?<resource>[^?/\s]+)(?:\/e\/(?<event>[^?/\s]+))?(?<query>\?.*)?$/;
 
 /**
+ * Reconstructs a Matrix ID shorthand from MatrixSchemeData.
+ *
+ * WARNING: This function removes all search parameters (query strings)
+ * during the reconstruction process.
+ *
+ * @param {MatrixSchemeData} parsed - The parsed Matrix scheme data object.
+ * @returns {string} The Matrix ID shorthand (e.g., '#room:server.com', '@user:server.com', '$eventid').
+ * @throws {TypeError} If the provided data is invalid or the type is unsupported.
+ */
+const reconstructMatrixShorthand = (parsed) => {
+  // Validate the input object using the existing validation logic
+  validateMatrixSchemeData(parsed);
+
+  const typeToPrefix = {
+    room: '#',
+    roomId: '!',
+    user: '@',
+    event: '$',
+  };
+
+  const prefix = typeToPrefix[parsed.type];
+
+  if (!prefix) {
+    throw new TypeError(`reconstructMatrixShorthand: Unsupported type "${parsed.type}".`);
+  }
+
+  // Start with the resource ID (e.g., the room ID or user ID)
+  let resource = parsed.resourceId;
+
+  // If a server is present, append it to the resource (e.g., 'room_id:matrix.org')
+  if (parsed.server) {
+    resource += `:${parsed.server}`;
+  }
+
+  return `${prefix}${resource}`;
+};
+
+/**
  * Reconstructs an MXC URI from parsed data.
  * @param {MXCData} parsed
  * @returns {string}
@@ -332,7 +370,7 @@ export const MatrixSchemeParser = TinyUriParser.buildParserPair(
  * Handle Matrix ID shorthands (#room, !event, $event, @user)
  */
 export const MatrixSchemeParser2 = TinyUriParser.buildParserPair(
-  'matrix_scheme',
+  'matrix_shorthand',
   (uriString) =>
     uriString.startsWith('#') ||
     uriString.startsWith('!') ||
@@ -346,7 +384,7 @@ export const MatrixSchemeParser2 = TinyUriParser.buildParserPair(
       throw new Error(`Unable to determine the protocol for the provided URI: ${uriString}`);
     return parseMatrixScheme(`matrix:${prefix}${uriString.substring(1)}`);
   },
-  reconstructMatrixScheme,
+  reconstructMatrixShorthand,
 );
 
 /**
