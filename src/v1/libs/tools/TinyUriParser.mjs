@@ -1,4 +1,5 @@
 /**
+ * A generic template for parsed URI results.
  * @template {string} Type
  * @template {Record<any, any>} Data
  * @typedef {Object} ParsedTemplate
@@ -7,6 +8,7 @@
  */
 
 /**
+ * Represents the data structure for parsed Matrix Content (MXC) URIs.
  * @typedef {Object} MXCData
  * @property {'mxc'} dataType - The category of the data.
  * @property {string} server - The Matrix server domain (e.g., 'matrix.org').
@@ -14,10 +16,12 @@
  */
 
 /**
+ * Defines the valid types for Matrix resource identifiers.
  * @typedef {'roomId' | 'room' | 'user' | 'event'} IdTypes
  */
 
 /**
+ * Represents the data structure for parsed Matrix scheme URIs.
  * @typedef {Object} MatrixSchemeData
  * @property {'matrix_scheme'} dataType - The category of the data.
  * @property {IdTypes} type - The type of the matrix resource.
@@ -29,6 +33,7 @@
  */
 
 /**
+ * Represents the data structure for parsed Matrix Web URLs.
  * @typedef {Object} MatrixWebData
  * @property {'matrix_web_url'} dataType - The category of the data.
  * @property {string} originalUrl - The full original input URL.
@@ -37,23 +42,33 @@
  */
 
 /**
+ * Represents a parsed MXC URI object.
  * @typedef {ParsedTemplate<'mxc', MXCData>} ParsedMXC
  */
 
 /**
+ * Represents a parsed Matrix scheme URI object.
  * @typedef {ParsedTemplate<'matrix_scheme', MatrixSchemeData>} ParsedSchemeData
  */
 
 /**
+ * Represents a parsed Matrix web URL object.
  * @typedef {ParsedTemplate<'matrix_web_url', MatrixWebData>} ParsedWebData
  */
 
 /**
+ * Represents a parsed custom protocol object.
  * @typedef {ParsedTemplate<'custom', Record<string, any>>} ParsedCustom
  */
 
+/**
+ * A utility class designed to parse various Matrix-related URI formats into structured objects.
+ */
 class TinyUriParser {
-  /** @type {Map<string, (uri: string) => any>} */
+  /**
+   * A private map that stores custom protocol identifiers and their associated parsing functions.
+   * @type {Map<string, (uri: string) => any>}
+   */
   #customParsers;
 
   /**
@@ -202,21 +217,20 @@ class TinyUriParser {
       actualResource = actualResource.substring(1);
     }
 
-    // Handles the extraction of resourceId and server
-    if (prefix === 'e') {
-      // If it is purely an event without a room
+    // Handles the extraction of resourceId, server and all types
+    const lastColonIndex = actualResource.lastIndexOf(':');
+    if (lastColonIndex !== -1) {
+      data.server = actualResource.substring(lastColonIndex + 1);
+      data.resourceId = actualResource.substring(0, lastColonIndex);
+    } else {
       data.resourceId = actualResource;
-      data.eventId = actualResource;
+    }
+
+    if (prefix === 'e') {
+      // Since the resourceId has already been cleaned in the block above, simply reference it
+      data.eventId = data.resourceId;
       data.type = 'event';
       data.subType = null;
-    } else {
-      const lastColonIndex = actualResource.lastIndexOf(':');
-      if (lastColonIndex !== -1) {
-        data.server = actualResource.substring(lastColonIndex + 1);
-        data.resourceId = actualResource.substring(0, lastColonIndex);
-      } else {
-        data.resourceId = actualResource;
-      }
     }
 
     // If the URI contains a nested event (matrix:r/room/e/event)
@@ -226,10 +240,16 @@ class TinyUriParser {
         actualEvent = actualEvent.substring(1);
       }
 
-      // This is where the logic occurs: we specify that it is an event and identify its base type
+      // Ensures that the nested eventId is also cleaned, in case it has an associated server
+      const eventColonIndex = actualEvent.lastIndexOf(':');
+      if (eventColonIndex !== -1) {
+        data.eventId = actualEvent.substring(0, eventColonIndex);
+      } else {
+        data.eventId = actualEvent;
+      }
+
       data.type = 'event';
       data.subType = baseType;
-      data.eventId = actualEvent;
     }
 
     this.#validateMatrixSchemeData(data);
