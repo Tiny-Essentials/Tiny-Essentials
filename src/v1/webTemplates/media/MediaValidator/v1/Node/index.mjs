@@ -110,19 +110,23 @@ export async function validateImage({ buffer, mimeType, Sharp }) {
  * @param {Object} options
  * @param {Buffer} options.buffer - The raw media buffer.
  * @param {string} options.mimeType - Result from {@link validateMagicNumbers}
- * @param {(stream: Readable, fileInfo?: IFileInfo | string, options?: IOptions) => Promise<IAudioMetadata>} options.parseStream
- * @param {ConstructorReadable} options.Readable
+ * @param {(stream: Readable, fileInfo?: IFileInfo | string, options?: IOptions) => Promise<IAudioMetadata>} [options.parseStream]
+ * @param {(uint8Array: Uint8Array<ArrayBufferLike>, fileInfo?: IFileInfo | string, options?: IOptions) => Promise<IAudioMetadata>} [options.parseBuffer]
+ * @param {ConstructorReadable} [options.Readable]
  * @returns {Promise<ValidationResult<IAudioMetadata>>} The validation outcome.
  */
-export async function validateAudioVideo({ buffer, mimeType, parseStream, Readable }) {
+export async function validateAudioVideo({ buffer, mimeType, parseStream, parseBuffer, Readable }) {
   try {
     // Deep metadata structural parsing
     // music-metadata parses the container (ID3 tags, RIFF headers, FLAC blocks).
     // If the file is a disguised script, the parser will fail to find valid audio frames.
-    const stream = bufferToStream(buffer, Readable);
-    const metadata = await parseStream(stream, mimeType);
+    const metadata = await (parseStream && Readable
+      ? parseStream(bufferToStream(buffer, Readable), mimeType)
+      : parseBuffer
+        ? parseBuffer(buffer)
+        : null);
 
-    if (!metadata.format || typeof metadata.format.duration !== 'number') {
+    if (!metadata || !metadata.format || typeof metadata.format.duration !== 'number') {
       throw new Error('Audio file structure is corrupted or missing explicit audio streams.');
     }
 
