@@ -1,6 +1,11 @@
 import TinyUriParser from '../TinyUriParser.mjs';
 
 /**
+ * Matrix Protocol (matrix.org)
+ * Official Documentation: https://spec.matrix.org/latest/appendices/#identifier-grammar
+ */
+
+/**
  * Defines the valid types for Matrix resource identifiers.
  * @typedef {'roomId' | 'room' | 'user'} IdTypes
  */
