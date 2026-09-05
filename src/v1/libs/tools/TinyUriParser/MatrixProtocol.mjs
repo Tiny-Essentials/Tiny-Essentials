@@ -301,6 +301,9 @@ const validateMatrixSchemeData = (data) => {
   }
 };
 
+/**
+ * A parser pair for MXC (Matrix Content) URIs, consisting of a predicate to check for the 'mxc://' prefix and a callback to parse the URI.
+ */
 export const MatrixMcxParser = TinyUriParser.buildParserPair(
   'mxc',
   (uriString) => uriString.startsWith('mxc://'),
@@ -308,6 +311,9 @@ export const MatrixMcxParser = TinyUriParser.buildParserPair(
   reconstructMxc,
 );
 
+/**
+ * A parser pair for Matrix scheme URIs, consisting of a predicate to check for the 'matrix:' prefix and a callback to parse the URI.
+ */
 export const MatrixSchemeParser = TinyUriParser.buildParserPair(
   'matrix_scheme',
   (uriString) => uriString.startsWith('matrix:'),
