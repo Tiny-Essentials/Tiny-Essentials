@@ -87,9 +87,10 @@ const targetFile = process.argv[3];
 const expectedType = process.argv[2];
 const streamMode = process.argv[4];
 
-if (!targetFile) {
-  console.error('Error: You must provide a file path.');
-  console.log('Usage: node test-runner.js <file_path>');
+if (!targetFile || !expectedType) {
+  if (!expectedType) console.error('Error: You must provide a file path.');
+  else if (!expectedType) console.error('Error: You must provide a file type.');
+  console.log('Usage: test:mediavalidator <audio|video|image> <file_path> <stream>?');
 } else {
   runRealTests(targetFile, expectedType, streamMode === 'stream');
 }
