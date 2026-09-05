@@ -68,6 +68,14 @@
       "require": "./dist/v1/webTemplates/vite/7.3/plugins/githubUtils.cjs",
       "import": "./dist/v1/webTemplates/vite/7.3/plugins/githubUtils.mjs"
     },
+    "./webTemplates/media/MediaValidator/v1/Node": {
+      "require": "./dist/v1/webTemplates/media/MediaValidator/v1/Node/index.cjs",
+      "import": "./dist/v1/webTemplates/media/MediaValidator/v1/Node/index.mjs"
+    },
+    "./webTemplates/media/MediaValidator/v1/Browser": {
+      "require": "./dist/v1/webTemplates/media/MediaValidator/v1/Browser/index.cjs",
+      "import": "./dist/v1/webTemplates/media/MediaValidator/v1/Browser/index.mjs"
+    },
     "./regexp": {
       "require": "./dist/v1/regexp/index.cjs",
       "import": "./dist/v1/regexp/index.mjs"
