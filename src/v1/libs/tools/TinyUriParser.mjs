@@ -9,7 +9,7 @@ import { isJsonObject } from '../../basics/objChecker.mjs';
  * A generic template for parsed URI results.
  * @template {string} Type
  * @template {ParsedData} Data
- * @typedef {Object} ParsedTemplate
+ * @typedef {Object} ParsedUri
  * @property {Type} type - The category of the URI.
  * @property {Data} data - The parsed content.
  */
@@ -20,10 +20,10 @@ import { isJsonObject } from '../../basics/objChecker.mjs';
  */
 
 /**
- * A function type that accepts a URI string and returns a structured `ParsedTemplate` object.
+ * A function type that accepts a URI string and returns a structured `ParsedUri` object.
  * @template {string} Type
  * @template {ParsedData} Data
- * @typedef {(uri: string) => ParsedTemplate<Type, Data>} ParserCallback
+ * @typedef {(uri: string) => ParsedUri<Type, Data>} ParserCallback
  */
 
 /**
@@ -160,7 +160,7 @@ class TinyUriParser {
   stringify(parsedObject) {
     if (!isJsonObject(parsedObject) || typeof parsedObject.type !== 'string') {
       throw new TypeError(
-        'The input must be a valid ParsedTemplate object with a "type" property.',
+        'The input must be a valid ParsedUri object with a "type" property.',
       );
     }
 
