@@ -1,14 +1,12 @@
 /**
- * Represents a structure for a parsed URI, linking a specific type to its data payload.
- * @template {string} Type
- * @template {Record<any, any>} Data
- * @typedef {import('../TinyUriParser.mjs').ParsedTemplate<Type, Data>} ParsedTemplate
- */
-
-/**
  * @template {string} Type
  * @template {Record<any, any>} Data
  * @typedef {import('../TinyUriParser.mjs').ParserPair<Type, Data>} ParserPair
+ */
+
+/**
+ * Defines the valid types for Matrix resource identifiers.
+ * @typedef {'roomId' | 'room' | 'user' | 'event'} IdTypes
  */
 
 /**
@@ -17,11 +15,6 @@
  * @property {'mxc'} dataType - The category of the data.
  * @property {string} server - The Matrix server domain (e.g., 'matrix.org').
  * @property {string} dataId - The unique identifier for the data.
- */
-
-/**
- * Defines the valid types for Matrix resource identifiers.
- * @typedef {'roomId' | 'room' | 'user' | 'event'} IdTypes
  */
 
 /**
@@ -46,42 +39,22 @@
  */
 
 /**
- * Represents a parsed MXC URI object.
- * @typedef {ParsedTemplate<'mxc', MXCData>} ParsedMXC
- */
-
-/**
- * Represents a parsed Matrix scheme URI object.
- * @typedef {ParsedTemplate<'matrix_scheme', MatrixSchemeData>} ParsedSchemeData
- */
-
-/**
- * Represents a parsed Matrix web URL object.
- * @typedef {ParsedTemplate<'matrix_web_url', MatrixWebData>} ParsedWebData
- */
-
-/**
- * Represents a parsed custom protocol object.
- * @typedef {ParsedTemplate<'custom', Record<string, any>>} ParsedCustom
- */
-
-/**
  * Reconstructs an MXC URI from parsed data.
- * @param {ParsedTemplate<'mxc', MXCData>} parsed 
+ * @param {MXCData} parsed
  * @returns {string}
  */
 const reconstructMxc = (parsed) => {
-  const { server, dataId } = parsed.data;
+  const { server, dataId } = parsed;
   return `mxc://${server}/${dataId}`;
 };
 
 /**
  * Reconstructs a Matrix Scheme URI from parsed data.
- * @param {ParsedTemplate<'matrix_scheme', MatrixSchemeData>} parsed 
+ * @param {MatrixSchemeData} parsed
  * @returns {string}
  */
 const reconstructMatrixScheme = (parsed) => {
-  const { type, subType, resourceId, eventId, server, params } = parsed.data;
+  const { type, subType, resourceId, eventId, server, params } = parsed;
 
   const typeToPrefix = { room: 'r', user: 'u', roomid: 'roomid', event: 'e' };
   const subTypeToPrefix = { room: 'r', user: 'u', roomid: 'roomid' };
@@ -119,12 +92,12 @@ const reconstructMatrixScheme = (parsed) => {
 
 /**
  * Reconstructs a Matrix Web URL from parsed data.
- * @param {ParsedTemplate<'matrix_web_url', MatrixWebData>} parsed 
+ * @param {MatrixWebData} parsed
  * @returns {string}
  */
 const reconstructMatrixWebUrl = (parsed) => {
   // We return the original URL stored in the data for maximum fidelity
-  return parsed.data.originalUrl;
+  return parsed.originalUrl;
 };
 
 /**
@@ -334,25 +307,17 @@ const validateMatrixSchemeData = (data) => {
 
 /** @type {ParserPair<'mxc', MXCData>} */
 export const MatrixMcxParser = Object.freeze([
+  'mxc',
   (uriString) => uriString.startsWith('mxc://'),
-  (uriString) => {
-    return {
-      type: 'mxc',
-      data: parseMxc(uriString),
-    };
-  },
+  parseMxc,
   reconstructMxc,
 ]);
 
 /** @type {ParserPair<'matrix_scheme', MatrixSchemeData>} */
 export const MatrixSchemeParser = Object.freeze([
+  'matrix_scheme',
   (uriString) => uriString.startsWith('matrix:'),
-  (uriString) => {
-    return {
-      type: 'matrix_scheme',
-      data: parseMatrixScheme(uriString),
-    };
-  },
+  parseMatrixScheme,
   reconstructMatrixScheme,
 ]);
 
@@ -361,6 +326,7 @@ export const MatrixSchemeParser = Object.freeze([
  * @type {ParserPair<'matrix_scheme', MatrixSchemeData>}
  */
 export const MatrixSchemeParser2 = Object.freeze([
+  'matrix_scheme',
   (uriString) =>
     uriString.startsWith('#') ||
     uriString.startsWith('!') ||
@@ -372,10 +338,7 @@ export const MatrixSchemeParser2 = Object.freeze([
     const prefix = prefixMap[uriString[0]];
     if (!prefix)
       throw new Error(`Unable to determine the protocol for the provided URI: ${uriString}`);
-    return {
-      type: 'matrix_scheme',
-      data: parseMatrixScheme(`matrix:${prefix}${uriString.substring(1)}`),
-    };
+    return parseMatrixScheme(`matrix:${prefix}${uriString.substring(1)}`);
   },
   reconstructMatrixScheme,
 ]);
@@ -385,13 +348,9 @@ export const MatrixSchemeParser2 = Object.freeze([
  * @type {ParserPair<'matrix_web_url', MatrixWebData>}
  */
 export const MatrixWebUrlParser = Object.freeze([
+  'matrix_web_url',
   (uriString) => uriString.includes('://') && uriString.includes('#/'),
-  (uriString) => {
-    return {
-      type: 'matrix_web_url',
-      data: parseWebUrl(uriString),
-    };
-  },
+  parseWebUrl,
   reconstructMatrixWebUrl,
 ]);
 

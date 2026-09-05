@@ -23,12 +23,12 @@ const statusDot = document.getElementById('status-dot');
 
 /**
  * Updates the visual console with formatted data.
- * @param {any} data - The data to display.
- * @param {boolean} isError - Whether the data represents an error.
+ * @param {Error} err - Whether the data represents an error.
+ * @param {any} [data] - The data to display.
  */
-const updateConsole = (data, isError = false) => {
-  if (isError) {
-    consoleOutput.textContent = `[ERROR] ${data.name || 'Error'}: ${data.message}`;
+const updateConsole = (err, data = null) => {
+  if (err) {
+    consoleOutput.textContent = `[ERROR] ${err.name || 'Error'}: ${err.message}`;
     consoleOutput.classList.add('text-error');
     consoleOutput.classList.remove('text-success');
     statusDot.style.backgroundColor = 'var(--error)';
@@ -47,15 +47,15 @@ const executeParse = () => {
   const uriValue = inputField.value.trim();
 
   if (!uriValue) {
-    updateConsole({ message: 'Input is empty. Please provide a URI.' }, true);
+    updateConsole({ message: 'Input is empty. Please provide a URI.' });
     return;
   }
 
   try {
     const result = parser.parse(uriValue);
-    updateConsole(result, false);
+    updateConsole(null, result);
   } catch (error) {
-    updateConsole(error, true);
+    updateConsole(error);
   }
 };
 
