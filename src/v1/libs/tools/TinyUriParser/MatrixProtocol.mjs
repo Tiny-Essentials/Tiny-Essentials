@@ -1,6 +1,10 @@
 /**
+ * @typedef {import('../TinyUriParser.mjs').ParsedData} ParsedData
+ */
+
+/**
  * @template {string} Type
- * @template {Record<any, any>} Data
+ * @template {ParsedData} Data
  * @typedef {import('../TinyUriParser.mjs').ParserPair<Type, Data>} ParserPair
  */
 
@@ -309,7 +313,10 @@ const validateMatrixSchemeData = (data) => {
 export const MatrixMcxParser = Object.freeze([
   'mxc',
   (uriString) => uriString.startsWith('mxc://'),
-  parseMxc,
+  (uriString) => ({
+    type: 'mxc',
+    data: parseMxc(uriString),
+  }),
   reconstructMxc,
 ]);
 
@@ -317,7 +324,10 @@ export const MatrixMcxParser = Object.freeze([
 export const MatrixSchemeParser = Object.freeze([
   'matrix_scheme',
   (uriString) => uriString.startsWith('matrix:'),
-  parseMatrixScheme,
+  (uriString) => ({
+    type: 'matrix_scheme',
+    data: parseMatrixScheme(uriString),
+  }),
   reconstructMatrixScheme,
 ]);
 
@@ -338,7 +348,10 @@ export const MatrixSchemeParser2 = Object.freeze([
     const prefix = prefixMap[uriString[0]];
     if (!prefix)
       throw new Error(`Unable to determine the protocol for the provided URI: ${uriString}`);
-    return parseMatrixScheme(`matrix:${prefix}${uriString.substring(1)}`);
+    return {
+      type: 'matrix_scheme',
+      data: parseMatrixScheme(`matrix:${prefix}${uriString.substring(1)}`),
+    };
   },
   reconstructMatrixScheme,
 ]);
@@ -350,7 +363,10 @@ export const MatrixSchemeParser2 = Object.freeze([
 export const MatrixWebUrlParser = Object.freeze([
   'matrix_web_url',
   (uriString) => uriString.includes('://') && uriString.includes('#/'),
-  parseWebUrl,
+  (uriString) => ({
+    type: 'matrix_web_url',
+    data: parseWebUrl(uriString),
+  }),
   reconstructMatrixWebUrl,
 ]);
 
