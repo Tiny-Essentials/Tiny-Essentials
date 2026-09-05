@@ -12,15 +12,6 @@
  */
 
 /**
- * HELPER: Converts a Buffer into a readable stream for libraries that require stream inputs.
- * @param {Buffer} buffer - The file buffer to convert.
- * @param {ConstructorReadable} Readable
- */
-function bufferToStream(buffer, Readable) {
-  return Readable.from(buffer);
-}
-
-/**
  *
  * @typedef {import('file-type').FileTypeOptions} FileTypeOptions
  * @typedef {import('file-type').FileTypeResult} FileTypeResult
@@ -115,16 +106,12 @@ export async function validateImage({ buffer, mimeType, Sharp }) {
  * @param {ConstructorReadable} [options.Readable]
  * @returns {Promise<ValidationResult<IAudioMetadata>>} The validation outcome.
  */
-export async function validateAudioVideo({ buffer, mimeType, parseStream, parseBuffer, Readable }) {
+export async function validateAudioVideo({ buffer, mimeType, parseBuffer }) {
   try {
     // Deep metadata structural parsing
     // music-metadata parses the container (ID3 tags, RIFF headers, FLAC blocks).
     // If the file is a disguised script, the parser will fail to find valid audio frames.
-    const metadata = await (parseStream && Readable
-      ? parseStream(bufferToStream(buffer, Readable), mimeType)
-      : parseBuffer
-        ? parseBuffer(buffer)
-        : null);
+    const metadata = await (parseBuffer ? parseBuffer(buffer) : null);
 
     if (!metadata || !metadata.format || typeof metadata.format.duration !== 'number') {
       throw new Error('Audio file structure is corrupted or missing explicit audio streams.');

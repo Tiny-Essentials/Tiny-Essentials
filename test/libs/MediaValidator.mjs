@@ -51,21 +51,11 @@ async function runRealTests(filePath, expectedType, streamMode) {
     // 3. Audio/Video Test (If the file is audio or video)
     if (mime.startsWith('audio/') || mime.startsWith('video/')) {
       console.log('\n[2/2] Validating Audio/Video Structure (music-metadata)...');
-      const avResult = await validateAudioVideo(
-        streamMode
-          ? {
-              buffer,
-              mimeType: mime,
-              parseStream: parseStream,
-              parseBuffer: parseBuffer,
-              Readable,
-            }
-          : {
-              buffer,
-              mimeType: mime,
-              parseBuffer: parseBuffer,
-            },
-      );
+      const avResult = await validateAudioVideo({
+        buffer,
+        mimeType: mime,
+        parseBuffer: parseBuffer,
+      });
 
       if (avResult.error) {
         console.log(`❌ Audio/Video error: ${avResult.error}`);
