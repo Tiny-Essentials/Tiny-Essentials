@@ -169,8 +169,7 @@ class TinyUriParser {
       throw new Error(`Invalid Matrix Scheme URI: ${uri}`);
     }
 
-    // @ts-ignore
-    const { prefix, resource, event, query } = match.groups;
+    const { prefix, resource, event, query } = match.groups ?? {};
     const prefixType =
       prefix === 'r' ? '#' : prefix === 'e' ? '$' : prefix === 'roomid' ? '!' : '@';
 
