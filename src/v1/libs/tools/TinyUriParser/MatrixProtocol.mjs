@@ -1,12 +1,4 @@
-/**
- * @typedef {import('../TinyUriParser.mjs').ParsedData} ParsedData
- */
-
-/**
- * @template {string} Type
- * @template {ParsedData} Data
- * @typedef {import('../TinyUriParser.mjs').ParserPair<Type, Data>} ParserPair
- */
+import TinyUriParser from '../TinyUriParser.mjs';
 
 /**
  * Defines the valid types for Matrix resource identifiers.
@@ -309,33 +301,24 @@ const validateMatrixSchemeData = (data) => {
   }
 };
 
-/** @type {ParserPair<'mxc', MXCData>} */
-export const MatrixMcxParser = Object.freeze([
+export const MatrixMcxParser = TinyUriParser.buildParserPair(
   'mxc',
   (uriString) => uriString.startsWith('mxc://'),
-  (uriString) => ({
-    type: 'mxc',
-    data: parseMxc(uriString),
-  }),
+  parseMxc,
   reconstructMxc,
-]);
+);
 
-/** @type {ParserPair<'matrix_scheme', MatrixSchemeData>} */
-export const MatrixSchemeParser = Object.freeze([
+export const MatrixSchemeParser = TinyUriParser.buildParserPair(
   'matrix_scheme',
   (uriString) => uriString.startsWith('matrix:'),
-  (uriString) => ({
-    type: 'matrix_scheme',
-    data: parseMatrixScheme(uriString),
-  }),
+  parseMatrixScheme,
   reconstructMatrixScheme,
-]);
+);
 
 /**
  * Handle Matrix ID shorthands (#room, !event, $event, @user)
- * @type {ParserPair<'matrix_scheme', MatrixSchemeData>}
  */
-export const MatrixSchemeParser2 = Object.freeze([
+export const MatrixSchemeParser2 = TinyUriParser.buildParserPair(
   'matrix_scheme',
   (uriString) =>
     uriString.startsWith('#') ||
@@ -348,27 +331,20 @@ export const MatrixSchemeParser2 = Object.freeze([
     const prefix = prefixMap[uriString[0]];
     if (!prefix)
       throw new Error(`Unable to determine the protocol for the provided URI: ${uriString}`);
-    return {
-      type: 'matrix_scheme',
-      data: parseMatrixScheme(`matrix:${prefix}${uriString.substring(1)}`),
-    };
+    return parseMatrixScheme(`matrix:${prefix}${uriString.substring(1)}`);
   },
   reconstructMatrixScheme,
-]);
+);
 
 /**
  * Check for Web URLs (e.g., https://matrix.to/#/...)
- * @type {ParserPair<'matrix_web_url', MatrixWebData>}
  */
-export const MatrixWebUrlParser = Object.freeze([
+export const MatrixWebUrlParser = TinyUriParser.buildParserPair(
   'matrix_web_url',
   (uriString) => uriString.includes('://') && uriString.includes('#/'),
-  (uriString) => ({
-    type: 'matrix_web_url',
-    data: parseWebUrl(uriString),
-  }),
+  parseWebUrl,
   reconstructMatrixWebUrl,
-]);
+);
 
 /**
  * An array of Matrix Protocol parser pairs, where each pair contains a matching predicate and a parsing callback.

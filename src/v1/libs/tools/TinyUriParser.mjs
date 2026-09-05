@@ -46,6 +46,27 @@ import { isJsonObject } from '../../basics/objChecker.mjs';
  */
 class TinyUriParser {
   /**
+   * @template {string} Type
+   * @template {ParsedData} Data
+   * @param {Type} type
+   * @param {ParseChecker} conditions
+   * @param {(uri: string) => Data} parser
+   * @param {StringifyCallback<Type, Data>} stringify
+   * @returns {ParserPair<Type, Data>}
+   */
+  static buildParserPair(type, conditions, parser, stringify) {
+    return Object.freeze([
+      type,
+      conditions,
+      (uriString) => ({
+        type: type,
+        data: parser(uriString),
+      }),
+      stringify,
+    ]);
+  }
+
+  /**
    * A collection of parser pairs used to iterate through and match URI strings.
    * @type {Set<Parser>}
    */
