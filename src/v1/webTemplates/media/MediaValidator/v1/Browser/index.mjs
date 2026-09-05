@@ -1,7 +1,6 @@
 /**
  * @template T
  * @typedef {Object} ValidationResult
- * @property {string|null} mimeType - The detected MIME type of the file.
  * @property {string|null} error - The error message if validation failed.
  * @property {T} [data]
  */
@@ -52,22 +51,19 @@ export async function validateMagicNumbers({ inputData, expectedType, fileTypeFr
  *
  * @param {Object} options
  * @param {Buffer|Blob} options.inputData - The raw image data.
- * @param {string} options.mimeType - Result from {@link validateMagicNumbers}
- * @returns {Promise<ValidationResult<{ width: number; height: number; format: string }>>} The validation outcome.
+ * @returns {Promise<ValidationResult<{ width: number; height: number }>>} The validation outcome.
  */
-export async function validateImage({ inputData, mimeType }) {
+export async function validateImage({ inputData }) {
   try {
     if (!(inputData instanceof Blob)) throw new TypeError('InputData must be a Blob or File.');
     const bitmap = await createImageBitmap(inputData);
     return {
-      mimeType,
       error: null,
-      data: { width: bitmap.width, height: bitmap.height, format: mimeType },
+      data: { width: bitmap.width, height: bitmap.height },
     };
   } catch (err) {
     console.error(err);
     return {
-      mimeType: null,
       error: err instanceof Error ? err.message : 'Unknown Error',
     };
   }
@@ -78,13 +74,18 @@ export async function validateImage({ inputData, mimeType }) {
  */
 
 /**
+ * @typedef {Object} ValidationResultExtra
+ * @property {string|null} mimeType - The detected MIME type of the file.
+ */
+
+/**
  * LAYER 2 (AUDIO/VIDEO): Deep validation for audio/video files.
  * Validates headers, durations, and container integrity.
  *
  * @param {Object} options
  * @param {Buffer|Blob} options.inputData - The raw media data.
  * @param {string} options.mimeType - Result from {@link validateMagicNumbers}
- * @returns {Promise<ValidationResult<{ duration: number }>>} The validation outcome.
+ * @returns {Promise<ValidationResult<{ duration: number }> & ValidationResultExtra>} The validation outcome.
  */
 export async function validateAudioVideo({ inputData, mimeType }) {
   try {

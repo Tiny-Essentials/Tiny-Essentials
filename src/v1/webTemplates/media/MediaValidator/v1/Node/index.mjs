@@ -1,7 +1,6 @@
 /**
  * @template T
  * @typedef {Object} ValidationResult
- * @property {string|null} mimeType - The detected MIME type of the file.
  * @property {string|null} error - The error message if validation failed.
  * @property {T} [data]
  */
@@ -12,8 +11,6 @@
  */
 
 /**
- *
- * @typedef {import('file-type').FileTypeOptions} FileTypeOptions
  * @typedef {import('file-type').FileTypeResult} FileTypeResult
  */
 
@@ -26,7 +23,7 @@
  * @param {Object} options
  * @param {Buffer} options.buffer - The raw file buffer from the upload.
  * @param {'image' | 'audio' | 'video'} options.expectedType - The expected media category.
- * @param {(buffer: Uint8Array | ArrayBuffer, options?: FileTypeOptions) => Promise<FileTypeResult | undefined>} options.fileTypeFromBuffer
+ * @param {(buffer: Uint8Array | ArrayBuffer) => Promise<FileTypeResult | undefined>} options.fileTypeFromBuffer
  * @returns {Promise<string>} Resolves with the confirmed MIME type if valid.
  * @throws {Error} If the file signature does not match the expected type.
  */
@@ -65,22 +62,20 @@ export async function validateMagicNumbers({ buffer, expectedType, fileTypeFromB
  *
  * @param {Object} options
  * @param {Buffer} options.buffer - The raw image buffer.
- * @param {string} options.mimeType - Result from {@link validateMagicNumbers}
  * @param {SharpConstructor} options.Sharp
  * @returns {Promise<ValidationResult<{ data: Sharp; metadata: SharpMetadata }>>} The validation outcome.
  */
-export async function validateImage({ buffer, mimeType, Sharp }) {
+export async function validateImage({ buffer, Sharp }) {
   try {
     // Deep structural parsing (Checks for corrupted structures or embedded malicious scripts)
     // sharp().metadata() forces the libvips C++ library to completely parse the image header/payload.
     const data = Sharp(buffer);
     const metadata = await data.metadata();
 
-    return { mimeType, error: null, data: { data, metadata } };
+    return { error: null, data: { data, metadata } };
   } catch (err) {
     console.error(err);
     return {
-      mimeType: null,
       error: err instanceof Error ? err.message : 'Unknown Error',
     };
   }
@@ -100,13 +95,12 @@ export async function validateImage({ buffer, mimeType, Sharp }) {
  *
  * @param {Object} options
  * @param {Buffer} options.buffer - The raw media buffer.
- * @param {string} options.mimeType - Result from {@link validateMagicNumbers}
  * @param {(stream: Readable, fileInfo?: IFileInfo | string, options?: IOptions) => Promise<IAudioMetadata>} [options.parseStream]
  * @param {(uint8Array: Uint8Array<ArrayBufferLike>, fileInfo?: IFileInfo | string, options?: IOptions) => Promise<IAudioMetadata>} [options.parseBuffer]
  * @param {ConstructorReadable} [options.Readable]
  * @returns {Promise<ValidationResult<IAudioMetadata>>} The validation outcome.
  */
-export async function validateAudioVideo({ buffer, mimeType, parseBuffer }) {
+export async function validateAudioVideo({ buffer, parseBuffer }) {
   try {
     // Deep metadata structural parsing
     // music-metadata parses the container (ID3 tags, RIFF headers, FLAC blocks).
@@ -117,11 +111,10 @@ export async function validateAudioVideo({ buffer, mimeType, parseBuffer }) {
       throw new Error('Audio file structure is corrupted or missing explicit audio streams.');
     }
 
-    return { mimeType, error: null, data: metadata };
+    return { error: null, data: metadata };
   } catch (err) {
     console.error(err);
     return {
-      mimeType: null,
       error: err instanceof Error ? err.message : 'Unknown Error',
     };
   }
