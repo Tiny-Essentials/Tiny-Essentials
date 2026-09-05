@@ -277,7 +277,7 @@ const validateMatrixSchemeData = (data) => {
 };
 
 /** @type {readonly [ParseChecker, ParserCallback<'mxc', MXCData>]} */
-export const matrixMcxParser = Object.freeze([
+export const MatrixMcxParser = Object.freeze([
   (uriString) => uriString.startsWith('mxc://'),
   (uriString) => {
     return {
@@ -288,7 +288,7 @@ export const matrixMcxParser = Object.freeze([
 ]);
 
 /** @type {readonly [ParseChecker, ParserCallback<'matrix_scheme', MatrixSchemeData>]} */
-export const matrixSchemeParser = Object.freeze([
+export const MatrixSchemeParser = Object.freeze([
   (uriString) => uriString.startsWith('matrix:'),
   (uriString) => {
     return {
@@ -302,7 +302,7 @@ export const matrixSchemeParser = Object.freeze([
  * Handle Matrix ID shorthands (#room, !event, $event, @user)
  * @type {readonly [ParseChecker, ParserCallback<'matrix_scheme', MatrixSchemeData>]}
  */
-export const matrixSchemeParser2 = Object.freeze([
+export const MatrixSchemeParser2 = Object.freeze([
   (uriString) =>
     uriString.startsWith('#') ||
     uriString.startsWith('!') ||
@@ -325,7 +325,7 @@ export const matrixSchemeParser2 = Object.freeze([
  * Check for Web URLs (e.g., https://matrix.to/#/...)
  * @type {readonly [ParseChecker, ParserCallback<'matrix_web_url', MatrixWebData>]}
  */
-export const matrixWebUrlParser = Object.freeze([
+export const MatrixWebUrlParser = Object.freeze([
   (uriString) => uriString.includes('://') && uriString.includes('#/'),
   (uriString) => {
     return {
@@ -339,8 +339,8 @@ export const matrixWebUrlParser = Object.freeze([
  * An array of Matrix Protocol parser pairs, where each pair contains a matching predicate and a parsing callback.
  */
 export const MatrixProtocolParsers = Object.freeze([
-  matrixMcxParser,
-  matrixSchemeParser,
-  matrixSchemeParser2,
-  matrixWebUrlParser,
+  MatrixMcxParser,
+  MatrixSchemeParser,
+  MatrixSchemeParser2,
+  MatrixWebUrlParser,
 ]);
