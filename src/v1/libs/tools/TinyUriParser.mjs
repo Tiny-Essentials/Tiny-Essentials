@@ -159,9 +159,7 @@ class TinyUriParser {
    */
   stringify(parsedObject) {
     if (!isJsonObject(parsedObject) || typeof parsedObject.type !== 'string') {
-      throw new TypeError(
-        'The input must be a valid ParsedUri object with a "type" property.',
-      );
+      throw new TypeError('The input must be a valid ParsedUri object with a "type" property.');
     }
 
     for (const parser of this.#parsers) {

@@ -214,9 +214,11 @@ import {
   extractUsernames,
 } from './regexp/Username/index.mjs';
 import TinyHtmlTagRegexBuilder from './libs/tools/TinyHtmlTagRegexBuilder.mjs';
+import { TinyUriParser } from './build/TinyUriParser.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
+  TinyUriParser,
   TinyHtmlTagRegexBuilder,
   TinyHttpResponseRegistry,
   TinyCloner,
