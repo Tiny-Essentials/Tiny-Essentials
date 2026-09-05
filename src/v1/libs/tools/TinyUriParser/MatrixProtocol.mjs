@@ -52,8 +52,8 @@ const reconstructMxc = (parsed) => {
 const reconstructMatrixScheme = (parsed) => {
   const { type, subType, resourceId, eventId, server, params } = parsed;
 
-  const typeToPrefix = { room: 'r', user: 'u', roomid: 'roomid', event: 'e' };
-  const subTypeToPrefix = { room: 'r', user: 'u', roomid: 'roomid' };
+  const typeToPrefix = { room: 'r', user: 'u', roomId: 'roomid', event: 'e' };
+  const subTypeToPrefix = { room: 'r', user: 'u', roomId: 'roomid' };
 
   // Determine the prefix based on the type or the subType if it's an event
   // @ts-ignore
