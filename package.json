@@ -20,6 +20,7 @@
     "test:mjs:sitemap": "node test/index.mjs sitemap",
     "test:mjs:pwvalidator": "node test/index.mjs pwValidator",
     "test:mjs:filemanager": "node test/index.mjs fileManager",
+    "test:mediavalidator": "node test/libs/MediaValidator.mjs",
     "test:mjs:i18": "node test/index.mjs i18",
     "fix:prettier": "npm run fix:prettier:src && npm run fix:prettier:build && npm run fix:prettier:test && npm run fix:prettier:rollup.config && npm run fix:prettier:webpack.config && npm run fix:prettier:tiny_fork && npm run fix:prettier:check_exports",
     "fix:prettier:src": "prettier --write ./src/*",

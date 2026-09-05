@@ -6,7 +6,6 @@
  * @property {T} [data]
  */
 
-
 /**
  * LAYER 1: Fast Binary Validation (Magic Numbers)
  * Validates if the file header matches expected media categories.
@@ -58,8 +57,7 @@ export async function validateMagicNumbers({ inputData, expectedType, fileTypeFr
  */
 export async function validateImage({ inputData, mimeType }) {
   try {
-    if (!(inputData instanceof Blob))
-      throw new TypeError('InputData must be a Blob or File.');
+    if (!(inputData instanceof Blob)) throw new TypeError('InputData must be a Blob or File.');
     const bitmap = await createImageBitmap(inputData);
     return {
       mimeType,
@@ -90,8 +88,7 @@ export async function validateImage({ inputData, mimeType }) {
  */
 export async function validateAudioVideo({ inputData, mimeType }) {
   try {
-    if (!(inputData instanceof Blob))
-      throw new TypeError('InputData must be a Blob or File.');
+    if (!(inputData instanceof Blob)) throw new TypeError('InputData must be a Blob or File.');
     return new Promise((resolve) => {
       const isAudio = mimeType.startsWith('audio/');
       const mediaElement = document.createElement(isAudio ? 'audio' : 'video');
