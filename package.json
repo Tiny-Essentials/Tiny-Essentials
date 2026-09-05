@@ -252,6 +252,10 @@
       "require": "./dist/v1/libs/tools/TinyUriParser.cjs",
       "import": "./dist/v1/libs/tools/TinyUriParser.mjs"
     },
+    "./libs/tools/TinyUriParser/MatrixProtocol": {
+      "require": "./dist/v1/libs/tools/TinyUriParser/MatrixProtocol.cjs",
+      "import": "./dist/v1/libs/tools/TinyUriParser/MatrixProtocol.mjs"
+    },
     "./libs/utils/TinyCloner": {
       "require": "./dist/v1/libs/utils/TinyCloner.cjs",
       "import": "./dist/v1/libs/utils/TinyCloner.mjs"
