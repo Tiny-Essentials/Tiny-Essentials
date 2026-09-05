@@ -35,6 +35,19 @@ import TinyUriParser from '../TinyUriParser.mjs';
  */
 
 /**
+ * @type {RegExp}
+ */
+const parseMxcRegex = /^mxc:\/\/([^/]+)\/(.+)$/;
+
+/**
+ * Regex handles: matrix:<type>/<resource>[/e/<event>][<query>]
+ * 
+ * Types supported: r (room), u (user), roomid (room), e (event)
+ * @type {RegExp}
+ */
+const matrixSchemeRegex = /^matrix:(?<prefix>r|u|roomid|e)\/(?<resource>[^?/\s]+)(?:\/e\/(?<event>[^?/\s]+))?(?<query>\?.*)?$/;
+
+/**
  * Reconstructs an MXC URI from parsed data.
  * @param {MXCData} parsed
  * @returns {string}
@@ -104,8 +117,7 @@ const reconstructMatrixWebUrl = (parsed) => {
  * @throws {Error} If the URI does not match the expected MXC format.
  */
 const parseMxc = (uri) => {
-  const regex = /^mxc:\/\/([^/]+)\/(.+)$/;
-  const match = uri.match(regex);
+  const match = uri.match(parseMxcRegex);
 
   if (!match) {
     throw new Error(`Invalid MXC URI format: ${uri}`);
@@ -127,11 +139,7 @@ const parseMxc = (uri) => {
  * @throws {Error} If the URI does not match the expected Matrix scheme format.
  */
 const parseMatrixScheme = (uri) => {
-  // Regex handles: matrix:<type>/<resource>[/e/<event>][<query>]
-  // Types supported: r (room), u (user), roomid (room), e (event)
-  const regex =
-    /^matrix:(?<prefix>r|u|roomid|e)\/(?<resource>[^?/\s]+)(?:\/e\/(?<event>[^?/\s]+))?(?<query>\?.*)?$/;
-  const match = uri.match(regex);
+  const match = uri.match(matrixSchemeRegex);
 
   if (!match) {
     throw new Error(`Invalid Matrix Scheme URI: ${uri}`);
