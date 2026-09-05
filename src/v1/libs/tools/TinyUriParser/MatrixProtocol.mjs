@@ -6,15 +6,9 @@
  */
 
 /**
- * Represents a function used to validate if a URI string belongs to a specific protocol.
- * @typedef {import('../TinyUriParser.mjs').ParseChecker} ParseChecker
- */
-
-/**
- * Represents a callback function responsible for converting a URI string into a typed data object.
  * @template {string} Type
  * @template {Record<any, any>} Data
- * @typedef {import('../TinyUriParser.mjs').ParserCallback<Type, Data>} ParserCallback
+ * @typedef {import('../TinyUriParser.mjs').ParserPair<Type, Data>} ParserPair
  */
 
 /**
@@ -70,6 +64,68 @@
  * Represents a parsed custom protocol object.
  * @typedef {ParsedTemplate<'custom', Record<string, any>>} ParsedCustom
  */
+
+/**
+ * Reconstructs an MXC URI from parsed data.
+ * @param {ParsedTemplate<'mxc', MXCData>} parsed 
+ * @returns {string}
+ */
+const reconstructMxc = (parsed) => {
+  const { server, dataId } = parsed.data;
+  return `mxc://${server}/${dataId}`;
+};
+
+/**
+ * Reconstructs a Matrix Scheme URI from parsed data.
+ * @param {ParsedTemplate<'matrix_scheme', MatrixSchemeData>} parsed 
+ * @returns {string}
+ */
+const reconstructMatrixScheme = (parsed) => {
+  const { type, subType, resourceId, eventId, server, params } = parsed.data;
+
+  const typeToPrefix = { room: 'r', user: 'u', roomid: 'roomid', event: 'e' };
+  const subTypeToPrefix = { room: 'r', user: 'u', roomid: 'roomid' };
+
+  // Determine the prefix based on the type or the subType if it's an event
+  // @ts-ignore
+  let prefix = typeToPrefix[type];
+  if (type === 'event' && subType) {
+    // @ts-ignore
+    prefix = subTypeToPrefix[subType];
+  }
+
+  let resource = resourceId;
+  if (server) {
+    resource += `:${server}`;
+  }
+
+  let result = `matrix:${prefix}/${resource}`;
+
+  if (type === 'event' && eventId) {
+    let eventPart = eventId;
+    if (server) {
+      eventPart += `:${server}`;
+    }
+    result += `/e/${eventPart}`;
+  }
+
+  if (params && Object.keys(params).length > 0) {
+    const query = new URLSearchParams(params).toString();
+    result += `?${query}`;
+  }
+
+  return result;
+};
+
+/**
+ * Reconstructs a Matrix Web URL from parsed data.
+ * @param {ParsedTemplate<'matrix_web_url', MatrixWebData>} parsed 
+ * @returns {string}
+ */
+const reconstructMatrixWebUrl = (parsed) => {
+  // We return the original URL stored in the data for maximum fidelity
+  return parsed.data.originalUrl;
+};
 
 /**
  * Parses MXC (Matrix Content) URIs.
@@ -276,7 +332,7 @@ const validateMatrixSchemeData = (data) => {
   }
 };
 
-/** @type {readonly [ParseChecker, ParserCallback<'mxc', MXCData>]} */
+/** @type {ParserPair<'mxc', MXCData>} */
 export const MatrixMcxParser = Object.freeze([
   (uriString) => uriString.startsWith('mxc://'),
   (uriString) => {
@@ -285,9 +341,10 @@ export const MatrixMcxParser = Object.freeze([
       data: parseMxc(uriString),
     };
   },
+  reconstructMxc,
 ]);
 
-/** @type {readonly [ParseChecker, ParserCallback<'matrix_scheme', MatrixSchemeData>]} */
+/** @type {ParserPair<'matrix_scheme', MatrixSchemeData>} */
 export const MatrixSchemeParser = Object.freeze([
   (uriString) => uriString.startsWith('matrix:'),
   (uriString) => {
@@ -296,11 +353,12 @@ export const MatrixSchemeParser = Object.freeze([
       data: parseMatrixScheme(uriString),
     };
   },
+  reconstructMatrixScheme,
 ]);
 
 /**
  * Handle Matrix ID shorthands (#room, !event, $event, @user)
- * @type {readonly [ParseChecker, ParserCallback<'matrix_scheme', MatrixSchemeData>]}
+ * @type {ParserPair<'matrix_scheme', MatrixSchemeData>}
  */
 export const MatrixSchemeParser2 = Object.freeze([
   (uriString) =>
@@ -319,11 +377,12 @@ export const MatrixSchemeParser2 = Object.freeze([
       data: parseMatrixScheme(`matrix:${prefix}${uriString.substring(1)}`),
     };
   },
+  reconstructMatrixScheme,
 ]);
 
 /**
  * Check for Web URLs (e.g., https://matrix.to/#/...)
- * @type {readonly [ParseChecker, ParserCallback<'matrix_web_url', MatrixWebData>]}
+ * @type {ParserPair<'matrix_web_url', MatrixWebData>}
  */
 export const MatrixWebUrlParser = Object.freeze([
   (uriString) => uriString.includes('://') && uriString.includes('#/'),
@@ -333,6 +392,7 @@ export const MatrixWebUrlParser = Object.freeze([
       data: parseWebUrl(uriString),
     };
   },
+  reconstructMatrixWebUrl,
 ]);
 
 /**
