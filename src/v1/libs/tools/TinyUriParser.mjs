@@ -50,12 +50,12 @@ class TinyUriParser {
    * @throws {TypeError | RangeError | Error} If the input is invalid or parsing fails.
    */
   parse(uriString) {
+    if (typeof uriString !== 'string') {
+      throw new TypeError('The input must be a string.');
+    }
     for (const parser of this.#parsers) {
       // @ts-ignore
       if (parser[0](uriString)) return parser[1](uriString);
-    }
-    if (typeof uriString !== 'string') {
-      throw new TypeError('The input must be a string.');
     }
     throw new Error(`Unable to determine the protocol for the provided URI: ${uriString}`);
   }
