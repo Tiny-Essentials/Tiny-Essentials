@@ -129,9 +129,11 @@ class TinyUriParser {
   }
 
   /**
-   * Parses MXC URIs.
-   * @param {string} uri
-   * @returns {MXCData}
+   * Parses MXC (Matrix Content) URIs.
+   *
+   * @param {string} uri - The raw MXC URI string.
+   * @returns {MXCData} The parsed MXC data object.
+   * @throws {Error} If the URI does not match the expected MXC format.
    */
   #parseMxc(uri) {
     const regex = /^mxc:\/\/([^/]+)\/(.+)$/;
@@ -150,9 +152,11 @@ class TinyUriParser {
   }
 
   /**
-   * Parses Matrix Scheme URIs (matrix:r/..., matrix:u/..., matrix:e/..., etc).
-   * @param {string} uri
-   * @returns {MatrixSchemeData}
+   * Parses Matrix Scheme URIs (e.g., matrix:r/..., matrix:u/..., matrix:e/..., etc).
+   *
+   * @param {string} uri - The Matrix scheme URI string.
+   * @returns {MatrixSchemeData} The parsed Matrix scheme data object.
+   * @throws {Error} If the URI does not match the expected Matrix scheme format.
    */
   #parseMatrixScheme(uri) {
     // Regex handles: matrix:<type>/<resource>[/e/<event>][<query>]
@@ -174,7 +178,7 @@ class TinyUriParser {
     const genType = (p) =>
       p === 'r' ? 'room' : p === 'e' ? 'event' : p === 'roomid' ? 'roomId' : 'user';
 
-    // Capturamos qual é o tipo original (sala, usuário, etc) antes de ver se é um evento
+    // Capture the original type (room, user, etc.) before checking if it is an event
     const baseType = genType(prefix);
 
     /** @type {MatrixSchemeData} */
@@ -193,15 +197,15 @@ class TinyUriParser {
       data.params = Object.fromEntries(searchParams.entries());
     }
 
-    // Remove always o símbolo identificador se ele estiver presente, independente do servidor
+    // Always remove the identifier symbol if it is present, regardless of the server
     let actualResource = resource;
     if (actualResource.startsWith(prefixType)) {
       actualResource = actualResource.substring(1);
     }
 
-    // Lida com a extração de resourceId e server
+    // Handles the extraction of resourceId and server
     if (prefix === 'e') {
-      // Se for puramente um evento sem sala
+      // If it is purely an event without a room
       data.resourceId = actualResource;
       data.eventId = actualResource;
       data.type = 'event';
@@ -216,14 +220,14 @@ class TinyUriParser {
       }
     }
 
-    // Se a URI contém um evento aninhado (matrix:r/room/e/event)
+    // If the URI contains a nested event (matrix:r/room/e/event)
     if (event) {
       let actualEvent = event;
       if (actualEvent.startsWith('$')) {
         actualEvent = actualEvent.substring(1);
       }
 
-      // Aqui a mágica acontece: informamos que é um evento, e que pertence ao tipo base
+      // This is where the logic occurs: we specify that it is an event and identify its base type
       data.type = 'event';
       data.subType = baseType;
       data.eventId = actualEvent;
@@ -234,16 +238,18 @@ class TinyUriParser {
   }
 
   /**
-   * Parses Matrix Web URLs by decoding the fragment.
-   * @param {string} url
-   * @returns {MatrixWebData}
+   * Parses Matrix Web URLs by decoding the URL fragment.
+   *
+   * @param {string} url - The full web URL (e.g., https://matrix.to/#/...).
+   * @returns {MatrixWebData} The parsed web URL data object.
+   * @throws {Error} If the URL is invalid or the fragment cannot be parsed.
    */
   #parseWebUrl(url) {
     const urlObj = new URL(url);
     const fragment = urlObj.hash.substring(2); // Remove '#/'
     const decodedFragment = decodeURIComponent(fragment);
 
-    // Divide em partes para suportar eventos contidos na URL matrix.to
+    // Split into parts to support events contained within the matrix.to URL
     // Ex: !room:server.com/$event_id -> mainPart: "!room:server.com", eventPart: "$event_id"
     const parts = decodedFragment.split('/');
     const mainPart = parts[0];
@@ -255,11 +261,11 @@ class TinyUriParser {
       const isId = mainPart.startsWith('!');
       const type = !isId ? 'r' : 'roomid';
 
-      // Constrói sempre removendo o símbolo inicial (!) ou (#)
+      // Always construct by removing the initial symbol (!) or (#)
       let normalizedResource = `matrix:${type}/${mainPart.substring(1)}`;
 
       if (eventPart) {
-        // Removemos o '$' caso ele exista para montar a rota do scheme certinha
+        // Remove the '$' if it exists to properly construct the scheme route
         const safeEventPart = eventPart.startsWith('$') ? eventPart.substring(1) : eventPart;
         normalizedResource += `/e/${safeEventPart}`;
       }
@@ -283,7 +289,10 @@ class TinyUriParser {
   }
 
   /**
-   * @param {MXCData} data
+   * Validates the MXC data object for required properties and correct types.
+   *
+   * @param {MXCData} data - The MXC data object to validate.
+   * @throws {TypeError} If any property is missing or of an invalid type.
    */
   #validateMXCData(data) {
     if (typeof data.server !== 'string' || data.server.length === 0) {
@@ -295,7 +304,10 @@ class TinyUriParser {
   }
 
   /**
-   * @param {MatrixSchemeData} data
+   * Validates the Matrix Scheme data object for required properties and correct types.
+   *
+   * @param {MatrixSchemeData} data - The Matrix scheme data object to validate.
+   * @throws {TypeError} If any property is missing or of an invalid type.
    */
   #validateMatrixSchemeData(data) {
     const validTypes = ['roomId', 'room', 'user', 'event'];
