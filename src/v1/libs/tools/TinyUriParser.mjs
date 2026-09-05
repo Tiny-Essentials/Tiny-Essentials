@@ -1,4 +1,7 @@
+import { createCheckDestroyed } from '../utils/tools.mjs';
 import { isJsonObject } from '../../basics/objChecker.mjs';
+
+const checkDestroy = createCheckDestroyed('TinyUriParser');
 
 /**
  * A generic template for parsed URI results.
@@ -68,6 +71,20 @@ class TinyUriParser {
   }
 
   /**
+   * Whether this instance has been destroyed.
+   * @type {boolean}
+   */
+  #isDestroyed = false;
+
+  /**
+   * Indicates whether this instance has been destroyed.
+   * @type {boolean}
+   */
+  get isDestroyed() {
+    return this.#isDestroyed;
+  }
+
+  /**
    * A collection of parser pairs used to iterate through and match URI strings.
    * @type {Set<Parser>}
    */
@@ -78,6 +95,7 @@ class TinyUriParser {
    * @type {Parser[]}
    */
   get parsers() {
+    checkDestroy(this.#isDestroyed);
     /** @type {Parser[]} */
     return Array.from(this.#parsers).map((parserPair) => [...parserPair]);
   }
@@ -87,6 +105,7 @@ class TinyUriParser {
    * @type {number}
    */
   get size() {
+    checkDestroy(this.#isDestroyed);
     return this.#parsers.size;
   }
 
@@ -148,6 +167,7 @@ class TinyUriParser {
    * @throws {TypeError | RangeError | Error} If the input is invalid or parsing fails.
    */
   parse(uriString) {
+    checkDestroy(this.#isDestroyed);
     if (typeof uriString !== 'string') {
       throw new TypeError('The input must be a string.');
     }
@@ -165,6 +185,7 @@ class TinyUriParser {
    * @throws {TypeError | Error} If the object is invalid or no reconstructor is found.
    */
   stringify(parsedObject) {
+    checkDestroy(this.#isDestroyed);
     if (!isJsonObject(parsedObject) || typeof parsedObject.type !== 'string') {
       throw new TypeError('The input must be a valid ParsedUri object with a "type" property.');
     }
@@ -180,6 +201,16 @@ class TinyUriParser {
     }
 
     throw new Error(`No reconstructor found for the parsed type: ${parsedObject.type}`);
+  }
+
+  /**
+   * Cleans up internal parsers and marks the instance as destroyed to prevent memory leaks.
+   * @returns {void}
+   */
+  destroy() {
+    if (this.#isDestroyed) return;
+    this.#parsers.clear();
+    this.#isDestroyed = true;
   }
 }
 
