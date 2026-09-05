@@ -1,9 +1,16 @@
+import { isJsonObject } from '../../basics/objChecker.mjs';
 
-import { isJsonObject } from "../../basics/objChecker.mjs";
+/**
+ * @template {string} Type
+ * @template {Record<any, any>} Data
+ * @typedef {Object} ParsedTemplate
+ * @property {Type} type - The category of the URI.
+ * @property {Data} data - The parsed content.
+ */
 
 /**
  * A generic template for parsed URI results.
- * @typedef {Record<any, any>} ParsedTemplate
+ * @typedef {Record<any, any>} ParsedData
  */
 
 /**
@@ -12,13 +19,13 @@ import { isJsonObject } from "../../basics/objChecker.mjs";
  */
 
 /**
- * A function type that accepts a URI string and returns a structured `ParsedTemplate` object.
- * @template {ParsedTemplate} Data
+ * A function type that accepts a URI string and returns a structured `ParsedData` object.
+ * @template {ParsedData} Data
  * @typedef {(uri: string) => Data} ParserCallback
  */
 
 /**
- * @template {ParsedTemplate} Data
+ * @template {ParsedData} Data
  * @typedef {(parsed: Data) => string} StringifyCallback
  */
 
@@ -26,7 +33,7 @@ import { isJsonObject } from "../../basics/objChecker.mjs";
  * A tuple representing a single parsing unit, consisting of a validation function,
  * its corresponding parsing function, and an reconstruction function.
  * @template {string} Type
- * @template {ParsedTemplate} Data
+ * @template {ParsedData} Data
  * @typedef {readonly [Type, ParseChecker, ParserCallback<Data>, StringifyCallback<Data>]} ParserPair
  */
 
@@ -73,7 +80,9 @@ class TinyUriParser {
 
       // 3. Validate that the first element is a string (Type)
       if (parser.length !== 4) {
-        throw new TypeError(`The first element of the parser at index ${i} must be a string (Type).`);
+        throw new TypeError(
+          `The first element of the parser at index ${i} must be a string (Type).`,
+        );
       }
 
       // 4. Validate that the second element is a function (ParseChecker)
@@ -104,7 +113,7 @@ class TinyUriParser {
   /**
    * Main entry point for parsing.
    * @param {string} uriString - The raw URI string to parse.
-   * @returns {ReturnType<Parser[2]>} The parsed object.
+   * @returns {ParsedTemplate<ReturnType<Parser[0]>, ReturnType<Parser[2]>>} The parsed object.
    * @throws {TypeError | RangeError | Error} If the input is invalid or parsing fails.
    */
   parse(uriString) {
@@ -119,28 +128,28 @@ class TinyUriParser {
 
   /**
    * Reconstructs the original URI string from a parsed object.
-   * @param {ReturnType<Parser[2]>} parsedObject - The object returned by the parse method.
+   * @param {ParsedTemplate<ReturnType<Parser[0]>, ReturnType<Parser[2]>>} parsedObject - The object returned by the parse method.
    * @returns {string} The reconstructed URI string.
    * @throws {TypeError | Error} If the object is invalid or no reconstructor is found.
    */
   stringify(parsedObject) {
-    if (!isJsonObject(parsedObject)) {
+    if (!isJsonObject(parsedObject) || typeof parsedObject.type !== 'string') {
       throw new TypeError(
-        'The input must be a valid ParsedTemplate object.',
+        'The input must be a valid ParsedTemplate object with a "type" property.',
       );
     }
 
     for (const parser of this.#parsers) {
-      const reconstructor = parser[3];
-      if (typeof reconstructor === 'function') {
-        const result = reconstructor(parsedObject);
+      const [type, , , reconstructor] = parser;
+      if (type === parsedObject.type && typeof reconstructor === 'function') {
+        const result = reconstructor(parsedObject.data);
         if (typeof result === 'string') {
           return result;
         }
       }
     }
 
-    throw new Error(`No reconstructor found for the parsed type.`);
+    throw new Error(`No reconstructor found for the parsed type: ${parsedObject.type}`);
   }
 }
 
