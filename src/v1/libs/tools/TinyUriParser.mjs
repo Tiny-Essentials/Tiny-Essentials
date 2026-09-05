@@ -20,6 +20,7 @@
  */
 
 /**
+ * A tuple representing a single parsing unit, consisting of a validation function and its corresponding parsing function.
  * @typedef {[ParseChecker, ParserCallback<any, any>]} ParserPair
  */
 
@@ -28,14 +29,14 @@
  * @template {ParserPair} Parsers
  */
 class TinyUriParser {
-/**
- * A collection of parser pairs, where each pair consists of a validation function and its corresponding parsing function.
- * @type {Set<Parsers>}
- */
+  /**
+   * A collection of parser pairs used to iterate through and match URI strings.
+   * @type {Set<Parsers>}
+   */
   #parsers;
 
   /**
-   * Initializes the parser.
+   * Initializes the TinyUriParser instance with a collection of parser pairs.
    * @param {...Parsers} parsers
    */
   constructor(...parsers) {
