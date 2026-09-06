@@ -4,26 +4,31 @@ import { createCheckDestroyed } from '../utils/tools.mjs';
 const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
 
 /**
+ * Represents the current connectivity status of the network connection.
  * @typedef {Object} ConnectivityStatus
  * @property {boolean} isOnline - Indicates if the browser is currently connected to a network.
  */
 
 /**
+ * Represents the qualitative metrics of the current network connection.
  * @typedef {Object} ConnectionQuality
  * @property {number} downlink - Effective bandwidth estimate in Mbps.
  * @property {number} rtt - Estimated round-trip time in ms.
  * @property {string} effectiveType - Effective connection type (e.g., '4g').
  * @property {boolean} saveData - Whether the user has enabled data saver mode.
+ * @property {boolean} enabled - Indicates whether the Network Information API is available.
  */
 
 /**
+ * Represents the performance metrics of a single loaded resource.
  * @typedef {Object} ResourceMetric
  * @property {string} name - The URL of the resource.
  * @property {number} duration - Time taken to load the resource in ms.
- * @property {string} entryType
+ * @property {string} entryType - The type of performance entry (e.g., 'resource').
  */
 
 /**
+ * Represents a comprehensive report containing connectivity status, connection quality, and recent resource performance metrics.
  * @typedef {Object} NetworkReport
  * @property {ConnectivityStatus} connectivity - Current online/offline status.
  * @property {ConnectionQuality} quality - Current network quality metrics.
@@ -31,13 +36,15 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  */
 
 /**
+ * A callback function signature for receiving network updates.
  * @typedef {(data: { report: NetworkReport; event?: Event }) => void} NetworkCallback
  */
 
 /**
- * An advanced monitor that tracks connectivity, connection quality, and resource performance.
+ * An monitor that tracks connectivity, connection quality, and resource performance.
  */
 class TinyNetworkMonitor extends EventEmitter {
+  /** @type {boolean} Indicates whether the monitor has been destroyed. */
   #isDestroyed = false;
 
   /**
@@ -46,17 +53,17 @@ class TinyNetworkMonitor extends EventEmitter {
    */
   #connectivity = { isOnline: navigator.onLine };
 
-  /** @type {ConnectionQuality} */
-  #quality = { downlink: 0, rtt: 0, effectiveType: 'unknown', saveData: false };
-  /** @type {ResourceMetric[]} */
+  /** @type {ConnectionQuality} Stores the current network quality metrics. */
+  #quality = { downlink: 0, rtt: 0, effectiveType: 'unknown', saveData: false, enabled: !!navigator.connection };
+  /** @type {ResourceMetric[]} A collection of recent resource loading metrics. */
   #resources = [];
 
   /**
-   * The callback function to execute on status change.
+   * The callback function to execute on status changes.
    * @type {NetworkCallback|null}
    */
   #callback = null;
-  /** @type {PerformanceObserver|null} */
+  /** @type {PerformanceObserver|null} The observer used to track performance entries. */
   #observer = null;
 
   /**
@@ -78,6 +85,10 @@ class TinyNetworkMonitor extends EventEmitter {
     this.#notify();
   }
 
+  /**
+   * Indicates whether the monitor has been destroyed.
+   * @returns {boolean} True if the monitor has been destroyed, false otherwise.
+   */
   get isDestroyed() {
     return this.#isDestroyed;
   }
@@ -148,6 +159,7 @@ class TinyNetworkMonitor extends EventEmitter {
         rtt: typeof rtt === 'number' ? rtt : 0,
         effectiveType: typeof effectiveType === 'string' ? effectiveType : 'unknown',
         saveData: typeof saveData === 'boolean' ? saveData : false,
+        enabled: true,
       };
     }
   }
