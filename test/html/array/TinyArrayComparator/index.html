@@ -20,6 +20,11 @@
         <input type="file" id="newFileInput" accept=".json" />
       </div>
 
+      <div class="file-input-group">
+        <label for="idKeyInput">ID Key (leave empty for hash mode):</label>
+        <input type="text" id="idKeyInput" placeholder="e.g., id" />
+      </div>
+
       <button id="compareBtn">Compare Arrays</button>
     </div>
 
@@ -33,6 +38,10 @@
       <div class="result-box">
         <div class="result-header header-added">Added Items</div>
         <div class="result-content" id="addedContent">No data yet.</div>
+      </div>
+      <div class="result-box">
+        <div class="result-header header-edited">Edited Items</div>
+        <div class="result-content" id="editedContent">No data yet.</div>
       </div>
     </div>
 
