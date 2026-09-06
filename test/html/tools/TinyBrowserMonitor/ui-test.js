@@ -76,7 +76,7 @@ const updateDashboard = ({ connectivity, quality, resources }) => {
 };
 
 /**
- * Handles the 'NetworkUpdate' event.
+ * Handles the 'NetworkUpdated' event.
  */
 const handleNetworkUpdate = (data) => {
   logToConsole('Network update received.', 'success');
@@ -104,7 +104,7 @@ const initMonitor = (resourceLimit = 1000) => {
     window.networkMonitor = monitor;
 
     // Main Update Event
-    monitor.on('NetworkUpdate', handleNetworkUpdate);
+    monitor.on('NetworkUpdated', handleNetworkUpdate);
 
     // Resource Specific Events (Required for 100% coverage)
     monitor.on('ResourceAdded', (old, newItem) => handleResourceEvent('ADDED', old, newItem));
@@ -158,7 +158,7 @@ const testStressLimit = async () => {
   monitor = new TinyBrowserMonitor(() => {}, 5);
 
   // Re-attach listeners for the new instance
-  monitor.on('NetworkUpdate', handleNetworkUpdate);
+  monitor.on('NetworkUpdated', handleNetworkUpdate);
   monitor.on('ResourceAdded', (old, newItem) => handleResourceEvent('ADDED', old, newItem));
   monitor.on('ResourceDeleted', (old, newItem) => handleResourceEvent('DELETED', old, newItem));
   monitor.on('ResourceEdited', (old, newItem) => handleResourceEvent('EDITED', old, newItem));

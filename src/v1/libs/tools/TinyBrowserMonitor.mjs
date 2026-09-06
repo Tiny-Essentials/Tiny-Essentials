@@ -943,7 +943,7 @@ class TinyBrowserMonitor extends EventEmitter {
       event,
     };
 
-    this.emit('NetworkUpdate', data);
+    this.emit('NetworkUpdated', data);
   }
 
   /**

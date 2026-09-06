@@ -92,7 +92,7 @@ Listen for any change in any monitored system.
 const monitor = new TinyBrowserMonitor();
 
 // Listen for network changes
-monitor.on('NetworkUpdate', ({ connectivity, quality, resources, event }) => {
+monitor.on('NetworkUpdated', ({ connectivity, quality, resources, event }) => {
   console.log('📊 Current Connectivity:', connectivity.isOnline);
   console.log('⚡ Current Quality:', quality.downlink, 'Mbps');
   if (event) console.log('Triggered by event:', event.type);
