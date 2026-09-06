@@ -34,6 +34,7 @@ const checkDestroy = createCheckDestroyed('TinyBrowserMonitor');
  * @property {number} [resourceLimit=1000] - Maximum number of resource metrics to store. Use -1 for infinite.
  * @property {SystemValue[]} [systems] - List of systems to enable. If empty, all are enabled.
  * @property {number} [memoryIntervalMs=100] - Interval in milliseconds for memory polling.
+ * @property {number} [fpsIntervalMs=1000] - Interval in miliseconds for fps polling.
  */
 
 /**
@@ -220,6 +221,9 @@ class TinyBrowserMonitor extends EventEmitter {
   /** @type {number} */
   #memoryIntervalMs;
 
+  /** @type {number} */
+  #fpsInternvalMs;
+
   /** @type {MemoryUsage} The current JavaScript heap memory usage. */
   #memoryUsage = {
     usedJSHeapSize: 0,
@@ -314,7 +318,12 @@ class TinyBrowserMonitor extends EventEmitter {
   constructor(options = {}) {
     super();
 
-    const { resourceLimit = 1000, systems = [], memoryIntervalMs = 100 } = options;
+    const {
+      resourceLimit = 1000,
+      systems = [],
+      memoryIntervalMs = 100,
+      fpsIntervalMs = 1000,
+    } = options;
 
     // 1. Validate resourceLimit
     if (typeof resourceLimit !== 'number' || resourceLimit < -1) {
@@ -324,6 +333,11 @@ class TinyBrowserMonitor extends EventEmitter {
     // 2. Validate memoryIntervalMs with a safety floor (16ms ~ 60fps) to prevent CPU exhaustion
     if (typeof memoryIntervalMs !== 'number' || memoryIntervalMs < 16) {
       throw new TypeError('The memoryIntervalMs must be a number greater than or equal to 16.');
+    }
+
+    // 2. Validate fpsIntervalMs value
+    if (typeof fpsIntervalMs !== 'number' || fpsIntervalMs < 0) {
+      throw new TypeError('The fpsIntervalMs must be a number greater than or equal to 0.');
     }
 
     // 3. Validate systems is an array and contains only valid SystemValue types
@@ -341,6 +355,7 @@ class TinyBrowserMonitor extends EventEmitter {
 
     this.#resourceLimit = resourceLimit;
     this.#memoryIntervalMs = memoryIntervalMs;
+    this.#fpsInternvalMs = fpsIntervalMs;
 
     // Logic: If systems array is empty, enable everything.
     this.#enabledSystems =
@@ -658,7 +673,7 @@ class TinyBrowserMonitor extends EventEmitter {
       frameCount++;
 
       // Update metrics every 1 second
-      if (currentTime - lastTime >= 1000) {
+      if (currentTime - lastTime >= this.#fpsInternvalMs) {
         this.#fps = {
           fps: Math.round((frameCount * 1000) / (currentTime - lastTime)),
           timestamp: currentTime,
