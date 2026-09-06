@@ -1,13 +1,14 @@
 /**
  * @file ui-test.js
  * Bridge logic for testing TinyBrowserMonitor.
+ * Refactored to use granular event updates for real-time performance.
  */
 
 import { TinyBrowserMonitor } from '/src/v1/libs/tools/TinyBrowserMonitor.mjs';
 
 window.TinyBrowserMonitor = TinyBrowserMonitor;
 
-// DOM Elements
+// --- DOM Elements ---
 const btnInit = document.getElementById('btn-init');
 const btnReport = document.getElementById('btn-report');
 const btnDestroy = document.getElementById('btn-destroy');
@@ -25,7 +26,6 @@ const resourceTbody = document.getElementById('resource-tbody');
 const consoleOutput = document.getElementById('console-output');
 const statusIndicator = document.getElementById('connection-status-indicator');
 
-// New Dashboard Elements
 const statBatteryLevel = document.getElementById('stat-battery-level');
 const statBatteryCharging = document.getElementById('stat-battery-charging');
 const statDeviceMem = document.getElementById('stat-device-mem');
@@ -40,73 +40,23 @@ const statCls = document.getElementById('stat-cls');
 
 const eventTicker = document.getElementById('event-ticker');
 
-// State
+// --- State ---
 let monitor = null;
 
-// Lista de todos os eventos que a classe pode emitir
-const ALL_MONITOR_EVENTS = [
-  'NetworkUpdated',
-  'WindowResize',
-  'FPS',
-  'ConnectivityUpdated',
-  'BatteryUpdated',
-  'MemoryUsage',
-  'PaintUpdated',
-  'NavigationUpdated',
-  'LayoutShiftUpdated',
-  'LcpUpdated',
-  'LongTaskUpdated',
-  'ResourceAdded',
-  'ResourceDeleted',
-  'ResourceEdited',
-  'Destroyed',
-];
+// --- UI Update Functions (Granular) ---
 
-const mainUIEvents = ['MemoryUsage', 'FPS'];
-
-const logToConsole = (message, type = 'info') => {
-  const entry = document.createElement('div');
-  entry.className = `log-entry ${type}`;
-  if (type === 'data') {
-    entry.textContent = `[DATA] ${JSON.stringify(message, null, 2)}`;
-  } else {
-    entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-  }
-  consoleOutput.appendChild(entry);
-  consoleOutput.scrollTop = consoleOutput.scrollHeight;
-};
-
-/**
- * Updates the visual ticker on the head
- * @param {string} eventName
- */
-const updateEventTicker = (eventName) => {
-  eventTicker.textContent = `Last Event: ${eventName}`;
-  eventTicker.classList.remove('flash');
-  void eventTicker.offsetWidth; // Trigger reflow para reiniciar animação
-  eventTicker.classList.add('flash');
-};
-
-/**
- * Updates the dashboard UI with the provided report.
- */
-const updateDashboard = ({
-  connectivity,
-  quality,
-  resources,
-  battery,
-  device,
-  performance,
-  memoryUsage,
-}) => {
-  // Connectivity & Quality
+const updateConnectivityUI = (connectivity) => {
   statOnline.textContent = connectivity.isOnline ? 'ONLINE' : 'OFFLINE';
   statOnline.style.color = connectivity.isOnline ? 'var(--success)' : 'var(--accent-danger)';
+};
+
+const updateQualityUI = (quality) => {
   statDownlink.textContent = `${quality.downlink} Mbps`;
   statRtt.textContent = `${quality.rtt} ms`;
   statType.textContent = quality.effectiveType.toUpperCase();
+};
 
-  // Battery
+const updateBatteryUI = (battery) => {
   if (battery.enabled) {
     statBatteryLevel.textContent = `${(battery.level * 100).toFixed(0)}%`;
     statBatteryCharging.textContent = battery.charging ? 'Charging' : 'Discharging';
@@ -114,29 +64,38 @@ const updateDashboard = ({
     statBatteryLevel.textContent = '--';
     statBatteryCharging.textContent = '--';
   }
+};
 
-  // Device
+const updateDeviceUI = (device) => {
   if (device.enabled) {
     statDeviceMem.textContent = `${device.memory} GB`;
     statDeviceCpu.textContent = `${device.cpu.logicalCores} Cores`;
     statDeviceGpu.textContent = `${device.gpu.renderer}`;
   }
+};
 
-  // Memory
+const updateMemoryUI = (memoryUsage) => {
   if (memoryUsage.enabled) {
-    statMemUsed.textContent = `${memoryUsage.usedJSHeapSize} B`;
-    statMemTotal.textContent = `${memoryUsage.totalJSHeapSize} B`;
-    statMemLimit.textContent = `${memoryUsage.jsHeapSizeLimit} B`;
+    const h = monitor.getFormattedMemoryUsage('MB', memoryUsage);
+    statMemUsed.textContent = `${h.used.toFixed(2)} MB`;
+    statMemTotal.textContent = `${h.total.toFixed(2)} MB`;
+    statMemLimit.textContent = `${h.limit.toFixed(2)} MB`;
   }
+};
 
-  // Performance
-  if (performance) {
-    statFps.textContent = `${performance.fps.fps} FPS`;
-    statLcp.textContent = `${performance.lcp.toFixed(0)} ms`;
-    statCls.textContent = performance.layoutShift.toFixed(4);
-  }
+const updateFPSUI = (fps) => {
+  statFps.textContent = `${fps.fps} FPS`;
+};
 
-  // Resources
+const updateLCPUI = (lcp) => {
+  statLcp.textContent = `${lcp.toFixed(0)} ms`;
+};
+
+const updateLayoutShiftUI = (data) => {
+  statCls.textContent = data.layoutShift.toFixed(4);
+};
+
+const updateResourceTable = (resources) => {
   resourceTbody.innerHTML = '';
   resources.forEach((res) => {
     const row = document.createElement('tr');
@@ -150,16 +109,45 @@ const updateDashboard = ({
 };
 
 /**
- * Handles the 'NetworkUpdated' event.
+ * Master update function for initial load or full state sync.
  */
-const handleNetworkUpdate = (data) => updateDashboard(data);
+const updateFullDashboard = (data) => {
+  updateConnectivityUI(data.connectivity);
+  updateQualityUI(data.quality);
+  updateBatteryUI(data.battery);
+  updateDeviceUI(data.device);
+  updateMemoryUI(data.memoryUsage);
+  updateResourceTable(data.resources);
 
-/**
- * Handles specific resource events emitted by the monitor.
- */
-const handleResourceEvent = (status, oldItem, newItem) => {
-  logToConsole(`Resource Event: ${status}`, 'data');
+  if (data.performance) {
+    updateFPSUI(data.performance.fps);
+    updateLCPUI(data.performance.lcp);
+    statCls.textContent = data.performance.layoutShift.toFixed(4);
+  }
 };
+
+// --- Logging & Ticker ---
+
+const logToConsole = (message, type = 'info') => {
+  const entry = document.createElement('div');
+  entry.className = `log-entry ${type}`;
+  if (type === 'data') {
+    entry.textContent = `[DATA] ${JSON.stringify(message, null, 2)}`;
+  } else {
+    entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+  }
+  consoleOutput.appendChild(entry);
+  consoleOutput.scrollTop = consoleOutput.scrollHeight;
+};
+
+const updateEventTicker = (eventName) => {
+  eventTicker.textContent = `Last Event: ${eventName}`;
+  eventTicker.classList.remove('flash');
+  void eventTicker.offsetWidth;
+  eventTicker.classList.add('flash');
+};
+
+// --- Monitor Lifecycle ---
 
 const initMonitor = () => {
   try {
@@ -171,28 +159,62 @@ const initMonitor = () => {
     monitor = new TinyBrowserMonitor({ resourceLimit, memoryIntervalMs });
     window.networkMonitor = monitor;
 
-    ALL_MONITOR_EVENTS.forEach((eventName) => {
-      monitor.on(eventName, (payload) => {
-        if (!mainUIEvents.includes(eventName)) {
-          updateEventTicker(eventName);
-          logToConsole(`Event Captured: ${eventName}`, 'system');
-        }
-      });
+    // 1. Listen for high-frequency/granular events
+    monitor.on('FPS', (fps) => {
+      updateFPSUI(fps);
     });
 
-    // Specific Handlers to maintain current dashboard logic
-    monitor.on('NetworkUpdated', handleNetworkUpdate);
+    monitor.on('MemoryUsage', (memory) => {
+      updateMemoryUI(memory);
+    });
 
-    // Resource Specific Events (Required for 100% coverage)
-    monitor.on('ResourceAdded', (old, newItem) => handleResourceEvent('ADDED', old, newItem));
-    monitor.on('ResourceDeleted', (old, newItem) => handleResourceEvent('DELETED', old, newItem));
-    monitor.on('ResourceEdited', (old, newItem) => handleResourceEvent('EDITED', old, newItem));
+    monitor.on('BatteryUpdated', (battery) => {
+      updateBatteryUI(battery);
+      updateEventTicker('BatteryUpdated');
+    });
 
+    monitor.on('LcpUpdated', (data) => {
+      updateLCPUI(data.lcp);
+      updateEventTicker('LCP');
+    });
+
+    monitor.on('LayoutShiftUpdated', (data) => {
+      updateLayoutShiftUI(data);
+      updateEventTicker('LayoutShift');
+    });
+
+    monitor.on('WindowResize', (windowMetrics) => {
+      updateEventTicker('WindowResize');
+      // Window/Screen metrics are usually handled via the full update or specific listeners if added
+    });
+
+    // 2. Listen for Resource lifecycle
+    monitor.on('ResourceAdded', (old, newItem) => {
+      logToConsole(`Resource Added: ${newItem.name}`, 'data');
+      updateResourceTable(monitor.resources);
+    });
+    monitor.on('ResourceDeleted', (old, newItem) => {
+      logToConsole(`Resource Deleted: ${old.name}`, 'data');
+      updateResourceTable(monitor.resources);
+    });
+    monitor.on('ResourceEdited', (old, newItem) => {
+      logToConsole(`Resource Edited: ${newItem.name}`, 'data');
+      updateResourceTable(monitor.resources);
+    });
+
+    // 3. Listen for general lifecycle
     monitor.on('Destroyed', () => {
       logToConsole('Monitor destroyed successfully.', 'system');
       statusIndicator.textContent = 'System Idle';
       statusIndicator.style.color = 'var(--accent-secondary)';
       eventTicker.textContent = 'System Idle';
+    });
+
+    // 4. The "God Event" for full synchronization and initial load
+    monitor.on('NetworkUpdated', (data) => {
+      updateFullDashboard(data);
+      // Log non-UI events to console for debugging
+      logToConsole(`Event Captured: NetworkUpdated`, 'system');
     });
 
     // UI State Update
@@ -232,21 +254,8 @@ const testStressLimit = async () => {
   // Initialize with a very low limit
   monitor = new TinyBrowserMonitor({ resourceLimit: 5 });
 
-  // Re-attach listeners for the new instance
-  monitor.on('NetworkUpdated', handleNetworkUpdate);
-  monitor.on('ResourceAdded', (old, newItem) => handleResourceEvent('ADDED', old, newItem));
-  monitor.on('ResourceDeleted', (old, newItem) => handleResourceEvent('DELETED', old, newItem));
-  monitor.on('ResourceEdited', (old, newItem) => handleResourceEvent('EDITED'));
-
-  // Re-attach global detector for the new instance
-  ALL_MONITOR_EVENTS.forEach((eventName) => {
-    monitor.on(eventName, (payload) => {
-      if (!mainUIEvents.includes(eventName)) {
-        updateEventTicker(eventName);
-        logToConsole(`Event Captured: ${eventName}`, 'system');
-      }
-    });
-  });
+  // Re-attach all listeners for the new instance
+  initMonitor(); // Re-running init is a quick way to re-bind everything in this test script
 
   // Rapidly load resources to force FIFO
   for (let i = 0; i < 7; i++) {
@@ -270,8 +279,8 @@ btnDestroy.addEventListener('click', () => {
     btnInit.disabled = false;
     btnReport.disabled = true;
     btnDestroy.disabled = true;
-    btnSimResource.disabled = true;
-    btnStressLimit.disabled = true;
+    btnSimResource.disabled = false; // Keep sim enabled for testing
+    btnStressLimit.disabled = false;
   }
 });
 btnSimResource.addEventListener('click', simulateResourceLoad);

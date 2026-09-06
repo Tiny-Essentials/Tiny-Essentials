@@ -545,10 +545,11 @@ class TinyBrowserMonitor extends EventEmitter {
   /**
    * Formats the current memory usage metrics into a human-readable string.
    * @param {MemoryFormat} format - The desired unit for the output.
+   * @param {MemoryUsage} [memoryUsage=this.#memoryUsage] - The memory usage object.
    * @returns {MemoryHumanData} A formatted string containing used, total, and limit memory.
-   * @throws {TypeError} If the provided format is not one of: 'bytes', 'KB', 'MB', 'GB'.
+   * @throws {TypeError} If the provided format is invalid or if memoryUsage is malformed.
    */
-  getFormattedMemoryUsage(format) {
+  getFormattedMemoryUsage(format, memoryUsage = this.#memoryUsage) {
     checkDestroy(this.#isDestroyed);
 
     const validFormats = ['bytes', 'KB', 'MB', 'GB'];
@@ -556,6 +557,19 @@ class TinyBrowserMonitor extends EventEmitter {
       throw new TypeError(
         `Invalid format: "${format}". Must be one of: ${validFormats.join(', ')}`,
       );
+    }
+
+    if (typeof memoryUsage !== 'object' || memoryUsage === null) {
+      throw new TypeError('The memoryUsage argument must be a non-null object.');
+    }
+
+    const requiredProperties = ['usedJSHeapSize', 'totalJSHeapSize', 'jsHeapSizeLimit'];
+
+    for (const prop of requiredProperties) {
+      // @ts-ignore
+      if (typeof memoryUsage[prop] !== 'number' || Number.isNaN(memoryUsage[prop])) {
+        throw new TypeError(`Invalid memoryUsage: Property "${prop}" must be a valid number.`);
+      }
     }
 
     const units = {
@@ -571,9 +585,9 @@ class TinyBrowserMonitor extends EventEmitter {
     const formatValue = (value) => value / divisor;
 
     return {
-      used: formatValue(this.#memoryUsage.usedJSHeapSize),
-      total: formatValue(this.#memoryUsage.totalJSHeapSize),
-      limit: formatValue(this.#memoryUsage.jsHeapSizeLimit),
+      used: formatValue(memoryUsage.usedJSHeapSize),
+      total: formatValue(memoryUsage.totalJSHeapSize),
+      limit: formatValue(memoryUsage.jsHeapSizeLimit),
     };
   }
 
