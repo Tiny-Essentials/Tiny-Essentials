@@ -34,6 +34,7 @@ import TinyBrowserMonitor from 'tiny-essentials/libs/tools/TinyBrowserMonitor';
  * @param {number} [options.resourceLimit=1000] - Maximum number of resource metrics to store. Use -1 for infinite.
  * @param {SystemValue[]} [options.systems] - List of systems to enable. If empty, all are enabled.
  * @param {number} [options.memoryIntervalMs=100] - Interval in milliseconds for memory polling.
+ * @param {number} [options.fpsIntervalMs=1000] - Interval in miliseconds for fps polling.
  */
 const monitor = new TinyBrowserMonitor(options);
 ```
@@ -96,13 +97,16 @@ You can listen to granular updates to optimize performance:
 * **Layout Shift:** `monitor.on('LayoutShiftUpdated', ({ layoutShift }) => ...)`
 * **LCP:** `monitor.on('LcpUpdated', ({ lcp }) => ...)`
 * **Long Tasks:** `monitor.on('LongTaskUpdated', ({ lcp }) => ...)` 
-  > *Note: Payload contains an array of task durations under the `lcp` key.*
+  > *Note: The payload contains an array of task durations under the `lcp` key.*
 
 #### Resource Lifecycle Events
-Emitted when the resource history changes (useful for tracking asset loading):
+Emitted when the resource history changes:
 * `ResourceAdded`: Emitted when a new resource is tracked. `(oldItem, newItem)`
 * `ResourceDeleted`: Emitted when an old resource is removed (FIFO). `(oldItem, newItem)`
 * `ResourceEdited`: Emitted if resource data is updated. `(oldItem, newItem)`
+
+#### Lifecycle
+* **Destroyed:** Emitted when the monitor is cleaned up. `monitor.on('Destroyed', () => ...)`
 
 ---
 
