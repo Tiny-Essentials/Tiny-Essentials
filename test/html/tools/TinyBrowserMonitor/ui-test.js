@@ -1,11 +1,11 @@
 /**
  * @file ui-test.js
- * Bridge logic for testing TinyNetworkMonitor.
+ * Bridge logic for testing TinyBrowserMonitor.
  */
 
-import { TinyNetworkMonitor } from '/src/v1/libs/tools/TinyNetworkMonitor.mjs';
+import { TinyBrowserMonitor } from '/src/v1/libs/tools/TinyBrowserMonitor.mjs';
 
-window.TinyNetworkMonitor = TinyNetworkMonitor;
+window.TinyBrowserMonitor = TinyBrowserMonitor;
 
 // DOM Elements
 const btnInit = document.getElementById('btn-init');
@@ -50,7 +50,7 @@ const logToConsole = (message, type = 'info') => {
 
 /**
  * Updates the dashboard UI with the provided report.
- * @type {(data: import('./TinyNetworkMonitor.mjs').NetworkEvent) => void}
+ * @type {(data: import('./TinyBrowserMonitor.mjs').NetworkEvent) => void}
  */
 const updateDashboard = ({ connectivity, quality, resources }) => {
   // Update Connectivity
@@ -97,9 +97,9 @@ const handleResourceEvent = (status, oldItem, newItem) => {
  */
 const initMonitor = (customLimit = 1000) => {
   try {
-    logToConsole(`Initializing TinyNetworkMonitor (Limit: ${customLimit})...`, 'system');
+    logToConsole(`Initializing TinyBrowserMonitor (Limit: ${customLimit})...`, 'system');
 
-    monitor = new TinyNetworkMonitor((data) => {
+    monitor = new TinyBrowserMonitor((data) => {
       // This is the callback provided to the constructor
       // It's redundant with the event emitter, but we use it for logging
     }, customLimit);
@@ -158,7 +158,7 @@ const testStressLimit = async () => {
   logToConsole('Starting Stress Test: Limit = 5', 'system');
 
   // Initialize with a very low limit
-  monitor = new TinyNetworkMonitor(() => {}, 5);
+  monitor = new TinyBrowserMonitor(() => {}, 5);
 
   // Re-attach listeners for the new instance
   monitor.on('NetworkUpdate', handleNetworkUpdate);
@@ -220,7 +220,7 @@ btnTestError.addEventListener('click', () => {
   logToConsole('Attempting invalid instantiation...', 'system');
   try {
     // Test invalid resourceLimit
-    new TinyNetworkMonitor(null, -5);
+    new TinyBrowserMonitor(null, -5);
   } catch (error) {
     logToConsole(`Caught Expected Error: ${error.message}`, 'error');
   }

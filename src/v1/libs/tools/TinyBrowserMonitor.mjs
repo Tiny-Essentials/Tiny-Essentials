@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import { createCheckDestroyed } from '../utils/tools.mjs';
 import TinyArrayComparator from '../array/TinyArrayComparator.mjs';
 
-const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
+const checkDestroy = createCheckDestroyed('TinyBrowserMonitor');
 
 /**
  * Defines the valid identifiers for the various monitoring systems available.
@@ -27,7 +27,7 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  */
 
 /**
- * Configuration options used to initialize the TinyNetworkMonitor instance.
+ * Configuration options used to initialize the TinyBrowserMonitor instance.
  * @typedef {Object} MonitorOptions
  * @property {number} [resourceLimit=1000] - Maximum number of resource metrics to store. Use -1 for infinite.
  * @property {SystemValue[]} [systems] - List of systems to enable. If empty, all are enabled.
@@ -145,7 +145,7 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  * An advanced monitor that tracks connectivity, connection quality, battery,
  * device constraints, and comprehensive performance metrics.
  */
-class TinyNetworkMonitor extends EventEmitter {
+class TinyBrowserMonitor extends EventEmitter {
   /** @type {boolean} Indicates whether the monitor has been destroyed. */
   #isDestroyed = false;
 
@@ -237,7 +237,7 @@ class TinyNetworkMonitor extends EventEmitter {
   #observers = [];
 
   /**
-   * Creates an instance of TinyNetworkMonitor.
+   * Creates an instance of TinyBrowserMonitor.
    * @param {NetworkCallback} [callback] - Function to call when status changes.
    * @param {MonitorOptions} [options={}] - Configuration options.
    * @throws {TypeError} If the provided callback is not a function, resourceLimit is invalid, memoryIntervalMs is invalid, or systems is not an array.
@@ -248,7 +248,7 @@ class TinyNetworkMonitor extends EventEmitter {
     const { resourceLimit = 1000, systems = [], memoryIntervalMs = 100 } = options;
 
     if (typeof callback !== 'undefined' && typeof callback !== 'function') {
-      throw new TypeError('The callback provided to TinyNetworkMonitor must be a function.');
+      throw new TypeError('The callback provided to TinyBrowserMonitor must be a function.');
     }
     if (typeof resourceLimit !== 'number' || resourceLimit < -1) {
       throw new TypeError('The resourceLimit must be a number greater than or equal to -1.');
@@ -569,7 +569,7 @@ class TinyNetworkMonitor extends EventEmitter {
             }
           }
         } catch (e) {
-          console.warn('TinyNetworkMonitor: GPU retrieval failed.', e);
+          console.warn('TinyBrowserMonitor: GPU retrieval failed.', e);
         }
       }
     }
@@ -778,7 +778,7 @@ class TinyNetworkMonitor extends EventEmitter {
   /**
    * Internal handler for network events.
    * @param {Event} event - The browser event object.
-   * @bind {TinyNetworkMonitor}
+   * @bind {TinyBrowserMonitor}
    */
   #handleUpdate = (event) => {
     if (this.#enabledSystems.has('connectivity')) {
@@ -883,4 +883,4 @@ class TinyNetworkMonitor extends EventEmitter {
   }
 }
 
-export default TinyNetworkMonitor;
+export default TinyBrowserMonitor;

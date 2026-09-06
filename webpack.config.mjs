@@ -116,7 +116,7 @@ addModule(1, './src/v1/build/TinyHttpResponseRegistry.mjs', 'TinyHttpResponseReg
 addModule(1, './src/v1/build/TinyPasswordValidator.mjs', 'TinyPasswordValidator', true);
 addModule(1, './src/v1/build/TinyHtmlTagRegexBuilder.mjs', 'TinyHtmlTagRegexBuilder', true);
 addModule(1, './src/v1/build/TinyUriParser.mjs', 'TinyUriParser', true);
-addModule(1, './src/v1/build/TinyNetworkMonitor.mjs', 'TinyNetworkMonitor', true);
+addModule(1, './src/v1/build/TinyBrowserMonitor.mjs', 'TinyBrowserMonitor', true);
 
 /**
  * Recursively scans the source directory for LICENSE files and copies them to the dist directory.

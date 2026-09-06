@@ -214,11 +214,11 @@ import {
 } from './regexp/Username/index.mjs';
 import TinyHtmlTagRegexBuilder from './libs/tools/TinyHtmlTagRegexBuilder.mjs';
 import { TinyUriParser } from './build/TinyUriParser.mjs';
-import TinyNetworkMonitor from './libs/tools/TinyNetworkMonitor.mjs';
+import TinyBrowserMonitor from './libs/tools/TinyBrowserMonitor.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
-  TinyNetworkMonitor,
+  TinyBrowserMonitor,
   TinyUriParser,
   TinyHtmlTagRegexBuilder,
   TinyHttpResponseRegistry,

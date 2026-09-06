@@ -1,14 +1,14 @@
-# 🌐 TinyNetworkMonitor Documentation
+# 🌐 TinyBrowserMonitor Documentation
 
-Welcome to the **TinyNetworkMonitor** documentation! 🚀 This lightweight, high-performance utility is designed to give developers real-time insights into a user's network environment and device performance.
+Welcome to the **TinyBrowserMonitor** documentation! 🚀 This lightweight, high-performance utility is designed to give developers real-time insights into a user's network environment and device performance.
 
-Whether you are building a progressive web app (PWA) that needs to react to offline status, a data-heavy dashboard that needs to adjust quality based on bandwidth, or a high-performance application requiring deep web vitals tracking, `TinyNetworkMonitor` has you covered.
+Whether you are building a progressive web app (PWA) that needs to react to offline status, a data-heavy dashboard that needs to adjust quality based on bandwidth, or a high-performance application requiring deep web vitals tracking, `TinyBrowserMonitor` has you covered.
 
 ---
 
 ## 🌟 Overview
 
-`TinyNetworkMonitor` is an event-driven monitor that tracks several critical pillars of environment health:
+`TinyBrowserMonitor` is an event-driven monitor that tracks several critical pillars of environment health:
 1.  **Connectivity Status:** Are we online or offline? 📶
 2.  **Connection Quality:** Bandwidth, Latency, Connection Type, and API availability. ⚡
 3.  **Battery Status:** Charge level and charging state. 🔋
@@ -24,7 +24,7 @@ Whether you are building a progressive web app (PWA) that needs to react to offl
 Since this module uses ES6 syntax, ensure your environment supports `import`.
 
 ```javascript
-import TinyNetworkMonitor from 'tiny-essentials/libs/tools/TinyNetworkMonitor';
+import TinyBrowserMonitor from 'tiny-essentials/libs/tools/TinyBrowserMonitor';
 ```
 
 ### Initialization
@@ -35,7 +35,7 @@ import TinyNetworkMonitor from 'tiny-essentials/libs/tools/TinyNetworkMonitor';
  * @param {number} [options.resourceLimit=1000] - Max number of resource metrics to store. Use -1 for infinite.
  * @param {string[]} [options.systems] - List of systems to enable (e.g., ['connectivity', 'battery']). If empty, all are enabled.
  */
-const monitor = new TinyNetworkMonitor(callback, options);
+const monitor = new TinyBrowserMonitor(callback, options);
 ```
 
 ---
@@ -75,7 +75,7 @@ You can interact with the monitor in four different ways depending on your archi
 Best for simple implementations where you want a function to trigger whenever *anything* changes.
 
 ```javascript
-const monitor = new TinyNetworkMonitor((data) => {
+const monitor = new TinyBrowserMonitor((data) => {
   // Note: data contains connectivity, quality, resources, and event directly
   if (!data.connectivity.isOnline) {
     console.warn('⚠️ You are currently offline!');
@@ -84,12 +84,12 @@ const monitor = new TinyNetworkMonitor((data) => {
 ```
 
 ### 📡 Method 2: The Event-Driven Approach (Recommended)
-Since `TinyNetworkMonitor` extends `EventEmitter`, you can listen for specific events.
+Since `TinyBrowserMonitor` extends `EventEmitter`, you can listen for specific events.
 
 #### Network Updates
 Listen for any change in any monitored system.
 ```javascript
-const monitor = new TinyNetworkMonitor();
+const monitor = new TinyBrowserMonitor();
 
 // Listen for network changes
 monitor.on('NetworkUpdate', ({ connectivity, quality, resources, event }) => {
@@ -127,7 +127,7 @@ monitor.on('Destroyed', () => {
 If you don't need real-time updates but simply want to check the current status at a specific moment.
 
 ```javascript
-const monitor = new TinyNetworkMonitor();
+const monitor = new TinyBrowserMonitor();
 
 // ... later in your code ...
 const quality = monitor.quality;
