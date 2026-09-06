@@ -163,6 +163,27 @@ const checkDestroy = createCheckDestroyed('TinyBrowserMonitor');
  * @typedef {(data: NetworkEvent) => void} NetworkCallback
  */
 
+/** @type {SystemValue[]} */
+const VALID_SYSTEMS = [
+  'connectivity',
+  'quality',
+  'battery',
+  'device',
+  'cpu',
+  'gpu',
+  'performance',
+  'resource',
+  'paint',
+  'navigation',
+  'layout-shift',
+  'lcp',
+  'longtask',
+  'memory-usage',
+  'fps',
+  'window',
+  'screen',
+];
+
 /**
  * An advanced monitor that tracks connectivity, connection quality, battery,
  * device constraints, and comprehensive performance metrics.
@@ -275,47 +296,39 @@ class TinyBrowserMonitor extends EventEmitter {
    * Creates an instance of TinyBrowserMonitor.
    * @param {MonitorOptions} [options={}] - Configuration options.
    * @throws {TypeError} If the provided resourceLimit is invalid, memoryIntervalMs is invalid, or systems is not an array.
+   * @throws {TypeError} If any provided system is not a valid SystemValue.
    */
   constructor(options = {}) {
     super();
 
     const { resourceLimit = 1000, systems = [], memoryIntervalMs = 100 } = options;
 
+    // 1. Validate resourceLimit
     if (typeof resourceLimit !== 'number' || resourceLimit < -1) {
       throw new TypeError('The resourceLimit must be a number greater than or equal to -1.');
     }
-    if (typeof memoryIntervalMs !== 'number' || memoryIntervalMs <= 0) {
-      throw new TypeError('The memoryIntervalMs must be a positive number.');
+
+    // 2. Validate memoryIntervalMs with a safety floor (16ms ~ 60fps) to prevent CPU exhaustion
+    if (typeof memoryIntervalMs !== 'number' || memoryIntervalMs < 16) {
+      throw new TypeError('The memoryIntervalMs must be a number greater than or equal to 16.');
     }
-    if (!Array.isArray(systems) && systems !== undefined) {
+
+    // 3. Validate systems is an array and contains only valid SystemValue types
+    if (!Array.isArray(systems)) {
       throw new TypeError('The systems option must be an array.');
+    }
+
+    for (const system of systems) {
+      if (!VALID_SYSTEMS.includes(system)) {
+        throw new TypeError(`Invalid system identifier: "${system}". Must be one of: ${VALID_SYSTEMS.join(', ')}`);
+      }
     }
 
     this.#resourceLimit = resourceLimit;
     this.#memoryIntervalMs = memoryIntervalMs;
 
     // Logic: If systems array is empty, enable everything.
-    /** @type {SystemValue[]} */
-    const allSystems = [
-      'connectivity',
-      'quality',
-      'battery',
-      'device',
-      'cpu',
-      'gpu',
-      'performance',
-      'resource',
-      'paint',
-      'navigation',
-      'layout-shift',
-      'lcp',
-      'longtask',
-      'memory-usage',
-      'fps',
-      'window',
-      'screen',
-    ];
-    this.#enabledSystems = systems.length === 0 ? new Set(allSystems) : new Set(systems);
+    this.#enabledSystems = systems.length === 0 ? new Set(VALID_SYSTEMS) : new Set(systems);
 
     this.#initializeSelectedSystems();
     this.#notify();
