@@ -55,16 +55,15 @@ Uses the `PerformanceObserver` API to track the loading duration of every resour
 
 ## 📖 Usage Guide
 
-You can interact with the monitor in three different ways depending on your architectural needs.
+You can interact with the monitor in four different ways depending on your architectural needs.
 
 ### 🚀 Method 1: The Callback Approach
 Best for simple implementations where you just want a function to trigger whenever *anything* changes.
 
 ```javascript
 const monitor = new TinyNetworkMonitor((data) => {
-  console.log('🔄 Network Update Detected:', data.report);
-  
-  if (!data.report.connectivity.isOnline) {
+  // Note: data contains connectivity, quality, resources, and event directly
+  if (!data.connectivity.isOnline) {
     console.warn('⚠️ You are currently offline!');
   }
 });
@@ -73,23 +72,45 @@ const monitor = new TinyNetworkMonitor((data) => {
 ### 📡 Method 2: The Event-Driven Approach (Recommended)
 Since `TinyNetworkMonitor` extends `EventEmitter`, you can listen for specific events. This is the cleanest way to separate concerns in large applications.
 
+#### Network Updates
+Listen for any change in connectivity, quality, or resources.
 ```javascript
 const monitor = new TinyNetworkMonitor();
 
 // Listen for network changes
-monitor.on('NetworkUpdate', ({ report, event }) => {
-  console.log('📊 Current Report:', report);
+monitor.on('NetworkUpdate', ({ connectivity, quality, resources, event }) => {
+  console.log('📊 Current Connectivity:', connectivity.isOnline);
+  console.log('⚡ Current Quality:', quality.downlink, 'Mbps');
   if (event) console.log('Triggered by event:', event.type);
 });
+```
 
-// Listen for destruction
+#### Resource-Specific Events
+The monitor emits specific events when the resource list changes:
+*   `ResourceAdded`: Emitted when a new resource is tracked.
+*   `ResourceDeleted`: Emitted when an old resource is removed (due to `resourceLimit`).
+*   `ResourceEdited`: Emitted if resource data is updated.
+
+```javascript
+// Payload: (oldItem, newItem)
+monitor.on('ResourceAdded', (oldItem, newItem) => {
+  console.log('🆕 New resource loaded:', newItem.name);
+});
+
+monitor.on('ResourceDeleted', (oldItem, newItem) => {
+  console.log('🧹 Old resource removed from history:', oldItem.name);
+});
+```
+
+#### Lifecycle Events
+```javascript
 monitor.on('Destroyed', () => {
   console.log('🧹 Monitor has been cleaned up.');
 });
 ```
 
 ### 📸 Method 3: Snapshot Access
-If you don't need real-time updates but simply want to check the current status at a specific moment (e.g., before starting a large file upload).
+If you don't need real-time updates but simply want to check the current status at a specific moment.
 
 ```javascript
 const monitor = new TinyNetworkMonitor();
@@ -103,7 +124,7 @@ console.log(`Current Bandwidth: ${currentStatus.quality.downlink} Mbps`);
 
 ## 📊 Understanding the `NetworkReport`
 
-The `report` object is **deeply frozen**. This means you cannot accidentally modify the data provided by the monitor, ensuring a "single source of truth." 🛡️
+The `report` returned by the `.report` getter is **deeply frozen**. This means you cannot accidentally modify the data provided by the monitor. 🛡️
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
@@ -155,5 +176,5 @@ monitor.destroy();
 ## ⚠️ Important Notes
 
 *   **Browser Support:** The `quality` metrics rely on the `navigator.connection` API, which may not be available in all browsers (e.g., Safari). The monitor handles this gracefully by setting `enabled: false`.
-*   **Immutability:** The `report` returned is a read-only copy. Attempting to change `monitor.report.connectivity.isOnline = false` will fail.
-*   **Resource Limit:** If a `resourceLimit` is set, the monitor will automatically remove the oldest entries to make room for new ones once the limit is reached.
+*   **Immutability:** All returned reports are read-only. Attempting to change `monitor.report.connectivity.isOnline = false` will fail.
+*   **Resource Limit:** If a `resourceLimit` is set, the monitor will automatically remove the oldest entries to make room for new ones once the limit is reached (FIFO).
