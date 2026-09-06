@@ -5,7 +5,7 @@ import TinyArrayComparator from '../array/TinyArrayComparator.mjs';
 const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
 
 /**
- * @typedef {'connectivity'|'quality'|'battery'|'device'|'performance'} SystemValue
+ * @typedef {'connectivity'|'quality'|'battery'|'device'|'performance'|'resource'|'paint'|'navigation'|'layout-shift'|'lcp'|'longtask'} SystemValue
  */
 
 /**
@@ -181,7 +181,19 @@ class TinyNetworkMonitor extends EventEmitter {
 
     // Logic: If systems array is empty, enable everything.
     /** @type {SystemValue[]} */
-    const allSystems = ['connectivity', 'quality', 'battery', 'device', 'performance'];
+    const allSystems = [
+      'connectivity',
+      'quality',
+      'battery',
+      'device',
+      'performance',
+      'resource',
+      'paint',
+      'navigation',
+      'layout-shift',
+      'lcp',
+      'longtask',
+    ];
     this.#enabledSystems = systems.length === 0 ? new Set(allSystems) : new Set(systems);
 
     this.#initializeSelectedSystems();
@@ -204,8 +216,19 @@ class TinyNetworkMonitor extends EventEmitter {
     if (this.#enabledSystems.has('device')) {
       this.#setupDeviceMetrics();
     }
-    if (this.#enabledSystems.has('performance')) {
-      this.#setupPerformanceObservers();
+
+    // Performance logic:
+    // If 'performance' is enabled, we enable all performance observers.
+    // Otherwise, we only enable the specific sub-types requested in the systems array.
+    /** @type {SystemValue[]} */
+    const performanceKeys = ['resource', 'paint', 'navigation', 'layout-shift', 'lcp', 'longtask'];
+    const isPerformanceEnabled = this.#enabledSystems.has('performance');
+    const hasSpecificPerformanceRequested = performanceKeys.some((key) =>
+      this.#enabledSystems.has(key),
+    );
+
+    if (isPerformanceEnabled || hasSpecificPerformanceRequested) {
+      this.#setupPerformanceObservers(isPerformanceEnabled);
     }
   }
 
@@ -332,25 +355,34 @@ class TinyNetworkMonitor extends EventEmitter {
   }
 
   /**
-   * Initializes and starts multiple PerformanceObservers to track web vital metrics.
+   * Initializes and starts PerformanceObservers based on enabled systems.
+   * @param {boolean} [enableAll=false] - If true, enables all performance observers.
    */
-  #setupPerformanceObservers() {
-    const observerConfigs = [
-      { type: 'resource', callback: this.#handleResourceEntry.bind(this) },
-      { type: 'paint', callback: this.#handlePaintEntry.bind(this) },
-      { type: 'navigation', callback: this.#handleNavigationEntry.bind(this) },
-      { type: 'layout-shift', callback: this.#handleLayoutShiftEntry.bind(this) },
-      { type: 'largest-contentful-paint', callback: this.#handleLCPEntry.bind(this) },
-      { type: 'longtask', callback: this.#handleLongTaskEntry.bind(this) },
+  #setupPerformanceObservers(enableAll = false) {
+    /** @type {({ key: SystemValue; type: string; callback: (list: PerformanceObserverEntryList) => void; })[]} */
+    const observerMapping = [
+      { key: 'resource', type: 'resource', callback: this.#handleResourceEntry.bind(this) },
+      { key: 'paint', type: 'paint', callback: this.#handlePaintEntry.bind(this) },
+      { key: 'navigation', type: 'navigation', callback: this.#handleNavigationEntry.bind(this) },
+      {
+        key: 'layout-shift',
+        type: 'layout-shift',
+        callback: this.#handleLayoutShiftEntry.bind(this),
+      },
+      { key: 'lcp', type: 'largest-contentful-paint', callback: this.#handleLCPEntry.bind(this) },
+      { key: 'longtask', type: 'longtask', callback: this.#handleLongTaskEntry.bind(this) },
     ];
 
-    for (const config of observerConfigs) {
-      try {
-        const observer = new PerformanceObserver(config.callback);
-        observer.observe({ type: config.type, buffered: true });
-        this.#observers.push(observer);
-      } catch (e) {
-        // Silently skip unsupported observer types
+    for (const config of observerMapping) {
+      if (enableAll || this.#enabledSystems.has(config.key)) {
+        try {
+          const observer = new PerformanceObserver(config.callback);
+          observer.observe({ type: config.type, buffered: true });
+          this.#observers.push(observer);
+        } catch (e) {
+          console.error(e);
+          // Silently skip unsupported observer types
+        }
       }
     }
   }
