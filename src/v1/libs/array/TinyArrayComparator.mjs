@@ -1,5 +1,5 @@
 /**
- * @fileoverview Array comparison utility.
+ * @fileoverview Array comparison utility with deep object diffing capabilities.
  * @module TinyArrayComparator
  */
 
@@ -12,10 +12,20 @@
 
 /**
  * @template {any} ArrayItem
+ * @typedef {Object} ObjectDiff
+ * @property {Object<string, any>} added - Properties added in the new object.
+ * @property {Object<string, any>} deleted - Properties removed from the old object.
+ * @property {Object<string, {oldValue: any, newValue: any}>} modified - Properties that changed value.
+ * @property {Object<string, ObjectDiff<ArrayItem>>} nested - Nested differences for nested objects.
+ */
+
+/**
+ * @template {any} ArrayItem
  * @typedef {Object} DiffResult
  * @property {ArrayItem} item - The item that was affected.
  * @property {ArrayItem} [oldItem] - The original item before the change (only for 'edited' status).
  * @property {'added'|'deleted'|'edited'} status - The nature of the change.
+ * @property {ObjectDiff<ArrayItem>} [details] - Detailed property changes (only if status is 'edited' and deepComparison is enabled).
  */
 
 /**
@@ -23,7 +33,7 @@
  * @typedef {Object} InternalState
  * Holds the internal tracking variables during the comparison process.
  * @property {Map<string|number, HashEntry<ArrayItem>>} oldItemsMap - A map storing the identity key as the key and the hash entry as the value.
- * @property {AffectedItems<ArrayItem>} affectedItems - The final array that collects added, deleted, or edited items.
+ * @property {Array<DiffResult<ArrayItem>>} affectedItems - The final array that collects added, deleted, or edited items.
  */
 
 /**
@@ -36,6 +46,7 @@
  * Options to configure the comparator.
  * @typedef {Object} ComparatorOptions
  * @property {string} [idKey='id'] - The property name used as a unique identifier for objects to detect edits.
+ * @property {boolean} [deepComparison=true] - If true, provides detailed property-level diffs for edited objects.
  */
 
 /**
@@ -45,7 +56,7 @@
 class TinyArrayComparator {
   /**
    * Generates a simple 32-bit integer hash converted to a base36 string.
-   * @param {any} item - The item to be hashed (can be an object, array, string, or number).
+   * @param {any} item - The item to be hashed.
    * @returns {string} The unique hash representing the item's value.
    * @throws {TypeError} Throws a TypeError if the item cannot be stringified due to circular references.
    */
@@ -81,6 +92,9 @@ class TinyArrayComparator {
    */
   #idKey = null;
 
+  /** @type {boolean} */
+  #deepComparison = true;
+
   /**
    * Gets the current identity key.
    * @returns {string|null}
@@ -98,6 +112,24 @@ class TinyArrayComparator {
     if (value !== null && typeof value !== 'string')
       throw new TypeError('The idKey must be a string or null.');
     this.#idKey = value;
+  }
+
+  /**
+   * Gets whether deep comparison is enabled.
+   * @returns {boolean}
+   */
+  get deepComparison() {
+    return this.#deepComparison;
+  }
+
+  /**
+   * Sets whether deep comparison is enabled.
+   * @param {boolean} value - The configuration value.
+   */
+  set deepComparison(value) {
+    if (typeof value !== 'boolean')
+      throw new TypeError('The deepComparison option must be a boolean.');
+    this.#deepComparison = value;
   }
 
   /**
@@ -130,16 +162,79 @@ class TinyArrayComparator {
     if (typeof options.idKey === 'string') {
       this.idKey = options.idKey;
     }
+
+    if (typeof options.deepComparison === 'boolean') {
+      this.deepComparison = options.deepComparison;
+    }
   }
 
   /**
    * Proxy to generates a hash converted to a string.
-   * @param {ArrayItem} item - The item to be hashed (can be an object, array, string, or number).
+   * @param {ArrayItem} item - The item to be hashed.
    * @returns {string} The unique hash representing the item's value.
    * @private
    */
   _generateHash(item) {
     return TinyArrayComparator.generateHash(item);
+  }
+
+  /**
+   * Recursively compares two objects to find differences.
+   * @param {Object} oldObj - The original object.
+   * @param {Object} newObj - The modified object.
+   * @returns {ObjectDiff<ArrayItem>} A structured object containing the differences.
+   */
+  #getDeepDiff(oldObj, newObj) {
+    /** @type {ObjectDiff<ArrayItem>} */
+    const diff = {
+      added: {},
+      deleted: {},
+      modified: {},
+      nested: {},
+    };
+
+    const allKeys = new Set([...Object.keys(oldObj), ...Object.keys(newObj)]);
+
+    for (const key of allKeys) {
+      // @ts-ignore
+      const oldVal = oldObj[key];
+      // @ts-ignore
+      const newVal = newObj[key];
+
+      if (!(key in oldObj)) {
+        // Key exists in new object but not in old
+        diff.added[key] = newVal;
+      } else if (!(key in newObj)) {
+        // Key exists in old object but not in new
+        diff.deleted[key] = oldVal;
+      } else if (
+        typeof oldVal === 'object' &&
+        oldVal !== null &&
+        typeof newVal === 'object' &&
+        newVal !== null &&
+        !Array.isArray(oldVal) &&
+        !Array.isArray(newObj)
+      ) {
+        // Both are objects, recurse
+        const nestedDiff = this.#getDeepDiff(oldVal, newVal);
+        // Only add nested if it actually contains differences
+        if (
+          Object.keys(nestedDiff.added).length > 0 ||
+          Object.keys(nestedDiff.deleted).length > 0 ||
+          Object.keys(nestedDiff.modified).length > 0 ||
+          Object.keys(nestedDiff.nested).length > 0
+        ) {
+          diff.nested[key] = nestedDiff;
+        }
+      } else if (oldVal !== newVal) {
+        // Values are different and not objects (or one is an array)
+        diff.modified[key] = {
+          oldValue: oldVal,
+          newValue: newVal,
+        };
+      }
+    }
+    return diff;
   }
 
   /**
@@ -183,19 +278,32 @@ class TinyArrayComparator {
             item[this.#idKey]
           : hash;
 
-      if (state.oldItemsMap.has(identityKey)) {
-        const oldData = state.oldItemsMap.get(identityKey);
-
-        if (oldData?.hash === hash) {
+      const oldData = state.oldItemsMap.get(identityKey);
+      if (oldData) {
+        if (oldData.hash === hash) {
           // Item exists and the content is identical. Unchanged.
           state.oldItemsMap.delete(identityKey);
         } else {
           // Item has the same identity but a different hash. It was edited.
-          state.affectedItems.push({
+          /** @type {DiffResult<ArrayItem>} */
+          const diffResult = {
             item: item,
-            oldItem: oldData?.item,
+            oldItem: oldData.item,
             status: 'edited',
-          });
+          };
+
+          // Perform deep comparison if enabled and items are objects
+          if (
+            this.#deepComparison &&
+            typeof item === 'object' &&
+            item !== null &&
+            typeof oldData.item === 'object' &&
+            oldData.item !== null
+          ) {
+            diffResult.details = this.#getDeepDiff(oldData.item, item);
+          }
+
+          state.affectedItems.push(diffResult);
           state.oldItemsMap.delete(identityKey);
         }
       } else {

@@ -59,7 +59,7 @@ const handleCompare = async () => {
 
     // Get the idKey from input. If empty, use null to trigger hash-only mode.
     const idKey = idKeyInput.value.trim() || null;
-    
+
     const comparator = new TinyArrayComparator(oldArray, { idKey });
     const results = comparator.compare(newArray);
     window.comparator = comparator;
