@@ -45,7 +45,7 @@ const logToConsole = (message, type = 'info') => {
 
 /**
  * Updates the dashboard UI with the provided report.
- * @param {import('./TinyNetworkMonitor.js').NetworkReport} report
+ * @type {(data: import('./TinyNetworkMonitor.mjs').NetworkEvent) => void} NetworkEvent
  */
 const updateDashboard = ({ connectivity, quality, resources }) => {
   // Update Connectivity

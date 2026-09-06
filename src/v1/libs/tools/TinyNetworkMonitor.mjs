@@ -36,8 +36,13 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  */
 
 /**
+ * Represents a network event payload that combines a comprehensive network report with the original browser event that triggered the update.
+ * @typedef {NetworkReport & { event?: Event; }} NetworkEvent
+ */
+
+/**
  * A callback function signature for receiving network updates.
- * @typedef {(data: NetworkReport & { event?: Event }) => void} NetworkCallback
+ * @typedef {(data: NetworkEvent) => void} NetworkCallback
  */
 
 /**
@@ -226,6 +231,7 @@ class TinyNetworkMonitor extends EventEmitter {
   #notify(event) {
     this.#validateInternalState();
 
+    /** @type {NetworkReport & { event?: Event; }} */
     const data = {
       connectivity: Object.freeze({ ...this.#connectivity }),
       quality: Object.freeze({ ...this.#quality }),
