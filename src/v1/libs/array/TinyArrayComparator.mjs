@@ -107,7 +107,10 @@ class TinyArrayComparator {
    */
   #idKey = null;
 
-  /** @type {boolean} */
+  /**
+   * Detects whether deep comparison is enabled.
+   * @type {boolean}
+   */
   #deepComparison = true;
 
   /**
