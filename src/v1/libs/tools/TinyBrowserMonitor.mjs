@@ -10,10 +10,12 @@ const checkDestroy = createCheckDestroyed('TinyBrowserMonitor');
  */
 
 /**
+ * Represents the valid units for memory formatting.
  * @typedef {'bytes'|'KB'|'MB'|'GB'} MemoryFormat
  */
 
 /**
+ * Represents memory usage data formatted into human-readable units.
  * @typedef {{ used: number; total: number; limit: number; }} MemoryHumanData
  */
 
@@ -163,7 +165,10 @@ const checkDestroy = createCheckDestroyed('TinyBrowserMonitor');
  * @typedef {(data: NetworkEvent) => void} NetworkCallback
  */
 
-/** @type {SystemValue[]} */
+/**
+ * A list of all valid identifiers for the monitoring systems.
+ * @type {SystemValue[]}
+ */
 const VALID_SYSTEMS = [
   'connectivity',
   'quality',
@@ -320,7 +325,9 @@ class TinyBrowserMonitor extends EventEmitter {
 
     for (const system of systems) {
       if (!VALID_SYSTEMS.includes(system)) {
-        throw new TypeError(`Invalid system identifier: "${system}". Must be one of: ${VALID_SYSTEMS.join(', ')}`);
+        throw new TypeError(
+          `Invalid system identifier: "${system}". Must be one of: ${VALID_SYSTEMS.join(', ')}`,
+        );
       }
     }
 
@@ -460,7 +467,10 @@ class TinyBrowserMonitor extends EventEmitter {
     return Object.freeze({ ...this.#deviceMetrics });
   }
 
-  /** @type {FrameRateMetrics} */
+  /**
+   * Returns the current frame rate metrics.
+   * @type {FrameRateMetrics}
+   */
   get fps() {
     checkDestroy(this.#isDestroyed);
     return Object.freeze({ ...this.#fps });
@@ -482,6 +492,10 @@ class TinyBrowserMonitor extends EventEmitter {
     });
   }
 
+  /**
+   * Returns the current JavaScript heap memory usage.
+   * @type {MemoryUsage}
+   */
   get memoryUsage() {
     checkDestroy(this.#isDestroyed);
     return Object.freeze({ ...this.#memoryUsage });
