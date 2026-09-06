@@ -67,7 +67,14 @@ const handleCompare = async () => {
     // Filter the results to populate the distinct boxes
     const deletedItems = results.filter((req) => req.status === 'deleted').map((req) => req.item);
     const addedItems = results.filter((req) => req.status === 'added').map((req) => req.item);
-    const editedItems = results.filter((req) => req.status === 'edited').map((req) => req.item);
+
+    // Mapping to include the 'details' property for edited items
+    const editedItems = results
+      .filter((req) => req.status === 'edited')
+      .map((req) => ({
+        item: req.item,
+        details: req.details,
+      }));
 
     // Display formatting
     deletedContent.textContent =
