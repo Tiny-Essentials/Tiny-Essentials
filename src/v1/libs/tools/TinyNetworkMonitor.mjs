@@ -5,10 +5,12 @@ import TinyArrayComparator from '../array/TinyArrayComparator.mjs';
 const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
 
 /**
+ * Defines the valid identifiers for the various monitoring systems available.
  * @typedef {'connectivity'|'quality'|'battery'|'device'|'performance'|'resource'|'paint'|'navigation'|'layout-shift'|'lcp'|'longtask'} SystemValue
  */
 
 /**
+ * Configuration options used to initialize the TinyNetworkMonitor instance.
  * @typedef {Object} MonitorOptions
  * @property {number} [resourceLimit=1000] - Maximum number of resource metrics to store. Use -1 for infinite.
  * @property {SystemValue[]} [systems] - List of systems to enable. If empty, all are enabled.
@@ -31,6 +33,7 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  */
 
 /**
+ * Represents the current state and availability of the device's battery information.
  * @typedef {Object} BatteryStatus
  * @property {number} level - Battery charge level (0 to 1).
  * @property {boolean} charging - Whether the device is currently charging.
@@ -40,6 +43,7 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  */
 
 /**
+ * Represents the hardware-specific metrics of the user's device.
  * @typedef {Object} DeviceMetrics
  * @property {number} memory - Approximate amount of device memory in GB.
  * @property {boolean} enabled - Indicates if the Device Memory API is available.
@@ -54,12 +58,14 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  */
 
 /**
+ * Represents the timing data related to browser paint events.
  * @typedef {Object} PaintMetrics
  * @property {number} firstPaint - Time when the first pixel was painted.
  * @property {number} firstContentfulPaint - Time when the first content was painted.
  */
 
 /**
+ * Represents the performance timing metrics related to page navigation.
  * @typedef {Object} NavigationMetrics
  * @property {number} ttfb - Time to first byte in ms.
  * @property {number} domContentLoaded - Time until DOMContentLoaded in ms.
@@ -67,6 +73,7 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  */
 
 /**
+ * Aggregates various performance and timing metrics into a single object.
  * @typedef {Object} PerformanceMetrics
  * @property {PaintMetrics} paint - Paint timing metrics.
  * @property {NavigationMetrics|null} navigation - Navigation timing metrics.
@@ -100,7 +107,7 @@ class TinyNetworkMonitor extends EventEmitter {
   /** @type {boolean} Indicates whether the monitor has been destroyed. */
   #isDestroyed = false;
 
-  /** @type {Set<SystemValue>} */
+  /** @type {Set<SystemValue>} A set containing the identifiers for the systems currently being monitored. */
   #enabledSystems = new Set();
 
   /**
