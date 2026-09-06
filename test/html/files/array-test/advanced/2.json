@@ -1,0 +1,5 @@
+[
+    { "id": "mio1", "test": "yay", "enabled": true },
+    { "id": "mio2", "test": "yay", "enabled": false },
+    { "id": "mio4", "test": "yay", "enabled": true }
+]
