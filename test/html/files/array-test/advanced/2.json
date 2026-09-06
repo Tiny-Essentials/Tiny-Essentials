@@ -1,5 +1,5 @@
 [
-  { "id": "mio1", "test": "yay", "enabled": true },
-  { "id": "mio2", "test": "yay", "enabled": true },
-  { "id": "mio4", "test": "yay", "enabled": true }
+  { "id": "mio1", "test": "yay", "enabled": true, "pudding": ["yay1"], "extra": { "mio": true } },
+  { "id": "mio2", "test": "yay", "enabled": true, "pudding": [], "extra": { "mio": true } },
+  { "id": "mio4", "test": "yay", "enabled": true, "pudding": ["yay3"], "extra": { "mio": true } }
 ]
