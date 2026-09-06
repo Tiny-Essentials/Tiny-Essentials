@@ -6,7 +6,16 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
 
 /**
  * Defines the valid identifiers for the various monitoring systems available.
- * @typedef {'connectivity'|'quality'|'battery'|'device'|'cpu'|'gpu'|'performance'|'resource'|'paint'|'navigation'|'layout-shift'|'lcp'|'longtask'} SystemValue
+ * @typedef {'connectivity'|'quality'|'battery'|'device'|'cpu'|'gpu'|'performance'|'resource'|'paint'|'navigation'|'layout-shift'|'lcp'|'longtask'|'memory-usage'|'fps'} SystemValue
+ */
+
+/**
+ * Represents the JavaScript heap memory usage.
+ * @typedef {Object} MemoryUsage
+ * @property {number} usedJSHeapSize - The amount of memory currently being used by the JS heap in bytes.
+ * @property {number} totalJSHeapSize - The total amount of memory currently allocated for the JS heap in bytes.
+ * @property {number} jsHeapSizeLimit - The maximum amount of memory that can be allocated for the JS heap in bytes.
+ * @property {boolean} enabled - Indicates if the Memory API is available.
  */
 
 /**
@@ -88,6 +97,13 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  */
 
 /**
+ * Represents the rendering performance in frames per second.
+ * @typedef {Object} FrameRateMetrics
+ * @property {number} fps - The current frames per second.
+ * @property {number} timestamp - The timestamp of the last measurement.
+ */
+
+/**
  * Aggregates various performance and timing metrics into a single object.
  * @typedef {Object} PerformanceMetrics
  * @property {PaintMetrics} paint - Paint timing metrics.
@@ -95,10 +111,11 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  * @property {number} layoutShift - Cumulative Layout Shift (CLS) value.
  * @property {number} lcp - Largest Contentful Paint (LCP) value in ms.
  * @property {number[]} longTasks - Array of durations of long tasks in ms.
+ * @property {Readonly<FrameRateMetrics>} fps - Current frame rate metrics.
  */
 
 /**
- * Represents a comprehensive report containing connectivity status, connection quality, and recent resource performance metrics.
+ * Represents a comprehensive report containing connectivity status, connection quality, recent resource performance metrics, and memory usage.
  * @typedef {Object} NetworkEvent
  * @property {Readonly<ConnectivityStatus>} connectivity - Current online/offline status.
  * @property {Readonly<ConnectionQuality>} quality - Current network quality metrics.
@@ -106,6 +123,7 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  * @property {Readonly<DeviceMetrics>} device - Current device hardware metrics.
  * @property {Readonly<PerformanceMetrics>} performance - Comprehensive performance metrics.
  * @property {Readonly<ResourceMetric[]>} resources - Recent resource loading metrics.
+ * @property {Readonly<MemoryUsage>} memoryUsage - Current JavaScript heap memory metrics.
  * @property {Event} [event]
  */
 
@@ -130,6 +148,20 @@ class TinyNetworkMonitor extends EventEmitter {
    * @type {ConnectivityStatus}
    */
   #connectivity = { isOnline: navigator.onLine };
+
+  /** @type {null|NodeJS.Timeout} */
+  #memoryInterval = null;
+
+  /** @type {number} */
+  #memoryIntervalMs = 100;
+
+  /** @type {MemoryUsage} The current JavaScript heap memory usage. */
+  #memoryUsage = {
+    usedJSHeapSize: 0,
+    totalJSHeapSize: 0,
+    jsHeapSizeLimit: 0,
+    enabled: !!performance.memory,
+  };
 
   /** @type {ConnectionQuality} Stores the current network quality metrics. */
   #quality = {
@@ -165,12 +197,22 @@ class TinyNetworkMonitor extends EventEmitter {
     enabled: !!navigator.deviceMemory,
   };
 
+  /** @type {FrameRateMetrics} The current frame rate metrics. */
+  #fps = {
+    fps: 60,
+    timestamp: performance.now(),
+  };
+
+  /** @type {number|null} The animation frame request ID for the FPS loop. */
+  #fpsRequestId = null;
+
   /** @type {PerformanceMetrics} The current performance and timing metrics. */
   #performance = {
     paint: { firstPaint: 0, firstContentfulPaint: 0 },
     navigation: null,
     layoutShift: 0,
     lcp: 0,
+    fps: this.#fps,
     longTasks: [],
   };
 
@@ -224,6 +266,8 @@ class TinyNetworkMonitor extends EventEmitter {
       'layout-shift',
       'lcp',
       'longtask',
+      'memory-usage',
+      'fps',
     ];
     this.#enabledSystems = systems.length === 0 ? new Set(allSystems) : new Set(systems);
 
@@ -243,6 +287,14 @@ class TinyNetworkMonitor extends EventEmitter {
     }
     if (this.#enabledSystems.has('battery')) {
       this.#setupBatteryMonitoring();
+    }
+
+    if (this.#enabledSystems.has('memory-usage')) {
+      this.#setupMemoryUsage();
+    }
+
+    if (this.#enabledSystems.has('fps')) {
+      this.#setupFPSMonitoring();
     }
 
     // Hardware initialization:
@@ -324,6 +376,12 @@ class TinyNetworkMonitor extends EventEmitter {
     return Object.freeze({ ...this.#deviceMetrics });
   }
 
+  /** @type {FrameRateMetrics} */
+  get fps() {
+    checkDestroy(this.#isDestroyed);
+    return Object.freeze({ ...this.#fps });
+  }
+
   /**
    * Returns the current performance metrics.
    * @returns {Readonly<PerformanceMetrics>} A deep clone of the performance metrics.
@@ -333,10 +391,16 @@ class TinyNetworkMonitor extends EventEmitter {
     return Object.freeze({
       ...this.#performance,
       paint: Object.freeze({ ...this.#performance.paint }),
+      fps: Object.freeze({ ...this.#performance.fps }),
       navigation: this.#performance.navigation
         ? Object.freeze({ ...this.#performance.navigation })
         : null,
     });
+  }
+
+  get memoryUsage() {
+    checkDestroy(this.#isDestroyed);
+    return Object.freeze({ ...this.#memoryUsage });
   }
 
   /**
@@ -381,6 +445,34 @@ class TinyNetworkMonitor extends EventEmitter {
     if (navigator.connection) {
       navigator.connection.addEventListener('change', this.#handleUpdate);
     }
+  }
+
+  /**
+   * Initializes FPS monitoring to track rendering performance (GPU/CPU proxy).
+   */
+  #setupFPSMonitoring() {
+    let frameCount = 0;
+    let lastTime = performance.now();
+
+    /** @param {number} currentTime */
+    const loop = (currentTime) => {
+      frameCount++;
+
+      // Update metrics every 1 second
+      if (currentTime - lastTime >= 1000) {
+        this.#fps = {
+          fps: Math.round((frameCount * 1000) / (currentTime - lastTime)),
+          timestamp: currentTime,
+        };
+        frameCount = 0;
+        lastTime = currentTime;
+        this.emit('FPS', Object.freeze({ ...this.#fps }));
+      }
+
+      this.#fpsRequestId = requestAnimationFrame(loop);
+    };
+
+    this.#fpsRequestId = requestAnimationFrame(loop);
   }
 
   /**
@@ -466,6 +558,29 @@ class TinyNetworkMonitor extends EventEmitter {
       } catch (error) {
         console.warn('Battery Status API failed to initialize:', error);
       }
+    }
+  }
+
+  /**
+   * Initializes memory monitoring using the Performance Memory API.
+   */
+  #setupMemoryUsage() {
+    const memory = performance.memory;
+    if (memory) {
+      const updateMemory = () => {
+        this.#memoryUsage = {
+          usedJSHeapSize: memory.usedJSHeapSize,
+          totalJSHeapSize: memory.totalJSHeapSize,
+          jsHeapSizeLimit: memory.jsHeapSizeLimit,
+          enabled: true,
+        };
+        this.emit('MemoryUsage', Object.freeze({ ...this.#memoryUsage }));
+      };
+
+      // Since performance.memory is not event-driven, we poll it periodically.
+      // We use a standard interval to check for changes.
+      this.#memoryInterval = setInterval(updateMemory, this.#memoryIntervalMs);
+      updateMemory();
     }
   }
 
@@ -666,6 +781,7 @@ class TinyNetworkMonitor extends EventEmitter {
       battery: Object.freeze({ ...this.#battery }),
       device: Object.freeze({ ...this.#deviceMetrics }),
       performance: this.performance,
+      memoryUsage: Object.freeze({ ...this.#memoryUsage }),
       event,
     };
 
@@ -708,6 +824,10 @@ class TinyNetworkMonitor extends EventEmitter {
       this.#observers = [];
     }
 
+    if (this.#memoryInterval) clearInterval(this.#memoryInterval);
+    if (this.#fpsRequestId) {
+      cancelAnimationFrame(this.#fpsRequestId);
+    }
     this.removeAllListeners();
     this.#isDestroyed = true;
     this.emit('Destroyed');

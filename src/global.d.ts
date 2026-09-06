@@ -1,3 +1,13 @@
+interface MemoryInfo {
+  readonly jsHeapSizeLimit: number;
+  readonly totalJSHeapSize: number;
+  readonly usedJSHeapSize: number;
+}
+
+interface Performance {
+  readonly memory?: MemoryInfo;
+}
+
 interface BatteryManager extends EventTarget {
   charging: boolean;
   chargingTime: number;
