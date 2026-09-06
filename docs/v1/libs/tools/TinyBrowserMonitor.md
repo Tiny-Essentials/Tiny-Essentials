@@ -30,12 +30,12 @@ import TinyBrowserMonitor from 'tiny-essentials/libs/tools/TinyBrowserMonitor';
 ### Initialization
 ```javascript
 /**
- * @param {NetworkCallback} [callback] - Optional callback function triggered on every update.
  * @param {MonitorOptions} [options={}] - Configuration options.
- * @param {number} [options.resourceLimit=1000] - Max number of resource metrics to store. Use -1 for infinite.
- * @param {string[]} [options.systems] - List of systems to enable (e.g., ['connectivity', 'battery']). If empty, all are enabled.
+ * @param {number} [options.resourceLimit=1000] - Maximum number of resource metrics to store. Use -1 for infinite.
+ * @param {SystemValue[]} [options.systems] - List of systems to enable. If empty, all are enabled.
+ * @param {number} [options.memoryIntervalMs=100] - Interval in milliseconds for memory polling.
  */
-const monitor = new TinyBrowserMonitor(callback, options);
+const monitor = new TinyBrowserMonitor(options);
 ```
 
 ---
@@ -69,80 +69,86 @@ Uses the `PerformanceObserver` API to track:
 
 ## 📖 Usage Guide
 
-You can interact with the monitor in four different ways depending on your architectural needs.
-
-### 🚀 Method 1: The Callback Approach
-Best for simple implementations where you want a function to trigger whenever *anything* changes.
-
-```javascript
-const monitor = new TinyBrowserMonitor((data) => {
-  // Note: data contains connectivity, quality, resources, and event directly
-  if (!data.connectivity.isOnline) {
-    console.warn('⚠️ You are currently offline!');
-  }
-});
-```
-
-### 📡 Method 2: The Event-Driven Approach (Recommended)
+### 📡 Method 1: The Event-Driven Approach (Recommended)
 Since `TinyBrowserMonitor` extends `EventEmitter`, you can listen for specific events.
 
-#### Network Updates
-Listen for any change in any monitored system.
+#### Global Updates
+Listen for any change in the monitored systems. The payload contains a comprehensive `NetworkEvent` report.
 ```javascript
-const monitor = new TinyBrowserMonitor();
-
-// Listen for network changes
-monitor.on('NetworkUpdated', ({ connectivity, quality, resources, event }) => {
-  console.log('📊 Current Connectivity:', connectivity.isOnline);
-  console.log('⚡ Current Quality:', quality.downlink, 'Mbps');
-  if (event) console.log('Triggered by event:', event.type);
+monitor.on('NetworkUpdated', (data) => {
+  console.log('📊 Full Report:', data);
+  if (data.event) console.log('Triggered by event:', data.event.type);
 });
 ```
 
-#### Resource-Specific Events
-The monitor emits specific events when the resource list changes:
-* `ResourceAdded`: Emitted when a new resource is tracked.
-* `ResourceDeleted`: Emitted when an old resource is removed (due to `resourceLimit`).
-* `ResourceEdited`: Emitted if resource data is updated.
+#### Specific System Events
+You can listen to granular updates to optimize performance:
 
+* **Connectivity:** `monitor.on('ConnectivityUpdated', (status) => ...)`
+* **Battery:** `monitor.on('BatteryUpdated', (battery) => ...)`
+* **Memory:** `monitor.on('MemoryUsage', (memory) => ...)`
+* **FPS:** `monitor.on('FPS', (fps) => ...)`
+* **Window Resize:** `monitor.on('WindowResize', (metrics) => ...)`
+
+#### Performance & Web Vitals Events
+* **Paint:** `monitor.on('PaintUpdated', (paint) => ...)`
+* **Navigation:** `monitor.on('NavigationUpdated', (nav) => ...)`
+* **Layout Shift:** `monitor.on('LayoutShiftUpdated', ({ layoutShift }) => ...)`
+* **LCP:** `monitor.on('LcpUpdated', ({ lcp }) => ...)`
+* **Long Tasks:** `monitor.on('LongTaskUpdated', ({ lcp }) => ...)` 
+  > *Note: Payload contains an array of task durations under the `lcp` key.*
+
+#### Resource Lifecycle Events
+Emitted when the resource history changes (useful for tracking asset loading):
+* `ResourceAdded`: Emitted when a new resource is tracked. `(oldItem, newItem)`
+* `ResourceDeleted`: Emitted when an old resource is removed (FIFO). `(oldItem, newItem)`
+* `ResourceEdited`: Emitted if resource data is updated. `(oldItem, newItem)`
+
+---
+
+### 📸 Method 2: Snapshot Access & Helpers
+Check metrics at any specific moment without waiting for an event.
+
+#### Snapshot Getters
+All getters return **read-only (frozen)** objects to ensure data integrity.
 ```javascript
-// Payload: (oldItem, newItem)
-monitor.on('ResourceAdded', (oldItem, newItem) => {
-  console.log('🆕 New resource loaded:', newItem.name);
-});
-
-monitor.on('ResourceDeleted', (oldItem, newItem) => {
-  console.log('🧹 Old resource removed from history:', oldItem.name);
-});
-```
-
-#### Lifecycle Events
-```javascript
-monitor.on('Destroyed', () => {
-  console.log('🧹 Monitor has been cleaned up.');
-});
-```
-
-### 📸 Method 3: Snapshot Access
-If you don't need real-time updates but simply want to check the current status at a specific moment.
-
-```javascript
-const monitor = new TinyBrowserMonitor();
-
-// ... later in your code ...
+const connectivity = monitor.connectivity;
 const quality = monitor.quality;
-console.log(`Current Bandwidth: ${quality.downlink} Mbps`);
+const resources = monitor.resources;
+const battery = monitor.battery;
+const device = monitor.device;
+const performance = monitor.performance;
+const memoryUsage = monitor.memoryUsage;
+const windowMetrics = monitor.windowMetrics;
+const screenMetrics = monitor.screenMetrics;
+const fps = monitor.fps;
+```
+
+#### Utility Methods
+```javascript
+// Check how many systems are currently active
+console.log(monitor.size); 
+
+// Check if a specific system is enabled
+if (monitor.has('battery')) { ... }
+
+// Get human-readable memory (e.g., '1.5 GB')
+const memory = monitor.getFormattedMemoryUsage('GB'); 
+// Returns: { used: 1.5, total: 8, limit: 16 }
 ```
 
 ---
 
 ## 🧹 Cleanup & Memory Management
 
-To prevent **memory leaks**, especially in Single Page Applications (SPAs) like React, Vue, or Angular, you **must** call the `destroy()` method when the component or page is unmounted.
+To prevent **memory leaks**, especially in Single Page Applications (SPAs), you **must** call the `destroy()` method when the component or page is unmounted.
 
 ```javascript
-// When the user leaves the page or the component unmounts:
+// Cleanup
 monitor.destroy();
+
+// Listen for destruction
+monitor.on('Destroyed', () => console.log('Monitor cleaned up.'));
 ```
 
 **What `destroy()` does:**
@@ -156,5 +162,5 @@ monitor.destroy();
 
 ## ⚠️ Important Notes
 
-*   **Immutability:** All returned reports are read-only. Attempting to change `monitor.connectivity.isOnline = false` will fail.
-*   **Resource Limit:** If a `resourceLimit` is set, the monitor will automatically remove the oldest entries to make room for new ones once the limit is reached (FIFO).
+* **Immutability:** All returned reports are read-only. Attempting to change properties directly will fail.
+* **Resource Limit:** If a `resourceLimit` is set, the monitor uses FIFO (First-In, First-Out) logic to remove the oldest entries.
