@@ -52,18 +52,12 @@ body {
   padding: 0 2rem;
 }
 
-.app-header h1 {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
 .badge {
   font-size: 0.7rem;
   background: var(--accent-primary);
   color: var(--bg-main);
   padding: 2px 6px;
   border-radius: 4px;
-  vertical-align: middle;
   margin-left: 8px;
 }
 
@@ -75,7 +69,7 @@ body {
 /* Main Dashboard Layout */
 .dashboard {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 320px 1fr;
   overflow: hidden;
 }
 
@@ -83,115 +77,123 @@ body {
 .control-panel {
   background-color: var(--bg-card);
   border-right: 1px solid var(--border-color);
-  padding: 1.5rem;
+  padding: 1.2rem;
+  overflow-y: auto;
 }
 
 .control-group {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
-
 .control-group h3 {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
   color: var(--text-muted);
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.3rem;
 }
 
-.hint {
+/* Configuration Inputs */
+.config-item {
+  margin-bottom: 0.8rem;
+  display: flex;
+  flex-direction: column;
   font-size: 0.8rem;
   color: var(--text-muted);
-  line-height: 1.4;
+}
+.config-item input {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  color: white;
+  padding: 0.4rem;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  font-size: 0.75rem;
+  margin-top: 8px;
+}
+.checkbox-grid label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 /* Buttons */
 .btn {
   display: block;
   width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 0.75rem;
+  padding: 0.6rem;
+  margin-bottom: 0.5rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
   text-align: center;
 }
-
 .btn-primary {
   background-color: var(--accent-primary);
   color: var(--bg-main);
 }
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-.btn-primary:disabled {
-  background-color: var(--border-color);
-  cursor: not-allowed;
-}
-
 .btn-secondary {
   background-color: var(--accent-secondary);
   color: var(--bg-main);
 }
-.btn-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .btn-danger {
   background-color: var(--accent-danger);
   color: white;
 }
+.btn-sim {
+  background-color: var(--border-color);
+  color: white;
+  font-size: 0.8rem;
+}
+.btn-sim:disabled {
+  opacity: 0.3;
+}
+.btn-primary:disabled,
+.btn-secondary:disabled,
 .btn-danger:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.btn-text {
-  background: none;
-  border: none;
-  color: var(--accent-primary);
-  cursor: pointer;
-  font-size: 0.8rem;
-}
-
-/* Data Display Area */
+/* Data Display */
 .data-display {
   padding: 1.5rem;
   overflow-y: auto;
 }
-
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
-
 .card {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 1.25rem;
+  padding: 1rem;
 }
-
 .card h4 {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--accent-primary);
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
 }
-
 .metric-item {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.85rem;
 }
-
 .label {
   color: var(--text-muted);
 }
@@ -206,59 +208,50 @@ body {
   display: flex;
   flex-direction: column;
 }
-
 .table-wrapper {
   flex: 1;
   overflow-y: auto;
 }
-
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
-
 th {
   text-align: left;
   color: var(--text-muted);
-  padding: 0.75rem;
+  padding: 0.5rem;
   border-bottom: 1px solid var(--border-color);
 }
-
 td {
-  padding: 0.75rem;
+  padding: 0.5rem;
   border-bottom: 1px solid var(--border-color);
   font-family: 'Courier New', monospace;
 }
 
-/* Console Area */
+/* Console */
 .console-area {
   background-color: var(--bg-console);
   border-top: 2px solid var(--border-color);
   display: flex;
   flex-direction: column;
 }
-
 .console-header {
   background-color: #1e293b;
   padding: 0.4rem 1rem;
   display: flex;
   justify-content: space-between;
-  align-items: center;
   font-size: 0.75rem;
   color: var(--text-muted);
-  text-transform: uppercase;
 }
-
 .console-output {
   flex: 1;
   padding: 0.5rem 1rem;
-  font-family: 'Consolas', 'Monaco', monospace;
-  font-size: 0.85rem;
+  font-family: 'Consolas', monospace;
+  font-size: 0.8rem;
   overflow-y: auto;
   white-space: pre-wrap;
 }
-
 .log-entry {
   margin-bottom: 4px;
 }
@@ -278,20 +271,10 @@ td {
   color: var(--accent-secondary);
   font-style: italic;
 }
-
-.btn-sim {
-  background-color: var(--border-color);
-  color: var(--text-main);
-  font-size: 0.8rem;
-  padding: 0.5rem;
-}
-
-.btn-sim:hover {
-  background-color: var(--accent-secondary);
-  color: var(--bg-main);
-}
-
-.btn-sim:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  cursor: pointer;
+  font-size: 0.75rem;
 }

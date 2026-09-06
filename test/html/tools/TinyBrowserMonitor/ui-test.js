@@ -13,7 +13,6 @@ const btnReport = document.getElementById('btn-report');
 const btnDestroy = document.getElementById('btn-destroy');
 const btnClear = document.getElementById('btn-clear-console');
 
-// Simulation Buttons
 const btnSimResource = document.getElementById('btn-sim-resource');
 const btnStressLimit = document.getElementById('btn-stress-limit');
 const btnTestError = document.getElementById('btn-test-error');
@@ -26,6 +25,19 @@ const resourceTbody = document.getElementById('resource-tbody');
 const consoleOutput = document.getElementById('console-output');
 const statusIndicator = document.getElementById('connection-status-indicator');
 
+// New Dashboard Elements
+const statBatteryLevel = document.getElementById('stat-battery-level');
+const statBatteryCharging = document.getElementById('stat-battery-charging');
+const statDeviceMem = document.getElementById('stat-device-mem');
+const statDeviceCpu = document.getElementById('stat-device-cpu');
+const statDeviceGpu = document.getElementById('stat-device-gpu');
+const statMemUsed = document.getElementById('stat-mem-used');
+const statMemTotal = document.getElementById('stat-mem-total');
+const statMemLimit = document.getElementById('stat-mem-limit');
+const statFps = document.getElementById('stat-fps');
+const statLcp = document.getElementById('stat-lcp');
+const statCls = document.getElementById('stat-cls');
+
 // State
 let monitor = null;
 
@@ -37,32 +49,65 @@ let monitor = null;
 const logToConsole = (message, type = 'info') => {
   const entry = document.createElement('div');
   entry.className = `log-entry ${type}`;
-
   if (type === 'data') {
     entry.textContent = `[DATA] ${JSON.stringify(message, null, 2)}`;
   } else {
     entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
   }
-
   consoleOutput.appendChild(entry);
   consoleOutput.scrollTop = consoleOutput.scrollHeight;
 };
 
 /**
  * Updates the dashboard UI with the provided report.
- * @type {(data: import('./TinyBrowserMonitor.mjs').NetworkEvent) => void}
  */
-const updateDashboard = ({ connectivity, quality, resources }) => {
-  // Update Connectivity
+const updateDashboard = ({
+  connectivity,
+  quality,
+  resources,
+  battery,
+  device,
+  performance,
+  memoryUsage,
+}) => {
+  // Connectivity & Quality
   statOnline.textContent = connectivity.isOnline ? 'ONLINE' : 'OFFLINE';
   statOnline.style.color = connectivity.isOnline ? 'var(--success)' : 'var(--accent-danger)';
-
-  // Update Quality
   statDownlink.textContent = `${quality.downlink} Mbps`;
   statRtt.textContent = `${quality.rtt} ms`;
   statType.textContent = quality.effectiveType.toUpperCase();
 
-  // Update Resources
+  // Battery
+  if (battery.enabled) {
+    statBatteryLevel.textContent = `${(battery.level * 100).toFixed(0)}%`;
+    statBatteryCharging.textContent = battery.charging ? 'Charging' : 'Discharging';
+  } else {
+    statBatteryLevel.textContent = '--';
+    statBatteryCharging.textContent = '--';
+  }
+
+  // Device
+  if (device.enabled) {
+    statDeviceMem.textContent = `${device.memory} GB`;
+    statDeviceCpu.textContent = `${device.cpu.logicalCores} Cores`;
+    statDeviceGpu.textContent = `${device.gpu.renderer}`;
+  }
+
+  // Memory
+  if (memoryUsage.enabled) {
+    statMemUsed.textContent = `${memoryUsage.usedJSHeapSize} B`;
+    statMemTotal.textContent = `${memoryUsage.totalJSHeapSize} B`;
+    statMemLimit.textContent = `${memoryUsage.jsHeapSizeLimit} B`;
+  }
+
+  // Performance
+  if (performance) {
+    statFps.textContent = `${performance.fps.fps} FPS`;
+    statLcp.textContent = `${performance.lcp.toFixed(0)} ms`;
+    statCls.textContent = performance.layoutShift.toFixed(4);
+  }
+
+  // Resources
   resourceTbody.innerHTML = '';
   resources.forEach((res) => {
     const row = document.createElement('tr');
@@ -79,7 +124,6 @@ const updateDashboard = ({ connectivity, quality, resources }) => {
  * Handles the 'NetworkUpdated' event.
  */
 const handleNetworkUpdate = (data) => {
-  logToConsole('Network update received.', 'success');
   updateDashboard(data);
 };
 
@@ -88,19 +132,23 @@ const handleNetworkUpdate = (data) => {
  */
 const handleResourceEvent = (status, oldItem, newItem) => {
   logToConsole(`Resource Event: ${status}`, 'data');
-  if (oldItem) logToConsole(`Old: ${oldItem.name}`, 'info');
-  if (newItem) logToConsole(`New: ${newItem.name}`, 'info');
 };
 
-/**
- * Initializes the monitor.
- */
-const initMonitor = (resourceLimit = 1000) => {
+const initMonitor = () => {
   try {
-    logToConsole(`Initializing TinyBrowserMonitor (Limit: ${resourceLimit})...`, 'system');
+    const resourceLimit = parseInt(document.getElementById('input-resource-limit').value, 10);
+    const memoryIntervalMs = parseInt(document.getElementById('input-memory-interval').value, 10);
 
-    monitor = new TinyBrowserMonitor({ resourceLimit });
+    const systems = Array.from(document.querySelectorAll('.system-checkbox:checked')).map(
+      (cb) => cb.value,
+    );
 
+    logToConsole(
+      `Initializing TinyBrowserMonitor (Limit: ${resourceLimit}, Systems: ${systems.join(', ')})...`,
+      'system',
+    );
+
+    monitor = new TinyBrowserMonitor({ resourceLimit, systems, memoryIntervalMs });
     window.networkMonitor = monitor;
 
     // Main Update Event
@@ -138,15 +186,12 @@ const initMonitor = (resourceLimit = 1000) => {
 
 const simulateResourceLoad = async () => {
   if (!monitor) return;
-  logToConsole('Triggering resource load (fetch)...', 'system');
+  logToConsole('Triggering resource load...', 'system');
   try {
     // Fetching a small asset with no-cache to ensure PerformanceObserver catches it
     await fetch('https://www.google.com/favicon.ico', { mode: 'no-cors', cache: 'no-store' });
   } catch (e) {
-    logToConsole(
-      'Fetch failed (expected if CORS blocks, but observer might still trigger): ' + e.message,
-      'error',
-    );
+    logToConsole('Fetch failed: ' + e.message, 'error');
   }
 };
 
@@ -155,7 +200,7 @@ const testStressLimit = async () => {
   logToConsole('Starting Stress Test: Limit = 5', 'system');
 
   // Initialize with a very low limit
-  monitor = new TinyBrowserMonitor(() => {}, 5);
+  monitor = new TinyBrowserMonitor({ resourceLimit: 5 });
 
   // Re-attach listeners for the new instance
   monitor.on('NetworkUpdated', handleNetworkUpdate);
@@ -173,30 +218,11 @@ const testStressLimit = async () => {
   }
 };
 
-// --- Event Listeners for UI ---
-
-btnInit.addEventListener('click', () => initMonitor());
-
+// --- Event Listeners ---
+btnInit.addEventListener('click', initMonitor);
 btnReport.addEventListener('click', () => {
-  if (monitor) {
-    try {
-      logToConsole(
-        {
-          connectivity: monitor.connectivity,
-          quality: monitor.quality,
-          resources: monitor.resources,
-          battery: monitor.battery,
-          device: monitor.device,
-          performance: monitor.performance,
-        },
-        'data',
-      );
-    } catch (error) {
-      logToConsole(error.message, 'error');
-    }
-  }
+  if (monitor) logToConsole(monitor.performance, 'data'); // Just a sample report
 });
-
 btnDestroy.addEventListener('click', () => {
   if (monitor) {
     monitor.destroy();
@@ -208,21 +234,17 @@ btnDestroy.addEventListener('click', () => {
     btnStressLimit.disabled = true;
   }
 });
-
 btnSimResource.addEventListener('click', simulateResourceLoad);
-
 btnStressLimit.addEventListener('click', testStressLimit);
-
 btnTestError.addEventListener('click', () => {
   logToConsole('Attempting invalid instantiation...', 'system');
   try {
-    // Test invalid resourceLimit
-    new TinyBrowserMonitor(null, -5);
+    // Passing object instead of positional arguments
+    new TinyBrowserMonitor({ resourceLimit: -5 });
   } catch (error) {
     logToConsole(`Caught Expected Error: ${error.message}`, 'error');
   }
 });
-
 btnClear.addEventListener('click', () => {
   consoleOutput.innerHTML = '';
 });

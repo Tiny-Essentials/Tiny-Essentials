@@ -21,7 +21,7 @@
       </header>
 
       <main class="dashboard">
-        <!-- Control Panel -->
+        <!-- Sidebar Controls -->
         <aside class="control-panel">
           <section class="control-group">
             <h3>Lifecycle</h3>
@@ -31,17 +31,66 @@
           </section>
 
           <section class="control-group">
+            <h3>Configuration</h3>
+            <div class="config-item">
+              <label>Resource Limit</label>
+              <input type="number" id="input-resource-limit" value="1000" min="-1" />
+            </div>
+            <div class="config-item">
+              <label>Memory Interval (ms)</label>
+              <input type="number" id="input-memory-interval" value="100" min="16" />
+            </div>
+            <div class="system-selector">
+              <label>Systems to Monitor:</label>
+              <div id="checkbox-container" class="checkbox-grid">
+                <!-- Checkboxes generated via JS or hardcoded for speed -->
+                <label
+                  ><input type="checkbox" class="system-checkbox" value="connectivity" checked />
+                  Conn.</label
+                >
+                <label
+                  ><input type="checkbox" class="system-checkbox" value="quality" checked />
+                  Quality</label
+                >
+                <label
+                  ><input type="checkbox" class="system-checkbox" value="battery" checked />
+                  Battery</label
+                >
+                <label
+                  ><input type="checkbox" class="system-checkbox" value="device" checked />
+                  Device</label
+                >
+                <label
+                  ><input type="checkbox" class="system-checkbox" value="memory-usage" checked />
+                  Memory</label
+                >
+                <label
+                  ><input type="checkbox" class="system-checkbox" value="fps" checked /> FPS</label
+                >
+                <label
+                  ><input type="checkbox" class="system-checkbox" value="resource" checked />
+                  Resource</label
+                >
+                <label
+                  ><input type="checkbox" class="system-checkbox" value="performance" checked />
+                  Perf.</label
+                >
+              </div>
+            </div>
+          </section>
+
+          <section class="control-group">
             <h3>Simulation</h3>
             <button id="btn-sim-resource" class="btn btn-sim" disabled>
               Simulate Resource Load
+            </button>
+            <button id="btn-stress-limit" class="btn btn-sim" disabled>
+              Test Resource Limit (FIFO)
             </button>
           </section>
 
           <section class="control-group">
             <h3>Stress & Error Testing</h3>
-            <button id="btn-stress-limit" class="btn btn-sim" disabled>
-              Test Resource Limit (FIFO)
-            </button>
             <button id="btn-test-error" class="btn btn-danger">Test Invalid Constructor</button>
           </section>
         </aside>
@@ -49,29 +98,75 @@
         <!-- Live Data Display -->
         <section class="data-display">
           <div class="metrics-grid">
-            <!-- Connectivity Card -->
+            <!-- Connectivity & Quality -->
             <div class="card" id="card-connectivity">
-              <h4>Connectivity</h4>
+              <h4>Connectivity & Quality</h4>
               <div class="metric-item">
-                <span class="label">Status:</span>
-                <span id="stat-online" class="value">--</span>
+                <span class="label">Status:</span><span id="stat-online" class="value">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="label">Downlink:</span><span id="stat-downlink" class="value">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="label">RTT:</span><span id="stat-rtt" class="value">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="label">Type:</span><span id="stat-type" class="value">--</span>
               </div>
             </div>
 
-            <!-- Quality Card -->
-            <div class="card" id="card-quality">
-              <h4>Connection Quality</h4>
+            <!-- Battery -->
+            <div class="card" id="card-battery">
+              <h4>Battery Status</h4>
               <div class="metric-item">
-                <span class="label">Downlink:</span>
-                <span id="stat-downlink" class="value">--</span>
+                <span class="label">Level:</span
+                ><span id="stat-battery-level" class="value">--</span>
               </div>
               <div class="metric-item">
-                <span class="label">RTT:</span>
-                <span id="stat-rtt" class="value">--</span>
+                <span class="label">Charging:</span
+                ><span id="stat-battery-charging" class="value">--</span>
+              </div>
+            </div>
+
+            <!-- Device -->
+            <div class="card" id="card-device">
+              <h4>Device Hardware</h4>
+              <div class="metric-item">
+                <span class="label">Memory:</span><span id="stat-device-mem" class="value">--</span>
               </div>
               <div class="metric-item">
-                <span class="label">Type:</span>
-                <span id="stat-type" class="value">--</span>
+                <span class="label">Cores:</span><span id="stat-device-cpu" class="value">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="label">GPU:</span><span id="stat-device-gpu" class="value">--</span>
+              </div>
+            </div>
+
+            <!-- Memory Usage -->
+            <div class="card" id="card-memory">
+              <h4>JS Heap Memory</h4>
+              <div class="metric-item">
+                <span class="label">Used:</span><span id="stat-mem-used" class="value">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="label">Total:</span><span id="stat-mem-total" class="value">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="label">Limit:</span><span id="stat-mem-limit" class="value">--</span>
+              </div>
+            </div>
+
+            <!-- Performance -->
+            <div class="card" id="card-performance">
+              <h4>Performance</h4>
+              <div class="metric-item">
+                <span class="label">FPS:</span><span id="stat-fps" class="value">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="label">LCP:</span><span id="stat-lcp" class="value">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="label">Layout Shift:</span><span id="stat-cls" class="value">--</span>
               </div>
             </div>
           </div>
@@ -111,7 +206,6 @@
       </footer>
     </div>
 
-    <!-- The Test Bridge -->
     <script type="module" src="ui-test.js"></script>
   </body>
 </html>
