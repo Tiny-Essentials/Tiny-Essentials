@@ -166,34 +166,42 @@ const checkDestroy = createCheckDestroyed('TinyBrowserMonitor');
  */
 
 /**
- * A list of all valid identifiers for the monitoring systems.
- * @type {SystemValue[]}
- */
-const VALID_SYSTEMS = [
-  'connectivity',
-  'quality',
-  'battery',
-  'device',
-  'cpu',
-  'gpu',
-  'performance',
-  'resource',
-  'paint',
-  'navigation',
-  'layout-shift',
-  'lcp',
-  'longtask',
-  'memory-usage',
-  'fps',
-  'window',
-  'screen',
-];
-
-/**
  * An advanced monitor that tracks connectivity, connection quality, battery,
  * device constraints, and comprehensive performance metrics.
  */
 class TinyBrowserMonitor extends EventEmitter {
+  /**
+   * A list of all valid identifiers for the monitoring systems.
+   * @type {SystemValue[]}
+   */
+  static #VALID_SYSTEMS = [
+    'connectivity',
+    'quality',
+    'battery',
+    'device',
+    'cpu',
+    'gpu',
+    'performance',
+    'resource',
+    'paint',
+    'navigation',
+    'layout-shift',
+    'lcp',
+    'longtask',
+    'memory-usage',
+    'fps',
+    'window',
+    'screen',
+  ];
+
+  /**
+   * Retrieves a read-only copy of the valid system identifiers.
+   * @returns {Readonly<SystemValue[]>} A read-only array of valid system values.
+   */
+  static get VALID_SYSTEMS() {
+    return Object.freeze([...TinyBrowserMonitor.#VALID_SYSTEMS]);
+  }
+
   /** @type {boolean} Indicates whether the monitor has been destroyed. */
   #isDestroyed = false;
 
@@ -324,9 +332,9 @@ class TinyBrowserMonitor extends EventEmitter {
     }
 
     for (const system of systems) {
-      if (!VALID_SYSTEMS.includes(system)) {
+      if (!TinyBrowserMonitor.#VALID_SYSTEMS.includes(system)) {
         throw new TypeError(
-          `Invalid system identifier: "${system}". Must be one of: ${VALID_SYSTEMS.join(', ')}`,
+          `Invalid system identifier: "${system}". Must be one of: ${TinyBrowserMonitor.#VALID_SYSTEMS.join(', ')}`,
         );
       }
     }
@@ -335,7 +343,8 @@ class TinyBrowserMonitor extends EventEmitter {
     this.#memoryIntervalMs = memoryIntervalMs;
 
     // Logic: If systems array is empty, enable everything.
-    this.#enabledSystems = systems.length === 0 ? new Set(VALID_SYSTEMS) : new Set(systems);
+    this.#enabledSystems =
+      systems.length === 0 ? new Set(TinyBrowserMonitor.#VALID_SYSTEMS) : new Set(systems);
 
     this.#initializeSelectedSystems();
     this.#notify();

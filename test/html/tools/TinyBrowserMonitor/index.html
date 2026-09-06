@@ -16,7 +16,10 @@
   <body>
     <div class="app-container">
       <header class="app-header">
-        <h1>TinyBrowserMonitor <span class="badge">QA Test Suite</span></h1>
+        <div class="header-left">
+          <h1>TinyBrowserMonitor <span class="badge">QA Test Suite</span></h1>
+          <div id="event-ticker" class="event-ticker">Waiting for events...</div>
+        </div>
         <div id="connection-status-indicator" class="status-pill">System Ready</div>
       </header>
 
@@ -39,43 +42,6 @@
             <div class="config-item">
               <label>Memory Interval (ms)</label>
               <input type="number" id="input-memory-interval" value="100" min="16" />
-            </div>
-            <div class="system-selector">
-              <label>Systems to Monitor:</label>
-              <div id="checkbox-container" class="checkbox-grid">
-                <!-- Checkboxes generated via JS or hardcoded for speed -->
-                <label
-                  ><input type="checkbox" class="system-checkbox" value="connectivity" checked />
-                  Conn.</label
-                >
-                <label
-                  ><input type="checkbox" class="system-checkbox" value="quality" checked />
-                  Quality</label
-                >
-                <label
-                  ><input type="checkbox" class="system-checkbox" value="battery" checked />
-                  Battery</label
-                >
-                <label
-                  ><input type="checkbox" class="system-checkbox" value="device" checked />
-                  Device</label
-                >
-                <label
-                  ><input type="checkbox" class="system-checkbox" value="memory-usage" checked />
-                  Memory</label
-                >
-                <label
-                  ><input type="checkbox" class="system-checkbox" value="fps" checked /> FPS</label
-                >
-                <label
-                  ><input type="checkbox" class="system-checkbox" value="resource" checked />
-                  Resource</label
-                >
-                <label
-                  ><input type="checkbox" class="system-checkbox" value="performance" checked />
-                  Perf.</label
-                >
-              </div>
             </div>
           </section>
 

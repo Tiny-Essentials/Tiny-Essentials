@@ -43,6 +43,8 @@ body {
 }
 
 /* Header */
+
+/* Header Layout Update */
 .app-header {
   background-color: var(--bg-card);
   border-bottom: 1px solid var(--border-color);
@@ -50,6 +52,45 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 2rem;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header-left h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.event-ticker {
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  color: var(--accent-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.event-ticker.flash {
+  color: var(--accent-primary);
+  animation: flash-animation 0.4s ease-out;
+}
+
+@keyframes flash-animation {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateX(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .badge {

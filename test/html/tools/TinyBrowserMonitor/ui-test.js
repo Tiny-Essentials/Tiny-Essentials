@@ -38,14 +38,32 @@ const statFps = document.getElementById('stat-fps');
 const statLcp = document.getElementById('stat-lcp');
 const statCls = document.getElementById('stat-cls');
 
+const eventTicker = document.getElementById('event-ticker');
+
 // State
 let monitor = null;
 
-/**
- * Logs messages to the UI visual console.
- * @param {string} message - The text to display.
- * @param {'info' | 'success' | 'error' | 'data' | 'system'} type - The log style.
- */
+// Lista de todos os eventos que a classe pode emitir
+const ALL_MONITOR_EVENTS = [
+  'NetworkUpdated',
+  'WindowResize',
+  'FPS',
+  'ConnectivityUpdated',
+  'BatteryUpdated',
+  'MemoryUsage',
+  'PaintUpdated',
+  'NavigationUpdated',
+  'LayoutShiftUpdated',
+  'LcpUpdated',
+  'LongTaskUpdated',
+  'ResourceAdded',
+  'ResourceDeleted',
+  'ResourceEdited',
+  'Destroyed',
+];
+
+const mainUIEvents = ['MemoryUsage', 'FPS'];
+
 const logToConsole = (message, type = 'info') => {
   const entry = document.createElement('div');
   entry.className = `log-entry ${type}`;
@@ -56,6 +74,17 @@ const logToConsole = (message, type = 'info') => {
   }
   consoleOutput.appendChild(entry);
   consoleOutput.scrollTop = consoleOutput.scrollHeight;
+};
+
+/**
+ * Updates the visual ticker on the head
+ * @param {string} eventName
+ */
+const updateEventTicker = (eventName) => {
+  eventTicker.textContent = `Last Event: ${eventName}`;
+  eventTicker.classList.remove('flash');
+  void eventTicker.offsetWidth; // Trigger reflow para reiniciar animação
+  eventTicker.classList.add('flash');
 };
 
 /**
@@ -123,9 +152,7 @@ const updateDashboard = ({
 /**
  * Handles the 'NetworkUpdated' event.
  */
-const handleNetworkUpdate = (data) => {
-  updateDashboard(data);
-};
+const handleNetworkUpdate = (data) => updateDashboard(data);
 
 /**
  * Handles specific resource events emitted by the monitor.
@@ -139,19 +166,21 @@ const initMonitor = () => {
     const resourceLimit = parseInt(document.getElementById('input-resource-limit').value, 10);
     const memoryIntervalMs = parseInt(document.getElementById('input-memory-interval').value, 10);
 
-    const systems = Array.from(document.querySelectorAll('.system-checkbox:checked')).map(
-      (cb) => cb.value,
-    );
+    logToConsole(`Initializing TinyBrowserMonitor (Limit: ${resourceLimit})...`, 'system');
 
-    logToConsole(
-      `Initializing TinyBrowserMonitor (Limit: ${resourceLimit}, Systems: ${systems.join(', ')})...`,
-      'system',
-    );
-
-    monitor = new TinyBrowserMonitor({ resourceLimit, systems, memoryIntervalMs });
+    monitor = new TinyBrowserMonitor({ resourceLimit, memoryIntervalMs });
     window.networkMonitor = monitor;
 
-    // Main Update Event
+    ALL_MONITOR_EVENTS.forEach((eventName) => {
+      monitor.on(eventName, (payload) => {
+        if (!mainUIEvents.includes(eventName)) {
+          updateEventTicker(eventName);
+          logToConsole(`Event Captured: ${eventName}`, 'system');
+        }
+      });
+    });
+
+    // Specific Handlers to maintain current dashboard logic
     monitor.on('NetworkUpdated', handleNetworkUpdate);
 
     // Resource Specific Events (Required for 100% coverage)
@@ -163,6 +192,7 @@ const initMonitor = () => {
       logToConsole('Monitor destroyed successfully.', 'system');
       statusIndicator.textContent = 'System Idle';
       statusIndicator.style.color = 'var(--accent-secondary)';
+      eventTicker.textContent = 'System Idle';
     });
 
     // UI State Update
@@ -206,7 +236,17 @@ const testStressLimit = async () => {
   monitor.on('NetworkUpdated', handleNetworkUpdate);
   monitor.on('ResourceAdded', (old, newItem) => handleResourceEvent('ADDED', old, newItem));
   monitor.on('ResourceDeleted', (old, newItem) => handleResourceEvent('DELETED', old, newItem));
-  monitor.on('ResourceEdited', (old, newItem) => handleResourceEvent('EDITED', old, newItem));
+  monitor.on('ResourceEdited', (old, newItem) => handleResourceEvent('EDITED'));
+
+  // Re-attach global detector for the new instance
+  ALL_MONITOR_EVENTS.forEach((eventName) => {
+    monitor.on(eventName, (payload) => {
+      if (!mainUIEvents.includes(eventName)) {
+        updateEventTicker(eventName);
+        logToConsole(`Event Captured: ${eventName}`, 'system');
+      }
+    });
+  });
 
   // Rapidly load resources to force FIFO
   for (let i = 0; i < 7; i++) {
