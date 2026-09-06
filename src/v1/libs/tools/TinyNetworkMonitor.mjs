@@ -308,6 +308,38 @@ class TinyNetworkMonitor extends EventEmitter {
   }
 
   /**
+   * Returns an array of all currently enabled systems.
+   * @returns {Readonly<SystemValue[]>} A read-only array of enabled system identifiers.
+   */
+  get enabledSystems() {
+    checkDestroy(this.#isDestroyed);
+    return Object.freeze([...this.#enabledSystems]);
+  }
+
+  /**
+   * Checks if a specific system is currently enabled.
+   * @param {SystemValue} system - The identifier of the system to check.
+   * @returns {boolean} True if the system is enabled, false otherwise.
+   * @throws {TypeError} If the provided system is not a string.
+   */
+  has(system) {
+    checkDestroy(this.#isDestroyed);
+    if (typeof system !== 'string') {
+      throw new TypeError('The system identifier must be a string.');
+    }
+    return this.#enabledSystems.has(system);
+  }
+
+  /**
+   * Returns the number of currently enabled systems.
+   * @returns {number} The count of enabled systems.
+   */
+  get size() {
+    checkDestroy(this.#isDestroyed);
+    return this.#enabledSystems.size;
+  }
+
+  /**
    * Attaches event listeners to the window and connection APIs.
    */
   #setupListeners() {
