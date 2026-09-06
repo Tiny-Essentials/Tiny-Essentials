@@ -10,6 +10,14 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  */
 
 /**
+ * @typedef {'bytes'|'KB'|'MB'|'GB'} MemoryFormat
+ */
+
+/**
+ * @typedef {{ used: number; total: number; limit: number; }} MemoryHumanData
+ */
+
+/**
  * Represents the JavaScript heap memory usage.
  * @typedef {Object} MemoryUsage
  * @property {number} usedJSHeapSize - The amount of memory currently being used by the JS heap in bytes.
@@ -23,6 +31,7 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  * @typedef {Object} MonitorOptions
  * @property {number} [resourceLimit=1000] - Maximum number of resource metrics to store. Use -1 for infinite.
  * @property {SystemValue[]} [systems] - List of systems to enable. If empty, all are enabled.
+ * @property {number} [memoryIntervalMs=100] - Interval in milliseconds for memory polling.
  */
 
 /**
@@ -153,7 +162,7 @@ class TinyNetworkMonitor extends EventEmitter {
   #memoryInterval = null;
 
   /** @type {number} */
-  #memoryIntervalMs = 100;
+  #memoryIntervalMs;
 
   /** @type {MemoryUsage} The current JavaScript heap memory usage. */
   #memoryUsage = {
@@ -231,17 +240,21 @@ class TinyNetworkMonitor extends EventEmitter {
    * Creates an instance of TinyNetworkMonitor.
    * @param {NetworkCallback} [callback] - Function to call when status changes.
    * @param {MonitorOptions} [options={}] - Configuration options.
-   * @throws {TypeError} If the provided callback is not a function, resourceLimit is invalid, or systems is not an array.
+   * @throws {TypeError} If the provided callback is not a function, resourceLimit is invalid, memoryIntervalMs is invalid, or systems is not an array.
    */
   constructor(callback, options = {}) {
     super();
 
-    const { resourceLimit = 1000, systems = [] } = options;
+    const { resourceLimit = 1000, systems = [], memoryIntervalMs = 100 } = options;
+
     if (typeof callback !== 'undefined' && typeof callback !== 'function') {
       throw new TypeError('The callback provided to TinyNetworkMonitor must be a function.');
     }
     if (typeof resourceLimit !== 'number' || resourceLimit < -1) {
       throw new TypeError('The resourceLimit must be a number greater than or equal to -1.');
+    }
+    if (typeof memoryIntervalMs !== 'number' || memoryIntervalMs <= 0) {
+      throw new TypeError('The memoryIntervalMs must be a positive number.');
     }
     if (!Array.isArray(systems) && systems !== undefined) {
       throw new TypeError('The systems option must be an array.');
@@ -249,6 +262,7 @@ class TinyNetworkMonitor extends EventEmitter {
 
     this.#callback = callback || null;
     this.#resourceLimit = resourceLimit;
+    this.#memoryIntervalMs = memoryIntervalMs;
 
     // Logic: If systems array is empty, enable everything.
     /** @type {SystemValue[]} */
@@ -433,6 +447,41 @@ class TinyNetworkMonitor extends EventEmitter {
   get size() {
     checkDestroy(this.#isDestroyed);
     return this.#enabledSystems.size;
+  }
+
+  /**
+   * Formats the current memory usage metrics into a human-readable string.
+   * @param {MemoryFormat} format - The desired unit for the output.
+   * @returns {MemoryHumanData} A formatted string containing used, total, and limit memory.
+   * @throws {TypeError} If the provided format is not one of: 'bytes', 'KB', 'MB', 'GB'.
+   */
+  getFormattedMemoryUsage(format) {
+    checkDestroy(this.#isDestroyed);
+
+    const validFormats = ['bytes', 'KB', 'MB', 'GB'];
+    if (typeof format !== 'string' || !validFormats.includes(format)) {
+      throw new TypeError(
+        `Invalid format: "${format}". Must be one of: ${validFormats.join(', ')}`,
+      );
+    }
+
+    const units = {
+      bytes: 1,
+      KB: 1024,
+      MB: Math.pow(1024, 2),
+      GB: Math.pow(1024, 3),
+    };
+
+    const divisor = units[format];
+
+    /** @type {(value: number) => number} */
+    const formatValue = (value) => value / divisor;
+
+    return {
+      used: formatValue(this.#memoryUsage.usedJSHeapSize),
+      total: formatValue(this.#memoryUsage.totalJSHeapSize),
+      limit: formatValue(this.#memoryUsage.jsHeapSizeLimit),
+    };
   }
 
   /**
