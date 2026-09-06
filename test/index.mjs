@@ -1,3 +1,5 @@
+import TinyPkgExportValidator from '../src/v1/libs/tools/TinyPkgExportValidator.mjs';
+
 import testFolderManager from './fileManager/index.mjs';
 import testColorSafeStringify from './libs/ColorSafeStringify.mjs';
 import testLevelUp from './libs/TinyLevelUp.mjs';
@@ -6,7 +8,6 @@ import testRateLimit from './libs/TinyRateLimiter.mjs';
 import executeObjType from './libs/objType.mjs';
 import testI18 from './libs/TinyI18.mjs';
 import testTinySiteMap from './libs/TinySiteMap.mjs';
-import TinyPkgExportValidator from '../src/v1/libs/tools/TinyPkgExportValidator.mjs';
 import testTinyPasswordValidator from './libs/TinyPasswordValidator.mjs';
 import executeCrypto from './libs/crypto.mjs';
 
