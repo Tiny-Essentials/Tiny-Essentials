@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { createCheckDestroyed } from '../utils/tools.mjs';
+import TinyArrayComparator from '../array/TinyArrayComparator.mjs';
 
 const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
 
@@ -166,6 +167,12 @@ class TinyNetworkMonitor extends EventEmitter {
     try {
       this.#observer = new PerformanceObserver((list) => {
         const entries = list.getEntries();
+        /** @type {TinyArrayComparator<ResourceMetric>} */
+        const comparator = new TinyArrayComparator(
+          this.#resources.map((v) => ({ ...v })),
+          { idKey: 'name' },
+        );
+
         entries.forEach((entry) => {
           this.#resources.push({
             name: entry.name,
@@ -177,6 +184,15 @@ class TinyNetworkMonitor extends EventEmitter {
         // Handle resource limit (FIFO logic)
         if (this.#resourceLimit > 0 && this.#resources.length > this.#resourceLimit) {
           this.#resources.splice(0, this.#resources.length - this.#resourceLimit);
+        }
+
+        const compareResult = comparator.compare(this.#resources);
+        for (const result of compareResult) {
+          this.emit(
+            `Resource${result.status === 'added' ? 'Added' : result.status === 'deleted' ? 'Deleted' : 'Edited'}`,
+            result.oldItem,
+            result.item,
+          );
         }
 
         this.#notify();
