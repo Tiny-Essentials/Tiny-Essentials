@@ -695,6 +695,7 @@ class TinyBrowserMonitor extends EventEmitter {
             dischargingTime: battery.dischargingTime,
             enabled: true,
           };
+          this.emit('BatteryUpdated', Object.freeze({ ...this.#battery }));
           this.#notify();
         };
 
@@ -814,6 +815,7 @@ class TinyBrowserMonitor extends EventEmitter {
         this.#performance.paint.firstContentfulPaint = entry.startTime;
       }
     });
+    this.emit('PaintUpdated', Object.freeze({ ...this.#performance.paint }));
     this.#notify();
   }
 
@@ -832,6 +834,7 @@ class TinyBrowserMonitor extends EventEmitter {
         loadEvent: entry.loadEventEnd - entry.startTime,
       };
     }
+    this.emit('NavigationUpdated', Object.freeze({ ...this.#performance.navigation }));
     this.#notify();
   }
 
@@ -849,6 +852,7 @@ class TinyBrowserMonitor extends EventEmitter {
         this.#performance.layoutShift += shiftEntry.value;
       }
     });
+    this.emit('LayoutShiftUpdated', { layoutShift: this.#performance.layoutShift });
     this.#notify();
   }
 
@@ -861,6 +865,7 @@ class TinyBrowserMonitor extends EventEmitter {
     if (lastEntry) {
       this.#performance.lcp = lastEntry.startTime;
     }
+    this.emit('LcpUpdated', { lcp: this.#performance.lcp });
     this.#notify();
   }
 
@@ -872,6 +877,7 @@ class TinyBrowserMonitor extends EventEmitter {
     list.getEntries().forEach((entry) => {
       this.#performance.longTasks.push(entry.duration);
     });
+    this.emit('LongTaskUpdated', { lcp: [...this.#performance.longTasks] });
     this.#notify();
   }
 
@@ -895,6 +901,7 @@ class TinyBrowserMonitor extends EventEmitter {
    */
   #updateConnectivity() {
     this.#connectivity = { isOnline: navigator.onLine };
+    this.emit('ConnectivityUpdated', { ...this.#connectivity });
   }
 
   /**
