@@ -5,6 +5,16 @@ import TinyArrayComparator from '../array/TinyArrayComparator.mjs';
 const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
 
 /**
+ * @typedef {'connectivity'|'quality'|'battery'|'device'|'performance'} SystemValue
+ */
+
+/**
+ * @typedef {Object} MonitorOptions
+ * @property {number} [resourceLimit=1000] - Maximum number of resource metrics to store. Use -1 for infinite.
+ * @property {SystemValue[]} [systems] - List of systems to enable. If empty, all are enabled.
+ */
+
+/**
  * Represents the current connectivity status of the network connection.
  * @typedef {Object} ConnectivityStatus
  * @property {boolean} isOnline - Indicates if the browser is currently connected to a network.
@@ -90,6 +100,9 @@ class TinyNetworkMonitor extends EventEmitter {
   /** @type {boolean} Indicates whether the monitor has been destroyed. */
   #isDestroyed = false;
 
+  /** @type {Set<SystemValue>} */
+  #enabledSystems = new Set();
+
   /**
    * The current network status.
    * @type {ConnectivityStatus}
@@ -146,27 +159,54 @@ class TinyNetworkMonitor extends EventEmitter {
   /**
    * Creates an instance of TinyNetworkMonitor.
    * @param {NetworkCallback} [callback] - Function to call when status changes.
-   * @param {number} [resourceLimit=1000] - Maximum number of resource metrics to store. Use -1 for infinite.
-   * @throws {TypeError} If the provided callback is not a function or resourceLimit is invalid.
+   * @param {MonitorOptions} [options={}] - Configuration options.
+   * @throws {TypeError} If the provided callback is not a function, resourceLimit is invalid, or systems is not an array.
    */
-  constructor(callback, resourceLimit = 1000) {
+  constructor(callback, options = {}) {
     super();
+
+    const { resourceLimit = 1000, systems = [] } = options;
     if (typeof callback !== 'undefined' && typeof callback !== 'function') {
       throw new TypeError('The callback provided to TinyNetworkMonitor must be a function.');
     }
     if (typeof resourceLimit !== 'number' || resourceLimit < -1) {
       throw new TypeError('The resourceLimit must be a number greater than or equal to -1.');
     }
+    if (!Array.isArray(systems) && systems !== undefined) {
+      throw new TypeError('The systems option must be an array.');
+    }
 
     this.#callback = callback || null;
     this.#resourceLimit = resourceLimit;
 
-    this.#setupListeners();
-    this.#setupPerformanceObservers();
-    this.#setupDeviceMetrics();
-    this.#setupBatteryMonitoring();
-    this.#updateQualityMetrics();
+    // Logic: If systems array is empty, enable everything.
+    /** @type {SystemValue[]} */
+    const allSystems = ['connectivity', 'quality', 'battery', 'device', 'performance'];
+    this.#enabledSystems = systems.length === 0 ? new Set(allSystems) : new Set(systems);
+
+    this.#initializeSelectedSystems();
     this.#notify();
+  }
+
+  /**
+   * Initializes only the systems selected in the options.
+   */
+  #initializeSelectedSystems() {
+    if (this.#enabledSystems.has('connectivity')) {
+      this.#setupListeners();
+    }
+    if (this.#enabledSystems.has('quality')) {
+      this.#updateQualityMetrics();
+    }
+    if (this.#enabledSystems.has('battery')) {
+      this.#setupBatteryMonitoring();
+    }
+    if (this.#enabledSystems.has('device')) {
+      this.#setupDeviceMetrics();
+    }
+    if (this.#enabledSystems.has('performance')) {
+      this.#setupPerformanceObservers();
+    }
   }
 
   /**
@@ -430,8 +470,12 @@ class TinyNetworkMonitor extends EventEmitter {
    * @bind {TinyNetworkMonitor}
    */
   #handleUpdate = (event) => {
-    this.#updateConnectivity();
-    this.#updateQualityMetrics();
+    if (this.#enabledSystems.has('connectivity')) {
+      this.#updateConnectivity();
+    }
+    if (this.#enabledSystems.has('quality')) {
+      this.#updateQualityMetrics();
+    }
     this.#notify(event);
   };
 
@@ -503,15 +547,19 @@ class TinyNetworkMonitor extends EventEmitter {
   destroy() {
     if (this.#isDestroyed) return;
 
-    window.removeEventListener('online', this.#handleUpdate);
-    window.removeEventListener('offline', this.#handleUpdate);
+    if (this.#enabledSystems.has('connectivity')) {
+      window.removeEventListener('online', this.#handleUpdate);
+      window.removeEventListener('offline', this.#handleUpdate);
+    }
 
-    if (navigator.connection) {
+    if (this.#enabledSystems.has('quality') && navigator.connection) {
       navigator.connection.removeEventListener('change', this.#handleUpdate);
     }
 
-    this.#observers.forEach((obs) => obs.disconnect());
-    this.#observers = [];
+    if (this.#enabledSystems.has('performance')) {
+      this.#observers.forEach((obs) => obs.disconnect());
+      this.#observers = [];
+    }
 
     this.removeAllListeners();
     this.#isDestroyed = true;
