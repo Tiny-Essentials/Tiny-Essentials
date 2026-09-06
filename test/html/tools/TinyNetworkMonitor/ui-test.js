@@ -14,8 +14,6 @@ const btnDestroy = document.getElementById('btn-destroy');
 const btnClear = document.getElementById('btn-clear-console');
 
 // Simulation Buttons
-const btnSimOnline = document.getElementById('btn-sim-online');
-const btnSimOffline = document.getElementById('btn-sim-offline');
 const btnSimResource = document.getElementById('btn-sim-resource');
 const btnStressLimit = document.getElementById('btn-stress-limit');
 const btnTestError = document.getElementById('btn-test-error');
@@ -126,8 +124,6 @@ const initMonitor = (customLimit = 1000) => {
     btnInit.disabled = true;
     btnReport.disabled = false;
     btnDestroy.disabled = false;
-    btnSimOnline.disabled = false;
-    btnSimOffline.disabled = false;
     btnSimResource.disabled = false;
     btnStressLimit.disabled = false;
 
@@ -201,22 +197,11 @@ btnDestroy.addEventListener('click', () => {
     btnInit.disabled = false;
     btnReport.disabled = true;
     btnDestroy.disabled = true;
-    btnSimOnline.disabled = true;
-    btnSimOffline.disabled = true;
     btnSimResource.disabled = true;
     btnStressLimit.disabled = true;
   }
 });
 
-btnSimOnline.addEventListener('click', () => {
-  window.dispatchEvent(new Event('online'));
-  logToConsole('Dispatched "online" event', 'system');
-});
-
-btnSimOffline.addEventListener('click', () => {
-  window.dispatchEvent(new Event('offline'));
-  logToConsole('Dispatched "offline" event', 'system');
-});
 
 btnSimResource.addEventListener('click', simulateResourceLoad);
 
