@@ -334,16 +334,6 @@ export function getObjTypeRegistry() {
 }
 
 /**
- * @deprecated Use {@link getObjTypeRegistry} instead.
- * @returns {Record<string, ExtendObjTypeFunc<any, any>>} A registry of validator functions.
- */
-export function getCheckObj() {
-  return Object.fromEntries(
-    Object.entries(typeValidator.items).map(([key, fn]) => [key, fn.validator]),
-  );
-}
-
-/**
  * Returns a copy of the current order of type validators.
  * @returns {string[]} A new array containing the type order.
  */

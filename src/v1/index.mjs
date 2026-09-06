@@ -46,7 +46,6 @@ import {
 } from './basics/simpleMath.mjs';
 import {
   addAiMarkerShortcut,
-  diffStrings,
   diffObjList,
   safeTextTrim,
   toTitleCase,
@@ -321,7 +320,6 @@ export {
   defuzzifyCentroid,
   trapezoid,
   diffArrayList,
-  diffStrings,
   hashText,
   diffObjList,
   breakdownDuration,

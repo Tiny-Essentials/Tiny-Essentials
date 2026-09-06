@@ -48,7 +48,6 @@ import {
 } from './simpleMath.mjs';
 import {
   addAiMarkerShortcut,
-  diffStrings,
   diffObjList,
   safeTextTrim,
   toTitleCase,
@@ -113,7 +112,6 @@ export {
   valFetchMediaContent,
   parseMediaMetadata,
   extractMediaId3Tags,
-  diffStrings,
   hashText,
   diffObjList,
   diffArrayList,

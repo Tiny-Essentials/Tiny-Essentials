@@ -144,20 +144,6 @@ class TinyTimeout {
   }
 
   /**
-   * Waits until a provided function returns `true`, checking repeatedly at the defined interval.
-   * Useful for polling asynchronous conditions.
-   *
-   * @param {() => boolean} getValue - A function that returns `true` when the condition is met.
-   * @param {number} [checkInterval=100] - How often (in ms) to check the condition.
-   * @returns {Promise<void>} Resolves when the condition is met.
-   * @throws {TypeError} If arguments are invalid.
-   * @deprecated Script migrated to `src/v1/basics/promiseUtils.mjs`.
-   */
-  static waitForTrue(getValue, checkInterval = 100) {
-    return waitForTrue(getValue, checkInterval);
-  }
-
-  /**
    * Instance version of `waitForTrue`, which defaults to using the instance's
    * cooldownWatcherTime if not explicitly provided.
    *

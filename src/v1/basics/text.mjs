@@ -243,14 +243,3 @@ export function diffObjList(oldStrings, newStrings) {
 
   return changes;
 }
-
-/**
- * Diff two objects.
- * @template {Record<string, any>} CompareValue1
- * @template {Record<string, any>} CompareValue2
- * @param {CompareValue1} oldStrings - The original/old object for comparison.
- * @param {CompareValue2} newStrings - The new object for comparison.
- * @returns {DiffStringsData<CompareValue1 & CompareValue2>} An object containing what was added, removed, and modified.
- * @deprecated Function rename! Use {@link diffObjList} instead.
- */
-export const diffStrings = diffObjList;
