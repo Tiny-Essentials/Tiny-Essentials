@@ -10,7 +10,7 @@ Whether you are building a progressive web app (PWA) that needs to react to offl
 
 `TinyNetworkMonitor` is an event-driven monitor that tracks three critical pillars of network health:
 1.  **Connectivity Status:** Are we online or offline? 📶
-2.  **Connection Quality:** How fast is the connection? (Bandwidth, Latency, Connection Type). ⚡
+2.  **Connection Quality:** How fast is the connection? (Bandwidth, Latency, Connection Type, and API availability). ⚡
 3.  **Resource Performance:** How long are assets (images, scripts, etc.) taking to load? ⏱️
 
 ---
@@ -22,6 +22,15 @@ Since this module uses ES6 syntax, ensure your environment supports `import`.
 
 ```javascript
 import TinyNetworkMonitor from 'tiny-essentials/libs/tools/TinyNetworkMonitor';
+```
+
+### Initialization
+```javascript
+/**
+ * @param {NetworkCallback} [callback] - Optional callback function triggered on every update.
+ * @param {number} [resourceLimit=1000] - Max number of resource metrics to store. Use -1 for infinite.
+ */
+const monitor = new TinyNetworkMonitor(callback, resourceLimit);
 ```
 
 ---
@@ -37,9 +46,10 @@ Leverages the **Network Information API** to provide:
 *   `rtt`: Estimated round-trip time (latency).
 *   `effectiveType`: The connection type (e.g., '4g', '3g').
 *   `saveData`: Detects if the user has "Data Saver" mode enabled.
+*   `enabled`: Indicates if the Network Information API is supported by the browser.
 
 ### 3. Resource Monitoring
-Uses the `PerformanceObserver` API to track the loading duration of every resource fetched by the browser.
+Uses the `PerformanceObserver` API to track the loading duration of every resource fetched by the browser. It maintains a history of these metrics up to the defined `resourceLimit` using a FIFO (First-In, First-Out) approach.
 
 ---
 
@@ -69,6 +79,7 @@ const monitor = new TinyNetworkMonitor();
 // Listen for network changes
 monitor.on('NetworkUpdate', ({ report, event }) => {
   console.log('📊 Current Report:', report);
+  if (event) console.log('Triggered by event:', event.type);
 });
 
 // Listen for destruction
@@ -101,6 +112,7 @@ The `report` object is **deeply frozen**. This means you cannot accidentally mod
 | `quality.rtt` | `number` | Latency in milliseconds. |
 | `quality.effectiveType` | `string` | Connection type (e.g., '4g', '2g'). |
 | `quality.saveData` | `boolean` | `true` if user has data saving enabled. |
+| `quality.enabled` | `boolean` | `true` if the Network Information API is available. |
 | `resources` | `Array<Object>` | A list of recent resource loading metrics. |
 
 **Example Report Object:**
@@ -136,10 +148,12 @@ monitor.destroy();
 *   ✅ Removes `connection` change listeners.
 *   ✅ Disconnects the `PerformanceObserver`.
 *   ✅ Clears all internal event emitters.
+*   ✅ Sets `isDestroyed` to `true`.
 
 ---
 
 ## ⚠️ Important Notes
 
 *   **Browser Support:** The `quality` metrics rely on the `navigator.connection` API, which may not be available in all browsers (e.g., Safari). The monitor handles this gracefully by setting `enabled: false`.
-*   **Immutability:** The `report` returned is a read-only copy. Attempting to change `monitor.report.connectivity.isOnline = false` will fail silently (or throw an error in strict mode).
+*   **Immutability:** The `report` returned is a read-only copy. Attempting to change `monitor.report.connectivity.isOnline = false` will fail.
+*   **Resource Limit:** If a `resourceLimit` is set, the monitor will automatically remove the oldest entries to make room for new ones once the limit is reached.
