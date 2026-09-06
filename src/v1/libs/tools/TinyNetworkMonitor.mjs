@@ -54,7 +54,13 @@ class TinyNetworkMonitor extends EventEmitter {
   #connectivity = { isOnline: navigator.onLine };
 
   /** @type {ConnectionQuality} Stores the current network quality metrics. */
-  #quality = { downlink: 0, rtt: 0, effectiveType: 'unknown', saveData: false, enabled: !!navigator.connection };
+  #quality = {
+    downlink: 0,
+    rtt: 0,
+    effectiveType: 'unknown',
+    saveData: false,
+    enabled: !!navigator.connection,
+  };
   /** @type {ResourceMetric[]} A collection of recent resource loading metrics. */
   #resources = [];
 

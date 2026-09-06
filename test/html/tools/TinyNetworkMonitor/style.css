@@ -1,0 +1,280 @@
+/* 
+  Theme Architecture: Dark Developer Aesthetic
+  Primary Colors:
+*/
+:root {
+  --bg-main: #0f172a;
+  --bg-card: #1e293b;
+  --bg-console: #020617;
+  --accent-primary: #38bdf8; /* Used for primary buttons and highlights */
+  --accent-secondary: #94a3b8; /* Used for secondary buttons */
+  --accent-danger: #f43f5e; /* Used for destroy button and errors */
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+  --success: #22c55e;
+  --warning: #f59e0b;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-container {
+  display: grid;
+  grid-template-rows: 60px 1fr 200px;
+  height: 100vh;
+}
+
+/* Header */
+.app-header {
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+}
+
+.app-header h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.badge {
+  font-size: 0.7rem;
+  background: var(--accent-primary);
+  color: var(--bg-main);
+  padding: 2px 6px;
+  border-radius: 4px;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+.status-pill {
+  font-size: 0.8rem;
+  color: var(--accent-secondary);
+}
+
+/* Main Dashboard Layout */
+.dashboard {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  overflow: hidden;
+}
+
+/* Sidebar Controls */
+.control-panel {
+  background-color: var(--bg-card);
+  border-right: 1px solid var(--border-color);
+  padding: 1.5rem;
+}
+
+.control-group {
+  margin-bottom: 2rem;
+}
+
+.control-group h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Buttons */
+.btn {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.btn-primary {
+  background-color: var(--accent-primary);
+  color: var(--bg-main);
+}
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.btn-primary:disabled {
+  background-color: var(--border-color);
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: var(--accent-secondary);
+  color: var(--bg-main);
+}
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  background-color: var(--accent-danger);
+  color: white;
+}
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+/* Data Display Area */
+.data-display {
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.card h4 {
+  font-size: 0.9rem;
+  color: var(--accent-primary);
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.metric-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.label {
+  color: var(--text-muted);
+}
+.value {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+}
+
+/* Resource Table */
+.resource-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+th {
+  text-align: left;
+  color: var(--text-muted);
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  font-family: 'Courier New', monospace;
+}
+
+/* Console Area */
+.console-area {
+  background-color: var(--bg-console);
+  border-top: 2px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.console-header {
+  background-color: #1e293b;
+  padding: 0.4rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.console-output {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.85rem;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+.log-entry {
+  margin-bottom: 4px;
+}
+.log-entry.info {
+  color: var(--text-main);
+}
+.log-entry.success {
+  color: var(--success);
+}
+.log-entry.error {
+  color: var(--accent-danger);
+}
+.log-entry.data {
+  color: var(--accent-primary);
+}
+.log-entry.system {
+  color: var(--accent-secondary);
+  font-style: italic;
+}

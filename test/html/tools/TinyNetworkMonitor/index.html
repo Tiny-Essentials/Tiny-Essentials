@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TinyNetworkMonitor | Test Environment</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "events": "https://esm.sh/events@3.3.0"
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <header class="app-header">
+        <h1>TinyNetworkMonitor <span class="badge">QA Test Suite</span></h1>
+        <div id="connection-status-indicator" class="status-pill">System Ready</div>
+      </header>
+
+      <main class="dashboard">
+        <!-- Control Panel -->
+        <aside class="control-panel">
+          <section class="control-group">
+            <h3>Lifecycle</h3>
+            <button id="btn-init" class="btn btn-primary">Initialize Monitor</button>
+            <button id="btn-report" class="btn btn-secondary" disabled>Get Manual Report</button>
+            <button id="btn-destroy" class="btn btn-danger" disabled>Destroy Monitor</button>
+          </section>
+
+          <section class="control-group">
+            <h3>Simulation</h3>
+            <p class="hint">
+              To test connectivity changes, use Chrome DevTools > Network > Throttling.
+            </p>
+          </section>
+        </aside>
+
+        <!-- Live Data Display -->
+        <section class="data-display">
+          <div class="metrics-grid">
+            <!-- Connectivity Card -->
+            <div class="card" id="card-connectivity">
+              <h4>Connectivity</h4>
+              <div class="metric-item">
+                <span class="label">Status:</span>
+                <span id="stat-online" class="value">--</span>
+              </div>
+            </div>
+
+            <!-- Quality Card -->
+            <div class="card" id="card-quality">
+              <h4>Connection Quality</h4>
+              <div class="metric-item">
+                <span class="label">Downlink:</span>
+                <span id="stat-downlink" class="value">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="label">RTT:</span>
+                <span id="stat-rtt" class="value">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="label">Type:</span>
+                <span id="stat-type" class="value">--</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resources Table -->
+          <div class="card resource-card">
+            <h4>Resource Performance</h4>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Resource Name</th>
+                    <th>Duration (ms)</th>
+                    <th>Type</th>
+                  </tr>
+                </thead>
+                <tbody id="resource-tbody">
+                  <!-- Rows injected by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Visual Console -->
+      <footer class="console-area">
+        <div class="console-header">
+          <span>Visual Console</span>
+          <button id="btn-clear-console" class="btn-text">Clear</button>
+        </div>
+        <div id="console-output" class="console-output">
+          <div class="log-entry system">
+            Welcome to TinyNetworkMonitor Test Suite. Press "Initialize" to begin.
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- The Test Bridge -->
+    <script type="module" src="ui-test.js"></script>
+  </body>
+</html>
