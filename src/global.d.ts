@@ -9,6 +9,19 @@ interface BatteryManager extends EventTarget {
   onlevelchange: ((this: BatteryManager, ev: Event) => any) | null;
 }
 
+interface LayoutShiftAttribution {
+  node?: HTMLElement;
+  previousRect: DOMRectReadOnly;
+  currentRect: DOMRectReadOnly;
+}
+
+interface LayoutShift extends PerformanceEntry {
+  value: number;
+  hadRecentInput: boolean;
+  lastInputTime: DOMHighResTimeStamp;
+  sources: LayoutShiftAttribution[];
+}
+
 // https://www.npmjs.com/package/network-information-types?activeTab=code
 // W3C Spec Draft http://wicg.github.io/netinfo/
 // Edition: Draft Community Group Report 20 February 2019

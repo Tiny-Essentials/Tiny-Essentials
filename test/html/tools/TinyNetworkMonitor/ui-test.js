@@ -183,7 +183,17 @@ btnInit.addEventListener('click', () => initMonitor());
 btnReport.addEventListener('click', () => {
   if (monitor) {
     try {
-      logToConsole(monitor.report, 'data');
+      logToConsole(
+        {
+          connectivity: monitor.connectivity,
+          quality: monitor.quality,
+          resources: monitor.resources,
+          battery: monitor.battery,
+          device: monitor.device,
+          performance: monitor.performance,
+        },
+        'data',
+      );
     } catch (error) {
       logToConsole(error.message, 'error');
     }

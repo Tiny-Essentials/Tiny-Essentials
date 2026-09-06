@@ -21,6 +21,21 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  */
 
 /**
+ * @typedef {Object} BatteryStatus
+ * @property {number} level - Battery charge level (0 to 1).
+ * @property {boolean} charging - Whether the device is currently charging.
+ * @property {number} chargingTime - Time until full charge in seconds.
+ * @property {number} dischargingTime - Time until empty in seconds.
+ * @property {boolean} enabled - Indicates if the Battery Status API is available.
+ */
+
+/**
+ * @typedef {Object} DeviceMetrics
+ * @property {number} memory - Approximate amount of device memory in GB.
+ * @property {boolean} enabled - Indicates if the Device Memory API is available.
+ */
+
+/**
  * Represents the performance metrics of a single loaded resource.
  * @typedef {Object} ResourceMetric
  * @property {string} name - The URL of the resource.
@@ -29,16 +44,37 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  */
 
 /**
- * Represents a comprehensive report containing connectivity status, connection quality, and recent resource performance metrics.
- * @typedef {Object} NetworkReport
- * @property {Readonly<ConnectivityStatus>} connectivity - Current online/offline status.
- * @property {Readonly<ConnectionQuality>} quality - Current network quality metrics.
- * @property {Readonly<ResourceMetric[]>} resources - Recent resource loading metrics.
+ * @typedef {Object} PaintMetrics
+ * @property {number} firstPaint - Time when the first pixel was painted.
+ * @property {number} firstContentfulPaint - Time when the first content was painted.
  */
 
 /**
- * Represents a network event payload that combines a comprehensive network report with the original browser event that triggered the update.
- * @typedef {NetworkReport & { event?: Event; }} NetworkEvent
+ * @typedef {Object} NavigationMetrics
+ * @property {number} ttfb - Time to first byte in ms.
+ * @property {number} domContentLoaded - Time until DOMContentLoaded in ms.
+ * @property {number} loadEvent - Time until load event in ms.
+ */
+
+/**
+ * @typedef {Object} PerformanceMetrics
+ * @property {PaintMetrics} paint - Paint timing metrics.
+ * @property {NavigationMetrics|null} navigation - Navigation timing metrics.
+ * @property {number} layoutShift - Cumulative Layout Shift (CLS) value.
+ * @property {number} lcp - Largest Contentful Paint (LCP) value in ms.
+ * @property {number[]} longTasks - Array of durations of long tasks in ms.
+ */
+
+/**
+ * Represents a comprehensive report containing connectivity status, connection quality, and recent resource performance metrics.
+ * @typedef {Object} NetworkEvent
+ * @property {Readonly<ConnectivityStatus>} connectivity - Current online/offline status.
+ * @property {Readonly<ConnectionQuality>} quality - Current network quality metrics.
+ * @property {Readonly<BatteryStatus>} battery - Current battery status.
+ * @property {Readonly<DeviceMetrics>} device - Current device hardware metrics.
+ * @property {Readonly<PerformanceMetrics>} performance - Comprehensive performance metrics.
+ * @property {Readonly<ResourceMetric[]>} resources - Recent resource loading metrics.
+ * @property {Event} [event]
  */
 
 /**
@@ -47,7 +83,8 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
  */
 
 /**
- * An monitor that tracks connectivity, connection quality, and resource performance.
+ * An advanced monitor that tracks connectivity, connection quality, battery,
+ * device constraints, and comprehensive performance metrics.
  */
 class TinyNetworkMonitor extends EventEmitter {
   /** @type {boolean} Indicates whether the monitor has been destroyed. */
@@ -67,8 +104,33 @@ class TinyNetworkMonitor extends EventEmitter {
     saveData: false,
     enabled: !!navigator.connection,
   };
+
   /** @type {ResourceMetric[]} A collection of recent resource loading metrics. */
   #resources = [];
+
+  /** @type {BatteryStatus} The current status of the device's battery. */
+  #battery = {
+    level: 1,
+    charging: true,
+    chargingTime: 0,
+    dischargingTime: 0,
+    enabled: false,
+  };
+
+  /** @type {DeviceMetrics} The current hardware metrics of the device. */
+  #deviceMetrics = {
+    memory: 0,
+    enabled: !!navigator.deviceMemory,
+  };
+
+  /** @type {PerformanceMetrics} The current performance and timing metrics. */
+  #performance = {
+    paint: { firstPaint: 0, firstContentfulPaint: 0 },
+    navigation: null,
+    layoutShift: 0,
+    lcp: 0,
+    longTasks: [],
+  };
 
   /** @type {number} Maximum number of resource metrics to store. Use -1 for infinite. */
   #resourceLimit;
@@ -78,8 +140,8 @@ class TinyNetworkMonitor extends EventEmitter {
    * @type {NetworkCallback|null}
    */
   #callback = null;
-  /** @type {PerformanceObserver|null} The observer used to track performance entries. */
-  #observer = null;
+  /** @type {PerformanceObserver[]} The observer used to track performance entries. */
+  #observers = [];
 
   /**
    * Creates an instance of TinyNetworkMonitor.
@@ -96,21 +158,15 @@ class TinyNetworkMonitor extends EventEmitter {
       throw new TypeError('The resourceLimit must be a number greater than or equal to -1.');
     }
 
-    if (callback) this.#callback = callback;
+    this.#callback = callback || null;
     this.#resourceLimit = resourceLimit;
 
     this.#setupListeners();
-    this.#setupResourceObserver();
+    this.#setupPerformanceObservers();
+    this.#setupDeviceMetrics();
+    this.#setupBatteryMonitoring();
     this.#updateQualityMetrics();
     this.#notify();
-  }
-
-  /**
-   *  The observer used to track performance entries.
-   * @returns {PerformanceObserver|null}
-   */
-  get observer() {
-    return this.#observer;
   }
 
   /**
@@ -149,6 +205,39 @@ class TinyNetworkMonitor extends EventEmitter {
   }
 
   /**
+   * Returns the current battery status.
+   * @returns {Readonly<BatteryStatus>} A deep clone of the battery status.
+   */
+  get battery() {
+    checkDestroy(this.#isDestroyed);
+    return Object.freeze({ ...this.#battery });
+  }
+
+  /**
+   * Returns the current device hardware metrics.
+   * @returns {Readonly<DeviceMetrics>} A deep clone of the device metrics.
+   */
+  get device() {
+    checkDestroy(this.#isDestroyed);
+    return Object.freeze({ ...this.#deviceMetrics });
+  }
+
+  /**
+   * Returns the current performance metrics.
+   * @returns {Readonly<PerformanceMetrics>} A deep clone of the performance metrics.
+   */
+  get performance() {
+    checkDestroy(this.#isDestroyed);
+    return Object.freeze({
+      ...this.#performance,
+      paint: Object.freeze({ ...this.#performance.paint }),
+      navigation: this.#performance.navigation
+        ? Object.freeze({ ...this.#performance.navigation })
+        : null,
+    });
+  }
+
+  /**
    * Attaches event listeners to the window and connection APIs.
    */
   #setupListeners() {
@@ -161,47 +250,178 @@ class TinyNetworkMonitor extends EventEmitter {
   }
 
   /**
-   * Sets up PerformanceObserver to monitor resource loading times.
+   * Initializes and stores hardware-specific metrics such as device memory.
    */
-  #setupResourceObserver() {
-    try {
-      this.#observer = new PerformanceObserver((list) => {
-        const entries = list.getEntries();
-        /** @type {TinyArrayComparator<ResourceMetric>} */
-        const comparator = new TinyArrayComparator(
-          this.#resources.map((v) => ({ ...v })),
-          { idKey: 'name' },
-        );
-
-        entries.forEach((entry) => {
-          this.#resources.push({
-            name: entry.name,
-            duration: entry.duration,
-            entryType: entry.entryType,
-          });
-        });
-
-        // Handle resource limit (FIFO logic)
-        if (this.#resourceLimit > 0 && this.#resources.length > this.#resourceLimit) {
-          this.#resources.splice(0, this.#resources.length - this.#resourceLimit);
-        }
-
-        const compareResult = comparator.compare(this.#resources);
-        for (const result of compareResult) {
-          this.emit(
-            `Resource${result.status === 'added' ? 'Added' : result.status === 'deleted' ? 'Deleted' : 'Edited'}`,
-            result.oldItem,
-            result.item,
-          );
-        }
-
-        this.#notify();
-      });
-
-      this.#observer.observe({ type: 'resource', buffered: true });
-    } catch (error) {
-      console.warn('PerformanceObserver is not supported in this browser.');
+  #setupDeviceMetrics() {
+    if (navigator.deviceMemory) {
+      this.#deviceMetrics.memory = navigator.deviceMemory;
     }
+  }
+
+  /**
+   * Asynchronously initializes battery monitoring using the Battery Status API.
+   * @returns {Promise<void>}
+   */
+  async #setupBatteryMonitoring() {
+    if (navigator.getBattery) {
+      try {
+        const battery = await navigator.getBattery();
+        this.#battery.enabled = true;
+
+        const updateBattery = () => {
+          this.#battery = {
+            level: battery.level,
+            charging: battery.charging,
+            chargingTime: battery.chargingTime,
+            dischargingTime: battery.dischargingTime,
+            enabled: true,
+          };
+          this.#notify();
+        };
+
+        battery.addEventListener('levelchange', updateBattery);
+        battery.addEventListener('chargingchange', updateBattery);
+        battery.addEventListener('chargingtimechange', updateBattery);
+        battery.addEventListener('dischargingtimechange', updateBattery);
+
+        updateBattery();
+      } catch (error) {
+        console.warn('Battery Status API failed to initialize:', error);
+      }
+    }
+  }
+
+  /**
+   * Initializes and starts multiple PerformanceObservers to track web vital metrics.
+   */
+  #setupPerformanceObservers() {
+    const observerConfigs = [
+      { type: 'resource', callback: this.#handleResourceEntry.bind(this) },
+      { type: 'paint', callback: this.#handlePaintEntry.bind(this) },
+      { type: 'navigation', callback: this.#handleNavigationEntry.bind(this) },
+      { type: 'layout-shift', callback: this.#handleLayoutShiftEntry.bind(this) },
+      { type: 'largest-contentful-paint', callback: this.#handleLCPEntry.bind(this) },
+      { type: 'longtask', callback: this.#handleLongTaskEntry.bind(this) },
+    ];
+
+    for (const config of observerConfigs) {
+      try {
+        const observer = new PerformanceObserver(config.callback);
+        observer.observe({ type: config.type, buffered: true });
+        this.#observers.push(observer);
+      } catch (e) {
+        // Silently skip unsupported observer types
+      }
+    }
+  }
+
+  /**
+   * Processes new resource performance entries and maintains the resource history.
+   * @param {PerformanceObserverEntryList} list - The list of performance entries.
+   */
+  #handleResourceEntry(list) {
+    const entries = list.getEntries();
+    /** @type {TinyArrayComparator<ResourceMetric>} */
+    const comparator = new TinyArrayComparator(
+      this.#resources.map((v) => ({ ...v })),
+      { idKey: 'name' },
+    );
+
+    entries.forEach((entry) => {
+      this.#resources.push({
+        name: entry.name,
+        duration: entry.duration,
+        entryType: entry.entryType,
+      });
+    });
+
+    // Handle resource limit (FIFO logic)
+    if (this.#resourceLimit > 0 && this.#resources.length > this.#resourceLimit) {
+      this.#resources.splice(0, this.#resources.length - this.#resourceLimit);
+    }
+
+    const compareResult = comparator.compare(this.#resources);
+    for (const result of compareResult) {
+      this.emit(
+        `Resource${result.status === 'added' ? 'Added' : result.status === 'deleted' ? 'Deleted' : 'Edited'}`,
+        result.oldItem,
+        result.item,
+      );
+    }
+    this.#notify();
+  }
+
+  /**
+   * Processes paint-related performance entries to update paint timing metrics.
+   * @param {PerformanceObserverEntryList} list - The list of performance entries.
+   */
+  #handlePaintEntry(list) {
+    list.getEntries().forEach((entry) => {
+      if (entry.name === 'first-paint') {
+        this.#performance.paint.firstPaint = entry.startTime;
+      } else if (entry.name === 'first-contentful-paint') {
+        this.#performance.paint.firstContentfulPaint = entry.startTime;
+      }
+    });
+    this.#notify();
+  }
+
+  /**
+   * Extracts and updates navigation timing metrics from performance entries.
+   * @param {PerformanceObserverEntryList} list - The list of performance entries.
+   */
+  #handleNavigationEntry(list) {
+    /** @type {PerformanceNavigationTiming} */
+    // @ts-ignore
+    const entry = list.getEntries()[0];
+    if (entry) {
+      this.#performance.navigation = {
+        ttfb: entry.responseStart - entry.requestStart,
+        domContentLoaded: entry.domContentLoadedEventEnd - entry.startTime,
+        loadEvent: entry.loadEventEnd - entry.startTime,
+      };
+    }
+    this.#notify();
+  }
+
+  /**
+   * Processes layout shift entries to track Cumulative Layout Shift (CLS).
+   * @param {PerformanceObserverEntryList} list - The list of performance entries.
+   */
+  #handleLayoutShiftEntry(list) {
+    list.getEntries().forEach((entry) => {
+      /** @type {LayoutShift} */
+      // @ts-ignore
+      const shiftEntry = entry;
+
+      if (!shiftEntry.hadRecentInput) {
+        this.#performance.layoutShift += shiftEntry.value;
+      }
+    });
+    this.#notify();
+  }
+
+  /**
+   * Updates the Largest Contentful Paint (LCP) value using the latest entry.
+   * @param {PerformanceObserverEntryList} list - The list of performance entries.
+   */
+  #handleLCPEntry(list) {
+    const lastEntry = list.getEntries().pop();
+    if (lastEntry) {
+      this.#performance.lcp = lastEntry.startTime;
+    }
+    this.#notify();
+  }
+
+  /**
+   * Collects durations of long tasks to monitor main thread responsiveness.
+   * @param {PerformanceObserverEntryList} list - The list of performance entries.
+   */
+  #handleLongTaskEntry(list) {
+    list.getEntries().forEach((entry) => {
+      this.#performance.longTasks.push(entry.duration);
+    });
+    this.#notify();
   }
 
   /**
@@ -247,11 +467,14 @@ class TinyNetworkMonitor extends EventEmitter {
   #notify(event) {
     this.#validateInternalState();
 
-    /** @type {NetworkReport & { event?: Event; }} */
+    /** @type {NetworkEvent} */
     const data = {
       connectivity: Object.freeze({ ...this.#connectivity }),
       quality: Object.freeze({ ...this.#quality }),
       resources: Object.freeze(this.#resources.map((res) => Object.freeze({ ...res }))),
+      battery: Object.freeze({ ...this.#battery }),
+      device: Object.freeze({ ...this.#deviceMetrics }),
+      performance: this.performance,
       event,
     };
 
@@ -275,19 +498,6 @@ class TinyNetworkMonitor extends EventEmitter {
   }
 
   /**
-   * Returns a deep-frozen report of the current network status.
-   * @returns {NetworkReport} A read-only copy of the current network report.
-   */
-  get report() {
-    checkDestroy(this.#isDestroyed);
-    return Object.freeze({
-      connectivity: Object.freeze({ ...this.#connectivity }),
-      quality: Object.freeze({ ...this.#quality }),
-      resources: Object.freeze(this.#resources.map((res) => Object.freeze({ ...res }))),
-    });
-  }
-
-  /**
    * Removes all listeners and observers to prevent memory leaks.
    */
   destroy() {
@@ -300,9 +510,8 @@ class TinyNetworkMonitor extends EventEmitter {
       navigator.connection.removeEventListener('change', this.#handleUpdate);
     }
 
-    if (this.#observer) {
-      this.#observer.disconnect();
-    }
+    this.#observers.forEach((obs) => obs.disconnect());
+    this.#observers = [];
 
     this.removeAllListeners();
     this.#isDestroyed = true;
