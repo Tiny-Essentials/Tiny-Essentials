@@ -95,14 +95,11 @@ const handleResourceEvent = (status, oldItem, newItem) => {
 /**
  * Initializes the monitor.
  */
-const initMonitor = (customLimit = 1000) => {
+const initMonitor = (resourceLimit = 1000) => {
   try {
-    logToConsole(`Initializing TinyBrowserMonitor (Limit: ${customLimit})...`, 'system');
+    logToConsole(`Initializing TinyBrowserMonitor (Limit: ${resourceLimit})...`, 'system');
 
-    monitor = new TinyBrowserMonitor((data) => {
-      // This is the callback provided to the constructor
-      // It's redundant with the event emitter, but we use it for logging
-    }, customLimit);
+    monitor = new TinyBrowserMonitor({ resourceLimit });
 
     window.networkMonitor = monitor;
 

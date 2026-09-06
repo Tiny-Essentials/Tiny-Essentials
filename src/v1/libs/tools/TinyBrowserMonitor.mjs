@@ -6,7 +6,7 @@ const checkDestroy = createCheckDestroyed('TinyBrowserMonitor');
 
 /**
  * Defines the valid identifiers for the various monitoring systems available.
- * @typedef {'connectivity'|'quality'|'battery'|'device'|'cpu'|'gpu'|'performance'|'resource'|'paint'|'navigation'|'layout-shift'|'lcp'|'longtask'|'memory-usage'|'fps'} SystemValue
+ * @typedef {'connectivity'|'quality'|'battery'|'device'|'cpu'|'gpu'|'performance'|'resource'|'paint'|'navigation'|'layout-shift'|'lcp'|'longtask'|'memory-usage'|'fps'|'window'|'screen'} SystemValue
  */
 
 /**
@@ -124,6 +124,26 @@ const checkDestroy = createCheckDestroyed('TinyBrowserMonitor');
  */
 
 /**
+ * Represents the dimensions and pixel ratio of the browser viewport.
+ * @typedef {Object} WindowMetrics
+ * @property {number} width - The width of the viewport in pixels.
+ * @property {number} height - The height of the viewport in pixels.
+ * @property {number} devicePixelRatio - The device pixel ratio.
+ */
+
+/**
+ * Represents the physical screen/monitor properties.
+ * @typedef {Object} ScreenMetrics
+ * @property {number} width - The screen width in pixels.
+ * @property {number} height - The screen height in pixels.
+ * @property {number} availWidth - The available screen width in pixels (excluding OS taskbars).
+ * @property {number} availHeight - The available screen height in pixels (excluding OS taskbars).
+ * @property {number} colorDepth - The color depth of the screen in bits.
+ * @property {number} pixelDepth - The pixel depth of the screen in bits.
+ * @property {string} orientation - The orientation of the screen (e.g., 'landscape-primary').
+ */
+
+/**
  * Represents a comprehensive report containing connectivity status, connection quality, recent resource performance metrics, and memory usage.
  * @typedef {Object} NetworkEvent
  * @property {Readonly<ConnectivityStatus>} connectivity - Current online/offline status.
@@ -133,6 +153,8 @@ const checkDestroy = createCheckDestroyed('TinyBrowserMonitor');
  * @property {Readonly<PerformanceMetrics>} performance - Comprehensive performance metrics.
  * @property {Readonly<ResourceMetric[]>} resources - Recent resource loading metrics.
  * @property {Readonly<MemoryUsage>} memoryUsage - Current JavaScript heap memory metrics.
+ * @property {Readonly<WindowMetrics>} windowMetrics - Current viewport dimensions.
+ * @property {Readonly<ScreenMetrics>} screenMetrics - Current screen/monitor properties.
  * @property {Event} [event]
  */
 
@@ -225,31 +247,40 @@ class TinyBrowserMonitor extends EventEmitter {
     longTasks: [],
   };
 
+  /** @type {WindowMetrics} The current viewport dimensions. */
+  #windowMetrics = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+    devicePixelRatio: window.devicePixelRatio,
+  };
+
+  /** @type {ScreenMetrics} The current screen/monitor properties. */
+  #screenMetrics = {
+    width: window.screen.width,
+    height: window.screen.height,
+    availWidth: window.screen.availWidth,
+    availHeight: window.screen.availHeight,
+    colorDepth: window.screen.colorDepth,
+    pixelDepth: window.screen.pixelDepth,
+    orientation: window.screen.orientation?.type || 'unknown',
+  };
+
   /** @type {number} Maximum number of resource metrics to store. Use -1 for infinite. */
   #resourceLimit;
 
-  /**
-   * The callback function to execute on status changes.
-   * @type {NetworkCallback|null}
-   */
-  #callback = null;
   /** @type {PerformanceObserver[]} The observer used to track performance entries. */
   #observers = [];
 
   /**
    * Creates an instance of TinyBrowserMonitor.
-   * @param {NetworkCallback} [callback] - Function to call when status changes.
    * @param {MonitorOptions} [options={}] - Configuration options.
-   * @throws {TypeError} If the provided callback is not a function, resourceLimit is invalid, memoryIntervalMs is invalid, or systems is not an array.
+   * @throws {TypeError} If the provided resourceLimit is invalid, memoryIntervalMs is invalid, or systems is not an array.
    */
-  constructor(callback, options = {}) {
+  constructor(options = {}) {
     super();
 
     const { resourceLimit = 1000, systems = [], memoryIntervalMs = 100 } = options;
 
-    if (typeof callback !== 'undefined' && typeof callback !== 'function') {
-      throw new TypeError('The callback provided to TinyBrowserMonitor must be a function.');
-    }
     if (typeof resourceLimit !== 'number' || resourceLimit < -1) {
       throw new TypeError('The resourceLimit must be a number greater than or equal to -1.');
     }
@@ -260,7 +291,6 @@ class TinyBrowserMonitor extends EventEmitter {
       throw new TypeError('The systems option must be an array.');
     }
 
-    this.#callback = callback || null;
     this.#resourceLimit = resourceLimit;
     this.#memoryIntervalMs = memoryIntervalMs;
 
@@ -282,6 +312,8 @@ class TinyBrowserMonitor extends EventEmitter {
       'longtask',
       'memory-usage',
       'fps',
+      'window',
+      'screen',
     ];
     this.#enabledSystems = systems.length === 0 ? new Set(allSystems) : new Set(systems);
 
@@ -309,6 +341,13 @@ class TinyBrowserMonitor extends EventEmitter {
 
     if (this.#enabledSystems.has('fps')) {
       this.#setupFPSMonitoring();
+    }
+
+    if (this.#enabledSystems.has('window')) {
+      this.#setupWindowMonitoring();
+    }
+    if (this.#enabledSystems.has('screen')) {
+      this.#updateScreenMetrics();
     }
 
     // Hardware initialization:
@@ -379,6 +418,24 @@ class TinyBrowserMonitor extends EventEmitter {
   get battery() {
     checkDestroy(this.#isDestroyed);
     return Object.freeze({ ...this.#battery });
+  }
+
+  /**
+   * Returns the current viewport dimensions.
+   * @returns {Readonly<WindowMetrics>} A deep clone of the window metrics.
+   */
+  get windowMetrics() {
+    checkDestroy(this.#isDestroyed);
+    return Object.freeze({ ...this.#windowMetrics });
+  }
+
+  /**
+   * Returns the current screen/monitor properties.
+   * @returns {Readonly<ScreenMetrics>} A deep clone of the screen metrics.
+   */
+  get screenMetrics() {
+    checkDestroy(this.#isDestroyed);
+    return Object.freeze({ ...this.#screenMetrics });
   }
 
   /**
@@ -483,6 +540,49 @@ class TinyBrowserMonitor extends EventEmitter {
       limit: formatValue(this.#memoryUsage.jsHeapSizeLimit),
     };
   }
+
+  /**
+   * Initializes window size monitoring by listening to resize events.
+   */
+  #setupWindowMonitoring() {
+    window.addEventListener('resize', this.#handleWindowResize);
+    this.#updateWindowMetrics();
+  }
+
+  /**
+   * Updates the window metrics based on the current viewport state.
+   */
+  #updateWindowMetrics() {
+    this.#windowMetrics = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      devicePixelRatio: window.devicePixelRatio,
+    };
+  }
+
+  /**
+   * Updates the screen metrics.
+   */
+  #updateScreenMetrics() {
+    this.#screenMetrics = {
+      width: window.screen.width,
+      height: window.screen.height,
+      availWidth: window.screen.availWidth,
+      availHeight: window.screen.availHeight,
+      colorDepth: window.screen.colorDepth,
+      pixelDepth: window.screen.pixelDepth,
+      orientation: window.screen.orientation?.type || 'unknown',
+    };
+  }
+
+  /**
+   * Event handler for window resize events.
+   * @bind {TinyBrowserMonitor}
+   */
+  #handleWindowResize = () => {
+    this.#updateWindowMetrics();
+    this.emit('WindowResize', Object.freeze({ ...this.#windowMetrics }));
+  };
 
   /**
    * Attaches event listeners to the window and connection APIs.
@@ -831,12 +931,11 @@ class TinyBrowserMonitor extends EventEmitter {
       device: Object.freeze({ ...this.#deviceMetrics }),
       performance: this.performance,
       memoryUsage: Object.freeze({ ...this.#memoryUsage }),
+      windowMetrics: Object.freeze({ ...this.#windowMetrics }),
+      screenMetrics: Object.freeze({ ...this.#screenMetrics }),
       event,
     };
 
-    if (this.#callback) {
-      this.#callback(data);
-    }
     this.emit('NetworkUpdate', data);
   }
 
@@ -862,6 +961,10 @@ class TinyBrowserMonitor extends EventEmitter {
     if (this.#enabledSystems.has('connectivity')) {
       window.removeEventListener('online', this.#handleUpdate);
       window.removeEventListener('offline', this.#handleUpdate);
+    }
+
+    if (this.#enabledSystems.has('window')) {
+      window.removeEventListener('resize', this.#handleWindowResize);
     }
 
     if (this.#enabledSystems.has('quality') && navigator.connection) {
