@@ -1,17 +1,20 @@
 # 🌐 TinyNetworkMonitor Documentation
 
-Welcome to the **TinyNetworkMonitor** documentation! 🚀 This lightweight, high-performance utility is designed to give developers real-time insights into a user's network environment. 
+Welcome to the **TinyNetworkMonitor** documentation! 🚀 This lightweight, high-performance utility is designed to give developers real-time insights into a user's network environment and device performance.
 
-Whether you are building a progressive web app (PWA) that needs to react to offline status, or a data-heavy dashboard that needs to adjust quality based on bandwidth, `TinyNetworkMonitor` has you covered.
+Whether you are building a progressive web app (PWA) that needs to react to offline status, a data-heavy dashboard that needs to adjust quality based on bandwidth, or a high-performance application requiring deep web vitals tracking, `TinyNetworkMonitor` has you covered.
 
 ---
 
 ## 🌟 Overview
 
-`TinyNetworkMonitor` is an event-driven monitor that tracks three critical pillars of network health:
+`TinyNetworkMonitor` is an event-driven monitor that tracks several critical pillars of environment health:
 1.  **Connectivity Status:** Are we online or offline? 📶
-2.  **Connection Quality:** How fast is the connection? (Bandwidth, Latency, Connection Type, and API availability). ⚡
-3.  **Resource Performance:** How long are assets (images, scripts, etc.) taking to load? ⏱️
+2.  **Connection Quality:** Bandwidth, Latency, Connection Type, and API availability. ⚡
+3.  **Battery Status:** Charge level and charging state. 🔋
+4.  **Device Metrics:** Hardware constraints like device memory. 💻
+5.  **Resource Performance:** Loading duration of assets (images, scripts, etc.). ⏱️
+6.  **Web Vitals & Performance:** Deep insights into Paint timing, Navigation, Layout Shift (CLS), LCP, and Long Tasks. 🚀
 
 ---
 
@@ -28,9 +31,11 @@ import TinyNetworkMonitor from 'tiny-essentials/libs/tools/TinyNetworkMonitor';
 ```javascript
 /**
  * @param {NetworkCallback} [callback] - Optional callback function triggered on every update.
- * @param {number} [resourceLimit=1000] - Max number of resource metrics to store. Use -1 for infinite.
+ * @param {MonitorOptions} [options={}] - Configuration options.
+ * @param {number} [options.resourceLimit=1000] - Max number of resource metrics to store. Use -1 for infinite.
+ * @param {string[]} [options.systems] - List of systems to enable (e.g., ['connectivity', 'battery']). If empty, all are enabled.
  */
-const monitor = new TinyNetworkMonitor(callback, resourceLimit);
+const monitor = new TinyNetworkMonitor(callback, options);
 ```
 
 ---
@@ -42,14 +47,23 @@ Automatically detects when a user loses or regains internet access.
 
 ### 2. Network Quality Metrics
 Leverages the **Network Information API** to provide:
-*   `downlink`: Effective bandwidth in Mbps.
-*   `rtt`: Estimated round-trip time (latency).
-*   `effectiveType`: The connection type (e.g., '4g', '3g').
-*   `saveData`: Detects if the user has "Data Saver" mode enabled.
-*   `enabled`: Indicates if the Network Information API is supported by the browser.
+* `downlink`: Effective bandwidth in Mbps.
+* `rtt`: Estimated round-trip time (latency).
+* `effectiveType`: The connection type (e.g., '4g', '3g').
+* `saveData`: Detects if the user has "Data Saver" mode enabled.
+* `enabled`: Indicates if the Network Information API is supported.
 
-### 3. Resource Monitoring
-Uses the `PerformanceObserver` API to track the loading duration of every resource fetched by the browser. It maintains a history of these metrics up to the defined `resourceLimit` using a FIFO (First-In, First-Out) approach.
+### 3. Battery & Device Monitoring
+* **Battery:** Tracks `level`, `charging` state, and time to full/empty.
+* **Device:** Provides approximate `memory` (GB) via the Device Memory API.
+
+### 4. Comprehensive Performance & Web Vitals
+Uses the `PerformanceObserver` API to track:
+* **Resource Loading:** Detailed metrics for every fetched asset.
+* **Paint Timing:** `first-paint` and `first-contentful-paint`.
+* **Navigation Timing:** `ttfb`, `domContentLoaded`, and `loadEvent`.
+* **Core Web Vitals:** `layoutShift` (CLS) and `lcp` (Largest Contentful Paint).
+* **Responsiveness:** Tracks `longTasks` to monitor main thread blockage.
 
 ---
 
@@ -58,7 +72,7 @@ Uses the `PerformanceObserver` API to track the loading duration of every resour
 You can interact with the monitor in four different ways depending on your architectural needs.
 
 ### 🚀 Method 1: The Callback Approach
-Best for simple implementations where you just want a function to trigger whenever *anything* changes.
+Best for simple implementations where you want a function to trigger whenever *anything* changes.
 
 ```javascript
 const monitor = new TinyNetworkMonitor((data) => {
@@ -70,10 +84,10 @@ const monitor = new TinyNetworkMonitor((data) => {
 ```
 
 ### 📡 Method 2: The Event-Driven Approach (Recommended)
-Since `TinyNetworkMonitor` extends `EventEmitter`, you can listen for specific events. This is the cleanest way to separate concerns in large applications.
+Since `TinyNetworkMonitor` extends `EventEmitter`, you can listen for specific events.
 
 #### Network Updates
-Listen for any change in connectivity, quality, or resources.
+Listen for any change in any monitored system.
 ```javascript
 const monitor = new TinyNetworkMonitor();
 
@@ -87,9 +101,9 @@ monitor.on('NetworkUpdate', ({ connectivity, quality, resources, event }) => {
 
 #### Resource-Specific Events
 The monitor emits specific events when the resource list changes:
-*   `ResourceAdded`: Emitted when a new resource is tracked.
-*   `ResourceDeleted`: Emitted when an old resource is removed (due to `resourceLimit`).
-*   `ResourceEdited`: Emitted if resource data is updated.
+* `ResourceAdded`: Emitted when a new resource is tracked.
+* `ResourceDeleted`: Emitted when an old resource is removed (due to `resourceLimit`).
+* `ResourceEdited`: Emitted if resource data is updated.
 
 ```javascript
 // Payload: (oldItem, newItem)
@@ -116,41 +130,8 @@ If you don't need real-time updates but simply want to check the current status 
 const monitor = new TinyNetworkMonitor();
 
 // ... later in your code ...
-const currentStatus = monitor.report;
-console.log(`Current Bandwidth: ${currentStatus.quality.downlink} Mbps`);
-```
-
----
-
-## 📊 Understanding the `NetworkReport`
-
-The `report` returned by the `.report` getter is **deeply frozen**. This means you cannot accidentally modify the data provided by the monitor. 🛡️
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `connectivity.isOnline` | `boolean` | `true` if connected, `false` if offline. |
-| `quality.downlink` | `number` | Bandwidth in Mbps. |
-| `quality.rtt` | `number` | Latency in milliseconds. |
-| `quality.effectiveType` | `string` | Connection type (e.g., '4g', '2g'). |
-| `quality.saveData` | `boolean` | `true` if user has data saving enabled. |
-| `quality.enabled` | `boolean` | `true` if the Network Information API is available. |
-| `resources` | `Array<Object>` | A list of recent resource loading metrics. |
-
-**Example Report Object:**
-```json
-{
-  "connectivity": { "isOnline": true },
-  "quality": {
-    "downlink": 10,
-    "rtt": 50,
-    "effectiveType": "4g",
-    "saveData": false,
-    "enabled": true
-  },
-  "resources": [
-    { "name": "https://example.com/image.png", "duration": 120, "entryType": "resource" }
-  ]
-}
+const quality = monitor.quality;
+console.log(`Current Bandwidth: ${quality.downlink} Mbps`);
 ```
 
 ---
@@ -165,16 +146,15 @@ monitor.destroy();
 ```
 
 **What `destroy()` does:**
-*   ✅ Removes `online`/`offline` window listeners.
-*   ✅ Removes `connection` change listeners.
-*   ✅ Disconnects the `PerformanceObserver`.
-*   ✅ Clears all internal event emitters.
-*   ✅ Sets `isDestroyed` to `true`.
+* ✅ Removes `online`/`offline` window listeners.
+* ✅ Removes `connection` change listeners.
+* ✅ Disconnects all `PerformanceObserver` instances.
+* ✅ Clears all internal event emitters.
+* ✅ Sets `isDestroyed` to `true`.
 
 ---
 
 ## ⚠️ Important Notes
 
-*   **Browser Support:** The `quality` metrics rely on the `navigator.connection` API, which may not be available in all browsers (e.g., Safari). The monitor handles this gracefully by setting `enabled: false`.
-*   **Immutability:** All returned reports are read-only. Attempting to change `monitor.report.connectivity.isOnline = false` will fail.
+*   **Immutability:** All returned reports are read-only. Attempting to change `monitor.connectivity.isOnline = false` will fail.
 *   **Resource Limit:** If a `resourceLimit` is set, the monitor will automatically remove the oldest entries to make room for new ones once the limit is reached (FIFO).
