@@ -202,7 +202,6 @@ btnDestroy.addEventListener('click', () => {
   }
 });
 
-
 btnSimResource.addEventListener('click', simulateResourceLoad);
 
 btnStressLimit.addEventListener('click', testStressLimit);

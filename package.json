@@ -758,7 +758,6 @@
     "lodash": "^4.17.21",
     "marked": "^18.0.5",
     "music-metadata": "^11.15.0",
-    "network-information-types": "^0.1.1",
     "node-polyfill-webpack-plugin": "^4.1.0",
     "prettier": "^3.9.4",
     "rollup": "^4.62.2",

@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "rootDir": "./src",
-        "types": ["node", "./node_modules/network-information-types"],
+        "types": ["node"],
         "outDir": "./dist",
         "allowJs": true,
         "checkJs": true,
