@@ -5,6 +5,8 @@
 
 import { TinyNetworkMonitor } from '/src/v1/libs/tools/TinyNetworkMonitor.mjs';
 
+window.TinyNetworkMonitor = TinyNetworkMonitor;
+
 // DOM Elements
 const btnInit = document.getElementById('btn-init');
 const btnReport = document.getElementById('btn-report');
@@ -88,6 +90,8 @@ const initMonitor = () => {
       // This is the callback provided to the constructor
       // It's redundant with the event emitter, but we use it for logging
     });
+
+    window.networkMonitor = monitor;
 
     // Attach event listeners to the instance
     monitor.on('NetworkUpdate', handleNetworkUpdate);

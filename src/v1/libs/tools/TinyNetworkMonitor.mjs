@@ -37,7 +37,7 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
 
 /**
  * A callback function signature for receiving network updates.
- * @typedef {(data: { report: NetworkReport; event?: Event }) => void} NetworkCallback
+ * @typedef {(data: NetworkReport & { event?: Event }) => void} NetworkCallback
  */
 
 /**
@@ -97,6 +97,14 @@ class TinyNetworkMonitor extends EventEmitter {
     this.#setupResourceObserver();
     this.#updateQualityMetrics();
     this.#notify();
+  }
+
+  /**
+   *  The observer used to track performance entries.
+   * @returns {PerformanceObserver|null}
+   */
+  get observer() {
+    return this.#observer;
   }
 
   /**
@@ -218,13 +226,12 @@ class TinyNetworkMonitor extends EventEmitter {
   #notify(event) {
     this.#validateInternalState();
 
-    const report = Object.freeze({
+    const data = {
       connectivity: Object.freeze({ ...this.#connectivity }),
       quality: Object.freeze({ ...this.#quality }),
       resources: Object.freeze(this.#resources.map((res) => Object.freeze({ ...res }))),
-    });
-
-    const data = { report, event };
+      event,
+    };
 
     if (this.#callback) {
       this.#callback(data);
