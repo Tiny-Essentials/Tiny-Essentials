@@ -278,3 +278,20 @@ td {
   color: var(--accent-secondary);
   font-style: italic;
 }
+
+.btn-sim {
+  background-color: var(--border-color);
+  color: var(--text-main);
+  font-size: 0.8rem;
+  padding: 0.5rem;
+}
+
+.btn-sim:hover {
+  background-color: var(--accent-secondary);
+  color: var(--bg-main);
+}
+
+.btn-sim:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

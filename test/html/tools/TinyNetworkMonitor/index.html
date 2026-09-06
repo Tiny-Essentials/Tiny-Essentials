@@ -32,9 +32,19 @@
 
           <section class="control-group">
             <h3>Simulation</h3>
-            <p class="hint">
-              To test connectivity changes, use Chrome DevTools > Network > Throttling.
-            </p>
+            <button id="btn-sim-online" class="btn btn-sim" disabled>Simulate Online</button>
+            <button id="btn-sim-offline" class="btn btn-sim" disabled>Simulate Offline</button>
+            <button id="btn-sim-resource" class="btn btn-sim" disabled>
+              Simulate Resource Load
+            </button>
+          </section>
+
+          <section class="control-group">
+            <h3>Stress & Error Testing</h3>
+            <button id="btn-stress-limit" class="btn btn-sim" disabled>
+              Test Resource Limit (FIFO)
+            </button>
+            <button id="btn-test-error" class="btn btn-danger">Test Invalid Constructor</button>
           </section>
         </aside>
 

@@ -13,6 +13,13 @@ const btnReport = document.getElementById('btn-report');
 const btnDestroy = document.getElementById('btn-destroy');
 const btnClear = document.getElementById('btn-clear-console');
 
+// Simulation Buttons
+const btnSimOnline = document.getElementById('btn-sim-online');
+const btnSimOffline = document.getElementById('btn-sim-offline');
+const btnSimResource = document.getElementById('btn-sim-resource');
+const btnStressLimit = document.getElementById('btn-stress-limit');
+const btnTestError = document.getElementById('btn-test-error');
+
 const statOnline = document.getElementById('stat-online');
 const statDownlink = document.getElementById('stat-downlink');
 const statRtt = document.getElementById('stat-rtt');
@@ -45,7 +52,7 @@ const logToConsole = (message, type = 'info') => {
 
 /**
  * Updates the dashboard UI with the provided report.
- * @type {(data: import('./TinyNetworkMonitor.mjs').NetworkEvent) => void} NetworkEvent
+ * @type {(data: import('./TinyNetworkMonitor.mjs').NetworkEvent) => void}
  */
 const updateDashboard = ({ connectivity, quality, resources }) => {
   // Update Connectivity
@@ -72,7 +79,6 @@ const updateDashboard = ({ connectivity, quality, resources }) => {
 
 /**
  * Handles the 'NetworkUpdate' event.
- * @param {Object} data - The data object emitted by the monitor.
  */
 const handleNetworkUpdate = (data) => {
   logToConsole('Network update received.', 'success');
@@ -80,21 +86,36 @@ const handleNetworkUpdate = (data) => {
 };
 
 /**
+ * Handles specific resource events emitted by the monitor.
+ */
+const handleResourceEvent = (status, oldItem, newItem) => {
+  logToConsole(`Resource Event: ${status}`, 'data');
+  if (oldItem) logToConsole(`Old: ${oldItem.name}`, 'info');
+  if (newItem) logToConsole(`New: ${newItem.name}`, 'info');
+};
+
+/**
  * Initializes the monitor.
  */
-const initMonitor = () => {
+const initMonitor = (customLimit = 1000) => {
   try {
-    logToConsole('Initializing TinyNetworkMonitor...', 'system');
+    logToConsole(`Initializing TinyNetworkMonitor (Limit: ${customLimit})...`, 'system');
 
     monitor = new TinyNetworkMonitor((data) => {
       // This is the callback provided to the constructor
       // It's redundant with the event emitter, but we use it for logging
-    });
+    }, customLimit);
 
     window.networkMonitor = monitor;
 
-    // Attach event listeners to the instance
+    // Main Update Event
     monitor.on('NetworkUpdate', handleNetworkUpdate);
+
+    // Resource Specific Events (Required for 100% coverage)
+    monitor.on('ResourceAdded', (old, newItem) => handleResourceEvent('ADDED', old, newItem));
+    monitor.on('ResourceDeleted', (old, newItem) => handleResourceEvent('DELETED', old, newItem));
+    monitor.on('ResourceEdited', (old, newItem) => handleResourceEvent('EDITED', old, newItem));
+
     monitor.on('Destroyed', () => {
       logToConsole('Monitor destroyed successfully.', 'system');
       statusIndicator.textContent = 'System Idle';
@@ -105,6 +126,11 @@ const initMonitor = () => {
     btnInit.disabled = true;
     btnReport.disabled = false;
     btnDestroy.disabled = false;
+    btnSimOnline.disabled = false;
+    btnSimOffline.disabled = false;
+    btnSimResource.disabled = false;
+    btnStressLimit.disabled = false;
+
     statusIndicator.textContent = 'Monitoring Active';
     statusIndicator.style.color = 'var(--success)';
 
@@ -115,14 +141,53 @@ const initMonitor = () => {
   }
 };
 
-// Event Listeners for UI
-btnInit.addEventListener('click', initMonitor);
+// --- Simulation Logic ---
+
+const simulateResourceLoad = async () => {
+  if (!monitor) return;
+  logToConsole('Triggering resource load (fetch)...', 'system');
+  try {
+    // Fetching a small asset with no-cache to ensure PerformanceObserver catches it
+    await fetch('https://www.google.com/favicon.ico', { mode: 'no-cors', cache: 'no-store' });
+  } catch (e) {
+    logToConsole(
+      'Fetch failed (expected if CORS blocks, but observer might still trigger): ' + e.message,
+      'error',
+    );
+  }
+};
+
+const testStressLimit = async () => {
+  if (monitor) monitor.destroy();
+  logToConsole('Starting Stress Test: Limit = 5', 'system');
+
+  // Initialize with a very low limit
+  monitor = new TinyNetworkMonitor(() => {}, 5);
+
+  // Re-attach listeners for the new instance
+  monitor.on('NetworkUpdate', handleNetworkUpdate);
+  monitor.on('ResourceAdded', (old, newItem) => handleResourceEvent('ADDED', old, newItem));
+  monitor.on('ResourceDeleted', (old, newItem) => handleResourceEvent('DELETED', old, newItem));
+  monitor.on('ResourceEdited', (old, newItem) => handleResourceEvent('EDITED', old, newItem));
+
+  // Rapidly load resources to force FIFO
+  for (let i = 0; i < 7; i++) {
+    await fetch(`${location.origin}/test/html/files/pudding.json?test=${(i % 10) + 1}`, {
+      cache: 'no-store',
+    });
+    // Small delay to allow observer to process
+    await new Promise((r) => setTimeout(r, 100));
+  }
+};
+
+// --- Event Listeners for UI ---
+
+btnInit.addEventListener('click', () => initMonitor());
 
 btnReport.addEventListener('click', () => {
   if (monitor) {
     try {
-      const report = monitor.report;
-      logToConsole(report, 'data');
+      logToConsole(monitor.report, 'data');
     } catch (error) {
       logToConsole(error.message, 'error');
     }
@@ -136,6 +201,34 @@ btnDestroy.addEventListener('click', () => {
     btnInit.disabled = false;
     btnReport.disabled = true;
     btnDestroy.disabled = true;
+    btnSimOnline.disabled = true;
+    btnSimOffline.disabled = true;
+    btnSimResource.disabled = true;
+    btnStressLimit.disabled = true;
+  }
+});
+
+btnSimOnline.addEventListener('click', () => {
+  window.dispatchEvent(new Event('online'));
+  logToConsole('Dispatched "online" event', 'system');
+});
+
+btnSimOffline.addEventListener('click', () => {
+  window.dispatchEvent(new Event('offline'));
+  logToConsole('Dispatched "offline" event', 'system');
+});
+
+btnSimResource.addEventListener('click', simulateResourceLoad);
+
+btnStressLimit.addEventListener('click', testStressLimit);
+
+btnTestError.addEventListener('click', () => {
+  logToConsole('Attempting invalid instantiation...', 'system');
+  try {
+    // Test invalid resourceLimit
+    new TinyNetworkMonitor(null, -5);
+  } catch (error) {
+    logToConsole(`Caught Expected Error: ${error.message}`, 'error');
   }
 });
 
