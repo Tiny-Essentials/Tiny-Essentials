@@ -768,6 +768,8 @@ class TinyBrowserMonitor extends EventEmitter {
     const memory = performance.memory;
     if (memory) {
       const updateMemory = () => {
+        const memory = performance.memory;
+        if (!memory) return;
         this.#memoryUsage = {
           usedJSHeapSize: memory.usedJSHeapSize,
           totalJSHeapSize: memory.totalJSHeapSize,
