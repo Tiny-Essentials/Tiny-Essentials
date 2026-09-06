@@ -44,9 +44,24 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
 
 /**
  * Represents the hardware-specific metrics of the user's device.
+ * @typedef {Object} GPUInfo
+ * @property {string} vendor - The GPU manufacturer.
+ * @property {string} renderer - The specific GPU model name.
+ */
+
+/**
+ * Represents the CPU-related metrics of the user's device.
+ * @typedef {Object} CPUInfo
+ * @property {number} logicalCores - The number of logical processing cores.
+ */
+
+/**
+ * Represents the hardware-specific metrics of the user's device.
  * @typedef {Object} DeviceMetrics
  * @property {number} memory - Approximate amount of device memory in GB.
- * @property {boolean} enabled - Indicates if the Device Memory API is available.
+ * @property {CPUInfo} cpu - CPU-related metrics.
+ * @property {GPUInfo} gpu - GPU-related metrics.
+ * @property {boolean} enabled - Indicates if the device information was successfully retrieved.
  */
 
 /**
@@ -140,6 +155,13 @@ class TinyNetworkMonitor extends EventEmitter {
   /** @type {DeviceMetrics} The current hardware metrics of the device. */
   #deviceMetrics = {
     memory: 0,
+    cpu: {
+      logicalCores: 0,
+    },
+    gpu: {
+      vendor: 'unknown',
+      renderer: 'unknown',
+    },
     enabled: !!navigator.deviceMemory,
   };
 
@@ -352,12 +374,52 @@ class TinyNetworkMonitor extends EventEmitter {
   }
 
   /**
-   * Initializes and stores hardware-specific metrics such as device memory.
+   * Initializes hardware-specific metrics including CPU, Memory, and GPU.
    */
   #setupDeviceMetrics() {
-    if (navigator.deviceMemory) {
-      this.#deviceMetrics.memory = navigator.deviceMemory;
+    let deviceInfoRetrieved = false;
+
+    // 1. CPU: Get logical cores
+    const cpu = {
+      logicalCores: navigator.hardwareConcurrency || 0,
+    };
+
+    // 2. Memory: Get approximate device memory
+    const memory = navigator.deviceMemory || 0;
+
+    // 3. GPU: Use WebGL to extract vendor and renderer info
+    const gpu = {
+      vendor: 'unknown',
+      renderer: 'unknown',
+    };
+
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+      if (gl instanceof WebGLRenderingContext) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) {
+          gpu.vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+          gpu.renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        }
+        deviceInfoRetrieved = true;
+      }
+    } catch (e) {
+      console.warn('Failed to retrieve GPU information:', e);
     }
+
+    if (navigator.deviceMemory) {
+      deviceInfoRetrieved = true;
+    }
+
+    // Update the private field with the gathered data
+    this.#deviceMetrics = {
+      memory,
+      cpu,
+      gpu,
+      enabled: deviceInfoRetrieved,
+    };
   }
 
   /**
