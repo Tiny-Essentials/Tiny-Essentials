@@ -47,19 +47,19 @@ const logToConsole = (message, type = 'info') => {
  * Updates the dashboard UI with the provided report.
  * @param {import('./TinyNetworkMonitor.js').NetworkReport} report
  */
-const updateDashboard = (report) => {
+const updateDashboard = ({ connectivity, quality, resources }) => {
   // Update Connectivity
-  statOnline.textContent = report.connectivity.isOnline ? 'ONLINE' : 'OFFLINE';
-  statOnline.style.color = report.connectivity.isOnline ? 'var(--success)' : 'var(--accent-danger)';
+  statOnline.textContent = connectivity.isOnline ? 'ONLINE' : 'OFFLINE';
+  statOnline.style.color = connectivity.isOnline ? 'var(--success)' : 'var(--accent-danger)';
 
   // Update Quality
-  statDownlink.textContent = `${report.quality.downlink} Mbps`;
-  statRtt.textContent = `${report.quality.rtt} ms`;
-  statType.textContent = report.quality.effectiveType.toUpperCase();
+  statDownlink.textContent = `${quality.downlink} Mbps`;
+  statRtt.textContent = `${quality.rtt} ms`;
+  statType.textContent = quality.effectiveType.toUpperCase();
 
   // Update Resources
   resourceTbody.innerHTML = '';
-  report.resources.forEach((res) => {
+  resources.forEach((res) => {
     const row = document.createElement('tr');
     row.innerHTML = `
       <td title="${res.name}">${res.name.split('/').pop() || res.name}</td>
@@ -76,7 +76,7 @@ const updateDashboard = (report) => {
  */
 const handleNetworkUpdate = (data) => {
   logToConsole('Network update received.', 'success');
-  updateDashboard(data.report);
+  updateDashboard(data);
 };
 
 /**
