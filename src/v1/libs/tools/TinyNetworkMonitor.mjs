@@ -30,9 +30,9 @@ const checkDestroy = createCheckDestroyed('TinyNetworkMonitor');
 /**
  * Represents a comprehensive report containing connectivity status, connection quality, and recent resource performance metrics.
  * @typedef {Object} NetworkReport
- * @property {ConnectivityStatus} connectivity - Current online/offline status.
- * @property {ConnectionQuality} quality - Current network quality metrics.
- * @property {ResourceMetric[]} resources - Recent resource loading metrics.
+ * @property {Readonly<ConnectivityStatus>} connectivity - Current online/offline status.
+ * @property {Readonly<ConnectionQuality>} quality - Current network quality metrics.
+ * @property {Readonly<ResourceMetric[]>} resources - Recent resource loading metrics.
  */
 
 /**
@@ -64,6 +64,9 @@ class TinyNetworkMonitor extends EventEmitter {
   /** @type {ResourceMetric[]} A collection of recent resource loading metrics. */
   #resources = [];
 
+  /** @type {number} Maximum number of resource metrics to store. Use -1 for infinite. */
+  #resourceLimit;
+
   /**
    * The callback function to execute on status changes.
    * @type {NetworkCallback|null}
@@ -75,15 +78,20 @@ class TinyNetworkMonitor extends EventEmitter {
   /**
    * Creates an instance of TinyNetworkMonitor.
    * @param {NetworkCallback} [callback] - Function to call when status changes.
-   * @throws {TypeError} If the provided callback is not a function.
+   * @param {number} [resourceLimit=1000] - Maximum number of resource metrics to store. Use -1 for infinite.
+   * @throws {TypeError} If the provided callback is not a function or resourceLimit is invalid.
    */
-  constructor(callback) {
+  constructor(callback, resourceLimit = 1000) {
     super();
     if (typeof callback !== 'undefined' && typeof callback !== 'function') {
       throw new TypeError('The callback provided to TinyNetworkMonitor must be a function.');
     }
+    if (typeof resourceLimit !== 'number' || resourceLimit < -1) {
+      throw new TypeError('The resourceLimit must be a number greater than or equal to -1.');
+    }
 
     if (callback) this.#callback = callback;
+    this.#resourceLimit = resourceLimit;
 
     this.#setupListeners();
     this.#setupResourceObserver();
@@ -97,6 +105,33 @@ class TinyNetworkMonitor extends EventEmitter {
    */
   get isDestroyed() {
     return this.#isDestroyed;
+  }
+
+  /**
+   * Returns the current connectivity status.
+   * @returns {Readonly<ConnectivityStatus>} A deep clone of the connectivity status.
+   */
+  get connectivity() {
+    checkDestroy(this.#isDestroyed);
+    return Object.freeze({ ...this.#connectivity });
+  }
+
+  /**
+   * Returns the current connection quality metrics.
+   * @returns {Readonly<ConnectionQuality>} A deep clone of the quality metrics.
+   */
+  get quality() {
+    checkDestroy(this.#isDestroyed);
+    return Object.freeze({ ...this.#quality });
+  }
+
+  /**
+   * Returns the collection of recent resource loading metrics.
+   * @returns {Readonly<ResourceMetric[]>} A deep freeze of the resources array.
+   */
+  get resources() {
+    checkDestroy(this.#isDestroyed);
+    return Object.freeze(this.#resources.map((res) => Object.freeze({ ...res })));
   }
 
   /**
@@ -125,6 +160,12 @@ class TinyNetworkMonitor extends EventEmitter {
             entryType: entry.entryType,
           });
         });
+
+        // Handle resource limit (FIFO logic)
+        if (this.#resourceLimit > 0 && this.#resources.length > this.#resourceLimit) {
+          this.#resources.splice(0, this.#resources.length - this.#resourceLimit);
+        }
+
         this.#notify();
       });
 
@@ -180,7 +221,7 @@ class TinyNetworkMonitor extends EventEmitter {
     const report = Object.freeze({
       connectivity: Object.freeze({ ...this.#connectivity }),
       quality: Object.freeze({ ...this.#quality }),
-      resources: this.#resources.map((res) => Object.freeze({ ...res })),
+      resources: Object.freeze(this.#resources.map((res) => Object.freeze({ ...res }))),
     });
 
     const data = { report, event };
@@ -211,9 +252,9 @@ class TinyNetworkMonitor extends EventEmitter {
   get report() {
     checkDestroy(this.#isDestroyed);
     return Object.freeze({
-      connectivity: { ...this.#connectivity },
-      quality: { ...this.#quality },
-      resources: [...this.#resources],
+      connectivity: Object.freeze({ ...this.#connectivity }),
+      quality: Object.freeze({ ...this.#quality }),
+      resources: Object.freeze(this.#resources.map((res) => Object.freeze({ ...res }))),
     });
   }
 
