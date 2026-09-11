@@ -8,14 +8,14 @@ const checkDestroy = createCheckDestroyed('TinyPlugin');
 /**
  * # TINY PLUGIN SYSTEM - ADVANCED DEVELOPER GUIDE
  *
- * This system uses a "Double-Layer Validation" and "Sandboxed Execution" architecture 
+ * This system uses a "Double-Layer Validation" and "Sandboxed Execution" architecture
  * to ensure maximum stability, security, and developer experience (DX).
  *
  * ## 1. CORE ENGINE SETUP (The Host)
  * - Create your main application class.
  * - Extend this class from `TinyPluginCore`.
  * - This enables your class to manage the plugin registry and lifecycle.
- * - **Access Control Configuration:** In the constructor, you can define how plugins 
+ * - **Access Control Configuration:** In the constructor, you can define how plugins
  *   interact with the engine:
  *    - `none`: All registered plugins have full access.
  *    - `whitelist`: Only plugins matching the `whitelist` (ID or Author) are allowed.
@@ -46,11 +46,11 @@ const checkDestroy = createCheckDestroyed('TinyPlugin');
  * - *Rule:* Expand the core via inheritance **before** implementing the plugin logic.
  *
  * ## 4. SECURITY & ACCESS CONTROL
- * - **Identity Verification:** For `cryptographic` mode, plugins must be signed 
+ * - **Identity Verification:** For `cryptographic` mode, plugins must be signed
  *   using `signPluginIdentity` during the build process.
- * - **Engine Protection:** The engine uses a `sandboxBlacklist` to prevent plugins 
+ * - **Engine Protection:** The engine uses a `sandboxBlacklist` to prevent plugins
  *   from accessing sensitive internal methods.
- * - **Proxy Enforcement:** Any attempt to mutate the plugin instance or access 
+ * - **Proxy Enforcement:** Any attempt to mutate the plugin instance or access
  *   forbidden engine properties will throw a `Security Error`.
  *
  * ## 5. INITIALIZATION
@@ -72,10 +72,10 @@ const checkDestroy = createCheckDestroyed('TinyPlugin');
  * const MyPlugin = (sandbox, options) => {
  *    // 1. Runtime Validation
  *    if (typeof options.key !== 'string') throw new TypeError('Option "key" must be a string.');
- *    
+ *
  *    // 2. Use the sandbox to interact with the engine
- *    const engine = sandbox.engine; 
- *    
+ *    const engine = sandbox.engine;
+ *
  *    // 3. Return the layer
  *    return new TinyPluginLayer();
  * };

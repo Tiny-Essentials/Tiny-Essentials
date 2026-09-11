@@ -39,22 +39,24 @@ The host application must extend `TinyPluginCore` to gain registry capabilities.
 
 ```javascript
 // Example: `./MyEngine.mjs`
-import { TinyPluginCore, TinyPlugin } from 'tiny-essentials/libs/plugin/TinyPlugin';
+import { TinyPluginCore, TinyPluginLayer, TinyPlugin } from 'tiny-essentials/libs/plugin/TinyPlugin';
 
 /**
  * A function used to install a plugin into the engine.
+ * @template {TinyPluginLayer} Layer
  * @template {string} IdString
  * @template {string} VersionString
  * @template {any[]} Options
- * @typedef {import('tiny-essentials/libs/plugin/TinyPlugin').TinyPluginInstaller<MyEngine, IdString, VersionString, Options>} MyEngineInstaller
+ * @typedef {import('tiny-essentials/libs/plugin/TinyPlugin').TinyPluginInstaller<MyEngine, Layer, IdString, VersionString, Options>} MyEngineInstaller
  */
 
 /**
  * Represents a plugin instance designed to be integrated into a MyEngine.
+ * @template {TinyPluginLayer} Layer
  * @template {string} IdString
  * @template {string} VersionString
  * @template {any[]} Options
- * @typedef {TinyPlugin<MyEngine, IdString, VersionString, Options>} MyEnginePlugin
+ * @typedef {TinyPlugin<MyEngine, Layer, IdString, VersionString, Options>} MyEnginePlugin
  */
 
 class MyEngine extends TinyPluginCore {
@@ -85,24 +87,28 @@ export default MyEngine;
 Plugins must be isolated files exporting an installer function.
 
 **Required Pattern:**
-1.  **Define Options:** Use `@typedef {Object}` for the plugin's configuration options and define every property and its type explicitly.
-2.  **Annotate Installer:** Use the generic `Installer` type from the specific Engine to annotate the function. This allows the IDE to validate the `options` object when you call `installPlugin`.
-3.  **Implement Validation:** Throw `TypeError` for all options.
+1.  **Define Options:** Use `@typedef {Object}` for configuration options.
+2.  **Annotate Installer:** Use the generic `Installer` type from your specific Engine to annotate the function. This allows the IDE to validate the `options` object when you call `installPlugin`.
+3.  **Implement Identity Assignment:** Use the `sandbox` to assign `id`, `version`, `description`, `authors`, and `contributors`.
+4.  **Return the Layer:** The installer **MUST** return a `TinyPluginLayer` or a class extended from `TinyPluginLayer` instance.
 
-**⚠️ TECHNICAL NUANCE: The Identity Contract**
-The plugin file exports an **Installer Function**. This function is a **setup routine** that is executed by the engine to "awaken" the plugin.
+**⚠️ TECHNICAL NUANCE: The Identity & Layer Contract**
+The `Installer` function is a setup routine. It is not a simple `void` function.
+1.  **The Sandbox:** The first argument is a `sandbox` (a Proxy of the `TinyPlugin` instance). You must use this to set the plugin's identity.
+2.  **The Return Value:** The installer **MUST** return an instance of `TinyPluginLayer`. If nothing is returned, or if the return value is not a `TinyPluginLayer`, initialization will fail.
 
-**The plugin is NOT considered "Ready" until the installer assigns the following identity properties to the `pluginInstance`:**
-1.  `pluginInstance.id` (String, non-empty)
-2.  `pluginInstance.description` (String, non-empty)
-3.  `pluginInstance.authors` (Array of non-empty strings)
-4.  `pluginInstance.contributors` (Array of non-empty strings)
-5.  `pluginInstance.version` (String, valid version)
+**The plugin is NOT considered "Ready" until the installer assigns the following to the `sandbox`:**
+- `sandbox.id` (String, non-empty)
+- `sandbox.version` (String, valid version)
+- `sandbox.description` (String, non-empty)
+- `sandbox.authors` (Array of non-empty strings)
+- `sandbox.contributors` (Array of non-empty strings)
 
 **If any of these are missing, the `installPlugin` process will throw an error and the plugin will fail to initialize.**
 
 ```javascript
 // Example: `./plugins/MyPlugin.mjs`
+import { TinyPluginLayer } from 'tiny-essentials/libs/plugin/TinyPlugin';
 import MyEngine from '../MyEngine.mjs';
 
 /**
@@ -111,31 +117,52 @@ import MyEngine from '../MyEngine.mjs';
  * @property {boolean} [debug=false] - Enable debug mode.
  */
 
+class MyTinyLayer extends TinyPluginLayer {
+  #userId = '';
+
+  constructor() {
+    super();
+  }
+
+  get userId() {
+    return this.#userId;
+  }
+
+  set userId(value) {
+    this.#userId = value;
+  }
+}
+
 /**
- * @type {import('../MyEngine.mjs').MyEngineInstaller<'MyPluginId', '1.0.0', [MyPluginOptions]>}
+ * @type {import('../MyEngine.mjs').MyEngineInstaller<MyTinyLayer, 'MyPluginId', '1.0.0', [MyPluginOptions]>}
  */
-const MyPluginInstaller = (pluginInstance, options) => {
+const MyPluginInstaller = (sandbox, options) => {
   // 1. MANDATORY IDENTITY SETUP (Crucial!)
-  pluginInstance.id = 'MyPluginId';
-  pluginInstance.version = '1.0.0';
-  pluginInstance.description = 'A plugin that performs amazing things.';
-  pluginInstance.authors = ['DeveloperName'];
-  pluginInstance.contributors = ['ContributorName'];
+  sandbox.id = 'MyPluginId';
+  sandbox.version = '1.0.0';
+  sandbox.description = 'A plugin that performs amazing things.';
+  sandbox.authors = ['DeveloperName'];
+  sandbox.contributors = ['ContributorName'];
 
   // 2. Runtime Validation of Options (CRITICAL)
   if (typeof options.apiKey !== 'string') throw new TypeError('apiKey must be a string');
   if (typeof options.debug !== 'boolean') throw new TypeError('debug must be a boolean');
 
   // 3. Implementation Logic
-  const engine = pluginInstance.engine;
+  const engine = sandbox.engine;
   if (!(engine instanceof MyEngine)) {
     throw new TypeError('Plugin requires a MyEngine instance to function.');
   }
 
+  const layer = new TinyPluginLayer();
+  layer.userId = 'user123';
+
   if (options.debug) {
     console.log(`Plugin ${pluginInstance.id} is active.`);
   }
-  // Note: This function returns nothing (void).
+
+  // 4. RETURN THE LAYER (Mandatory!)
+  return layer;
 };
 
 export default MyPluginInstaller;
@@ -163,11 +190,56 @@ console.log('Plugin Status:', pluginInstance.isReady); // pluginInstance is the 
 
 ---
 
+## 🔐 ACCESS CONTROL & PERMISSION MANAGEMENT (Engine Security)
+
+The `TinyPluginCore` implements a **Zero-Trust** security model. The objective is to ensure the engine maintains absolute control over which plugins can interact with it and which engine properties are visible to each specific plugin.
+
+Security is applied on two fronts: **Identity Control** (Who are you?) and **Scope Control** (What can you touch?).
+
+### 1. OPERATION MODES (Identity Control)
+The engine operates in one of the four access modes defined in `PluginAccessControlMode`. This mode determines how the `getPlugin()` method filters access between plugins.
+
+| Mode | Description | Behavior |
+| :--- | :--- | :--- |
+| `none` | **Open Access** | All registered plugins can see and interact with all other plugins. |
+| `whitelist` | **Explicit Permission** | Only plugins whose `id` or `authors` are in the whitelist can access the engine or other plugins. |
+| `blacklist` | **Explicit Restriction** | All plugins have access, **except** those whose `id` or `authors` are in the blacklist. |
+| `cryptographic`| **Zero-Trust** | **Only** plugins that have passed digital signature verification via the Web Crypto API can access the engine. |
+
+### 2. THE DOUBLE-SIDED SECURITY MODEL
+
+Security is not just about "who can enter," but about "what can be touched" once inside.
+
+#### A. Outbound Protection: The Plugin Proxy (`plugin.engine`)
+When a plugin accesses `this.engine`, it does **not** receive the actual `TinyPluginCore` instance. It receives a **Dynamic Proxy**.
+- **Property Filtering:** The Proxy intercepts every access attempt. If a plugin attempts to access a property that has been added to the `sandboxBlacklist` by the engine, the Proxy will throw a `Security Error`.
+- **Instance Protection:** The Proxy prevents the plugin from altering the engine's prototype (`setPrototypeOf`) or modifying protected properties.
+- **Automatic Binding:** The Proxy ensures that engine methods maintain their correct execution context (`this`), preventing runtime errors.
+
+#### B. Inbound Protection: The Engine Filter (`engine._getPlugin`)
+Whenever a plugin attempts to retrieve another plugin via `plugin.getPlugin(id)`, the engine intercepts the request.
+- The engine verifies the current access mode (`whitelist`, `blacklist`, or `cryptographic`).
+- If the requesting plugin does not have permission to "see" the target, the engine returns `undefined`, even if the target plugin exists and is active.
+
+### 3. CRYPTOGRAPHIC VERIFICATION (High-Security Mode)
+In `cryptographic` mode, plugin identity is mathematically validated.
+
+1.  **Signing:** The plugin author uses a private key to sign a JSON object containing `{id, authors}`.
+2.  **Verification:** The engine uses the public key (configured in `accessControl`) to verify the signature during the initialization phase.
+3.  **Trust Registration:** Only if the signature is valid is the `pluginId` added to the internal `#verifiedPlugins` set.
+
+### ⚠️ DEVELOPER WARNING (AI & HUMAN)
+- **Never attempt to bypass the Proxy:** Attempting to access the engine through unofficial methods to evade the Proxy will result in a runtime error.
+
+---
+
 ## 🤖 AI AGENT INSTRUCTIONS (PROMPT)
 When assisting with this codebase:
-1.  **Distinguish between Installer and Instance:** Always clarify that the `Installer` function is a `void` setup routine, while `engine.installPlugin()` is the method that returns the `TinyPlugin` instance.
-2.  **Enforce the Identity Contract:** When writing or reviewing a plugin installer, **ALWAYS** ensure the developer is assigning `id`, `version`, `description`, `authors`, and `contributors` to the `instance`. If they are missing, flag it as a critical error that will prevent `isReady` from becoming `true`.
-3.  **Always check the `@typedef`** of the options before suggesting implementation.
-4.  **Enforce the use of Generics** in any new plugin or engine extension to maintain IDE type-safety.
-5.  **If the user attempts to modify an object property directly** (e.g., `engine.newProp = ...`), immediately flag it as a violation of **RULE 01** and suggest the **Extension Pattern**.
-6.  **Ensure all `throw` statements** in installers are specific (e.g., `TypeError`, `RangeError`) and provide descriptive error messages.
+1.  **Distinguish between Installer and Instance:** Always clarify that the `Installer` function **must return a `TinyPluginLayer` instance**, while `engine.installPlugin()` is the method that returns the `TinyPlugin` instance.
+2.  **Enforce the Identity Contract:** When writing or reviewing a plugin installer, **ALWAYS** ensure the developer assigns `id`, `version`, `description`, `authors`, and `contributors` to the `sandbox` provided. If they are missing, flag it as a critical error that will prevent `isReady` from becoming `true`.
+3.  **The Sandbox Argument:** Always refer to the first argument of the installer as the `sandbox`.
+4.  **Always check the `@typedef`** of the options before suggesting implementation.
+5.  **Enforce the use of Generics** in any new plugin or engine extension to maintain IDE type-safety.
+6.  **If the user attempts to modify an object property directly** (e.g., `engine.newProp = ...`), immediately flag it as a violation of **RULE 01** and suggest the **Extension Pattern**.
+7.  **Ensure all `throw` statements** in installers are specific (e.g., `TypeError`, `RangeError`) and provide descriptive error messages.
+8.  **Enforce Security Context:** Whenever the user asks about "security" or "permissions," explain the distinction between the **Access Mode** (Whitelist/Blacklist/Crypto) and the **Sandbox Proxy**. Remind the user that `plugin.engine` is a Proxy and not the actual instance, and that attempting to modify protected properties will trigger a security error.
