@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinyPlugin | Security Test Suite</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+      {
+        "imports": {
+          "events": "https://esm.sh/events@3.3.0"
+        }
+      }
+    </script>
+</head>
+<body>
+    <header>
+        <div class="logo">TinyPlugin <span>Security Lab</span></div>
+        <div class="status-bar">
+            <span id="connection-status" class="status-dot"></span>
+            System Ready
+        </div>
+    </header>
+
+    <main>
+        <section class="control-panel">
+            <!-- Identity Configuration -->
+            <div class="card">
+                <h3>1. Identity Configuration</h3>
+                <p class="description">Define the plugin metadata to be signed.</p>
+                <div class="input-group">
+                    <label for="plugin-id">Plugin ID</label>
+                    <input type="text" id="plugin-id" placeholder="e.g., com.plugin.example">
+                </div>
+                <div class="input-group">
+                    <label for="plugin-authors">Authors (comma-separated)</label>
+                    <input type="text" id="plugin-authors" placeholder="e.g., Yasmin, Isabela">
+                </div>
+                <div class="input-group">
+                    <label for="plugin-categories">Categories (comma-separated)</label>
+                    <input type="text" id="plugin-categories" placeholder="e.g., Tool, Security">
+                </div>
+                <div class="input-group">
+                    <label for="plugin-tags">Tags (comma-separated)</label>
+                    <input type="text" id="plugin-tags" placeholder="e.g., crypto, sandbox">
+                </div>
+                <div class="button-row">
+                    <button id="btn-generate-checker" class="btn-secondary">Generate Checker String</button>
+                    <button id="btn-sign-identity" class="btn-primary">Sign Identity</button>
+                </div>
+            </div>
+
+            <!-- Cryptographic Tools -->
+            <div class="card">
+                <h3>2. Cryptographic Tools</h3>
+                <p class="description">Manage keys required for the signing process.</p>
+                <div class="info-box">
+                    <p>Current Status: <span id="key-status">No Key Generated</span></p>
+                </div>
+                <div class="button-row">
+                    <button id="btn-generate-key" class="btn-accent">Generate RSA Key Pair</button>
+                </div>
+                <div class="input-group">
+                    <label for="public-key-display">Public Key (PEM/Raw)</label>
+                    <textarea id="public-key-display" readonly placeholder="Key will appear here after generation..."></textarea>
+                </div>
+            </div>
+
+            <!-- Verification & Access Control -->
+            <div class="card">
+                <h3>3. Verification & Access Control</h3>
+                <p class="description">Test the verification of signatures and access modes.</p>
+                <div class="input-group">
+                    <label for="access-mode">Access Control Mode</label>
+                    <select id="access-mode">
+                        <option value="none">none</option>
+                        <option value="whitelist">whitelist</option>
+                        <option value="blacklist">blacklist</option>
+                        <option value="cryptographic">cryptographic</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="signature-input">Signature (Hexadecimal)</label>
+                    <textarea id="signature-input" placeholder="Paste hex signature here..."></textarea>
+                </div>
+                <div class="button-row">
+                    <button id="btn-verify" class="btn-success">Verify Signature</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="output-panel">
+            <div class="console-header">
+                <span>Visual Console Output</span>
+                <button id="btn-clear-console" class="btn-text">Clear</button>
+            </div>
+            <div id="console-output">
+                <div class="log-entry system">Welcome to the TinyPlugin Security Lab. Awaiting input...</div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="ui-test.js"></script>
+</body>
+</html>
