@@ -250,7 +250,7 @@ const pluginConstrctor = (ops, accessControl, sandboxBlacklist) => {
  * @param {string[]} authors - The list of authors of the plugin.
  * @param {string[]} categories - The list of categories of the plugin.
  * @param {string[]} tags - The list of tags of the plugin.
- * @param {string|ArrayBuffer|Uint8Array} signature - The cryptographic signature provided by the plugin.
+ * @param {string|BufferSource} signature - The cryptographic signature provided by the plugin.
  * @returns {Promise<boolean>} A promise that resolves to true if the signature is valid, false otherwise.
  */
 export const verifyPluginSignature = async (
