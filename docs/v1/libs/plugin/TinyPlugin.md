@@ -1,3 +1,93 @@
+# 📖 API REFERENCE: TINY PLUGIN SYSTEM
+
+This section provides a detailed technical breakdown of all classes, functions, and types exported by the system.
+
+## 🏛️ CORE CLASSES
+
+### `TinyPluginCore`
+The central engine and registry of the system. It manages the lifecycle of all plugins and enforces security boundaries.
+- **Purpose:** Acts as the "Host" that installs, tracks, and communicates with plugins.
+- **Key Responsibilities:**
+    - Plugin registration and retrieval (`installPlugin`, `getPlugin`).
+    - Enforcement of `PluginAccessControlMode`.
+    - Management of the `sandboxBlacklist` (protecting engine properties).
+    - Emitting lifecycle events (e.g., `pluginsDestroyed`).
+
+### `TinyPlugin`
+The object representing a registered plugin instance.
+- **Purpose:** Provides the plugin with a controlled interface to interact with the engine and its own state.
+- **Key Responsibilities:**
+    - Provides access to the `engine` (via a security Proxy).
+    - Provides access to the `layer` (via a security Proxy).
+    - Manages plugin identity (`id`, `version`, `authors`, etc.).
+    - Manages the plugin lifecycle state (`isReady`, `isDestroyed`).
+
+### `TinyPluginLayer`
+The isolated runtime environment for a specific plugin.
+- **Purpose:** Provides a "sandbox" where the plugin performs its primary logic.
+- **Key Responsibilities:**
+    - Provides the `sandbox` object to the installer.
+    - Manages layer-specific access control.
+    - Ensures that the plugin cannot access the `TinyPluginCore` directly, only through the permitted `layer` interface.
+
+---
+
+## 🛠️ EXPORTED UTILITY FUNCTIONS
+
+### `signPluginIdentity`
+**Usage:** Used by plugin authors during the build/release process.
+- **Description:** Signs the plugin's deterministic identity string using a provided RSA private key.
+- **Parameters:**
+    - `pluginId` (`string`): Unique ID.
+    - `authors` (`string[]`): List of authors.
+    - `categories` (`string[]`): List of categories.
+    - `tags` (`string[]`): List of tags.
+    - `privateKey` (`CryptoKey`): The RSA private key.
+    - `algorithm` (`CryptoAlgorithm`, optional): The signing algorithm.
+- **Returns:** `Promise<ArrayBuffer>` (The digital signature).
+
+### `createPluginIdChecker`
+**Usage:** Used by the engine to generate a deterministic string for verification.
+- **Description:** Creates a standardized, sorted JSON string of the plugin's identity to ensure the signature matches exactly during verification.
+- **Returns:** `string` (The JSON identity string).
+
+### `verifyPluginSignature`
+**Usage:** Used by the engine during the plugin initialization phase.
+- **Description:** Asynchronously validates that a provided signature matches the plugin's identity using a public key.
+- **Returns:** `Promise<boolean>` (True if valid, false otherwise).
+
+---
+
+## 🔐 SECURITY & ACCESS CONTROL TYPES
+
+### `PluginAccessControlMode`
+Defines how the engine filters access.
+- `'none'`: Open access.
+- `'whitelist'`: Only allowed identities can access.
+- `'blacklist'`: Specific identities are blocked.
+- `'cryptographic'`: Only signed identities are allowed.
+
+### `BlackListValue`
+- **Type:** `string | symbol`
+- **Description:** The allowed types for keys used in blacklists or whitelists.
+
+### `PluginAccessControl`
+The configuration object defining the security posture of an engine or layer.
+- `mode`: The current `PluginAccessControlMode`.
+- `whitelist`: A `BwList` of allowed identities.
+- `blacklist`: A `BwList` of blocked identities.
+- `publicKey`: The PEM string used for cryptographic verification.
+- `cryptoAlgorithm`: The algorithm used for verification.
+- `importAlgorithm`: The algorithm used to import the key.
+- `importKeyFormat`: The format of the key (e.g., `'raw'`, `'spki'`).
+
+### `BwList`
+A collection of sets used for identity matching.
+- `ids`: `Set<string>`
+- `authors`: `Set<string>`
+- `categories`: `Set<string>`
+- `tags`: `Set<string>`
+
 # 🛠️ TINY PLUGIN SYSTEM: ARCHITECTURAL SPECIFICATION & DEVELOPER PROMPT
 
 > **IMPORTANT:** This document serves as the authoritative source of truth for the Tiny Plugin System. All developers (human and AI) must adhere to these architectural constraints to ensure system integrity and type safety.
