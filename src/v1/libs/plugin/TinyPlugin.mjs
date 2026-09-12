@@ -242,6 +242,20 @@ const pluginConstrctor = (ops, accessControl, sandboxBlacklist) => {
 };
 
 /**
+ * Converts a Base64 string to an ArrayBuffer.
+ * @param {string} base64 - The Base64 string to convert.
+ * @returns {ArrayBuffer} The resulting ArrayBuffer.
+ */
+const base64ToArrayBuffer = (base64) => {
+  const binaryString = globalThis.atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+};
+
+/**
  * Converts a PEM formatted key string into an ArrayBuffer by stripping headers and decoding Base64.
  * @param {string} pem - The PEM string.
  * @returns {ArrayBuffer} The decoded ArrayBuffer.
@@ -250,21 +264,6 @@ const pemToArrayBuffer = (pem) => {
   const b64Lines = pem.replace(/(-----(BEGIN|END) [^-]+-----)/g, '').replace(/\s+/g, '');
   return base64ToArrayBuffer(b64Lines);
 };
-
-/**
- * Creates a default access control object.
- *
- * @returns {PluginAccessControl} A new access control object with default settings.
- */
-const createAccessControl = () => ({
-  mode: 'none',
-  importKeyFormat: 'spki',
-  importAlgorithm: { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-  cryptoAlgorithm: { name: 'RSASSA-PKCS1-v1_5' },
-  publicKey: null,
-  whitelist: { ids: new Set(), authors: new Set(), categories: new Set(), tags: new Set() },
-  blacklist: { ids: new Set(), authors: new Set(), categories: new Set(), tags: new Set() },
-});
 
 /**
  * Validate asynchronous encryption signature using the native browser API.
@@ -392,18 +391,19 @@ const isAllowedPlugin = (
 };
 
 /**
- * Converts a Base64 string to an ArrayBuffer.
- * @param {string} base64 - The Base64 string to convert.
- * @returns {ArrayBuffer} The resulting ArrayBuffer.
+ * Creates a default access control object.
+ *
+ * @returns {PluginAccessControl} A new access control object with default settings.
  */
-const base64ToArrayBuffer = (base64) => {
-  const binaryString = globalThis.atob(base64);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes.buffer;
-};
+const createAccessControl = () => ({
+  mode: 'none',
+  importKeyFormat: 'spki',
+  importAlgorithm: { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+  cryptoAlgorithm: { name: 'RSASSA-PKCS1-v1_5' },
+  publicKey: null,
+  whitelist: { ids: new Set(), authors: new Set(), categories: new Set(), tags: new Set() },
+  blacklist: { ids: new Set(), authors: new Set(), categories: new Set(), tags: new Set() },
+});
 
 /**
  * Creates a sandboxed proxy to restrict access to the provided instance.
