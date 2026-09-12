@@ -242,6 +242,31 @@ const pluginConstrctor = (ops, accessControl, sandboxBlacklist) => {
 };
 
 /**
+ * Converts a PEM formatted key string into an ArrayBuffer by stripping headers and decoding Base64.
+ * @param {string} pem - The PEM string.
+ * @returns {ArrayBuffer} The decoded ArrayBuffer.
+ */
+const pemToArrayBuffer = (pem) => {
+  const b64Lines = pem.replace(/(-----(BEGIN|END) [^-]+-----)/g, '').replace(/\s+/g, '');
+  return base64ToArrayBuffer(b64Lines);
+};
+
+/**
+ * Creates a default access control object.
+ *
+ * @returns {PluginAccessControl} A new access control object with default settings.
+ */
+const createAccessControl = () => ({
+  mode: 'none',
+  importKeyFormat: 'spki',
+  importAlgorithm: { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+  cryptoAlgorithm: { name: 'RSASSA-PKCS1-v1_5' },
+  publicKey: null,
+  whitelist: { ids: new Set(), authors: new Set(), categories: new Set(), tags: new Set() },
+  blacklist: { ids: new Set(), authors: new Set(), categories: new Set(), tags: new Set() },
+});
+
+/**
  * Validate asynchronous encryption signature using the native browser API.
  *
  * @param {PluginAccessControl} accessControl - The access control configuration used for verification.
@@ -379,31 +404,6 @@ const base64ToArrayBuffer = (base64) => {
   }
   return bytes.buffer;
 };
-
-/**
- * Converts a PEM formatted key string into an ArrayBuffer by stripping headers and decoding Base64.
- * @param {string} pem - The PEM string.
- * @returns {ArrayBuffer} The decoded ArrayBuffer.
- */
-const pemToArrayBuffer = (pem) => {
-  const b64Lines = pem.replace(/(-----(BEGIN|END) [^-]+-----)/g, '').replace(/\s+/g, '');
-  return base64ToArrayBuffer(b64Lines);
-};
-
-/**
- * Creates a default access control object.
- *
- * @returns {PluginAccessControl} A new access control object with default settings.
- */
-const createAccessControl = () => ({
-  mode: 'none',
-  importKeyFormat: 'spki',
-  importAlgorithm: { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-  cryptoAlgorithm: { name: 'RSASSA-PKCS1-v1_5' },
-  publicKey: null,
-  whitelist: { ids: new Set(), authors: new Set(), categories: new Set(), tags: new Set() },
-  blacklist: { ids: new Set(), authors: new Set(), categories: new Set(), tags: new Set() },
-});
 
 /**
  * Creates a sandboxed proxy to restrict access to the provided instance.
