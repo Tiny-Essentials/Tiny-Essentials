@@ -230,6 +230,8 @@ import {
   TinyPluginCore,
   TinyPluginLayer,
   signPluginIdentity,
+  createPluginIdChecker,
+  verifyPluginSignature,
 } from './libs/plugin/TinyPlugin.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
@@ -294,6 +296,8 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  createPluginIdChecker,
+  verifyPluginSignature,
   signPluginIdentity,
   isClass,
   isAnyClassInstance,
