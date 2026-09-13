@@ -359,6 +359,22 @@
       "require": "./dist/v1/libs/html/templates/TinyLoadingScreen.cjs",
       "import": "./dist/v1/libs/html/templates/TinyLoadingScreen.mjs"
     },
+    "./libs/router/pwa/TinyServiceWorkerEngine": {
+      "require": "./dist/v1/libs/router/pwa/TinyServiceWorkerEngine.cjs",
+      "import": "./dist/v1/libs/router/pwa/TinyServiceWorkerEngine.mjs"
+    },
+    "./libs/router/pwa/plugins/GlobCachePlugin": {
+      "require": "./dist/v1/libs/router/pwa/plugins/GlobCachePlugin.cjs",
+      "import": "./dist/v1/libs/router/pwa/plugins/GlobCachePlugin.mjs"
+    },
+    "./libs/router/pwa/plugins/Ping": {
+      "require": "./dist/v1/libs/router/pwa/plugins/Ping.cjs",
+      "import": "./dist/v1/libs/router/pwa/plugins/Ping.mjs"
+    },
+    "./libs/router/pwa/plugins/ViteFileDetector": {
+      "require": "./dist/v1/libs/router/pwa/plugins/ViteFileDetector.cjs",
+      "import": "./dist/v1/libs/router/pwa/plugins/ViteFileDetector.mjs"
+    },
     "./libs/router/TinyMapCache": {
       "require": "./dist/v1/libs/router/TinyMapCache.cjs",
       "import": "./dist/v1/libs/router/TinyMapCache.mjs"
