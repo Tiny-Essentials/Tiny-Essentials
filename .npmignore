@@ -1,5 +1,6 @@
 # Remove original repository data
 build
+build.mjs
 dist/v1/libs/utils/examples
 dist-sw
 src
