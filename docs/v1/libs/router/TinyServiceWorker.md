@@ -218,3 +218,9 @@ To set up the background engine and enable full feature sets like **Fetch Interc
 👉 [TinyServiceWorkerEngine](./pwa/TinyServiceWorkerEngine.md)
 
 > **Pro Tip:** The true power of this system is realized when both modules are active, enabling real-time, bidirectional communication between your UI and the background process via the **Messaging System**.
+
+---
+
+## 🧩 TinyPlugin Ecosystem Integration
+
+`TinyServiceWorker` is not a standalone utility; it is a first-class citizen of the **[TinyPlugin](../plugin/TinyPlugin.md)** architecture.

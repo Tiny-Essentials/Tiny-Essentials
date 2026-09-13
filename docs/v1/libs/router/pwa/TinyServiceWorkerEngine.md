@@ -351,4 +351,9 @@ Using both modules allows you to fully leverage the **Messaging System**. This e
 1.  **Listen** to events triggered by the Service Worker.
 2.  **Trigger** updates and lifecycle events.
 3.  **Exchange data** between the background process and the user interface in real-time.
-```
+
+---
+
+## 🧩 TinyPlugin Ecosystem Integration
+
+`TinyServiceWorker` is not a standalone utility; it is a first-class citizen of the **[TinyPlugin](../../plugin/TinyPlugin.md)** architecture.
