@@ -306,15 +306,18 @@ export const verifyPluginSignature = async (
 
     const encoder = new TextEncoder();
     const dataBytes = encoder.encode(identity);
-    
+
+    /** @type {ArrayBuffer} */
     let importedPublicKey;
     if (importKeyFormat === 'spki' || importKeyFormat === 'pkcs8') {
       importedPublicKey = pemToArrayBuffer(publicKey);
     } else {
-      importedPublicKey = typeof publicKey === 'string' ? base64ToArrayBuffer(publicKey) : publicKey;
+      importedPublicKey =
+        typeof publicKey === 'string' ? base64ToArrayBuffer(publicKey) : publicKey;
     }
 
-    const signatureBuffer = typeof signature === 'string' ? base64ToArrayBuffer(signature) : signature;
+    const signatureBuffer =
+      typeof signature === 'string' ? base64ToArrayBuffer(signature) : signature;
 
     const cryptoKey = await crypto.subtle.importKey(
       importKeyFormat,
