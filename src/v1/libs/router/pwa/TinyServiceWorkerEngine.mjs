@@ -1067,7 +1067,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @param {string} type - The identifier for the message type.
    * @returns {boolean} True if it exists, false otherwise.
    */
-  hasMessage(type) {
+  hasMessageListener(type) {
     return this.#messages.has(type);
   }
 
@@ -1075,7 +1075,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * Clears all registered message listeners.
    * @returns {void}
    */
-  clearMessages() {
+  clearMessageListeners() {
     return this.#messages.clear();
   }
 

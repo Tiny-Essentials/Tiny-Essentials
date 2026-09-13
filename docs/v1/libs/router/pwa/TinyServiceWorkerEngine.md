@@ -277,15 +277,62 @@ If `spaMode` is set to `true`, the engine adjusts how paths are calculated. This
 
 ---
 
-## 📝 Summary Table for Developers
+## 📝 API Reference Summary
 
-| Method | Purpose | Key Argument | Best Use Case |
+To make navigation easier, the API is divided into three functional modules: **Fetch Management**, **Messaging**, and **Router Management**.
+
+### 🌐 1. Fetch Management
+These methods allow you to control how the engine intercepts and tracks network requests.
+
+| Method | Purpose | Arguments | Returns |
 | :--- | :--- | :--- | :--- |
-| `addFetchUrlListener` | Matches exact paths or `:params` | `fetchObj` (contains `params`) | API endpoints, specific assets. |
-| `addFetchRegExpListener` | Matches via Regex | `fetchObj` | File extensions, complex patterns. |
-| `addFetchGlobalListener` | Observes all requests | `fetchObj` | Analytics, logging, debugging. |
-| `addMessageListener` | Handles `postMessage` | `msg` (contains `data` and `reply`) | Communicating with the UI. |
-| `addRouterCode` | Maps HTTP codes to files | `RouterCodeConfig` | Custom 404, 500, etc. |
+| **Registration** | | | |
+| `addFetchUrlListener` | Registers an exact or parameterized URL match. | `type (string)`, `callback` | `void` |
+| `addFetchRegExpListener` | Registers a pattern match via Regex. | `type (string)`, `callback` | `void` |
+| `addFetchGlobalListener` | Registers a listener for every request. | `type (string)`, `callback` | `void` |
+| **Retrieval & Check** | | | |
+| `getFetchUrlListener` | Retrieves a specific URL listener. | `type (string)` | `callback \| undefined` |
+| `getFetchRegExpListener`| Retrieves a specific RegExp listener. | `type (string)` | `callback \| undefined` |
+| `getFetchGlobalListener` | Retrieves a specific global listener. | `type (string)` | `callback \| undefined` |
+| `hasFetchUrl` | Checks if a URL listener exists. | `type (string)` | `boolean` |
+| `hasFetchRegExp` | Checks if a RegExp listener exists. | `type (string)` | `boolean` |
+| `hasFetchGlobal` | Checks if a global listener exists. | `type (string)` | `boolean` |
+| **Removal & Cleanup** | | | |
+| `removeFetchUrlListener` | Removes a specific URL listener. | `type (string)` | `boolean` |
+| `removeFetchRegExpListener`| Removes a specific RegExp listener. | `type (string)` | `boolean` |
+| `removeFetchGlobalListener`| Removes a specific global listener. | `type (string)` | `boolean` |
+| `clearFetchUrls` | Wipes all registered URL listeners. | None | `void` |
+| `clearFetchRegExps` | Wipes all registered RegExp listeners. | None | `void` |
+| `clearFetchGlobals` | Wipes all registered global listeners. | None | `void` |
+| **Metadata** | | | |
+| `fetchUrlSize` | Returns the count of URL listeners. | None | `number` |
+| `fetchRegExpSize` | Returns the count of RegExp listeners. | None | `number` |
+| `fetchGlobalSize` | Returns the count of global listeners. | None | `number` |
+
+### 💬 2. Message Management
+These methods manage the communication bridge between the Main Thread and the Service Worker.
+
+| Method | Purpose | Arguments | Returns |
+| :--- | :--- | :--- | :--- |
+| **Registration** | | | |
+| `addMessageListener` | Registers a listener for a message type. | `type (string)`, `callback` | `void` |
+| **Retrieval & Check** | | | |
+| `getMessageListener` | Retrieves a specific message listener. | `type (string)` | `callback \| undefined` |
+| `hasMessageListener` | Checks if a message listener exists. | `type (string)` | `boolean` |
+| **Removal & Cleanup** | | | |
+| `removeMessageListener` | Removes a specific message listener. | `type (string)` | `boolean` |
+| `clearMessageListeners` | Wipes all registered message listeners. | None | `void` |
+| **Metadata** | | | |
+| `messagesSize` | Returns the count of message listeners. | None | `number` |
+
+### 🚦 3. Router Management
+These methods allow you to customize how the engine handles specific HTTP status codes.
+
+| Method | Purpose | Arguments | Returns |
+| :--- | :--- | :--- | :--- |
+| `addRouterCode` | Adds/updates a custom handler for a code. | `code (number)`, `config` | `void` |
+| `removeRouterCode` | Removes a custom code handler. | `code (number)` | `boolean` |
+| `getRouterCode` | Retrieves a deep clone of a code config. | `code (number)` | `RouterCodeConfig \| undefined` |
 
 ---
 
