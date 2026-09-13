@@ -1,4 +1,4 @@
-import { TinyPluginCore } from '../plugin/TinyPlugin.mjs';
+import { TinyPluginCore, TinyPluginLayer, TinyPlugin } from '../plugin/TinyPlugin.mjs';
 import { createCheckDestroyed } from '../utils/tools.mjs';
 
 const checkDestroy = createCheckDestroyed('TinyServiceWorker');
@@ -15,6 +15,24 @@ const checkDestroy = createCheckDestroyed('TinyServiceWorker');
  * @property {Promise<{ outcome: 'accepted' | 'dismissed' }>} userChoice - A promise that resolves with the user's choice.
  * @property {() => Promise<void>} prompt - The method to show the native installation prompt.
  * @property {boolean} canShare - Indicates if the event can be shared.
+ */
+
+/**
+ * A function used to install a plugin into the engine.
+ * @template {TinyPluginLayer} Layer
+ * @template {string} IdString
+ * @template {string} VersionString
+ * @template {any[]} Options
+ * @typedef {import('../plugin/TinyPlugin.mjs').TinyPluginInstaller<TinyServiceWorker<any, any>, Layer, IdString, VersionString, Options>} SwPluginInstaller
+ */
+
+/**
+ * Represents a plugin instance designed to be integrated into a TinyServiceWorker.
+ * @template {TinyPluginLayer} Layer
+ * @template {string} IdString
+ * @template {string} VersionString
+ * @template {any[]} Options
+ * @typedef {TinyPlugin<TinyServiceWorker<any, any>, Layer, IdString, VersionString, Options>} TinyServiceWorkerPlugin
  */
 
 /**
@@ -492,6 +510,7 @@ class TinyServiceWorker extends TinyPluginCore {
     // 4. Clear references
     this.#registration = null;
     this.#deferredPrompt = null;
+    this.destroyPlugins();
 
     this.#isDestroyed = true;
     this.log('info', `[${this.#id}] Destroyed successfully.`);
