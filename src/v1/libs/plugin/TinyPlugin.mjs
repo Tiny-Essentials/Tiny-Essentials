@@ -474,7 +474,7 @@ const createSandbox = (
   });
 };
 
-/** @typedef {import('tiny-essentials/libs/tools/TinyDebugger').DebuggerConstructor} DebuggerConstructor - The constructor function for a debugger instance. */
+/** @typedef {import('../tools/TinyDebugger.mjs').DebuggerConstructor} DebuggerConstructor - The constructor function for a debugger instance. */
 
 /**
  * @typedef {Object} LayerSecurityConfig

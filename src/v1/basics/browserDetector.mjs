@@ -9,10 +9,13 @@
  * @returns {boolean} Indicates if the current execution environment is a web browser.
  */
 export const isBrowser = () =>
+  // @ts-ignore
   typeof window !== 'undefined' && typeof window.document !== 'undefined';
 
 const win =
+  // @ts-ignore
   typeof window !== 'undefined' ? window : typeof globalThis !== 'undefined' ? globalThis : null;
+// @ts-ignore
 const doc = typeof document !== 'undefined' ? document : null;
 
 /**
@@ -80,7 +83,10 @@ export function isBrowserAgent() {
 export function getBrowserCssPrefix() {
   const prefix = !!win?.getComputedStyle
     ? (Array.prototype.slice
-        .call(win.getComputedStyle(document.documentElement, ''))
+        .call(
+          // @ts-ignore
+          win.getComputedStyle(document.documentElement, ''),
+        )
         .join('')
         .match(/-(moz|webkit|ms)-/) ?? ['', ''])[1]
     : '';

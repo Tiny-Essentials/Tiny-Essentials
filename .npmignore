@@ -1,6 +1,7 @@
 # Remove original repository data
 build
 dist/v1/libs/utils/examples
+dist-sw
 src
 test
 temp

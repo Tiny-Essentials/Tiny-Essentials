@@ -1,7 +1,21 @@
 {
-  "extends": "../../../../../tsconfig.json",
   "compilerOptions": {
-    "lib": ["WebWorker"]
+    "rootDir": "../../../../../",
+    "types": ["node"],
+    "lib": ["esnext", "webworker"],
+    "outDir": "../../../../../dist-sw",
+    "allowJs": true,
+    "checkJs": true,
+    "removeComments": false,
+    "declaration": true,
+    "declarationMap": true,
+    "declarationDir": "../../../../../dist-sw",
+    "emitDeclarationOnly": false,
+    "allowSyntheticDefaultImports": true,
+    "target": "ESNext",
+    "strict": true,
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext"
   },
   "include": ["./**/*"]
 }

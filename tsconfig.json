@@ -17,5 +17,5 @@
         "module": "NodeNext",
     },
     "include": ["src"],
-    "exclude": ["node_modules"]
+    "exclude": ["node_modules", "src/v1/libs/router/pwa"]
 }

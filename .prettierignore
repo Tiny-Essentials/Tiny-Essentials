@@ -1,9 +1,9 @@
-dist
 node_modules
 .flatpak
 vendor
 release
 dist
+dist-sw
 dist-electron
 package.json
 package-lock.json
