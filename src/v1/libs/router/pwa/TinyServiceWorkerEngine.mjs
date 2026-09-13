@@ -256,7 +256,7 @@ const getResType = (code) => {
  * @template {string} IdString
  * @template {string} VersionString
  * @template {any[]} Options
- * @typedef {import('tiny-essentials/libs/plugin/TinyPlugin').TinyPluginInstaller<TinyServiceWorkerEngine, Layer, IdString, VersionString, Options>} SwPluginInstaller
+ * @typedef {import('../../plugin/TinyPlugin.mjs').TinyPluginInstaller<TinyServiceWorkerEngine, Layer, IdString, VersionString, Options>} SwPluginInstaller
  */
 
 /**
