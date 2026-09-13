@@ -1,4 +1,4 @@
-import TinyDebugger from '../tools/TinyDebugger.mjs';
+import { TinyPluginCore } from '../plugin/TinyPlugin.mjs';
 import { createCheckDestroyed } from '../utils/tools.mjs';
 
 const checkDestroy = createCheckDestroyed('TinyServiceWorker');
@@ -22,7 +22,7 @@ const checkDestroy = createCheckDestroyed('TinyServiceWorker');
  * @template {string | URL} SwUrl
  * Manages Service Worker registration, versioning, and messaging.
  */
-class TinyServiceWorker extends TinyDebugger {
+class TinyServiceWorker extends TinyPluginCore {
   /**
    * Validates if an event type is a reserved name for the internal lifecycle.
    * @param {string} type - The name of the event to validate.
@@ -151,10 +151,12 @@ class TinyServiceWorker extends TinyDebugger {
    */
   constructor({ id, swUrl, version, logger, debugMode, useLogColors }) {
     super({
-      id: '[_blue_TinyServiceWorker_reset_]',
-      logger: logger ?? console,
-      debugMode: debugMode ?? false,
-      useLogColors: useLogColors ?? false,
+      logCfg: {
+        id: '[_blue_TinyServiceWorker_reset_]',
+        logger: logger ?? console,
+        debugMode: debugMode ?? false,
+        useLogColors: useLogColors ?? false,
+      },
     });
     if (typeof id !== 'string' || id.trim() === '') {
       throw new TypeError('The "id" parameter must be a non-empty string.');
