@@ -6,6 +6,8 @@ import { resolve } from 'path';
  * @typedef {Object} BuildConfiguration
  * @property {string} pwaTsConfig - Path to the PWA TypeScript configuration file.
  * @property {string} mainTsConfig - Path to the main TypeScript configuration file.
+ * @property {string} cssSassCommand - The command to execute the Sass compilation script.
+ * @property {string} cssScssCommand - The command to execute the Scss compilation script.
  * @property {string} rollupCommand - The command to run Rollup.
  * @property {string} webpackMode - The mode for Webpack execution.
  * @property {string} pwaSourceDir - The absolute path of the source PWA directory.
@@ -49,6 +51,8 @@ class BuildManager {
     const requiredKeys = [
       'pwaTsConfig',
       'mainTsConfig',
+      'cssSassCommand',
+      'cssScssCommand',
       'rollupCommand',
       'webpackMode',
       'pwaSourceDir',
@@ -66,7 +70,7 @@ class BuildManager {
   /**
    * Logs messages to the console with specific formatting and colors.
    * @param {string} message - The message to display.
-   * @param {'info' | 'success' | 'warn' | 'error'} level - The severity level of the log.
+   * @param {'info' | 'success' | 'warn' | 'error' | 'bright'} level - The severity level of the log.
    */
   #log(message, level = 'info') {
     const timestamp = new Date().toLocaleTimeString();
@@ -85,6 +89,10 @@ class BuildManager {
       case 'error':
         color = this.#colors.red;
         prefix = '[ERROR]';
+        break;
+      case 'bright':
+        color = this.#colors.bright;
+        prefix = '[START]';
         break;
       case 'info':
         color = this.#colors.cyan;
@@ -108,6 +116,15 @@ class BuildManager {
     } catch (error) {
       throw new Error(`Command failed: ${command}`);
     }
+  }
+
+  /**
+   * Handles the compilation of CSS styles (Sass and Scss).
+   */
+  #compileStyles() {
+    this.#log('Starting CSS compilation phase...', 'info');
+    this.#runCommand(this.#config.cssSassCommand);
+    this.#runCommand(this.#config.cssScssCommand);
   }
 
   /**
@@ -142,11 +159,14 @@ class BuildManager {
       // 2. Compile Main TypeScript files
       this.#runCommand(`npx tsc -p ${this.#config.mainTsConfig}`);
 
-      // 3. Bundling
+      // 3. Compile CSS Styles (Sass/Scss)
+      this.#compileStyles();
+
+      // 4. Bundling
       this.#runCommand(this.#config.rollupCommand);
       this.#runCommand(`npx webpack --mode ${this.#config.webpackMode}`);
 
-      // 4. Asset Management
+      // 5. Asset Management
       this.#managePwaAssets();
 
       this.#log('Build process completed successfully!', 'success');
@@ -162,6 +182,8 @@ class BuildManager {
 const buildConfig = {
   pwaTsConfig: resolve('src/v1/libs/router/pwa/tsconfig.json'),
   mainTsConfig: resolve('tsconfig.json'),
+  cssSassCommand: 'node build/sass.mjs',
+  cssScssCommand: 'node build/scss.mjs',
   rollupCommand: 'npx rollup -c',
   webpackMode: 'production',
   pwaSourceDir: resolve('dist-sw/src/v1/libs/router/pwa'),

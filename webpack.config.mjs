@@ -64,7 +64,12 @@ const addModule = (version, entry, library, isClass = false, extraOps = {}) => {
 addModule(1, './src/v1/index.mjs', 'TinyEssentials');
 addModule(1, './src/v1/basics/index.mjs', 'TinyBasicsEs');
 addModule(1, './src/v1/regexp/index.mjs', 'TinyRegexEs');
-addModule(1, './src/v1/libs/router/pwa/build/TinyServiceWorkerEngine.mjs', 'TinyServiceWorkerEngine', true);
+addModule(
+  1,
+  './src/v1/libs/router/pwa/build/TinyServiceWorkerEngine.mjs',
+  'TinyServiceWorkerEngine',
+  true,
+);
 addModule(1, './src/v1/libs/math/TinyMamdaniInferenceSystem.mjs', 'TinyMaInSys');
 addModule(1, './src/v1/libs/plugin/TinyPlugin.mjs', 'TinyPluginPackage');
 addModule(1, './src/v1/build/TinyLevelUp.mjs', 'TinyLevelUp', true);
