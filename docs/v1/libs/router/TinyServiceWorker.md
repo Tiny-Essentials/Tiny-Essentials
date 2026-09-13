@@ -198,3 +198,23 @@ swManager.destroy();
 * `isFailed`: `boolean` - Returns `true` if registration encountered an error.
 * `displayMode`: `'twa' | 'standalone' | 'browser'` - The current UI mode.
 * `id`: `string` - The instance ID.
+
+---
+
+## 🧩 Architecture Note: The Dual-Module System
+
+The `TinyServiceWorker` module is only one half of a complete Progressive Web App (PWA) solution. To function correctly, it must be paired with the **`TinyServiceWorkerEngine`**.
+
+### 🏗️ How it works
+The system is architected using a **Client-Server model** within the browser:
+
+1.  **`TinyServiceWorker` (This Module):** Runs in the **Main Thread** (your web page). It acts as the interface, allowing your application code to send messages and listen for events.
+2.  **`TinyServiceWorkerEngine` (The Core):** Runs in the **Service Worker context** (the background). It performs the heavy lifting: intercepting network requests, managing the HTTP router, and processing background logic.
+
+### 🚀 Complete your implementation
+To set up the background engine and enable full feature sets like **Fetch Interception** and **Automatic Error Routing**, you must implement the engine in your Service Worker file.
+
+**Learn how to configure the engine here:**
+👉 [TinyServiceWorkerEngine](./pwa/TinyServiceWorkerEngine.md)
+
+> **Pro Tip:** The true power of this system is realized when both modules are active, enabling real-time, bidirectional communication between your UI and the background process via the **Messaging System**.

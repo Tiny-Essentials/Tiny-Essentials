@@ -77,7 +77,10 @@ The constructor sets up the internal state, but the `.init()` method actually at
 
 ## 🌐 Feature 1: Fetch Interception
 
-The engine allows you to intercept requests using three different levels of granularity. All listeners receive a `fetchObj` as their first argument.
+The engine allows you to intercept requests using three different levels of granularity. All listeners receive a `fetchObj` and `result` as the arguments.
+
+**Callback Signature:**
+`async (fetchObj: FetchObj, result: FetchCheckerResult) => Promise<void> | void`
 
 ### 📦 The `fetchObj` Argument Reference
 When a match is found, the callback is executed with this object:
@@ -94,7 +97,63 @@ When a match is found, the callback is executed with this object:
 | `replyTemplate` | `Function` | Utility to format a message object before sending. |
 | `error` | `Error` (Optional) | Contains error details if the plugin execution failed. |
 
-#### A. Exact or Parameterized URL Matching 📍
+### ⚙️ The Interception Flow Control (`result` object)
+
+When you intercept a request, the engine provides a `result` object as the **second argument** to your callback function. This object is used to communicate back to the engine how the interception should proceed.
+
+#### `FetchCheckerResult` Property Reference
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `code` | `number` | The HTTP status code associated with the fetch result. This can be used to trigger the Router. |
+| `needValidation` | `boolean` | **The Router Trigger.** If `true`, the engine checks the `code` against the Router configuration. If the code is an error (like 404), the engine will serve the configured error page. |
+| `isSameOrigin` | `boolean` | Indicates if the request is from the same origin as the Service Worker. |
+| `continueCheck` | `boolean` | **The Flow Controller.** If set to `false`, the engine immediately stops searching for other matching plugins and proceeds with the standard network request. |
+
+#### 🛠️ Practical Implementation Examples
+
+**1. Stopping the Search (Flow Control)**
+If you have multiple listeners and you want to ensure that once *this* plugin handles the request, no other plugins are even checked, set `continueCheck` to `false`.
+
+```javascript
+engine.addFetchUrlListener('/api/secure-data', async (fetchObj, result) => {
+  // Perform security logic...
+  
+  // Stop the engine from looking for more matches for this request
+  result.continueCheck = false;
+  
+  return new Response(JSON.stringify({ data: 'secret' }));
+});
+```
+
+**2. Forcing an Error Page (Router Trigger)**
+If your plugin detects that a resource is missing (even if the browser hasn't realized it yet), you can force the engine to trigger the Router by setting `needValidation` to `true` and providing a `code`.
+
+```javascript
+engine.addFetchUrlListener('/old-api/:version', async (fetchObj, result) => {
+  const isLegacy = fetchObj.params.version === 'v1';
+
+  if (isLegacy) {
+    // Force the engine to treat this as a 404 error and trigger the Router
+    result.code = 404;
+    result.needValidation = true;
+    return;
+  }
+});
+```
+
+**3. Bypassing the Router for Errors**
+Sometimes a request returns a 404, but you want the browser to handle it normally (perhaps to allow a different part of your app to catch the error) instead of showing a custom `404.html` page.
+
+```javascript
+engine.addFetchUrlListener('/api/external-service', async (fetchObj, result) => {
+  // We don't want the Router to intercept this 404.
+  // We want the original 404 response to go straight to the application.
+  result.needValidation = false;
+});
+```
+
+**4. Exact or Parameterized URL Matching**
 ```javascript
 // Intercepting a specific path
 engine.addFetchUrlListener('/api/config', async ({ url }) => {
@@ -111,7 +170,7 @@ engine.addFetchUrlListener('/user/:id', async ({ params }) => {
 });
 ```
 
-### B. Regular Expression (RegExp) Matching 🔍
+**5. Regular Expression (RegExp) Matching**
 Use this for patterns that are too complex for simple URL strings.
 
 ```javascript
@@ -122,7 +181,7 @@ engine.addFetchRegExpListener('\\.png$', async ({ url }) => {
 });
 ```
 
-### C. Global Tracking 🌐
+**6. Global Tracking**
 If you want to perform an action (like logging) on **every single request** without changing the response, use the Global listener.
 
 ```javascript
@@ -227,3 +286,22 @@ If `spaMode` is set to `true`, the engine adjusts how paths are calculated. This
 | `addFetchGlobalListener` | Observes all requests | `fetchObj` | Analytics, logging, debugging. |
 | `addMessageListener` | Handles `postMessage` | `msg` (contains `data` and `reply`) | Communicating with the UI. |
 | `addRouterCode` | Maps HTTP codes to files | `RouterCodeConfig` | Custom 404, 500, etc. |
+
+---
+
+## 🔗 Full PWA Integration (Client-Side)
+
+To achieve a complete and seamless Progressive Web App (PWA) experience, it is highly recommended to use the `TinyServiceWorkerEngine` in conjunction with our dedicated client-side module.
+
+While the `TinyServiceWorkerEngine` manages the background logic and network interception within the **Service Worker context**, the **`TinyServiceWorker`** module provides the necessary interface to interact with the engine from your **Main Thread (the browser window)**.
+
+### 📍 Recommended Next Step
+To learn how to communicate with the engine from your web application, please refer to the integration guide here:
+👉 [TinyServiceWorker](../TinyServiceWorker.md)
+
+**Why integrate both?**
+Using both modules allows you to fully leverage the **Messaging System**. This enables your website to:
+1.  **Listen** to events triggered by the Service Worker.
+2.  **Trigger** updates and lifecycle events.
+3.  **Exchange data** between the background process and the user interface in real-time.
+```
