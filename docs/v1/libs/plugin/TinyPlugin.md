@@ -17,6 +17,7 @@ The central engine and registry of the system. It manages the lifecycle of all p
 The object representing a registered plugin instance.
 - **Purpose:** Provides the plugin with a controlled interface to interact with the engine and its own state.
 - **Key Responsibilities:**
+    - Provides the `sandbox` object (a secure Proxy of itself) to the installer.
     - Provides access to the `engine` (via a security Proxy).
     - Provides access to the `layer` (via a security Proxy).
     - Manages plugin identity (`id`, `version`, `authors`, etc.).
@@ -26,8 +27,7 @@ The object representing a registered plugin instance.
 The isolated runtime environment for a specific plugin.
 - **Purpose:** Provides a "sandbox" where the plugin performs its primary logic.
 - **Key Responsibilities:**
-    - Provides the `sandbox` object to the installer.
-    - Manages layer-specific access control.
+    - Manages layer-specific access control (evaluating inbound requests from other plugins).
     - Ensures that the plugin cannot access the `TinyPluginCore` directly, only through the permitted `layer` interface.
 
 ---
@@ -83,10 +83,10 @@ The configuration object defining the security posture of an engine or layer.
 
 ### `BwList`
 A collection of sets used for identity matching.
-- `ids`: `Set<string>`
-- `authors`: `Set<string>`
-- `categories`: `Set<string>`
-- `tags`: `Set<string>`
+- `ids`: `Set<BlackListValue>`
+- `authors`: `Set<BlackListValue>`
+- `categories`: `Set<BlackListValue>`
+- `tags`: `Set<BlackListValue>`
 
 # 🛠️ TINY PLUGIN SYSTEM: ARCHITECTURAL SPECIFICATION & DEVELOPER PROMPT
 
@@ -338,8 +338,8 @@ When a plugin accesses `this.engine`, it does **not** receive the actual `TinyPl
 
 Whenever a plugin attempts to retrieve another plugin via `plugin.getPlugin(id)`, the engine intercepts the request.
 
-* The engine verifies the current access mode (`whitelist`, `blacklist`, or `cryptographic`).
-* If the requesting plugin does not have permission to "see" the target based on its identity profile, the engine throw a `Security Error`.
+* The engine verifies the target plugin's layer access rules by calling `targetPlugin.layer.canAccessLayer(...)`.
+* If the requesting plugin does not have permission to "see" the target based on the target's identity profile rules (`whitelist`, `blacklist`, or `cryptographic`), the engine throws a `Security Error`.
 
 ### 3. CRYPTOGRAPHIC VERIFICATION (High-Security Mode)
 
