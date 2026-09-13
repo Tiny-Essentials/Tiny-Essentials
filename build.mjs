@@ -3,46 +3,171 @@ import { mkdirSync, cpSync, rmSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
 /**
- * Executa um comando no terminal exibindo a saída em tempo real no console.
- * @param {string} command - O comando a ser executado.
+ * @typedef {Object} BuildConfiguration
+ * @property {string} pwaTsConfig - Path to the PWA TypeScript configuration file.
+ * @property {string} mainTsConfig - Path to the main TypeScript configuration file.
+ * @property {string} rollupCommand - The command to run Rollup.
+ * @property {string} webpackMode - The mode for Webpack execution.
+ * @property {string} pwaSourceDir - The absolute path of the source PWA directory.
+ * @property {string} pwaTargetDir - The absolute path of the target PWA directory.
+ * @property {string} tempDir - The absolute path of the temporary directory to be cleaned.
  */
-function runCommand(command) {
-  console.log(`\n> Executando: ${command}`);
-  execSync(command, { stdio: 'inherit' });
-}
 
-function build() {
-  try {
-    // 1. Compilação do Service Worker (SW)
-    runCommand('npx tsc -p src/v1/libs/router/pwa/tsconfig.json');
+/**
+ * Manages the build process for the project, including compilation, bundling, and asset management.
+ */
+class BuildManager {
+  /** @type {BuildConfiguration} */
+  #config;
 
-    // 2. Compilação do TypeScript principal
-    runCommand('npx tsc -p tsconfig.json');
+  // ANSI Color Codes for terminal output
+  #colors = {
+    reset: '\x1b[0m',
+    bright: '\x1b[1m',
+    green: '\x1b[32m',
+    yellow: '\x1b[33m',
+    red: '\x1b[31m',
+    blue: '\x1b[34m',
+    cyan: '\x1b[36m',
+  };
 
-    // 3. Bundling de JS com Rollup e Webpack
-    runCommand('npx rollup -c');
-    runCommand('npx webpack --mode production');
+  /**
+   * @param {BuildConfiguration} config - The configuration object for the build process.
+   * @throws {TypeError} If the configuration object is invalid or missing required properties.
+   */
+  constructor(config) {
+    this.#validateConfig(config);
+    this.#config = config;
+  }
 
-    // 4. Mover/Copiar a pasta do PWA
-    const sourceDir = resolve('dist-sw/src/v1/libs/router/pwa');
-    const targetDir = resolve('dist/v1/libs/router/pwa');
+  /**
+   * Validates the configuration object at runtime.
+   * @param {BuildConfiguration} config
+   * @throws {TypeError}
+   */
+  #validateConfig(config) {
+    const requiredKeys = [
+      'pwaTsConfig',
+      'mainTsConfig',
+      'rollupCommand',
+      'webpackMode',
+      'pwaSourceDir',
+      'pwaTargetDir',
+      'tempDir',
+    ];
 
-    if (existsSync(sourceDir)) {
-      console.log(`\n> Copiando arquivos PWA de "${sourceDir}" para "${targetDir}"...`);
-      mkdirSync(targetDir, { recursive: true });
-      cpSync(sourceDir, targetDir, { recursive: true });
-      rmSync(resolve('dist-sw'), { recursive: true, force: true });
-      
-      console.log('> Arquivos PWA copiados com sucesso!');
-    } else {
-      console.warn(`\n> [Aviso] Diretório de origem não encontrado: ${sourceDir}`);
+    for (const key of requiredKeys) {
+      if (typeof config[key] !== 'string') {
+        throw new TypeError(`Configuration Error: The property "${key}" must be a string.`);
+      }
+    }
+  }
+
+  /**
+   * Logs messages to the console with specific formatting and colors.
+   * @param {string} message - The message to display.
+   * @param {'info' | 'success' | 'warn' | 'error'} level - The severity level of the log.
+   */
+  #log(message, level = 'info') {
+    const timestamp = new Date().toLocaleTimeString();
+    let color = this.#colors.reset;
+    let prefix = '[INFO]';
+
+    switch (level) {
+      case 'success':
+        color = this.#colors.green;
+        prefix = '[SUCCESS]';
+        break;
+      case 'warn':
+        color = this.#colors.yellow;
+        prefix = '[WARNING]';
+        break;
+      case 'error':
+        color = this.#colors.red;
+        prefix = '[ERROR]';
+        break;
+      case 'info':
+        color = this.#colors.cyan;
+        prefix = '[INFO]';
+        break;
     }
 
-    console.log('\n Build finalizado com sucesso!');
-  } catch (error) {
-    console.error('\n Ocorreu um erro durante o processo de build:', error.message);
-    process.exit(1);
+    console.log(
+      `${color}${this.#colors.bright}${timestamp} ${prefix}${this.#colors.reset} ${message}${this.#colors.reset}`,
+    );
+  }
+
+  /**
+   * Executes a shell command synchronously.
+   * @param {string} command - The shell command to execute.
+   */
+  #runCommand(command) {
+    this.#log(`Executing: ${command}`, 'info');
+    try {
+      execSync(command, { stdio: 'inherit' });
+    } catch (error) {
+      throw new Error(`Command failed: ${command}`);
+    }
+  }
+
+  /**
+   * Handles the copying and cleaning of PWA assets.
+   */
+  #managePwaAssets() {
+    const source = this.#config.pwaSourceDir;
+    const target = this.#config.pwaTargetDir;
+    const temp = this.#config.tempDir;
+
+    if (existsSync(source)) {
+      this.#log(`Copying PWA assets from "${source}" to "${target}"...`, 'info');
+      mkdirSync(target, { recursive: true });
+      cpSync(source, target, { recursive: true });
+      rmSync(temp, { recursive: true, force: true });
+      this.#log('PWA assets copied and temporary files cleaned successfully!', 'success');
+    } else {
+      this.#log(`Source directory not found: ${source}`, 'warn');
+    }
+  }
+
+  /**
+   * Orchestrates the entire build pipeline.
+   */
+  execute() {
+    try {
+      this.#log('Starting the build process...', 'bright');
+
+      // 1. Compile PWA Service Worker
+      this.#runCommand(`npx tsc -p ${this.#config.pwaTsConfig}`);
+
+      // 2. Compile Main TypeScript files
+      this.#runCommand(`npx tsc -p ${this.#config.mainTsConfig}`);
+
+      // 3. Bundling
+      this.#runCommand(this.#config.rollupCommand);
+      this.#runCommand(`npx webpack --mode ${this.#config.webpackMode}`);
+
+      // 4. Asset Management
+      this.#managePwaAssets();
+
+      this.#log('Build process completed successfully!', 'success');
+    } catch (error) {
+      this.#log(`Build failed: ${error.message}`, 'error');
+      process.exit(1);
+    }
   }
 }
 
-build();
+// --- Execution Block ---
+
+const buildConfig = {
+  pwaTsConfig: resolve('src/v1/libs/router/pwa/tsconfig.json'),
+  mainTsConfig: resolve('tsconfig.json'),
+  rollupCommand: 'npx rollup -c',
+  webpackMode: 'production',
+  pwaSourceDir: resolve('dist-sw/src/v1/libs/router/pwa'),
+  pwaTargetDir: resolve('dist/v1/libs/router/pwa'),
+  tempDir: resolve('dist-sw'),
+};
+
+const builder = new BuildManager(buildConfig);
+builder.execute();
