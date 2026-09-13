@@ -57,9 +57,9 @@
           <div class="input-group">
             <label for="crypto-algorithm">Cryptographic Algorithm</label>
             <select id="crypto-algorithm">
-              <option value="RSASSA-PKCS1-v1_5">RSASSA-PKCS1-v1_5 (RSA Clássico)</option>
-              <option value="RSA-PSS">RSA-PSS (RSA Avançado)</option>
-              <option value="ECDSA">ECDSA (Curva Elíptica P-256)</option>
+              <option value="RSASSA-PKCS1-v1_5">RSASSA-PKCS1-v1_5 (RSA Classic)</option>
+              <option value="RSA-PSS">RSA-PSS (RSA Advanced)</option>
+              <option value="ECDSA">ECDSA (Elliptic Curve P-256)</option>
             </select>
           </div>
           <div class="info-box">
@@ -97,6 +97,17 @@
           </div>
           <div class="button-row">
             <button id="btn-verify" class="btn-success">Verify Signature</button>
+          </div>
+        </div>
+
+        <!-- Structural Testing -->
+        <div class="card">
+          <h3>4. Structural Testing</h3>
+          <p class="description">Automated verification of Core, Layer, and Sandbox integrity.</p>
+          <div class="button-row">
+            <button id="btn-run-structural-tests" class="btn-accent" style="width: 100%">
+              Run All Structural Tests
+            </button>
           </div>
         </div>
       </section>

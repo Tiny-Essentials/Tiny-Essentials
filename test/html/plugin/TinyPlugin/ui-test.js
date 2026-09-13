@@ -1,12 +1,14 @@
 /**
  * UI Test Bridge for TinyPlugin Module
- * This script connects the HTML controls to the exported functions.
+ * This script connects the HTML controls to the exported functions and runs structural tests.
  */
 
 import {
   signPluginIdentity,
   createPluginIdChecker,
   verifyPluginSignature,
+  TinyPluginLayer,
+  TinyPluginCore,
 } from '/src/v1/libs/plugin/TinyPlugin.mjs';
 
 // --- DOM Elements ---
@@ -28,6 +30,7 @@ const elements = {
   btnGenerateKey: document.getElementById('btn-generate-key'),
   btnVerify: document.getElementById('btn-verify'),
   btnClearConsole: document.getElementById('btn-clear-console'),
+  btnRunStructuralTests: document.getElementById('btn-run-structural-tests'),
 
   // Console
   console: document.getElementById('console-output'),
@@ -35,14 +38,14 @@ const elements = {
 
 // --- State ---
 let currentKeyPair = null;
-let currentAlgorithm = null; // Armazena qual algoritmo foi gerado por último
+let currentAlgorithm = null;
 
 // --- Utilities ---
 
 /**
  * Logs messages to the visual console UI.
  * @param {string} message
- * @param {'info' | 'success' | 'error' | 'system' | 'data'} type
+ * @param {'info' | 'success' | 'error' | 'system' | 'data' | 'test-pass' | 'test-fail'} type
  */
 const log = (message, type = 'info') => {
   const entry = document.createElement('div');
@@ -128,8 +131,237 @@ const getAlgoConfig = (algoName) => {
         signParams: { name: 'ECDSA', hash: { name: 'SHA-256' } }, // ECDSA precisa do hash na hora de assinar
       };
     default:
-      throw new Error(`Algoritmo não suportado: ${algoName}`);
+      throw new Error(`Algorithm not supported: ${algoName}`);
   }
+};
+
+// --- Structural Testing Runner ---
+
+/**
+ * Helper to create a valid installer that adheres to the Identity Contract.
+ * @param {Object} identity - The identity to assign.
+ * @param {Object} expectedOptions - Additional options for the installer.
+ * @param {TinyPluginLayer} [forcedLayer] - If provided, returns this layer instead of creating a new one.
+ * @returns {Function}
+ */
+const createValidInstaller = (identity, expectedOptions = {}, forcedLayer = null) => {
+  return (sandbox, options) => {
+    // 1. Mandatory Identity Assignment (The Identity Contract)
+    sandbox.id = identity.id;
+    sandbox.version = identity.version;
+    sandbox.description = identity.description;
+    sandbox.authors = identity.authors;
+    sandbox.contributors = identity.contributors;
+    sandbox.categories = identity.categories;
+    sandbox.tags = identity.tags;
+
+    // 2. Runtime Validation of Options (Rule 03)
+    if (options && options.testProp && typeof options.testProp !== 'string') {
+      throw new TypeError('testProp must be a string');
+    }
+
+    // 3. Return the Layer (Mandatory!)
+    if (forcedLayer) return forcedLayer;
+    return new TinyPluginLayer();
+  };
+};
+
+/**
+ * Dummy Engine class specifically for testing, following RULE 02 (The Extension Pattern).
+ */
+class TestEngine extends TinyPluginCore {
+  constructor(config = {}) {
+    super({
+      logCfg: config.logCfg || { id: '[test]', logger: console, debugMode: false },
+      sandboxBlacklist: config.sandboxBlacklist,
+      accessControl: config.accessControl || { mode: 'none' },
+    });
+  }
+}
+
+/**
+ * Runs a suite of structural tests to verify the integrity of the TinyPlugin system.
+ */
+const runStructuralTests = async () => {
+  log('Starting Structural Test Suite...', 'system');
+  let passed = 0;
+  let failed = 0;
+
+  /**
+   * Helper to execute a test case.
+   * @param {string} name
+   * @param {() => Promise<void> | void} testFn
+   */
+  const runTest = async (name, testFn) => {
+    try {
+      await testFn();
+      log(`[PASS] ${name}`, 'test-pass');
+      passed++;
+    } catch (err) {
+      log(`[FAIL] ${name}: ${err.message}`, 'test-fail');
+      failed++;
+    }
+  };
+
+  // --- TEST 1: Identity Contract & Lifecycle ---
+  await runTest('Identity Contract: Should fail if properties are missing', async () => {
+    const core = new TestEngine();
+
+    // Incomplete identity (missing description to force a validation failure)
+    const invalidInstaller = (sandbox, options) => {
+      sandbox.id = 'bad.plugin';
+      sandbox.version = '1.0.0';
+      // Missing description intentionally
+      sandbox.authors = ['Tester'];
+      sandbox.contributors = ['Tester'];
+      sandbox.categories = ['Test'];
+      sandbox.tags = ['Test'];
+      return new TinyPluginLayer();
+    };
+
+    try {
+      // Correct usage: engine.installPlugin(InstallerFunction, options)
+      core.installPlugin(invalidInstaller, {});
+      throw new Error('Core allowed a plugin with missing identity properties!');
+    } catch (e) {
+      if (!e.message.includes('not set') && !e.message.toLowerCase().includes('description')) {
+        throw e;
+      }
+    }
+  });
+
+  await runTest('Lifecycle: Successful installation and readiness', async () => {
+    const core = new TestEngine();
+    const identity = {
+      id: 'valid.plugin',
+      version: '1.0.0',
+      description: 'Valid Plugin',
+      authors: ['Tester'],
+      contributors: ['Tester'],
+      categories: ['Test'],
+      tags: ['Test'],
+    };
+
+    // Correct usage instead of TinyPlugin._addModuleToCore
+    const plugin = core.installPlugin(createValidInstaller(identity), {});
+
+    if (!plugin.isReady) throw new Error('Plugin should be ready after installation.');
+    if (core.getPlugin('valid.plugin') !== plugin) throw new Error('Plugin not found in core.');
+  });
+
+  // --- TEST 2: Outbound Protection (Engine Proxy) ---
+  await runTest('Outbound Protection: Sandbox Blacklist on Engine', async () => {
+    const core = new TestEngine({
+      sandboxBlacklist: {
+        get: ['pluginsSize'],
+        set: [],
+      },
+    });
+
+    const identity = {
+      id: 'proxy.test',
+      version: '1.0.0',
+      description: 'Proxy Test',
+      authors: ['Tester'],
+      contributors: ['Tester'],
+      categories: ['Test'],
+      tags: ['Test'],
+    };
+
+    const plugin = core.installPlugin(createValidInstaller(identity), {});
+    const engineProxy = plugin.engine; // Access via dynamic proxy
+
+    try {
+      engineProxy.pluginsSize;
+      throw new Error('Sandbox allowed access to a blacklisted engine property.');
+    } catch (e) {
+      // Engine Proxy must throw a Security Error on blacklisted property read
+      if (!e.message.includes('Security Error')) throw e;
+    }
+  });
+
+  // --- TEST 3: Inbound Protection (Engine Filter) ---
+  await runTest('Inbound Protection: Whitelist Mode', async () => {
+    const core = new TestEngine({
+      accessControl: {
+        mode: 'whitelist',
+        whitelist: { ids: ['allowed.id'], authors: [], categories: [], tags: [] },
+        blacklist: { ids: [], authors: [], categories: [], tags: [] },
+      },
+    });
+
+    const idAllowed = {
+      id: 'allowed.id',
+      version: '1.0.0',
+      description: 'A',
+      authors: ['A'],
+      contributors: ['A'],
+      categories: ['A'],
+      tags: ['A'],
+    };
+    const pAllowed = core.installPlugin(createValidInstaller(idAllowed), {});
+
+    try {
+      const idUnauthorized = {
+        id: 'unauthorized.id',
+        version: '1.0.0',
+        description: 'B',
+        authors: ['B'],
+        contributors: ['B'],
+        categories: ['B'],
+        tags: ['B'],
+      };
+      core.installPlugin(createValidInstaller(idUnauthorized), {});
+
+      // The Engine Filter intercepts this call
+      pAllowed.getPlugin('unauthorized.id');
+      throw new Error('Whitelist allowed access to an unauthorized plugin.');
+    } catch (e) {
+      if (!e.message.includes('Security Error')) throw e;
+    }
+  });
+
+  await runTest('Inbound Protection: Blacklist Mode', async () => {
+    const core = new TestEngine({
+      accessControl: {
+        mode: 'blacklist',
+        blacklist: { ids: ['blocked.id'], authors: [], categories: [], tags: [] },
+        whitelist: { ids: [], authors: [], categories: [], tags: [] },
+      },
+    });
+
+    try {
+      const idBlocked = {
+        id: 'blocked.id',
+        version: '1.0.0',
+        description: 'B',
+        authors: ['B'],
+        contributors: ['B'],
+        categories: ['B'],
+        tags: ['B'],
+      };
+      core.installPlugin(createValidInstaller(idBlocked), {});
+
+      const idOther = {
+        id: 'other.id',
+        version: '1.0.0',
+        description: 'O',
+        authors: ['O'],
+        contributors: ['O'],
+        categories: ['O'],
+        tags: ['O'],
+      };
+      const pOther = core.installPlugin(createValidInstaller(idOther), {});
+
+      // In blacklist mode, specific identities are blocked from being retrieved
+      pOther.getPlugin('blocked.id');
+      throw new Error('Blacklist allowed access to a blocked plugin.');
+    } catch (e) {
+      if (!e.message.includes('Security Error')) throw e;
+    }
+  });
+
+  log(`Structural Test Suite Finished. Passed: ${passed}, Failed: ${failed}`, 'system');
 };
 
 // --- Event Handlers ---
@@ -189,8 +421,6 @@ const handleSignIdentity = async () => {
     const config = getAlgoConfig(currentAlgorithm);
 
     log(`Signing identity for: ${id} with ${currentAlgorithm}...`, 'system');
-
-    // Passamos config.signParams para a função do motor
     const signature = await signPluginIdentity(
       id,
       authors,
@@ -221,13 +451,11 @@ const handleVerify = async () => {
     if (!currentAlgorithm) throw new Error('No algorithm context found. Generate a key first.');
 
     const config = getAlgoConfig(currentAlgorithm);
-
-    // Setup Mock Access Control dinâmico baseado no algoritmo ativo
     const mockAccessControl = {
       mode: mode,
       importKeyFormat: 'spki',
       importAlgorithm: config.importParams,
-      cryptoAlgorithm: config.signParams, // Usa os mesmos parâmetros de assinatura para verificar
+      cryptoAlgorithm: config.signParams,
       publicKey: elements.publicKeyDisplay.value,
       whitelist: { ids: new Set(), authors: new Set(), categories: new Set(), tags: new Set() },
       blacklist: { ids: new Set(), authors: new Set(), categories: new Set(), tags: new Set() },
@@ -264,8 +492,8 @@ elements.btnGenerateChecker.addEventListener('click', handleGenerateChecker);
 elements.btnSignIdentity.addEventListener('click', handleSignIdentity);
 elements.btnVerify.addEventListener('click', handleVerify);
 elements.btnClearConsole.addEventListener('click', () => (elements.console.innerHTML = ''));
+elements.btnRunStructuralTests.addEventListener('click', runStructuralTests);
 
-// Evento para limpar o estado quando a usuária trocar o algoritmo manualmente
 elements.cryptoAlgorithm.addEventListener('change', () => {
   currentKeyPair = null;
   currentAlgorithm = null;

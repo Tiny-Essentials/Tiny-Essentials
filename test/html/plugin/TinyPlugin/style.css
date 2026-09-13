@@ -276,3 +276,16 @@ button:hover {
   margin-bottom: 1rem;
   font-size: 0.85rem;
 }
+
+/* Test Result Styles */
+.log-entry.test-pass {
+  color: var(--success-color);
+  border-left: 3px solid var(--success-color);
+  background: rgba(35, 134, 54, 0.05);
+}
+
+.log-entry.test-fail {
+  color: var(--error-color);
+  border-left: 3px solid var(--error-color);
+  background: rgba(218, 54, 51, 0.05);
+}
