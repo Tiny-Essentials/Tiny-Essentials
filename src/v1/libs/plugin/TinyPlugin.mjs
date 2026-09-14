@@ -434,7 +434,7 @@ const createSandbox = (
   const allowedSetKeys = [...setKeys];
 
   /** @type {BlackListValue[]} */
-  const allowedGetKeys = [...allowedSetKeys, ...getKeys];
+  const allowedGetKeys = [...getKeys];
 
   /** @type {BlackListCoreProtected} */
   const coreBlacklist = engineSandboxBlacklist ?? { get: [], set: [] };
@@ -617,15 +617,17 @@ class TinyPluginLayer extends TinyDebugger {
    * Creates a secure proxy to restrict plugin access to the host.
    * This ensures that even if the layer is passed to external entities,
    * its internal state and lifecycle methods remain protected.
+   * @param {BlackListValue[]} allowedSets - The list of keys allowed to be set.
+   * @param {BlackListValue[]} allowedGets - The list of keys allowed to be accessed.
    * @returns {this} The proxied instance of the layer.
    */
-  _createSandbox() {
+  _createSandbox(allowedSets, allowedGets) {
     return createSandbox(
       this,
       null,
       null,
       // Allowed set keys.
-      [],
+      [...allowedSets],
       // Allowed get keys.
       [
         'isReady',
@@ -634,6 +636,7 @@ class TinyPluginLayer extends TinyDebugger {
         'accessControlBlacklist',
         'verifyPluginSignature',
         'canAccessLayer',
+        ...allowedGets,
       ],
     );
   }
@@ -1070,22 +1073,17 @@ class TinyPlugin extends TinyDebugger {
   /** @type {boolean} */
   #isDestroyed = false;
 
+  /** @type {Set<BlackListValue>} */
+  #allowedGets = new Set();
+  /** @type {Set<BlackListValue>} */
+  #allowedSets = new Set();
+
   /**
    * Gets whether the plugin has been destroyed.
    * @returns {boolean} True if the plugin has been destroyed, false otherwise.
    */
   get isDestroyed() {
     return this.#isDestroyed;
-  }
-
-  /**
-   * Gets the plugin's layer instance.
-   * @returns {Layer} The proxied plugin layer.
-   */
-  get layer() {
-    checkDestroy(this.#isDestroyed);
-    if (this.#layer === null) throw new Error('Plugin layer is not set.');
-    return this.#layer._createSandbox();
   }
 
   /**
@@ -1299,6 +1297,60 @@ class TinyPlugin extends TinyDebugger {
     value.forEach((v) => this.#tags.add(v));
   }
 
+    /**
+   * Gets the list of keys allowed to be set.
+   * @returns {BlackListValue[]} The list of allowed keys for setting.
+   */
+  get allowedSets() {
+    checkDestroy(this.#isDestroyed);
+    return [...this.#allowedSets];
+  }
+
+  /**
+   * Sets the list of keys allowed to be modified by the plugin.
+   * @param {BlackListValue[]} value - The array of keys to be added to the allowed set.
+   * @throws {Error} If the tags are already set.
+   * @throws {TypeError} If the value is not an array of non-empty strings or is empty.
+   */
+  set allowedSets(value) {
+    checkDestroy(this.#isDestroyed);
+    if (this.#allowedSets.size !== 0 || this.#isReady) throw new Error('AllowedSets are already set.');
+    if (
+      !Array.isArray(value) ||
+      !value.every((v) => typeof v === 'string' && v.trim().length !== 0)
+    )
+      throw new TypeError('AllowedSets must be an array of non-empty strings.');
+    if (value.length === 0) throw new TypeError('AllowedSets cannot be empty.');
+    value.forEach((v) => this.#allowedSets.add(v));
+  }
+
+  /**
+   * Gets the list of keys allowed to be accessed.
+   * @returns {BlackListValue[]} The list of allowed keys for getting.
+   */
+  get allowedGets() {
+    checkDestroy(this.#isDestroyed);
+    return [...this.#allowedGets];
+  }
+
+  /**
+   * Sets the list of keys allowed to be accessed by the plugin.
+   * @param {BlackListValue[]} value - The array of keys to be added to the allowed get list.
+   * @throws {Error} If the tags are already set.
+   * @throws {TypeError} If the value is not an array of non-empty strings or is empty.
+   */
+  set allowedGets(value) {
+    checkDestroy(this.#isDestroyed);
+    if (this.#allowedGets.size !== 0 || this.#isReady) throw new Error('AllowedGets are already set.');
+    if (
+      !Array.isArray(value) ||
+      !value.every((v) => typeof v === 'string' && v.trim().length !== 0)
+    )
+      throw new TypeError('AllowedGets must be an array of non-empty strings.');
+    if (value.length === 0) throw new TypeError('AllowedGets cannot be empty.');
+    value.forEach((v) => this.#allowedGets.add(v));
+  }
+
   /**
    * Gets the version of the plugin as a string.
    * @returns {VersionString} The plugin version.
@@ -1333,6 +1385,16 @@ class TinyPlugin extends TinyDebugger {
     checkDestroy(this.#isDestroyed);
     if (!this.#version) throw new Error('Plugin version is not set.');
     return this.#version;
+  }
+
+  /**
+   * Gets the plugin's layer instance.
+   * @returns {Layer} The proxied plugin layer.
+   */
+  get layer() {
+    checkDestroy(this.#isDestroyed);
+    if (this.#layer === null) throw new Error('Plugin layer is not set.');
+    return this.#layer._createSandbox([...this.#allowedSets], [...this.#allowedGets]);
   }
 
   /**
@@ -1425,14 +1487,26 @@ class TinyPlugin extends TinyDebugger {
    * This prevents the plugin from accessing the 'engine' or mutating the plugin instance.
    */
   #createSandbox() {
+    const allowedSets = [
+      'id',
+      'version',
+      'description',
+      'authors',
+      'contributors',
+      'categories',
+      'tags',
+      'allowedGets',
+      'allowedSets',
+    ];
     return createSandbox(
       this,
       this.#engine.sandboxBlacklist,
       this.#sandboxBlacklist,
       // Allowed set keys.
-      ['id', 'version', 'description', 'authors', 'contributors', 'categories', 'tags'],
+      allowedSets,
       // Allowed get keys.
       [
+        ...allowedSets,
         'tinyVersion',
         'isReady',
         'layer',
