@@ -20,7 +20,8 @@ The object representing a registered plugin instance.
     - Provides the `sandbox` object (a secure Proxy of itself) to the installer.
     - Provides access to the `engine` (via a security Proxy).
     - Provides access to the `layer` (via a security Proxy).
-    - Manages plugin identity (`id`, `version`, `authors`, etc.).
+    - **Manages its own sandbox permissions via `allowedSets` and `allowedGets`.**
+    - Manages plugin identity (`id`, `version`, `description`, `authors`, `contributors`, `categories`, `tags`, `allowedSets`, and `allowedGets`).
     - Manages the plugin lifecycle state (`isReady`, `isDestroyed`).
 
 ### `TinyPluginLayer`
@@ -28,6 +29,7 @@ The isolated runtime environment for a specific plugin.
 - **Purpose:** Provides a "sandbox" where the plugin performs its primary logic.
 - **Key Responsibilities:**
     - Manages layer-specific access control (evaluating inbound requests from other plugins).
+    - Provides read-only access to the layer's security configuration (`accessControlWhitelist`, `accessControlBlacklist`, and `accessControlMode`).
     - Ensures that the plugin cannot access the `TinyPluginCore` directly, only through the permitted `layer` interface.
 
 ---
@@ -52,7 +54,7 @@ The isolated runtime environment for a specific plugin.
 - **Returns:** `string` (The JSON identity string).
 
 ### `verifyPluginSignature`
-**Usage:** Used by the engine during the plugin initialization phase.
+**Usage:** The engine uses this during the plugin initialization phase.
 - **Description:** Asynchronously validates that a provided signature matches the plugin's identity using a public key.
 - **Returns:** `Promise<boolean>` (True if valid, false otherwise).
 
@@ -198,7 +200,8 @@ Plugins must be isolated files exporting an installer function.
 1. **Define Options:** Use `@typedef {Object}` for configuration options.
 2. **Annotate Installer:** Use the generic `Installer` type from your specific Engine to annotate the function. This allows the IDE to validate the `options` object when you call `installPlugin`.
 3. **Implement Identity Assignment:** Use the `sandbox` to assign `id`, `version`, `description`, `authors`, `contributors`, `categories`, and `tags`.
-4. **Return the Layer:** The installer **MUST** return a `TinyPluginLayer` or a class extended from `TinyPluginLayer` instance.
+4. **Define Sandbox Permissions:** Use `sandbox.allowedSets` and `sandbox.allowedGets` to define which properties of the plugin itself can be accessed/modified by the plugin's logic.
+5. **Return the Layer:** The installer **MUST** return a `TinyPluginLayer` or a class extended from `TinyPluginLayer` instance.
 
 **⚠️ TECHNICAL NUANCE: The Identity & Layer Contract**
 The `Installer` function is a setup routine. It is not a simple `void` function.
@@ -258,11 +261,15 @@ const MyPluginInstaller = (sandbox, options) => {
   sandbox.categories = ['Utility'];
   sandbox.tags = ['demo', 'example'];
 
-  // 2. Runtime Validation of Options (CRITICAL)
+  // 2. SANDBOX PERMISSIONS (Defining what the plugin can touch on itself)
+  sandbox.allowedSets = ['userId'];
+  sandbox.allowedGets = ['userId'];
+
+  // 3. Runtime Validation of Options (CRITICAL)
   if (typeof options.apiKey !== 'string') throw new TypeError('apiKey must be a string');
   if (typeof options.debug !== 'boolean') throw new TypeError('debug must be a boolean');
 
-  // 3. Implementation Logic
+  // 4. Implementation Logic
   const engine = sandbox.engine;
   if (!(engine instanceof MyEngine)) {
     throw new TypeError('Plugin requires a MyEngine instance to function.');
@@ -275,7 +282,7 @@ const MyPluginInstaller = (sandbox, options) => {
     console.log(`Plugin ${sandbox.id} is active.`);
   }
 
-  // 4. RETURN THE LAYER (Mandatory!)
+  // 5. RETURN THE LAYER (Mandatory!)
   return layer;
 };
 
@@ -324,7 +331,7 @@ The engine operates in one of the four access modes defined in `PluginAccessCont
 
 ### 2. THE DOUBLE-SIDED SECURITY MODEL
 
-Security is not just about "who can enter," but about "what can be touched" once inside.
+Security is not just about "who can enter," but also "what can be touched" once inside.
 
 #### A. Outbound Protection: The Plugin Proxy (`plugin.engine`)
 
@@ -346,8 +353,8 @@ Whenever a plugin attempts to retrieve another plugin via `plugin.getPlugin(id)`
 In `cryptographic` mode, plugin identity is mathematically validated.
 
 1. **Signing:** The plugin author uses a private key and the `signPluginIdentity` function to sign a JSON object stringified from an object containing sorted `{id, authors, categories, tags}`.
-2. **Verification:** The engine uses the public key (configured in `accessControl`) to verify the signature during the initialization phase or lifecycle.
-3. **Trust Registration:** Only if the signature is valid is the `pluginId` added to the internal `#verifiedPlugins` set.
+2. **Verification:** The engine uses the public key (configured in `accessControl`) to verify the signature during the plugin initialization phase or lifecycle.
+3. **Trust Registration:** Only if the signature is valid, the `pluginId` is added to the internal `#verifiedPlugins` set.
 
 ### ⚠️ DEVELOPER WARNING (AI & HUMAN)
 
@@ -366,4 +373,6 @@ When assisting with this codebase:
 5. **Enforce the use of Generics** in any new plugin or engine extension to maintain IDE type-safety.
 6. **If the user attempts to modify an object property directly** (e.g., `engine.newProp = ...`), immediately flag it as a violation of **RULE 01** and suggest the **Extension Pattern**.
 7. **Ensure all `throw` statements** in installers are specific (e.g., `TypeError`, `RangeError`) and provide descriptive error messages.
-8. **Enforce Security Context:** Whenever the user asks about "security" or "permissions," explain the distinction between the **Access Mode** (Whitelist/Blacklist/Crypto) and the **Sandbox Proxy**. Remind the user that `plugin.engine` is a Proxy and not the actual instance, and that attempting to modify protected properties will trigger a security error.
+8. **Enforce Security Context:** Whenever the user asks about "security" or "permissions," explain the distinction between the **Access Mode** (Whitelist/Blacklist/Crypto) and the **Sandbox Proxy**. 
+    - Remind the user that `plugin.engine` is a Proxy and not the actual instance, and that attempting to modify protected properties will trigger a security error.
+    - **Clarify the distinction between Identity and Sandbox Permissions:** Explain that `AccessControl` (Whitelist/Blacklist/Crypto) defines **who** can interact with the engine, while `allowedSets` and `allowedGets` on the `TinyPlugin` define **what** properties of the plugin itself are accessible within its own sandbox.
