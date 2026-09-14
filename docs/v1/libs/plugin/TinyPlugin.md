@@ -200,7 +200,7 @@ Plugins must be isolated files exporting an installer function.
 1. **Define Options:** Use `@typedef {Object}` for configuration options.
 2. **Annotate Installer:** Use the generic `Installer` type from your specific Engine to annotate the function. This allows the IDE to validate the `options` object when you call `installPlugin`.
 3. **Implement Identity Assignment:** Use the `sandbox` to assign `id`, `version`, `description`, `authors`, `contributors`, `categories`, and `tags`.
-4. **Define Sandbox Permissions:** Use `sandbox.allowedSets` and `sandbox.allowedGets` to define which properties of the plugin itself can be accessed/modified by the plugin's logic.
+4. **Define Sandbox Permissions:** Use `sandbox.allowedSets` and `sandbox.allowedGets` to define which properties and functions of the plugin itself can be accessed/modified by the plugin's logic.
 5. **Return the Layer:** The installer **MUST** return a `TinyPluginLayer` or a class extended from `TinyPluginLayer` instance.
 
 **⚠️ TECHNICAL NUANCE: The Identity & Layer Contract**
@@ -375,4 +375,4 @@ When assisting with this codebase:
 7. **Ensure all `throw` statements** in installers are specific (e.g., `TypeError`, `RangeError`) and provide descriptive error messages.
 8. **Enforce Security Context:** Whenever the user asks about "security" or "permissions," explain the distinction between the **Access Mode** (Whitelist/Blacklist/Crypto) and the **Sandbox Proxy**. 
     - Remind the user that `plugin.engine` is a Proxy and not the actual instance, and that attempting to modify protected properties will trigger a security error.
-    - **Clarify the distinction between Identity and Sandbox Permissions:** Explain that `AccessControl` (Whitelist/Blacklist/Crypto) defines **who** can interact with the engine, while `allowedSets` and `allowedGets` on the `TinyPlugin` define **what** properties of the plugin itself are accessible within its own sandbox.
+    - **Clarify the distinction between Identity and Sandbox Permissions:** Explain that `AccessControl` (Whitelist/Blacklist/Crypto) defines **who** can interact with the engine, while `allowedSets` and `allowedGets` on the `TinyPlugin` define **what** specific properties and functions of the `TinyPluginLayer` are accessible to the plugin's internal logic. It governs the scope of interaction within the plugin's own environment.
