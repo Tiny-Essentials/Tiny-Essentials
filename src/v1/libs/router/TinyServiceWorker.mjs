@@ -108,7 +108,7 @@ class TinyServiceWorker extends TinyPluginCore {
   #displayMode = 'browser';
   /** @type {Map<string, {resolve: (value: any) => void, reject: (reason: Error) => void, timer: NodeJS.Timeout}>} */
   #pendingRequests = new Map();
-  /** @type {Map<string, ApiHandlerCallback} */
+  /** @type {Map<string, ApiHandlerCallback>} */
   #apiHandlers = new Map();
 
   /** @type {((evt: MediaQueryListEvent) => void) | null} Handler for display mode changes. */
