@@ -8,10 +8,24 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
 ///////////////////////////////////////////////////////////////////
 
 /**
+ * A function that handles the actual postMessage call to the message api source.
+ * @callback MessageApiReply
+ * @param {string} type - The type identifier for the api reply message.
+ * @param {MessagePayload} [data] - The payload to be sent in the api reply.
+ * @param {number} [timeout=10000] - Wait time.
+ * @returns {Promise<any>}
+ */
+
+/**
  * @typedef {Object} ApiHandlerOptions
  * @property {MessagePayload} [data] - The payload received from the browser.
- * @property {Client} client - The client that sent the request.
+ * @property {string} clientId - The ID of the client that sent the message.
  * @property {string} correlationId - The request ID.
+ * @property {MessageReplyTo} replyTo - A function to send a reply to the message source.
+ * @property {MessageReplyToAll} replyToAll - A function to send a reply to all clients.
+ * @property {MessageReplyTemplate} replyTemplate - A template function to format reply messages.
+ * @property {MessageReply} reply - A convenience method to reply to the message source.
+ * @property {MessageApiReply} replyApi - A convenience method to reply to the message api source.
  */
 
 /**
@@ -1512,7 +1526,21 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
         const data = event.data.data;
         /** @type {Client} */
         const source = event.source;
-        const { correlationId, isApi } = event.data;
+        /** @type {string} */
+        const clientId = source.id;
+        /** @type {string} */
+        const correlationId = event.data.correlationId;
+        /** @type {boolean} */
+        const isApi = event.data.isApi;
+
+        /** @type {MessageReply} */
+        const reply = (nType, payload) => {
+          if (!(event.source instanceof Client)) {
+            this.log('warn', 'Attempted to reply to a non-client source.');
+            return;
+          }
+          TinyServiceWorkerEngine.replyTo(event.source, nType, payload);
+        };
 
         // 1. Handle API responses coming from the Browser (Browser Response -> SW)
         if (type === 'api_response') {
@@ -1559,7 +1587,22 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
                 type: 'api_response',
                 data: r,
               });
-            const result = handler({ data, client: source, correlationId });
+            const result = handler({
+              data,
+              correlationId,
+              clientId,
+              reply,
+              replyTemplate: TinyServiceWorkerEngine.replyTemplate,
+              replyTo: TinyServiceWorkerEngine.replyTo,
+              replyToAll: TinyServiceWorkerEngine.replyToAll,
+              replyApi: async (nType, payload, timeout) => {
+                if (!(event.source instanceof Client)) {
+                  this.log('warn', 'Attempted to reply to a non-client source.');
+                  return;
+                }
+                return this.emitApi(source, nType, payload, timeout);
+              },
+            });
             if (result instanceof Promise) result.then(sendResult);
             else sendResult(result);
           } catch (error) {
@@ -1597,9 +1640,6 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
           );
         }
 
-        /** @type {string} */
-        const clientId = source.id;
-
         // Get the registered message callback
         const message = this.#messages.get(type);
 
@@ -1608,16 +1648,10 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
           event,
           data,
           clientId,
+          reply,
           replyTemplate: TinyServiceWorkerEngine.replyTemplate,
           replyTo: TinyServiceWorkerEngine.replyTo,
           replyToAll: TinyServiceWorkerEngine.replyToAll,
-          reply: (nType, payload) => {
-            if (!(event.source instanceof Client)) {
-              this.log('warn', 'Attempted to reply to a non-client source.');
-              return;
-            }
-            TinyServiceWorkerEngine.replyTo(event.source, nType, payload);
-          },
         };
 
         /** @type {Error|null} */
