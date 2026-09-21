@@ -257,6 +257,66 @@ class TinyServiceWorker extends TinyPluginCore {
   }
 
   /**
+   * Returns a promise that resolves when the Service Worker is fully registered,
+   * initialized, and has taken control of the current page.
+   * @returns {Promise<void>} A promise that resolves when the Service Worker is ready for use.
+   * @throws {Error} If the Service Worker registration fails.
+   */
+  async waitForReady() {
+    checkDestroy(this.#isDestroyed);
+
+    // 1. If registration already failed, reject immediately.
+    if (this.#isFailed) {
+      throw new Error('Service Worker registration failed. Cannot wait for ready state.');
+    }
+
+    // 2. If already ready and controlling the page, resolve immediately.
+    if (this.#isReady && navigator.serviceWorker.controller) {
+      return;
+    }
+
+    return new Promise((resolve, reject) => {
+      /**
+       * Handler for when the Service Worker takes control of the page.
+       */
+      const onControllerChange = () => {
+        // Once the controller changes, check if the class is ready and the worker is controlling.
+        if (this.#isReady && navigator.serviceWorker.controller) {
+          cleanup();
+          resolve();
+        }
+      };
+
+      /**
+       * Handler for when a registration error occurs during the wait.
+       * @param {Error} error - The error thrown during registration.
+       */
+      const onRegistrationFailed = (error) => {
+        cleanup();
+        reject(error instanceof Error ? error : new Error(String(error)));
+      };
+
+      /**
+       * Cleans up event listeners to prevent memory leaks.
+       */
+      const cleanup = () => {
+        navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+        this.off('sw:RegistrationFailed', onRegistrationFailed);
+      };
+
+      // Listen for the 'controllerchange' event to know when the SW is in control.
+      navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+      this.on('sw:RegistrationFailed', onRegistrationFailed);
+
+      // 3. Safety check: if it became ready between the initial check and adding the listener.
+      if (this.#isReady && navigator.serviceWorker.controller) {
+        cleanup();
+        resolve();
+      }
+    });
+  }
+
+  /**
    * Registers the service worker and handles version updates.
    * @param {RegistrationOptions} [options] - Standard Service Worker registration options.
    * @returns {Promise<void>} A promise that resolves when registration is attempted.

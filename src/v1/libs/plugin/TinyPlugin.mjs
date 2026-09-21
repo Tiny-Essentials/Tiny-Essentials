@@ -1297,7 +1297,7 @@ class TinyPlugin extends TinyDebugger {
     value.forEach((v) => this.#tags.add(v));
   }
 
-    /**
+  /**
    * Gets the list of keys allowed to be set.
    * @returns {BlackListValue[]} The list of allowed keys for setting.
    */
@@ -1314,7 +1314,8 @@ class TinyPlugin extends TinyDebugger {
    */
   set allowedSets(value) {
     checkDestroy(this.#isDestroyed);
-    if (this.#allowedSets.size !== 0 || this.#isReady) throw new Error('AllowedSets are already set.');
+    if (this.#allowedSets.size !== 0 || this.#isReady)
+      throw new Error('AllowedSets are already set.');
     if (
       !Array.isArray(value) ||
       !value.every((v) => typeof v === 'string' && v.trim().length !== 0)
@@ -1341,7 +1342,8 @@ class TinyPlugin extends TinyDebugger {
    */
   set allowedGets(value) {
     checkDestroy(this.#isDestroyed);
-    if (this.#allowedGets.size !== 0 || this.#isReady) throw new Error('AllowedGets are already set.');
+    if (this.#allowedGets.size !== 0 || this.#isReady)
+      throw new Error('AllowedGets are already set.');
     if (
       !Array.isArray(value) ||
       !value.every((v) => typeof v === 'string' && v.trim().length !== 0)
