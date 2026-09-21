@@ -4,9 +4,26 @@ import { createCheckDestroyed } from '../utils/tools.mjs';
 const checkDestroy = createCheckDestroyed('TinyServiceWorker');
 
 /**
+ * The data payload contained within the message.
+ * @typedef {Record<any, any>} MessagePayload
+ */
+
+/**
+ * @typedef {Object} ApiHandlerOptions
+ * @property {MessagePayload} [data] - The payload received from the browser.
+ * @property {string} correlationId - The request ID.
+ */
+
+/**
+ * @callback ApiHandlerCallback
+ * @param {ApiHandlerOptions} options - Options for the API handler.
+ * @returns {Promise<MessagePayload|undefined> | (MessagePayload|undefined)} The response payload.
+ */
+
+/**
  * @typedef {Object} ServiceWorkerMessagePayload
  * @property {string} type - The identifier for the message type.
- * @property {Record<any, any>} [data] - The actual data content of the message.
+ * @property {MessagePayload} [data] - The actual data content of the message.
  */
 
 /**
@@ -36,11 +53,28 @@ const checkDestroy = createCheckDestroyed('TinyServiceWorker');
  */
 
 /**
+ * Sends a message to the service worker controller.
+ *
+ * @param {*} message - The message to be sent to the service worker.
+ * @param {Transferable[]} [transfer] - An optional array of transferable objects to transfer ownership of.
+ * @returns {void}
+ * @throws {Error} If the Service Worker is not available or not controlling the page.
+ * @throws {TypeError} If the transfer argument is provided but is not an array.
+ */
+const postMessage = (message, transfer) => {
+  if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
+    throw new Error('Service Worker is not available or not controlling the page.');
+  }
+  return navigator.serviceWorker.controller.postMessage(message, transfer ?? []);
+};
+
+/**
  * @template {string} IdWorker
  * @template {string | URL} SwUrl
  * Manages Service Worker registration, versioning, and messaging.
  */
 class TinyServiceWorker extends TinyPluginCore {
+  static postMessage = postMessage;
   /**
    * Validates if an event type is a reserved name for the internal lifecycle.
    * @param {string} type - The name of the event to validate.
@@ -72,6 +106,10 @@ class TinyServiceWorker extends TinyPluginCore {
   #deferredPrompt = null;
   /** @type {'twa' | 'standalone' | 'browser'} The current PWA display mode. */
   #displayMode = 'browser';
+  /** @type {Map<string, {resolve: (value: any) => void, reject: (reason: Error) => void, timer: NodeJS.Timeout}>} */
+  #pendingRequests = new Map();
+  /** @type {Map<string, ApiHandlerCallback} */
+  #apiHandlers = new Map();
 
   /** @type {((evt: MediaQueryListEvent) => void) | null} Handler for display mode changes. */
   #displayModeChangeHandler = null;
@@ -367,7 +405,7 @@ class TinyServiceWorker extends TinyPluginCore {
 
       // Existing message handler and lifecycle logic
       this.#messageHandler = (event) => {
-        /** @type {ServiceWorkerMessagePayload} */
+        /** @type {ServiceWorkerMessagePayload & { correlationId?: string; error?: string; isApi?: boolean; }} */
         const payload = event.data;
         if (Array.isArray(payload) || typeof payload !== 'object' || payload === null) return;
         if (typeof payload.type !== 'string') return;
@@ -376,6 +414,65 @@ class TinyServiceWorker extends TinyPluginCore {
           (Array.isArray(payload.data) || typeof payload.data !== 'object' || payload.data === null)
         )
           return;
+
+        // 1. Logic to respond to API calls (Response from SW -> Browser)
+        if (payload.type === 'api_response') {
+          if (typeof payload.correlationId !== 'string') {
+            this.log('error', 'Received message with missing or invalid "correlationId" string.');
+            return;
+          }
+          const pending = this.#pendingRequests.get(payload.correlationId);
+          if (pending) {
+            clearTimeout(pending.timer);
+            this.#pendingRequests.delete(payload.correlationId);
+
+            if (payload.error) {
+              pending.reject(new Error(payload.error));
+            } else {
+              pending.resolve(payload.data);
+            }
+          }
+          return;
+        }
+
+        // 2. Logic to RECEIVE API requests (Request from SW -> Browser)
+        if (payload.isApi === true) {
+          if (typeof payload.correlationId !== 'string') {
+            this.log('error', 'Received message with missing or invalid "correlationId" string.');
+            return;
+          }
+          const handler = this.#apiHandlers.get(payload.type);
+          if (!handler) {
+            postMessage({
+              correlationId: payload.correlationId,
+              type: 'api_response',
+              error: `No API handler registered for type: ${payload.type}`,
+            });
+            return;
+          }
+
+          try {
+            /** @param {MessagePayload} [r] */
+            const sendResult = (r) =>
+              postMessage({
+                correlationId: payload.correlationId,
+                type: 'api_response',
+                data: r,
+              });
+
+            const result = handler({ data: payload.data, correlationId: payload.correlationId });
+            if (result instanceof Promise) result.then(sendResult);
+            else sendResult(result);
+          } catch (error) {
+            postMessage({
+              correlationId: payload.correlationId,
+              type: 'api_response',
+              error: error instanceof Error ? error.message : String(error),
+            });
+          }
+          return;
+        }
+
         super.emit(payload.type, { data: payload.data, event });
       };
 
@@ -431,7 +528,7 @@ class TinyServiceWorker extends TinyPluginCore {
   /**
    * Sends a message to the active Service Worker controller.
    * @param {string} type - The identifier for the message type.
-   * @param {Record<any, any>} [data] - The actual data content of the message.
+   * @param {MessagePayload} [data] - The actual data content of the message.
    * @param {boolean} [strictMode=false] - Enable strict mode validator.
    * @returns {boolean} True if the message was sent, false otherwise.
    * @throws {TypeError} If the type is not a string or data is not a non-null object.
@@ -461,9 +558,59 @@ class TinyServiceWorker extends TinyPluginCore {
   }
 
   /**
+   * Removes a registered API handler.
+   * @param {string} type - The call identifier.
+   */
+  offApi(type) {
+    return this.#apiHandlers.delete(type);
+  }
+
+  /**
+   * Registers a handler for API calls coming from the Service Worker.
+   * @param {string} type - The call identifier.
+   * @param {ApiHandlerCallback} callback - Function that processes the request and returns the result.
+   */
+  onApi(type, callback) {
+    if (typeof callback !== 'function') {
+      throw new TypeError('Callback must be a function.');
+    }
+    this.#apiHandlers.set(type, callback);
+  }
+
+  /**
+   * Sends a message to the active Service Worker and waits for a response via Promise.
+   * @param {string} type - The API call identifier.
+   * @param {MessagePayload} [data] - The request payload.
+   * @param {number} [timeout=10000] - Maximum waiting time in milliseconds.
+   * @returns {Promise<any>} A promise that resolves with the result from the Service Worker.
+   * @throws {Error} If the timeout is reached or if the Service Worker is unavailable.
+   */
+  async emitApi(type, data, timeout = 10000) {
+    checkDestroy(this.#isDestroyed);
+    const correlationId = crypto.randomUUID();
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        if (this.#pendingRequests.has(correlationId)) {
+          this.#pendingRequests.delete(correlationId);
+          reject(new Error(`API request timeout: ${type} (ID: ${correlationId})`));
+        }
+      }, timeout);
+
+      this.#pendingRequests.set(correlationId, { resolve, reject, timer });
+
+      postMessage({
+        type,
+        data,
+        correlationId,
+        isApi: true,
+      });
+    });
+  }
+
+  /**
    * Sends a message to the active Service Worker controller.
    * @param {string} type - The identifier for the message type.
-   * @param {Record<any, any>} [data] - The actual data content of the message.
+   * @param {MessagePayload} [data] - The actual data content of the message.
    * @returns {boolean} True if the message was sent, false otherwise.
    * @throws {TypeError} If the type is not a string or data is not a non-null object.
    */
@@ -518,8 +665,8 @@ class TinyServiceWorker extends TinyPluginCore {
 
   /**
    * Removes an event listener from the Service Worker.
-   * @param {EventListener} callback - The callback function to remove.
-   * @returns {boolean} True if an event listener was removed, false otherwise.
+   * @param {EventListener} callback - The callback to be removed.
+   * @returns {boolean} True if the event listener was removed, false otherwise.
    */
   removeEventListener(callback) {
     checkDestroy(this.#isDestroyed);

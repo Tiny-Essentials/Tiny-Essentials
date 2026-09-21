@@ -8,6 +8,21 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
 ///////////////////////////////////////////////////////////////////
 
 /**
+ * @typedef {Object} ApiHandlerOptions
+ * @property {MessagePayload} [data] - The payload received from the browser.
+ * @property {Client} client - The client that sent the request.
+ * @property {string} correlationId - The request ID.
+ */
+
+/**
+ * @callback ApiHandlerCallback
+ * @param {ApiHandlerOptions} options - Options for the API handler.
+ * @returns {Promise<MessagePayload|undefined> | (MessagePayload|undefined)} The response payload.
+ */
+
+///////////////////////////////////////////////////////////////////
+
+/**
  * A partial configuration object for Service Worker settings.
  * @typedef {Object} PartialServiceWorkerSettings
  * @property {boolean} [spaMode] - Whether the service worker is running in Single Page Application mode.
@@ -194,7 +209,7 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
  * @property {MessageReplyTo} replyTo - A function to send a reply to the message source.
  * @property {MessageReplyToAll} replyToAll - A function to send a reply to all clients.
  * @property {MessageReplyTemplate} replyTemplate - A template function to format reply messages.
- * @property {boolean} isSameOrigin
+ * @property {boolean} isSameOrigin - Indicates if the request is same-origin.
  * @property {Error} [error] - An error object if the plugin execution failed.
  */
 
@@ -460,6 +475,11 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   globalPathGetter(path) {
     return !this.#config.spaMode ? path : this.#globalMsgCode.spaPath;
   }
+  /** @type {Map<string, ApiHandlerCallback>} */
+  #apiHandlers = new Map();
+
+  /** @type {Map<string, {resolve: (value: any) => void, reject: (reason: Error) => void, timer: NodeJS.Timeout}>} */
+  #pendingRequests = new Map();
 
   #globalMsgCode = {
     spaPath: '/index.html',
@@ -533,8 +553,8 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
 
   /**
    * Handles a successful fetch request.
-   * @param {string} msg - The message to log.
-   * @param {string} logMsg - The log message to record.
+   * @param {string} msg - The message to be logged.
+   * @param {string} logMsg - The log message to be recorded.
    * @param {string|PathGetter} pathGetter - The path to fetch.
    * @param {FnOptions} options - The options for the fetch operation.
    * @returns {Promise<Response>} A promise that resolves to the Response object.
@@ -559,8 +579,8 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
 
   /**
    * Handles a failed fetch request by simulating an error page.
-   * @param {string} msg - The message to log.
-   * @param {string} logMsg - The log message to record.
+   * @param {string} msg - The message to be logged.
+   * @param {string} logMsg - The log message to be recorded.
    * @param {string|PathGetter} pathGetter - The path to fetch.
    * @param {FnOptions} options - The options for the fetch operation.
    * @returns {Promise<Response>} A promise that resolves to the error Response object.
@@ -638,7 +658,8 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
 
   /**
    * Sets the engine configuration.
-   * @param {ServiceWorkerSettings} config - The new configuration.
+   * @param {ServiceWorkerSettings} config - The new configuration to apply.
+   * @throws {TypeError} If the configuration does not meet the minimum requirements.
    */
   set config(config) {
     this.#updateConfig(config, true);
@@ -891,7 +912,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   /**
    * Removes a fetch RegExp listener.
    * @param {string} type - The identifier for the fetch type.
-   * @returns {boolean} True if an element was removed, false otherwise.
+   * @returns {boolean} True if the listener was removed, false otherwise.
    */
   removeFetchRegExpListener(type) {
     return this.#fetchRegExp.delete(type);
@@ -909,7 +930,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   /**
    * Checks if a fetch RegExp listener exists.
    * @param {string} type - The identifier for the fetch type.
-   * @returns {boolean} True if it exists, false otherwise.
+   * @returns {boolean} True if the listener exists, false otherwise.
    */
   hasFetchRegExp(type) {
     return this.#fetchRegExp.has(type);
@@ -943,7 +964,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   /**
    * Removes a fetch URL listener.
    * @param {string} type - The identifier for the fetch type.
-   * @returns {boolean} True if an element was removed, false otherwise.
+   * @returns {boolean} True if the listener was removed, false otherwise.
    */
   removeFetchUrlListener(type) {
     return this.#fetchUrls.delete(type);
@@ -961,7 +982,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   /**
    * Checks if a fetch URL listener exists.
    * @param {string} type - The identifier for the fetch type.
-   * @returns {boolean} True if it exists, false otherwise.
+   * @returns {boolean} True if the listener exists, false otherwise.
    */
   hasFetchUrl(type) {
     return this.#fetchUrls.has(type);
@@ -977,7 +998,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
 
   /**
    * Gets the number of registered global fetch tracking listeners.
-   * @returns {number} The count of registered listeners.
+   * @returns {number} The count of registered tracking listeners.
    */
   get fetchGlobalSize() {
     return this.#fetchGlobal.size;
@@ -994,8 +1015,8 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
 
   /**
    * Removes a global fetch tracking listener.
-   * @param {string} type - The identifier of the listener to be removed.
-   * @returns {boolean} True if an element was removed, false otherwise.
+   * @param {string} type - The identifier for the tracking type.
+   * @returns {boolean} True if the listener was removed, false otherwise.
    */
   removeFetchGlobalListener(type) {
     return this.#fetchGlobal.delete(type);
@@ -1003,7 +1024,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
 
   /**
    * Retrieves a global fetch tracking listener.
-   * @param {string} type - The identifier of the listener.
+   * @param {string} type - The identifier for the tracking type.
    * @returns {FetchCallback|undefined} The listener, or undefined if not found.
    */
   getFetchGlobalListener(type) {
@@ -1012,7 +1033,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
 
   /**
    * Checks if a global fetch tracking listener exists.
-   * @param {string} type - The identifier of the listener.
+   * @param {string} type - The identifier for the tracking type.
    * @returns {boolean} True if the listener exists, false otherwise.
    */
   hasFetchGlobal(type) {
@@ -1047,7 +1068,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   /**
    * Removes a message listener.
    * @param {string} type - The identifier for the message type.
-   * @returns {boolean} True if an element was removed, false otherwise.
+   * @returns {boolean} True if the listener was removed, false otherwise.
    */
   removeMessageListener(type) {
     return this.#messages.delete(type);
@@ -1065,7 +1086,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   /**
    * Checks if a message listener exists.
    * @param {string} type - The identifier for the message type.
-   * @returns {boolean} True if it exists, false otherwise.
+   * @returns {boolean} True if the listener exists, false otherwise.
    */
   hasMessageListener(type) {
     return this.#messages.has(type);
@@ -1258,6 +1279,54 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   }
 
   /**
+   * Removes a registered API handler.
+   * @param {string} type - The identifier for the call.
+   */
+  offApi(type) {
+    return this.#apiHandlers.delete(type);
+  }
+
+  /**
+   * Registers a handler for API calls coming from the browser.
+   * @param {string} type - The identifier for the call.
+   * @param {ApiHandlerCallback} callback - Function that processes the request and returns a payload.
+   */
+  onApi(type, callback) {
+    if (typeof callback !== 'function') throw new TypeError('Callback must be a function.');
+    this.#apiHandlers.set(type, callback);
+  }
+
+  /**
+   * Sends a request to a specific client in the browser and waits for a response.
+   * @param {Client} client - The client (tab/worker) to which to send.
+   * @param {string} type - The identifier for the call.
+   * @param {MessagePayload} [data] - The request payload.
+   * @param {number} [timeout=10000] - Wait time.
+   * @returns {Promise<any>}
+   */
+  async emitApi(client, type, data, timeout = 10000) {
+    const correlationId = crypto.randomUUID();
+
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        if (this.#pendingRequests.has(correlationId)) {
+          this.#pendingRequests.delete(correlationId);
+          reject(new Error(`API timeout: ${type}`));
+        }
+      }, timeout);
+
+      this.#pendingRequests.set(correlationId, { resolve, reject, timer });
+
+      client.postMessage({
+        type,
+        data,
+        correlationId,
+        isApi: true,
+      });
+    });
+  }
+
+  /**
    * Initializes the Service Worker event listeners.
    * @returns {void}
    * @throws {Error} If the engine has already been started.
@@ -1437,6 +1506,72 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
           return;
         }
 
+        /** @type {string} */
+        const type = event.data.type;
+        /** @type {MessagePayload|undefined} */
+        const data = event.data.data;
+        /** @type {Client} */
+        const source = event.source;
+        const { correlationId, isApi } = event.data;
+
+        // 1. Handle API responses coming from the Browser (Browser Response -> SW)
+        if (type === 'api_response') {
+          if (typeof correlationId !== 'string') {
+            this.log('error', 'Received message with missing or invalid "correlationId" string.');
+            return;
+          }
+          const pending = this.#pendingRequests.get(correlationId);
+          if (pending) {
+            this.#pendingRequests.delete(correlationId);
+            if (data && data.error) {
+              // Note: The error comes in the 'error' field as defined in the Browser
+              // In the browser, 'error' was sent directly; adjusting for consistency
+              pending.reject(new Error(event.data.error || data.error));
+            } else {
+              pending.resolve(data);
+            }
+          }
+          return;
+        }
+
+        // 2. Handle API calls coming from the Browser (Browser Request -> SW)
+        if (isApi === true) {
+          if (typeof correlationId !== 'string') {
+            this.log('error', 'Received message with missing or invalid "correlationId" string.');
+            return;
+          }
+
+          const handler = this.#apiHandlers.get(type);
+          if (!handler) {
+            source.postMessage({
+              correlationId,
+              type: 'api_response',
+              error: `No API handler registered for type: ${type}`,
+            });
+            return;
+          }
+
+          try {
+            /** @param {MessagePayload} [r] */
+            const sendResult = (r) =>
+              source.postMessage({
+                correlationId,
+                type: 'api_response',
+                data: r,
+              });
+            const result = handler({ data, client: source, correlationId });
+            if (result instanceof Promise) result.then(sendResult);
+            else sendResult(result);
+          } catch (error) {
+            source.postMessage({
+              correlationId,
+              type: 'api_response',
+              error: error instanceof Error ? error.message : String(error),
+            });
+          }
+          return;
+        }
+
         if (event.data.type === 'sw:PrepareUpdate') {
           this.log('info', 'Update signal received. Starting installation...');
 
@@ -1462,14 +1597,8 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
           );
         }
 
-        /** @type {Client} */
-        const source = event.source;
         /** @type {string} */
         const clientId = source.id;
-        /** @type {string} */
-        const type = event.data.type;
-        /** @type {MessagePayload|undefined} */
-        const data = event.data.data;
 
         // Get the registered message callback
         const message = this.#messages.get(type);
