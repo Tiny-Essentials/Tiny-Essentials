@@ -136,7 +136,7 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
 
 /**
  * The data payload contained within the message.
- * @typedef {Record<any, any>} MessagePayload
+ * @typedef {Record<string, any>} MessagePayload
  */
 
 /**
@@ -1315,8 +1315,9 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @param {Client} client - The client (tab/worker) to which to send.
    * @param {string} type - The identifier for the call.
    * @param {MessagePayload} [data] - The request payload.
-   * @param {number} [timeout=10000] - Wait time.
-   * @returns {Promise<any>}
+   * @param {number} [timeout=10000] - Maximum waiting time in milliseconds.
+   * @returns {Promise<any>} A promise that resolves with the result object or undefined from the Service Worker.
+   * @throws {Error} If the timeout is reached or if the Service Worker is unavailable.
    */
   async emitApi(client, type, data, timeout = 10000) {
     const correlationId = crypto.randomUUID();

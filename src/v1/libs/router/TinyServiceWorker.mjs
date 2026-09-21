@@ -5,7 +5,7 @@ const checkDestroy = createCheckDestroyed('TinyServiceWorker');
 
 /**
  * The data payload contained within the message.
- * @typedef {Record<any, any>} MessagePayload
+ * @typedef {Record<string, any>} MessagePayload
  */
 
 /**
@@ -582,7 +582,7 @@ class TinyServiceWorker extends TinyPluginCore {
    * @param {string} type - The API call identifier.
    * @param {MessagePayload} [data] - The request payload.
    * @param {number} [timeout=10000] - Maximum waiting time in milliseconds.
-   * @returns {Promise<any>} A promise that resolves with the result from the Service Worker.
+   * @returns {Promise<any>} A promise that resolves with the result object or undefined from the Service Worker.
    * @throws {Error} If the timeout is reached or if the Service Worker is unavailable.
    */
   async emitApi(type, data, timeout = 10000) {
