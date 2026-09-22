@@ -4,6 +4,7 @@ vendor
 release
 dist
 dist-sw
+dist-worker
 dist-electron
 package.json
 package-lock.json

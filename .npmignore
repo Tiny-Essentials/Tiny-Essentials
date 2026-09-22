@@ -3,6 +3,7 @@ build
 build.mjs
 dist/v1/libs/utils/examples
 dist-sw
+dist-worker
 src
 test
 temp

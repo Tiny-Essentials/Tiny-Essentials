@@ -70,6 +70,7 @@ addModule(
   'TinyServiceWorkerEngine',
   true,
 );
+addModule(1, './src/v1/libs/worker/engine/build/TinyWebWorkerEngine.mjs', 'TinyWebWorkerEngine', true);
 addModule(1, './src/v1/libs/math/TinyMamdaniInferenceSystem.mjs', 'TinyMaInSys');
 addModule(1, './src/v1/libs/plugin/TinyPlugin.mjs', 'TinyPluginPackage');
 addModule(1, './src/v1/build/TinyLevelUp.mjs', 'TinyLevelUp', true);
@@ -118,6 +119,7 @@ addModule(1, './src/v1/build/TinyDebugger.mjs', 'TinyDebugger', true);
 addModule(1, './src/v1/build/TinyMapCache.mjs', 'TinyMapCache', true);
 addModule(1, './src/v1/build/TinyRouter.mjs', 'TinyRouter', true);
 addModule(1, './src/v1/build/TinyServiceWorker.mjs', 'TinyServiceWorker', true);
+addModule(1, './src/v1/build/TinyWebWorker.mjs', 'TinyWebWorker', true);
 addModule(1, './src/v1/build/TinyCloner.mjs', 'TinyCloner', true);
 addModule(1, './src/v1/build/TinyHttpResponseRegistry.mjs', 'TinyHttpResponseRegistry', true);
 addModule(1, './src/v1/build/TinyPasswordValidator.mjs', 'TinyPasswordValidator', true);

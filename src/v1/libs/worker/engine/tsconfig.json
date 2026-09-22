@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "rootDir": "../../../../../",
+    "types": ["node"],
+    "lib": ["ESNext", "WebWorker"],
+    "outDir": "../../../../../dist-worker",
+    "allowJs": true,
+    "checkJs": true,
+    "removeComments": false,
+    "declaration": true,
+    "declarationMap": true,
+    "declarationDir": "../../../../../dist-worker",
+    "emitDeclarationOnly": false,
+    "allowSyntheticDefaultImports": true,
+    "target": "ESNext",
+    "strict": true,
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext"
+  },
+  "include": ["./**/*"]
+}

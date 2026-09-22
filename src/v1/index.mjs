@@ -233,6 +233,7 @@ import {
   createPluginIdChecker,
   verifyPluginSignature,
 } from './libs/plugin/TinyPlugin.mjs';
+import TinyWebWorker from './libs/worker/browser/TinyWebWorker.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
@@ -246,6 +247,7 @@ export {
   TinyHtmlTagRegexBuilder,
   TinyHttpResponseRegistry,
   TinyCloner,
+  TinyWebWorker,
   TinyServiceWorker,
   TinyMapCache,
   TinyRouter,

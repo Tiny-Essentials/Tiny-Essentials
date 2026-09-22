@@ -387,6 +387,14 @@
       "require": "./dist/v1/libs/sw/browser/TinyServiceWorker.cjs",
       "import": "./dist/v1/libs/sw/browser/TinyServiceWorker.mjs"
     },
+    "./libs/worker/engine/TinyWebWorkerEngine": {
+      "require": "./dist/v1/libs/worker/engine/TinyWebWorkerEngine.cjs",
+      "import": "./dist/v1/libs/worker/engine/TinyWebWorkerEngine.mjs"
+    },
+    "./libs/worker/browser/TinyWebWorker": {
+      "require": "./dist/v1/libs/worker/browser/TinyWebWorker.cjs",
+      "import": "./dist/v1/libs/worker/browser/TinyWebWorker.mjs"
+    },
     "./libs/router/TinyMapCache": {
       "require": "./dist/v1/libs/router/TinyMapCache.cjs",
       "import": "./dist/v1/libs/router/TinyMapCache.mjs"

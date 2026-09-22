@@ -4,15 +4,19 @@ import { resolve } from 'path';
 
 /**
  * @typedef {Object} BuildConfiguration
- * @property {string} pwaTsConfig - Path to the PWA TypeScript configuration file.
+ * @property {string} workerTsConfig - Path to the Web Worker TypeScript configuration file.
+ * @property {string} swTsConfig - Path to the Service Worker TypeScript configuration file.
  * @property {string} mainTsConfig - Path to the main TypeScript configuration file.
  * @property {string} cssSassCommand - The command to execute the Sass compilation script.
  * @property {string} cssScssCommand - The command to execute the Scss compilation script.
  * @property {string} rollupCommand - The command to run Rollup.
  * @property {string} webpackMode - The mode for Webpack execution.
- * @property {string} pwaSourceDir - The absolute path of the source PWA directory.
- * @property {string} pwaTargetDir - The absolute path of the target PWA directory.
- * @property {string} tempDir - The absolute path of the temporary directory to be cleaned.
+ * @property {string} swSourceDir - The absolute path of the source Service Worker directory.
+ * @property {string} swTargetDir - The absolute path of the target Service Worker directory.
+ * @property {string} workerSourceDir - The absolute path of the source Web Worker directory.
+ * @property {string} workerTargetDir - The absolute path of the target Web Worker directory.
+ * @property {string} swTempDir - The absolute path of the temporary Service Worker directory to be cleaned.
+ * @property {string} workerTempDir - The absolute path of the temporary Web Worker directory to be cleaned.
  */
 
 /**
@@ -49,15 +53,19 @@ class BuildManager {
    */
   #validateConfig(config) {
     const requiredKeys = [
-      'pwaTsConfig',
+      'swTsConfig',
+      'workerTsConfig',
       'mainTsConfig',
       'cssSassCommand',
       'cssScssCommand',
       'rollupCommand',
       'webpackMode',
-      'pwaSourceDir',
-      'pwaTargetDir',
-      'tempDir',
+      'workerSourceDir',
+      'swSourceDir',
+      'workerTargetDir',
+      'swTargetDir',
+      'swTempDir',
+      'workerTempDir',
     ];
 
     for (const key of requiredKeys) {
@@ -131,18 +139,33 @@ class BuildManager {
    * Handles the copying and cleaning of PWA assets.
    */
   #managePwaAssets() {
-    const source = this.#config.pwaSourceDir;
-    const target = this.#config.pwaTargetDir;
-    const temp = this.#config.tempDir;
+    const sw = {
+      source: this.#config.swSourceDir,
+      target: this.#config.swTargetDir,
+      temp: this.#config.swTempDir,
+      type: 'Service Worker',
+    };
+    const worker = {
+      source: this.#config.workerSourceDir,
+      target: this.#config.workerTargetDir,
+      temp: this.#config.workerTempDir,
+      type: 'Web Worker',
+    };
 
-    if (existsSync(source)) {
-      this.#log(`Copying PWA assets from "${source}" to "${target}"...`, 'info');
-      mkdirSync(target, { recursive: true });
-      cpSync(source, target, { recursive: true });
-      rmSync(temp, { recursive: true, force: true });
-      this.#log('PWA assets copied and temporary files cleaned successfully!', 'success');
-    } else {
-      this.#log(`Source directory not found: ${source}`, 'warn');
+    /** @type {Record<string, { source: string; target: string; type: string; temp: string; }>} */
+    const data = { sw, worker };
+
+    for (const name in data) {
+      const { source, target, type, temp } = data[name];
+      if (existsSync(source)) {
+        this.#log(`Copying ${type} assets from "${source}" to "${target}"...`, 'info');
+        mkdirSync(target, { recursive: true });
+        cpSync(source, target, { recursive: true });
+        rmSync(temp, { recursive: true, force: true });
+        this.#log(`${type} assets copied and temporary files cleaned successfully!`, 'success');
+      } else {
+        this.#log(`Source directory not found: ${source}`, 'warn');
+      }
     }
   }
 
@@ -154,7 +177,8 @@ class BuildManager {
       this.#log('Starting the build process...', 'bright');
 
       // 1. Compile PWA Service Worker
-      this.#runCommand(`npx tsc -p ${this.#config.pwaTsConfig}`);
+      this.#runCommand(`npx tsc -p ${this.#config.swTsConfig}`);
+      this.#runCommand(`npx tsc -p ${this.#config.workerTsConfig}`);
 
       // 2. Compile Main TypeScript files
       this.#runCommand(`npx tsc -p ${this.#config.mainTsConfig}`);
@@ -180,15 +204,19 @@ class BuildManager {
 // --- Execution Block ---
 
 const buildConfig = {
-  pwaTsConfig: resolve('src/v1/libs/sw/service/tsconfig.json'),
+  swTsConfig: resolve('src/v1/libs/sw/service/tsconfig.json'),
+  workerTsConfig: resolve('src/v1/libs/worker/engine/tsconfig.json'),
   mainTsConfig: resolve('tsconfig.json'),
   cssSassCommand: 'node build/sass.mjs',
   cssScssCommand: 'node build/scss.mjs',
   rollupCommand: 'npx rollup -c',
   webpackMode: 'production',
-  pwaSourceDir: resolve('dist-sw/src/v1/libs/sw/service'),
-  pwaTargetDir: resolve('dist/v1/libs/sw/service'),
-  tempDir: resolve('dist-sw'),
+  workerSourceDir: resolve('dist-worker/src/v1/libs/worker/engine'),
+  workerTargetDir: resolve('dist/v1/libs/worker/engine'),
+  swSourceDir: resolve('dist-sw/src/v1/libs/sw/service'),
+  swTargetDir: resolve('dist/v1/libs/sw/service'),
+  swTempDir: resolve('dist-sw'),
+  workerTempDir: resolve('dist-worker'),
 };
 
 const builder = new BuildManager(buildConfig);

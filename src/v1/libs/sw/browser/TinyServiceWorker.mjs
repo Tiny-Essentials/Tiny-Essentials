@@ -234,7 +234,7 @@ class TinyServiceWorker extends TinyPluginCore {
   constructor({ id, swUrl, version, logger, debugMode, useLogColors }) {
     super({
       logCfg: {
-        id: '[_blue_TinyServiceWorker_reset_]',
+        id: '[_green_TinyServiceWorker_reset_]',
         logger: logger ?? console,
         debugMode: debugMode ?? false,
         useLogColors: useLogColors ?? false,

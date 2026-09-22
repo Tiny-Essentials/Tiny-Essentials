@@ -92,6 +92,7 @@ out
 .nuxt
 dist
 dist-sw
+dist-worker
 
 # Gatsby files
 .cache/

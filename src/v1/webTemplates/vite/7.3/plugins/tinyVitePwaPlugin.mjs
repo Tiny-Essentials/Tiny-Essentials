@@ -2,6 +2,13 @@ import { resolve, relative } from 'path';
 import { build } from 'vite';
 
 /**
+ * @typedef {Object} TinyWebWorkerConfig
+ * @property {string} entry - The source file path for the Web Worker (e.g., 'src/workers/myWorker.mjs').
+ * @property {string} filename - The output filename for the Web Worker (e.g., 'myWorker.js').
+ * @property {'es' | 'iife'} [format='es'] - Optional. The bundle format. Defaults to 'es' to match { type: 'module' } in the browser.
+ */
+
+/**
  * @typedef {Object} TinyVitePwaOptions
  * @property {Record<any, any>} manifest - The Web App Manifest object.
  * @property {string} manifestPath - The URL path where the manifest should be served.
@@ -10,6 +17,7 @@ import { build } from 'vite';
  * @property {boolean} [injectRegister=true] - Optional. Whether to automatically inject the SW registration script into the HTML <head>.
  * @property {boolean} [injectManifestToGlobal=true] - Optional. Whether to inject the manifest into the global scope via Vite's `define`.
  * @property {RegistrationOptions} [swRegistrationOptions] - Optional. Registration options for the Service Worker.
+ * @property {TinyWebWorkerConfig[]} [webWorkers] - Optional. A list of Web Workers to be bundled and served alongside the PWA.
  */
 
 // ANSI Color Codes
@@ -47,9 +55,9 @@ const logger = {
 
 /**
  * Custom PWA Plugin.
- * Resolves Manifest, Dev HMR, and Service Worker bundling.
+ * Resolves Manifest, Dev HMR, Service Worker, and multiple Web Workers bundling.
  *
- * NOTE: The Service Worker file is always served from the root directory of the website.
+ * NOTE: The Service Worker and Web Worker files are always served from the root directory of the website.
  *
  * TypeScript Support: To enable IntelliSense and avoid type errors when using
  * the injected '__TINY_PWA_MANIFEST__' global variable, add the following to your `env.d.ts` file:
@@ -114,12 +122,45 @@ const tinyVitePwaPlugin = (options) => {
     );
   }
 
-  const { manifest, manifestPath, srcDir, filename, swRegistrationOptions } = options;
+  // Validate Web Workers Array if provided
+  if (options.webWorkers !== undefined) {
+    if (!Array.isArray(options.webWorkers)) {
+      throw new TypeError('The "webWorkers" property must be an array.');
+    }
+    options.webWorkers.forEach((ww, index) => {
+      if (typeof ww !== 'object' || ww === null) {
+        throw new TypeError(`webWorkers[${index}] must be a non-null object.`);
+      }
+      if (typeof ww.entry !== 'string') {
+        throw new TypeError(`webWorkers[${index}].entry must be a string.`);
+      }
+      if (typeof ww.filename !== 'string') {
+        throw new TypeError(`webWorkers[${index}].filename must be a string.`);
+      }
+      if (!filenamePattern.test(ww.filename)) {
+        throw new RangeError(`webWorkers[${index}].filename contains invalid characters.`);
+      }
+      if (ww.format !== undefined && ww.format !== 'es' && ww.format !== 'iife') {
+        throw new TypeError(`webWorkers[${index}].format must be strictly 'es' or 'iife'.`);
+      }
+    });
+  }
+
+  const {
+    manifest,
+    manifestPath,
+    srcDir,
+    filename,
+    swRegistrationOptions,
+    webWorkers = [],
+  } = options;
   const injectRegister = options.injectRegister ?? true;
   const injectManifestToGlobal = options.injectManifestToGlobal ?? true;
 
   /** @type {string} */
   let swSourcePath;
+  /** @type {Array<{ entryPath: string, filename: string, format: 'es'|'iife' }>} */
+  let resolvedWebWorkers = [];
   /** @type {import('vite').ResolvedConfig} */
   let viteConfig;
 
@@ -130,6 +171,13 @@ const tinyVitePwaPlugin = (options) => {
     configResolved(config) {
       viteConfig = config;
       swSourcePath = resolve(config.root, srcDir, filename);
+
+      // Resolve absolute paths for Web Workers
+      resolvedWebWorkers = webWorkers.map((ww) => ({
+        entryPath: resolve(config.root, ww.entry),
+        filename: ww.filename,
+        format: ww.format || 'es',
+      }));
     },
 
     config(config) {
@@ -138,7 +186,7 @@ const tinyVitePwaPlugin = (options) => {
       return { ...config, define };
     },
 
-    // REQUIREMENTS 1 & 4 (DEV Mode): Serve the manifest and the Service Worker
+    // REQUIREMENTS 1 & 4 (DEV Mode): Serve the manifest, Service Worker, and Web Workers
     configureServer(server) {
       // Extract server info to build a clickable URL
       const serverConfig = server.config.server || {};
@@ -178,7 +226,7 @@ const tinyVitePwaPlugin = (options) => {
         }
 
         // Serve the Service Worker in Dev mode using Vite's transformer
-        if (pathname === `/${filename}`) {
+        if (pathname === swUrl) {
           try {
             const transformed = await server.transformRequest(swSourcePath);
             if (transformed) {
@@ -193,20 +241,44 @@ const tinyVitePwaPlugin = (options) => {
             );
           }
         }
+
+        // Serve Web Workers in Dev mode
+        for (const ww of resolvedWebWorkers) {
+          if (pathname === `/${ww.filename}`) {
+            try {
+              const transformed = await server.transformRequest(ww.entryPath);
+              if (transformed) {
+                res.setHeader('Content-Type', 'application/javascript');
+                res.end(transformed.code);
+                return;
+              }
+            } catch (e) {
+              logger.error(
+                `Error transforming Web Worker (${ww.filename}) in dev:`,
+                e instanceof Error ? e : new Error('Unknown Error'),
+              );
+            }
+          }
+        }
+
         next();
       });
 
       logger.success(`Manifest available at: ${baseUrl}${normalizedManifestPath}`);
       logger.success(`Service Worker available at: ${baseUrl}${swUrl}`);
 
-      // Warning regarding client-side routing interception
+      resolvedWebWorkers.forEach((ww) => {
+        logger.success(`Web Worker available at: ${baseUrl}/${ww.filename}`);
+      });
+
       logger.warn(
-        `NOTE: If your Service Worker implements client-side routing, ensure it is configured to bypass interception for the manifest and SW files. Improper routing configuration may cause 404 errors in the browser, even though the server is serving the files correctly.`,
+        `NOTE: If your Service Worker implements client-side routing, ensure it is configured to bypass interception for the manifest, SW, and WW files.`,
       );
     },
 
-    // REQUIREMENT 3: Monitor SW changes and notify the frontend
+    // REQUIREMENT 3: Monitor SW and WW changes and notify the frontend
     handleHotUpdate({ file, server }) {
+      // Check for Service Worker updates
       if (file.startsWith(resolve(viteConfig.root, srcDir))) {
         logger.info('Service Worker change detected. Notifying frontend...');
         // Send a custom event via Vite's WebSocket
@@ -218,6 +290,22 @@ const tinyVitePwaPlugin = (options) => {
 
         // Return an empty array so Vite does not attempt a full page reload automatically
         return [];
+      }
+
+      // Check for Web Worker updates
+      for (const ww of resolvedWebWorkers) {
+        if (file === ww.entryPath) {
+          logger.info(`Web Worker change detected (${ww.filename}). Notifying frontend...`);
+          server.ws.send({
+            type: 'custom',
+            event: 'pwa:ww-updated',
+            data: {
+              message: `The Web Worker file ${ww.filename} has been changed.`,
+              filename: ww.filename,
+            },
+          });
+          return [];
+        }
       }
     },
 
@@ -306,12 +394,16 @@ const tinyVitePwaPlugin = (options) => {
       });
     },
 
-    // REQUIREMENT 4 (PROD Mode): Bundle the Service Worker separately
+    // REQUIREMENT 4 (PROD Mode): Bundle the Service Worker and Web Workers separately
     async closeBundle() {
       // Only run this during the build command (production)
       if (viteConfig.command === 'build') {
         const projectRoot = viteConfig.root || process.cwd();
 
+        logger.dim('--------------------------------------------------');
+        logger.log(` Mode:       ${colors.bright}${viteConfig.mode}${colors.reset}`);
+
+        // --- Build Service Worker ---
         const relativeSourceSW = relative(projectRoot, swSourcePath);
         const relativeDestSW = relative(projectRoot, resolve(viteConfig.build.outDir, filename));
 
@@ -320,19 +412,12 @@ const tinyVitePwaPlugin = (options) => {
 
         logger.info('Initiating Service Worker bundling process...');
 
-        logger.dim('--------------------------------------------------');
-        logger.log(` Mode:       ${colors.bright}${viteConfig.mode}${colors.reset}`);
-
         // Manifest Info
-        logger.log(
-          ` Manifest:   ${colors.cyan}${relativeDestManifest}${colors.reset} (from [Config Object])`,
-        );
+        logger.log(` Manifest:   ${colors.cyan}${relativeDestManifest}${colors.reset}`);
 
         // Service Worker Info
         logger.log(` SW Source:  ${colors.cyan}${relativeSourceSW}${colors.reset}`);
         logger.log(` SW Dest:    ${colors.cyan}${relativeDestSW}${colors.reset}`);
-
-        logger.dim('--------------------------------------------------');
 
         try {
           await build({
@@ -349,9 +434,7 @@ const tinyVitePwaPlugin = (options) => {
               },
               rollupOptions: {
                 // Ensures no hashes are added to the SW filename
-                output: {
-                  entryFileNames: filename,
-                },
+                output: { entryFileNames: filename },
               },
             },
           });
@@ -362,6 +445,52 @@ const tinyVitePwaPlugin = (options) => {
             e instanceof Error ? e : new Error('Unknown Error'),
           );
         }
+
+        // --- Build Web Workers ---
+        if (resolvedWebWorkers.length > 0) {
+          logger.dim('--------------------------------------------------');
+          logger.info('Initiating Web Workers bundling process...');
+
+          for (const ww of resolvedWebWorkers) {
+            const relativeSourceWW = relative(projectRoot, ww.entryPath);
+            const relativeDestWW = relative(
+              projectRoot,
+              resolve(viteConfig.build.outDir, ww.filename),
+            );
+
+            logger.log(` WW Source:  ${colors.cyan}${relativeSourceWW}${colors.reset}`);
+            logger.log(` WW Dest:    ${colors.cyan}${relativeDestWW}${colors.reset}`);
+            logger.log(` WW Format:  ${colors.cyan}${ww.format.toUpperCase()}${colors.reset}`);
+
+            try {
+              await build({
+                configFile: false,
+                mode: viteConfig.mode,
+                build: {
+                  outDir: viteConfig.build.outDir,
+                  emptyOutDir: false,
+                  lib: {
+                    entry: ww.entryPath,
+                    // Removes the extension to create a safe variable name (only matters for IIFE format)
+                    name: ww.filename.replace(/\.[^/.]+$/, ''),
+                    formats: [ww.format],
+                    fileName: () => ww.filename,
+                  },
+                  rollupOptions: {
+                    output: { entryFileNames: ww.filename },
+                  },
+                },
+              });
+              logger.success(`Web Worker (${ww.filename}) bundled successfully.`);
+            } catch (e) {
+              logger.error(
+                `Failed to bundle the Web Worker (${ww.filename}).`,
+                e instanceof Error ? e : new Error('Unknown Error'),
+              );
+            }
+          }
+        }
+        logger.dim('--------------------------------------------------');
       }
     },
   };
