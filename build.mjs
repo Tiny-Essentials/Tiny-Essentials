@@ -180,14 +180,14 @@ class BuildManager {
 // --- Execution Block ---
 
 const buildConfig = {
-  pwaTsConfig: resolve('src/v1/libs/router/pwa/tsconfig.json'),
+  pwaTsConfig: resolve('src/v1/libs/router/sw/service/tsconfig.json'),
   mainTsConfig: resolve('tsconfig.json'),
   cssSassCommand: 'node build/sass.mjs',
   cssScssCommand: 'node build/scss.mjs',
   rollupCommand: 'npx rollup -c',
   webpackMode: 'production',
-  pwaSourceDir: resolve('dist-sw/src/v1/libs/router/pwa'),
-  pwaTargetDir: resolve('dist/v1/libs/router/pwa'),
+  pwaSourceDir: resolve('dist-sw/src/v1/libs/router/sw/service'),
+  pwaTargetDir: resolve('dist/v1/libs/router/sw/service'),
   tempDir: resolve('dist-sw'),
 };
 

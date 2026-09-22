@@ -39,7 +39,7 @@ Instead of dealing with the verbose and often confusing native Service Worker AP
 Ensure that `TinyDebugger` and your utility functions are correctly mapped in your project structure.
 
 ```javascript
-import TinyServiceWorker from 'tiny-essentials/libs/router/TinyServiceWorker';
+import TinyServiceWorker from 'tiny-essentials/libs/router/sw/browser/TinyServiceWorker';
 ```
 
 ### 2. Initialization

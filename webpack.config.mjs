@@ -66,7 +66,7 @@ addModule(1, './src/v1/basics/index.mjs', 'TinyBasicsEs');
 addModule(1, './src/v1/regexp/index.mjs', 'TinyRegexEs');
 addModule(
   1,
-  './src/v1/libs/router/pwa/build/TinyServiceWorkerEngine.mjs',
+  './src/v1/libs/router/sw/service/build/TinyServiceWorkerEngine.mjs',
   'TinyServiceWorkerEngine',
   true,
 );

@@ -31,8 +31,8 @@ When you install the plugin, you can pass an optional configuration object. If n
 To use the plugin, you must have an active instance of `TinyServiceWorkerEngine`. You install the plugin using the engine's installation method.
 
 ```javascript
-import TinyServiceWorkerEngine from 'tiny-essentials/libs/router/pwa/TinyServiceWorkerEngine';
-import ViteFileDetectorPlugin from 'tiny-essentials/libs/router/pwa/plugins/ViteFileDetectorPlugin';
+import TinyServiceWorkerEngine from 'tiny-essentials/libs/router/sw/service/TinyServiceWorkerEngine';
+import ViteFileDetectorPlugin from 'tiny-essentials/libs/router/sw/service/plugins/ViteFileDetectorPlugin';
 
 // 1. Initialize your engine
 const engine = new TinyServiceWorkerEngine();
