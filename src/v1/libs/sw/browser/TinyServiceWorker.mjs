@@ -355,6 +355,44 @@ class TinyServiceWorker extends TinyPluginCore {
   }
 
   /**
+   * Requests permission from the user to display notifications.
+   *
+   * @returns {Promise<'granted' | 'denied' | 'default'>} The resulting permission status.
+   * @throws {Error} If the Notification API is not supported by the browser.
+   */
+  async requestNotificationPermission() {
+    checkDestroy(this.#isDestroyed);
+
+    if (!('Notification' in window)) {
+      throw new Error('Notification API is not supported in this browser.');
+    }
+
+    // If permission is already 'granted', return immediately.
+    if (Notification.permission === 'granted') {
+      return 'granted';
+    }
+
+    // If 'denied', the user has blocked it and we cannot prompt again via code.
+    if (Notification.permission === 'denied') {
+      this.log('warn', 'Notification permission was denied by the user.');
+      return 'denied';
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      this.log('info', `Notification permission status: ${permission}`);
+
+      // Emit an event so the UI can react (e.g., show/hide notification settings).
+      super.emit('sw:NotificationPermissionChanged', { permission });
+
+      return permission;
+    } catch (error) {
+      this.log('error', 'Error requesting notification permission:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Registers the service worker and handles version updates.
    * @param {RegistrationOptions} [options] - Standard Service Worker registration options.
    * @returns {Promise<void>} A promise that resolves when registration is attempted.

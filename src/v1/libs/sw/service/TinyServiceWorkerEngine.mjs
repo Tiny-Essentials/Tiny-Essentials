@@ -1388,10 +1388,13 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
     this.emit('push', { event, data });
 
     // Notify all clients open in the browser about the new push
-    await TinyServiceWorkerEngine.#replyToAll({
-      type: 'sw:PushReceived',
-      data: data,
-    }, false);
+    await TinyServiceWorkerEngine.#replyToAll(
+      {
+        type: 'sw:PushReceived',
+        data: data,
+      },
+      false,
+    );
   }
 
   /**
