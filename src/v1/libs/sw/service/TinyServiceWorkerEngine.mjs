@@ -41,7 +41,14 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
  * @typedef {Object} PartialServiceWorkerSettings
  * @property {boolean} [spaMode] - Whether the service worker is running in Single Page Application mode.
  * @property {PartialFetchOptions} fetch - Partial configuration for fetch event interception.
+ * @property {PartialPushOptions} push - Partial configuration for push event interception.
  * @property {Partial<MessagingOptions>} messaging - Partial configuration for message event handling.
+ */
+
+/**
+ * A partial configuration object for push interception settings.
+ * @typedef {Object} PartialPushOptions
+ * @property {boolean} [enabled] - Indicates if push interception is enabled.
  */
 
 /**
@@ -58,6 +65,12 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
  * @typedef {Object} FetchOptions
  * @property {boolean} enabled - Indicates if fetch interception is enabled.
  * @property {RouterOptions} router - Configuration for the routing logic.
+ */
+
+/**
+ * Configuration settings for intercepting and handling push events.
+ * @typedef {Object} PushOptions
+ * @property {boolean} enabled - Indicates if push interception is enabled.
  */
 
 /**
@@ -78,6 +91,7 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
  * @typedef {Object} ServiceWorkerSettings
  * @property {boolean} spaMode - Whether the service worker is running in Single Page Application mode.
  * @property {FetchOptions} fetch - Configuration for fetch event interception.
+ * @property {PushOptions} push - Configuration for push event interception.
  * @property {MessagingOptions} messaging - Configuration for message event handling.
  */
 
@@ -658,6 +672,9 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    */
   #config = {
     spaMode: false,
+    push: {
+      enabled: true,
+    },
     fetch: {
       enabled: true,
       router: {
@@ -874,10 +891,19 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
         }
       : this.#config.fetch;
 
-    // 4. Apply to the instance's private state
+    // 4. Prepare Fetch configuration
+    const newPush = config.push
+      ? {
+          ...this.#config.push,
+          ...config.push,
+        }
+      : this.#config.push;
+
+    // 5. Apply to the instance's private state
     this.#config = {
       spaMode: config.spaMode ?? this.#config.spaMode,
       fetch: newFetch,
+      push: newPush,
       messaging: newMessaging,
     };
 
@@ -1342,6 +1368,71 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   }
 
   /**
+   * Processes the push event received from the server.
+   *
+   * @param {PushEvent} event - The native push event.
+   * @returns {Promise<void>}
+   */
+  async #handlePush(event) {
+    let data;
+    try {
+      // Try to parse as JSON; if it fails, try as text
+      data = event.data ? event.data.json() : undefined;
+    } catch (error) {
+      this.log('warn', 'Failed to parse push data as JSON, attempting text fallback.');
+      data = event.data ? event.data.text() : undefined;
+    }
+
+    // Emit the event so that plugins registered in the Engine can react
+    this.emit('push', { event, data });
+
+    // Notify all clients open in the browser about the new push
+    await TinyServiceWorkerEngine.replyToAll({
+      type: 'sw:PushReceived',
+      data: data,
+    });
+  }
+
+  /**
+   * Processes the notification click event.
+   *
+   * @param {NotificationEvent} event - The click event.
+   * @returns {Promise<void>}
+   */
+  async #handleNotificationClick(event) {
+    this.emit('notificationclick', { event });
+    // Close the notification after the click
+    event.notification.close();
+  }
+
+  /**
+   * Displays a native notification to the user.
+   *
+   * @param {string} title - The notification title.
+   * @param {string} body - The message body.
+   * @param {NotificationOptions} [options] - Additional options from the Notification API.
+   * @returns {Promise<void>}
+   */
+  async showNotification(title, body, options = {}) {
+    const pushCfg = this.#config.push;
+    if (!pushCfg.enabled) {
+      throw new Error('[TinyServiceWorkerEngine] showNotification: Push notifications are disabled in the configuration.');
+    }
+ 
+    if (typeof title !== 'string' || title.trim() === '') {
+      throw new TypeError('Notification title must be a non-empty string.');
+    }
+    if (typeof body !== 'string') {
+      throw new TypeError('Notification body must be a string.');
+    }
+
+    return sw.registration.showNotification(title, {
+      body,
+      ...options,
+    });
+  }
+
+  /**
    * Initializes the Service Worker event listeners.
    * @returns {void}
    * @throws {Error} If the engine has already been started.
@@ -1375,6 +1466,25 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
           .catch((err) => this.emit('activateError', errorMaker(err, event))),
       );
     });
+
+    // Listener for Push events
+    const pushCfg = this.#config.push;
+    if (pushCfg.enabled) {
+      sw.addEventListener('push', (event) => {
+        this.#handlePush(event).catch((err) => {
+          this.log('error', 'Error handling push event:', err);
+          this.emit('pushError', errorMaker(err, event));
+        });
+      });
+
+      // Listener for notification clicks
+      sw.addEventListener('notificationclick', (event) => {
+        this.#handleNotificationClick(event).catch((err) => {
+          this.log('error', 'Error handling notification click event:', err);
+          this.emit('pushError', errorMaker(err, event));
+        });
+      });
+    }
 
     // Detect fetch events on the website.
     const fetchCfg = this.#config.fetch;
