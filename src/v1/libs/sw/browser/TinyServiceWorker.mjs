@@ -379,7 +379,7 @@ class TinyServiceWorker extends TinyPluginCore {
       }
     });
   }
-  
+
   /**
    * Registers a new sync tag to be handled by the Service Worker.
    * This will trigger the 'sync' event in the Service Worker when connectivity is available.
@@ -396,16 +396,16 @@ class TinyServiceWorker extends TinyPluginCore {
       throw new TypeError('[TinyServiceWorker] registerSync: tag must be a non-empty string.');
     }
 
-    if (!('SyncManager' in window.navigator) && !('SyncManager' in navigator)) {
+    // 1. Wait for the service worker to be active/ready
+    const registration = await TinyServiceWorker.waitForReady();
+
+    if (!registration.sync) {
       throw new Error(
         '[TinyServiceWorker] registerSync: Background Sync API is not supported in this browser.',
       );
     }
 
     try {
-      // 1. Wait for the service worker to be active/ready
-      const registration = await TinyServiceWorker.waitForReady();
-
       // 2. Register the sync tag
       await registration.sync.register(tag);
 

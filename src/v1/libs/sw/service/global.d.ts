@@ -4,5 +4,5 @@ interface SyncEvent extends ExtendableEvent {
 }
 
 interface ServiceWorkerGlobalScopeEventMap {
-  "sync": SyncEvent;
+  sync: SyncEvent;
 }
