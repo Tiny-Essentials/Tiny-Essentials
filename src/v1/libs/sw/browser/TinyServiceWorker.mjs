@@ -476,7 +476,12 @@ class TinyServiceWorker extends TinyPluginCore {
           if (this.displayMode === 'browser' && this.#autoNotifyPush) {
             if ('Notification' in window) {
               const { title = 'New Message', body = '', ...options } = payload.data || {};
-              new Notification(title, { body, ...options });
+              const notification = new Notification(title, { body, ...options });
+
+              notification.onclick = () => {
+                this.#emit('sw:NotificationClicked', { title, body, options }, false);
+              };
+
               this.log('info', 'Automatic browser notification triggered by push event.');
             } else {
               this.log('warn', 'Push received, but Notification API is not supported.');

@@ -312,6 +312,57 @@ const getResType = (code) => {
  */
 
 /**
+ * A mock class to simulate NotificationEvent for messaging purposes.
+ * @extends Event
+ */
+class MockNotificationEvent extends Event {
+  /** @type {ExtendableMessageEvent} */
+  #event;
+  /**
+   * @type {string}
+   * Required by NotificationEvent interface
+   */
+  #action;
+  /** @type {Notification} */
+  #notification;
+
+  get notification() {
+    return this.#notification;
+  }
+
+  get action() {
+    return this.#action;
+  }
+
+  /**
+   * @param {ExtendableMessageEvent} event - The event.
+   * @param {any} data - Notification details.
+   */
+  constructor(event, data) {
+    super('notificationclick');
+    this.#event = event;
+    this.#action = ''; // Clicking the notification body via browser does not have 'action'
+    this.#notification = {
+      title: data.title,
+      body: data.body,
+      ...data.options, // Ensures fields like 'date', 'tag' and 'icon' are passed on
+      close: () => {
+        // Mock implementation of the close method
+      },
+    };
+  }
+
+  /**
+   * Mocking waitUntil to satisfy the ExtendableEvent/NotificationEvent interface.
+   * @param {Promise<any>} promise - The promise to keep the event alive.
+   * @returns {void}
+   */
+  waitUntil(promise) {
+    return this.#event.waitUntil(promise);
+  }
+}
+
+/**
  * Manages the lifecycle and execution of modules based on the provided configuration.
  */
 class TinyServiceWorkerEngine extends TinyPluginCore {
@@ -1398,9 +1449,9 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   }
 
   /**
-   * Processes the notification click event.
+   * Displays a native notification to the user.
    *
-   * @param {NotificationEvent} event - The click event.
+   * @param {NotificationEvent} event - The native notification event.
    * @returns {Promise<void>}
    */
   async #handleNotificationClick(event) {
@@ -1679,7 +1730,21 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
           return;
         }
 
-        // 2. Handle API calls coming from the Browser (Browser Request -> SW)
+        // 2. Handle Browser Notification Clicks (Browser Click -> SW)
+        if (type === 'sw:NotificationClicked') {
+          // We create a pseudo-event that mimics a native NotificationEvent
+          // so that #handleNotificationClick can treat it consistently.
+          /** @type {NotificationEvent} */
+          const pseudoEvent = new MockNotificationEvent(event, {
+            title: data?.title,
+            body: data?.body,
+            options: data?.options,
+          });
+          event.waitUntil(this.#handleNotificationClick(pseudoEvent));
+          return;
+        }
+
+        // 3. Handle API calls coming from the Browser (Browser Request -> SW)
         if (isApi === true) {
           if (typeof correlationId !== 'string') {
             this.log('error', 'Received message with missing or invalid "correlationId" string.');
