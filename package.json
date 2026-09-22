@@ -384,8 +384,8 @@
       "import": "./dist/v1/libs/router/sw/browser/plugins/TabManager.mjs"
     },
     "./libs/router/sw/browser/TinyServiceWorker": {
-      "require": "./dist/v1libs/router/sw/browser/TinyServiceWorker.cjs",
-      "import": "./dist/v1libs/router/sw/browser/TinyServiceWorker.mjs"
+      "require": "./dist/v1/libs/router/sw/browser/TinyServiceWorker.cjs",
+      "import": "./dist/v1/libs/router/sw/browser/TinyServiceWorker.mjs"
     },
     "./libs/router/TinyMapCache": {
       "require": "./dist/v1/libs/router/TinyMapCache.cjs",
