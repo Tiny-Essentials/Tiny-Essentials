@@ -1374,23 +1374,24 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {Promise<void>}
    */
   async #handlePush(event) {
-    let data;
+    /** @type {MessagePayload} */
+    let data = {};
     try {
       // Try to parse as JSON; if it fails, try as text
-      data = event.data ? event.data.json() : undefined;
+      data = event.data ? event.data.json() : {};
     } catch (error) {
       this.log('warn', 'Failed to parse push data as JSON, attempting text fallback.');
-      data = event.data ? event.data.text() : undefined;
+      data = event.data ? { title: '', body: event.data.text() } : {};
     }
 
     // Emit the event so that plugins registered in the Engine can react
     this.emit('push', { event, data });
 
     // Notify all clients open in the browser about the new push
-    await TinyServiceWorkerEngine.replyToAll({
+    await TinyServiceWorkerEngine.#replyToAll({
       type: 'sw:PushReceived',
       data: data,
-    });
+    }, false);
   }
 
   /**
@@ -1416,9 +1417,11 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   async showNotification(title, body, options = {}) {
     const pushCfg = this.#config.push;
     if (!pushCfg.enabled) {
-      throw new Error('[TinyServiceWorkerEngine] showNotification: Push notifications are disabled in the configuration.');
+      throw new Error(
+        '[TinyServiceWorkerEngine] showNotification: Push notifications are disabled in the configuration.',
+      );
     }
- 
+
     if (typeof title !== 'string' || title.trim() === '') {
       throw new TypeError('Notification title must be a non-empty string.');
     }
