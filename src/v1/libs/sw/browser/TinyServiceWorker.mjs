@@ -195,6 +195,24 @@ class TinyServiceWorker extends TinyPluginCore {
     return this.#displayMode;
   }
 
+  /** @type {boolean} Indicates if the browser should automatically show a notification when a push is received in browser mode. */
+  #autoNotifyPush = true;
+
+  /** @returns {boolean} True if auto-notification is enabled. */
+  get autoNotifyPush() {
+    checkDestroy(this.#isDestroyed);
+    return this.#autoNotifyPush;
+  }
+
+  /** @param {boolean} value - Whether to enable auto-notification. */
+  set autoNotifyPush(value) {
+    checkDestroy(this.#isDestroyed);
+    if (typeof value !== 'boolean') {
+      throw new TypeError('autoNotifyPush must be a boolean.');
+    }
+    this.#autoNotifyPush = value;
+  }
+
   /**
    * @param {Object} options - Configuration options for the instance.
    * @param {IdWorker} options.id - The unique identifier for this manager instance.
@@ -453,8 +471,24 @@ class TinyServiceWorker extends TinyPluginCore {
         )
           return;
 
-        // 1. Logic to respond to API calls (Response from SW -> Browser)
-        if (payload.type === 'api_response') {
+        // 1. Automatic browser notification for push events in browser mode
+        if (payload.type === 'sw:PushReceived') {
+          if (this.displayMode === 'browser' && this.#autoNotifyPush) {
+            if ('Notification' in window) {
+              const { title = 'New Message', body = '', ...options } = payload.data || {};
+              new Notification(title, { body, ...options });
+              this.log('info', 'Automatic browser notification triggered by push event.');
+            } else {
+              this.log('warn', 'Push received, but Notification API is not supported.');
+            }
+          }
+          // Always emit the event so plugins can still react to the data
+          super.emit(payload.type, { data: payload.data, event });
+          return;
+        }
+
+        // 2. Logic to respond to API calls (Response from SW -> Browser)
+        if (payload.type === 'sw:ApiResponse') {
           if (typeof payload.correlationId !== 'string') {
             this.log('error', 'Received message with missing or invalid "correlationId" string.');
             return;
@@ -473,7 +507,7 @@ class TinyServiceWorker extends TinyPluginCore {
           return;
         }
 
-        // 2. Logic to RECEIVE API requests (Request from SW -> Browser)
+        // 3. Logic to RECEIVE API requests (Request from SW -> Browser)
         if (payload.isApi === true) {
           if (typeof payload.correlationId !== 'string') {
             this.log('error', 'Received message with missing or invalid "correlationId" string.');
@@ -483,7 +517,7 @@ class TinyServiceWorker extends TinyPluginCore {
           if (!handler) {
             postMessage({
               correlationId: payload.correlationId,
-              type: 'api_response',
+              type: 'sw:ApiResponse',
               error: `No API handler registered for type: ${payload.type}`,
             });
             return;
@@ -494,7 +528,7 @@ class TinyServiceWorker extends TinyPluginCore {
             const sendResult = (r) =>
               postMessage({
                 correlationId: payload.correlationId,
-                type: 'api_response',
+                type: 'sw:ApiResponse',
                 data: r,
               });
 
@@ -504,7 +538,7 @@ class TinyServiceWorker extends TinyPluginCore {
           } catch (error) {
             postMessage({
               correlationId: payload.correlationId,
-              type: 'api_response',
+              type: 'sw:ApiResponse',
               error: error instanceof Error ? error.message : String(error),
             });
           }

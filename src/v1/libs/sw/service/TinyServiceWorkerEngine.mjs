@@ -1660,7 +1660,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
         };
 
         // 1. Handle API responses coming from the Browser (Browser Response -> SW)
-        if (type === 'api_response') {
+        if (type === 'sw:ApiResponse') {
           if (typeof correlationId !== 'string') {
             this.log('error', 'Received message with missing or invalid "correlationId" string.');
             return;
@@ -1690,7 +1690,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
           if (!handler) {
             source.postMessage({
               correlationId,
-              type: 'api_response',
+              type: 'sw:ApiResponse',
               error: `No API handler registered for type: ${type}`,
             });
             return;
@@ -1701,7 +1701,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
             const sendResult = (r) =>
               source.postMessage({
                 correlationId,
-                type: 'api_response',
+                type: 'sw:ApiResponse',
                 data: r,
               });
             const result = handler({
@@ -1725,7 +1725,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
           } catch (error) {
             source.postMessage({
               correlationId,
-              type: 'api_response',
+              type: 'sw:ApiResponse',
               error: error instanceof Error ? error.message : String(error),
             });
           }
@@ -1788,9 +1788,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
             const callResult = message(msgData);
             if (callResult instanceof Promise) {
               event.waitUntil(
-                callResult
-                  .then(() => this.emit('afterMessage', afterData()))
-                  .catch(sendErrorEvent),
+                callResult.then(() => this.emit('afterMessage', afterData())).catch(sendErrorEvent),
               );
             } else {
               this.emit('afterMessage', afterData());
