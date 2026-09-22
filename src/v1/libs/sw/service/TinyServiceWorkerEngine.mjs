@@ -1778,15 +1778,26 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
         this.emit('beforeMessage', { event, type, data: msgData });
         const afterData = () => ({ event, type, error: err, data: msgData });
         if (message) {
-          event.waitUntil(
-            message(msgData)
-              .then(() => this.emit('afterMessage', afterData()))
-              .catch((/** @type {Error} */ error) => {
-                err = error instanceof Error ? error : new Error('Unknown Error');
-                this.log('error', `Error executing handler for message type "${type}":`, error);
-                this.emit('messageError', afterData());
-              }),
-          );
+          /** @param {any} error */
+          const sendErrorEvent = (error) => {
+            err = error instanceof Error ? error : new Error('Unknown Error');
+            this.log('error', `Error executing handler for message type "${type}":`, error);
+            this.emit('messageError', afterData());
+          };
+          try {
+            const callResult = message(msgData);
+            if (callResult instanceof Promise) {
+              event.waitUntil(
+                callResult
+                  .then(() => this.emit('afterMessage', afterData()))
+                  .catch(sendErrorEvent),
+              );
+            } else {
+              this.emit('afterMessage', afterData());
+            }
+          } catch (error) {
+            sendErrorEvent(error);
+          }
         } else {
           this.emit('afterMessage', afterData());
         }
