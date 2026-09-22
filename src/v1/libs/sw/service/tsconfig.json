@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": "../../../../../",
     "types": ["node"],
-    "lib": ["esnext", "webworker"],
+    "lib": ["ESNext", "WebWorker"],
     "outDir": "../../../../../dist-sw",
     "allowJs": true,
     "checkJs": true,

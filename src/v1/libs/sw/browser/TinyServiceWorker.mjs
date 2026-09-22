@@ -5,7 +5,7 @@ const checkDestroy = createCheckDestroyed('TinyServiceWorker');
 
 /**
  * The data payload contained within the message.
- * @typedef {Record<string, any>} MessagePayload
+ * @typedef {Record<string, any>} MessagePayload - A key-value map representing the message content.
  */
 
 /**
@@ -57,7 +57,7 @@ const checkDestroy = createCheckDestroyed('TinyServiceWorker');
  *
  * @param {*} message - The message to be sent to the service worker.
  * @param {Transferable[]} [transfer] - An optional array of transferable objects to transfer ownership of.
- * @returns {void}
+ * @returns {void} This function does not return a value.
  * @throws {Error} If the Service Worker is not available or not controlling the page.
  * @throws {TypeError} If the transfer argument is provided but is not an array.
  */
@@ -88,6 +88,14 @@ class TinyServiceWorker extends TinyPluginCore {
     }
   }
 
+  /**
+   * Returns a promise that resolves when the Service Worker is ready.
+   * @returns {Promise<ServiceWorkerRegistration>} A promise that resolves to the Service Worker registration.
+   */
+  static async waitForReady() {
+    return navigator.serviceWorker.ready;
+  }
+
   /** @type {ServiceWorkerRegistration | null} The active Service Worker registration instance. */
   #registration = null;
   /** @type {IdWorker} The unique identifier for this instance. */
@@ -106,9 +114,9 @@ class TinyServiceWorker extends TinyPluginCore {
   #deferredPrompt = null;
   /** @type {'twa' | 'standalone' | 'browser'} The current PWA display mode. */
   #displayMode = 'browser';
-  /** @type {Map<string, {resolve: (value: any) => void, reject: (reason: Error) => void, timer: NodeJS.Timeout}>} */
+  /** @type {Map<string, {resolve: (value: any) => void, reject: (reason: Error) => void, timer: NodeJS.Timeout}>} A map of pending API requests, keyed by their correlation ID. */
   #pendingRequests = new Map();
-  /** @type {Map<string, ApiHandlerCallback>} */
+  /** @type {Map<string, ApiHandlerCallback>} A map of registered API handlers, keyed by the message type. */
   #apiHandlers = new Map();
 
   /** @type {((evt: MediaQueryListEvent) => void) | null} Handler for display mode changes. */
@@ -370,6 +378,42 @@ class TinyServiceWorker extends TinyPluginCore {
         resolve();
       }
     });
+  }
+  
+  /**
+   * Registers a new sync tag to be handled by the Service Worker.
+   * This will trigger the 'sync' event in the Service Worker when connectivity is available.
+   *
+   * @param {string} tag - A unique identifier for the sync task.
+   * @returns {Promise<void>} A promise that resolves when the sync registration is successful.
+   * @throws {Error} If Background Sync is not supported by the browser.
+   * @throws {TypeError} If the tag is not a non-empty string.
+   */
+  async registerSync(tag) {
+    checkDestroy(this.#isDestroyed);
+
+    if (typeof tag !== 'string' || tag.trim() === '') {
+      throw new TypeError('[TinyServiceWorker] registerSync: tag must be a non-empty string.');
+    }
+
+    if (!('SyncManager' in window.navigator) && !('SyncManager' in navigator)) {
+      throw new Error(
+        '[TinyServiceWorker] registerSync: Background Sync API is not supported in this browser.',
+      );
+    }
+
+    try {
+      // 1. Wait for the service worker to be active/ready
+      const registration = await TinyServiceWorker.waitForReady();
+
+      // 2. Register the sync tag
+      await registration.sync.register(tag);
+
+      this.log('info', `Sync tag registered: ${tag}`);
+    } catch (error) {
+      this.log('error', `Failed to register sync tag "${tag}":`, error);
+      throw error;
+    }
   }
 
   /**

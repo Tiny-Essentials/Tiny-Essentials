@@ -8,6 +8,22 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
 ///////////////////////////////////////////////////////////////////
 
 /**
+ * Enriched event object for the sync event.
+ * @typedef {Object} SyncEventObj
+ * @property {SyncEvent} event - The native sync event.
+ * @property {string} tag - The tag associated with the sync event.
+ */
+
+/**
+ * Callback for the sync handler.
+ * @callback SyncCallback
+ * @param {SyncEventObj} msg - The sync event object.
+ * @returns {Promise<void> | void}
+ */
+
+///////////////////////////////////////////////////////////////////
+
+/**
  * A function that handles the actual postMessage call to the message api source.
  * @callback MessageApiReply
  * @param {string} type - The type identifier for the api reply message.
@@ -42,7 +58,13 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
  * @property {boolean} [spaMode] - Whether the service worker is running in Single Page Application mode.
  * @property {PartialFetchOptions} fetch - Partial configuration for fetch event interception.
  * @property {PartialPushOptions} push - Partial configuration for push event interception.
+ * @property {PartialSyncOptions} sync - Partial configuration for sync event interception.
  * @property {Partial<MessagingOptions>} messaging - Partial configuration for message event handling.
+ */
+
+/**
+ * @typedef {Object} PartialSyncOptions
+ * @property {boolean} [enabled] - Indicates if sync interception is enabled.
  */
 
 /**
@@ -80,6 +102,12 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
  */
 
 /**
+ * Configuration settings for background sync event interception.
+ * @typedef {Object} SyncOptions
+ * @property {boolean} enabled - Indicates if sync interception is enabled.
+ */
+
+/**
  * Configuration settings for the routing logic used during fetch interception.
  * @typedef {Object} RouterOptions
  * @property {boolean} enabled - Indicates if the router is active.
@@ -92,6 +120,7 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
  * @property {boolean} spaMode - Whether the service worker is running in Single Page Application mode.
  * @property {FetchOptions} fetch - Configuration for fetch event interception.
  * @property {PushOptions} push - Configuration for push event interception.
+ * @property {SyncOptions} sync - Configuration for background sync event interception.
  * @property {MessagingOptions} messaging - Configuration for message event handling.
  */
 
@@ -557,6 +586,9 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   /** @type {Map<string, ApiHandlerCallback>} */
   #apiHandlers = new Map();
 
+  /** @type {Map<string, SyncCallback>} */
+  #syncListeners = new Map();
+
   /** @type {Map<string, {resolve: (value: any) => void, reject: (reason: Error) => void, timer: NodeJS.Timeout}>} */
   #pendingRequests = new Map();
 
@@ -726,6 +758,9 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
     push: {
       enabled: true,
     },
+    sync: {
+      enabled: true,
+    },
     fetch: {
       enabled: true,
       router: {
@@ -889,6 +924,15 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
       throw new TypeError('Missing required property: "fetch"');
     }
 
+    if (config.sync !== undefined) {
+      if (typeof config.sync !== 'object' || config.sync === null) {
+        throw new TypeError('Sync configuration must be a non-null object.');
+      }
+      validateField(config.sync, 'enabled', 'boolean', 'sync');
+    } else if (strict) {
+      throw new TypeError('Missing required property: "sync"');
+    }
+
     // Deep validation for 'messaging' configuration
     if (config.messaging !== undefined) {
       if (typeof config.messaging !== 'object' || config.messaging === null) {
@@ -950,11 +994,15 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
         }
       : this.#config.push;
 
+    // 5. Prepare Sync configuration
+    const newSync = config.sync ? { ...this.#config.sync, ...config.sync } : this.#config.sync;
+
     // 5. Apply to the instance's private state
     this.#config = {
       spaMode: config.spaMode ?? this.#config.spaMode,
       fetch: newFetch,
       push: newPush,
+      sync: newSync,
       messaging: newMessaging,
     };
 
@@ -1370,6 +1418,47 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   }
 
   /**
+   * Adds a handler for a specific sync event.
+   * @param {string} tag - The tag of the sync event.
+   * @param {SyncCallback} callback - The function to be executed.
+   * @throws {TypeError} If tag is not a string or callback is not a function.
+   */
+  addSyncListener(tag, callback) {
+    if (typeof tag !== 'string' || tag.trim() === '') {
+      throw new TypeError('Tag must be a non-empty string.');
+    }
+    if (typeof callback !== 'function') {
+      throw new TypeError('Callback must be a function.');
+    }
+    this.#syncListeners.set(tag, callback);
+  }
+
+  /**
+   * Removes a sync handler for a specific tag.
+   * @param {string} tag - The tag of the sync event.
+   * @returns {boolean} True if the handler was removed.
+   */
+  removeSyncListener(tag) {
+    return this.#syncListeners.delete(tag);
+  }
+
+  /**
+   * Returns the number of registered sync listeners.
+   * @returns {number}
+   */
+  get syncListenerSize() {
+    return this.#syncListeners.size;
+  }
+
+  /**
+   * Clears all sync listeners.
+   * @returns {void}
+   */
+  clearSyncListeners() {
+    return this.#syncListeners.clear();
+  }
+
+  /**
    * Removes a registered API handler.
    * @param {string} type - The identifier for the call.
    */
@@ -1540,6 +1629,33 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
           this.log('error', 'Error handling notification click event:', err);
           this.emit('pushError', errorMaker(err, event));
         });
+      });
+    }
+
+    // Listener for Sync events
+    const syncCfg = this.#config.sync;
+    if (syncCfg.enabled) {
+      sw.addEventListener('sync', (event) => {
+        const tag = event.tag;
+        const callback = this.#syncListeners.get(tag);
+
+        this.emit('beforeSync', { event, tag });
+
+        if (callback) {
+          event.waitUntil(
+            (async () => {
+              try {
+                await callback({ event, tag });
+                this.emit('afterSync', { event, tag });
+              } catch (error) {
+                this.log('error', `Error in sync handler for tag "${tag}":`, error);
+                this.emit('syncError', { event, tag, error });
+              }
+            })(),
+          );
+        } else {
+          this.emit('afterSync', { event, tag });
+        }
       });
     }
 
