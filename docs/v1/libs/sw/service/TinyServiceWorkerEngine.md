@@ -36,6 +36,8 @@ Defines the operational behavior of the engine.
       * `codes` (Map<number, RouterCodeConfig>): A Map where keys are HTTP status codes and values are custom response handlers.
 * `push` (Object) — `PushOptions`: Configuration for push notification interception.
   * `enabled` (boolean): Activates/deactivates push event interception.
+* `sync` (Object) — `SyncOptions`: Configuration for background sync event interception.
+  * `enabled` (boolean): Activates/deactivates sync event interception.
 * `messaging` (Object):
   * `enabled` (boolean): Activates/deactivates the `message` event listener.
 
@@ -295,6 +297,28 @@ await engine.showNotification('New Message', 'You have received a new notificati
 
 ---
 
+## 🔄 Feature 5: Background Sync
+
+The engine provides built-in support for the **Background Sync API**. This allows your application to defer tasks (like sending analytics or syncing data) until the user has a stable internet connection.
+
+When a `sync` event is triggered by the browser, the engine:
+1. **Identifies the Task:** It uses the `tag` from the `SyncEvent` to find the specific callback registered for that tag.
+2. **Lifecycle Emission:** It emits `beforeSync` and `afterSync` events.
+3. **Error Handling:** If the callback fails, it emits a `syncError` event.
+
+### 🛠️ Implementation Example
+
+```javascript
+// Register a handler for a specific sync tag
+engine.addSyncListener('sync-analytics', async ({ event, tag }) => {
+  console.log(`Syncing analytics for tag: ${tag}`);
+  // Perform the sync logic...
+  await performAnalyticsSync();
+});
+```
+
+---
+
 ## ⚙️ Configuration & Security
 
 ### Strict Validation
@@ -374,6 +398,17 @@ These methods allow you to customize how the engine handles specific HTTP status
 | `addRouterCode` | Adds/updates a custom handler for a code. | `code (number)`, `config` | `void` |
 | `removeRouterCode` | Removes a custom code handler. | `code (number)` | `boolean` |
 | `getRouterCode` | Retrieves a deep clone of a code config. | `code (number)` | `RouterCodeConfig \| undefined` |
+
+### 🔄 Sync Management
+| Method | Purpose | Arguments | Returns |
+| :--- | :--- | :--- | :--- |
+| **Registration** | | | |
+| `addSyncListener` | Registers a handler for a specific sync tag. | `tag (string)`, `callback` | `void` |
+| **Retrieval & Check** | | | |
+| `syncListenerSize` | Returns the count of registered sync listeners. | None | `number` |
+| **Removal & Cleanup** | | | |
+| `removeSyncListener` | Removes a sync handler. | `tag (string)` | `boolean` |
+| `clearSyncListeners` | Wipes all registered sync listeners. | None | `void` |
 
 ---
 

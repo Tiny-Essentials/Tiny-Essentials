@@ -134,6 +134,14 @@ The manager handles the "tricky" parts of being a Progressive Web App.
 * **Installation Prompt:** You can trigger the native browser installation UI by calling `promptInstallation()`. *Note: This must be triggered by a user gesture (like a button click) and only works if the `beforeinstallprompt` event has fired.*
 * **Display Mode:** Automatically detects if your app is running in `standalone` (installed), `twa` (Android Trusted Web Activity), or a standard `browser` tab.
 
+#### **Background Sync**
+Schedule tasks to run once the user has a stable internet connection.
+
+```javascript
+// Register a sync tag to trigger the 'sync' event in the Service Worker
+await swManager.registerSync('sync-data-update');
+```
+
 ---
 
 ## 📡 Event Reference
@@ -219,6 +227,7 @@ swManager.destroy();
 | `offApi(type)` | `boolean` | Removes a previously registered API handler. |
 | `addEventListener(cb)` | `void` | Listens for messages coming **from** the worker. |
 | `removeEventListener(cb)` | `boolean` | Removes a previously added listener. |
+| `registerSync(tag)` | `Promise<void>` | Registers a sync tag to trigger the 'sync' event in the Service Worker. |
 | `destroy()` | `void` | Performs full cleanup of all resources. |
 
 ### Properties (Getters)
