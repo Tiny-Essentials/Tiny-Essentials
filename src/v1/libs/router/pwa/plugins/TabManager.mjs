@@ -361,7 +361,9 @@ const TinyTabManagerPlugin = (instance, lgConfig = {}) => {
 
       for (const id of ids) {
         if (typeof id !== 'string') {
-          throw new TypeError('[TinyTabManagerPlugin] tab:close_multiple: invalid ID type in array.');
+          throw new TypeError(
+            '[TinyTabManagerPlugin] tab:close_multiple: invalid ID type in array.',
+          );
         }
 
         const permissions = clientPermissions.get(id);

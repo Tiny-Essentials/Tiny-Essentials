@@ -367,6 +367,10 @@
       "require": "./dist/v1/libs/router/pwa/plugins/GlobCachePlugin.cjs",
       "import": "./dist/v1/libs/router/pwa/plugins/GlobCachePlugin.mjs"
     },
+    "./libs/router/pwa/plugins/TabManager": {
+      "require": "./dist/v1/libs/router/pwa/plugins/TabManager.cjs",
+      "import": "./dist/v1/libs/router/pwa/plugins/TabManager.mjs"
+    },
     "./libs/router/pwa/plugins/Ping": {
       "require": "./dist/v1/libs/router/pwa/plugins/Ping.cjs",
       "import": "./dist/v1/libs/router/pwa/plugins/Ping.mjs"
@@ -374,6 +378,10 @@
     "./libs/router/pwa/plugins/ViteFileDetector": {
       "require": "./dist/v1/libs/router/pwa/plugins/ViteFileDetector.cjs",
       "import": "./dist/v1/libs/router/pwa/plugins/ViteFileDetector.mjs"
+    },
+    "./libs/router/plugins/sw/TabManager": {
+      "require": "./dist/v1/libs/router/plugins/sw/TabManager.cjs",
+      "import": "./dist/v1/libs/router/plugins/sw/TabManager.mjs"
     },
     "./libs/router/TinyMapCache": {
       "require": "./dist/v1/libs/router/TinyMapCache.cjs",
