@@ -152,6 +152,7 @@ These events are emitted by the `TinyServiceWorker` class to inform your applica
 | `sw:PrepareUpdate` | `void` | Fired to signal the Service Worker to begin downloading new assets. |
 | `sw:NewVersionReady` | `{ event: Event }` | Fired when the new Service Worker successfully takes control of the page. |
 | `sw:NoSwControllerWarn` | `void` | Fired when a message is attempted but no active Service Worker controller exists. |
+| `sw:PushReceived` | `{ data: any, event: MessageEvent }` | Fired when a push event is received. If in 'browser' mode and `autoNotifyPush` is enabled, a native browser notification is automatically displayed. |
 | `{CUSTOM EVENT}` | `{ event: Event, data: Record<string, any>  }` | Fired when a message from `sw.js`is sent. |
 
 ### 📨 Custom Worker Messages
@@ -230,6 +231,7 @@ swManager.destroy();
 * `version`: `string` - The current application version.
 * `registration`: `ServiceWorkerRegistration` - The current registration object.
 * `eventListeners`: `EventListener[]` - An array of all registered event listeners.
+* `autoNotifyPush`: `boolean` - Indicates if the browser should automatically show a notification when a push is received in browser mode.
 
 ---
 

@@ -28,14 +28,16 @@ When you instantiate the engine, you can provide two configuration objects.
 
 **Parameter: `config` (Object) — `ServiceWorkerSettings`**
 Defines the operational behavior of the engine.
-*   `spaMode` (boolean): If `true`, the engine uses the `spaPath` (default: `/index.html`) when handling routing errors. If `false`, it uses the original requested path.
-*   `fetch` (Object):
-    *   `enabled` (boolean): Activates/deactivates fetch interception.
-    *   `router` (Object):
-        *   `enabled` (boolean): Activates/deactivates the automatic error routing.
-        *   `codes` (Map<number, RouterCodeConfig>): A Map where keys are HTTP status codes and values are custom response handlers.
-*   `messaging` (Object):
-    *   `enabled` (boolean): Activates/deactivates the `message` event listener.
+* `spaMode` (boolean): If `true`, the engine uses the `spaPath` (default: `/index.html`) when handling routing errors. If `false`, it uses the original requested path.
+* `fetch` (Object):
+  * `enabled` (boolean): Activates/deactivates fetch interception.
+  * `router` (Object):
+      * `enabled` (boolean): Activates/deactivates the automatic error routing.
+      * `codes` (Map<number, RouterCodeConfig>): A Map where keys are HTTP status codes and values are custom response handlers.
+* `push` (Object) — `PushOptions`: Configuration for push notification interception.
+  * `enabled` (boolean): Activates/deactivates push event interception.
+* `messaging` (Object):
+  * `enabled` (boolean): Activates/deactivates the `message` event listener.
 
 **Parameter: `lgConfig` (Object) — `LoggerOptions`**
 Defines how the engine logs its internal operations.
@@ -264,6 +266,35 @@ This mimics how professional web servers (like Apache2) work. It ensures that if
 
 ---
 
+## 🔔 Feature 4: Push & Notifications
+
+The engine provides built-in support for the Web Push API and user interaction with browser notifications.
+
+### 📡 Push Events
+When a push event is received from the server, the engine automates the following workflow:
+1.  **Data Parsing:** It attempts to parse the payload as JSON. If parsing fails, it falls back to a text format.
+2.  **Internal Event:** It emits a `push` event, allowing plugins to react to the incoming data.
+3.  **Client Broadcast:** It automatically broadcasts a `sw:PushReceived` message to all open browser tabs/clients via `postMessage`. This allows your website's main thread to react to the push event in real-time.
+
+### 🖱️ Notification Interaction
+The engine listens for `notificationclick` events. When a user interacts with a notification:
+1.  **Event Emission:** The engine emits a `notificationclick` event for internal handling.
+2.  **Automatic Cleanup:** The engine automatically calls `event.notification.close()` to dismiss the notification from the user's screen.
+
+### 🛠️ Manual Notifications
+You can trigger a native browser notification directly from the Service Worker using the `showNotification` method.
+
+```javascript
+// Triggering a manual notification
+await engine.showNotification('New Message', 'You have received a new notification!', {
+  icon: '/icons/icon-192x192.png',
+  badge: '/icons/badge-72x72.png'
+});
+```
+*Note: This method will throw an error if `push.enabled` is set to `false` in the configuration.*
+
+---
+
 ## ⚙️ Configuration & Security
 
 ### Strict Validation
@@ -317,6 +348,7 @@ These methods allow you to control how the engine intercepts and tracks network 
 | Method | Purpose | Arguments | Returns |
 | :--- | :--- | :--- | :--- |
 | `init` | Initializes the Service Worker event listeners. | None | `void` |
+| `showNotification` | Displays a native notification to the user. | `title (string)`, `body (string)`, `options (Object)` | `Promise<void>` |
 
 ### 💬 4. Message Management
 These methods manage the communication bridge between the Main Thread and the Service Worker.
