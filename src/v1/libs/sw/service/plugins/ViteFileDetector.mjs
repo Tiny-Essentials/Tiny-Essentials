@@ -1,4 +1,4 @@
-import { TinyPluginLayer } from '../../../../plugin/TinyPlugin.mjs';
+import { TinyPluginLayer } from '../../../plugin/TinyPlugin.mjs';
 import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
 
 /**

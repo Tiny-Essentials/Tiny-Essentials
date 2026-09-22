@@ -1,6 +1,6 @@
-import { TinyPluginLayer } from '../../../../plugin/TinyPlugin.mjs';
-import { isJsonObject } from '../../../../../basics/objChecker.mjs';
-import { compileGlobRegExp } from '../../../../../regexp/Glob.mjs';
+import { TinyPluginLayer } from '../../../plugin/TinyPlugin.mjs';
+import { isJsonObject } from '../../../../basics/objChecker.mjs';
+import { compileGlobRegExp } from '../../../../regexp/Glob.mjs';
 import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
 
 /**

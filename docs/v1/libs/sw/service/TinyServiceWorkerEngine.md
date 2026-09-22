@@ -47,7 +47,7 @@ Defines how the engine logs its internal operations.
 By separating `config` from `lgConfig`, we separate **business logic** (how the SW behaves) from **developer tools** (how the SW reports its status).
 
 ```javascript
-import TinyServiceWorkerEngine from 'tiny-essentials/libs/router/sw/service/TinyServiceWorkerEngine';
+import TinyServiceWorkerEngine from 'tiny-essentials/libs/sw/service/TinyServiceWorkerEngine';
 
 const engine = new TinyServiceWorkerEngine({
   spaMode: true, // Set to true if you are building a Single Page Application

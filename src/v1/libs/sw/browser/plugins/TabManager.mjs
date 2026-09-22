@@ -1,7 +1,7 @@
-import { TinyPluginLayer } from '../../../../plugin/TinyPlugin.mjs';
+import { TinyPluginLayer } from '../../../plugin/TinyPlugin.mjs';
 import TinyServiceWorker from '../TinyServiceWorker.mjs';
 
-/** @typedef {import('../../../../tools/TinyDebugger.mjs').DebuggerConstructor} DebuggerConstructor - The constructor function for a debugger instance. */
+/** @typedef {import('../../../tools/TinyDebugger.mjs').DebuggerConstructor} DebuggerConstructor - The constructor function for a debugger instance. */
 
 /**
  * @typedef {(() => any)} ExtraDataFn - A function that returns custom data.

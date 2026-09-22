@@ -1,3 +1,3 @@
-import TinyServiceWorker from '../libs/router/sw/browser/TinyServiceWorker.mjs';
+import TinyServiceWorker from '../libs/sw/browser/TinyServiceWorker.mjs';
 
 export { TinyServiceWorker };

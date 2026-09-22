@@ -6,13 +6,13 @@ A lightweight utility to verify that the `TinyServiceWorkerEngine` is communicat
 
 1.  **Register the plugin:**
     ```javascript
-    import TinyPingPwa from 'tiny-essentials/libs/router/sw/service/plugins/Ping';
+    import TinyPingPwa from 'tiny-essentials/libs/sw/service/plugins/Ping';
     engineInstance.installPlugin(TinyPingPwa);
     ```
 
 2.  **Send a test message:**
     ```javascript
-    import TinyServiceWorker from 'tiny-essentials/libs/router/sw/browser/TinyServiceWorker';
+    import TinyServiceWorker from 'tiny-essentials/libs/sw/browser/TinyServiceWorker';
 
     const swManager = new TinyServiceWorker({
         id: 'web-manager',

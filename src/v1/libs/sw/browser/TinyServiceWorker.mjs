@@ -1,5 +1,5 @@
-import { TinyPluginCore, TinyPluginLayer, TinyPlugin } from '../../../plugin/TinyPlugin.mjs';
-import { createCheckDestroyed } from '../../../utils/tools.mjs';
+import { TinyPluginCore, TinyPluginLayer, TinyPlugin } from '../../plugin/TinyPlugin.mjs';
+import { createCheckDestroyed } from '../../utils/tools.mjs';
 
 const checkDestroy = createCheckDestroyed('TinyServiceWorker');
 
@@ -40,7 +40,7 @@ const checkDestroy = createCheckDestroyed('TinyServiceWorker');
  * @template {string} IdString
  * @template {string} VersionString
  * @template {any[]} Options
- * @typedef {import('../../../plugin/TinyPlugin.mjs').TinyPluginInstaller<TinyServiceWorker<any, any>, Layer, IdString, VersionString, Options>} SwPluginInstaller
+ * @typedef {import('../../plugin/TinyPlugin.mjs').TinyPluginInstaller<TinyServiceWorker<any, any>, Layer, IdString, VersionString, Options>} SwPluginInstaller
  */
 
 /**

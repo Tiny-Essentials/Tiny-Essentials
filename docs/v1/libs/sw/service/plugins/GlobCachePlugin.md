@@ -39,7 +39,7 @@ When initializing the plugin, you must provide a configuration object. Below is 
 To use the plugin, pass your `TinyServiceWorkerEngine` instance and the configuration object into the plugin function.
 
 ```javascript
-import GlobCachePlugin from 'tiny-essentials/libs/router/sw/service/plugins/GlobCachePlugin';
+import GlobCachePlugin from 'tiny-essentials/libs/sw/service/plugins/GlobCachePlugin';
 
 // Example configuration
 const cacheOptions = {
@@ -57,7 +57,7 @@ engineInstance.installPlugin(GlobCachePlugin, cacheOptions);
 If you want to cache everything except for specific configuration files and ensure you are only caching assets from your own domain:
 
 ```javascript
-import GlobCachePlugin from 'tiny-essentials/libs/router/sw/service/plugins/GlobCachePlugin';
+import GlobCachePlugin from 'tiny-essentials/libs/sw/service/plugins/GlobCachePlugin';
 
 const advancedOptions = {
   patterns: ['**/*'], 
