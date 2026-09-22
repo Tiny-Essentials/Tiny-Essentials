@@ -1,7 +1,7 @@
-import { TinyPluginLayer } from '../../../plugin/TinyPlugin.mjs';
-import TinyServiceWorker from '../../TinyServiceWorker.mjs';
+import { TinyPluginLayer } from '../../../../plugin/TinyPlugin.mjs';
+import TinyServiceWorker from '../TinyServiceWorker.mjs';
 
-/** @typedef {import('../../../tools/TinyDebugger.mjs').DebuggerConstructor} DebuggerConstructor - The constructor function for a debugger instance. */
+/** @typedef {import('../../../../tools/TinyDebugger.mjs').DebuggerConstructor} DebuggerConstructor - The constructor function for a debugger instance. */
 
 /**
  * @typedef {(() => any)} ExtraDataFn - A function that returns custom data.
@@ -283,7 +283,7 @@ class TinySwTabsLayer extends TinyPluginLayer {
 
 /**
  * A plugin for TinyServiceWorker that manages a centralized registry of all open website tabs.
- * @type {import('../../TinyServiceWorker.mjs').SwPluginInstaller<TinySwTabsLayer, 'TabManager', '1.0.0', [ConstructorOptions]|[]>}
+ * @type {import('../TinyServiceWorker.mjs').SwPluginInstaller<TinySwTabsLayer, 'TabManager', '1.0.0', [ConstructorOptions]|[]>}
  */
 const TinyTabManagerPlugin = (instance, lgConfig = {}) => {
   const engine = instance.engine;

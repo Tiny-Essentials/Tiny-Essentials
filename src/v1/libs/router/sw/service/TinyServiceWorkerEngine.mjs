@@ -1,7 +1,7 @@
-import { segmentExtractorV1 } from '../../../regexp/SegmentExtractor.mjs';
-import TinyCloner from '../../utils/TinyCloner.mjs';
-import TinyHttpResponseRegistry from '../../tools/TinyHttpResponseRegistry.mjs';
-import { TinyPluginCore, TinyPlugin, TinyPluginLayer } from '../../plugin/TinyPlugin.mjs';
+import { segmentExtractorV1 } from '../../../../regexp/SegmentExtractor.mjs';
+import TinyCloner from '../../../utils/TinyCloner.mjs';
+import TinyHttpResponseRegistry from '../../../tools/TinyHttpResponseRegistry.mjs';
+import { TinyPluginCore, TinyPlugin, TinyPluginLayer } from '../../../plugin/TinyPlugin.mjs';
 
 const codeIs = TinyHttpResponseRegistry.codeIs;
 
@@ -285,7 +285,7 @@ const getResType = (code) => {
  * @template {string} IdString
  * @template {string} VersionString
  * @template {any[]} Options
- * @typedef {import('../../plugin/TinyPlugin.mjs').TinyPluginInstaller<TinyServiceWorkerEngine, Layer, IdString, VersionString, Options>} SwPluginInstaller
+ * @typedef {import('../../../plugin/TinyPlugin.mjs').TinyPluginInstaller<TinyServiceWorkerEngine, Layer, IdString, VersionString, Options>} SwPluginInstaller
  */
 
 /**

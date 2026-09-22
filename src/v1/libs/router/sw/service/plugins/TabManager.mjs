@@ -1,12 +1,12 @@
-import TinyPromiseQueue from '../../../utils/TinyPromiseQueue.mjs';
-import { TinyPluginLayer } from '../../../plugin/TinyPlugin.mjs';
+import TinyPromiseQueue from '../../../../utils/TinyPromiseQueue.mjs';
+import { TinyPluginLayer } from '../../../../plugin/TinyPlugin.mjs';
 import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
 
 /** @type {ServiceWorkerGlobalScope} */
 // @ts-ignore
 export const sw = self;
 
-/** @typedef {import('../../../tools/TinyDebugger.mjs').DebuggerConstructor} DebuggerConstructor - The constructor function for a debugger instance. */
+/** @typedef {import('../../../../tools/TinyDebugger.mjs').DebuggerConstructor} DebuggerConstructor - The constructor function for a debugger instance. */
 
 /**
  * Represents information about a single browser tab.
