@@ -17,5 +17,5 @@
         "module": "NodeNext",
     },
     "include": ["src"],
-    "exclude": ["node_modules", "src/v1/libs/router/sw/service"]
+    "exclude": ["node_modules", "src/v1/libs/sw/service"]
 }

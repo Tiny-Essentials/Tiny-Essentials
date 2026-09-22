@@ -34,7 +34,7 @@
     "auto-build": "npm run build",
     "check-exports": "node CheckExports.mjs",
     "build": "node build.mjs",
-    "build:sw": "tsc -p src/v1/libs/router/sw/service/tsconfig.json",
+    "build:sw": "tsc -p src/v1/libs/sw/service/tsconfig.json",
     "build:ts": "tsc -p tsconfig.json",
     "build:js": "rollup -c && webpack --mode production",
     "build-clean": "npm run clean && npm run build",
@@ -359,33 +359,33 @@
       "require": "./dist/v1/libs/html/templates/TinyLoadingScreen.cjs",
       "import": "./dist/v1/libs/html/templates/TinyLoadingScreen.mjs"
     },
-    "./libs/router/sw/service/TinyServiceWorkerEngine": {
-      "require": "./dist/v1/libs/router/sw/service/TinyServiceWorkerEngine.cjs",
-      "import": "./dist/v1/libs/router/sw/service/TinyServiceWorkerEngine.mjs"
+    "./libs/sw/service/TinyServiceWorkerEngine": {
+      "require": "./dist/v1/libs/sw/service/TinyServiceWorkerEngine.cjs",
+      "import": "./dist/v1/libs/sw/service/TinyServiceWorkerEngine.mjs"
     },
-    "./libs/router/sw/service/plugins/GlobCachePlugin": {
-      "require": "./dist/v1/libs/router/sw/service/plugins/GlobCachePlugin.cjs",
-      "import": "./dist/v1/libs/router/sw/service/plugins/GlobCachePlugin.mjs"
+    "./libs/sw/service/plugins/GlobCachePlugin": {
+      "require": "./dist/v1/libs/sw/service/plugins/GlobCachePlugin.cjs",
+      "import": "./dist/v1/libs/sw/service/plugins/GlobCachePlugin.mjs"
     },
-    "./libs/router/sw/service/plugins/TabManager": {
-      "require": "./dist/v1/libs/router/sw/service/plugins/TabManager.cjs",
-      "import": "./dist/v1/libs/router/sw/service/plugins/TabManager.mjs"
+    "./libs/sw/service/plugins/TabManager": {
+      "require": "./dist/v1/libs/sw/service/plugins/TabManager.cjs",
+      "import": "./dist/v1/libs/sw/service/plugins/TabManager.mjs"
     },
-    "./libs/router/sw/service/plugins/Ping": {
-      "require": "./dist/v1/libs/router/sw/service/plugins/Ping.cjs",
-      "import": "./dist/v1/libs/router/sw/service/plugins/Ping.mjs"
+    "./libs/sw/service/plugins/Ping": {
+      "require": "./dist/v1/libs/sw/service/plugins/Ping.cjs",
+      "import": "./dist/v1/libs/sw/service/plugins/Ping.mjs"
     },
-    "./libs/router/sw/service/plugins/ViteFileDetector": {
-      "require": "./dist/v1/libs/router/sw/service/plugins/ViteFileDetector.cjs",
-      "import": "./dist/v1/libs/router/sw/service/plugins/ViteFileDetector.mjs"
+    "./libs/sw/service/plugins/ViteFileDetector": {
+      "require": "./dist/v1/libs/sw/service/plugins/ViteFileDetector.cjs",
+      "import": "./dist/v1/libs/sw/service/plugins/ViteFileDetector.mjs"
     },
-    "./libs/router/sw/browser/plugins/TabManager": {
-      "require": "./dist/v1/libs/router/sw/browser/plugins/TabManager.cjs",
-      "import": "./dist/v1/libs/router/sw/browser/plugins/TabManager.mjs"
+    "./libs/sw/browser/plugins/TabManager": {
+      "require": "./dist/v1/libs/sw/browser/plugins/TabManager.cjs",
+      "import": "./dist/v1/libs/sw/browser/plugins/TabManager.mjs"
     },
-    "./libs/router/sw/browser/TinyServiceWorker": {
-      "require": "./dist/v1/libs/router/sw/browser/TinyServiceWorker.cjs",
-      "import": "./dist/v1/libs/router/sw/browser/TinyServiceWorker.mjs"
+    "./libs/sw/browser/TinyServiceWorker": {
+      "require": "./dist/v1/libs/sw/browser/TinyServiceWorker.cjs",
+      "import": "./dist/v1/libs/sw/browser/TinyServiceWorker.mjs"
     },
     "./libs/router/TinyMapCache": {
       "require": "./dist/v1/libs/router/TinyMapCache.cjs",
