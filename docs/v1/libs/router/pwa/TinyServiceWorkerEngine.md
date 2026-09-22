@@ -308,8 +308,17 @@ These methods allow you to control how the engine intercepts and tracks network 
 | `fetchUrlSize` | Returns the count of URL listeners. | None | `number` |
 | `fetchRegExpSize` | Returns the count of RegExp listeners. | None | `number` |
 | `fetchGlobalSize` | Returns the count of global listeners. | None | `number` |
+| **Registration & Execution** | | | |
+| `onApi` | Registers a handler for API calls coming from the browser. | `type (string)`, `callback` | `void` |
+| `offApi` | Removes a registered API handler. | `type (string)` | `boolean` |
+| `emitApi` | Sends a request to a specific client and waits for a response. | `client (Client)`, `type (string)`, `data (any)`, `timeout (number)` | `Promise<any>` |
 
-### 💬 2. Message Management
+### ⚙️ 3. Lifecycle & Utility
+| Method | Purpose | Arguments | Returns |
+| :--- | :--- | :--- | :--- |
+| `init` | Initializes the Service Worker event listeners. | None | `void` |
+
+### 💬 4. Message Management
 These methods manage the communication bridge between the Main Thread and the Service Worker.
 
 | Method | Purpose | Arguments | Returns |
@@ -325,7 +334,7 @@ These methods manage the communication bridge between the Main Thread and the Se
 | **Metadata** | | | |
 | `messagesSize` | Returns the count of message listeners. | None | `number` |
 
-### 🚦 3. Router Management
+### 🚦 5. Router Management
 These methods allow you to customize how the engine handles specific HTTP status codes.
 
 | Method | Purpose | Arguments | Returns |

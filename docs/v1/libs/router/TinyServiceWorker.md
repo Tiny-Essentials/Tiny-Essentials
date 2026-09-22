@@ -105,6 +105,29 @@ swManager.addEventListener((event) => {
 swManager.on('PONG', ({ data, event }) => console.log(data));
 ```
 
+#### **C. Receiving API Requests (Service Worker ➡️ Main Thread)**
+Unlike standard events, an API request is a command that expects a response. The Service Worker sends a request, and `TinyServiceWorker` processes it in the Main Thread and automatically sends the result back.
+
+**Implementation:**
+Use `onApi` to register a handler. The callback must return the data you wish to send back to the Service Worker.
+
+```javascript
+// 1. Register a handler for a specific request type
+swManager.onApi('FETCH_USER_SETTINGS', async ({ data, correlationId }) => {
+  // 'data' contains the payload sent by the Service Worker
+  // 'correlationId' is the unique identifier for this request
+  
+  console.log(`Received request for: ${data.userId}`);
+
+  // You can return a plain object or a Promise
+  const settings = await database.getSettings(data.userId);
+  return settings; 
+});
+
+// 2. Remove the handler when it is no longer needed
+swManager.offApi('FETCH_USER_SETTINGS');
+```
+
 ### 📱 PWA Lifecycle & Installation
 The manager handles the "tricky" parts of being a Progressive Web App.
 
@@ -179,6 +202,7 @@ swManager.destroy();
 | `version` | `string` | Current application version string. | Yes |
 | `logger` | `Console` | Custom logger (defaults to `console`). | No |
 | `debugMode` | `boolean` | Enables extra logging and cache busting. | No |
+| `useLogColors` | `boolean` | Enables color support in the console logs. | No |
 
 ### Methods
 
@@ -189,6 +213,9 @@ swManager.destroy();
 | `promptInstallation()` | `Promise<void>` | Triggers the native browser installation prompt. |
 | `postMessage(payload)` | `void` | Sends a structured payload to the worker. |
 | `emit(type, data)` | `boolean` | Sends a simplified message to the worker. |
+| `emitApi(type, data, timeout)` | `Promise<any>` | Sends a message and returns a Promise that resolves with the response from the Service Worker. |
+| `onApi(type, callback)` | `void` | Registers a handler to respond to specific API requests sent from the Service Worker. |
+| `offApi(type)` | `boolean` | Removes a previously registered API handler. |
 | `addEventListener(cb)` | `void` | Listens for messages coming **from** the worker. |
 | `removeEventListener(cb)` | `boolean` | Removes a previously added listener. |
 | `destroy()` | `void` | Performs full cleanup of all resources. |
@@ -196,8 +223,13 @@ swManager.destroy();
 ### Properties (Getters)
 * `isReady`: `boolean` - Returns `true` if registration was successful.
 * `isFailed`: `boolean` - Returns `true` if registration encountered an error.
+* `isDestroyed`: `boolean` - Returns `true` if the instance has been destroyed.
 * `displayMode`: `'twa' | 'standalone' | 'browser'` - The current UI mode.
 * `id`: `string` - The instance ID.
+* `swUrl`: `string \| URL` - The URL of the service worker file.
+* `version`: `string` - The current application version.
+* `registration`: `ServiceWorkerRegistration` - The current registration object.
+* `eventListeners`: `EventListener[]` - An array of all registered event listeners.
 
 ---
 
