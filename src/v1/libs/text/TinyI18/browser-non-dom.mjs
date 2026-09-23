@@ -1,6 +1,4 @@
-import { readFile, writeFile } from 'fs/promises';
-import { existsSync } from 'fs';
-import { join } from 'path';
+import { joinUrl, readFile } from './browser-utils.mjs';
 import TinyI18 from './index.mjs';
 
 /**
@@ -11,14 +9,13 @@ import TinyI18 from './index.mjs';
  * TinyI18 — Professional and flexible i18n manager with dual mode (local/file),
  * regex-based keys, and function-based entries for advanced rendering (incl. HTML).
  *
- * - Mode "local": in-memory resources (Node + Browser).
- * - Mode "file": JSON files on disk via fs/path (Node only).
+ * - Mode "local": in-memory resources.
  * - Keeps only default + selected locale in memory.
  * - Selected locale overrides default; fallback resolves to default.
  * - Supports string entries, regex pattern entries, and function-backed entries.
  * - Safe: no dynamic code eval from files; functions in file mode are referenced by name ("$fn").
  */
-class TinyI18Node extends TinyI18 {
+class TinyI18Browser extends TinyI18 {
   /**
    * Creates a new TinyI18 instance for managing localized strings and patterns.
    *
@@ -35,13 +32,23 @@ class TinyI18Node extends TinyI18 {
   }
 }
 
-/** @type {typeof import('path').join} */
-TinyI18Node._join = (...args) => join(...args);
-/** @type {typeof import('fs').existsSync} */
-TinyI18Node._existsSync = (...args) => existsSync(...args);
-/** @type {(path: string, options: BufferEncoding) => Promise<string>} */
-TinyI18Node._readFile = (...args) => readFile(...args);
-/** @type {typeof import('fs/promises').writeFile} */
-TinyI18Node._writeFile = (...args) => writeFile(...args);
+/**
+ * Not supported in the browser non-dom: `mergeLocaleFiles` is a build-time API.
+ *
+ * @type {(path: string, data: string, encoding?: string) => never}
+ * @throws {Error} Always. Use the Node.js entry point instead.
+ */
+TinyI18Browser._writeFile = () => {
+  throw new Error(
+    'TinyI18: "mergeLocaleFiles" is not available in the browser; run it in Node.js at build time',
+  );
+};
 
-export default TinyI18Node;
+/** @type {(...paths: string[]) => string} */
+TinyI18Browser._join = joinUrl;
+/** @type {false} */
+TinyI18Browser._existsSync = false;
+/** @type {(path: string, options?: string) => Promise<string>} */
+TinyI18Browser._readFile = readFile;
+
+export default TinyI18Browser;

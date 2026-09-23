@@ -1,6 +1,6 @@
 import { segmentExtractorV1 } from '../../../regexp/SegmentExtractor.mjs';
 import TinyCloner from '../../utils/TinyCloner.mjs';
-import TinyHttpResponseRegistry from '../../tools/TinyHttpResponseRegistry/browser.mjs';
+import TinyHttpResponseRegistry from '../../tools/TinyHttpResponseRegistry/browser-non-dom.mjs';
 import { TinyPluginCore, TinyPlugin, TinyPluginLayer } from '../../plugin/TinyPlugin.mjs';
 
 const codeIs = TinyHttpResponseRegistry.codeIs;

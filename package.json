@@ -427,6 +427,10 @@
       "require": "./dist/v1/libs/text/TinyI18/browser.cjs",
       "import": "./dist/v1/libs/text/TinyI18/browser.mjs"
     },
+    "./libs/text/TinyI18/browser-non-dom": {
+      "require": "./dist/v1/libs/text/TinyI18/browser-non-dom.cjs",
+      "import": "./dist/v1/libs/text/TinyI18/browser-non-dom.mjs"
+    },
     "./libs/html/TinyHtml": {
       "require": "./dist/v1/libs/html/TinyHtml.cjs",
       "import": "./dist/v1/libs/html/TinyHtml.mjs"
@@ -514,6 +518,10 @@
     "./libs/tools/TinyHttpResponseRegistry/browser": {
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/browser.cjs",
       "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/browser.mjs"
+    },
+    "./libs/tools/TinyHttpResponseRegistry/browser-non-dom": {
+      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/browser-non-dom.cjs",
+      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/browser-non-dom.mjs"
     },
     "./libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes": {
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes/index.cjs",
