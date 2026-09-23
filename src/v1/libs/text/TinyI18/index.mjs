@@ -158,8 +158,8 @@ class TinyI18 {
    */
   static set _join(value) {
     if (typeof value !== 'function') throw new TypeError('TinyI18: "_join" must be a function');
-    if (this.#join !== null) throw new Error('TinyI18: "_join" has already been set');
-    this.#join = value;
+    if (TinyI18.#join !== null) throw new Error('TinyI18: "_join" has already been set');
+    TinyI18.#join = value;
   }
 
   /**
@@ -170,8 +170,8 @@ class TinyI18 {
   static set _existsSync(value) {
     if (typeof value !== 'function' && value !== false)
       throw new TypeError('TinyI18: "_existsSync" must be a function or false');
-    if (this.#existsSync !== null) throw new Error('TinyI18: "_existsSync" has already been set');
-    this.#existsSync = value;
+    if (TinyI18.#existsSync !== null) throw new Error('TinyI18: "_existsSync" has already been set');
+    TinyI18.#existsSync = value;
   }
 
   /**
@@ -181,8 +181,8 @@ class TinyI18 {
    */
   static set _readFile(value) {
     if (typeof value !== 'function') throw new TypeError('TinyI18: "_readFile" must be a function');
-    if (this.#readFile !== null) throw new Error('TinyI18: "_readFile" has already been set');
-    this.#readFile = value;
+    if (TinyI18.#readFile !== null) throw new Error('TinyI18: "_readFile" has already been set');
+    TinyI18.#readFile = value;
   }
 
   /**
@@ -193,8 +193,8 @@ class TinyI18 {
   static set _writeFile(value) {
     if (typeof value !== 'function')
       throw new TypeError('TinyI18: "_writeFile" must be a function');
-    if (this.#writeFile !== null) throw new Error('TinyI18: "_writeFile" has already been set');
-    this.#writeFile = value;
+    if (TinyI18.#writeFile !== null) throw new Error('TinyI18: "_writeFile" has already been set');
+    TinyI18.#writeFile = value;
   }
 
   /**

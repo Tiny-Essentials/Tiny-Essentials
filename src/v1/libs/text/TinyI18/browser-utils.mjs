@@ -1,4 +1,3 @@
-
 /**
  * Joins URL segments into a single normalized path.
  *
