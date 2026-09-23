@@ -70,7 +70,12 @@ addModule(
   'TinyServiceWorkerEngine',
   true,
 );
-addModule(1, './src/v1/libs/worker/engine/build/TinyWebWorkerEngine.mjs', 'TinyWebWorkerEngine', true);
+addModule(
+  1,
+  './src/v1/libs/worker/engine/build/TinyWebWorkerEngine.mjs',
+  'TinyWebWorkerEngine',
+  true,
+);
 addModule(1, './src/v1/libs/math/TinyMamdaniInferenceSystem.mjs', 'TinyMaInSys');
 addModule(1, './src/v1/libs/plugin/TinyPlugin.mjs', 'TinyPluginPackage');
 addModule(1, './src/v1/build/TinyLevelUp.mjs', 'TinyLevelUp', true);

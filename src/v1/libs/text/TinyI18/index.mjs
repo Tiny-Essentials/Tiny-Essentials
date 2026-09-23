@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join as pathJoin } from 'path';
-import { createCheckDestroyed } from '../utils/tools.mjs';
+import { createCheckDestroyed } from '../../utils/tools.mjs';
 
 const checkDestroy = createCheckDestroyed('TinyI18');
 
