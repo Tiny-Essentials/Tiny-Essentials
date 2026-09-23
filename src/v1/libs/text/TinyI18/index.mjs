@@ -170,7 +170,8 @@ class TinyI18 {
   static set _existsSync(value) {
     if (typeof value !== 'function' && value !== false)
       throw new TypeError('TinyI18: "_existsSync" must be a function or false');
-    if (TinyI18.#existsSync !== null) throw new Error('TinyI18: "_existsSync" has already been set');
+    if (TinyI18.#existsSync !== null)
+      throw new Error('TinyI18: "_existsSync" has already been set');
     TinyI18.#existsSync = value;
   }
 

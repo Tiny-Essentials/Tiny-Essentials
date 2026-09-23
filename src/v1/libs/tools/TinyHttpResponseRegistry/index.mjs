@@ -140,7 +140,7 @@ class TinyHttpResponseRegistry {
 
   /**
    * Initializes a new instance of the TinyHttpResponseRegistry.
-   * @param {typeof TinyI18} I18
+   * @param {typeof TinyI18} I18 - The TinyI18 constructor.
    * @param {HttpResponses} [initialResponses] - An object of initial response objects to populate the registry.
    * @throws {TypeError} If the input is not an object.
    */
@@ -155,6 +155,9 @@ class TinyHttpResponseRegistry {
       strict: false,
       acceptNullResults: true,
     });
+
+    if (!(this.#i18 instanceof TinyI18))
+      throw new TypeError('The "i18" must be an instance of TinyI18.');
 
     this.#i18.loadLocaleLocal(this.#locale, {});
     for (const id in TinyHttpResponseRegistry.#DefaultRequestCodes) {
