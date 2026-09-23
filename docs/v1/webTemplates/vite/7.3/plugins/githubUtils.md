@@ -19,12 +19,12 @@ Open your `vite.config.js` file and import the function you just created. Add it
 
 ```javascript
 import { defineConfig } from 'vite';
-import { copyIndexToGithub404 } from 'tiny-essentials/webTemplates/vite/7.3/plugins/githubUtils';
+import { CopyIndexToGithub404 } from 'tiny-essentials/webTemplates/vite/7.3/plugins/githubUtils';
 
 export default defineConfig({
   plugins: [
     // ... your other plugins (e.g., react(), vue())
-    copyIndexToGithub404()
+    CopyIndexToGithub404()
   ],
   // Your other Vite configurations
 });

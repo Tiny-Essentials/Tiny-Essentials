@@ -32,7 +32,7 @@ Welcome to the official guide for **`tiny-vite-pwa`**! This plugin is designed t
 
 ## ⚙️ Configuration Guide
 
-When using the plugin, you will pass an options object to `tinyVitePwaPlugin()`. Below are the available properties:
+When using the plugin, you will pass an options object to `TinyVitePwaPlugin()`. Below are the available properties:
 
 | Property | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
@@ -61,11 +61,11 @@ Update your `vite.config.js` as follows:
 
 ```javascript
 import { defineConfig } from 'vite';
-import tinyVitePwaPlugin from 'tiny-essentials/webTemplates/vite/7.3/plugins/tinyVitePwaPlugin';
+import TinyVitePwaPlugin from 'tiny-essentials/webTemplates/vite/7.3/plugins/TinyVitePwaPlugin';
 
 export default defineConfig({
   plugins: [
-    tinyVitePwaPlugin({
+    TinyVitePwaPlugin({
       // 1. The Manifest Object
       manifest: {
         name: 'My Awesome App',

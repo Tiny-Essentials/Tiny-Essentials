@@ -72,7 +72,7 @@ const logger = {
  * @param {TinyVitePwaOptions} options - The configuration options for the plugin.
  * @returns {import('vite').Plugin} The Vite plugin object.
  */
-const tinyVitePwaPlugin = (options) => {
+const TinyVitePwaPlugin = (options) => {
   // --- Strict Runtime Validation ---
   if (typeof options !== 'object' || options === null) {
     throw new TypeError('The "options" argument must be a non-null object.');
@@ -489,4 +489,4 @@ const tinyVitePwaPlugin = (options) => {
   };
 };
 
-export default tinyVitePwaPlugin;
+export default TinyVitePwaPlugin;
