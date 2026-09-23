@@ -18,7 +18,6 @@ import { TinyPluginCore, TinyPlugin, TinyPluginLayer } from '../../plugin/TinyPl
  * @typedef {Object} ApiHandlerOptions
  * @property {MessagePayload} [data] - The payload received from the main thread.
  * @property {string} correlationId - The request ID.
- * @property {MessageApiReply} replyApi - A convenience method to emit a new API request back to the main thread.
  */
 
 /**
@@ -30,7 +29,7 @@ import { TinyPluginCore, TinyPlugin, TinyPluginLayer } from '../../plugin/TinyPl
 /**
  * An enriched message object containing the event and utility methods for responding.
  * @typedef {Object} MessageObj
- * @param {string} type - The identifier for the message type.
+ * @property {string} type - The identifier for the message type.
  * @property {MessageEvent} event - The original message event.
  * @property {MessagePayload} [data] - The payload sent within the message.
  */
@@ -279,7 +278,6 @@ class TinyWebWorkerEngine extends TinyPluginCore {
           const result = handler({
             data,
             correlationId,
-            replyApi: (nType, payload, timeout) => this.emitApi(nType, payload, timeout),
           });
 
           if (result instanceof Promise) {
