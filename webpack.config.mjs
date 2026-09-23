@@ -126,7 +126,7 @@ addModule(1, './src/v1/build/TinyRouter.mjs', 'TinyRouter', true);
 addModule(1, './src/v1/build/TinyServiceWorker.mjs', 'TinyServiceWorker', true);
 addModule(1, './src/v1/build/TinyWebWorker.mjs', 'TinyWebWorker', true);
 addModule(1, './src/v1/build/TinyCloner.mjs', 'TinyCloner', true);
-addModule(1, './src/v1/build/TinyHttpResponseRegistry.mjs', 'TinyHttpResponseRegistry', true);
+addModule(1, './src/v1/build/TinyHttpResponseRegistry/browser.mjs', 'TinyHttpResponseRegistry', true);
 addModule(1, './src/v1/build/TinyPasswordValidator.mjs', 'TinyPasswordValidator', true);
 addModule(1, './src/v1/build/TinyHtmlTagRegexBuilder.mjs', 'TinyHtmlTagRegexBuilder', true);
 addModule(1, './src/v1/build/TinyUriParser.mjs', 'TinyUriParser', true);

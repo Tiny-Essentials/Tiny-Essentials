@@ -1,10 +1,10 @@
-import { isJsonObject } from '../../basics/objChecker.mjs';
-import TinyI18 from '../text/TinyI18.mjs';
-import RequestCodes from './TinyHttpResponseRegistry/RequestCodes.mjs';
+import { isJsonObject } from '../../../basics/objChecker.mjs';
+import TinyI18 from '../../text/TinyI18/index.mjs';
+import RequestCodes from './RequestCodes.mjs';
 
 /**
- * @typedef {import('./TinyHttpResponseRegistry/JsDoc.mjs').HttpResponse} HttpResponse
- * @typedef {import('./TinyHttpResponseRegistry/JsDoc.mjs').HttpResponses} HttpResponses
+ * @typedef {import('./JsDoc.mjs').HttpResponse} HttpResponse
+ * @typedef {import('./JsDoc.mjs').HttpResponses} HttpResponses
  */
 
 /**
@@ -133,25 +133,28 @@ class TinyHttpResponseRegistry {
   #reqCodes = new Set();
 
   /** @type {TinyI18} The internationalization instance used for managing localized response data. */
-  #i18 = new TinyI18({
-    defaultLocale: 'en',
-    mode: 'local',
-    strict: false,
-    acceptNullResults: true,
-  });
+  #i18;
 
   /** @type {string} The current active locale for the registry. */
   #locale = 'en';
 
   /**
    * Initializes a new instance of the TinyHttpResponseRegistry.
+   * @param {typeof TinyI18} I18
    * @param {HttpResponses} [initialResponses] - An object of initial response objects to populate the registry.
    * @throws {TypeError} If the input is not an object.
    */
-  constructor(initialResponses = {}) {
+  constructor(I18, initialResponses = {}) {
     if (!isJsonObject(initialResponses)) {
       throw new TypeError('Initial responses must be an object.');
     }
+
+    this.#i18 = new I18({
+      defaultLocale: 'en',
+      mode: 'local',
+      strict: false,
+      acceptNullResults: true,
+    });
 
     this.#i18.loadLocaleLocal(this.#locale, {});
     for (const id in TinyHttpResponseRegistry.#DefaultRequestCodes) {
@@ -219,7 +222,7 @@ class TinyHttpResponseRegistry {
    * Retrieves a response by its ID.
    * @param {number} id - The HTTP status code.
    * @returns {HttpResponse | null} The response object or null if not found.
-   * @param {import('../text/TinyI18.mjs').Dict} [params]
+   * @param {import('../../text/TinyI18/index.mjs').Dict} [params]
    * @param {string} [locale] - The locale to use for retrieval.
    */
   get(id, params = {}, locale = this.#locale) {

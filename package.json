@@ -508,8 +508,12 @@
       "import": "./dist/v1/libs/tools/TinyPkgExportValidator.mjs"
     },
     "./libs/tools/TinyHttpResponseRegistry": {
-      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry.cjs",
-      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry.mjs"
+      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/node.cjs",
+      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/node.mjs"
+    },
+    "./libs/tools/TinyHttpResponseRegistry/browser": {
+      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/browser.cjs",
+      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/browser.mjs"
     },
     "./libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes": {
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes/index.cjs",

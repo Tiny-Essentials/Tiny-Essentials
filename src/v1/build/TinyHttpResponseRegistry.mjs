@@ -1,3 +1,3 @@
-import TinyHttpResponseRegistry from '../libs/tools/TinyHttpResponseRegistry.mjs';
+import TinyHttpResponseRegistry from '../libs/tools/TinyHttpResponseRegistry/browser.mjs';
 
 export { TinyHttpResponseRegistry };

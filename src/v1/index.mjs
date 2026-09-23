@@ -195,7 +195,7 @@ import TinyMapCache from './libs/router/TinyMapCache.mjs';
 import TinyServiceWorker from './libs/sw/browser/TinyServiceWorker.mjs';
 import { makeSegmentExtractor, segmentExtractorV1 } from './regexp/SegmentExtractor.mjs';
 import TinyCloner from './libs/utils/TinyCloner.mjs';
-import TinyHttpResponseRegistry from './libs/tools/TinyHttpResponseRegistry.mjs';
+import TinyHttpResponseRegistry from './libs/tools/TinyHttpResponseRegistry/node.mjs';
 import { ipv4Regex, isValidIPv4, findIPv4Regex, extractIPsV4 } from './regexp/Ipv4.mjs';
 import { ipv6Regex, isValidIPv6, findIPv6Regex, extractIPsV6 } from './regexp/Ipv6.mjs';
 import {
