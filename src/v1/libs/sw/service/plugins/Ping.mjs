@@ -23,7 +23,7 @@ const TinyPingPwa = (instance) => {
   engine.addMessageListener('ping', ({ reply }) => {
     reply('pong', { msg: 'mio! :3' });
   });
-  return new TinyPluginLayer()._startLayer();
+  return new TinyPluginLayer();
 };
 
 export default TinyPingPwa;

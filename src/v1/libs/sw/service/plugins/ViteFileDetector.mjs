@@ -78,7 +78,7 @@ const ViteFileDetectorPlugin = (instance, options = {}) => {
     });
   }
 
-  return new TinyPluginLayer()._startLayer();
+  return new TinyPluginLayer();
 };
 
 export default ViteFileDetectorPlugin;
