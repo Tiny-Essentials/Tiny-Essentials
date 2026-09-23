@@ -1,10 +1,10 @@
-import { TinyI18 } from '/src/v1/libs/text/TinyI18/browser.mjs';
+import { TinyI18Browser } from '/src/v1/libs/text/TinyI18/browser.mjs';
 import * as clock from '/src/v1/basics/clock.mjs';
-window.TinyI18 = TinyI18;
+window.TinyI18 = TinyI18Browser;
 Object.assign(window, clock);
 
 // --- Setup TinyI18 in local mode for demo ---
-const i18 = new TinyI18({
+const i18 = new TinyI18Browser({
   strict: true,
   mode: 'local',
   defaultLocale: 'en',

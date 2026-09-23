@@ -6,7 +6,7 @@
     <title>Tiny Essentials - Test Panel</title>
     <script type="module">
       import { TinyCloner } from '/src/v1/libs/utils/TinyCloner.mjs';
-      import { TinyHttpResponseRegistry } from '/src/v1/libs/tools/TinyHttpResponseRegistry/browser.mjs';
+      import { TinyHttpResponseRegistryBrowser } from '/src/v1/libs/tools/TinyHttpResponseRegistry/browser.mjs';
       import { TinyURLSecurityVerifier } from '/src/v1/libs/tools/TinyURLSecurityVerifier.mjs';
       import { TinyVersion } from '/src/v1/libs/plugin/TinyVersion.mjs';
       import * as tinyEssentialsb from '/src/v1/basics/index.mjs';
@@ -17,9 +17,9 @@
       window.urt = urt;
       window.TinyCloner = TinyCloner;
       window.TinyURLSecurityVerifier = TinyURLSecurityVerifier;
-      window.TinyHttpResponseRegistry = TinyHttpResponseRegistry;
+      window.TinyHttpResponseRegistry = TinyHttpResponseRegistryBrowser;
       window.TinyVersion = TinyVersion;
-      window.reqCodes = new TinyHttpResponseRegistry();
+      window.reqCodes = new TinyHttpResponseRegistryBrowser();
     </script>
     <style>
       /* Reset */
