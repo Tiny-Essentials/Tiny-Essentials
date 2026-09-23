@@ -379,6 +379,10 @@
       "require": "./dist/v1/libs/sw/service/plugins/ViteFileDetector.cjs",
       "import": "./dist/v1/libs/sw/service/plugins/ViteFileDetector.mjs"
     },
+    "./libs/sw/service/plugins/GlobBypassPlugin": {
+      "require": "./dist/v1/libs/sw/service/plugins/GlobBypassPlugin.cjs",
+      "import": "./dist/v1/libs/sw/service/plugins/GlobBypassPlugin.mjs"
+    },
     "./libs/sw/browser/plugins/TabManager": {
       "require": "./dist/v1/libs/sw/browser/plugins/TabManager.cjs",
       "import": "./dist/v1/libs/sw/browser/plugins/TabManager.mjs"
