@@ -5,7 +5,6 @@ import { build } from 'vite';
  * @typedef {Object} TinyWebWorkerConfig
  * @property {string} entry - The source file path for the Web Worker (e.g., 'src/workers/myWorker.mjs').
  * @property {string} filename - The output filename for the Web Worker (e.g., 'myWorker.js').
- * @property {'es' | 'iife'} [format='es'] - Optional. The bundle format. Defaults to 'es' to match { type: 'module' } in the browser.
  */
 
 /**
@@ -140,9 +139,6 @@ const tinyVitePwaPlugin = (options) => {
       if (!filenamePattern.test(ww.filename)) {
         throw new RangeError(`webWorkers[${index}].filename contains invalid characters.`);
       }
-      if (ww.format !== undefined && ww.format !== 'es' && ww.format !== 'iife') {
-        throw new TypeError(`webWorkers[${index}].format must be strictly 'es' or 'iife'.`);
-      }
     });
   }
 
@@ -159,7 +155,7 @@ const tinyVitePwaPlugin = (options) => {
 
   /** @type {string} */
   let swSourcePath;
-  /** @type {Array<{ entryPath: string, filename: string, format: 'es'|'iife' }>} */
+  /** @type {Array<{ entryPath: string, filename: string }>} */
   let resolvedWebWorkers = [];
   /** @type {import('vite').ResolvedConfig} */
   let viteConfig;
@@ -174,9 +170,8 @@ const tinyVitePwaPlugin = (options) => {
 
       // Resolve absolute paths for Web Workers
       resolvedWebWorkers = webWorkers.map((ww) => ({
-        entryPath: resolve(config.root, ww.entry),
+        entryPath: resolve(config.root, ww.entry, ww.filename),
         filename: ww.filename,
-        format: ww.format || 'es',
       }));
     },
 
@@ -460,7 +455,6 @@ const tinyVitePwaPlugin = (options) => {
 
             logger.log(` WW Source:  ${colors.cyan}${relativeSourceWW}${colors.reset}`);
             logger.log(` WW Dest:    ${colors.cyan}${relativeDestWW}${colors.reset}`);
-            logger.log(` WW Format:  ${colors.cyan}${ww.format.toUpperCase()}${colors.reset}`);
 
             try {
               await build({
@@ -471,9 +465,8 @@ const tinyVitePwaPlugin = (options) => {
                   emptyOutDir: false,
                   lib: {
                     entry: ww.entryPath,
-                    // Removes the extension to create a safe variable name (only matters for IIFE format)
                     name: ww.filename.replace(/\.[^/.]+$/, ''),
-                    formats: [ww.format],
+                    formats: ['iife'],
                     fileName: () => ww.filename,
                   },
                   rollupOptions: {

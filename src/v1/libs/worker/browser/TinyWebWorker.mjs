@@ -81,20 +81,13 @@ class TinyWebWorker extends TinyPluginCore {
    * @param {Object} options - Configuration options for the instance.
    * @param {string} options.id - The unique identifier for this manager instance.
    * @param {string | URL} options.workerUrl - The path to the web worker file.
-   * @param {WorkerOptions} [options.workerOptions={ type: 'module' }] - Native worker options.
+   * @param {WorkerOptions} [options.workerOptions={}] - Native worker options.
    * @param {boolean} [options.debugMode=false] - Whether to enable internal debug logging.
    * @param {boolean} [options.useLogColors=false] - Whether to enable log color support.
    * @param {Partial<Console>} [options.logger=console] - A custom logger object.
    * @throws {TypeError} If parameters are not the correct types.
    */
-  constructor({
-    id,
-    workerUrl,
-    workerOptions = { type: 'module' },
-    logger,
-    debugMode,
-    useLogColors,
-  }) {
+  constructor({ id, workerUrl, workerOptions = {}, logger, debugMode, useLogColors }) {
     super({
       logCfg: {
         id: '[_green_TinyWebWorker_reset_]',
