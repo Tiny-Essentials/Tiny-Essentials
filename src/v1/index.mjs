@@ -158,7 +158,7 @@ import TinyArrayPaginator from './libs/array/TinyArrayPaginator.mjs';
 import TinyInventory from './libs/game/TinyInventory.mjs';
 import TinyInventoryTrader from './libs/game/TinyInventoryTrader.mjs';
 import TinyCookieConsent from './libs/html/templates/TinyCookieConsent.mjs';
-import TinyI18 from './libs/text/TinyI18.mjs';
+import TinyI18 from './libs/text/TinyI18/node.mjs';
 import TinyNeedBar from './libs/game/TinyNeedBar.mjs';
 import TinySimpleDice from './libs/math/TinySimpleDice.mjs';
 import TinyElementObserver from './libs/html/TinyElementObserver.mjs';

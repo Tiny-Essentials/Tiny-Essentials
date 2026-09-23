@@ -1,4 +1,4 @@
-import { TinyI18 } from '/src/v1/libs/text/TinyI18.mjs';
+import { TinyI18 } from '/src/v1/libs/text/TinyI18/browser.mjs';
 import * as clock from '/src/v1/basics/clock.mjs';
 window.TinyI18 = TinyI18;
 Object.assign(window, clock);

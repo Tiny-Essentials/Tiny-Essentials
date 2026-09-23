@@ -420,8 +420,12 @@
       "import": "./dist/v1/libs/html/events/TinyIframeEvents.mjs"
     },
     "./libs/text/TinyI18": {
-      "require": "./dist/v1/libs/text/TinyI18.cjs",
-      "import": "./dist/v1/libs/text/TinyI18.mjs"
+      "require": "./dist/v1/libs/text/TinyI18/node.cjs",
+      "import": "./dist/v1/libs/text/TinyI18/node.mjs"
+    },
+    "./libs/text/TinyI18/browser": {
+      "require": "./dist/v1/libs/text/TinyI18/browser.cjs",
+      "import": "./dist/v1/libs/text/TinyI18/browser.mjs"
     },
     "./libs/html/TinyHtml": {
       "require": "./dist/v1/libs/html/TinyHtml.cjs",

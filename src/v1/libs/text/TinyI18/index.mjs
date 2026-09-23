@@ -1,6 +1,3 @@
-import { readFile, writeFile } from 'fs/promises';
-import { existsSync } from 'fs';
-import { join as pathJoin } from 'path';
 import { createCheckDestroyed } from '../../utils/tools.mjs';
 
 const checkDestroy = createCheckDestroyed('TinyI18');
@@ -28,6 +25,9 @@ const checkDestroy = createCheckDestroyed('TinyI18');
  */
 
 /**
+ * Represents a translation entry as it appears in JSON files, extending
+ * the base pattern/function fields with arbitrary string key-value pairs.
+ *
  * @typedef {FileValueBase & { [key: string]: string }} FileValue
  */
 
@@ -131,6 +131,73 @@ const checkDestroy = createCheckDestroyed('TinyI18');
  */
 class TinyI18 {
   /**
+   * Cached path join function used to resolve locale file paths.
+   * @type {((...paths: string[]) => string)|null}
+   */
+  static #join = null;
+  /**
+   * Cached file existence check function.
+   * @type {((path: string) => boolean)|null|false}
+   */
+  static #existsSync = null;
+  /**
+   * Cached asynchronous file read function.
+   * @type {((path: string, options: BufferEncoding) => Promise<string>)|null}
+   */
+  static #readFile = null;
+  /**
+   * Cached asynchronous file write function.
+   * @type {((path: string, data: string, options: BufferEncoding) => Promise<any>)|null}
+   */
+  static #writeFile = null;
+
+  /**
+   * Sets the path join function used to resolve locale file paths.
+   * Throws if a non-function value is provided or if the function has already been set.
+   * @param {(...paths: string[]) => string} value - The path join function to cache.
+   */
+  static set _join(value) {
+    if (typeof value !== 'function') throw new TypeError('TinyI18: "_join" must be a function');
+    if (this.#join !== null) throw new Error('TinyI18: "_join" has already been set');
+    this.#join = value;
+  }
+
+  /**
+   * Sets the file existence check function.
+   * Throws if a non-function value is provided or if the function has already been set.
+   * @param {((path: string) => boolean)|false} value - The existence check function, or false to disable.
+   */
+  static set _existsSync(value) {
+    if (typeof value !== 'function' && value !== false)
+      throw new TypeError('TinyI18: "_existsSync" must be a function or false');
+    if (this.#existsSync !== null) throw new Error('TinyI18: "_existsSync" has already been set');
+    this.#existsSync = value;
+  }
+
+  /**
+   * Sets the asynchronous file read function.
+   * Throws if a non-function value is provided or if the function has already been set.
+   * @param {(path: string, options: BufferEncoding) => Promise<string>} value - The file read function to cache.
+   */
+  static set _readFile(value) {
+    if (typeof value !== 'function') throw new TypeError('TinyI18: "_readFile" must be a function');
+    if (this.#readFile !== null) throw new Error('TinyI18: "_readFile" has already been set');
+    this.#readFile = value;
+  }
+
+  /**
+   * Sets the asynchronous file write function.
+   * Throws if a non-function value is provided or if the function has already been set.
+   * @param {(path: string, data: string, options: BufferEncoding) => Promise<void>} value - The file write function to cache.
+   */
+  static set _writeFile(value) {
+    if (typeof value !== 'function')
+      throw new TypeError('TinyI18: "_writeFile" must be a function');
+    if (this.#writeFile !== null) throw new Error('TinyI18: "_writeFile" has already been set');
+    this.#writeFile = value;
+  }
+
+  /**
    * Merges multiple JSON locale files into a single file for TinyI18 usage.
    *
    * @param {Object} options - Configuration for the merge operation.
@@ -141,6 +208,11 @@ class TinyI18 {
    * @throws {Error} If file reading or writing fails.
    */
   static async mergeLocaleFiles({ files, output, spaces = 0 }) {
+    if (TinyI18.#existsSync === null || TinyI18.#readFile === null || TinyI18.#writeFile === null)
+      throw new Error(
+        'TinyI18: "mergeLocaleFiles" requires "_existsSync", "_readFile", and "_writeFile" to be set',
+      );
+
     if (typeof spaces !== 'number' || Number.isNaN(spaces) || spaces < 0)
       throw new TypeError('mergeLocaleFiles: "spaces" must be a non-negative number');
     if (!Array.isArray(files) || files.length === 0)
@@ -153,10 +225,10 @@ class TinyI18 {
     for (const filePath of files) {
       if (typeof filePath !== 'string' || !filePath)
         throw new TypeError('mergeLocaleFiles: each file path must be a non-empty string');
-      if (!existsSync(filePath))
+      if (TinyI18.#existsSync !== false && !TinyI18.#existsSync(filePath))
         throw new Error(`mergeLocaleFiles: file "${filePath}" does not exist`);
 
-      const raw = await readFile(filePath, 'utf-8');
+      const raw = await TinyI18.#readFile(filePath, 'utf-8');
       let json;
       try {
         json = JSON.parse(raw);
@@ -168,7 +240,7 @@ class TinyI18 {
       Object.assign(merged, json);
     }
 
-    await writeFile(output, JSON.stringify(merged, null, spaces), 'utf-8');
+    await TinyI18.#writeFile(output, JSON.stringify(merged, null, spaces), 'utf-8');
   }
 
   /**
@@ -623,17 +695,19 @@ class TinyI18 {
    * - `$fn` references are preserved for later resolution via helpers.
    *
    * @param {LocaleCode} locale - Locale identifier (e.g., "en", "pt-BR").
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} A promise that resolves when the locale file has been loaded and ingested.
    */
   async #loadLocaleFromFile(locale) {
+    if (TinyI18.#join === null || TinyI18.#readFile === null)
+      throw new Error('TinyI18: "file" mode requires "_join" and "_readFile" to be set');
     if (typeof locale !== 'string' || !locale)
       throw new TypeError('#loadLocaleFromFile: "locale" must be a non-empty string');
     if (typeof this.#basePath !== 'string' || !this.#basePath)
       throw new TypeError('#loadLocaleFromFile: "this.#basePath" must be a non-empty string');
-    const file = pathJoin(this.#basePath, `${locale}.json`);
+    const file = TinyI18.#join(this.#basePath, `${locale}.json`);
     let json;
     try {
-      const raw = await readFile(file, 'utf8');
+      const raw = await TinyI18.#readFile(file, 'utf8');
       json = JSON.parse(raw);
     } catch (err) {
       if (!(err instanceof Error)) return;
@@ -705,7 +779,7 @@ class TinyI18 {
    * In strict mode, throws on invalid regex; otherwise returns a never-matching regex.
    *
    * @param {string} src - Regex source pattern (no flags allowed).
-   * @returns {RegExp}
+   * @returns {RegExp} The compiled regular expression, or a never-matching regex in non-strict mode.
    */
   #safeRegExp(src) {
     if (typeof src !== 'string' || !src)
@@ -862,7 +936,7 @@ class TinyI18 {
    * Sets the current selected locale. In file mode, loads it from disk.
    * Keeps only the default and the selected locale in memory (unloads previous selected).
    * @param {LocaleCode|null} locale - The locale to set, or null to use only the default.
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} A promise that resolves when the locale has been set and loaded.
    */
   async setLocale(locale) {
     checkDestroy(this.#destroyed);
@@ -1008,7 +1082,7 @@ class TinyI18 {
    * to free up memory. Once destroyed, the instance cannot be reused.
    *
    * @throws {Error} If the instance has already been destroyed.
-   * @returns {void}
+   * @returns {void} This method does not return a value.
    */
   destroy() {
     if (this.#destroyed) return;
