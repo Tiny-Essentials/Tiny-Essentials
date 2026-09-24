@@ -8,6 +8,40 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
 ///////////////////////////////////////////////////////////////////
 
 /**
+ * Describes a single entry of the {@link GlobalMsgCode} table.
+ *
+ * Each entry maps an internal HTTP status code (or the `unknown` fallback) to the
+ * information required to build a response and to log the occurrence.
+ *
+ * @template {string|null} Path - The type accepted by {@link GlobalMsgCodeItem.path}.
+ *   Use `string` for entries that serve a file and `null` for entries that must not
+ *   serve any file.
+ * @typedef {Object} GlobalMsgCodeItem
+ * @property {Path} path - Absolute path of the file served for this entry.
+ *   When the value is `null`, no file is fetched and the response is built from
+ *   {@link GlobalMsgCodeItem.msg} only.
+ * @property {string} msg - Short, human readable message. It is used as the response
+ *   body and as the `statusText` of the generated error response.
+ * @property {string} logMsg - Message written to the log. It is aimed at developers,
+ *   so it can be more descriptive than {@link GlobalMsgCodeItem.msg}.
+ */
+
+/**
+ * The complete message table used by the engine to answer a request.
+ *
+ * Every key except `spaPath` is an HTTP status code. The `unknown` key is the
+ * fallback used when a status code has no dedicated entry.
+ *
+ * @typedef {{ spaPath: string; unknown: GlobalMsgCodeItem<string>; 200: GlobalMsgCodeItem<null>; 404: GlobalMsgCodeItem<string>; 500: GlobalMsgCodeItem<string>; }} GlobalMsgCode
+ * @property {string} spaPath - Path served for every navigation request while
+ *   `spaMode` is `true`.
+ * @property {GlobalMsgCodeItem<string>} unknown - Fallback entry, used when no other
+ *   entry matches the status code.
+ */
+
+///////////////////////////////////////////////////////////////////
+
+/**
  * Enriched event object for the sync event.
  * @typedef {Object} SyncEventObj
  * @property {SyncEvent} event - The native sync event.
@@ -592,6 +626,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   /** @type {Map<string, {resolve: (value: any) => void, reject: (reason: Error) => void, timer: NodeJS.Timeout}>} */
   #pendingRequests = new Map();
 
+  /** @type {GlobalMsgCode} */
   #globalMsgCode = {
     spaPath: '/index.html',
     unknown: {
@@ -1240,22 +1275,152 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   }
 
   /**
+   * Describes every key accepted by {@link GlobalMsgCode}, except `spaPath`.
+   *
+   * @type {Readonly<Record<string, { nullablePath: boolean }>>}
+   */
+  static #GLOBAL_MSG_CODE_SPEC = Object.freeze({
+    unknown: { nullablePath: false },
+    200: { nullablePath: true },
+    404: { nullablePath: false },
+    500: { nullablePath: false },
+  });
+
+  /**
+   * Validates a single entry of the {@link GlobalMsgCode} table.
+   *
+   * @param {unknown} item - The value to validate.
+   * @param {string} context - Dotted path of the entry, used in the error messages.
+   * @param {boolean} nullablePath - `true` when `path` is allowed to be `null`.
+   * @returns {void}
+   * @throws {TypeError} If `item` is not a valid {@link GlobalMsgCodeItem}.
+   */
+  static #validateGlobalMsgCodeItem(item, context, nullablePath) {
+    if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+      throw new TypeError(
+        `[TinyServiceWorkerEngine] globalMsgCode: "${context}" must be a non-null object.`,
+      );
+    }
+
+    const { path, msg, logMsg } = /** @type {GlobalMsgCodeItem<string|null>} */ (item);
+
+    if (path === null && !nullablePath) {
+      throw new TypeError(
+        `[TinyServiceWorkerEngine] globalMsgCode: "${context}.path" must be a non-empty string.`,
+      );
+    }
+
+    if (path !== null && (typeof path !== 'string' || path.trim() === '')) {
+      throw new TypeError(
+        `[TinyServiceWorkerEngine] globalMsgCode: "${context}.path" must be a non-empty string${
+          nullablePath ? ' or null' : ''
+        }.`,
+      );
+    }
+
+    if (typeof msg !== 'string' || msg.trim() === '') {
+      throw new TypeError(
+        `[TinyServiceWorkerEngine] globalMsgCode: "${context}.msg" must be a non-empty string.`,
+      );
+    }
+
+    if (typeof logMsg !== 'string' || logMsg.trim() === '') {
+      throw new TypeError(
+        `[TinyServiceWorkerEngine] globalMsgCode: "${context}.logMsg" must be a non-empty string.`,
+      );
+    }
+  }
+
+  /**
+   * Performs a deep validation of a {@link GlobalMsgCode} object.
+   *
+   * @param {unknown} config - The value to validate.
+   * @param {boolean} [strict=false] - When `true`, every key of {@link GlobalMsgCode}
+   *   must be present. When `false`, only the provided keys are validated.
+   * @returns {void}
+   * @throws {TypeError} If `config` is not a non-null object, if it contains an
+   *   unknown key, or if one of its entries is not a valid {@link GlobalMsgCodeItem}.
+   */
+  static #validateGlobalMsgCode(config, strict = false) {
+    if (typeof config !== 'object' || config === null || Array.isArray(config)) {
+      throw new TypeError('[TinyServiceWorkerEngine] globalMsgCode must be a non-null object.');
+    }
+
+    const allowedKeys = ['spaPath', ...Object.keys(TinyServiceWorkerEngine.#GLOBAL_MSG_CODE_SPEC)];
+    const providedKeys = new Set(Object.keys(config));
+
+    if (strict) {
+      const missingKeys = allowedKeys.filter((key) => !providedKeys.has(key));
+      if (missingKeys.length > 0) {
+        throw new TypeError(
+          `[TinyServiceWorkerEngine] globalMsgCode: missing required key(s): ${missingKeys
+            .map((key) => `"${key}"`)
+            .join(', ')}.`,
+        );
+      }
+    }
+
+    for (const key of providedKeys) {
+      if (!allowedKeys.includes(key)) {
+        throw new TypeError(
+          `[TinyServiceWorkerEngine] globalMsgCode: unknown key "${key}". Expected one of: ${allowedKeys
+            .map((allowed) => `"${allowed}"`)
+            .join(', ')}.`,
+        );
+      }
+
+      if (key === 'spaPath') {
+        const { spaPath } = /** @type {Record<string, unknown>} */ (config);
+        if (typeof spaPath !== 'string' || spaPath.trim() === '') {
+          throw new TypeError(
+            '[TinyServiceWorkerEngine] globalMsgCode: "spaPath" must be a non-empty string.',
+          );
+        }
+        continue;
+      }
+
+      const spec = TinyServiceWorkerEngine.#GLOBAL_MSG_CODE_SPEC[key];
+      TinyServiceWorkerEngine.#validateGlobalMsgCodeItem(
+        /** @type {Record<string, unknown>} */ (config)[key],
+        key,
+        spec.nullablePath,
+      );
+    }
+  }
+
+  /**
    * Gets a deep clone of the current global message configuration.
-   * @returns {Object} A deep cloned copy of the global message configuration.
+   * @returns {GlobalMsgCode} A deep cloned copy of the global message configuration.
    */
   get globalMsgCode() {
     return TinyCloner.clone(this.#globalMsgCode);
   }
 
   /**
-   * Updates the global message configuration using a deep clone to prevent mutation.
-   * @param {Object} newConfig - The new configuration properties to merge.
-   * @throws {TypeError} If newConfig is not a non-null object.
+   * Replaces the whole global message configuration.
+   *
+   * The provided object is validated and deep cloned, so later mutations of the
+   * argument do not affect the engine.
+   *
+   * @param {GlobalMsgCode} newConfig - The complete configuration that replaces the current one.
+   * @returns {void}
+   * @throws {TypeError} If `newConfig` is not a complete, valid {@link GlobalMsgCode} object.
    */
   set globalMsgCode(newConfig) {
-    if (typeof newConfig !== 'object' || newConfig === null) {
-      throw new TypeError('[TinyServiceWorkerEngine] globalMsgCode must be a non-null object.');
-    }
+    TinyServiceWorkerEngine.#validateGlobalMsgCode(newConfig, true);
+    // Merge and then deep clone the result to ensure the internal state is isolated
+    this.#globalMsgCode = TinyCloner.clone(newConfig);
+  }
+
+  /**
+   * Merges the provided properties into the current global message configuration.
+   *
+   * @param {Partial<GlobalMsgCode>} newConfig - The properties to merge.
+   * @returns {void}
+   * @throws {TypeError} If `newConfig` is not a valid partial {@link GlobalMsgCode} object.
+   */
+  updateGlobalMsgCode(newConfig) {
+    TinyServiceWorkerEngine.#validateGlobalMsgCode(newConfig, false);
     // Merge and then deep clone the result to ensure the internal state is isolated
     this.#globalMsgCode = TinyCloner.clone({ ...this.#globalMsgCode, ...newConfig });
   }

@@ -3,6 +3,13 @@ import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
 const { TinyPluginLayer } = TinyServiceWorkerEngine;
 
 /**
+ * Cache of URL strings that already emitted a detection log.
+ * Prevents duplicated log entries when the same file is requested multiple times.
+ * @type {Set<string>}
+ */
+const loggedUrls = new Set();
+
+/**
  * Configuration options for the ViteFileDetectorPlugin to define which paths should be bypassed.
  * @typedef {Object} ViteFileDetectorOptions
  * @property {(string|RegExp)[]} paths - An array of strings or regular expressions used to identify URLs that should be bypassed.
@@ -72,7 +79,12 @@ const ViteFileDetectorPlugin = (instance, options = {}) => {
       });
 
       if (isBypassed) {
-        instance.log('info', `File detected: ${url.toString()}`);
+        const cacheKey = url.toString();
+        if (!loggedUrls.has(cacheKey)) {
+          loggedUrls.add(cacheKey);
+          instance.log('info', `File detected: ${cacheKey}`);
+        }
+
         response.continueCheck = false;
         response.needValidation = false;
         response.code = 200;

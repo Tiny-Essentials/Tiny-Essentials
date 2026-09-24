@@ -111,27 +111,41 @@ When you intercept a request, the engine provides a `result` object as the **sec
 | :--- | :--- | :--- |
 | `code` | `number` | The HTTP status code associated with the fetch result. This can be used to trigger the Router. |
 | `needValidation` | `boolean` | **The Router Trigger.** If `true`, the engine checks the `code` against the Router configuration. If the code is an error (like 404), the engine will serve the configured error page. |
-| `isSameOrigin` | `boolean` | Indicates if the request is from the same origin as the Service Worker. |
 | `continueCheck` | `boolean` | **The Flow Controller.** If set to `false`, the engine immediately stops searching for other matching plugins and proceeds with the standard network request. |
+| `customPath` | `string` (optional) | Overrides the path resolved by the Router for this specific request. |
+| `customMsg` | `string` (optional) | Overrides the message sent to the Router for this specific request. |
+| `customResponse` | `Response` (optional) | **The Direct Reply.** If set to a `Response` instance, the engine returns it immediately, bypassing the Router and the network. |
+
+> ⚠️ **Important — Priority Order:** The engine evaluates `continueCheck` **before** `customResponse`. If you set `continueCheck = false`, the engine performs the network request and **ignores** any `customResponse` you may have set. To return a custom response, set **only** `customResponse` and leave `continueCheck` as `true` (its default).
 
 #### 🛠️ Practical Implementation Examples
 
-**1. Stopping the Search (Flow Control)**
-If you have multiple listeners and you want to ensure that once *this* plugin handles the request, no other plugins are even checked, set `continueCheck` to `false`.
+**1. Returning a Custom Response (`customResponse`)**
+Callbacks do **not** return a `Response`. Instead, you assign it to `result.customResponse`. The engine detects this instance after the plugin chain finishes and returns it to the browser.
 
 ```javascript
 engine.addFetchUrlListener('/api/secure-data', async (fetchObj, result) => {
   // Perform security logic...
-  
-  // Stop the engine from looking for more matches for this request
-  result.continueCheck = false;
-  
-  return new Response(JSON.stringify({ data: 'secret' }));
+
+  // Provide a direct response using customResponse
+  result.customResponse = new Response(JSON.stringify({ data: 'secret' }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
 });
 ```
 
-**2. Forcing an Error Page (Router Trigger)**
-If your plugin detects that a resource is missing (even if the browser hasn't realized it yet), you can force the engine to trigger the Router by setting `needValidation` to `true` and providing a `code`.
+**2. Stopping the Search (Flow Control)**
+If you want to stop the engine from evaluating other plugins for this request and let the network handle it, set `continueCheck` to `false`.
+
+```javascript
+engine.addFetchUrlListener('/api/public', async (fetchObj, result) => {
+  // Stop the engine from looking for more matches for this request
+  result.continueCheck = false;
+});
+```
+
+**3. Forcing an Error Page (Router Trigger)**
+If your plugin detects that a resource is missing (even if the browser has not realized it yet), you can force the engine to trigger the Router by setting `needValidation` to `true` and providing a `code`.
 
 ```javascript
 engine.addFetchUrlListener('/old-api/:version', async (fetchObj, result) => {
@@ -141,40 +155,40 @@ engine.addFetchUrlListener('/old-api/:version', async (fetchObj, result) => {
     // Force the engine to treat this as a 404 error and trigger the Router
     result.code = 404;
     result.needValidation = true;
-    return;
   }
 });
 ```
 
-**3. Bypassing the Router for Errors**
+**4. Bypassing the Router for Errors**
 Sometimes a request returns a 404, but you want the browser to handle it normally (perhaps to allow a different part of your app to catch the error) instead of showing a custom `404.html` page.
 
 ```javascript
 engine.addFetchUrlListener('/api/external-service', async (fetchObj, result) => {
-  // We don't want the Router to intercept this 404.
+  // We do not want the Router to intercept this 404.
   // We want the original 404 response to go straight to the application.
   result.needValidation = false;
 });
 ```
 
-**4. Exact or Parameterized URL Matching**
+**5. Exact or Parameterized URL Matching**
+
 ```javascript
 // Intercepting a specific path
-engine.addFetchUrlListener('/api/config', async ({ url }) => {
+engine.addFetchUrlListener('/api/config', async ({ url }, result) => {
   console.log('Intercepted config request:', url);
-  return new Response(JSON.stringify({ status: 'ok' }), {
-    headers: { 'Content-Type': 'application/json' }
+  result.customResponse = new Response(JSON.stringify({ status: 'ok' }), {
+    headers: { 'Content-Type': 'application/json' },
   });
 });
 
 // Intercepting a parameterized path
-engine.addFetchUrlListener('/user/:id', async ({ params }) => {
+engine.addFetchUrlListener('/user/:id', async ({ params }, result) => {
   const { id } = params; // The engine extracts ':id' automatically
-  return new Response(`Hello User ${id}`);
+  result.customResponse = new Response(`Hello User ${id}`);
 });
 ```
 
-**5. Regular Expression (RegExp) Matching**
+**6. Regular Expression (RegExp) Matching**
 Use this for patterns that are too complex for simple URL strings.
 
 ```javascript
@@ -185,7 +199,7 @@ engine.addFetchRegExpListener('\\.png$', async ({ url }) => {
 });
 ```
 
-**6. Global Tracking**
+**7. Global Tracking**
 If you want to perform an action (like logging) on **every single request** without changing the response, use the Global listener.
 
 ```javascript
@@ -254,17 +268,51 @@ The router automatically handles errors by serving specific HTML files based on 
 
 ### Customizing Error Pages
 
+`addRouterCode` expects a `RouterCodeConfig` object. The recommended way to build one is the `createFetchRes` helper, which wires the `pathGetter` into the correct fetch handler:
+
 ```javascript
 // If a request returns a 404, serve a custom 404.html file
-engine.addRouterCode(404, {
-  msg: 'Not Found',
-  logMsg: 'User tried to access a non-existent route',
-  pathGetter: () => '/errors/custom-404.html'
-});
+engine.addRouterCode(
+  404,
+  engine.createFetchRes({
+    isError: true,
+    msg: 'Not Found',
+    logMsg: 'User tried to access a non-existent route',
+    pathGetter: () => '/errors/custom-404.html',
+  }),
+);
 ```
 
 **Why use this?**
 This mimics how professional web servers (like Apache2) work. It ensures that if an API call or a page load fails, the user sees a beautiful, branded error page instead of a generic browser error.
+
+### Inspecting the Router State
+
+```javascript
+// Returns a deep clone of the config for a specific code (or undefined)
+const cfg = engine.getRouterCode(404);
+
+// Returns the effective config used at runtime (custom code, then default, then 500 fallback)
+const resolved = engine.getCodeCfg(404);
+
+// Removes a custom code handler
+engine.removeRouterCode(404);
+```
+
+### Global Messages and SPA Mode
+
+The engine keeps a `globalMsgCode` object that stores the default paths and messages for `200`, `404`, and `500`, plus the `spaPath` (default: `/index.html`).
+
+```javascript
+// Read the current global messages (deep clone)
+const messages = engine.globalMsgCode;
+
+// Patch the global messages (shallow merge, then deep clone)
+engine.updateGlobalMsgCode({ 404: { path: '/errors/not-found.html' } });
+
+// Toggle SPA mode at runtime
+engine.spaMode = true;
+```
 
 ---
 
@@ -319,6 +367,64 @@ engine.addSyncListener('sync-analytics', async ({ event, tag }) => {
 
 ---
 
+## 🔌 Feature 6: The API System (Bidirectional RPC)
+
+While the **Messaging System** is fire-and-forget, the **API System** implements a request/response (RPC) pattern between the Service Worker and a specific client. It uses a `correlationId` to match each response to its original request.
+
+### 🛠️ Registering a Handler (`onApi`)
+
+The handler receives an `ApiHandlerOptions` object and its **return value** (or the resolved value of the returned Promise) is automatically sent back to the caller.
+
+```javascript
+engine.onApi('GET_CACHED_USER', async ({ data, clientId, replyApi }) => {
+  // 'data' is the payload sent by the browser
+  // 'clientId' identifies the tab that made the call
+  // 'replyApi' lets you call back into the browser and await a response
+  const token = await replyApi('REQUEST_USER_TOKEN', { scope: 'profile' }, 5000);
+
+  return { id: data.id, name: 'Yasmin', token };
+});
+```
+
+### 📤 Calling a Client from the Service Worker (`emitApi`)
+
+```javascript
+const client = await sw.clients.get(clientId);
+
+// Sends 'REQUEST_USER_TOKEN' to the client and waits up to 5s for a response
+const response = await engine.emitApi(client, 'REQUEST_USER_TOKEN', { scope: 'profile' }, 5000);
+```
+
+### 🗑️ Removing a Handler (`offApi`)
+
+```javascript
+engine.offApi('GET_CACHED_USER');
+```
+
+### ⏱️ Timeout Behavior
+
+If the client does not respond within the timeout window (default: `10000` ms), the returned Promise rejects with an `Error` whose message is `API timeout: <type>`. The pending request is then discarded from the internal `#pendingRequests` map.
+
+---
+
+## 🧰 Static Utilities
+
+These static methods are exposed on the class itself and can be used without instantiating the engine.
+
+| Method | Description |
+| :--- | :--- |
+| `TinyServiceWorkerEngine.isNavigate(req)` | Returns `true` if the request mode is `'navigate'`. |
+| `TinyServiceWorkerEngine.isSameOrigin(data)` | Returns `true` if the given `Request` or `URL` shares the Service Worker's origin. |
+| `TinyServiceWorkerEngine.replyTemplate(type, payload)` | Formats a message into the standard `MessagingData` shape. Throws if `type` starts with `sw:`. |
+| `TinyServiceWorkerEngine.replyTo(client, type, payload)` | Sends a message to a single `Client`. |
+| `TinyServiceWorkerEngine.replyToAll({ type, data, options })` | Broadcasts a message to all matching clients. |
+
+### Reserved Event Types
+
+Any message type that starts with the `sw:` prefix is **reserved** for internal PWA lifecycle management. Passing such a type to `replyTemplate` or `replyTo` will throw a `TypeError`.
+
+---
+
 ## ⚙️ Configuration & Security
 
 ### Strict Validation
@@ -334,10 +440,9 @@ If `spaMode` is set to `true`, the engine adjusts how paths are calculated. This
 
 ## 📝 API Reference Summary
 
-To make navigation easier, the API is divided into three functional modules: **Fetch Management**, **Messaging**, and **Router Management**.
+To make navigation easier, the API is divided into functional modules: **Fetch Management**, **Messaging**, **Router Management**, **API (RPC)**, and **Lifecycle & State**.
 
 ### 🌐 1. Fetch Management
-These methods allow you to control how the engine intercepts and tracks network requests.
 
 | Method | Purpose | Arguments | Returns |
 | :--- | :--- | :--- | :--- |
@@ -347,15 +452,15 @@ These methods allow you to control how the engine intercepts and tracks network 
 | `addFetchGlobalListener` | Registers a listener for every request. | `type (string)`, `callback` | `void` |
 | **Retrieval & Check** | | | |
 | `getFetchUrlListener` | Retrieves a specific URL listener. | `type (string)` | `callback \| undefined` |
-| `getFetchRegExpListener`| Retrieves a specific RegExp listener. | `type (string)` | `callback \| undefined` |
+| `getFetchRegExpListener` | Retrieves a specific RegExp listener. | `type (string)` | `callback \| undefined` |
 | `getFetchGlobalListener` | Retrieves a specific global listener. | `type (string)` | `callback \| undefined` |
 | `hasFetchUrl` | Checks if a URL listener exists. | `type (string)` | `boolean` |
 | `hasFetchRegExp` | Checks if a RegExp listener exists. | `type (string)` | `boolean` |
 | `hasFetchGlobal` | Checks if a global listener exists. | `type (string)` | `boolean` |
 | **Removal & Cleanup** | | | |
 | `removeFetchUrlListener` | Removes a specific URL listener. | `type (string)` | `boolean` |
-| `removeFetchRegExpListener`| Removes a specific RegExp listener. | `type (string)` | `boolean` |
-| `removeFetchGlobalListener`| Removes a specific global listener. | `type (string)` | `boolean` |
+| `removeFetchRegExpListener` | Removes a specific RegExp listener. | `type (string)` | `boolean` |
+| `removeFetchGlobalListener` | Removes a specific global listener. | `type (string)` | `boolean` |
 | `clearFetchUrls` | Wipes all registered URL listeners. | None | `void` |
 | `clearFetchRegExps` | Wipes all registered RegExp listeners. | None | `void` |
 | `clearFetchGlobals` | Wipes all registered global listeners. | None | `void` |
@@ -363,19 +468,8 @@ These methods allow you to control how the engine intercepts and tracks network 
 | `fetchUrlSize` | Returns the count of URL listeners. | None | `number` |
 | `fetchRegExpSize` | Returns the count of RegExp listeners. | None | `number` |
 | `fetchGlobalSize` | Returns the count of global listeners. | None | `number` |
-| **Registration & Execution** | | | |
-| `onApi` | Registers a handler for API calls coming from the browser. | `type (string)`, `callback` | `void` |
-| `offApi` | Removes a registered API handler. | `type (string)` | `boolean` |
-| `emitApi` | Sends a request to a specific client and waits for a response. | `client (Client)`, `type (string)`, `data (any)`, `timeout (number)` | `Promise<any>` |
 
-### ⚙️ 3. Lifecycle & Utility
-| Method | Purpose | Arguments | Returns |
-| :--- | :--- | :--- | :--- |
-| `init` | Initializes the Service Worker event listeners. | None | `void` |
-| `showNotification` | Displays a native notification to the user. | `title (string)`, `body (string)`, `options (Object)` | `Promise<void>` |
-
-### 💬 4. Message Management
-These methods manage the communication bridge between the Main Thread and the Service Worker.
+### 💬 2. Message Management
 
 | Method | Purpose | Arguments | Returns |
 | :--- | :--- | :--- | :--- |
@@ -390,16 +484,27 @@ These methods manage the communication bridge between the Main Thread and the Se
 | **Metadata** | | | |
 | `messagesSize` | Returns the count of message listeners. | None | `number` |
 
-### 🚦 5. Router Management
-These methods allow you to customize how the engine handles specific HTTP status codes.
+### 🔌 3. API (RPC) Management
 
 | Method | Purpose | Arguments | Returns |
 | :--- | :--- | :--- | :--- |
-| `addRouterCode` | Adds/updates a custom handler for a code. | `code (number)`, `config` | `void` |
+| `onApi` | Registers a handler for API calls coming from the browser. | `type (string)`, `callback` | `void` |
+| `offApi` | Removes a registered API handler. | `type (string)` | `boolean` |
+| `emitApi` | Sends a request to a specific client and waits for a response. | `client (Client)`, `type (string)`, `data (any)`, `timeout (number)` | `Promise<any>` |
+
+### 🚦 4. Router Management
+
+| Method | Purpose | Arguments | Returns |
+| :--- | :--- | :--- | :--- |
+| `addRouterCode` | Adds/updates a custom handler for a code. | `code (number)`, `config (RouterCodeConfig)` | `void` |
 | `removeRouterCode` | Removes a custom code handler. | `code (number)` | `boolean` |
 | `getRouterCode` | Retrieves a deep clone of a code config. | `code (number)` | `RouterCodeConfig \| undefined` |
+| `getCodeCfg` | Resolves the effective config for a code (custom → default → 500). | `code (number)` | `RouterCodeConfig` |
+| `createFetchRes` | Builds a `RouterCodeConfig` from a `pathGetter`. | `{ isError, msg, logMsg, pathGetter }` | `RouterCodeConfig` |
+| `globalPathGetter` | Returns the SPA path or the original path. | `path (string)` | `string` |
 
-### 🔄 Sync Management
+### 🔄 5. Sync Management
+
 | Method | Purpose | Arguments | Returns |
 | :--- | :--- | :--- | :--- |
 | **Registration** | | | |
@@ -409,6 +514,17 @@ These methods allow you to customize how the engine handles specific HTTP status
 | **Removal & Cleanup** | | | |
 | `removeSyncListener` | Removes a sync handler. | `tag (string)` | `boolean` |
 | `clearSyncListeners` | Wipes all registered sync listeners. | None | `void` |
+
+### ⚙️ 6. Lifecycle, State & Utility
+
+| Method / Property | Purpose | Arguments | Returns |
+| :--- | :--- | :--- | :--- |
+| `init` | Initializes the Service Worker event listeners. | None | `void` |
+| `started` | Whether `init()` has already been called. | None | `boolean` |
+| `spaMode` | Gets/sets SPA mode at runtime. | `boolean` | `boolean` |
+| `config` | Gets a deep clone of the config / applies a partial update. | `Partial<PartialServiceWorkerSettings>` | `ServiceWorkerSettings` |
+| `globalMsgCode` | Gets/sets the global message map. | `Object` | `Object` |
+| `showNotification` | Displays a native notification to the user. | `title (string)`, `body (string)`, `options (Object)` | `Promise<void>` |
 
 ---
 
