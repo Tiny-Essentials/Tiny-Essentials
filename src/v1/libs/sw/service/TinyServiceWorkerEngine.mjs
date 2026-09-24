@@ -23,8 +23,21 @@ const LIFECYCLE_ORDERS = Object.freeze(['before', 'after']);
 const LIFECYCLE_SPEC = Object.freeze([
   ['installStrategy', INSTALL_STRATEGIES],
   ['activateStrategy', ACTIVATE_STRATEGIES],
-  ['strategyOrder', LIFECYCLE_ORDERS],
+  ['installOrder', LIFECYCLE_ORDERS],
+  ['activateOrder', LIFECYCLE_ORDERS],
 ]);
+
+/**
+ * Maps each lifecycle phase to the {@link LifecycleOptions} key that stores the
+ * order of that phase. Keeping the mapping explicit lets the type checker prove
+ * that every phase resolves to a valid key.
+ *
+ * @type {Readonly<Record<'install'|'activate', 'installOrder'|'activateOrder'>>}
+ */
+const PHASE_ORDER_KEY = Object.freeze({
+  install: 'installOrder',
+  activate: 'activateOrder',
+});
 
 ///////////////////////////////////////////////////////////////////
 
@@ -143,8 +156,8 @@ const LIFECYCLE_SPEC = Object.freeze([
  */
 
 /**
- * Determines whether the lifecycle strategy runs before or after the
- * user-registered lifecycle listeners.
+ * Determines whether the lifecycle strategy of a phase runs before or after
+ * the user-registered listeners of that same phase.
  *
  * - `before`: the strategy (`skipWaiting()` / `clients.claim()`) is resolved
  *   first, then the listeners run.
@@ -159,7 +172,8 @@ const LIFECYCLE_SPEC = Object.freeze([
  * @typedef {Object} LifecycleOptions
  * @property {InstallStrategy} installStrategy - How the `install` phase is resolved.
  * @property {ActivateStrategy} activateStrategy - How the `activate` phase is resolved.
- * @property {LifecycleOrder} strategyOrder - Whether the strategy runs before or after the listeners.
+ * @property {LifecycleOrder} installOrder - Order of the strategy inside the `install` phase.
+ * @property {LifecycleOrder} activateOrder - Order of the strategy inside the `activate` phase.
  */
 
 ///////////////////////////////////////////////////////////////////
@@ -1000,7 +1014,8 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
     lifecycle: {
       installStrategy: 'immediate',
       activateStrategy: 'immediate',
-      strategyOrder: 'after',
+      installOrder: 'after',
+      activateOrder: 'after',
     },
     push: {
       enabled: true,
@@ -2298,16 +2313,16 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   /**
    * Runs every registered lifecycle listener and resolves the phase strategy.
    *
-   * The `lifecycle.strategyOrder` option decides whether the strategy runs
-   * before or after the listeners. Listeners never reject: a throwing listener
-   * is logged and emitted, so it can not block the Service Worker lifecycle.
+   * The order is read from `lifecycle.installOrder` or `lifecycle.activateOrder`,
+   * depending on `phase`. Listeners never reject: a throwing listener is logged
+   * and emitted, so it can not block the Service Worker lifecycle.
    *
    * @param {Map<string, LifecycleCallback>} listeners - The listeners to run.
    * @param {ExtendableEvent} event - The native lifecycle event.
    * @param {'install'|'activate'} phase - The lifecycle phase, used for logging and events.
    * @param {(event: ExtendableEvent) => Promise<void>} resolveStrategy - Resolves the phase strategy.
    * @returns {Promise<void>} Resolves once every listener has settled.
-   * @throws {TypeError} If `resolveStrategy` is not a function.
+   * @throws {TypeError} If `phase` is unknown or `resolveStrategy` is not a function.
    */
   async #runLifecycleListeners(listeners, event, phase, resolveStrategy) {
     if (typeof resolveStrategy !== 'function') {
@@ -2316,7 +2331,14 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
       );
     }
 
-    const strategyFirst = this.#config.lifecycle.strategyOrder === 'before';
+    const orderKey = PHASE_ORDER_KEY[phase];
+    if (orderKey === undefined) {
+      throw new TypeError(
+        `[TinyServiceWorkerEngine] runLifecycleListeners: unknown phase "${String(phase)}".`,
+      );
+    }
+
+    const strategyFirst = this.#config.lifecycle[orderKey] === 'before';
 
     if (strategyFirst) await resolveStrategy(event);
 
