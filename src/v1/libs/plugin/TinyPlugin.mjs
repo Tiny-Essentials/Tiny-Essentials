@@ -1031,7 +1031,11 @@ class TinyPlugin extends TinyDebugger {
       throw new TypeError('The provided engine must be an instance of TinyPluginCore.');
     /** @type {TinyPlugin<ExternalEngine, ExternalLayer, ExternalIdString, ExternalVersionString, ExternalOptions>} */
     const instance = new TinyPlugin(
-      { engine: engine, installer: plugin, logCfg: { ...TinyPlugin.#logCfg } },
+      {
+        engine: engine,
+        installer: plugin,
+        logCfg: { ...TinyPlugin.#logCfg, debugMode: engine.debugMode },
+      },
       ...options,
     );
     instance._startPlugin();
@@ -1571,6 +1575,7 @@ class TinyPlugin extends TinyDebugger {
       }
 
       // 4. Final validation of core identity
+      this.#layer.debugMode = this.debugMode;
       if (!this.#layer.isReady) this.#layer._startLayer();
       if (this.#id.length === 0) throw new Error('Plugin id is not set.');
       if (this.#description.length === 0) throw new Error('Plugin description is not set.');
