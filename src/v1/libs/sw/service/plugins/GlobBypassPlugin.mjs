@@ -10,7 +10,6 @@ const { TinyPluginLayer } = TinyServiceWorkerEngine;
  * @property {string[]} patterns - Array of glob patterns (e.g., ['\*\*\/*.js', '\*\*\/\*.{css,html}']) that, when matched, make the request bypass the router validation.
  * @property {string[]} [exclude] - Array of glob patterns to ignore (e.g., ['**\/sw.js']).
  * @property {boolean} [sameOriginOnly=true] - When true, only same-origin requests are evaluated.
- * @property {boolean} [devOnly=false] - When true, the bypass is only registered in development mode.
  */
 
 /**
@@ -53,37 +52,32 @@ const GlobBypassPlugin = (instance, options) => {
   ) {
     throw new TypeError('[GlobBypassPlugin] options.sameOriginOnly must be a boolean.');
   }
-  if (typeof options.devOnly !== 'undefined' && typeof options.devOnly !== 'boolean') {
-    throw new TypeError('[GlobBypassPlugin] options.devOnly must be a boolean.');
-  }
 
-  const { patterns, exclude, sameOriginOnly = true, devOnly = false } = options;
+  const { patterns, exclude, sameOriginOnly = true } = options;
 
   // 2. Implementation
-  // @ts-ignore
-  if (!devOnly) {
-    // Pre-compile exclusion patterns into Regex for performance
-    const excludeRegexes = (exclude || []).map((pattern) => compileGlobRegExp(pattern));
 
-    for (const pattern of patterns) {
-      const regex = compileGlobRegExp(pattern);
-      engine.addFetchRegExpListener(regex.source, (fetchObj, response) => {
-        if (sameOriginOnly && !fetchObj.isSameOrigin) {
-          return; // Skip cross-origin requests
-        }
+  // Pre-compile exclusion patterns into Regex for performance
+  const excludeRegexes = (exclude || []).map((pattern) => compileGlobRegExp(pattern));
 
-        // Check if the current URL matches any exclusion pattern
-        if (excludeRegexes.some((re) => re.test(fetchObj.url.pathname))) {
-          return; // Skip excluded requests
-        }
+  for (const pattern of patterns) {
+    const regex = compileGlobRegExp(pattern);
+    engine.addFetchRegExpListener(regex.source, (fetchObj, response) => {
+      if (sameOriginOnly && !fetchObj.isSameOrigin) {
+        return; // Skip cross-origin requests
+      }
 
-        // Bypass the router validation for the matched request
-        instance.log('info', `File detected: ${fetchObj.url.toString()}`);
-        response.continueCheck = false;
-        response.needValidation = false;
-        response.code = 200;
-      });
-    }
+      // Check if the current URL matches any exclusion pattern
+      if (excludeRegexes.some((re) => re.test(fetchObj.url.pathname))) {
+        return; // Skip excluded requests
+      }
+
+      // Bypass the router validation for the matched request
+      instance.log('info', `File detected: ${fetchObj.url.toString()}`);
+      response.continueCheck = false;
+      response.needValidation = false;
+      response.code = 200;
+    });
   }
 
   return new TinyPluginLayer();

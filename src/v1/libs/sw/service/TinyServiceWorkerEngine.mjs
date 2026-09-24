@@ -1334,8 +1334,6 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   async #fetchChecker(event, url) {
     /** @type {Request} */
     const request = event.request;
-    /** @type {FetchCallback|null} */
-    let matchedCallback = null;
     const isSameOrigin = TinyServiceWorkerEngine.isSameOrigin(request);
 
     /** @type {FetchCheckerResult} */
@@ -1367,8 +1365,26 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
     }
 
     if (result.continueCheck) {
+      // 3. Execute the plugin if a match is found
+      /** @param {FetchCallback} callback */
+      const executeCallback = async (callback) => {
+        try {
+          this.emit('beforeFetchPlugin', fetchObj);
+          await callback(fetchObj, result);
+          this.emit('afterFetchPlugin', fetchObj);
+        } catch (error) {
+          result.code = 500;
+          fetchObj.error = error instanceof Error ? error : new Error('Unknown Error.');
+          result.continueCheck = false;
+          result.needValidation = true;
+          this.log('error', `Error executing fetch plugin for "${url.pathname}":`, error);
+          this.emit('fetchPluginError', fetchObj);
+        }
+      };
+
       // 1. Check in fetchUrls (Exact match and Parameterized match)
       for (const [pattern, callback] of this.#fetchUrls.entries()) {
+        if (!result.continueCheck) break;
         // Dynamic parameter matching (e.g., /user/:id)
         if (pattern.includes('/:')) {
           // Converts the key pattern into the extraction Regex
@@ -1376,40 +1392,23 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
           const { match, params } = seg.exec(url.pathname);
           fetchObj.params = { ...fetchObj.params, ...params };
           if (match) {
-            matchedCallback = callback;
-            break; // Route type detected, breaking the loop
+            await executeCallback(callback);
+            continue; // Route type detected
           }
         }
 
         // Exact match
         if (url.pathname === pattern) {
-          matchedCallback = callback;
-          break;
+          await executeCallback(callback);
         }
       }
 
-      // 2. Check in fetchRegExp (If no match was found in fetchUrls)
-      if (!matchedCallback) {
-        for (const [regExpStr, callback] of this.#fetchRegExp.entries()) {
-          const regex = new RegExp(regExpStr);
-          if (regex.test(url.pathname)) {
-            matchedCallback = callback;
-            break; // Found via raw Regex, breaking the loop
-          }
-        }
-      }
-
-      // 3. Execute the plugin if a match is found
-      if (matchedCallback) {
-        try {
-          this.emit('beforeFetchPlugin', fetchObj);
-          await matchedCallback(fetchObj, result);
-          this.emit('afterFetchPlugin', fetchObj);
-        } catch (error) {
-          result.code = 500;
-          fetchObj.error = error instanceof Error ? error : new Error('Unknown Error.');
-          this.log('error', `Error executing fetch plugin for "${url.pathname}":`, error);
-          this.emit('fetchPluginError', fetchObj);
+      // 2. Check in fetchRegExp
+      for (const [regExpStr, callback] of this.#fetchRegExp.entries()) {
+        if (!result.continueCheck) break;
+        const regex = new RegExp(regExpStr);
+        if (regex.test(url.pathname)) {
+          await executeCallback(callback);
         }
       }
     }
