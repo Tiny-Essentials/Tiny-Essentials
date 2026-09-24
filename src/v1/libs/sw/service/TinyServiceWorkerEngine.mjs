@@ -5,6 +5,15 @@ import { TinyPluginCore, TinyPlugin, TinyPluginLayer } from '../../plugin/TinyPl
 
 const codeIs = TinyHttpResponseRegistry.codeIs;
 
+/** @type {readonly InstallStrategy[]} */
+const INSTALL_STRATEGIES = Object.freeze(['immediate', 'wait', 'manual']);
+
+/** @type {readonly ActivateStrategy[]} */
+const ACTIVATE_STRATEGIES = Object.freeze(['immediate', 'wait', 'manual']);
+
+/** @type {readonly LifecycleOrder[]} */
+const LIFECYCLE_ORDERS = Object.freeze(['before', 'after']);
+
 ///////////////////////////////////////////////////////////////////
 
 /**
@@ -100,9 +109,55 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
 ///////////////////////////////////////////////////////////////////
 
 /**
+ * Strategy used to resolve the `install` phase of the Service Worker.
+ *
+ * - `immediate`: runs the install listeners and calls `skipWaiting()` right away.
+ * - `wait`: never calls `skipWaiting()`. The new worker stays in the `waiting`
+ *   state until every client is closed.
+ * - `manual`: does not call `skipWaiting()` automatically. The application must
+ *   call {@link TinyServiceWorkerEngine#skipWaiting} when it decides to.
+ *
+ * @typedef {'immediate'|'wait'|'manual'} InstallStrategy
+ */
+
+/**
+ * Strategy used to resolve the `activate` phase of the Service Worker.
+ *
+ * - `immediate`: runs the activate listeners and calls `clients.claim()` right away.
+ * - `wait`: never calls `clients.claim()`.
+ * - `manual`: does not call `clients.claim()` automatically.
+ *
+ * @typedef {'immediate'|'wait'|'manual'} ActivateStrategy
+ */
+
+/**
+ * Determines whether the lifecycle strategy runs before or after the
+ * user-registered lifecycle listeners.
+ *
+ * - `before`: the strategy (`skipWaiting()` / `clients.claim()`) is resolved
+ *   first, then the listeners run.
+ * - `after`: the listeners run first, then the strategy is resolved.
+ *
+ * @typedef {'before'|'after'} LifecycleOrder
+ */
+
+/**
+ * Lifecycle configuration for the engine.
+ *
+ * @typedef {Object} LifecycleOptions
+ * @property {InstallStrategy} installStrategy - How the `install` phase is resolved.
+ * @property {ActivateStrategy} activateStrategy - How the `activate` phase is resolved.
+ * @property {LifecycleOrder} strategyOrder - Whether the strategy runs before or after the listeners.
+ */
+
+///////////////////////////////////////////////////////////////////
+
+/**
+/**
  * A partial configuration object for Service Worker settings.
  * @typedef {Object} PartialServiceWorkerSettings
  * @property {boolean} [spaMode] - Whether the service worker is running in Single Page Application mode.
+ * @property {Partial<LifecycleOptions>} [lifecycle] - Partial lifecycle configuration.
  * @property {PartialFetchOptions} fetch - Partial configuration for fetch event interception.
  * @property {PartialPushOptions} push - Partial configuration for push event interception.
  * @property {PartialSyncOptions} sync - Partial configuration for sync event interception.
@@ -165,6 +220,7 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
  * The complete configuration structure for the Service Worker engine.
  * @typedef {Object} ServiceWorkerSettings
  * @property {boolean} spaMode - Whether the service worker is running in Single Page Application mode.
+ * @property {LifecycleOptions} lifecycle - Lifecycle strategy configuration.
  * @property {FetchOptions} fetch - Configuration for fetch event interception.
  * @property {PushOptions} push - Configuration for push event interception.
  * @property {SyncOptions} sync - Configuration for background sync event interception.
@@ -904,6 +960,11 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    */
   #config = {
     spaMode: false,
+    lifecycle: {
+      installStrategy: 'immediate',
+      activateStrategy: 'immediate',
+      strategyOrder: 'after',
+    },
     push: {
       enabled: true,
     },
@@ -1073,6 +1134,40 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
       throw new TypeError('Missing required property: "fetch"');
     }
 
+    if (config.lifecycle !== undefined) {
+      if (typeof config.lifecycle !== 'object' || config.lifecycle === null) {
+        throw new TypeError('Lifecycle configuration must be a non-null object.');
+      }
+
+      const { installStrategy, activateStrategy, strategyOrder } = config.lifecycle;
+
+      /**
+       * Validates a single lifecycle field against its allowed values.
+       * @param {unknown} value - The value to validate.
+       * @param {readonly string[]} allowed - The accepted values.
+       * @param {string} key - The property name, used in the error messages.
+       * @returns {void}
+       */
+      const validateLifecycleField = (value, allowed, key) => {
+        if (strict && value === undefined) {
+          throw new TypeError(`Missing required property: "lifecycle.${key}"`);
+        }
+        if (value !== undefined && !allowed.includes(/** @type {string} */ (value))) {
+          throw new TypeError(
+            `[TinyServiceWorkerEngine] validateConfig: lifecycle.${key} must be one of ${allowed.join(
+              ', ',
+            )}. Received: ${String(value)}`,
+          );
+        }
+      };
+
+      validateLifecycleField(installStrategy, INSTALL_STRATEGIES, 'installStrategy');
+      validateLifecycleField(activateStrategy, ACTIVATE_STRATEGIES, 'activateStrategy');
+      validateLifecycleField(strategyOrder, LIFECYCLE_ORDERS, 'strategyOrder');
+    } else if (strict) {
+      throw new TypeError('Missing required property: "lifecycle"');
+    }
+
     if (config.sync !== undefined) {
       if (typeof config.sync !== 'object' || config.sync === null) {
         throw new TypeError('Sync configuration must be a non-null object.');
@@ -1143,12 +1238,18 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
         }
       : this.#config.push;
 
-    // 5. Prepare Sync configuration
+    // 5. Prepare Lifecycle configuration
+    const newLifecycle = config.lifecycle
+      ? { ...this.#config.lifecycle, ...config.lifecycle }
+      : this.#config.lifecycle;
+
+    // 6. Prepare Sync configuration
     const newSync = config.sync ? { ...this.#config.sync, ...config.sync } : this.#config.sync;
 
-    // 5. Apply to the instance's private state
+    // 7. Apply to the instance's private state
     this.#config = {
       spaMode: config.spaMode ?? this.#config.spaMode,
+      lifecycle: newLifecycle,
       fetch: newFetch,
       push: newPush,
       sync: newSync,
@@ -1432,6 +1533,85 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    */
   clearMessageListeners() {
     return this.#messages.clear();
+  }
+
+  /**
+   * Promotes the waiting Service Worker to the active state.
+   *
+   * This is the manual counterpart of the `'immediate'` install strategy. It is
+   * safe to call at any time: when no worker is waiting, the browser resolves the
+   * call without side effects.
+   *
+   * @param {ExtendableEvent} [event] - The lifecycle event that triggered the call, when any.
+   * @returns {Promise<boolean>} `true` when `skipWaiting()` was requested.
+   * @throws {TypeError} If `event` is provided and does not expose a `waitUntil` method.
+   */
+  async skipWaiting(event) {
+    if (!(event instanceof ExtendableEvent)) {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] skipWaiting: event must be an ExtendableEvent when provided.',
+      );
+    }
+
+    this.emit('beforeSkipWaiting', { event });
+    await sw.skipWaiting();
+    this.emit('afterSkipWaiting', { event });
+    this.log('info', 'skipWaiting: activation requested.');
+    return true;
+  }
+
+  /**
+   * Makes the active Service Worker take control of every open client.
+   *
+   * This is the manual counterpart of the `'immediate'` activate strategy.
+   *
+   * @param {ClientQueryOptions} [query] - Filter applied to the clients that must be claimed.
+   * @returns {Promise<readonly Client[]>} The clients that are now controlled.
+   * @throws {TypeError} If `query` is provided and is not a non-null object.
+   */
+  async claimClients(query = { type: 'window', includeUncontrolled: true }) {
+    if (typeof query !== 'object' || query === null || Array.isArray(query)) {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] claimClients: query must be a non-null object when provided.',
+      );
+    }
+
+    this.emit('beforeClaim', { query });
+    await sw.clients.claim();
+    const clients = await sw.clients.matchAll(query);
+    this.emit('afterClaim', { query, clients });
+    this.log('info', `claimClients: ${clients.length} client(s) claimed.`);
+    return clients;
+  }
+
+  /**
+   * Forces every controlled client to navigate to the given URL.
+   *
+   * Useful when the new Service Worker changes the routing contract and the open
+   * tabs must be reloaded to stay consistent with the new version.
+   *
+   * @param {string} [url] - Target URL. Defaults to the current URL of each client.
+   * @returns {Promise<number>} The number of clients that were navigated.
+   * @throws {TypeError} If `url` is provided and is not a non-empty string.
+   */
+  async reloadClients(url) {
+    if (url !== undefined && (typeof url !== 'string' || url.trim() === '')) {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] reloadClients: url must be a non-empty string when provided.',
+      );
+    }
+
+    const clientList = await sw.clients.matchAll({ type: 'window', includeUncontrolled: false });
+    let total = 0;
+
+    for (const client of clientList) {
+      if (typeof client.navigate !== 'function') continue;
+      await client.navigate(url ?? client.url);
+      total += 1;
+    }
+
+    this.log('info', `reloadClients: ${total} client(s) navigated.`);
+    return total;
   }
 
   /**
@@ -2059,17 +2239,30 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   }
 
   /**
-   * Runs every registered lifecycle listener sequentially, in insertion order.
+   * Runs every registered lifecycle listener and resolves the phase strategy.
    *
-   * Errors thrown by a listener are logged and emitted, but never propagated, so a
-   * failing developer listener can not block the Service Worker lifecycle.
+   * The `lifecycle.strategyOrder` option decides whether the strategy runs
+   * before or after the listeners. Listeners never reject: a throwing listener
+   * is logged and emitted, so it can not block the Service Worker lifecycle.
    *
    * @param {Map<string, LifecycleCallback>} listeners - The listeners to run.
    * @param {ExtendableEvent} event - The native lifecycle event.
    * @param {'install'|'activate'} phase - The lifecycle phase, used for logging and events.
+   * @param {(event: ExtendableEvent) => Promise<void>} resolveStrategy - Resolves the phase strategy.
    * @returns {Promise<void>} Resolves once every listener has settled.
+   * @throws {TypeError} If `resolveStrategy` is not a function.
    */
-  async #runLifecycleListeners(listeners, event, phase) {
+  async #runLifecycleListeners(listeners, event, phase, resolveStrategy) {
+    if (typeof resolveStrategy !== 'function') {
+      throw new TypeError(
+        `[TinyServiceWorkerEngine] runLifecycleListeners: resolveStrategy must be a function. Received: ${typeof resolveStrategy}`,
+      );
+    }
+
+    const strategyFirst = this.#config.lifecycle.strategyOrder === 'before';
+
+    if (strategyFirst) await resolveStrategy(event);
+
     for (const [tag, callback] of listeners.entries()) {
       try {
         await callback({ event });
@@ -2077,6 +2270,64 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
         this.log('error', `Error in ${phase} handler for tag "${tag}":`, error);
         this.emit(`${phase}ListenerError`, { event, tag, error });
       }
+    }
+
+    if (!strategyFirst) await resolveStrategy(event);
+  }
+
+  /**
+   * Resolves the `install` phase according to the configured strategy.
+   *
+   * @param {ExtendableEvent} event - The native install event.
+   * @returns {Promise<void>}
+   * @throws {TypeError} If the configured install strategy is not recognized.
+   */
+  async #resolveInstall(event) {
+    const { installStrategy } = this.#config.lifecycle;
+
+    switch (installStrategy) {
+      case 'immediate':
+        await this.skipWaiting(event);
+        return;
+      case 'wait':
+        this.log('info', 'install: strategy "wait" active, the worker stays in the waiting state.');
+        return;
+      case 'manual':
+        this.log('info', 'install: strategy "manual" active, call skipWaiting() to activate.');
+        this.emit('waitingForActivation', { event });
+        return;
+      default:
+        throw new TypeError(
+          `[TinyServiceWorkerEngine] resolveInstall: unknown install strategy "${String(installStrategy)}".`,
+        );
+    }
+  }
+
+  /**
+   * Resolves the `activate` phase according to the configured strategy.
+   *
+   * @param {ExtendableEvent} event - The native activate event.
+   * @returns {Promise<void>}
+   * @throws {TypeError} If the configured activate strategy is not recognized.
+   */
+  async #resolveActivate(event) {
+    const { activateStrategy } = this.#config.lifecycle;
+
+    switch (activateStrategy) {
+      case 'immediate':
+        await this.claimClients();
+        return;
+      case 'wait':
+        this.log('info', 'activate: strategy "wait" active, clients will not be claimed.');
+        return;
+      case 'manual':
+        this.log('info', 'activate: strategy "manual" active, call claimClients() to claim.');
+        this.emit('waitingForClaim', { event });
+        return;
+      default:
+        throw new TypeError(
+          `[TinyServiceWorkerEngine] resolveActivate: unknown activate strategy "${String(activateStrategy)}".`,
+        );
     }
   }
 
@@ -2088,28 +2339,25 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   init() {
     if (this.#started) throw new Error('TinyServiceWorkerEngine is already initialized.');
 
-    // Force the new Service Worker to become active immediately after installation
+    // Resolves the install phase according to the configured strategy
     sw.addEventListener('install', (event) => {
-      this.emit('beforeSkipWaiting', { event });
       event.waitUntil(
-        this.#runLifecycleListeners(this.#installListeners, event, 'install')
-          .then(() => sw.skipWaiting())
-          .then(() => {
-            this.emit('afterSkipWaiting', { event });
-          })
-          .catch((err) => this.emit('installError', errorMaker(err, event))),
+        this.#runLifecycleListeners(this.#installListeners, event, 'install', (e) =>
+          this.#resolveInstall(e),
+        ).catch((err) => this.emit('installError', errorMaker(err, event))),
       );
     });
 
-    // Ensure the new Service Worker takes control of all open clients immediately
+    // Resolves the activate phase according to the configured strategy
     sw.addEventListener('activate', (event) => {
       this.emit('beforeActivated', { event });
       event.waitUntil(
-        this.#runLifecycleListeners(this.#activateListeners, event, 'activate')
-          .then(() => sw.clients.claim())
+        this.#runLifecycleListeners(this.#activateListeners, event, 'activate', (e) =>
+          this.#resolveActivate(e),
+        )
           .then(() => {
             this.emit('afterActivated', { event });
-            this.log('info', 'Activated and claiming clients.');
+            this.log('info', 'Activated.');
           })
           .catch((err) => this.emit('activateError', errorMaker(err, event))),
       );
@@ -2348,7 +2596,17 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
           return;
         }
 
-        // 2. Handle Browser Notification Clicks (Browser Click -> SW)
+        // 2. Handle on-demand activation (Browser Request -> SW)
+        if (type === 'sw:SkipWaiting') {
+          event.waitUntil(
+            this.skipWaiting(event).catch((error) => {
+              this.emit('skipWaitingError', errorMaker(error, event));
+            }),
+          );
+          return;
+        }
+
+        // 3. Handle Browser Notification Clicks (Browser Click -> SW)
         if (type === 'sw:NotificationClicked') {
           // We create a pseudo-event that mimics a native NotificationEvent
           // so that #handleNotificationClick can treat it consistently.
@@ -2362,7 +2620,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
           return;
         }
 
-        // 3. Handle API calls coming from the Browser (Browser Request -> SW)
+        // 4. Handle API calls coming from the Browser (Browser Request -> SW)
         if (isApi === true) {
           if (typeof correlationId !== 'string') {
             this.log('error', 'Received message with missing or invalid "correlationId" string.');
