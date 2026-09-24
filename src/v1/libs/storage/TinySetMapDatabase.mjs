@@ -831,7 +831,7 @@ class TinyMapDb extends TinyTableDb {
  * @typedef {Object} TinyDatabaseTableConfig
  * @property {string} name - Name of the object store.
  * @property {'set'|'map'} type - Kind of table.
- * @property {((...args: any[]) => boolean)|null} [validate] - Optional predicate.
+ * @property {((...args: any[]) => boolean)|null} [validate] - Optional predicate, read from the latest migration that creates the table.
  */
 
 /**
@@ -840,17 +840,38 @@ class TinyMapDb extends TinyTableDb {
  */
 
 /**
- * @typedef {Object} TinyDatabaseOptions
- * @property {number} [version=1] - IndexedDB schema version.
+ * A single schema migration.
+ *
+ * The version number of a migration is its 1-based position in the array, so
+ * the first entry is version 1, the second is version 2, and so on. Dropping a
+ * table and creating it again inside the same entry is the supported way of
+ * changing a key path.
+ *
+ * @typedef {Object} TinyDatabaseMigration
+ * @property {TinyDatabaseTableDefinition[]} [create] - Tables created by this version.
+ * @property {string[]} [delete] - Names of the tables dropped by this version.
+ */
+
+/**
+ * A migration whose table definitions were already normalized.
+ *
+ * Unlike {@link TinyDatabaseMigration}, every property is present and every
+ * table is a full configuration object, so the upgrade handler can read
+ * `name` and `type` without narrowing the union first.
+ *
+ * @typedef {Object} TinyDatabaseNormalizedMigration
+ * @property {Required<TinyDatabaseTableConfig>[]} create - Tables created by this version.
+ * @property {string[]} delete - Names of the tables dropped by this version.
  */
 
 /**
  * A single IndexedDB database that owns several {@link TinySetDb} and
  * {@link TinyMapDb} tables.
  *
- * Every table is an object store inside the same database, so a service worker
- * only ever opens one connection. Each table can declare an optional validator
- * that rejects entries before they reach the cache or the disk.
+ * The migration array is the single source of truth: the schema is the result
+ * of replaying every entry, and the database version is the array length. Every
+ * table is an object store inside the same database, so a service worker only
+ * ever opens one connection.
  */
 class TinySetMapDatabase {
   /** @type {string} */
@@ -870,56 +891,42 @@ class TinySetMapDatabase {
 
   /**
    * @param {string} name - Name of the IndexedDB database.
-   * @param {TinyDatabaseTableDefinition[]} tables - Tables to expose.
-   * @param {TinyDatabaseOptions} [options] - Extra database options.
+   * @param {TinyDatabaseMigration[]} migrations - Ordered schema history, one entry per version.
    * @throws {TypeError} If `name` is not a non-empty string.
-   * @throws {TypeError} If `tables` is not a non-empty array.
-   * @throws {TypeError} If a table definition is invalid.
-   * @throws {Error} If two tables share the same name.
-   * @throws {RangeError} If `options.version` is not a positive integer.
+   * @throws {TypeError} If `migrations` is not a non-empty array.
+   * @throws {TypeError} If a migration is invalid.
+   * @throws {Error} If a table is created twice without being dropped in between.
    */
-  constructor(name, tables, options = {}) {
+  constructor(name, migrations) {
     assertNonEmptyString(name, 'name');
-    if (!Array.isArray(tables) || tables.length === 0) {
-      throw new TypeError('The "tables" argument must be a non-empty array.');
-    }
-
-    const { version = 1 } = options;
-    if (!Number.isInteger(version) || version < 1) {
-      throw new RangeError('The "version" option must be a positive integer.');
+    if (!Array.isArray(migrations) || migrations.length === 0) {
+      throw new TypeError('The "migrations" argument must be a non-empty array.');
     }
 
     this.#name = name;
-    this.#version = version;
+    this.#version = migrations.length;
 
-    /** @type {Map<string, Required<TinyDatabaseTableConfig>>} */
-    const tablesList = new Map();
+    const history = migrations.map((migration, index) =>
+      TinySetMapDatabase.#normalizeMigration(migration, index),
+    );
+    const schema = TinySetMapDatabase.#resolveSchema(history);
 
-    const definitions = tables.map((table) => TinySetMapDatabase.#normalizeTable(table));
-    for (const definition of definitions) {
-      if (tablesList.has(definition.name)) {
-        throw new Error(`The "${definition.name}" table is declared more than once.`);
-      }
-      tablesList.set(definition.name, definition);
-    }
+    this.#connection = TinySetMapDatabase.#openDatabase(name, history);
 
-    this.#connection = TinySetMapDatabase.#openDatabase(name, version, definitions);
-
-    for (const [tableName, definition] of tablesList) {
+    for (const definition of schema.values()) {
       const tableCfg = {
-        storeName: tableName,
+        storeName: definition.name,
         validate: definition.validate,
         openDatabase: () => this.#connection,
       };
 
       if (definition.type === 'map') {
-        this.#tables.set(tableName, new TinyMapDb(tableCfg));
+        this.#tables.set(definition.name, new TinyMapDb(tableCfg));
       } else {
-        this.#tables.set(tableName, new TinySetDb(tableCfg));
+        this.#tables.set(definition.name, new TinySetDb(tableCfg));
       }
     }
 
-    tablesList.clear();
     this.#ready = this.#connection.then(() =>
       Promise.all([...this.#tables.values()].map((table) => table.hydrate())).then(() => undefined),
     );
@@ -1039,28 +1046,28 @@ class TinySetMapDatabase {
   }
 
   /**
-   * Opens the IndexedDB database and creates the missing object stores.
+   * Opens the IndexedDB database and replays every pending migration.
    * @param {string} name - Name of the database.
-   * @param {number} version - Schema version.
-   * @param {Required<TinyDatabaseTableConfig>[]} definitions - Tables that must exist.
+   * @param {TinyDatabaseNormalizedMigration[]} history - Normalized migrations, in order.
    * @returns {Promise<IDBDatabase>} The open database connection.
    */
-  static #openDatabase(name, version, definitions) {
+  static #openDatabase(name, history) {
     return new Promise((resolve, reject) => {
       if (typeof indexedDB === 'undefined') {
         reject(new ReferenceError('IndexedDB is not available in the current environment.'));
         return;
       }
 
-      const request = indexedDB.open(name, version);
+      const request = indexedDB.open(name, history.length);
 
-      request.onupgradeneeded = () => {
-        const database = request.result;
-        for (const definition of definitions) {
-          if (!database.objectStoreNames.contains(definition.name)) {
-            const keyPath = definition.type === 'map' ? 'key' : 'value';
-            database.createObjectStore(definition.name, { keyPath });
+      request.onupgradeneeded = (event) => {
+        try {
+          for (let version = event.oldVersion + 1; version <= history.length; version += 1) {
+            TinySetMapDatabase.#applyMigration(request.result, history[version - 1]);
           }
+        } catch (error) {
+          reject(error);
+          request.transaction?.abort();
         }
       };
       request.onsuccess = () => {
@@ -1070,6 +1077,85 @@ class TinySetMapDatabase {
       };
       request.onerror = () => reject(request.error);
     });
+  }
+
+  /**
+   * Applies a single migration to the version change transaction.
+   * @param {IDBDatabase} database - The database being upgraded.
+   * @param {TinyDatabaseNormalizedMigration} migration - The normalized migration.
+   * @returns {void}
+   */
+  static #applyMigration(database, migration) {
+    for (const name of migration.delete) {
+      if (database.objectStoreNames.contains(name)) {
+        database.deleteObjectStore(name);
+      }
+    }
+
+    for (const definition of migration.create) {
+      database.createObjectStore(definition.name, {
+        keyPath: definition.type === 'map' ? 'key' : 'value',
+      });
+    }
+  }
+
+  /**
+   * Validates a single migration and normalizes its table definitions.
+   * @param {TinyDatabaseMigration} migration - The migration to validate.
+   * @param {number} index - Zero-based position of the migration.
+   * @returns {TinyDatabaseNormalizedMigration} The normalized migration.
+   * @throws {TypeError} If the migration is not an object.
+   * @throws {TypeError} If `create` is not an array of table definitions.
+   * @throws {TypeError} If `delete` is not an array of non-empty strings.
+   */
+  static #normalizeMigration(migration, index) {
+    if (typeof migration !== 'object' || migration === null) {
+      throw new TypeError(`The migration at index ${index} must be an object.`);
+    }
+
+    const { create = [], delete: drop = [] } = migration;
+
+    if (!Array.isArray(create)) {
+      throw new TypeError(`The "create" list of the migration at index ${index} must be an array.`);
+    }
+    if (!Array.isArray(drop)) {
+      throw new TypeError(`The "delete" list of the migration at index ${index} must be an array.`);
+    }
+
+    for (const name of drop) {
+      assertNonEmptyString(name, `migrations[${index}].delete[]`);
+    }
+
+    return {
+      create: create.map((table) => TinySetMapDatabase.#normalizeTable(table)),
+      delete: [...drop],
+    };
+  }
+
+  /**
+   * Replays every migration and returns the resulting table set.
+   * @param {TinyDatabaseNormalizedMigration[]} history - Normalized migrations, in order.
+   * @returns {Map<string, Required<TinyDatabaseTableConfig>>} The final schema, keyed by table name.
+   * @throws {Error} If a table is created twice without being dropped in between.
+   */
+  static #resolveSchema(history) {
+    /** @type {Map<string, Required<TinyDatabaseTableConfig>>} */
+    const schema = new Map();
+
+    for (const migration of history) {
+      for (const name of migration.delete) {
+        schema.delete(name);
+      }
+
+      for (const definition of migration.create) {
+        if (schema.has(definition.name)) {
+          throw new Error(`The "${definition.name}" table is created twice.`);
+        }
+        schema.set(definition.name, definition);
+      }
+    }
+
+    return schema;
   }
 }
 

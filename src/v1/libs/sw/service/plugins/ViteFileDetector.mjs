@@ -4,7 +4,15 @@ import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
 const { TinyPluginLayer } = TinyServiceWorkerEngine;
 
 const db = new TinySetMapDatabase('tiny-sw-vite-file-detector', [
-  { name: 'logged-urls', validate: (value) => typeof value === 'string', type: 'set' },
+  {
+    create: [
+      {
+        name: 'logged-urls',
+        validate: (value) => typeof value === 'string',
+        type: 'set',
+      },
+    ],
+  },
 ]);
 
 /**
