@@ -21,6 +21,30 @@ When you install the plugin, you can pass an optional configuration object. If n
 | `paths` | `(string \| RegExp)[]` | An array of strings or Regular Expressions. Any URL matching these patterns will be bypassed. | `['/@vite', '/@react', '/node_modules']` |
 | `srcPath` | `string` | The base path for your source directory. | `'/src'` |
 | `manifestPath` | `string` | The path to your application's manifest file. | `'/manifest.json'` |
+| `maxCachedUrls` | `number` | Maximum amount of detected URLs kept in the persistent cache. When the limit is reached, the oldest entries are evicted before the new one is written. Use `Infinity` to keep every URL forever. | `1000` |
+
+> **Note:** `srcPath` and `manifestPath` are appended to `paths` internally. The final matching list is always `[...paths, srcPath, manifestPath]`.
+
+### Validation
+
+The configuration is validated while the plugin is installed. Invalid values throw immediately instead of failing silently during a fetch event.
+
+| Thrown Error | Condition |
+| :--- | :--- |
+| `TypeError` | The plugin was installed without a valid `TinyServiceWorkerEngine` instance. |
+| `TypeError` | `paths` is not an array. |
+| `TypeError` | An item inside `paths` (or `srcPath` / `manifestPath`) is neither a `string` nor a `RegExp`. |
+| `TypeError` | `maxCachedUrls` is not a number. |
+| `RangeError` | `maxCachedUrls` is not a positive integer and is not `Infinity`. |
+
+### 🗃️ Persistent Cache
+
+Every detected URL is stored in a `TinySetMapDatabase` set named `logged-urls`. This keeps the "File detected" log at one entry per URL, even after the Service Worker restarts.
+
+*   **Deduplication:** a URL that is already cached is skipped and produces no new log.
+*   **Eviction:** before a new URL is written, the oldest entries are removed until the cache has room for it, so the cache never holds more than `maxCachedUrls` entries.
+*   **Serialized writes:** all cache mutations run through an internal promise queue. This prevents two detections that resolve in the same tick from reading the same `size` and pushing the cache above `maxCachedUrls`.
+*   **Isolation:** the whole detector, including the cache, only runs in development mode (`import.meta.env.DEV`).
 
 ---
 
@@ -42,7 +66,8 @@ const engine = new TinyServiceWorkerEngine();
 engine.installPlugin(ViteFileDetectorPlugin, {
   paths: ['/@vite', '/@my-custom-tool'],
   srcPath: '/app/src',
-  manifestPath: '/public/manifest.json'
+  manifestPath: '/public/manifest.json',
+  maxCachedUrls: 500
 });
 ```
 
@@ -54,6 +79,8 @@ engine.installPlugin(ViteFileDetectorPlugin, {
     *   Stop further checks (`continueCheck = false`).
     *   Skip validation (`needValidation = false`).
     *   Return a successful status (`code = 200`).
+4.  **Cache Lookup:** The URL is compared against the persistent cache. If it was already detected before, the workflow stops here.
+5.  **Cache Write:** The oldest entries are evicted when the limit is reached, the URL is stored, and the message `File detected: <url>` is logged with the `warn` level. Failures inside this step are logged with the `error` level and never break the response.
 
 ---
 
@@ -61,3 +88,5 @@ engine.installPlugin(ViteFileDetectorPlugin, {
 
 *   **Environment Specific:** This plugin is strictly for **Development environments**. It uses `import.meta.env.DEV` to ensure production performance is not affected.
 *   **Path Matching:** It is recommended to use specific paths to avoid accidentally bypassing important application files.
+*   **Cache Size:** `maxCachedUrls` only controls how many URLs are remembered for logging. A low value means the same URL can be logged again after it is evicted. Use `Infinity` if the log must never repeat.
+*   **Log Levels:** Successful detections use the `warn` level, while cache failures use the `error` level. Filter by these levels if the console becomes noisy.

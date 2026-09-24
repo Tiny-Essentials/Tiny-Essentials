@@ -28,6 +28,7 @@ const loggedUrls = db.tableSet('logged-urls');
  * @property {(string|RegExp)[]} paths - An array of strings or regular expressions used to identify URLs that should be bypassed.
  * @property {string} srcPath - The base path for the source directory to be included in the bypass list.
  * @property {string} manifestPath - The path to the manifest file to be included in the bypass list.
+ * @property {number} maxCachedUrls - Maximum amount of detected URLs kept in the persistent cache. When the limit is reached, the oldest entries are evicted before the new one is written. Use `Infinity` to keep every URL forever.
  */
 
 /**
@@ -38,6 +39,7 @@ const DEFAULT_OPTIONS = {
   paths: ['/@vite', '/@react', '/node_modules'],
   srcPath: '/src',
   manifestPath: '/manifest.json',
+  maxCachedUrls: 1000,
 };
 
 /**
@@ -82,28 +84,91 @@ const ViteFileDetectorPlugin = (instance, options = {}) => {
     }
   });
 
+  // 2. Validate the cache limit
+  if (typeof config.maxCachedUrls !== 'number') {
+    throw new TypeError(
+      `The "maxCachedUrls" option must be a number, but received ${typeof config.maxCachedUrls}.`,
+    );
+  }
+
+  if (
+    config.maxCachedUrls !== Infinity &&
+    (!Number.isInteger(config.maxCachedUrls) || config.maxCachedUrls < 1)
+  ) {
+    throw new RangeError(
+      `The "maxCachedUrls" option must be a positive integer or Infinity, but received ${config.maxCachedUrls}.`,
+    );
+  }
+
+  const { maxCachedUrls } = config;
+
   // 3. Implementation
   // @ts-ignore
   if (import.meta.env.DEV) {
+    /**
+     * Tail of the detection queue.
+     *
+     * Every cache mutation is chained here because `TinySetDb` only makes each
+     * individual call atomic. Without this queue, two detections that resolve in
+     * the same tick would both read the same `size` and both decide to insert,
+     * letting the cache grow past `maxCachedUrls`.
+     * @type {Promise<void>}
+     */
+    let detectionQueue = Promise.resolve();
+
+    /**
+     * Runs a detection task after every previously queued task has settled.
+     * @param {() => Promise<void>} task - The task that touches the cache.
+     * @returns {Promise<void>} Resolves when the task settles.
+     */
+    const enqueueDetection = (task) => {
+      const result = detectionQueue.then(task);
+      detectionQueue = result.catch(() => undefined);
+      return result;
+    };
+
+    /**
+     * Drops the oldest URLs until a single new entry fits inside the limit.
+     *
+     * The `+ 1` reserves the slot for the value that is about to be inserted,
+     * so the cache always ends up with exactly `maxCachedUrls` entries.
+     * @returns {Promise<void>} Resolves once the cache is below the limit.
+     */
+    const evictOldestUrls = async () => {
+      const overflow = loggedUrls.size - maxCachedUrls + 1;
+      if (overflow <= 0) return;
+
+      const snapshot = await loggedUrls.toArray();
+      /** @type {Promise<any>[]} */
+      const promises = [];
+      for (let index = 0; index < overflow; index += 1) {
+        promises.push(loggedUrls.delete(snapshot[index]));
+      }
+      await Promise.all(promises);
+    };
+
     engine.addFetchGlobalListener('ViteFileDetectorPlugin', ({ url }, response) => {
       const isBypassed = paths.some((pattern) => {
         if (pattern instanceof RegExp) return pattern.test(url.pathname);
         return url.pathname.startsWith(pattern);
       });
 
-      if (isBypassed) {
-        const cacheKey = url.toString();
-        loggedUrls.has(cacheKey).then((exists) => {
-          if (!exists) {
-            loggedUrls.add(cacheKey);
-            instance.log('warn', `File detected: ${cacheKey}`);
-          }
-        });
+      if (!isBypassed) return;
 
-        response.continueCheck = false;
-        response.needValidation = false;
-        response.code = 200;
-      }
+      response.continueCheck = false;
+      response.needValidation = false;
+      response.code = 200;
+
+      const cacheKey = url.toString();
+
+      enqueueDetection(async () => {
+        if (await loggedUrls.has(cacheKey)) return;
+        await evictOldestUrls();
+        await loggedUrls.add(cacheKey);
+        instance.log('warn', `File detected: ${cacheKey}`);
+      }).catch((error) => {
+        instance.log('error', `Failed to cache the detected URL "${cacheKey}": ${error.message}`);
+      });
     });
   }
 

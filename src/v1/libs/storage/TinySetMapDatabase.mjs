@@ -527,7 +527,7 @@ class TinySetDb extends TinyTableDb {
    * @returns {void}
    */
   _load(records) {
-    for (const record of records) {
+    for (const record of records.sort((a, b) => a.timestamp - b.timestamp)) {
       this.#cache.add(record.value);
     }
   }
@@ -806,7 +806,7 @@ class TinyMapDb extends TinyTableDb {
    * @returns {void}
    */
   _load(records) {
-    for (const record of records) {
+    for (const record of records.sort((a, b) => a.timestamp - b.timestamp)) {
       this.#cache.set(record.key, record.value);
     }
   }
