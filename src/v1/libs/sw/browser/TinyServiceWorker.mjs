@@ -78,9 +78,13 @@ class TinyServiceWorker extends TinyPluginCore {
   /**
    * Validates if an event type is a reserved name for the internal lifecycle.
    * @param {string} type - The name of the event to validate.
+   * @throws {TypeError} If the event name is not a non-empty string.
    * @throws {TypeError} If the event name starts with the reserved prefix 'sw:'.
    */
   static #validateEventType(type) {
+    if (typeof type !== 'string' || type.trim() === '') {
+      throw new TypeError('The event type must be a non-empty string.');
+    }
     if (type.startsWith('sw:')) {
       throw new TypeError(
         `The event type "${type}" is reserved for internal PWA lifecycle management and cannot be used for Service Worker messaging.`,
@@ -231,15 +235,12 @@ class TinyServiceWorker extends TinyPluginCore {
    * @param {Partial<Console>} [options.logger=console] - A custom logger object (must implement console methods).
    * @throws {TypeError} If parameters are not the correct types or if id is empty.
    */
-  constructor({ id, swUrl, version, logger, debugMode, useLogColors }) {
-    super({
-      logCfg: {
-        id: '[_sub_class_TinyServiceWorker_reset_]',
-        logger: logger ?? console,
-        debugMode: debugMode ?? false,
-        useLogColors: useLogColors ?? false,
-      },
-    });
+  constructor(options) {
+    if (Array.isArray(options) || typeof options !== 'object' || options === null) {
+      throw new TypeError('The "options" argument must be a non-null object.');
+    }
+
+    const { id, swUrl, version, logger, debugMode, useLogColors } = options;
     if (typeof id !== 'string' || id.trim() === '') {
       throw new TypeError('The "id" parameter must be a non-empty string.');
     }
@@ -249,6 +250,15 @@ class TinyServiceWorker extends TinyPluginCore {
     if (typeof version !== 'string') {
       throw new TypeError('The "version" parameter must be a string.');
     }
+
+    super({
+      logCfg: {
+        id: '[_sub_class_TinyServiceWorker_reset_]',
+        logger: logger ?? console,
+        debugMode: debugMode ?? false,
+        useLogColors: useLogColors ?? false,
+      },
+    });
 
     this.#id = id;
     this.#swUrl = swUrl;
@@ -431,12 +441,14 @@ class TinyServiceWorker extends TinyPluginCore {
 
     // If permission is already 'granted', return immediately.
     if (Notification.permission === 'granted') {
+      super.emit('sw:NotificationPermissionChanged', { permission: 'granted' });
       return 'granted';
     }
 
     // If 'denied', the user has blocked it and we cannot prompt again via code.
     if (Notification.permission === 'denied') {
       this.log('warn', 'Notification permission was denied by the user.');
+      super.emit('sw:NotificationPermissionChanged', { permission: 'denied' });
       return 'denied';
     }
 
@@ -462,6 +474,13 @@ class TinyServiceWorker extends TinyPluginCore {
    */
   async register(options) {
     checkDestroy(this.#isDestroyed);
+    if (
+      typeof options !== 'undefined' &&
+      (Array.isArray(options) || typeof options !== 'object' || options === null)
+    ) {
+      throw new TypeError('The "options" argument must be a non-null object.');
+    }
+
     if (!('serviceWorker' in navigator)) {
       this.log('warn', 'Service Worker is not supported in this browser.');
       return;
@@ -659,6 +678,9 @@ class TinyServiceWorker extends TinyPluginCore {
     if (typeof type !== 'string') {
       throw new TypeError('Payload.type must be a string.');
     }
+    if (typeof strictMode !== 'boolean') {
+      throw new TypeError('The "strictMode" argument must be a boolean.');
+    }
     if (
       typeof data !== 'undefined' &&
       (Array.isArray(data) || typeof data !== 'object' || data === null)
@@ -681,8 +703,13 @@ class TinyServiceWorker extends TinyPluginCore {
   /**
    * Removes a registered API handler.
    * @param {string} type - The call identifier.
+   * @returns {boolean} True if a handler was removed, false otherwise.
+   * @throws {TypeError} If the type is not a non-empty string.
    */
   offApi(type) {
+    if (typeof type !== 'string' || type.trim() === '') {
+      throw new TypeError('The "type" argument must be a non-empty string.');
+    }
     return this.#apiHandlers.delete(type);
   }
 
@@ -690,8 +717,14 @@ class TinyServiceWorker extends TinyPluginCore {
    * Registers a handler for API calls coming from the Service Worker.
    * @param {string} type - The call identifier.
    * @param {ApiHandlerCallback} callback - Function that processes the request and returns the result.
+   * @returns {void}
+   * @throws {TypeError} If the type is not a non-empty string.
+   * @throws {TypeError} If the callback is not a function.
    */
   onApi(type, callback) {
+    if (typeof type !== 'string' || type.trim() === '') {
+      throw new TypeError('The "type" argument must be a non-empty string.');
+    }
     if (typeof callback !== 'function') {
       throw new TypeError('Callback must be a function.');
     }
@@ -704,10 +737,33 @@ class TinyServiceWorker extends TinyPluginCore {
    * @param {MessagePayload} [data] - The request payload.
    * @param {number} [timeout=10000] - Maximum waiting time in milliseconds.
    * @returns {Promise<any>} A promise that resolves with the result object or undefined from the Service Worker.
+   * @throws {TypeError} If the type is not a non-empty string.
+   * @throws {TypeError} If the data is not a non-null object.
+   * @throws {TypeError} If the timeout is not a number.
+   * @throws {RangeError} If the timeout is not a finite number greater than or equal to 0.
    * @throws {Error} If the timeout is reached or if the Service Worker is unavailable.
    */
   async emitApi(type, data, timeout = 10000) {
     checkDestroy(this.#isDestroyed);
+
+    if (typeof type !== 'string' || type.trim() === '') {
+      throw new TypeError('The "type" argument must be a non-empty string.');
+    }
+    if (
+      typeof data !== 'undefined' &&
+      (Array.isArray(data) || typeof data !== 'object' || data === null)
+    ) {
+      throw new TypeError('The "data" argument must be a non-null object.');
+    }
+    if (typeof timeout !== 'number') {
+      throw new TypeError('The "timeout" argument must be a number.');
+    }
+    if (!Number.isFinite(timeout) || timeout < 0) {
+      throw new RangeError(
+        'The "timeout" argument must be a finite number greater than or equal to 0.',
+      );
+    }
+
     const correlationId = crypto.randomUUID();
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -788,9 +844,13 @@ class TinyServiceWorker extends TinyPluginCore {
    * Removes an event listener from the Service Worker.
    * @param {EventListener} callback - The callback to be removed.
    * @returns {boolean} True if the event listener was removed, false otherwise.
+   * @throws {TypeError} If the callback is not a function.
    */
   removeEventListener(callback) {
     checkDestroy(this.#isDestroyed);
+    if (typeof callback !== 'function') {
+      throw new TypeError('The callback must be a function.');
+    }
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.removeEventListener('message', callback);
       return this.#eventListeners.delete(callback);

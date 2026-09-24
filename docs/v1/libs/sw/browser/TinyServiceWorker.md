@@ -142,6 +142,16 @@ Schedule tasks to run once the user has a stable internet connection.
 await swManager.registerSync('sync-data-update');
 ```
 
+#### **Notification Permission**
+Request the browser's notification permission. The method is idempotent: it returns the cached status without prompting again if the user has already decided.
+
+```javascript
+const permission = await swManager.requestNotificationPermission();
+
+if (permission === 'granted') {
+  console.log('Notifications are enabled.');
+}
+
 ---
 
 ## 📡 Event Reference
@@ -160,8 +170,10 @@ These events are emitted by the `TinyServiceWorker` class to inform your applica
 | `sw:PrepareUpdate` | `void` | Fired to signal the Service Worker to begin downloading new assets. |
 | `sw:NewVersionReady` | `{ event: Event }` | Fired when the new Service Worker successfully takes control of the page. |
 | `sw:NoSwControllerWarn` | `void` | Fired when a message is attempted but no active Service Worker controller exists. |
+| `sw:NotificationPermissionChanged` | `{ permission: NotificationPermission }` | Fired after `requestNotificationPermission()` resolves with the user's decision. |
+| `sw:RegistrationFailed` | `Error` | Fired when registration fails while a `waitForReady()` call is pending. |
 | `sw:PushReceived` | `{ data: any, event: MessageEvent }` | Fired when a push event is received. If in 'browser' mode and `autoNotifyPush` is enabled, a native browser notification is automatically displayed. |
-| `{CUSTOM EVENT}` | `{ event: Event, data: Record<string, any>  }` | Fired when a message from `sw.js`is sent. |
+| `{CUSTOM EVENT}` | `{ event: Event, data: Record<string, any> }` | Fired when a message from `sw.js` is sent. |
 
 ### 📨 Custom Worker Messages
 When your Service Worker sends a message using `postMessage`, the class intercepts it and re-emits it as a standard event.
@@ -219,7 +231,9 @@ swManager.destroy();
 | :--- | :--- | :--- |
 | `register(options)` | `Promise<void>` | Attempts to register the Service Worker. |
 | `unregister()` | `Promise<boolean>` | Unregisters the worker and destroys the instance. |
+| `waitForReady()` | `Promise<void>` | Resolves when the Service Worker is registered, active, and controlling the page. |
 | `promptInstallation()` | `Promise<void>` | Triggers the native browser installation prompt. |
+| `requestNotificationPermission()` | `Promise<'granted' \| 'denied' \| 'default'>` | Requests notification permission from the user. |
 | `postMessage(payload)` | `void` | Sends a structured payload to the worker. |
 | `emit(type, data)` | `boolean` | Sends a simplified message to the worker. |
 | `emitApi(type, data, timeout)` | `Promise<any>` | Sends a message and returns a Promise that resolves with the response from the Service Worker. |
@@ -230,10 +244,26 @@ swManager.destroy();
 | `registerSync(tag)` | `Promise<void>` | Registers a sync tag to trigger the 'sync' event in the Service Worker. |
 | `destroy()` | `void` | Performs full cleanup of all resources. |
 
+### Static Methods
+
+| Method | Return | Description |
+| :--- | :--- | :--- |
+| `TinyServiceWorker.waitForReady()` | `Promise<ServiceWorkerRegistration>` | Resolves with the active registration once the Service Worker is ready. |
+| `TinyServiceWorker.postMessage(message, transfer?)` | `void` | Sends a raw message to the active Service Worker controller. |
+
+```javascript
+// Wait for the worker before sending a message
+await TinyServiceWorker.waitForReady();
+
+// Send a raw message with an optional transferable list
+TinyServiceWorker.postMessage({ type: 'PING' }, []);
+```
+
 ### Properties (Getters)
 * `isReady`: `boolean` - Returns `true` if registration was successful.
 * `isFailed`: `boolean` - Returns `true` if registration encountered an error.
 * `isDestroyed`: `boolean` - Returns `true` if the instance has been destroyed.
+* `isSwAvailable`: `boolean` - Returns `true` if the Service Worker API is supported **and** an active controller exists.
 * `displayMode`: `'twa' | 'standalone' | 'browser'` - The current UI mode.
 * `id`: `string` - The instance ID.
 * `swUrl`: `string \| URL` - The URL of the service worker file.
