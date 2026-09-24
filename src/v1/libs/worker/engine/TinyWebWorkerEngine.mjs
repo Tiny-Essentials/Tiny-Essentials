@@ -109,7 +109,7 @@ class TinyWebWorkerEngine extends TinyPluginCore {
   constructor(lgConfig = {}) {
     super({
       logCfg: {
-        id: '[_blue_TinyWW-Engine_reset_]',
+        id: '[_main_class_TinyWW-Engine_reset_]',
         logger: lgConfig.logger ?? console,
         debugMode: lgConfig.debugMode ?? false,
         useLogColors: lgConfig.useLogColors ?? false,

@@ -90,7 +90,7 @@ class TinyWebWorker extends TinyPluginCore {
   constructor({ id, workerUrl, workerOptions = {}, logger, debugMode, useLogColors }) {
     super({
       logCfg: {
-        id: '[_green_TinyWebWorker_reset_]',
+        id: '[_sub_class_TinyWebWorker_reset_]',
         logger: logger ?? console,
         debugMode: debugMode ?? false,
         useLogColors: useLogColors ?? false,

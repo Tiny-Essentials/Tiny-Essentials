@@ -72,6 +72,8 @@ class TinyDebugger extends EventEmitter {
     ['warn', '\x1b[33m'], // Yellow
     ['error', '\x1b[31m'], // Red
     ['debug', '\x1b[35m'], // Magenta
+    ['main_class', '\x1b[34m'], // Blue
+    ['sub_class', '\x1b[32m'], // Green
     ['reset', '\x1b[0m'], // Reset
 
     // Color names mapping (for manual usage via _color_)

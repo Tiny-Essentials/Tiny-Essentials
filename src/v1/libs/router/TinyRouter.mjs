@@ -148,7 +148,7 @@ class TinyRouter extends TinyDebugger {
       throw new TypeError('historyLimit must be an integer and greater than or equal to -1.');
 
     super({
-      id: '[_blue_TinyRouter_reset_]',
+      id: '[_main_class_TinyRouter_reset_]',
       logger: options.logger ?? console,
       debugMode: options.debugMode ?? false,
       useLogColors: options.useLogColors ?? false,

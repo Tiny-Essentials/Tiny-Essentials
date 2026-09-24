@@ -162,7 +162,7 @@ class TinySwTabsLayer extends TinyPluginLayer {
   constructor(sw, options = {}) {
     super({
       logCfg: {
-        id: '[_blue_TinySW-Tabs_reset_]',
+        id: '[_main_class_TinySW-Tabs_reset_]',
         logger: options.lgConfig?.logger ?? console,
         debugMode: options.lgConfig?.debugMode ?? false,
         useLogColors: options.lgConfig?.useLogColors ?? false,

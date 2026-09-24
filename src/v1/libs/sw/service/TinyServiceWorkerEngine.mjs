@@ -1022,7 +1022,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   constructor(config = {}, lgConfig = {}) {
     super({
       logCfg: {
-        id: '[_blue_TinySW-Engine_reset_]',
+        id: '[_main_class_TinySW-Engine_reset_]',
         logger: lgConfig.logger ?? console,
         debugMode: lgConfig.debugMode ?? false,
         useLogColors: lgConfig.useLogColors ?? false,

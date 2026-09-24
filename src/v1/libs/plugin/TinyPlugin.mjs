@@ -544,7 +544,7 @@ class TinyPluginLayer extends TinyDebugger {
   constructor(ops) {
     super(
       ops?.logCfg ?? {
-        id: '[_blue_TinyPluginLayer_reset_]',
+        id: '[_main_class_TinyPluginLayer_reset_]',
         logger: console,
         debugMode: false,
         useLogColors: false,
@@ -990,7 +990,7 @@ class TinyPluginCore extends TinyDebugger {
 class TinyPlugin extends TinyDebugger {
   /** @type {DebuggerConstructor} */
   static #logCfg = {
-    id: '[_blue_TinyPlugin_reset_]',
+    id: '[_main_class_TinyPlugin_reset_]',
     logger: console,
     debugMode: false,
     canEmitLogs: false,
@@ -1159,7 +1159,7 @@ class TinyPlugin extends TinyDebugger {
     if (typeof value !== 'string') throw new TypeError('Id must be a string.');
     if (value.length === 0) throw new TypeError('Id cannot be empty.');
     this.#id = value;
-    this.logSubId = `[_green_${value}_reset_]`;
+    this.logSubId = `${this.#engine.logId} [_sub_class_${value}_reset_]`;
   }
 
   /**
