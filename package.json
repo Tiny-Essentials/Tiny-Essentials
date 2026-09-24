@@ -399,9 +399,9 @@
       "require": "./dist/v1/libs/worker/browser/TinyWebWorker.cjs",
       "import": "./dist/v1/libs/worker/browser/TinyWebWorker.mjs"
     },
-    "./libs/router/TinyMapCache": {
-      "require": "./dist/v1/libs/router/TinyMapCache.cjs",
-      "import": "./dist/v1/libs/router/TinyMapCache.mjs"
+    "./libs/memory/TinyMapCache": {
+      "require": "./dist/v1/libs/memory/TinyMapCache.cjs",
+      "import": "./dist/v1/libs/memory/TinyMapCache.mjs"
     },
     "./libs/router/TinyRouter": {
       "require": "./dist/v1/libs/router/TinyRouter.cjs",
