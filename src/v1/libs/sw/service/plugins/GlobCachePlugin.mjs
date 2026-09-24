@@ -1,7 +1,8 @@
-import { TinyPluginLayer } from '../../../plugin/TinyPlugin.mjs';
 import { isJsonObject } from '../../../../basics/objChecker.mjs';
 import { compileGlobRegExp } from '../../../../regexp/Glob.mjs';
 import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
+
+const { TinyPluginLayer } = TinyServiceWorkerEngine;
 
 /**
  * @typedef {Object} GlobCacheOptions
@@ -13,7 +14,7 @@ import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
 
 /**
  * A plugin for TinyServiceWorkerEngine that implements runtime caching based on glob patterns.
- * @type {import('../TinyServiceWorkerEngine.mjs').SwPluginInstaller<TinyPluginLayer, 'GlobCache', '1.0.0', [GlobCacheOptions]>}
+ * @type {import('../TinyServiceWorkerEngine.mjs').SwPluginInstaller<InstanceType<typeof TinyPluginLayer>, 'GlobCache', '1.0.0', [GlobCacheOptions]>}
  * @throws {TypeError} If options or patterns are invalid.
  */
 const GlobCachePlugin = (instance, options) => {

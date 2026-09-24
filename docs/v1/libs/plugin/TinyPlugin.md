@@ -221,9 +221,58 @@ The `Installer` function is a setup routine. It is not a simple `void` function.
 
 **If any of these are missing, the `installPlugin` process will throw an error and the plugin will fail to initialize.**
 
+#### Example 1
+
 ```javascript
 // Example: `./plugins/MyPlugin.mjs`
-import { TinyPluginLayer } from 'tiny-essentials/libs/plugin/TinyPlugin';
+import MyEngine from '../MyEngine.mjs';
+
+const { TinyPluginLayer } = MyEngine;
+
+/**
+ * @typedef {Object} MyPluginOptions
+ * @property {string} apiKey - The API key for the service.
+ * @property {boolean} [debug=false] - Enable debug mode.
+ */
+
+/**
+ * @type {import('../MyEngine.mjs').MyEngineInstaller<InstanceType<typeof TinyPluginLayer>, 'MyPluginId', '1.0.0', [MyPluginOptions]>}
+ */
+const MyPluginInstaller = (sandbox, options) => {
+  // 1. MANDATORY IDENTITY SETUP (Crucial!)
+  sandbox.id = 'MyPluginId';
+  sandbox.version = '1.0.0';
+  sandbox.description = 'A plugin that performs amazing things.';
+  sandbox.authors = ['DeveloperName'];
+  sandbox.contributors = ['ContributorName'];
+  sandbox.categories = ['Utility'];
+  sandbox.tags = ['demo', 'example'];
+
+  // 2. Runtime Validation of Options (CRITICAL)
+  if (typeof options.apiKey !== 'string') throw new TypeError('apiKey must be a string');
+  if (typeof options.debug !== 'boolean') throw new TypeError('debug must be a boolean');
+
+  // 3. Implementation Logic
+  const engine = sandbox.engine;
+  if (!(engine instanceof MyEngine)) {
+    throw new TypeError('Plugin requires a MyEngine instance to function.');
+  }
+
+  if (options.debug) {
+    console.log(`Plugin ${sandbox.id} is active.`);
+  }
+
+  // 4. RETURN THE LAYER (Mandatory!)
+  return new TinyPluginLayer();
+};
+
+export default MyPluginInstaller;
+```
+
+#### Example 2
+
+```javascript
+// Example: `./plugins/MyPlugin.mjs`
 import MyEngine from '../MyEngine.mjs';
 
 /**
@@ -232,7 +281,7 @@ import MyEngine from '../MyEngine.mjs';
  * @property {boolean} [debug=false] - Enable debug mode.
  */
 
-class MyTinyLayer extends TinyPluginLayer {
+class MyTinyLayer extends MyEngine.TinyPluginLayer {
   #userId = '';
 
   constructor() {
@@ -245,6 +294,16 @@ class MyTinyLayer extends TinyPluginLayer {
 
   set userId(value) {
     this.#userId = value;
+  }
+
+  /**
+   * The `this._startLayer` accepts 3 args only. Arg 3 is optional to send private value.
+   * @template {Parameters<MyTinyLayer['_startLayer']>[0]} Plugin
+   * @param {Plugin} plugin - The TinyPlugin instance.
+   * @param {(data: string) => void} callback - The callback function to be executed with the current data.
+   */
+  _start(plugin, callback) {
+    return this._startLayer(plugin, callback, this.#userId);
   }
 }
 
@@ -277,6 +336,10 @@ const MyPluginInstaller = (sandbox, options) => {
 
   const layer = new MyTinyLayer();
   layer.userId = 'user123';
+
+  layer._start(sandbox, (userId) => {
+    console.log(`Yay! New user: ${userId}`);
+  });
 
   if (options.debug) {
     console.log(`Plugin ${sandbox.id} is active.`);

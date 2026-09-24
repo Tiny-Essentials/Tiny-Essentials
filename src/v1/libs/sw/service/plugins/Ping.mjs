@@ -1,10 +1,11 @@
-import { TinyPluginLayer } from '../../../plugin/TinyPlugin.mjs';
 import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
+
+const { TinyPluginLayer } = TinyServiceWorkerEngine;
 
 /**
  * Ping/Pong Logic to plugin test.
  *
- * @type {import('../TinyServiceWorkerEngine.mjs').SwPluginInstaller<TinyPluginLayer, 'SimplePing', '1.0.0', []>}
+ * @type {import('../TinyServiceWorkerEngine.mjs').SwPluginInstaller<InstanceType<typeof TinyPluginLayer>, 'SimplePing', '1.0.0', []>}
  */
 const TinyPingPwa = (instance) => {
   const engine = instance.engine;

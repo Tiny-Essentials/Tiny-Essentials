@@ -1,5 +1,4 @@
 import TinyPromiseQueue from '../../../utils/TinyPromiseQueue.mjs';
-import { TinyPluginLayer, TinyPlugin } from '../../../plugin/TinyPlugin.mjs';
 import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
 
 /** @type {ServiceWorkerGlobalScope} */
@@ -26,7 +25,7 @@ export const sw = self;
 /**
  * A layer within the TinyPlugin system specifically designed to manage and track tab instances.
  */
-class TinySwTabsLayer extends TinyPluginLayer {
+class TinySwTabsLayer extends TinyServiceWorkerEngine.TinyPluginLayer {
   /**
    * A queue used to manage and sequence asynchronous operations to prevent race conditions.
    * @type {TinyPromiseQueue}
@@ -180,7 +179,7 @@ class TinySwTabsLayer extends TinyPluginLayer {
 
   /**
    * Initializes the layer, loads persisted data, and begins monitoring tab changes.
-   * @template {TinyPlugin<any, any, any, any, any>} Plugin - The TinyPlugin template.
+   * @template {Parameters<TinySwTabsLayer['_startLayer']>[0]} Plugin - The TinyPlugin template.
    * @param {Plugin} plugin - The TinyPlugin instance.
    * @param {(tabs: TabInstance) => void} callback - The callback function to be executed with the current tabs upon initialization.
    */

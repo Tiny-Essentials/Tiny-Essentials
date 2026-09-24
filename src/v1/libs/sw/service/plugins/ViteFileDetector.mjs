@@ -1,5 +1,6 @@
-import { TinyPluginLayer } from '../../../plugin/TinyPlugin.mjs';
 import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
+
+const { TinyPluginLayer } = TinyServiceWorkerEngine;
 
 /**
  * Configuration options for the ViteFileDetectorPlugin to define which paths should be bypassed.
@@ -22,7 +23,7 @@ const DEFAULT_OPTIONS = {
 /**
  * A plugin for TinyServiceWorkerEngine to detect and bypass Vite-specific files.
  *
- * @type {import('../TinyServiceWorkerEngine.mjs').SwPluginInstaller<TinyPluginLayer, 'ViteFileDetector', '1.0.0', [Partial<ViteFileDetectorOptions>]|[]>}
+ * @type {import('../TinyServiceWorkerEngine.mjs').SwPluginInstaller<InstanceType<typeof TinyPluginLayer>, 'ViteFileDetector', '1.0.0', [Partial<ViteFileDetectorOptions>]|[]>}
  * @throws {TypeError} If the engine is invalid or if the provided options do not match the required schema.
  */
 const ViteFileDetectorPlugin = (instance, options = {}) => {

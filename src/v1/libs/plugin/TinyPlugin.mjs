@@ -722,6 +722,14 @@ class TinyPluginLayer extends TinyDebugger {
  * It extends TinyDebugger to provide debugging capabilities alongside plugin management.
  */
 class TinyPluginCore extends TinyDebugger {
+  /** @type {typeof TinyPluginLayer} */
+  static #TinyPluginLayer = TinyPluginLayer;
+
+  /** @returns {typeof TinyPluginLayer} */
+  static get TinyPluginLayer() {
+    return TinyPluginCore.#TinyPluginLayer;
+  }
+
   static #pluginsDestroyEventName = 'pluginsDestroyed';
   /** @type {BlackListCore} */
   #sandboxBlacklist = { get: new Set(), set: new Set() };

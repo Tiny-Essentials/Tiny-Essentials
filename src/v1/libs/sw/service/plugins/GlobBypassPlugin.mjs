@@ -1,7 +1,8 @@
-import { TinyPluginLayer } from '../../../plugin/TinyPlugin.mjs';
 import { isJsonObject } from '../../../../basics/objChecker.mjs';
 import { compileGlobRegExp } from '../../../../regexp/Glob.mjs';
 import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
+
+const { TinyPluginLayer } = TinyServiceWorkerEngine;
 
 /**
  * Configuration options for the GlobBypassPlugin.
@@ -16,7 +17,7 @@ import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
  * A plugin for TinyServiceWorkerEngine that bypasses the router validation for
  * every request whose pathname matches one of the provided glob patterns.
  *
- * @type {import('../TinyServiceWorkerEngine.mjs').SwPluginInstaller<TinyPluginLayer, 'GlobBypass', '1.0.0', [GlobBypassOptions]>}
+ * @type {import('../TinyServiceWorkerEngine.mjs').SwPluginInstaller<InstanceType<typeof TinyPluginLayer>, 'GlobBypass', '1.0.0', [GlobBypassOptions]>}
  * @throws {TypeError} If the engine is invalid or if the provided options do not match the required schema.
  */
 const GlobBypassPlugin = (instance, options) => {

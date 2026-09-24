@@ -1,4 +1,3 @@
-import { TinyPluginLayer } from '../../../plugin/TinyPlugin.mjs';
 import TinyServiceWorker from '../TinyServiceWorker.mjs';
 
 /** @typedef {import('../../../tools/TinyDebugger.mjs').DebuggerConstructor} DebuggerConstructor - The constructor function for a debugger instance. */
@@ -39,7 +38,7 @@ import TinyServiceWorker from '../TinyServiceWorker.mjs';
 /**
  * Controller to be used in the main thread to communicate with the TabManagerPlugin.
  */
-class TinySwTabsLayer extends TinyPluginLayer {
+class TinySwTabsLayer extends TinyServiceWorker.TinyPluginLayer {
   /** @type {TinyServiceWorker<any, any>} - The TinyServiceWorker instance used for communication. */
   #sw;
   /** @type {boolean} - Indicates whether tab focus tracking is enabled. */
