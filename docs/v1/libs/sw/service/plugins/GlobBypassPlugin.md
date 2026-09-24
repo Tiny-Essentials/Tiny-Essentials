@@ -51,8 +51,8 @@ In other words: **the request is short-circuited and allowed through.**
 ## 🚀 Quick Start
 
 ```js
-import TinyServiceWorkerEngine from './engine/TinyServiceWorkerEngine.mjs';
-import GlobBypassPlugin from './engine/plugins/glob-bypass/GlobBypassPlugin.mjs';
+import TinyServiceWorkerEngine from 'tiny-essentials/libs/sw/service/TinyServiceWorkerEngine';
+import GlobBypassPlugin from 'tiny-essentials/libs/sw/service/plugins/GlobBypassPlugin';
 
 const engine = new TinyServiceWorkerEngine();
 

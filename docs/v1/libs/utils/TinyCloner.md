@@ -72,7 +72,7 @@ Every plugin must follow this structure:
 
 ### 💡 Example: Adding a `Date` Plugin
 ```javascript
-import TinyCloner from './TinyCloner.mjs';
+import TinyCloner from 'tiny-essentials/libs/utils/TinyCloner';
 
 const datePlugin = {
   id: 'date-plugin',

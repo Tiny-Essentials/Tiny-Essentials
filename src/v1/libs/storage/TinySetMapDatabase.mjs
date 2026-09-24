@@ -966,7 +966,7 @@ class TinySetMapDatabase {
   }
 
   /**
-   * Returns a table by name.
+   * Returns a Set instance of table by name.
    * @param {string} tableName - Name of the table.
    * @returns {TinySetDb<any>} The requested table.
    * @throws {TypeError} If `tableName` is not a non-empty string.
@@ -984,7 +984,7 @@ class TinySetMapDatabase {
   }
 
   /**
-   * Returns a table by name.
+   * Returns a Map instance of table by name.
    * @param {string} tableName - Name of the table.
    * @returns {TinyMapDb<any, any>} The requested table.
    * @throws {TypeError} If `tableName` is not a non-empty string.
