@@ -29,6 +29,11 @@ When you instantiate the engine, you can provide two configuration objects.
 **Parameter: `config` (Object) — `ServiceWorkerSettings`**
 Defines the operational behavior of the engine.
 * `spaMode` (boolean): If `true`, the engine uses the `spaPath` (default: `/index.html`) when handling routing errors. If `false`, it uses the original requested path.
+* `lifecycle` (Object) — `LifecycleOptions`: Controls how the `install` and `activate` phases are resolved.
+  * `installStrategy` (`'immediate' | 'wait' | 'manual'`): How the `install` phase is resolved. Default: `'immediate'`.
+  * `activateStrategy` (`'immediate' | 'wait' | 'manual'`): How the `activate` phase is resolved. Default: `'immediate'`.
+  * `installOrder` (`'before' | 'after'`): Whether the install strategy runs before or after the install listeners. Default: `'after'`.
+  * `activateOrder` (`'before' | 'after'`): Whether the activate strategy runs before or after the activate listeners. Default: `'after'`.
 * `fetch` (Object):
   * `enabled` (boolean): Activates/deactivates fetch interception.
   * `router` (Object):
@@ -55,19 +60,22 @@ import TinyServiceWorkerEngine from 'tiny-essentials/libs/sw/service/TinyService
 
 const engine = new TinyServiceWorkerEngine({
   spaMode: true, // Set to true if you are building a Single Page Application
+  lifecycle: {
+    installStrategy: 'manual', // 'immediate' | 'wait' | 'manual'
+    activateStrategy: 'manual',
+    installOrder: 'after',
+    activateOrder: 'after',
+  },
   fetch: {
     enabled: true,
     router: {
       enabled: true,
-      codes: new Map() // You can add custom status code handlers here
-    }
+      codes: new Map(), // You can add custom status code handlers here
+    },
   },
   messaging: {
-    enabled: true
-  }
-}, {
-  debugMode: true,
-  useLogColors: true
+    enabled: true,
+  },
 });
 
 // This is a mandatory step to start listening to events
@@ -407,6 +415,106 @@ If the client does not respond within the timeout window (default: `10000` ms), 
 
 ---
 
+## ♻️ Feature 7: Lifecycle Management
+
+The engine exposes the `install` and `activate` phases through a configurable strategy system. Each phase has two independent settings:
+
+- **Strategy** (`installStrategy` / `activateStrategy`): *what* the engine does with the phase.
+- **Order** (`installOrder` / `activateOrder`): *when* the strategy runs relative to your registered listeners.
+
+### 🎯 Strategies
+
+| Value | `install` phase | `activate` phase |
+| :--- | :--- | :--- |
+| `'immediate'` *(default)* | Calls `skipWaiting()` right away. | Calls `clients.claim()` right away. |
+| `'wait'` | Never calls `skipWaiting()`. The new worker stays in the `waiting` state until every tab is closed. | Never calls `clients.claim()`. Only future navigations are controlled. |
+| `'manual'` | Does not call `skipWaiting()`. Emits `waitingForActivation` and lets the app decide. | Does not call `clients.claim()`. Emits `waitingForClaim` and lets the app decide. |
+
+### 🔀 Order
+
+| Value | Behavior |
+| :--- | :--- |
+| `'after'` *(default)* | Listeners run first, then the strategy is resolved. |
+| `'before'` | The strategy is resolved first, then the listeners run. |
+
+The `'before'` order is useful when a migration routine must run **before** the new worker takes control of the open tabs. The `'after'` order is the safe default: your listeners always run against a fully initialized worker.
+
+### 🛠️ Configuration
+
+```javascript
+const engine = new TinyServiceWorkerEngine({
+  lifecycle: {
+    installStrategy: 'manual',
+    activateStrategy: 'manual',
+    installOrder: 'after',
+    activateOrder: 'after',
+  },
+});
+
+engine.init();
+```
+
+You can also patch the lifecycle configuration at runtime:
+
+```javascript
+// Partial patch: omitted keys keep their current value.
+engine.lifecycle = { installOrder: 'before' };
+
+// Read a deep clone of the current lifecycle configuration.
+const { installStrategy } = engine.lifecycle;
+```
+
+### 🖐️ Manual Activation
+
+When a strategy is set to `'manual'`, the engine emits an event and waits. You can then promote the worker on demand:
+
+```javascript
+// Service Worker context
+engine.on('waitingForActivation', () => {
+  // Notify every open tab that a new version is ready.
+  TinyServiceWorkerEngine.replyToAll({ type: 'app:UpdateReady' });
+});
+```
+
+```javascript
+// Page context
+navigator.serviceWorker.addEventListener('message', (event) => {
+  if (event.data?.type === 'app:UpdateReady') {
+    navigator.serviceWorker.getRegistration().then((reg) => {
+      // The engine listens for this message and calls skipWaiting() for you.
+      reg.waiting?.postMessage({ type: 'sw:SkipWaiting' });
+    });
+  }
+});
+```
+
+### 🧩 Registering Lifecycle Listeners
+
+```javascript
+engine.addInstallListener('warm-cache', async ({ event }) => {
+  const cache = await caches.open('v2');
+  await cache.addAll(['/offline.html']);
+});
+
+engine.addActivateListener('cleanup', async ({ event }) => {
+  const keys = await caches.keys();
+  await Promise.all(keys.filter((key) => key !== 'v2').map((key) => caches.delete(key)));
+});
+```
+
+A listener that throws is logged and emitted as `installListenerError` or `activateListenerError`. It never blocks the Service Worker lifecycle.
+
+### 🔄 Forcing a Client Reload
+
+When the new worker changes the routing contract, the open tabs must be reloaded to stay consistent. Use `reloadClients` to navigate every controlled client at once:
+
+```javascript
+await engine.reloadClients(); // Reloads the current URL of each client
+await engine.reloadClients('/'); // Or navigate them all to a specific URL
+```
+
+---
+
 ## 🧰 Static Utilities
 
 These static methods are exposed on the class itself and can be used without instantiating the engine.
@@ -422,6 +530,18 @@ These static methods are exposed on the class itself and can be used without ins
 ### Reserved Event Types
 
 Any message type that starts with the `sw:` prefix is **reserved** for internal PWA lifecycle management. Passing such a type to `replyTemplate` or `replyTo` will throw a `TypeError`.
+
+The engine uses the following internal types:
+
+| Type | Direction | Description |
+| :--- | :--- | :--- |
+| `sw:ApiResponse` | Browser → SW | Carries the response of an `emitApi` call. |
+| `sw:NotificationClicked` | Browser → SW | Forwards a notification click to the engine. |
+| `sw:PrepareUpdate` | Browser → SW | Asks the engine to fetch and install a new version. |
+| `sw:Updated` | SW → Browser | The update finished and the new worker is waiting. |
+| `sw:UpdateError` | SW → Browser | The update failed. |
+| `sw:SkipWaiting` | Browser → SW | Promotes the waiting worker to active. |
+| `sw:PushReceived` | SW → Browser | A push event was received. |
 
 ---
 
@@ -500,6 +620,7 @@ To make navigation easier, the API is divided into functional modules: **Fetch M
 | `removeRouterCode` | Removes a custom code handler. | `code (number)` | `boolean` |
 | `getRouterCode` | Retrieves a deep clone of a code config. | `code (number)` | `RouterCodeConfig \| undefined` |
 | `getCodeCfg` | Resolves the effective config for a code (custom → default → 500). | `code (number)` | `RouterCodeConfig` |
+| `updateGlobalMsgCode` | Merges a partial patch into the global message map. | `patch (Partial<GlobalMsgCode>)` | `void` |
 | `createFetchRes` | Builds a `RouterCodeConfig` from a `pathGetter`. | `{ isError, msg, logMsg, pathGetter }` | `RouterCodeConfig` |
 | `globalPathGetter` | Returns the SPA path or the original path. | `path (string)` | `string` |
 
@@ -525,6 +646,29 @@ To make navigation easier, the API is divided into functional modules: **Fetch M
 | `config` | Gets a deep clone of the config / applies a partial update. | `Partial<PartialServiceWorkerSettings>` | `ServiceWorkerSettings` |
 | `globalMsgCode` | Gets/sets the global message map. | `Object` | `Object` |
 | `showNotification` | Displays a native notification to the user. | `title (string)`, `body (string)`, `options (Object)` | `Promise<void>` |
+
+### ♻️ 7. Lifecycle Management
+
+| Method / Property | Purpose | Arguments | Returns |
+| :--- | :--- | :--- | :--- |
+| `lifecycle` | Gets a deep clone / merges a partial lifecycle config. | `Partial<LifecycleOptions>` | `LifecycleOptions` |
+| `skipWaiting` | Promotes the waiting worker to active. | `event? (ExtendableEvent)` | `Promise<boolean>` |
+| `claimClients` | Makes the active worker control the open clients. | `query? (ClientQueryOptions)` | `Promise<readonly Client[]>` |
+| `reloadClients` | Navigates every controlled client to a URL. | `url? (string)` | `Promise<number>` |
+| **Install Listeners** | | | |
+| `addInstallListener` | Registers an `install` listener. | `tag (string)`, `callback` | `void` |
+| `removeInstallListener` | Removes an `install` listener. | `tag (string)` | `boolean` |
+| `getInstallListener` | Retrieves an `install` listener. | `tag (string)` | `callback \| undefined` |
+| `hasInstallListener` | Checks if an `install` listener exists. | `tag (string)` | `boolean` |
+| `clearInstallListeners` | Wipes all `install` listeners. | None | `void` |
+| `installListenerSize` | Returns the count of `install` listeners. | None | `number` |
+| **Activate Listeners** | | | |
+| `addActivateListener` | Registers an `activate` listener. | `tag (string)`, `callback` | `void` |
+| `removeActivateListener` | Removes an `activate` listener. | `tag (string)` | `boolean` |
+| `getActivateListener` | Retrieves an `activate` listener. | `tag (string)` | `callback \| undefined` |
+| `hasActivateListener` | Checks if an `activate` listener exists. | `tag (string)` | `boolean` |
+| `clearActivateListeners` | Wipes all `activate` listeners. | None | `void` |
+| `activateListenerSize` | Returns the count of `activate` listeners. | None | `number` |
 
 ---
 
