@@ -14,6 +14,18 @@ const ACTIVATE_STRATEGIES = Object.freeze(['immediate', 'wait', 'manual']);
 /** @type {readonly LifecycleOrder[]} */
 const LIFECYCLE_ORDERS = Object.freeze(['before', 'after']);
 
+/**
+ * Single source of truth for the lifecycle options: every entry pairs the
+ * property name with the list of values it accepts.
+ *
+ * @type {readonly (readonly [string, readonly string[]])[]}
+ */
+const LIFECYCLE_SPEC = Object.freeze([
+  ['installStrategy', INSTALL_STRATEGIES],
+  ['activateStrategy', ACTIVATE_STRATEGIES],
+  ['strategyOrder', LIFECYCLE_ORDERS],
+]);
+
 ///////////////////////////////////////////////////////////////////
 
 /**
@@ -723,6 +735,31 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   }
 
   /**
+   * Gets a deep clone of the current lifecycle configuration.
+   *
+   * @returns {LifecycleOptions} A deep cloned copy of the lifecycle configuration.
+   */
+  get lifecycle() {
+    return TinyCloner.clone(this.#config.lifecycle);
+  }
+
+  /**
+   * Merges the provided properties into the current lifecycle configuration.
+   *
+   * The operation is a **merge**, not a replacement: omitted keys keep their
+   * current value. This is required because the internal validation is strict,
+   * so a partial patch such as `{ strategyOrder: 'before' }` must not erase the
+   * install and activate strategies.
+   *
+   * @param {Partial<LifecycleOptions>} value - The lifecycle properties to merge.
+   * @throws {TypeError} If `value` is not a valid partial {@link LifecycleOptions}.
+   */
+  set lifecycle(value) {
+    TinyServiceWorkerEngine.#assertLifecycle(value);
+    this.#updateConfig({ lifecycle: value });
+  }
+
+  /**
    * Returns the global path based on the current SPA mode configuration.
    * @param {string} path - The original path.
    * @returns {string} The path adjusted for SPA mode or the original path.
@@ -1135,35 +1172,15 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
     }
 
     if (config.lifecycle !== undefined) {
-      if (typeof config.lifecycle !== 'object' || config.lifecycle === null) {
-        throw new TypeError('Lifecycle configuration must be a non-null object.');
+      TinyServiceWorkerEngine.#assertLifecycle(config.lifecycle);
+
+      if (strict) {
+        for (const [key] of LIFECYCLE_SPEC) {
+          if (/** @type {Record<string, unknown>} */ (config.lifecycle)[key] === undefined) {
+            throw new TypeError(`Missing required property: "lifecycle.${key}"`);
+          }
+        }
       }
-
-      const { installStrategy, activateStrategy, strategyOrder } = config.lifecycle;
-
-      /**
-       * Validates a single lifecycle field against its allowed values.
-       * @param {unknown} value - The value to validate.
-       * @param {readonly string[]} allowed - The accepted values.
-       * @param {string} key - The property name, used in the error messages.
-       * @returns {void}
-       */
-      const validateLifecycleField = (value, allowed, key) => {
-        if (strict && value === undefined) {
-          throw new TypeError(`Missing required property: "lifecycle.${key}"`);
-        }
-        if (value !== undefined && !allowed.includes(/** @type {string} */ (value))) {
-          throw new TypeError(
-            `[TinyServiceWorkerEngine] validateConfig: lifecycle.${key} must be one of ${allowed.join(
-              ', ',
-            )}. Received: ${String(value)}`,
-          );
-        }
-      };
-
-      validateLifecycleField(installStrategy, INSTALL_STRATEGIES, 'installStrategy');
-      validateLifecycleField(activateStrategy, ACTIVATE_STRATEGIES, 'activateStrategy');
-      validateLifecycleField(strategyOrder, LIFECYCLE_ORDERS, 'strategyOrder');
     } else if (strict) {
       throw new TypeError('Missing required property: "lifecycle"');
     }
@@ -1725,6 +1742,46 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
         key,
         spec.nullablePath,
       );
+    }
+  }
+
+  /**
+   * Validates a partial lifecycle configuration.
+   *
+   * Only the provided keys are checked, so the method accepts both a full
+   * {@link LifecycleOptions} object and a partial patch.
+   *
+   * @param {unknown} lifecycle - The value to validate.
+   * @returns {void}
+   * @throws {TypeError} If `lifecycle` is not a non-null object, if it contains an
+   *   unknown key, or if one of its values is not an accepted strategy.
+   */
+  static #assertLifecycle(lifecycle) {
+    if (typeof lifecycle !== 'object' || lifecycle === null || Array.isArray(lifecycle)) {
+      throw new TypeError('[TinyServiceWorkerEngine] lifecycle must be a non-null object.');
+    }
+
+    const source = /** @type {Record<string, unknown>} */ (lifecycle);
+
+    for (const key of Object.keys(source)) {
+      if (!LIFECYCLE_SPEC.some(([name]) => name === key)) {
+        throw new TypeError(
+          `[TinyServiceWorkerEngine] lifecycle: unknown key "${key}". Expected one of: ${LIFECYCLE_SPEC.map(
+            ([name]) => `"${name}"`,
+          ).join(', ')}.`,
+        );
+      }
+    }
+
+    for (const [key, allowed] of LIFECYCLE_SPEC) {
+      const value = source[key];
+      if (value !== undefined && !allowed.includes(/** @type {string} */ (value))) {
+        throw new TypeError(
+          `[TinyServiceWorkerEngine] lifecycle.${key} must be one of ${allowed.join(
+            ', ',
+          )}. Received: ${String(value)}`,
+        );
+      }
     }
   }
 
