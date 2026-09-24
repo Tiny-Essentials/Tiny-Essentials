@@ -126,21 +126,6 @@ class TinyMapCache extends EventEmitter {
   }
 
   /**
-   * Returns a deep-cloned plain object representation of the cache.
-   * @returns {CacheObject<T>} An object where keys are cache keys and values are deep-cloned entries.
-   */
-  get cache() {
-    /** @type {CacheObject<T>} */
-    const cacheObject = {};
-    for (const [key, entry] of this.#cache.entries()) {
-      // structuredClone ensures a deep copy of the entry and its nested data
-      // @ts-ignore
-      cacheObject[key] = structuredClone(entry);
-    }
-    return cacheObject;
-  }
-
-  /**
    * Returns the number of items currently stored in the cache.
    * @returns {number}
    */
