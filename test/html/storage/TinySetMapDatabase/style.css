@@ -1,0 +1,441 @@
+/* ============================================================================
+   DESIGN TOKENS
+   ============================================================================ */
+:root {
+  /* --- Base surfaces (used for page background and panels) --- */
+  --color-void: #080a0f; /* App background */
+  --color-surface: #0f131c; /* Panels and cards */
+  --color-surface-raised: #151b27; /* Inputs, raised elements */
+  --color-surface-hover: #1b2231; /* Hover states */
+  --color-border: #232b3b; /* Default borders */
+  --color-border-strong: #313c52; /* Focused borders */
+
+  /* --- Text (used across every label and value) --- */
+  --color-text: #e6edf7; /* Primary text */
+  --color-text-muted: #8b98ae; /* Secondary text */
+  --color-text-faint: #5b6779; /* Hints and placeholders */
+
+  /* --- Accents (used for primary actions and highlights) --- */
+  --color-accent: #7c8cff; /* Primary accent */
+  --color-accent-strong: #9aa6ff; /* Accent hover */
+  --color-cyan: #4fd1c5; /* Secondary accent (return values) */
+  --color-success: #3fb950; /* Success / connected */
+  --color-warning: #d9a441; /* Warnings */
+  --color-error: #f26d6d; /* Errors */
+
+  /* --- Typography --- */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas, monospace;
+
+  --radius: 10px;
+  --radius-sm: 7px;
+  --transition: 140ms ease;
+}
+
+/* ============================================================================
+   RESET
+   ============================================================================ */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(124, 140, 255, 0.08), transparent 60%),
+    var(--color-void);
+  color: var(--color-text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================================
+   HEADER
+   ============================================================================ */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 28px;
+  border-bottom: 1px solid var(--color-border);
+  background: rgba(15, 19, 28, 0.7);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.app-header__logo {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-cyan));
+  color: #0b0e14;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.app-header__title {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.app-header__subtitle {
+  font-size: 12px;
+  color: var(--color-text-faint);
+}
+
+.app-header__status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-text-faint);
+  transition: var(--transition);
+}
+
+.status-dot[data-state='connected'] {
+  background: var(--color-success);
+  box-shadow: 0 0 10px var(--color-success);
+}
+
+.status-dot[data-state='error'] {
+  background: var(--color-error);
+  box-shadow: 0 0 10px var(--color-error);
+}
+
+/* ============================================================================
+   LAYOUT
+   ============================================================================ */
+.layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 20px;
+  padding: 22px;
+  max-width: 1500px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ============================================================================
+   PANELS & CARDS
+   ============================================================================ */
+.panel,
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+.card {
+  background: var(--color-surface-raised);
+}
+
+.panel__title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-faint);
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+
+.card__title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   FIELDS
+   ============================================================================ */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.field__label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.input {
+  width: 100%;
+  background: var(--color-void);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  padding: 9px 11px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  transition: var(--transition);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(124, 140, 255, 0.15);
+}
+
+.input--code {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+select.input {
+  cursor: pointer;
+}
+
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+.btn {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: var(--color-border);
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn--primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #0b0e14;
+  font-weight: 600;
+}
+
+.btn--primary:hover {
+  background: var(--color-accent-strong);
+  border-color: var(--color-accent-strong);
+}
+
+.btn--ghost {
+  background: transparent;
+}
+
+.btn--danger {
+  color: var(--color-error);
+  border-color: rgba(242, 109, 109, 0.4);
+}
+
+.btn--danger:hover {
+  background: rgba(242, 109, 109, 0.12);
+  border-color: var(--color-error);
+}
+
+.btn--small {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+/* ============================================================================
+   ROWS
+   ============================================================================ */
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.row + .row {
+  margin-top: 10px;
+}
+
+.row--wrap {
+  flex-wrap: wrap;
+}
+
+/* ============================================================================
+   TABS
+   ============================================================================ */
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 5px;
+}
+
+.tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  padding: 9px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.tab:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+.tab--active {
+  background: var(--color-accent);
+  color: #0b0e14;
+  font-weight: 600;
+}
+
+.tab-panel {
+  display: none;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.tab-panel--active {
+  display: flex;
+}
+
+/* ============================================================================
+   CONSOLE
+   ============================================================================ */
+.console {
+  max-width: 1500px;
+  margin: 0 auto 28px;
+  padding: 0 22px;
+}
+
+.console__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.console__title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-faint);
+  font-weight: 600;
+}
+
+.console__output {
+  background: #05070b;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 12px;
+  height: 280px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.log {
+  display: grid;
+  grid-template-columns: 78px 74px 1fr;
+  gap: 10px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(35, 43, 59, 0.4);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.log__time {
+  color: var(--color-text-faint);
+}
+
+.log__tag {
+  font-weight: 600;
+}
+
+.log--call .log__tag {
+  color: var(--color-accent);
+}
+.log--return .log__tag {
+  color: var(--color-cyan);
+}
+.log--error .log__tag {
+  color: var(--color-error);
+}
+.log--error .log__body {
+  color: var(--color-error);
+}
+
+.log__body {
+  color: var(--color-text-muted);
+}
+
+/* ============================================================================
+   SCROLLBAR
+   ============================================================================ */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 10px;
+  border: 2px solid var(--color-void);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

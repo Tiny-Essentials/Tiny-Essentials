@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TinySetMapDatabase · QA Console</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "events": "https://esm.sh/events@3.3.0"
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="app-header__brand">
+        <span class="app-header__logo">{ }</span>
+        <div>
+          <h1 class="app-header__title">TinySetMapDatabase</h1>
+          <p class="app-header__subtitle">Interactive QA Console</p>
+        </div>
+      </div>
+      <div class="app-header__status">
+        <span class="status-dot" id="status-dot" data-state="idle"></span>
+        <span id="status-text">Disconnected</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <!-- ================= SIDEBAR ================= -->
+      <aside class="column column--side">
+        <section class="panel">
+          <h2 class="panel__title">Database</h2>
+          <label class="field">
+            <span class="field__label">Name</span>
+            <input id="db-name" class="input" type="text" value="tiny-test-db" spellcheck="false" />
+          </label>
+          <label class="field">
+            <span class="field__label">Migrations (JSON)</span>
+            <textarea id="db-migrations" class="input input--code" rows="10" spellcheck="false">
+[
+  { "create": ["users", "tags"] },
+  {
+    "create": [
+      { "name": "settings", "type": "map" },
+      { "name": "sessions", "type": "map" }
+    ]
+  }
+]</textarea>
+          </label>
+          <div class="row">
+            <button id="btn-init" class="btn btn--primary">Initialize</button>
+            <button id="btn-close" class="btn">Close</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel__title">Active Tables</h2>
+          <label class="field">
+            <span class="field__label">Set table</span>
+            <select id="set-table" class="input"></select>
+          </label>
+          <label class="field">
+            <span class="field__label">Map table</span>
+            <select id="map-table" class="input"></select>
+          </label>
+          <button id="btn-refresh" class="btn btn--ghost">Refresh tables</button>
+        </section>
+      </aside>
+
+      <!-- ================= MAIN ================= -->
+      <section class="column column--main">
+        <nav class="tabs">
+          <button class="tab tab--active" data-tab="set">Set Table</button>
+          <button class="tab" data-tab="map">Map Table</button>
+          <button class="tab" data-tab="database">Database</button>
+        </nav>
+
+        <!-- ---------- SET PANEL ---------- -->
+        <div class="tab-panel tab-panel--active" id="panel-set">
+          <div class="card">
+            <h3 class="card__title">Single value</h3>
+            <div class="row">
+              <input
+                id="set-value"
+                class="input"
+                type="text"
+                placeholder="value"
+                spellcheck="false"
+              />
+              <button id="set-add" class="btn btn--primary">add()</button>
+              <button id="set-has" class="btn">has()</button>
+              <button id="set-delete" class="btn">delete()</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Bulk seed</h3>
+            <div class="row">
+              <input
+                id="set-seed"
+                class="input"
+                type="text"
+                placeholder="alpha, beta, gamma"
+                spellcheck="false"
+              />
+              <button id="set-seed-run" class="btn">Seed</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Set algebra</h3>
+            <div class="row">
+              <input
+                id="set-other"
+                class="input"
+                type="text"
+                placeholder="other values: a, b, c"
+                spellcheck="false"
+              />
+            </div>
+            <div class="row row--wrap">
+              <button id="set-union" class="btn">union()</button>
+              <button id="set-intersection" class="btn">intersection()</button>
+              <button id="set-difference" class="btn">difference()</button>
+              <button id="set-symmetric" class="btn">symmetricDifference()</button>
+            </div>
+            <div class="row row--wrap">
+              <button id="set-subset" class="btn btn--ghost">isSubsetOf()</button>
+              <button id="set-superset" class="btn btn--ghost">isSupersetOf()</button>
+              <button id="set-disjoint" class="btn btn--ghost">isDisjointFrom()</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Inspection</h3>
+            <div class="row row--wrap">
+              <button id="set-size" class="btn btn--ghost">size</button>
+              <button id="set-toarray" class="btn btn--ghost">toArray()</button>
+              <button id="set-tojson" class="btn btn--ghost">toJSON()</button>
+              <button id="set-values" class="btn btn--ghost">values()</button>
+              <button id="set-entries" class="btn btn--ghost">entries()</button>
+              <button id="set-foreach" class="btn btn--ghost">forEach()</button>
+              <button id="set-clear" class="btn btn--danger">clear()</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------- MAP PANEL ---------- -->
+        <div class="tab-panel" id="panel-map">
+          <div class="card">
+            <h3 class="card__title">Entry</h3>
+            <div class="row">
+              <input id="map-key" class="input" type="text" placeholder="key" spellcheck="false" />
+              <input
+                id="map-value"
+                class="input"
+                type="text"
+                placeholder="value (JSON or text)"
+                spellcheck="false"
+              />
+            </div>
+            <div class="row row--wrap">
+              <button id="map-set" class="btn btn--primary">set()</button>
+              <button id="map-get" class="btn">get()</button>
+              <button id="map-has" class="btn">has()</button>
+              <button id="map-delete" class="btn">delete()</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Inspection</h3>
+            <div class="row row--wrap">
+              <button id="map-size" class="btn btn--ghost">size</button>
+              <button id="map-toarray" class="btn btn--ghost">toArray()</button>
+              <button id="map-tojson" class="btn btn--ghost">toJSON()</button>
+              <button id="map-keys" class="btn btn--ghost">keys()</button>
+              <button id="map-values" class="btn btn--ghost">values()</button>
+              <button id="map-entries" class="btn btn--ghost">entries()</button>
+              <button id="map-foreach" class="btn btn--ghost">forEach()</button>
+              <button id="map-clear" class="btn btn--danger">clear()</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------- DATABASE PANEL ---------- -->
+        <div class="tab-panel" id="panel-database">
+          <div class="card">
+            <h3 class="card__title">Introspection</h3>
+            <div class="row row--wrap">
+              <button id="db-get-name" class="btn btn--ghost">name</button>
+              <button id="db-get-version" class="btn btn--ghost">version</button>
+              <button id="db-get-tablenames" class="btn btn--ghost">tableNames</button>
+              <button id="db-get-ready" class="btn btn--ghost">ready</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="card__title">Lookup</h3>
+            <div class="row">
+              <input
+                id="db-lookup"
+                class="input"
+                type="text"
+                placeholder="table name"
+                spellcheck="false"
+              />
+              <button id="db-has" class="btn">has()</button>
+              <button id="db-tableset" class="btn">tableSet()</button>
+              <button id="db-tablemap" class="btn">tableMap()</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <section class="console">
+      <div class="console__header">
+        <span class="console__title">Console</span>
+        <button id="console-clear" class="btn btn--ghost btn--small">Clear</button>
+      </div>
+      <div class="console__output" id="console-output"></div>
+    </section>
+
+    <script type="module" src="ui-test.js"></script>
+  </body>
+</html>
