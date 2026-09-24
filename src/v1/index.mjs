@@ -191,7 +191,7 @@ import TinyUploadClicker from './libs/html/upload/TinyUploadClicker.mjs';
 import TinyPkgExportValidator from './libs/tools/TinyPkgExportValidator.mjs';
 import { jsonFilter, jsonFilterRecursive, jsonFilterByKeys } from './basics/jsonFilter.mjs';
 import TinyRouter from './libs/router/TinyRouter.mjs';
-import TinyMapCache from './libs/router/TinyMapCache.mjs';
+import TinyMapCache from './libs/memory/TinyMapCache.mjs';
 import TinyServiceWorker from './libs/sw/browser/TinyServiceWorker.mjs';
 import { makeSegmentExtractor, segmentExtractorV1 } from './regexp/SegmentExtractor.mjs';
 import TinyCloner from './libs/utils/TinyCloner.mjs';
