@@ -18,7 +18,7 @@
 Since this is an ES6 module, ensure your environment supports `import` syntax.
 
 ```javascript
-import TinyMapCache from 'tiny-essentials/libs/memory/TinyMapCache';
+import TinyMapCache from 'tiny-essentials/libs/storage/TinyMapCache';
 ```
 
 ### Basic Initialization

@@ -355,6 +355,10 @@
       "require": "./dist/v1/libs/storage/TinyLocalStorage.cjs",
       "import": "./dist/v1/libs/storage/TinyLocalStorage.mjs"
     },
+    "./libs/storage/TinyMapCache": {
+      "require": "./dist/v1/libs/storage/TinyMapCache.cjs",
+      "import": "./dist/v1/libs/storage/TinyMapCache.mjs"
+    },
     "./libs/html/templates/TinyLoadingScreen": {
       "require": "./dist/v1/libs/html/templates/TinyLoadingScreen.cjs",
       "import": "./dist/v1/libs/html/templates/TinyLoadingScreen.mjs"
@@ -398,10 +402,6 @@
     "./libs/worker/browser/TinyWebWorker": {
       "require": "./dist/v1/libs/worker/browser/TinyWebWorker.cjs",
       "import": "./dist/v1/libs/worker/browser/TinyWebWorker.mjs"
-    },
-    "./libs/memory/TinyMapCache": {
-      "require": "./dist/v1/libs/memory/TinyMapCache.cjs",
-      "import": "./dist/v1/libs/memory/TinyMapCache.mjs"
     },
     "./libs/router/TinyRouter": {
       "require": "./dist/v1/libs/router/TinyRouter.cjs",

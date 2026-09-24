@@ -1,3 +1,3 @@
-import TinyMapCache from '../libs/memory/TinyMapCache.mjs';
+import TinyMapCache from '../libs/storage/TinyMapCache.mjs';
 
 export { TinyMapCache };

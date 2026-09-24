@@ -1,13 +1,18 @@
+import { TinySetMapDatabase, TinySetDb } from '../../../storage/TinySetMapDatabase.mjs';
 import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
 
 const { TinyPluginLayer } = TinyServiceWorkerEngine;
 
+const db = new TinySetMapDatabase('tiny-sw-vite-file-detector', [
+  { name: 'logged-urls', validate: (value) => typeof value === 'string', type: 'set' },
+]);
+
 /**
- * Cache of URL strings that already emitted a detection log.
- * Prevents duplicated log entries when the same file is requested multiple times.
- * @type {Set<string>}
+ * Persistent store of URL strings that already emitted a detection log.
+ * Survives service worker restarts by mirroring every write into IndexedDB.
+ * @type {TinySetDb<string>}
  */
-const loggedUrls = new Set();
+const loggedUrls = db.tableSet('logged-urls');
 
 /**
  * Configuration options for the ViteFileDetectorPlugin to define which paths should be bypassed.
@@ -80,10 +85,12 @@ const ViteFileDetectorPlugin = (instance, options = {}) => {
 
       if (isBypassed) {
         const cacheKey = url.toString();
-        if (!loggedUrls.has(cacheKey)) {
-          loggedUrls.add(cacheKey);
-          instance.log('info', `File detected: ${cacheKey}`);
-        }
+        loggedUrls.has(cacheKey).then((exists) => {
+          if (!exists) {
+            loggedUrls.add(cacheKey);
+            instance.log('warn', `File detected: ${cacheKey}`);
+          }
+        });
 
         response.continueCheck = false;
         response.needValidation = false;
