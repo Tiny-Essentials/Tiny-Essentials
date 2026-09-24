@@ -9,6 +9,7 @@
 *   🔔 **Event-Driven Architecture:** Extends `EventEmitter` to provide hooks for lifecycle changes (`set`, `delete`, `expire`, `purge`, `clear`).
 *   🛡️ **Data Integrity:** Uses `structuredClone` to return deep copies of data, preventing accidental mutations of the cached items.
 *   🧹 **Cascaded Purging:** Features a unique "Global Purge" capability that can trigger expiration checks across all active cache instances simultaneously.
+*   🔁 **Familiar Iteration API:** Implements `keys()`, `values()`, `entries()`, `forEach()` and `Symbol.iterator`, so it can be used in `for...of` loops and spread syntax just like a native `Map`.
 
 ---
 
@@ -39,7 +40,7 @@ cache.ttl = 10000;
 | :--- | :--- | :--- |
 | `ttl` | `number` | The Time-To-Live in milliseconds. Default is `300000` (5 minutes). |
 | `size` | `number` | Returns the current number of items stored in the cache. |
-| `cache` | `Object` | Returns a deep-cloned plain object representation of the entire cache. |
+| `[Symbol.toStringTag]` | `string` | Read-only. Always returns `'TinyMapCache'`. Used by `Object.prototype.toString`. |
 
 ### 🚀 Methods
 
@@ -73,6 +74,33 @@ Wipes all items from the current cache instance.
 Manually triggers the expiration logic.
 *   **`clearAll = true`**: Triggers a purge across **all** active `TinyMapCache` instances in the application.
 *   **`clearAll = false`**: Only purges expired items in the current instance.
+
+#### `.keys()`
+Returns an iterator over the keys of all valid (non-expired) entries.
+*   **Returns:** `IterableIterator<string>`
+*   **Note:** Triggers `purgeExpired(true)` before building the result.
+
+#### `.values()`
+Returns an iterator over the values of all valid (non-expired) entries.
+*   **Returns:** `IterableIterator<T>`
+*   **Note:** Triggers `purgeExpired(true)` before building the result.
+
+#### `.entries()`
+Returns an iterator over the `[key, value]` pairs of all valid (non-expired) entries.
+*   **Returns:** `IterableIterator<[string, T]>`
+*   **Note:** Triggers `purgeExpired(true)` before building the result.
+
+#### `[Symbol.iterator]()`
+Alias for `.entries()`. Enables `for...of`, spread (`[...cache]`) and destructuring directly on the instance.
+*   **Returns:** `IterableIterator<[string, T]>`
+
+#### `.forEach(callbackFn, thisArg)`
+Executes a provided function once for each valid (non-expired) entry.
+*   **`callbackFn`:** `(data: T, key: string, cache: TinyMapCache<T>) => void` (Required)
+*   **`thisArg`:** `any` (Optional) — Value to use as `this` inside `callbackFn`.
+*   **Returns:** `void`
+*   **Throws:** `TypeError` if `callbackFn` is not a function.
+*   **Note:** Triggers `purgeExpired(true)` before iterating.
 
 ---
 
@@ -143,10 +171,49 @@ sessionCache2.set('session_id', 456);
 sessionCache1.purgeExpired(true); 
 ```
 
+### 4. Iterating Over the Cache
+All iteration helpers return a **snapshot** of the valid entries at the moment of the call. Expired items are never yielded.
+
+```javascript
+const cache = new TinyMapCache();
+cache.set('user:1', { name: 'Yasmin' });
+cache.set('user:2', { name: 'Isabela' });
+
+// for...of (uses Symbol.iterator)
+for (const [key, user] of cache) {
+  console.log(key, user.name);
+}
+
+// Spread into an array
+const allKeys = [...cache.keys()];
+const allUsers = [...cache.values()];
+
+// forEach with a bound context
+cache.forEach(function (user, key) {
+  console.log(`${key} -> ${user.name}`, this.label);
+}, { label: '(cached)' });
+```
+
+### 5. Map Compatibility Cheat Sheet
+| Native `Map` | `TinyMapCache` | Notes |
+| :--- | :--- | :--- |
+| `map.get(k)` | `cache.get(k)` | Returns `null` instead of `undefined` when missing. |
+| `map.set(k, v)` | `cache.set(k, v)` | Requires a `string` key. |
+| `map.has(k)` | `cache.has(k)` | Expired keys return `false`. |
+| `map.delete(k)` | `cache.delete(k)` | Emits `'delete'`. |
+| `map.clear()` | `cache.clear()` | Emits `'clear'`. |
+| `map.size` | `cache.size` | — |
+| `map.keys()` | `cache.keys()` | Skips expired entries. |
+| `map.values()` | `cache.values()` | Skips expired entries. |
+| `map.entries()` | `cache.entries()` | Skips expired entries. |
+| `map.forEach(fn)` | `cache.forEach(fn)` | Same argument order. |
+| `[...map]` | `[...cache]` | Same `[key, value]` shape. |
+| `new Map(iterable)` | ❌ Not supported | See "Important Technical Notes". |
+
 ---
 
 ## ⚠️ Important Technical Notes
 
 1.  **Automatic Cleanup:** Most methods (`get`, `set`, `has`, `delete`) automatically call `purgeExpired(true)`. This ensures you are always working with fresh data, but be aware that in very large caches, this adds a small overhead to every call.
 2.  **Memory Management:** When a `TinyMapCache` instance becomes empty (size 0), it automatically removes itself from the internal `#instances` set to prevent memory leaks.
-3.  **Data Safety:** Because we use `structuredClone`, if you store an object in the cache and later modify that object in your main code, the version inside the cache **will not change**. This is a safety feature to prevent "side-effect" bugs.
+4.  **Snapshot Semantics:** The iteration methods (`keys`, `values`, `entries`, `forEach`) build a snapshot array before returning. Mutating the cache while iterating is therefore safe, but the loop will **not** see changes made after it started.

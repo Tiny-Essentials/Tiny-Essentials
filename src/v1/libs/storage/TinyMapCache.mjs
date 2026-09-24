@@ -2,6 +2,15 @@ import { EventEmitter } from 'events';
 
 /**
  * @template T
+ * @callback ForEachCallback
+ * @param {T} data - The value of the current entry.
+ * @param {string} key - The key of the current entry.
+ * @param {TinyMapCache<T>} cache - The cache instance that is being iterated.
+ * @returns {void}
+ */
+
+/**
+ * @template T
  * @typedef {Object} SetEventPayload
  * @property {string} key - The key that was set.
  * @property {T} data - The data that was set.
@@ -219,6 +228,95 @@ class TinyMapCache extends EventEmitter {
     if (!cached) return null;
 
     return cached.data;
+  }
+
+  /**
+   * Returns the string tag used by `Object.prototype.toString`.
+   * @returns {string} The string tag for this class.
+   */
+  get [Symbol.toStringTag]() {
+    return 'TinyMapCache';
+  }
+
+  /**
+   * Returns a new iterator that yields the keys of all valid (non-expired) entries.
+   *
+   * Note: This method triggers a full purge of all expired items in the cache.
+   * @returns {IterableIterator<string>} An iterator over the cache keys.
+   */
+  keys() {
+    this.purgeExpired(true);
+    return this.#validEntries()
+      .map(([key]) => key)
+      .values();
+  }
+
+  /**
+   * Returns a new iterator that yields the values of all valid (non-expired) entries.
+   *
+   * Note: This method triggers a full purge of all expired items in the cache.
+   * @returns {IterableIterator<T>} An iterator over the cache values.
+   */
+  values() {
+    this.purgeExpired(true);
+    return this.#validEntries()
+      .map(([, data]) => data)
+      .values();
+  }
+
+  /**
+   * Returns a new iterator that yields the `[key, value]` pairs of all valid (non-expired) entries.
+   *
+   * Note: This method triggers a full purge of all expired items in the cache.
+   * @returns {IterableIterator<[string, T]>} An iterator over the cache entries.
+   */
+  entries() {
+    this.purgeExpired(true);
+    return this.#validEntries().values();
+  }
+
+  /**
+   * Returns a new iterator over the `[key, value]` pairs of all valid (non-expired) entries.
+   * Alias for `entries()`, enabling `for...of` and spread syntax.
+   *
+   * Note: This method triggers a full purge of all expired items in the cache.
+   * @returns {IterableIterator<[string, T]>} An iterator over the cache entries.
+   */
+  [Symbol.iterator]() {
+    return this.entries();
+  }
+
+  /**
+   * Executes a provided function once for each valid (non-expired) entry.
+   *
+   * Note: This method triggers a full purge of all expired items in the cache.
+   * @param {ForEachCallback<T>} callbackFn - The function to execute for each entry.
+   * @param {any} [thisArg] - The value to use as `this` when executing `callbackFn`.
+   * @returns {void}
+   * @throws {TypeError} If the callback is not a function.
+   */
+  forEach(callbackFn, thisArg) {
+    if (typeof callbackFn !== 'function') {
+      throw new TypeError('The callback must be a function.');
+    }
+    this.purgeExpired(true);
+    for (const [key, data] of this.#validEntries()) {
+      callbackFn.call(thisArg, data, key, this);
+    }
+  }
+
+  /**
+   * Builds a snapshot of all valid (non-expired) entries as `[key, value]` pairs.
+   * Expired entries are expected to be removed beforehand via `purgeExpired`.
+   * @returns {Array<[string, T]>} The list of valid entries.
+   */
+  #validEntries() {
+    /** @type {Array<[string, T]>} */
+    const entries = [];
+    for (const [key, entry] of this.#cache.entries()) {
+      entries.push([key, entry.data]);
+    }
+    return entries;
   }
 
   /**
