@@ -1,4 +1,4 @@
-import TinyI18Browser from '../../text/TinyI18/browser.mjs';
+import TinyI18Browser from '../../text/TinyI18/Browser-NON-DOM.mjs';
 import TinyHttpResponseRegistry from './index.mjs';
 
 /**

@@ -158,7 +158,7 @@ import TinyArrayPaginator from './libs/array/TinyArrayPaginator.mjs';
 import TinyInventory from './libs/game/TinyInventory.mjs';
 import TinyInventoryTrader from './libs/game/TinyInventoryTrader.mjs';
 import TinyCookieConsent from './libs/html/templates/TinyCookieConsent.mjs';
-import TinyI18 from './libs/text/TinyI18/node.mjs';
+import TinyI18 from './libs/text/TinyI18/Node.mjs';
 import TinyNeedBar from './libs/game/TinyNeedBar.mjs';
 import TinySimpleDice from './libs/math/TinySimpleDice.mjs';
 import TinyElementObserver from './libs/html/TinyElementObserver.mjs';
@@ -195,7 +195,7 @@ import TinyMapCache from './libs/router/TinyMapCache.mjs';
 import TinyServiceWorker from './libs/sw/browser/TinyServiceWorker.mjs';
 import { makeSegmentExtractor, segmentExtractorV1 } from './regexp/SegmentExtractor.mjs';
 import TinyCloner from './libs/utils/TinyCloner.mjs';
-import TinyHttpResponseRegistry from './libs/tools/TinyHttpResponseRegistry/node.mjs';
+import TinyHttpResponseRegistry from './libs/tools/TinyHttpResponseRegistry/Node.mjs';
 import { ipv4Regex, isValidIPv4, findIPv4Regex, extractIPsV4 } from './regexp/Ipv4.mjs';
 import { ipv6Regex, isValidIPv6, findIPv6Regex, extractIPsV6 } from './regexp/Ipv6.mjs';
 import {

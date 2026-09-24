@@ -424,16 +424,16 @@
       "import": "./dist/v1/libs/html/events/TinyIframeEvents.mjs"
     },
     "./libs/text/TinyI18": {
-      "require": "./dist/v1/libs/text/TinyI18/node.cjs",
-      "import": "./dist/v1/libs/text/TinyI18/node.mjs"
+      "require": "./dist/v1/libs/text/TinyI18/Node.cjs",
+      "import": "./dist/v1/libs/text/TinyI18/Node.mjs"
     },
-    "./libs/text/TinyI18/browser": {
-      "require": "./dist/v1/libs/text/TinyI18/browser.cjs",
-      "import": "./dist/v1/libs/text/TinyI18/browser.mjs"
+    "./libs/text/TinyI18/Browser": {
+      "require": "./dist/v1/libs/text/TinyI18/Browser.cjs",
+      "import": "./dist/v1/libs/text/TinyI18/Browser.mjs"
     },
-    "./libs/text/TinyI18/browser-non-dom": {
-      "require": "./dist/v1/libs/text/TinyI18/browser-non-dom.cjs",
-      "import": "./dist/v1/libs/text/TinyI18/browser-non-dom.mjs"
+    "./libs/text/TinyI18/Browser-NON-DOM": {
+      "require": "./dist/v1/libs/text/TinyI18/Browser-NON-DOM.cjs",
+      "import": "./dist/v1/libs/text/TinyI18/Browser-NON-DOM.mjs"
     },
     "./libs/html/TinyHtml": {
       "require": "./dist/v1/libs/html/TinyHtml.cjs",
@@ -516,16 +516,16 @@
       "import": "./dist/v1/libs/tools/TinyPkgExportValidator.mjs"
     },
     "./libs/tools/TinyHttpResponseRegistry": {
-      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/node.cjs",
-      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/node.mjs"
+      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Node.cjs",
+      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Node.mjs"
     },
-    "./libs/tools/TinyHttpResponseRegistry/browser": {
-      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/browser.cjs",
-      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/browser.mjs"
+    "./libs/tools/TinyHttpResponseRegistry/Browser": {
+      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Browser.cjs",
+      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Browser.mjs"
     },
-    "./libs/tools/TinyHttpResponseRegistry/browser-non-dom": {
-      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/browser-non-dom.cjs",
-      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/browser-non-dom.mjs"
+    "./libs/tools/TinyHttpResponseRegistry/Browser-NON-DOM": {
+      "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Browser-NON-DOM.cjs",
+      "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Browser-NON-DOM.mjs"
     },
     "./libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes": {
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes/index.cjs",

@@ -1,4 +1,4 @@
-import TinyI18Browser from '../../text/TinyI18/browser-non-dom.mjs';
+import TinyI18Node from '../../text/TinyI18/Node.mjs';
 import TinyHttpResponseRegistry from './index.mjs';
 
 /**
@@ -7,15 +7,15 @@ import TinyHttpResponseRegistry from './index.mjs';
  * enabling the retrieval of localized response names, summaries, and descriptions
  * while preventing accidental state mutation.
  */
-class TinyHttpResponseRegistryBrowser extends TinyHttpResponseRegistry {
+class TinyHttpResponseRegistryNode extends TinyHttpResponseRegistry {
   /**
    * Initializes a new instance of the TinyHttpResponseRegistry.
    * @param {import('./JsDoc.mjs').HttpResponses} [initialResponses] - An object of initial response objects to populate the registry.
    * @throws {TypeError} If the input is not an object.
    */
   constructor(initialResponses) {
-    super(TinyI18Browser, initialResponses);
+    super(TinyI18Node, initialResponses);
   }
 }
 
-export default TinyHttpResponseRegistryBrowser;
+export default TinyHttpResponseRegistryNode;
