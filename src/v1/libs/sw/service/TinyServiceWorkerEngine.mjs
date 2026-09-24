@@ -55,6 +55,19 @@ const codeIs = TinyHttpResponseRegistry.codeIs;
  * @returns {Promise<void> | void}
  */
 
+/**
+ * Enriched event object for the install and activate lifecycle events.
+ * @typedef {Object} LifecycleEventObj
+ * @property {ExtendableEvent} event - The native install or activate event.
+ */
+
+/**
+ * Callback for install and activate lifecycle handlers.
+ * @callback LifecycleCallback
+ * @param {LifecycleEventObj} msg - The lifecycle event object.
+ * @returns {Promise<void> | void}
+ */
+
 ///////////////////////////////////////////////////////////////////
 
 /**
@@ -673,6 +686,12 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
 
   /** @type {Map<string, SyncCallback>} */
   #syncListeners = new Map();
+
+  /** @type {Map<string, LifecycleCallback>} */
+  #installListeners = new Map();
+
+  /** @type {Map<string, LifecycleCallback>} */
+  #activateListeners = new Map();
 
   /** @type {Map<string, {resolve: (value: any) => void, reject: (reason: Error) => void, timer: NodeJS.Timeout}>} */
   #pendingRequests = new Map();
@@ -1770,6 +1789,130 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   }
 
   /**
+   * Gets the number of registered install listeners.
+   * @returns {number} The count of registered install listeners.
+   */
+  get installListenerSize() {
+    return this.#installListeners.size;
+  }
+
+  /**
+   * Adds an install listener.
+   * @param {string} tag - The identifier for the install listener.
+   * @param {LifecycleCallback} callback - The callback to execute.
+   * @returns {void}
+   * @throws {TypeError} If tag is not a non-empty string or callback is not a function.
+   */
+  addInstallListener(tag, callback) {
+    TinyServiceWorkerEngine.#assertListenerType(tag, 'addInstallListener');
+    TinyServiceWorkerEngine.#assertListenerCallback(callback, 'addInstallListener');
+    this.#installListeners.set(tag, callback);
+  }
+
+  /**
+   * Removes an install listener.
+   * @param {string} tag - The identifier for the install listener.
+   * @returns {boolean} True if the listener was removed, false otherwise.
+   * @throws {TypeError} If tag is not a non-empty string.
+   */
+  removeInstallListener(tag) {
+    TinyServiceWorkerEngine.#assertListenerType(tag, 'removeInstallListener');
+    return this.#installListeners.delete(tag);
+  }
+
+  /**
+   * Retrieves an install listener.
+   * @param {string} tag - The identifier for the install listener.
+   * @returns {LifecycleCallback|undefined} The listener, or undefined if not found.
+   * @throws {TypeError} If tag is not a non-empty string.
+   */
+  getInstallListener(tag) {
+    TinyServiceWorkerEngine.#assertListenerType(tag, 'getInstallListener');
+    return this.#installListeners.get(tag);
+  }
+
+  /**
+   * Checks if an install listener exists.
+   * @param {string} tag - The identifier for the install listener.
+   * @returns {boolean} True if the listener exists, false otherwise.
+   * @throws {TypeError} If tag is not a non-empty string.
+   */
+  hasInstallListener(tag) {
+    TinyServiceWorkerEngine.#assertListenerType(tag, 'hasInstallListener');
+    return this.#installListeners.has(tag);
+  }
+
+  /**
+   * Clears all registered install listeners.
+   * @returns {void}
+   */
+  clearInstallListeners() {
+    return this.#installListeners.clear();
+  }
+
+  /**
+   * Gets the number of registered activate listeners.
+   * @returns {number} The count of registered activate listeners.
+   */
+  get activateListenerSize() {
+    return this.#activateListeners.size;
+  }
+
+  /**
+   * Adds an activate listener.
+   * @param {string} tag - The identifier for the activate listener.
+   * @param {LifecycleCallback} callback - The callback to execute.
+   * @returns {void}
+   * @throws {TypeError} If tag is not a non-empty string or callback is not a function.
+   */
+  addActivateListener(tag, callback) {
+    TinyServiceWorkerEngine.#assertListenerType(tag, 'addActivateListener');
+    TinyServiceWorkerEngine.#assertListenerCallback(callback, 'addActivateListener');
+    this.#activateListeners.set(tag, callback);
+  }
+
+  /**
+   * Removes an activate listener.
+   * @param {string} tag - The identifier for the activate listener.
+   * @returns {boolean} True if the listener was removed, false otherwise.
+   * @throws {TypeError} If tag is not a non-empty string.
+   */
+  removeActivateListener(tag) {
+    TinyServiceWorkerEngine.#assertListenerType(tag, 'removeActivateListener');
+    return this.#activateListeners.delete(tag);
+  }
+
+  /**
+   * Retrieves an activate listener.
+   * @param {string} tag - The identifier for the activate listener.
+   * @returns {LifecycleCallback|undefined} The listener, or undefined if not found.
+   * @throws {TypeError} If tag is not a non-empty string.
+   */
+  getActivateListener(tag) {
+    TinyServiceWorkerEngine.#assertListenerType(tag, 'getActivateListener');
+    return this.#activateListeners.get(tag);
+  }
+
+  /**
+   * Checks if an activate listener exists.
+   * @param {string} tag - The identifier for the activate listener.
+   * @returns {boolean} True if the listener exists, false otherwise.
+   * @throws {TypeError} If tag is not a non-empty string.
+   */
+  hasActivateListener(tag) {
+    TinyServiceWorkerEngine.#assertListenerType(tag, 'hasActivateListener');
+    return this.#activateListeners.has(tag);
+  }
+
+  /**
+   * Clears all registered activate listeners.
+   * @returns {void}
+   */
+  clearActivateListeners() {
+    return this.#activateListeners.clear();
+  }
+
+  /**
    * Removes a registered API handler.
    * @param {string} type - The identifier for the call.
    * @returns {boolean} True if the handler was removed, false otherwise.
@@ -1916,6 +2059,28 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   }
 
   /**
+   * Runs every registered lifecycle listener sequentially, in insertion order.
+   *
+   * Errors thrown by a listener are logged and emitted, but never propagated, so a
+   * failing developer listener can not block the Service Worker lifecycle.
+   *
+   * @param {Map<string, LifecycleCallback>} listeners - The listeners to run.
+   * @param {ExtendableEvent} event - The native lifecycle event.
+   * @param {'install'|'activate'} phase - The lifecycle phase, used for logging and events.
+   * @returns {Promise<void>} Resolves once every listener has settled.
+   */
+  async #runLifecycleListeners(listeners, event, phase) {
+    for (const [tag, callback] of listeners.entries()) {
+      try {
+        await callback({ event });
+      } catch (error) {
+        this.log('error', `Error in ${phase} handler for tag "${tag}":`, error);
+        this.emit(`${phase}ListenerError`, { event, tag, error });
+      }
+    }
+  }
+
+  /**
    * Initializes the Service Worker event listeners.
    * @returns {void}
    * @throws {Error} If the engine has already been started.
@@ -1927,8 +2092,8 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
     sw.addEventListener('install', (event) => {
       this.emit('beforeSkipWaiting', { event });
       event.waitUntil(
-        sw
-          .skipWaiting()
+        this.#runLifecycleListeners(this.#installListeners, event, 'install')
+          .then(() => sw.skipWaiting())
           .then(() => {
             this.emit('afterSkipWaiting', { event });
           })
@@ -1940,8 +2105,8 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
     sw.addEventListener('activate', (event) => {
       this.emit('beforeActivated', { event });
       event.waitUntil(
-        sw.clients
-          .claim()
+        this.#runLifecycleListeners(this.#activateListeners, event, 'activate')
+          .then(() => sw.clients.claim())
           .then(() => {
             this.emit('afterActivated', { event });
             this.log('info', 'Activated and claiming clients.');
