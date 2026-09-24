@@ -447,8 +447,10 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    *
    * @param {string} type - The type identifier for the reply message.
    * @param {MessagePayload} [payload] - The payload to be sent in the reply.
+   * @param {boolean} [strict=false] - Whether to enforce the reserved event name rules.
    * @returns {MessagingData} The formatted message object.
-   * @throws {TypeError} If type is not a string.
+   * @throws {TypeError} If type is not a string, payload is not a non-null object,
+   *   or strict is not a boolean.
    */
   static #replyTemplate(type, payload, strict = false) {
     if (typeof type !== 'string') {
@@ -460,7 +462,14 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
       typeof payload !== 'undefined' &&
       (Array.isArray(payload) || typeof payload !== 'object' || payload === null)
     ) {
-      throw new TypeError('Fetch router configuration must be a non-null object.');
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] replyTemplate: payload must be a non-null object when provided.',
+      );
+    }
+    if (typeof strict !== 'boolean') {
+      throw new TypeError(
+        `[TinyServiceWorkerEngine] replyTemplate: strict must be a boolean. Received: ${typeof strict}`,
+      );
     }
     if (strict) TinyServiceWorkerEngine.#validateEventType(type);
     return { type, data: payload };
@@ -493,6 +502,11 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
         `[TinyServiceWorkerEngine] replyTo: targetSource must be a valid Client with a postMessage method.`,
       );
     }
+    if (typeof strict !== 'boolean') {
+      throw new TypeError(
+        `[TinyServiceWorkerEngine] replyTo: strict must be a boolean. Received: ${typeof strict}`,
+      );
+    }
     targetSource.postMessage(TinyServiceWorkerEngine.#replyTemplate(type, payload, strict));
   }
 
@@ -515,9 +529,39 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @param {MessageReplyToAllOptions} ops - The options for the reply.
    * @param {boolean} [strict=false] - Whether to perform strict event type validation.
    * @returns {Promise<MessageReplyToAllResponse>} The result of the broadcast.
+   * @throws {TypeError} If ops is not a valid object or strict is not a boolean.
    */
   static async #replyToAll(ops, strict = false) {
+    if (typeof ops !== 'object' || ops === null || Array.isArray(ops)) {
+      throw new TypeError('[TinyServiceWorkerEngine] replyToAll: ops must be a non-null object.');
+    }
+    if (typeof strict !== 'boolean') {
+      throw new TypeError(
+        `[TinyServiceWorkerEngine] replyToAll: strict must be a boolean. Received: ${typeof strict}`,
+      );
+    }
+
     const { type, data, options = { type: 'window', includeUncontrolled: true } } = ops;
+
+    if (typeof type !== 'string' || type.trim() === '') {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] replyToAll: ops.type must be a non-empty string.',
+      );
+    }
+    if (
+      typeof data !== 'undefined' &&
+      (Array.isArray(data) || typeof data !== 'object' || data === null)
+    ) {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] replyToAll: ops.data must be a non-null object when provided.',
+      );
+    }
+    if (typeof options !== 'object' || options === null || Array.isArray(options)) {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] replyToAll: ops.options must be a non-null object when provided.',
+      );
+    }
+
     return sw.clients.matchAll(options).then((clientList) =>
       clientList.forEach((client) => {
         TinyServiceWorkerEngine.#replyTo(client, type, data, strict);
@@ -613,10 +657,17 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * Returns the global path based on the current SPA mode configuration.
    * @param {string} path - The original path.
    * @returns {string} The path adjusted for SPA mode or the original path.
+   * @throws {TypeError} If path is not a non-empty string.
    */
   globalPathGetter(path) {
+    if (typeof path !== 'string' || path.trim() === '') {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] globalPathGetter: path must be a non-empty string.',
+      );
+    }
     return !this.#config.spaMode ? path : this.#globalMsgCode.spaPath;
   }
+
   /** @type {Map<string, ApiHandlerCallback>} */
   #apiHandlers = new Map();
 
@@ -706,6 +757,18 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {Promise<Response>} A promise that resolves to the Response object.
    */
   async fetchFn(msg, logMsg, pathGetter, options) {
+    if (typeof msg !== 'string' || typeof logMsg !== 'string') {
+      throw new TypeError('[TinyServiceWorkerEngine] fetchFn: msg and logMsg must be strings.');
+    }
+    if (typeof pathGetter !== 'string' && typeof pathGetter !== 'function') {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] fetchFn: pathGetter must be a string or a function.',
+      );
+    }
+    if (typeof options !== 'object' || options === null || !(options.url instanceof URL)) {
+      throw new TypeError('[TinyServiceWorkerEngine] fetchFn: options.url must be a valid URL.');
+    }
+
     const { url, code, request, customPath } = options;
     const path =
       typeof customPath === 'string'
@@ -732,6 +795,22 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {Promise<Response>} A promise that resolves to the error Response object.
    */
   async fetchErrorFn(msg, logMsg, pathGetter, options) {
+    if (typeof msg !== 'string' || typeof logMsg !== 'string') {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] fetchErrorFn: msg and logMsg must be strings.',
+      );
+    }
+    if (typeof pathGetter !== 'string' && typeof pathGetter !== 'function') {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] fetchErrorFn: pathGetter must be a string or a function.',
+      );
+    }
+    if (typeof options !== 'object' || options === null || !(options.url instanceof URL)) {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] fetchErrorFn: options.url must be a valid URL.',
+      );
+    }
+
     const { url, code, event, request, resType, customMsg, customPath } = options;
     const path =
       typeof customPath === 'string'
@@ -772,8 +851,24 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @param {string} ops.logMsg - The log message.
    * @param {string|PathGetter} ops.pathGetter - The path to use for the response.
    * @returns {RouterCodeConfig} The newly created configuration.
+   * @throws {TypeError} If any property is missing or has the wrong type.
    */
   createFetchRes({ isError, msg, logMsg, pathGetter }) {
+    if (typeof isError !== 'boolean') {
+      throw new TypeError('[TinyServiceWorkerEngine] createFetchRes: isError must be a boolean.');
+    }
+    if (typeof msg !== 'string') {
+      throw new TypeError('[TinyServiceWorkerEngine] createFetchRes: msg must be a string.');
+    }
+    if (typeof logMsg !== 'string') {
+      throw new TypeError('[TinyServiceWorkerEngine] createFetchRes: logMsg must be a string.');
+    }
+    if (typeof pathGetter !== 'string' && typeof pathGetter !== 'function') {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] createFetchRes: pathGetter must be a string or a function.',
+      );
+    }
+
     return {
       fn: (ops) =>
         isError
@@ -1067,6 +1162,32 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   }
 
   /**
+   * Validates that a listener identifier is a non-empty string.
+   * @param {unknown} type - The value to validate.
+   * @param {string} context - The method name used in the error message.
+   * @returns {void}
+   * @throws {TypeError} If type is not a non-empty string.
+   */
+  static #assertListenerType(type, context) {
+    if (typeof type !== 'string' || type.trim() === '') {
+      throw new TypeError(`[TinyServiceWorkerEngine] ${context}: type must be a non-empty string.`);
+    }
+  }
+
+  /**
+   * Validates that a listener callback is a function.
+   * @param {unknown} callback - The value to validate.
+   * @param {string} context - The method name used in the error message.
+   * @returns {void}
+   * @throws {TypeError} If callback is not a function.
+   */
+  static #assertListenerCallback(callback, context) {
+    if (typeof callback !== 'function') {
+      throw new TypeError(`[TinyServiceWorkerEngine] ${context}: callback must be a function.`);
+    }
+  }
+
+  /**
    * Gets the number of registered fetch RegExp listeners.
    * @returns {number} The count of registered RegExp listeners.
    */
@@ -1080,6 +1201,8 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @param {FetchCallback} callback - The callback to execute.
    */
   addFetchRegExpListener(type, callback) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'addFetchRegExpListener');
+    TinyServiceWorkerEngine.#assertListenerCallback(callback, 'addFetchRegExpListener');
     this.#fetchRegExp.set(type, callback);
   }
 
@@ -1089,6 +1212,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {boolean} True if the listener was removed, false otherwise.
    */
   removeFetchRegExpListener(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'removeFetchRegExpListener');
     return this.#fetchRegExp.delete(type);
   }
 
@@ -1098,6 +1222,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {FetchCallback|undefined} The listener, or undefined if not found.
    */
   getFetchRegExpListener(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'getFetchRegExpListener');
     return this.#fetchRegExp.get(type);
   }
 
@@ -1107,6 +1232,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {boolean} True if the listener exists, false otherwise.
    */
   hasFetchRegExp(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'hasFetchRegExp');
     return this.#fetchRegExp.has(type);
   }
 
@@ -1132,6 +1258,8 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @param {FetchCallback} callback - The callback to execute.
    */
   addFetchUrlListener(type, callback) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'addFetchUrlListener');
+    TinyServiceWorkerEngine.#assertListenerCallback(callback, 'addFetchUrlListener');
     this.#fetchUrls.set(type, callback);
   }
 
@@ -1141,6 +1269,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {boolean} True if the listener was removed, false otherwise.
    */
   removeFetchUrlListener(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'removeFetchUrlListener');
     return this.#fetchUrls.delete(type);
   }
 
@@ -1150,6 +1279,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {FetchCallback|undefined} The listener, or undefined if not found.
    */
   getFetchUrlListener(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'getFetchUrlListener');
     return this.#fetchUrls.get(type);
   }
 
@@ -1159,6 +1289,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {boolean} True if the listener exists, false otherwise.
    */
   hasFetchUrl(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'hasFetchUrl');
     return this.#fetchUrls.has(type);
   }
 
@@ -1184,6 +1315,8 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @param {FetchCallback} callback - The callback function to be executed.
    */
   addFetchGlobalListener(type, callback) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'addFetchGlobalListener');
+    TinyServiceWorkerEngine.#assertListenerCallback(callback, 'addFetchGlobalListener');
     this.#fetchGlobal.set(type, callback);
   }
 
@@ -1193,6 +1326,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {boolean} True if the listener was removed, false otherwise.
    */
   removeFetchGlobalListener(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'removeFetchGlobalListener');
     return this.#fetchGlobal.delete(type);
   }
 
@@ -1202,6 +1336,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {FetchCallback|undefined} The listener, or undefined if not found.
    */
   getFetchGlobalListener(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'getFetchGlobalListener');
     return this.#fetchGlobal.get(type);
   }
 
@@ -1211,6 +1346,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {boolean} True if the listener exists, false otherwise.
    */
   hasFetchGlobal(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'hasFetchGlobal');
     return this.#fetchGlobal.has(type);
   }
 
@@ -1236,6 +1372,8 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @param {MessageCallback} callback - The callback to execute.
    */
   addMessageListener(type, callback) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'addMessageListener');
+    TinyServiceWorkerEngine.#assertListenerCallback(callback, 'addMessageListener');
     this.#messages.set(type, callback);
   }
 
@@ -1245,6 +1383,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {boolean} True if the listener was removed, false otherwise.
    */
   removeMessageListener(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'removeMessageListener');
     return this.#messages.delete(type);
   }
 
@@ -1254,6 +1393,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {MessageCallback|undefined} The listener, or undefined if not found.
    */
   getMessageListener(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'getMessageListener');
     return this.#messages.get(type);
   }
 
@@ -1263,6 +1403,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @returns {boolean} True if the listener exists, false otherwise.
    */
   hasMessageListener(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'hasMessageListener');
     return this.#messages.has(type);
   }
 
@@ -1403,7 +1544,6 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * argument do not affect the engine.
    *
    * @param {GlobalMsgCode} newConfig - The complete configuration that replaces the current one.
-   * @returns {void}
    * @throws {TypeError} If `newConfig` is not a complete, valid {@link GlobalMsgCode} object.
    */
   set globalMsgCode(newConfig) {
@@ -1416,7 +1556,6 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * Merges the provided properties into the current global message configuration.
    *
    * @param {Partial<GlobalMsgCode>} newConfig - The properties to merge.
-   * @returns {void}
    * @throws {TypeError} If `newConfig` is not a valid partial {@link GlobalMsgCode} object.
    */
   updateGlobalMsgCode(newConfig) {
@@ -1462,17 +1601,15 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * Removes a custom router configuration for a specific HTTP status code.
    * @param {number} code - The HTTP status code to remove.
    * @returns {boolean} True if a code was removed, false otherwise.
+   * @throws {TypeError} If code is not a number.
    */
   removeRouterCode(code) {
+    if (typeof code !== 'number') {
+      throw new TypeError('[TinyServiceWorkerEngine] removeRouterCode: code must be a number.');
+    }
     const newCodes = new Map(this.#config.fetch.router.codes);
     if (newCodes.delete(code)) {
-      this.#updateConfig({
-        fetch: {
-          router: {
-            codes: newCodes,
-          },
-        },
-      });
+      this.#updateConfig({ fetch: { router: { codes: newCodes } } });
       return true;
     }
     return false;
@@ -1482,8 +1619,12 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * Retrieves a deep clone of the current configuration for a specific HTTP status code.
    * @param {number} code - The HTTP status code.
    * @returns {RouterCodeConfig|undefined} A deep cloned copy of the configuration or undefined.
+   * @throws {TypeError} If code is not a number.
    */
   getRouterCode(code) {
+    if (typeof code !== 'number') {
+      throw new TypeError('[TinyServiceWorkerEngine] getRouterCode: code must be a number.');
+    }
     const cfg = this.#config.fetch.router.codes.get(code);
     // Return a deep clone to prevent the consumer from mutating the engine's internal Map
     return cfg ? TinyCloner.clone(cfg) : undefined;
@@ -1601,8 +1742,14 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * Removes a sync handler for a specific tag.
    * @param {string} tag - The tag of the sync event.
    * @returns {boolean} True if the handler was removed.
+   * @throws {TypeError} If tag is not a non-empty string.
    */
   removeSyncListener(tag) {
+    if (typeof tag !== 'string' || tag.trim() === '') {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] removeSyncListener: tag must be a non-empty string.',
+      );
+    }
     return this.#syncListeners.delete(tag);
   }
 
@@ -1625,8 +1772,11 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   /**
    * Removes a registered API handler.
    * @param {string} type - The identifier for the call.
+   * @returns {boolean} True if the handler was removed, false otherwise.
+   * @throws {TypeError} If type is not a non-empty string.
    */
   offApi(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'offApi');
     return this.#apiHandlers.delete(type);
   }
 
@@ -1634,9 +1784,12 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * Registers a handler for API calls coming from the browser.
    * @param {string} type - The identifier for the call.
    * @param {ApiHandlerCallback} callback - Function that processes the request and returns a payload.
+   * @returns {void}
+   * @throws {TypeError} If type is not a non-empty string or callback is not a function.
    */
   onApi(type, callback) {
-    if (typeof callback !== 'function') throw new TypeError('Callback must be a function.');
+    TinyServiceWorkerEngine.#assertListenerType(type, 'onApi');
+    TinyServiceWorkerEngine.#assertListenerCallback(callback, 'onApi');
     this.#apiHandlers.set(type, callback);
   }
 
@@ -1647,9 +1800,29 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    * @param {MessagePayload} [data] - The request payload.
    * @param {number} [timeout=10000] - Maximum waiting time in milliseconds.
    * @returns {Promise<any>} A promise that resolves with the result object or undefined from the Service Worker.
-   * @throws {Error} If the timeout is reached or if the Service Worker is unavailable.
+   * @throws {TypeError} If any argument has an invalid type.
    */
   async emitApi(client, type, data, timeout = 10000) {
+    if (!(client instanceof Client)) {
+      throw new TypeError('[TinyServiceWorkerEngine] emitApi: client must be a valid Client.');
+    }
+    if (typeof type !== 'string' || type.trim() === '') {
+      throw new TypeError('[TinyServiceWorkerEngine] emitApi: type must be a non-empty string.');
+    }
+    if (
+      typeof data !== 'undefined' &&
+      (Array.isArray(data) || typeof data !== 'object' || data === null)
+    ) {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] emitApi: data must be a non-null object when provided.',
+      );
+    }
+    if (typeof timeout !== 'number' || !Number.isFinite(timeout) || timeout < 0) {
+      throw new TypeError(
+        '[TinyServiceWorkerEngine] emitApi: timeout must be a non-negative finite number.',
+      );
+    }
+
     const correlationId = crypto.randomUUID();
 
     return new Promise((resolve, reject) => {
