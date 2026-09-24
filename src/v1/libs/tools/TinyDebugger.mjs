@@ -6,6 +6,7 @@ import { browserIs } from '../../basics/browserDetector.mjs';
  * @typedef {Object} DebuggerConstructor
  * @property {Partial<Console>} logger - A custom logger (must implement Console methods).
  * @property {string} id - The unique identifier for this debugger instance.
+ * @property {boolean} [autoHideId=false] - Whether to hide the instance id whenever a sub id is set.
  * @property {boolean} debugMode - Whether to enable internal debug logging.
  * @property {boolean} [canEmitLogs=false] - Whether to emit debug events to listeners.
  * @property {boolean} [useLogColors=false] - Whether to enable log color support.
@@ -61,6 +62,9 @@ class TinyDebugger extends EventEmitter {
   /** @type {boolean} */
   #useLogColors;
 
+  /** @type {boolean} */
+  #autoHideId;
+
   /**
    * Colors (ANSI Escape Codes)
    * @type {Map<string, string>}
@@ -105,7 +109,14 @@ class TinyDebugger extends EventEmitter {
    * @param {DebuggerConstructor} config - The configuration object.
    * @throws {TypeError} If parameters do not match the required types.
    */
-  constructor({ logger, id, debugMode, canEmitLogs = false, useLogColors = false }) {
+  constructor({
+    logger,
+    id,
+    debugMode,
+    canEmitLogs = false,
+    useLogColors = false,
+    autoHideId = false,
+  }) {
     super();
     if (!isValidObj(logger)) {
       throw new TypeError('Logger must be an object that implements the Console interface.');
@@ -122,11 +133,15 @@ class TinyDebugger extends EventEmitter {
     if (typeof useLogColors !== 'boolean') {
       throw new TypeError('useLogColors must be a boolean.');
     }
+    if (typeof autoHideId !== 'boolean') {
+      throw new TypeError('autoHideId must be a boolean.');
+    }
 
     this.#logId = id;
     this.#logger = logger;
     this.#debugMode = debugMode;
     this.#canEmitLogs = canEmitLogs;
+    this.#autoHideId = autoHideId;
     this.#useLogColors = browserIs() !== 'firefox' ? useLogColors : false;
 
     this.log('info', `Emit logs of debug mode set to: ${this.#debugMode ? 'ON' : 'OFF'}`);
@@ -432,11 +447,12 @@ class TinyDebugger extends EventEmitter {
     let prefix = this.#logId;
     let subPrefix = this.#logSubId ?? '';
     let formattedMessage = message;
+    const showId = !this.#autoHideId || typeof this.#logSubId !== 'string';
 
-    prefix = this.#applyFormatting(prefix);
+    prefix = showId ? this.#applyFormatting(prefix) : '';
     if (subPrefix) subPrefix = this.#applyFormatting(subPrefix);
     formattedMessage = this.#applyFormatting(formattedMessage);
-    const fullPrefix = `${prefix}${subPrefix ? ` ${subPrefix}` : ''}`;
+    const fullPrefix = `${prefix}${subPrefix ? (showId ? ` ${subPrefix}` : subPrefix) : ''}`;
 
     const logFunc = this.#logger[logType] ? this.#logger[logType] : console[logType];
 

@@ -546,6 +546,7 @@ class TinyPluginLayer extends TinyDebugger {
       ops?.logCfg ?? {
         id: '[_main_class_TinyPluginLayer_reset_]',
         logger: console,
+        autoHideId: true,
         debugMode: false,
         useLogColors: false,
       },
@@ -555,16 +556,19 @@ class TinyPluginLayer extends TinyDebugger {
 
   /**
    * Internal method to initialize the layer state.
+   * @template {TinyPlugin<any, any, any, any, any>} Plugin - The TinyPlugin template.
    * @template {any[]} Args - The type of arguments passed to the callback.
+   * @param {Plugin} plugin - The TinyPlugin instance.
    * @param {(...args: Args) => void} [callback] - An optional callback function to execute during initialization.
    * @param {Args} args - The arguments to be passed to the callback.
    * @returns {this} The current instance of the TinyPluginLayer.
    * @throws {Error} If the layer has already been initialized.
    */
-  _startLayer(callback, ...args) {
+  _startLayer(plugin, callback, ...args) {
     if (this.#isReady) {
       throw new Error('TinyPluginLayer: The layer has already been initialized.');
     }
+    this.logSubId = plugin.logSubId;
     if (typeof callback === 'function') callback(...args);
     this.#isReady = true;
     return this;
@@ -991,6 +995,7 @@ class TinyPlugin extends TinyDebugger {
   /** @type {DebuggerConstructor} */
   static #logCfg = {
     id: '[_main_class_TinyPlugin_reset_]',
+    autoHideId: true,
     logger: console,
     debugMode: false,
     canEmitLogs: false,
@@ -1576,7 +1581,7 @@ class TinyPlugin extends TinyDebugger {
 
       // 4. Final validation of core identity
       this.#layer.debugMode = this.debugMode;
-      if (!this.#layer.isReady) this.#layer._startLayer();
+      if (!this.#layer.isReady) this.#layer._startLayer(this);
       if (this.#id.length === 0) throw new Error('Plugin id is not set.');
       if (this.#description.length === 0) throw new Error('Plugin description is not set.');
       if (this.#authors.size === 0) throw new Error('Plugin authors are not set.');

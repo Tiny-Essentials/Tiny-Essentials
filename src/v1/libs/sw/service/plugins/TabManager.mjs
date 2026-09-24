@@ -1,5 +1,5 @@
 import TinyPromiseQueue from '../../../utils/TinyPromiseQueue.mjs';
-import { TinyPluginLayer } from '../../../plugin/TinyPlugin.mjs';
+import { TinyPluginLayer, TinyPlugin } from '../../../plugin/TinyPlugin.mjs';
 import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
 
 /** @type {ServiceWorkerGlobalScope} */
@@ -180,11 +180,13 @@ class TinySwTabsLayer extends TinyPluginLayer {
 
   /**
    * Initializes the layer, loads persisted data, and begins monitoring tab changes.
+   * @template {TinyPlugin<any, any, any, any, any>} Plugin - The TinyPlugin template.
+   * @param {Plugin} plugin - The TinyPlugin instance.
    * @param {(tabs: TabInstance) => void} callback - The callback function to be executed with the current tabs upon initialization.
    */
-  _start(callback) {
+  _start(plugin, callback) {
     this.#queue.enqueue(() => this.#loadFromStorage());
-    return this._startLayer(callback, this.#tabs);
+    return this._startLayer(plugin, callback, this.#tabs);
   }
 
   /**
@@ -234,7 +236,7 @@ const TinyTabManagerPlugin = (instance, lgConfig = {}) => {
   }
 
   const layer = new TinySwTabsLayer(lgConfig);
-  layer._start((tabs) => {
+  layer._start(instance, (tabs) => {
     /**
      * Broadcasts the current list of tabs to all connected clients.
      * @returns {Promise<void>}
