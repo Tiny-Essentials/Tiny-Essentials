@@ -6,7 +6,7 @@ import TinyServiceWorkerEngine from '../TinyServiceWorkerEngine.mjs';
 /**
  * Configuration options for the GlobBypassPlugin.
  * @typedef {Object} GlobBypassOptions
- * @property {string[]} patterns - Array of glob patterns (e.g., ['**\/*.js', '**\/*.{css,html}']) that, when matched, make the request bypass the router validation.
+ * @property {string[]} patterns - Array of glob patterns (e.g., ['\*\*\/*.js', '\*\*\/\*.{css,html}']) that, when matched, make the request bypass the router validation.
  * @property {string[]} [exclude] - Array of glob patterns to ignore (e.g., ['**\/sw.js']).
  * @property {boolean} [sameOriginOnly=true] - When true, only same-origin requests are evaluated.
  * @property {boolean} [devOnly=false] - When true, the bypass is only registered in development mode.
@@ -46,7 +46,10 @@ const GlobBypassPlugin = (instance, options) => {
   ) {
     throw new TypeError('[GlobBypassPlugin] options.exclude must be an array of strings.');
   }
-  if (typeof options.sameOriginOnly !== 'undefined' && typeof options.sameOriginOnly !== 'boolean') {
+  if (
+    typeof options.sameOriginOnly !== 'undefined' &&
+    typeof options.sameOriginOnly !== 'boolean'
+  ) {
     throw new TypeError('[GlobBypassPlugin] options.sameOriginOnly must be a boolean.');
   }
   if (typeof options.devOnly !== 'undefined' && typeof options.devOnly !== 'boolean') {
@@ -74,6 +77,7 @@ const GlobBypassPlugin = (instance, options) => {
         }
 
         // Bypass the router validation for the matched request
+        instance.log('info', `File detected: ${fetchObj.url.toString()}`);
         response.continueCheck = false;
         response.needValidation = false;
         response.code = 200;

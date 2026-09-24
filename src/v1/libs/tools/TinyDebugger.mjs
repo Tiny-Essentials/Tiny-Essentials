@@ -12,6 +12,33 @@ import { browserIs } from '../../basics/browserDetector.mjs';
  */
 
 /**
+ * A `console`-compatible facade. Every method delegates to a TinyDebugger instance.
+ * @typedef {Object} ConsoleFacade
+ * @property {(...data: any[]) => void} log - Writes a log message.
+ * @property {(...data: any[]) => void} info - Writes an informational message.
+ * @property {(...data: any[]) => void} warn - Writes a warning message.
+ * @property {(...data: any[]) => void} error - Writes an error message.
+ * @property {(...data: any[]) => void} debug - Writes a debug message.
+ * @property {(...data: any[]) => void} dirxml - Writes an XML representation.
+ * @property {(...data: any[]) => void} group - Starts a log group.
+ * @property {(...data: any[]) => void} groupCollapsed - Starts a collapsed log group.
+ * @property {(...data: any[]) => void} trace - Writes a stack trace.
+ * @property {(condition: boolean, ...data: any[]) => void} assert - Logs when the condition is false.
+ * @property {(item: any, options?: import('util').InspectOptions) => void} dir - Logs an object.
+ * @property {(tabularData: any, properties?: string[]) => void} table - Logs a table.
+ * @property {() => void} clear - Clears the console.
+ * @property {() => void} groupEnd - Ends the current log group.
+ * @property {(label?: string) => void} count - Logs the call count for a label.
+ * @property {(label?: string) => void} countReset - Resets the counter for a label.
+ * @property {(label?: string) => void} time - Starts a timer.
+ * @property {(label?: string) => void} timeEnd - Stops a timer.
+ * @property {(label?: string, ...data: any[]) => void} timeLog - Logs the current timer value.
+ * @property {(label?: string) => void} timeStamp - Adds a timestamp marker.
+ * @property {(label?: string) => void} profile - Starts a profiler.
+ * @property {(label?: string) => void} profileEnd - Stops a profiler.
+ */
+
+/**
  * A lightweight debugging utility that wraps console methods and provides event emission.
  * @extends EventEmitter
  */
@@ -21,6 +48,9 @@ class TinyDebugger extends EventEmitter {
 
   /** @type {string} */
   #logId;
+
+  /** @type {string|null} */
+  #logSubId = null;
 
   /** @type {boolean} */
   #canEmitLogs;
@@ -109,6 +139,33 @@ class TinyDebugger extends EventEmitter {
   }
 
   /**
+   * @returns {string} The instance debug sub id.
+   */
+  get logSubId() {
+    if (typeof this.#logSubId !== 'string') {
+      throw new Error(
+        'logSubId has not been set yet. Assign a string to "logSubId" before reading it.',
+      );
+    }
+    return this.#logSubId;
+  }
+
+  /**
+   * @param {string} value - The new instance debug sub id.
+   * @throws {Error} If the sub id has not been set yet.
+   */
+  set logSubId(value) {
+    if (typeof value !== 'string') {
+      throw new TypeError(`logSubId must be a string. Received: ${typeof value}.`);
+    }
+    if (this.#logSubId !== null) {
+      throw new Error(`logSubId is already set to "${this.#logSubId}" and cannot be reassigned.`);
+    }
+    this.#logSubId = value;
+    this.emit('setLogSubId', value);
+  }
+
+  /**
    * @returns {boolean} Whether event emission is enabled.
    */
   get canEmitLogs() {
@@ -132,7 +189,7 @@ class TinyDebugger extends EventEmitter {
     }
     this.#useLogColors = value;
     this.log('info', `Log Colors usage mode set to: ${this.#useLogColors ? 'ON' : 'OFF'}`);
-    this.emit('setDebugMode', value);
+    this.emit('setUseLogColors', value);
   }
 
   /**
@@ -281,7 +338,7 @@ class TinyDebugger extends EventEmitter {
 
   /**
    * Starts a timer with a label.
-   * @param {string} label - The label for the timer.
+   * @param {string} [label] - The label for the timer.
    * @param {...any} args - Additional arguments for the timer.
    * @throws {TypeError} If label is not a string.
    * @returns {void}
@@ -296,7 +353,7 @@ class TinyDebugger extends EventEmitter {
 
   /**
    * Asserts a condition and logs a message if the condition is false.
-   * @param {boolean} condition - The condition to evaluate.
+   * @param {boolean} [condition] - The condition to evaluate.
    * @param {...any} args - Arguments to log if the condition is false.
    * @returns {void}
    */
@@ -310,7 +367,7 @@ class TinyDebugger extends EventEmitter {
 
   /**
    * Logs an element as a JavaScript object.
-   * @param {any} item - The object to inspect.
+   * @param {any} [item] - The object to inspect.
    * @param {import('util').InspectOptions} [options] - Inspection options.
    * @returns {void}
    */
@@ -322,7 +379,7 @@ class TinyDebugger extends EventEmitter {
 
   /**
    * Displays a table of objects.
-   * @param {any} tabularData - The data to be displayed in a table.
+   * @param {any} [tabularData] - The data to be displayed in a table.
    * @param {string[]} [properties] - The properties (columns) to display.
    * @throws {TypeError} If properties is provided but is not an array of strings.
    * @returns {void}
@@ -371,20 +428,69 @@ class TinyDebugger extends EventEmitter {
     }
 
     let prefix = this.#logId;
+    let subPrefix = this.#logSubId ?? '';
     let formattedMessage = message;
 
     prefix = this.#applyFormatting(prefix);
+    if (subPrefix) subPrefix = this.#applyFormatting(subPrefix);
     formattedMessage = this.#applyFormatting(formattedMessage);
+    const fullPrefix = `${prefix}${subPrefix ? ` ${subPrefix}` : ''}`;
 
     const logFunc = this.#logger[logType] ? this.#logger[logType] : console[logType];
 
     if (logFunc) {
-      if (this.#canEmitLogs) this.emit('debug:log', prefix, formattedMessage, ...args);
-      return logFunc(prefix, formattedMessage, ...args);
+      if (this.#canEmitLogs) this.emit('debug:log', fullPrefix, formattedMessage, ...args);
+      return logFunc(fullPrefix, formattedMessage, ...args);
     } else {
-      if (this.#canEmitLogs) this.emit('debug:log', prefix, formattedMessage, ...args);
-      return console.log(prefix, formattedMessage, ...args);
+      if (this.#canEmitLogs) this.emit('debug:log', fullPrefix, formattedMessage, ...args);
+      return console.log(fullPrefix, formattedMessage, ...args);
     }
+  }
+
+  /**
+   * Forwards a `console`-style call to the internal `log` method.
+   * @param {'log' | 'info' | 'warn' | 'error' | 'debug' | 'dirxml' | 'group' | 'groupCollapsed' | 'trace'} logType - The console method to use.
+   * @param {any[]} data - The arguments forwarded to the logger.
+   * @returns {void}
+   */
+  #forwardLog(logType, data) {
+    const [message = '', ...rest] = data;
+    return typeof message === 'string'
+      ? this.log(logType, message, ...rest)
+      : this.log(logType, '', message, ...rest);
+  }
+
+  /**
+   * Builds a `console`-compatible facade bound to this instance.
+   * Every call is routed through the existing logging methods, so formatting,
+   * debug mode and event emission keep working without extra code.
+   * @returns {ConsoleFacade} A `console`-compatible object bound to this instance.
+   */
+  toConsole() {
+    return {
+      log: (...data) => this.#forwardLog('log', data),
+      info: (...data) => this.#forwardLog('info', data),
+      warn: (...data) => this.#forwardLog('warn', data),
+      error: (...data) => this.#forwardLog('error', data),
+      debug: (...data) => this.#forwardLog('debug', data),
+      dirxml: (...data) => this.#forwardLog('dirxml', data),
+      group: (...data) => this.#forwardLog('group', data),
+      groupCollapsed: (...data) => this.#forwardLog('groupCollapsed', data),
+      trace: (...data) => this.#forwardLog('trace', data),
+      assert: (condition, ...data) => this.logAssert(condition, ...data),
+      dir: (item, options) => this.logDir(item, options),
+      table: (tabularData, properties) => this.logTable(tabularData, properties),
+      clear: () => this.logClear(),
+      groupEnd: () => this.logGroupEnd(),
+      count: (label) => this.logLabel('count', label),
+      countReset: (label) => this.logLabel('countReset', label),
+      time: (label) => this.logLabel('time', label),
+      timeEnd: (label) => this.logLabel('timeEnd', label),
+      timeLog: (label, ...data) => this.logTimeLabel(label, ...data),
+      timeStamp: (label) => this.logLabel('timeStamp', label),
+      profile: (label) => this.logLabel('profile', label),
+      profileEnd: (label) => this.logLabel('profileEnd', label),
+    };
   }
 }
 

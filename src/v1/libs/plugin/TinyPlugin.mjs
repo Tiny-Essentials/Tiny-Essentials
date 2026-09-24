@@ -1155,6 +1155,7 @@ class TinyPlugin extends TinyDebugger {
     if (typeof value !== 'string') throw new TypeError('Id must be a string.');
     if (value.length === 0) throw new TypeError('Id cannot be empty.');
     this.#id = value;
+    this.logSubId = `[_green_${value}_reset_]`;
   }
 
   /**
@@ -1520,6 +1521,15 @@ class TinyPlugin extends TinyDebugger {
         'plugins',
         'hasPlugin',
         'getPlugin',
+        'log',
+        'logClear',
+        'logGroupEnd',
+        'logLabel',
+        'logTimeLabel',
+        'logAssert',
+        'logDir',
+        'logTable',
+        'toConsole',
         'isDestroyed',
       ],
       // Blocked engine get keys

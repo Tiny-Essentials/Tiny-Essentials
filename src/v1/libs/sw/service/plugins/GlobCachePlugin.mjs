@@ -93,6 +93,7 @@ const GlobCachePlugin = (instance, options) => {
           cache.put(request, networkResponse.clone());
         }
 
+        instance.log('info', `File detected: ${fetchObj.url.toString()}`);
         result.customResponse = networkResponse;
       } catch (error) {
         // If caching fails, we don't break the flow,

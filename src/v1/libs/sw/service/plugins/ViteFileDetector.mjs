@@ -71,6 +71,7 @@ const ViteFileDetectorPlugin = (instance, options = {}) => {
       });
 
       if (isBypassed) {
+        instance.log('info', `File detected: ${url.toString()}`);
         response.continueCheck = false;
         response.needValidation = false;
         response.code = 200;
