@@ -17,5 +17,5 @@
         "module": "NodeNext",
     },
     "include": ["src"],
-    "exclude": ["node_modules", "src/v1/libs/sw/service", "src/v1/libs/worker/engine"]
+    "exclude": ["node_modules", "src/v1/libs/sw/service/**/*", "src/v1/libs/worker/engine/**/*"]
 }

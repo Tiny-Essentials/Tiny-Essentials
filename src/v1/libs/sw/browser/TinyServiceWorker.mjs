@@ -1,11 +1,14 @@
+import { EventEmitter } from 'events';
 import { TinyPluginCore, TinyPluginLayer, TinyPlugin } from '../../plugin/TinyPlugin.mjs';
 import { createCheckDestroyed } from '../../utils/tools.mjs';
+import { PUSH_TYPE } from '../utils.mjs';
+import { requestNotificationPermission } from './utils.mjs';
 
 const checkDestroy = createCheckDestroyed('TinyServiceWorker');
 
 /**
  * The data payload contained within the message.
- * @typedef {Record<string, any>} MessagePayload - A key-value map representing the message content.
+ * @typedef {any} MessagePayload - A key-value map representing the message content.
  */
 
 /**
@@ -68,6 +71,18 @@ const postMessage = (message, transfer) => {
   return navigator.serviceWorker.controller.postMessage(message, transfer ?? []);
 };
 
+/** @typedef {import('../utils.mjs').TinyPushMessage} TinyPushMessage */
+
+/**
+ * @typedef {Object} PushEventData
+ * @property {TinyPushMessage} data
+ * @property {MessageEvent<any>} event
+ */
+
+/**
+ * @typedef {ICustomEventEmitter<Record<string, (payload: PushEventData) => void>>} PushEventEmitter
+ */
+
 /**
  * @template {string} IdWorker
  * @template {string | URL} SwUrl
@@ -75,6 +90,11 @@ const postMessage = (message, transfer) => {
  */
 class TinyServiceWorker extends TinyPluginCore {
   static postMessage = postMessage;
+  static #PUSH_TYPE = PUSH_TYPE;
+  static get PUSH_TYPE() {
+    return TinyServiceWorker.#PUSH_TYPE;
+  }
+
   /**
    * Validates if an event type is a reserved name for the internal lifecycle.
    * @param {string} type - The name of the event to validate.
@@ -130,8 +150,16 @@ class TinyServiceWorker extends TinyPluginCore {
   /** @type {(() => void) | null} Handler for the appinstalled event. */
   #appInstalledHandler = null;
 
+  /** @type {PushEventEmitter} */
+  #pushEvents = new EventEmitter();
+
   /** @type {boolean} Internal flag to track if the instance has been destroyed. */
   #isDestroyed = false;
+
+  /** @returns {PushEventEmitter} The emitter to receive push events. */
+  get pushEvents() {
+    return this.#pushEvents;
+  }
 
   /** @returns {boolean} True if the service worker is ready. */
   get isReady() {
@@ -434,29 +462,24 @@ class TinyServiceWorker extends TinyPluginCore {
    */
   async requestNotificationPermission() {
     checkDestroy(this.#isDestroyed);
-
-    if (!('Notification' in window)) {
-      throw new Error('Notification API is not supported in this browser.');
-    }
-
-    // If permission is already 'granted', return immediately.
-    if (Notification.permission === 'granted') {
-      super.emit('sw:NotificationPermissionChanged', { permission: 'granted' });
-      return 'granted';
-    }
-
-    // If 'denied', the user has blocked it and we cannot prompt again via code.
-    if (Notification.permission === 'denied') {
-      this.log('warn', 'Notification permission was denied by the user.');
-      super.emit('sw:NotificationPermissionChanged', { permission: 'denied' });
-      return 'denied';
-    }
-
     try {
-      const permission = await Notification.requestPermission();
-      this.log('info', `Notification permission status: ${permission}`);
+      const permission = await requestNotificationPermission();
+
+      // If permission is already 'granted', return immediately.
+      if (permission === 'granted') {
+        super.emit('sw:NotificationPermissionChanged', { permission: 'granted' });
+        return permission;
+      }
+
+      // If 'denied', the user has blocked it and we cannot prompt again via code.
+      else if (permission === 'denied') {
+        this.log('warn', 'Notification permission was denied by the user.');
+        super.emit('sw:NotificationPermissionChanged', { permission: 'denied' });
+        return permission;
+      }
 
       // Emit an event so the UI can react (e.g., show/hide notification settings).
+      this.log('info', `Notification permission status: ${permission}`);
       super.emit('sw:NotificationPermissionChanged', { permission });
 
       return permission;
@@ -536,9 +559,12 @@ class TinyServiceWorker extends TinyPluginCore {
 
         // 1. Automatic browser notification for push events in browser mode
         if (payload.type === 'sw:PushReceived') {
+          /** @type {TinyPushMessage} */
+          const pushData = payload.data;
           if (this.displayMode === 'browser' && this.#autoNotifyPush) {
             if ('Notification' in window) {
-              const { title = 'New Message', body = '', ...options } = payload.data || {};
+              const { title = 'New Message', body = '', ...options } = pushData.notification ?? {};
+              // @ts-ignore
               const notification = new Notification(title, { body, ...options });
 
               notification.onclick = () => {
@@ -551,7 +577,7 @@ class TinyServiceWorker extends TinyPluginCore {
             }
           }
           // Always emit the event so plugins can still react to the data
-          super.emit(payload.type, { data: payload.data, event });
+          this.#pushEvents.emit(pushData.topic ?? 'push', { data: payload.data, event });
           return;
         }
 
@@ -894,6 +920,7 @@ class TinyServiceWorker extends TinyPluginCore {
 
     // 3. Remove EventEmitter listeners
     this.removeAllListeners();
+    this.#pushEvents.removeAllListeners();
 
     // 4. Clear references
     this.#registration = null;

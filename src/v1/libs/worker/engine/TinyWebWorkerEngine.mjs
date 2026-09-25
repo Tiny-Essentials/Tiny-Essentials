@@ -2,7 +2,7 @@ import { TinyPluginCore, TinyPlugin, TinyPluginLayer } from '../../plugin/TinyPl
 
 /**
  * The data payload contained within the message.
- * @typedef {Record<string, any>} MessagePayload
+ * @typedef {any} MessagePayload
  */
 
 /**

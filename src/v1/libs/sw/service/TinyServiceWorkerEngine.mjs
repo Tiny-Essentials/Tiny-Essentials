@@ -1,7 +1,10 @@
+import TinyPushRouter from './TinyPushRouter.mjs';
+import TinyPushPayload from './shared/TinyPushPayload.mjs';
 import { segmentExtractorV1 } from '../../../regexp/SegmentExtractor.mjs';
 import TinyCloner from '../../utils/TinyCloner.mjs';
 import TinyHttpResponseRegistry from '../../tools/TinyHttpResponseRegistry/Browser-NON-DOM.mjs';
 import { TinyPluginCore, TinyPlugin, TinyPluginLayer } from '../../plugin/TinyPlugin.mjs';
+import { PUSH_TYPE } from '../utils.mjs';
 
 const codeIs = TinyHttpResponseRegistry.codeIs;
 
@@ -199,6 +202,11 @@ const PHASE_ORDER_KEY = Object.freeze({
  * A partial configuration object for push interception settings.
  * @typedef {Object} PartialPushOptions
  * @property {boolean} [enabled] - Indicates if push interception is enabled.
+ * @property {string} [vapidPublicKey] - Base64 URL-safe VAPID public key.
+ * @property {string} [subscribeEndpoint] - Backend route that persists subscriptions.
+ * @property {string} [defaultIcon] - Fallback notification icon.
+ * @property {string} [defaultBadge] - Fallback notification badge.
+ * @property {string} [defaultUrl] - Fallback click URL.
  */
 
 /**
@@ -221,6 +229,11 @@ const PHASE_ORDER_KEY = Object.freeze({
  * Configuration settings for intercepting and handling push events.
  * @typedef {Object} PushOptions
  * @property {boolean} enabled - Indicates if push interception is enabled.
+ * @property {string} vapidPublicKey - Base64 URL-safe VAPID public key.
+ * @property {string} subscribeEndpoint - Backend route that persists subscriptions.
+ * @property {string} defaultIcon - Fallback notification icon.
+ * @property {string} defaultBadge - Fallback notification badge.
+ * @property {string} defaultUrl - Fallback click URL.
  */
 
 /**
@@ -308,7 +321,7 @@ const PHASE_ORDER_KEY = Object.freeze({
 
 /**
  * The data payload contained within the message.
- * @typedef {Record<string, any>} MessagePayload
+ * @typedef {any} MessagePayload
  */
 
 /**
@@ -495,11 +508,12 @@ class MockNotificationEvent extends Event {
   /**
    * @param {ExtendableMessageEvent} event - The event.
    * @param {any} data - Notification details.
+   * @param {string} [action=''] - The action identifier that was clicked.
    */
-  constructor(event, data) {
+  constructor(event, data, action = '') {
     super('notificationclick');
     this.#event = event;
-    this.#action = ''; // Clicking the notification body via browser does not have 'action'
+    this.#action = action;
     this.#notification = {
       title: data.title,
       body: data.body,
@@ -524,6 +538,11 @@ class MockNotificationEvent extends Event {
  * Manages the lifecycle and execution of modules based on the provided configuration.
  */
 class TinyServiceWorkerEngine extends TinyPluginCore {
+  static #PUSH_TYPE = PUSH_TYPE;
+  static get PUSH_TYPE() {
+    return TinyServiceWorkerEngine.#PUSH_TYPE;
+  }
+
   /**
    * Validates if an event type is a reserved name for the internal lifecycle.
    * @param {string} type - The name of the event to validate.
@@ -1006,6 +1025,30 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   }
 
   /**
+   * The push router. Kept outside `#config` on purpose: `get config()` deep
+   * clones the configuration, and a class instance would not survive the clone.
+   * @type {TinyPushRouter}
+   */
+  #pushRouter = new TinyPushRouter();
+
+  /**
+   * Replaces the push router.
+   * @param {TinyPushRouter} router - The new router.
+   * @throws {TypeError} If `router` is not a TinyPushRouter.
+   */
+  set pushRouter(router) {
+    if (!(router instanceof TinyPushRouter)) {
+      throw new TypeError('[TinyServiceWorkerEngine] pushRouter must be a TinyPushRouter.');
+    }
+    this.#pushRouter = router;
+  }
+
+  /** @returns {TinyPushRouter} The active push router. */
+  get pushRouter() {
+    return this.#pushRouter;
+  }
+
+  /**
    * The internal configuration state of the engine.
    * @type {ServiceWorkerSettings}
    */
@@ -1019,6 +1062,11 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
     },
     push: {
       enabled: true,
+      vapidPublicKey: '',
+      subscribeEndpoint: '',
+      defaultIcon: '/icons/notification-192.png',
+      defaultBadge: '/icons/badge-72.png',
+      defaultUrl: '/',
     },
     sync: {
       enabled: true,
@@ -2240,45 +2288,88 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   }
 
   /**
-   * Processes the push event received from the server.
+   * Handles a `push` event.
+   *
+   * The method never rejects: a failure is reported through the `pushError`
+   * event so the browser does not show its own generic notification.
    *
    * @param {PushEvent} event - The native push event.
    * @returns {Promise<void>}
    */
   async #handlePush(event) {
-    /** @type {MessagePayload} */
-    let data = {};
-    try {
-      // Try to parse as JSON; if it fails, try as text
-      data = event.data ? event.data.json() : {};
-    } catch (error) {
-      this.log('warn', 'Failed to parse push data as JSON, attempting text fallback.');
-      data = event.data ? { title: '', body: event.data.text() } : {};
+    const pushCfg = this.#config.push;
+    const message = await TinyPushPayload.fromEvent(event);
+
+    if (TinyPushPayload.isExpired(message)) {
+      this.log('warn', `Discarded expired push: ${message.id ?? message.type}.`);
+      return;
     }
 
-    // Emit the event so that plugins registered in the Engine can react
-    this.emit('push', { event, data });
+    /** @type {import('./TinyPushRouter.mjs').TinyPushContext} */
+    const context = { event, message, engine: this, handled: false };
 
-    // Notify all clients open in the browser about the new push
-    await TinyServiceWorkerEngine.#replyToAll(
-      {
-        type: 'sw:PushReceived',
-        data: data,
-      },
-      false,
-    );
+    this.emit('push', context);
+
+    try {
+      const handled = await this.#pushRouter.dispatch(message, context);
+
+      if (!handled && message.notification) {
+        const { title, options } = TinyPushPayload.toNotification(message, pushCfg);
+        await this.showNotification(title, options.body ?? '', options);
+      }
+    } catch (error) {
+      this.emit('pushError', errorMaker(error, event));
+      this.log('error', 'Failed to handle push message.', error);
+    } finally {
+      await TinyServiceWorkerEngine.#replyToAll({ type: 'sw:PushReceived', data: message }, false);
+    }
   }
 
   /**
-   * Displays a native notification to the user.
+   * Handles a `notificationclick` event, including action buttons.
    *
-   * @param {NotificationEvent} event - The native notification event.
+   * @param {NotificationEvent} event - The native notification click event.
    * @returns {Promise<void>}
    */
   async #handleNotificationClick(event) {
-    this.emit('notificationclick', { event });
-    // Close the notification after the click
+    const action = event.action || null;
+    const data = /** @type {Record<string, any>} */ (event.notification.data ?? {});
+    const target = action ? data.actions?.[action] : data.url;
+
+    this.emit('notificationclick', { event, action, data });
+
+    if (!target) {
+      event.notification.close();
+      return;
+    }
+
+    const url = new URL(target, sw.location.origin).href;
+    const clientList = await sw.clients.matchAll({ type: 'window', includeUncontrolled: true });
+
+    for (const client of clientList) {
+      if (client.url === url && 'focus' in client) {
+        await client.focus();
+        event.notification.close();
+        return;
+      }
+    }
+
+    await sw.clients.openWindow(url);
     event.notification.close();
+  }
+
+  /**
+   * Handles a `pushsubscriptionchange` event.
+   *
+   * The browser fires this event when the push service rotates the endpoint.
+   * Without this handler the user stops receiving pushes silently.
+   *
+   * @param {Event} event - The native event.
+   * @returns {Promise<void>}
+   */
+  async #handleSubscriptionChange(event) {
+    this.emit('pushsubscriptionchange', { event });
+    await TinyServiceWorkerEngine.#replyToAll({ type: 'sw:PushSubscriptionChange' }, false);
   }
 
   /**
@@ -2446,18 +2537,23 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
     const pushCfg = this.#config.push;
     if (pushCfg.enabled) {
       sw.addEventListener('push', (event) => {
-        this.#handlePush(event).catch((err) => {
-          this.log('error', 'Error handling push event:', err);
-          this.emit('pushError', errorMaker(err, event));
-        });
+        event.waitUntil(
+          this.#handlePush(event).catch((error) => {
+            this.emit('pushError', errorMaker(error, event));
+          }),
+        );
       });
 
-      // Listener for notification clicks
       sw.addEventListener('notificationclick', (event) => {
-        this.#handleNotificationClick(event).catch((err) => {
-          this.log('error', 'Error handling notification click event:', err);
-          this.emit('pushError', errorMaker(err, event));
-        });
+        event.waitUntil(this.#handleNotificationClick(event));
+      });
+
+      sw.addEventListener('notificationclose', (event) => {
+        this.emit('notificationclose', { event });
+      });
+
+      sw.addEventListener('pushsubscriptionchange', (event) => {
+        event.waitUntil(this.#handleSubscriptionChange(event));
       });
     }
 

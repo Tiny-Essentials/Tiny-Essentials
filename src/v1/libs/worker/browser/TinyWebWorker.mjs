@@ -5,7 +5,7 @@ const checkDestroy = createCheckDestroyed('TinyWebWorker');
 
 /**
  * The data payload contained within the message.
- * @typedef {Record<string, any>} MessagePayload
+ * @typedef {any} MessagePayload
  */
 
 /**
