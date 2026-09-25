@@ -8,12 +8,8 @@ import { PUSH_TYPE } from '../../utils.mjs';
  * before it reaches the backend.
  */
 
-
 /** @typedef {import('../../utils.mjs').TinyPushNotification} TinyPushNotification */
 /** @typedef {import('../../utils.mjs').TinyPushMessage} TinyPushMessage */
-
-
-
 
 /**
  * @typedef {Object} TinyPushNotificationDefaults

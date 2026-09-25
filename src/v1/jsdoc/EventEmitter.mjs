@@ -17,4 +17,3 @@ import { EventEmitter } from 'events';
  *   listenerCount<K extends keyof MyEvents>(event: K, listener: MyEvents[K]|undefined): number;
  * }} ICustomEventEmitter
  */
-
