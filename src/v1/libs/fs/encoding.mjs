@@ -1,5 +1,5 @@
 /**
- * @file Byte/string conversion helpers shared by every {@link FS} backend.
+ * @file Byte/string conversion helpers shared by every {@link TinyFSCore} backend.
  */
 
 /**

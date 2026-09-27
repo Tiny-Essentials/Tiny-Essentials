@@ -1,5 +1,5 @@
 /**
- * @file Thin facade returned by {@link FS#open}.
+ * @file Thin facade returned by {@link TinyFSCore#open}.
  */
 
 import { createFileSystemError } from './error.mjs';
@@ -7,7 +7,7 @@ import { createFileSystemError } from './error.mjs';
 /**
  * Handle returned by `open()`, shaped like `node:fs/promises.FileHandle`.
  *
- * The handle is a facade over the originating {@link FS} instance.
+ * The handle is a facade over the originating {@link TinyFSCore} instance.
  * Every method delegates back to the file system, so no file descriptor is
  * actually held open.
  */

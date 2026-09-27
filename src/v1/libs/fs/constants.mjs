@@ -1,5 +1,5 @@
 /**
- * @file Numeric constants shared by every {@link FS} backend.
+ * @file Numeric constants shared by every {@link TinyFSCore} backend.
  */
 
 /** @type {Readonly<Record<string, number>>} */

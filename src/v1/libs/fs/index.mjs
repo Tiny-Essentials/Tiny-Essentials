@@ -115,7 +115,7 @@ const createDefaultMetadata = () => ({
  * Abstract, `node:fs/promises`-compatible file system.
  * @beta
  */
-class FS {
+class TinyFSCore {
   /** @type {Map<string, FSMetadata>} */
   #metadata = new Map();
 
@@ -707,4 +707,4 @@ class FS {
   }
 }
 
-export default FS;
+export default TinyFSCore;

@@ -1,5 +1,5 @@
 /**
- * @file Errno-style error helpers shared by every {@link FS} backend.
+ * @file Errno-style error helpers shared by every {@link TinyFSCore} backend.
  *
  * These helpers are intentionally dependency free so they can be imported from
  * the abstract class, from concrete backends and from user code without

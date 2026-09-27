@@ -1,8 +1,8 @@
 /**
- * @file OPFS backend for {@link FS}.
+ * @file OPFS backend for {@link TinyFSCore}.
  */
 
-import FS from '../index.mjs';
+import TinyFSCore from '../index.mjs';
 import { createFileSystemError, toFileSystemError } from '../error.mjs';
 import { toSegments } from '../path.mjs';
 import { ROOT_PATH } from '../constants.mjs';
@@ -20,7 +20,7 @@ import { ROOT_PATH } from '../constants.mjs';
  * memory, so they are lost when the tab is closed.
  * @beta
  */
-class TinyOPFSFileSystem extends FS {
+class TinyOPFSFileSystem extends TinyFSCore {
   /** @type {FileSystemDirectoryHandle | null} */
   #root;
 

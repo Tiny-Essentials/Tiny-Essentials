@@ -1,5 +1,5 @@
 /**
- * @file Immutable metadata snapshots returned by {@link FS#stat}.
+ * @file Immutable metadata snapshots returned by {@link TinyFSCore#stat}.
  */
 
 import { FILE_TYPE } from './constants.mjs';
