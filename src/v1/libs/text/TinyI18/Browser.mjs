@@ -1,4 +1,5 @@
-import { joinUrl, readFile } from './browser-utils.mjs';
+import { join } from '../../fs/path.mjs';
+import { readFile } from './browser-utils.mjs';
 import TinyI18 from './index.mjs';
 
 /**
@@ -50,7 +51,7 @@ const writeFile = async (path, data) => {
 };
 
 /** @type {(...paths: string[]) => string} */
-TinyI18Browser._join = joinUrl;
+TinyI18Browser._join = join;
 /** @type {false} */
 TinyI18Browser._existsSync = false;
 /** @type {(path: string, options?: string) => Promise<string>} */

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OPFS File System · Test Harness</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar__identity">
+        <span class="topbar__mark" aria-hidden="true">◈</span>
+        <div class="topbar__text">
+          <h1 class="topbar__title">OPFS File System</h1>
+          <p class="topbar__subtitle">
+            Test harness for <code>src/v1/libs/fs</code>
+          </p>
+        </div>
+      </div>
+
+      <div class="topbar__controls">
+        <span id="environment" class="badge badge--pending" role="status">
+          checking environment…
+        </span>
+        <button id="action-run-all" class="button button--primary" type="button">
+          Run smoke suite
+        </button>
+        <button id="action-clean" class="button" type="button">Clean sandbox</button>
+        <button id="action-clear" class="button button--ghost" type="button">Clear log</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section id="panels" class="panels" aria-label="Test groups"></section>
+
+      <aside class="console" aria-label="Output console">
+        <header class="console__header">
+          <h2 class="console__title">Output</h2>
+          <label class="console__toggle">
+            <input id="console-autoscroll" type="checkbox" checked />
+            Auto-scroll
+          </label>
+        </header>
+        <div id="console" class="console__body" role="log" aria-live="polite"></div>
+      </aside>
+    </main>
+
+    <template id="template-group">
+      <article class="group">
+        <header class="group__header">
+          <div class="group__heading">
+            <h2 class="group__title"></h2>
+            <p class="group__description"></p>
+          </div>
+          <button class="button button--small group__run" type="button">Run group</button>
+        </header>
+        <div class="group__body"></div>
+      </article>
+    </template>
+
+    <template id="template-test">
+      <section class="test">
+        <header class="test__header">
+          <div class="test__heading">
+            <h3 class="test__title"></h3>
+            <p class="test__description"></p>
+          </div>
+          <button class="button button--small button--primary test__run" type="button">Run</button>
+        </header>
+        <div class="test__fields"></div>
+      </section>
+    </template>
+
+    <template id="template-field">
+      <label class="field">
+        <span class="field__label"></span>
+        <span class="field__control"></span>
+        <span class="field__hint"></span>
+      </label>
+    </template>
+
+    <script type="module" src="ui-test.js"></script>
+  </body>
+</html>

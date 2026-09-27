@@ -207,6 +207,38 @@
       "require": "./dist/v1/fileManager/normalFuncs.cjs",
       "import": "./dist/v1/fileManager/normalFuncs.mjs"
     },
+    "./libs/fs": {
+      "require": "./dist/v1/libs/fs/index.cjs",
+      "import": "./dist/v1/libs/fs/index.mjs"
+    },
+    "./libs/fs/path": {
+      "require": "./dist/v1/libs/fs/path.cjs",
+      "import": "./dist/v1/libs/fs/path.mjs"
+    },
+    "./libs/fs/constants": {
+      "require": "./dist/v1/libs/fs/constants.cjs",
+      "import": "./dist/v1/libs/fs/constants.mjs"
+    },
+    "./libs/fs/encoding": {
+      "require": "./dist/v1/libs/fs/encoding.cjs",
+      "import": "./dist/v1/libs/fs/encoding.mjs"
+    },
+    "./libs/fs/error": {
+      "require": "./dist/v1/libs/fs/error.cjs",
+      "import": "./dist/v1/libs/fs/error.mjs"
+    },
+    "./libs/fs/handle": {
+      "require": "./dist/v1/libs/fs/handle.cjs",
+      "import": "./dist/v1/libs/fs/handle.mjs"
+    },
+    "./libs/fs/stats": {
+      "require": "./dist/v1/libs/fs/stats.cjs",
+      "import": "./dist/v1/libs/fs/stats.mjs"
+    },
+    "./libs/fs/plugins/OPFS": {
+      "require": "./dist/v1/libs/fs/plugins/OPFS.cjs",
+      "import": "./dist/v1/libs/fs/plugins/OPFS.mjs"
+    },
     "./libs/utils/tools": {
       "require": "./dist/v1/libs/utils/tools.cjs",
       "import": "./dist/v1/libs/utils/tools.mjs"
