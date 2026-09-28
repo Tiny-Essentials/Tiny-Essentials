@@ -113,6 +113,17 @@ class TinyServiceWorker extends TinyPluginCore {
   }
 
   /**
+   * Validates that a value is a non-empty string usable as an event name.
+   * @param {string} type - The value to validate.
+   * @throws {TypeError} If the value is not a non-empty string.
+   */
+  static #assertEventName(type) {
+    if (typeof type !== 'string' || type.trim() === '') {
+      throw new TypeError('The event name must be a non-empty string.');
+    }
+  }
+
+  /**
    * Returns a promise that resolves when the Service Worker is ready.
    * @returns {Promise<ServiceWorkerRegistration>} A promise that resolves to the Service Worker registration.
    */
@@ -155,6 +166,13 @@ class TinyServiceWorker extends TinyPluginCore {
 
   /** @type {boolean} Internal flag to track if the instance has been destroyed. */
   #isDestroyed = false;
+
+  /**
+   * A set of event names that must be ignored when received from the Service Worker.
+   * Useful to avoid collisions with third-party Service Workers that share the same scope.
+   * @type {Set<string>}
+   */
+  #eventBlacklist = new Set();
 
   /** @returns {PushEventEmitter} The emitter to receive push events. */
   get pushEvents() {
@@ -251,6 +269,61 @@ class TinyServiceWorker extends TinyPluginCore {
       throw new TypeError('autoNotifyPush must be a boolean.');
     }
     this.#autoNotifyPush = value;
+  }
+
+  /**
+   * Returns a copy of the blacklisted event names.
+   * @returns {string[]} An array with every blacklisted event name.
+   */
+  get eventBlacklist() {
+    checkDestroy(this.#isDestroyed);
+    return Array.from(this.#eventBlacklist);
+  }
+
+  /**
+   * Adds an event name to the blacklist. Blacklisted events are ignored when
+   * they arrive from the Service Worker.
+   * @param {string} type - The event name to ignore.
+   * @returns {void}
+   * @throws {TypeError} If the type is not a non-empty string.
+   */
+  addToEventBlacklist(type) {
+    checkDestroy(this.#isDestroyed);
+    TinyServiceWorker.#assertEventName(type);
+    this.#eventBlacklist.add(type);
+  }
+
+  /**
+   * Removes an event name from the blacklist.
+   * @param {string} type - The event name to remove.
+   * @returns {boolean} True if the event was removed, false otherwise.
+   * @throws {TypeError} If the type is not a non-empty string.
+   */
+  removeFromEventBlacklist(type) {
+    checkDestroy(this.#isDestroyed);
+    TinyServiceWorker.#assertEventName(type);
+    return this.#eventBlacklist.delete(type);
+  }
+
+  /**
+   * Checks whether an event name is blacklisted.
+   * @param {string} type - The event name to check.
+   * @returns {boolean} True if the event is blacklisted, false otherwise.
+   * @throws {TypeError} If the type is not a non-empty string.
+   */
+  hasInEventBlacklist(type) {
+    checkDestroy(this.#isDestroyed);
+    TinyServiceWorker.#assertEventName(type);
+    return this.#eventBlacklist.has(type);
+  }
+
+  /**
+   * Removes every event name from the blacklist.
+   * @returns {void}
+   */
+  clearEventBlacklist() {
+    checkDestroy(this.#isDestroyed);
+    this.#eventBlacklist.clear();
   }
 
   /**
@@ -551,6 +624,10 @@ class TinyServiceWorker extends TinyPluginCore {
         const payload = event.data;
         if (Array.isArray(payload) || typeof payload !== 'object' || payload === null) return;
         if (typeof payload.type !== 'string') return;
+        if (this.#eventBlacklist.has(payload.type)) {
+          this.log('warn', `Ignored blacklisted event: ${payload.type}`);
+          return;
+        }
         if (
           typeof payload.data !== 'undefined' &&
           (Array.isArray(payload.data) || typeof payload.data !== 'object' || payload.data === null)

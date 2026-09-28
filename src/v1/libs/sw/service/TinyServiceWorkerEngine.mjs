@@ -1108,6 +1108,13 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
   #messages = new Map();
 
   /**
+   * A set of event names that must be ignored when received from the browser.
+   * Useful to avoid collisions with third-party Service Workers that share the same scope.
+   * @type {Set<string>}
+   */
+  #eventBlacklist = new Set();
+
+  /**
    * A map containing registered fetch RegExp listeners.
    * @type {Map<string, FetchCallback>}
    */
@@ -1613,6 +1620,56 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
    */
   clearMessageListeners() {
     return this.#messages.clear();
+  }
+
+  /**
+   * Returns a copy of the blacklisted event names.
+   * @returns {string[]} An array with every blacklisted event name.
+   */
+  get eventBlacklist() {
+    return Array.from(this.#eventBlacklist);
+  }
+
+  /**
+   * Adds an event name to the blacklist. Blacklisted events are ignored when
+   * they arrive from the browser.
+   * @param {string} type - The event name to ignore.
+   * @returns {void}
+   * @throws {TypeError} If the type is not a non-empty string.
+   */
+  addToEventBlacklist(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'addToEventBlacklist');
+    this.#eventBlacklist.add(type);
+  }
+
+  /**
+   * Removes an event name from the blacklist.
+   * @param {string} type - The event name to remove.
+   * @returns {boolean} True if the event was removed, false otherwise.
+   * @throws {TypeError} If the type is not a non-empty string.
+   */
+  removeFromEventBlacklist(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'removeFromEventBlacklist');
+    return this.#eventBlacklist.delete(type);
+  }
+
+  /**
+   * Checks whether an event name is blacklisted.
+   * @param {string} type - The event name to check.
+   * @returns {boolean} True if the event is blacklisted, false otherwise.
+   * @throws {TypeError} If the type is not a non-empty string.
+   */
+  hasInEventBlacklist(type) {
+    TinyServiceWorkerEngine.#assertListenerType(type, 'hasInEventBlacklist');
+    return this.#eventBlacklist.has(type);
+  }
+
+  /**
+   * Removes every event name from the blacklist.
+   * @returns {void}
+   */
+  clearEventBlacklist() {
+    this.#eventBlacklist.clear();
   }
 
   /**
@@ -2726,6 +2783,11 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
         // Validation: Ensure 'type' exists and is a string
         if (typeof event.data.type !== 'string') {
           this.log('error', 'Received message with missing or invalid "type" string.');
+          return;
+        }
+
+        if (this.#eventBlacklist.has(event.data.type)) {
+          this.log('warn', `Ignored blacklisted event: ${event.data.type}`);
           return;
         }
 
