@@ -207,7 +207,7 @@
       "require": "./dist/v1/fileManager/normalFuncs.cjs",
       "import": "./dist/v1/fileManager/normalFuncs.mjs"
     },
-    "./libs/fs": {
+    "./libs/fs/TinyFSCore": {
       "require": "./dist/v1/libs/fs/index.cjs",
       "import": "./dist/v1/libs/fs/index.mjs"
     },
