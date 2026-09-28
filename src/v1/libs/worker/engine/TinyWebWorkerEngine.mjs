@@ -45,6 +45,12 @@ import { TinyPluginCore, TinyPlugin, TinyPluginLayer } from '../../plugin/TinyPl
 const workerScope = self;
 
 /**
+ * The reserved message type used by the engine to announce that it is ready to receive messages.
+ * @type {string}
+ */
+const READY_EVENT_TYPE = 'ww:EngineReady';
+
+/**
  * A function used to install a plugin into the engine.
  * @template {TinyPluginLayer} Layer
  * @template {string} IdString
@@ -161,7 +167,7 @@ class TinyWebWorkerEngine extends TinyPluginCore {
    * Sends a unidirectional message to the main thread.
    * @param {string} type - The identifier for the message type.
    * @param {MessagePayload} [data] - The actual data content.
-   * @returns {boolean} True if the message was sent, false otherwise.
+   * @returns {boolean} Always true when the message is dispatched.
    * @throws {TypeError} If type is not a string or data is invalid.
    */
   emit(type, data) {
@@ -306,21 +312,25 @@ class TinyWebWorkerEngine extends TinyPluginCore {
 
       /** @type {MessageObj} */
       const msgData = { type, event, data };
-      this.emit('beforeMessage', msgData);
+      super.emit('beforeMessage', msgData);
 
       if (messageHandler) {
         try {
           messageHandler(msgData);
         } catch (err) {
           this.log('error', `Error executing handler for message type "${type}":`, err);
-          this.emit('messageError', { type, error: err, data: msgData });
+          super.emit('messageError', { type, error: err, data: msgData });
         }
       }
-      this.emit('afterMessage', msgData);
+      super.emit('afterMessage', msgData);
     });
 
     this.#started = true;
     this.log('info', 'Web Worker Engine initialized.');
+
+    // NOTE: workerScope.postMessage is called directly on purpose.
+    // The public emit() method rejects every "ww:" prefixed type, and this signal is internal.
+    workerScope.postMessage({ type: READY_EVENT_TYPE });
   }
 }
 

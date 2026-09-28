@@ -208,6 +208,14 @@ class TinyWebWorker extends TinyPluginCore {
       this.#errorHandler = (errorEvent) => {
         this.log('error', `Worker Error [${this.#id}]:`, errorEvent.message);
         super.emit('ww:Error', { error: errorEvent });
+
+        // Calling reject() after the promise is already resolved is a no-op,
+        // so this is safe for runtime errors that happen after startup.
+        reject(
+          new Error(
+            `Web Worker [${this.#id}] failed to start: ${errorEvent.message || 'unknown error'}`,
+          ),
+        );
       };
 
       this.#worker.addEventListener('message', this.#messageHandler);
