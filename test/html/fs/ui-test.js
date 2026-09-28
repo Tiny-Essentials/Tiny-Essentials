@@ -550,6 +550,31 @@ const GROUPS = [
         fields: [text('cwd', 'cwd', '/home/user'), text('value', 'parts', '../file.txt')],
         run: ({ cwd, value }) => ({ result: path.resolve(cwd, value) }),
       },
+      {
+        id: 'path.parse',
+        title: 'parse(path)',
+        description: 'Splits a path into its structural components.',
+        fields: [text('value', 'path', '/a/b/c.tar.gz')],
+        run: ({ value }) => path.parse(value),
+      },
+      {
+        id: 'path.format',
+        title: 'format(pathObject)',
+        description: 'Builds a path from its structural components.',
+        fields: [
+          text('dir', 'dir', '/a/b'),
+          text('name', 'name', 'c'),
+          text('ext', 'ext', '.txt'),
+        ],
+        run: ({ dir, name, ext }) => ({ result: path.format({ dir, name, ext }) }),
+      },
+      {
+        id: 'path.relative',
+        title: 'relative(from, to)',
+        description: 'Computes the relative path between two locations.',
+        fields: [text('from', 'from', '/a/b/c'), text('to', 'to', '/a/d/e')],
+        run: ({ from, to }) => ({ result: path.relative(from, to) }),
+      },
     ],
   },
   {

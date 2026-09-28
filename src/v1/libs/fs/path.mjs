@@ -15,6 +15,38 @@
 import { PATH_SEPARATOR, ROOT_PATH } from './constants.mjs';
 
 /**
+ * @typedef {Object} ParsedPath
+ * @property {string} root Root of the path. Always `/`.
+ * @property {string} dir Directory of the path.
+ * @property {string} base Base name, including the extension.
+ * @property {string} ext Extension, including the leading dot.
+ * @property {string} name Base name, without the extension.
+ */
+
+/**
+ * @typedef {Object} PathObject
+ * @property {string} [root] Root of the path.
+ * @property {string} [dir] Directory of the path.
+ * @property {string} [base] Base name, including the extension.
+ * @property {string} [ext] Extension, including the leading dot.
+ * @property {string} [name] Base name, without the extension.
+ */
+
+/**
+ * Platform-specific path segment separator. Always `/` in the browser.
+ *
+ * @type {string}
+ */
+export const sep = PATH_SEPARATOR;
+
+/**
+ * Platform-specific list separator, as used by `PATH`-like variables.
+ *
+ * @type {string}
+ */
+export const delimiter = ':';
+
+/**
  * Splits a POSIX-like path into normalised segments.
  *
  * @param {string} targetPath Path to normalise.
@@ -122,6 +154,64 @@ export const resolve = (cwd, ...parts) => {
   }
   const base = isAbsolute(first) ? first : `${cwd}${PATH_SEPARATOR}${first}`;
   return resolve(base, ...rest);
+};
+
+/**
+ * Parses a path into its structural components.
+ *
+ * @param {string} targetPath Source path.
+ * @returns {ParsedPath} The parsed components.
+ */
+export const parse = (targetPath) => {
+  const segments = toSegments(targetPath);
+  const base = segments.at(-1) ?? '';
+  const extension = extname(base);
+  return {
+    root: PATH_SEPARATOR,
+    dir: toAbsolutePath(segments.slice(0, -1)),
+    base,
+    ext: extension,
+    name: extension.length === 0 ? base : base.slice(0, base.length - extension.length),
+  };
+};
+
+/**
+ * Builds a path from its structural components.
+ *
+ * @param {PathObject} pathObject Components to serialise.
+ * @returns {string} The normalised absolute path.
+ * @throws {TypeError} When `pathObject` is not a plain object.
+ */
+export const format = (pathObject) => {
+  if (pathObject === null || typeof pathObject !== 'object' || Array.isArray(pathObject)) {
+    throw new TypeError('The "pathObject" argument must be of type object');
+  }
+  const { root, dir, base, ext, name } = pathObject;
+  const resolvedBase = base ?? `${name ?? ''}${ext ?? ''}`;
+  const resolvedDirectory = dir ?? root ?? ROOT_PATH;
+  return normalize(`${resolvedDirectory}${PATH_SEPARATOR}${resolvedBase}`);
+};
+
+/**
+ * Computes the relative path from one location to another.
+ *
+ * @param {string} from Source path.
+ * @param {string} to Destination path.
+ * @returns {string} The relative path, or an empty string when both are equal.
+ */
+export const relative = (from, to) => {
+  const fromSegments = toSegments(from);
+  const toSegmentsList = toSegments(to);
+  let shared = 0;
+  while (
+    shared < fromSegments.length &&
+    shared < toSegmentsList.length &&
+    fromSegments[shared] === toSegmentsList[shared]
+  ) {
+    shared += 1;
+  }
+  const upward = new Array(fromSegments.length - shared).fill('..');
+  return [...upward, ...toSegmentsList.slice(shared)].join(PATH_SEPARATOR);
 };
 
 export { ROOT_PATH };
