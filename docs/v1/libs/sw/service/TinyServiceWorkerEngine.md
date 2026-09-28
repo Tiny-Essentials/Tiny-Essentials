@@ -268,6 +268,26 @@ navigator.serviceWorker.addEventListener('message', (event) => {
 **Why use `msg.reply()`?**
 In a Service Worker, there might be many open tabs. If you use a broadcast, every tab receives the message. `msg.reply()` ensures that **only the tab that requested the data** receives the answer.
 
+### 🚫 Event Blacklist (Third-Party Isolation)
+
+The `message` event is shared by every Service Worker in the same scope. A third-party worker can therefore deliver events that reach your handlers. The blacklist drops those events **before** they are dispatched to any registered listener.
+
+```javascript
+// Ignore every event emitted by a third-party worker.
+engine.addToEventBlacklist('THIRD_PARTY_PING');
+engine.addToEventBlacklist('analytics:beacon');
+
+// Check and remove.
+engine.hasInEventBlacklist('THIRD_PARTY_PING'); // true
+engine.removeFromEventBlacklist('THIRD_PARTY_PING'); // true
+
+// Inspect or reset the whole list.
+console.log(engine.eventBlacklist); // ['analytics:beacon']
+engine.clearEventBlacklist();
+```
+
+> **Note:** The filter is applied to **incoming** messages only. It never blocks an event that your own code sends with `reply`, `replyTo` or `replyToAll`.
+
 ---
 
 ## 🚦 Feature 3: The HTTP Router
@@ -601,6 +621,12 @@ To make navigation easier, the API is divided into functional modules: **Fetch M
 | **Removal & Cleanup** | | | |
 | `removeMessageListener` | Removes a specific message listener. | `type (string)` | `boolean` |
 | `clearMessageListeners` | Wipes all registered message listeners. | None | `void` |
+| **Event Blacklist** | | | |
+| `addToEventBlacklist` | Ignores every incoming event with the given name. | `type (string)` | `void` |
+| `removeFromEventBlacklist` | Removes an event name from the blacklist. | `type (string)` | `boolean` |
+| `hasInEventBlacklist` | Checks whether an event name is blacklisted. | `type (string)` | `boolean` |
+| `clearEventBlacklist` | Wipes the entire blacklist. | None | `void` |
+| `eventBlacklist` | Returns a copy of every blacklisted event name. | None | `string[]` |
 | **Metadata** | | | |
 | `messagesSize` | Returns the count of message listeners. | None | `number` |
 

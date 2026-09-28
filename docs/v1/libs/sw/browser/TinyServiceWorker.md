@@ -151,6 +151,7 @@ const permission = await swManager.requestNotificationPermission();
 if (permission === 'granted') {
   console.log('Notifications are enabled.');
 }
+```
 
 ---
 
@@ -194,6 +195,28 @@ swManager.addEventListener((event) => {
   }
 });
 ```
+
+### 🚫 Event Blacklist (Third-Party Isolation)
+
+The Service Worker `message` channel is **global to the scope**: any Service Worker registered for the same origin can post a message that reaches your handler. When a third-party worker shares the scope, its events can collide with yours.
+
+The blacklist drops those events **before** they are dispatched, without requiring any change on the sender side.
+
+```javascript
+// Ignore every event emitted by a third-party worker.
+swManager.addToEventBlacklist('THIRD_PARTY_PING');
+swManager.addToEventBlacklist('analytics:pudding');
+
+// Check and remove.
+swManager.hasInEventBlacklist('THIRD_PARTY_PING'); // true
+swManager.removeFromEventBlacklist('THIRD_PARTY_PING'); // true
+
+// Inspect or reset the whole list.
+console.log(swManager.eventBlacklist); // ['analytics:pudding']
+swManager.clearEventBlacklist();
+```
+
+> **Note:** The filter is applied to **incoming** messages only. It never blocks an event that your own code sends with `emit()` or `postMessage()`.
 
 ---
 
@@ -241,6 +264,10 @@ swManager.destroy();
 | `offApi(type)` | `boolean` | Removes a previously registered API handler. |
 | `addEventListener(cb)` | `void` | Listens for messages coming **from** the worker. |
 | `removeEventListener(cb)` | `boolean` | Removes a previously added listener. |
+| `addToEventBlacklist(type)` | `void` | Ignores every incoming event with the given name. |
+| `removeFromEventBlacklist(type)` | `boolean` | Removes an event name from the blacklist. |
+| `hasInEventBlacklist(type)` | `boolean` | Checks whether an event name is blacklisted. |
+| `clearEventBlacklist()` | `void` | Removes every event name from the blacklist. |
 | `registerSync(tag)` | `Promise<void>` | Registers a sync tag to trigger the 'sync' event in the Service Worker. |
 | `destroy()` | `void` | Performs full cleanup of all resources. |
 
@@ -271,6 +298,7 @@ TinyServiceWorker.postMessage({ type: 'PING' }, []);
 * `registration`: `ServiceWorkerRegistration` - The current registration object.
 * `eventListeners`: `EventListener[]` - An array of all registered event listeners.
 * `autoNotifyPush`: `boolean` - Indicates if the browser should automatically show a notification when a push is received in browser mode.
+* `eventBlacklist`: `string[]` - A copy of every blacklisted event name.
 
 ---
 
