@@ -134,6 +134,7 @@ addModule(1, './src/v1/build/TinyBrowserMonitor.mjs', 'TinyBrowserMonitor', true
 addModule(1, './src/v1/build/TinyThrottledApi.mjs', 'TinyThrottledApi', true);
 addModule(1, './src/v1/build/TinyVersion.mjs', 'TinyVersion', true);
 addModule(1, './src/v1/build/TinyOPFSFileSystem.mjs', 'TinyOPFSFileSystem', true);
+addModule(1, './src/v1/build/TinyStorageBucketFileSystem.mjs', 'TinyStorageBucketFileSystem', true);
 
 /**
  * Recursively scans the source directory for LICENSE files and copies them to the dist directory.

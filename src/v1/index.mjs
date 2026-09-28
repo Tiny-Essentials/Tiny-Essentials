@@ -234,10 +234,12 @@ import {
   verifyPluginSignature,
 } from './libs/plugin/TinyPlugin.mjs';
 import TinyWebWorker from './libs/worker/browser/TinyWebWorker.mjs';
-import TinyOPFSFileSystem from './libs/fs/plugins/OPFS.mjs';
+import TinyOPFSFileSystem from './libs/fs/plugins/OPFS/index.mjs';
+import TinyStorageBucketFileSystem from './libs/fs/plugins/OPFS/StorageBucket.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
+  TinyStorageBucketFileSystem,
   TinyOPFSFileSystem,
   TinyPluginLayer,
   TinyPlugin,

@@ -236,8 +236,12 @@
       "import": "./dist/v1/libs/fs/stats.mjs"
     },
     "./libs/fs/plugins/OPFS": {
-      "require": "./dist/v1/libs/fs/plugins/OPFS.cjs",
-      "import": "./dist/v1/libs/fs/plugins/OPFS.mjs"
+      "require": "./dist/v1/libs/fs/plugins/OPFS/index.cjs",
+      "import": "./dist/v1/libs/fs/plugins/OPFS/index.mjs"
+    },
+    "./libs/fs/plugins/OPFS/StorageBucket": {
+      "require": "./dist/v1/libs/fs/plugins/OPFS/StorageBucket.cjs",
+      "import": "./dist/v1/libs/fs/plugins/OPFS/StorageBucket.mjs"
     },
     "./libs/utils/tools": {
       "require": "./dist/v1/libs/utils/tools.cjs",

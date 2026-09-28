@@ -6,7 +6,7 @@
  * {@link GROUPS} registry.
  */
 
-import { TinyOPFSFileSystem } from '/src/v1/libs/fs/plugins/OPFS.mjs';
+import { TinyOPFSFileSystem } from '/src/v1/libs/fs/plugins/OPFS/index.mjs';
 import * as path from '/src/v1/libs/fs/path.mjs';
 import * as encoding from '/src/v1/libs/fs/encoding.mjs';
 import { constants } from '/src/v1/libs/fs/constants.mjs';
@@ -253,10 +253,7 @@ const GROUPS = [
         id: 'dir.mkdir',
         title: 'mkdir(path, { recursive })',
         description: 'Creates a directory, optionally creating missing parents.',
-        fields: [
-          text('path', 'path', NESTED),
-          check('recursive', 'recursive', true),
-        ],
+        fields: [text('path', 'path', NESTED), check('recursive', 'recursive', true)],
         run: ({ path: target, recursive }) =>
           fs.mkdir(target, { recursive: recursive === 'true' }).then((created) => ({
             created: created ?? null,
@@ -462,7 +459,11 @@ const GROUPS = [
         fields: [text('path', 'path', FILE), text('flags', 'flags', 'r')],
         run: async ({ path: target, flags }) => {
           activeHandle = await fs.open(target, flags);
-          return { path: activeHandle.path, flags: activeHandle.flags, closed: activeHandle.closed };
+          return {
+            path: activeHandle.path,
+            flags: activeHandle.flags,
+            closed: activeHandle.closed,
+          };
         },
       },
       {
@@ -561,11 +562,7 @@ const GROUPS = [
         id: 'path.format',
         title: 'format(pathObject)',
         description: 'Builds a path from its structural components.',
-        fields: [
-          text('dir', 'dir', '/a/b'),
-          text('name', 'name', 'c'),
-          text('ext', 'ext', '.txt'),
-        ],
+        fields: [text('dir', 'dir', '/a/b'), text('name', 'name', 'c'), text('ext', 'ext', '.txt')],
         run: ({ dir, name, ext }) => ({ result: path.format({ dir, name, ext }) }),
       },
       {
@@ -703,8 +700,7 @@ const render = () => {
         const controls = fields.querySelectorAll('.field');
         (test.fields ?? []).forEach((field, index) => {
           const control = controls[index].querySelector('input, select, textarea');
-          values[field.id] =
-            field.type === 'checkbox' ? String(control.checked) : control.value;
+          values[field.id] = field.type === 'checkbox' ? String(control.checked) : control.value;
         });
         return values;
       };

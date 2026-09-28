@@ -1,3 +1,3 @@
-import TinyOPFSFileSystem from '../libs/fs/plugins/OPFS.mjs';
+import TinyOPFSFileSystem from '../libs/fs/plugins/OPFS/index.mjs';
 
 export { TinyOPFSFileSystem };

@@ -2,10 +2,10 @@
  * @file OPFS backend for {@link TinyFSCore}.
  */
 
-import TinyFSCore from '../index.mjs';
-import { createFileSystemError, toFileSystemError } from '../error.mjs';
-import { toSegments } from '../path.mjs';
-import { ROOT_PATH } from '../constants.mjs';
+import TinyFSCore from '../../index.mjs';
+import { createFileSystemError, toFileSystemError } from '../../error.mjs';
+import { toSegments } from '../../path.mjs';
+import { ROOT_PATH } from '../../constants.mjs';
 
 /**
  * @typedef {Object} OPFSFileSystemOptions
@@ -25,14 +25,14 @@ class TinyOPFSFileSystem extends TinyFSCore {
   #root;
 
   /**
-   * @param {import('../index.mjs').FSOptions & OPFSFileSystemOptions} [options] Construction options.
+   * @param {import('../../index.mjs').FSOptions & OPFSFileSystemOptions} [options] Construction options.
    */
   constructor(options = {}) {
     super(options);
     this.#root = options.root ?? null;
   }
 
-  /** @returns {import('../index.mjs').FSCapabilities} The capabilities advertised by OPFS. */
+  /** @returns {import('../../index.mjs').FSCapabilities} The capabilities advertised by OPFS. */
   static get capabilities() {
     return Object.freeze({
       permissions: false,
@@ -45,10 +45,16 @@ class TinyOPFSFileSystem extends TinyFSCore {
   }
 
   /**
+   * Resolves the root directory handle used by every operation.
+   *
+   * Backends that store their tree inside a nested location — such as a
+   * storage bucket — override this hook and return the nested directory.
+   *
+   * @protected
    * @returns {Promise<FileSystemDirectoryHandle>} The OPFS root directory.
    * @throws {Error} When OPFS is not reachable in the current context.
    */
-  async #getRoot() {
+  async _resolveRoot() {
     if (this.#root !== null) {
       return this.#root;
     }
@@ -72,7 +78,7 @@ class TinyOPFSFileSystem extends TinyFSCore {
    * @returns {Promise<FileSystemDirectoryHandle>} The resolved directory handle.
    */
   async #resolveDirectory(segments, create, syscall, displayPath) {
-    let handle = await this.#getRoot();
+    let handle = await this._resolveRoot();
     for (const segment of segments) {
       try {
         handle = await handle.getDirectoryHandle(segment, { create });
@@ -157,7 +163,7 @@ class TinyOPFSFileSystem extends TinyFSCore {
    * @override
    * @param {string} targetPath Absolute path of the file.
    * @param {Uint8Array} bytes Payload to persist.
-   * @param {import('../index.mjs').TWriteFileOptions} options Write options.
+   * @param {import('../../index.mjs').TWriteFileOptions} options Write options.
    * @returns {Promise<void>} Resolves once the payload is committed.
    */
   async _writeFile(targetPath, bytes, options) {
@@ -181,7 +187,7 @@ class TinyOPFSFileSystem extends TinyFSCore {
   /**
    * @override
    * @param {string} targetPath Absolute path of the directory.
-   * @returns {Promise<import('../stats.mjs').FSDirectoryEntry[]>} The directory entries.
+   * @returns {Promise<import('../../stats.mjs').FSDirectoryEntry[]>} The directory entries.
    */
   async _readdir(targetPath) {
     const directory = await this.#resolveDirectory(
@@ -196,7 +202,7 @@ class TinyOPFSFileSystem extends TinyFSCore {
   /**
    * @override
    * @param {string} targetPath Absolute path of the directory.
-   * @param {import('../index.mjs').TMkdirOptions} options Creation options.
+   * @param {import('../../index.mjs').TMkdirOptions} options Creation options.
    * @returns {Promise<void>} Resolves once the directory exists.
    */
   async _mkdir(targetPath, options) {
@@ -226,7 +232,7 @@ class TinyOPFSFileSystem extends TinyFSCore {
   /**
    * @override
    * @param {string} targetPath Absolute path of the entry.
-   * @param {import('../index.mjs').TRmOptions} options Removal options.
+   * @param {import('../../index.mjs').TRmOptions} options Removal options.
    * @returns {Promise<void>} Resolves once the entry is gone.
    */
   async _rm(targetPath, options) {
@@ -256,7 +262,7 @@ class TinyOPFSFileSystem extends TinyFSCore {
   /**
    * @override
    * @param {string} targetPath Absolute path of the entry.
-   * @returns {Promise<import('../stats.mjs').FSStatDescriptor | undefined>}
+   * @returns {Promise<import('../../stats.mjs').FSStatDescriptor | undefined>}
    */
   async _stat(targetPath) {
     const segments = toSegments(targetPath);
