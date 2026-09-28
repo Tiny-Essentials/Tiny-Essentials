@@ -395,6 +395,10 @@
       "require": "./dist/v1/libs/storage/TinyMapCache.cjs",
       "import": "./dist/v1/libs/storage/TinyMapCache.mjs"
     },
+    "./libs/storage/TinySetMapDatabase": {
+      "require": "./dist/v1/libs/storage/TinySetMapDatabase.cjs",
+      "import": "./dist/v1/libs/storage/TinySetMapDatabase.mjs"
+    },
     "./libs/html/templates/TinyLoadingScreen": {
       "require": "./dist/v1/libs/html/templates/TinyLoadingScreen.cjs",
       "import": "./dist/v1/libs/html/templates/TinyLoadingScreen.mjs"

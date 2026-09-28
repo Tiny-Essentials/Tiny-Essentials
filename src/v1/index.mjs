@@ -236,9 +236,19 @@ import {
 import TinyWebWorker from './libs/worker/browser/TinyWebWorker.mjs';
 import TinyOPFSFileSystem from './libs/fs/plugins/OPFS/index.mjs';
 import TinyStorageBucketFileSystem from './libs/fs/plugins/OPFS/StorageBucket.mjs';
+import {
+  TinySetMapDatabase,
+  TinySetDb,
+  TinyMapDb,
+  TinyTableDb,
+} from './libs/storage/TinySetMapDatabase.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
+  TinySetMapDatabase,
+  TinySetDb,
+  TinyMapDb,
+  TinyTableDb,
   TinyStorageBucketFileSystem,
   TinyOPFSFileSystem,
   TinyPluginLayer,
