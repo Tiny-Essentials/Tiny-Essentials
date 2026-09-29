@@ -88,8 +88,8 @@ swManager.postMessage({
   data: { userId: 123, status: 'active' }
 });
 
-// Using "emit" (Simplified)
-swManager.emit('LOG_EVENT', { message: 'User clicked button' });
+// Using "emitMessage" (Simplified)
+swManager.emitMessage('LOG_EVENT', { message: 'User clicked button' });
 ```
 
 #### **B. Receiving messages (Service Worker ➡️ Main Thread)**
@@ -216,7 +216,7 @@ console.log(swManager.eventBlacklist); // ['analytics:pudding']
 swManager.clearEventBlacklist();
 ```
 
-> **Note:** The filter is applied to **incoming** messages only. It never blocks an event that your own code sends with `emit()` or `postMessage()`.
+> **Note:** The filter is applied to **incoming** messages only. It never blocks an event that your own code sends with `emitMessage()` or `postMessage()`.
 
 ---
 
@@ -258,7 +258,7 @@ swManager.destroy();
 | `promptInstallation()` | `Promise<void>` | Triggers the native browser installation prompt. |
 | `requestNotificationPermission()` | `Promise<'granted' \| 'denied' \| 'default'>` | Requests notification permission from the user. |
 | `postMessage(payload)` | `void` | Sends a structured payload to the worker. |
-| `emit(type, data)` | `boolean` | Sends a simplified message to the worker. |
+| `emitMessage(type, data)` | `boolean` | Sends a simplified message to the worker. |
 | `emitApi(type, data, timeout)` | `Promise<any>` | Sends a message and returns a Promise that resolves with the response from the Service Worker. |
 | `onApi(type, callback)` | `void` | Registers a handler to respond to specific API requests sent from the Service Worker. |
 | `offApi(type)` | `boolean` | Removes a previously registered API handler. |

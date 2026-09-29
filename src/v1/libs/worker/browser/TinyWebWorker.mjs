@@ -229,7 +229,7 @@ class TinyWebWorker extends TinyPluginCore {
    * @param {MessagePayload} [data]
    * @param {boolean} strictMode
    */
-  #emit(type, data, strictMode = false) {
+  #emitMessage(type, data, strictMode = false) {
     checkDestroy(this.#isDestroyed);
     if (!this.#worker) throw new Error('Worker is not initialized.');
     if (typeof type !== 'string') throw new TypeError('Payload.type must be a string.');
@@ -251,7 +251,7 @@ class TinyWebWorker extends TinyPluginCore {
    * @param {MessagePayload} [data]
    */
   emitMessage(type, data) {
-    this.#emit(type, data, true);
+    this.#emitMessage(type, data, true);
   }
 
   /**

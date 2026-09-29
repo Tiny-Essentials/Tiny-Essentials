@@ -597,7 +597,7 @@ class TinyServiceWorker extends TinyPluginCore {
         super.emit('sw:VersionUpdateAvailable');
 
         // 2. Signal the current Service Worker to begin downloading the new version
-        this.#emit('sw:PrepareUpdate');
+        this.#emitMessage('sw:PrepareUpdate');
         // Update localStorage so subsequent manual refreshes recognize the new version
         localStorage.setItem(idVersion, this.#version);
       }
@@ -645,7 +645,7 @@ class TinyServiceWorker extends TinyPluginCore {
               const notification = new Notification(title, { body, ...options });
 
               notification.onclick = () => {
-                this.#emit('sw:NotificationClicked', { title, body, options }, false);
+                this.#emitMessage('sw:NotificationClicked', { title, body, options }, false);
               };
 
               this.log('info', 'Automatic browser notification triggered by push event.');
@@ -776,7 +776,7 @@ class TinyServiceWorker extends TinyPluginCore {
    * @returns {boolean} True if the message was sent, false otherwise.
    * @throws {TypeError} If the type is not a string or data is not a non-null object.
    */
-  #emit(type, data, strictMode = false) {
+  #emitMessage(type, data, strictMode = false) {
     checkDestroy(this.#isDestroyed);
     if (typeof type !== 'string') {
       throw new TypeError('Payload.type must be a string.');
@@ -894,8 +894,8 @@ class TinyServiceWorker extends TinyPluginCore {
    * @returns {boolean} True if the message was sent, false otherwise.
    * @throws {TypeError} If the type is not a string or data is not a non-null object.
    */
-  emit(type, data) {
-    return this.#emit(type, data, true);
+  emitMessage(type, data) {
+    return this.#emitMessage(type, data, true);
   }
 
   /**
