@@ -198,7 +198,7 @@ class TinyServiceWorker extends TinyPluginCore {
    * Emits a warning event and logs a message when no Service Worker controller is available.
    */
   #noSwControllerWarn() {
-    super.emit('sw:NoSwControllerWarn');
+    this.emit('sw:NoSwControllerWarn');
     this.log('warn', 'No active controller to receive message.');
   }
 
@@ -383,7 +383,7 @@ class TinyServiceWorker extends TinyPluginCore {
       this.#displayMode = 'browser';
     }
 
-    super.emit('sw:DisplayModeChanged', { displayMode: this.#displayMode });
+    this.emit('sw:DisplayModeChanged', { displayMode: this.#displayMode });
     this.log('info', `DISPLAY_MODE_CHANGED: ${this.#displayMode}`);
   }
 
@@ -401,7 +401,7 @@ class TinyServiceWorker extends TinyPluginCore {
     this.#beforeInstallPromptHandler = (e) => {
       // @ts-ignore
       this.#deferredPrompt = e;
-      super.emit('sw:BeforeInstallPrompt', { event: e });
+      this.emit('sw:BeforeInstallPrompt', { event: e });
       this.log('info', 'beforeinstallprompt event fired.');
     };
     window.addEventListener('beforeinstallprompt', this.#beforeInstallPromptHandler);
@@ -409,7 +409,7 @@ class TinyServiceWorker extends TinyPluginCore {
     // 3. Handle App Installed
     this.#appInstalledHandler = () => {
       this.#deferredPrompt = null;
-      super.emit('sw:AppInstalled');
+      this.emit('sw:AppInstalled');
       this.log('info', 'PWA was installed');
     };
     window.addEventListener('appinstalled', this.#appInstalledHandler);
@@ -540,20 +540,20 @@ class TinyServiceWorker extends TinyPluginCore {
 
       // If permission is already 'granted', return immediately.
       if (permission === 'granted') {
-        super.emit('sw:NotificationPermissionChanged', { permission: 'granted' });
+        this.emit('sw:NotificationPermissionChanged', { permission: 'granted' });
         return permission;
       }
 
       // If 'denied', the user has blocked it and we cannot prompt again via code.
       else if (permission === 'denied') {
         this.log('warn', 'Notification permission was denied by the user.');
-        super.emit('sw:NotificationPermissionChanged', { permission: 'denied' });
+        this.emit('sw:NotificationPermissionChanged', { permission: 'denied' });
         return permission;
       }
 
       // Emit an event so the UI can react (e.g., show/hide notification settings).
       this.log('info', `Notification permission status: ${permission}`);
-      super.emit('sw:NotificationPermissionChanged', { permission });
+      this.emit('sw:NotificationPermissionChanged', { permission });
 
       return permission;
     } catch (error) {
@@ -594,7 +594,7 @@ class TinyServiceWorker extends TinyPluginCore {
         );
 
         // 1. Notify the UI that a new version is available (to show the update button)
-        super.emit('sw:VersionUpdateAvailable');
+        this.emit('sw:VersionUpdateAvailable');
 
         // 2. Signal the current Service Worker to begin downloading the new version
         this.#emitMessage('sw:PrepareUpdate');
@@ -614,7 +614,7 @@ class TinyServiceWorker extends TinyPluginCore {
 
       // Listen for when the new Service Worker takes control
       navigator.serviceWorker.addEventListener('controllerchange', (event) => {
-        super.emit('sw:NewVersionReady', { event });
+        this.emit('sw:NewVersionReady', { event });
         this.log('info', 'New Service Worker is now in control.');
       });
 
@@ -716,7 +716,7 @@ class TinyServiceWorker extends TinyPluginCore {
           return;
         }
 
-        super.emit(payload.type, { data: payload.data, event });
+        this.emit(payload.type, { data: payload.data, event });
       };
 
       navigator.serviceWorker.addEventListener('message', this.#messageHandler);
