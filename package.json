@@ -431,6 +431,22 @@
       "require": "./dist/v1/libs/sw/service/plugins/GlobBypassPlugin.cjs",
       "import": "./dist/v1/libs/sw/service/plugins/GlobBypassPlugin.mjs"
     },
+    "./libs/sw/service/shared/TinyPushPayload": {
+      "require": "./dist/v1/libs/sw/service/shared/TinyPushPayload.cjs",
+      "import": "./dist/v1/libs/sw/service/shared/TinyPushPayload.mjs"
+    },
+    "./libs/sw/service/TinyPushRouter": {
+      "require": "./dist/v1/libs/sw/service/TinyPushRouter.cjs",
+      "import": "./dist/v1/libs/sw/service/TinyPushRouter.mjs"
+    },
+    "./libs/sw/browser/TinyPushManager": {
+      "require": "./dist/v1/libs/sw/browser/TinyPushManager.cjs",
+      "import": "./dist/v1/libs/sw/browser/TinyPushManager.mjs"
+    },
+    "./libs/sw/browser/TinyNotificationAdapter": {
+      "require": "./dist/v1/libs/sw/browser/TinyNotificationAdapter.cjs",
+      "import": "./dist/v1/libs/sw/browser/TinyNotificationAdapter.mjs"
+    },
     "./libs/sw/browser/plugins/TabManager": {
       "require": "./dist/v1/libs/sw/browser/plugins/TabManager.cjs",
       "import": "./dist/v1/libs/sw/browser/plugins/TabManager.mjs"

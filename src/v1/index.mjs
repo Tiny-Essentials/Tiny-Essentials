@@ -242,9 +242,13 @@ import {
   TinyMapDb,
   TinyTableDb,
 } from './libs/storage/TinySetMapDatabase.mjs';
+import TinyPushManager from './libs/sw/browser/TinyPushManager.mjs';
+import { TinyNotificationAdapter } from './build/TinyNotificationAdapter.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
+  TinyNotificationAdapter,
+  TinyPushManager,
   TinySetMapDatabase,
   TinySetDb,
   TinyMapDb,

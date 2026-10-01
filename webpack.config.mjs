@@ -76,6 +76,18 @@ addModule(
   'TinyWebWorkerEngine',
   true,
 );
+addModule(
+  1,
+  './src/v1/libs/sw/service/build/TinyPushPayload.mjs',
+  'TinyPushPayload',
+  true,
+);
+addModule(
+  1,
+  './src/v1/libs/sw/service/build/TinyPushRouter.mjs',
+  'TinyPushRouter',
+  true,
+);
 addModule(1, './src/v1/libs/storage/TinySetMapDatabase.mjs', 'TinySetMapPackage');
 addModule(1, './src/v1/libs/math/TinyMamdaniInferenceSystem.mjs', 'TinyMaInSys');
 addModule(1, './src/v1/libs/plugin/TinyPlugin.mjs', 'TinyPluginPackage');
@@ -136,6 +148,8 @@ addModule(1, './src/v1/build/TinyThrottledApi.mjs', 'TinyThrottledApi', true);
 addModule(1, './src/v1/build/TinyVersion.mjs', 'TinyVersion', true);
 addModule(1, './src/v1/build/TinyOPFSFileSystem.mjs', 'TinyOPFSFileSystem', true);
 addModule(1, './src/v1/build/TinyStorageBucketFileSystem.mjs', 'TinyStorageBucketFileSystem', true);
+addModule(1, './src/v1/build/TinyNotificationAdapter.mjs', 'TinyNotificationAdapter', true);
+addModule(1, './src/v1/build/TinyPushManager.mjs', 'TinyPushManager', true);
 
 /**
  * Recursively scans the source directory for LICENSE files and copies them to the dist directory.
