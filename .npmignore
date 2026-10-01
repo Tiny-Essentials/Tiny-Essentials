@@ -15,6 +15,7 @@ rollup.config.mjs
 webpack.config.mjs
 CheckExports.mjs
 tsconfig.json
+.agents
 
 # Logs
 logs

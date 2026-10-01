@@ -14,6 +14,6 @@ import { EventEmitter } from 'events';
  *   emit<K extends keyof MyEvents>(event: K, ...args: Parameters<MyEvents[K]>): boolean;
  *   listeners<K extends keyof MyEvents>(event: K): MyEvents[K][];
  *   rawListeners<K extends keyof MyEvents>(event: K): MyEvents[K][];
- *   listenerCount<K extends keyof MyEvents>(event: K, listener: MyEvents[K]|undefined): number;
+ *   listenerCount<K extends keyof MyEvents>(event: K, listener?: MyEvents[K]): number;
  * }} ICustomEventEmitter
  */
