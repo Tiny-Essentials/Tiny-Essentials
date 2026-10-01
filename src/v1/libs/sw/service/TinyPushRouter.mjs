@@ -13,6 +13,7 @@ import { PUSH_TYPE } from '../utils.mjs';
  * @property {import('./shared/TinyPushPayload.mjs').TinyPushMessage} message - The normalized message.
  * @property {import('./TinyServiceWorkerEngine.mjs').default} engine - The engine that received the push.
  * @property {boolean} handled - Set to `true` to stop the chain.
+ * @property {boolean} notificationShown - Set to `true` when a notification was displayed.
  */
 
 /**

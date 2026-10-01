@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { TinyPluginCore, TinyPluginLayer, TinyPlugin } from '../../plugin/TinyPlugin.mjs';
+import TinyNotificationAdapter from './TinyNotificationAdapter.mjs';
 import { createCheckDestroyed } from '../../utils/tools.mjs';
 import { PUSH_TYPE } from '../utils.mjs';
 import { requestNotificationPermission } from './utils.mjs';
@@ -75,8 +76,10 @@ const postMessage = (message, transfer) => {
 
 /**
  * @typedef {Object} PushEventData
- * @property {TinyPushMessage} data
+ * @property {TinyPushMessage & { notificationShown: boolean }} data
  * @property {MessageEvent<any>} event
+ * @property {boolean} notificationShown
+ * @property {(overrides?: Partial<import('./TinyNotificationAdapter.mjs').BrowserNotificationOptions>) => Notification|null} showNotification
  */
 
 /**
@@ -563,6 +566,59 @@ class TinyServiceWorker extends TinyPluginCore {
   }
 
   /**
+   * Handles a push message forwarded by the Service Worker.
+   *
+   * The method never shows a notification on its own. It always emits the
+   * `push` event with a `showNotification` helper, so the consumer decides
+   * whether the page must display a fallback notification or not.
+   *
+   * @param {TinyPushMessage & { notificationShown?: boolean }} pushData - The payload sent by the Service Worker.
+   * @param {MessageEvent} event - The original message event.
+   * @returns {void}
+   */
+  #handlePushReceived(pushData, event) {
+    const notificationShown = pushData.notificationShown === true;
+    /** @type {import('../utils.mjs').TinyPushNotification|null} */
+    const swNotification = pushData.notification ?? null;
+
+    /**
+     * Renders the notification in the page and wires the round trip back to the SW.
+     * @param {Partial<import('./TinyNotificationAdapter.mjs').BrowserNotificationOptions>} [overrides]
+     * @returns {Notification|null}
+     */
+    const showNotification = (overrides = {}) => {
+      if (!('Notification' in window)) {
+        this.log('warn', 'Push received, but the Notification API is not supported.');
+        return null;
+      }
+      // SW -> Browser
+      const browserNotification = TinyNotificationAdapter.toBrowser(swNotification, overrides);
+      const instance = new Notification(browserNotification.title, browserNotification.options);
+      // Browser -> SW
+      /** @param {string} type */
+      const sendBack = (type) => {
+        const payload = TinyNotificationAdapter.toServiceWorker(browserNotification);
+        this.#emitMessage(type, payload, false);
+      };
+      instance.onclick = () => sendBack('sw:NotificationClicked');
+      instance.onclose = () => sendBack('sw:NotificationClosed');
+      return instance;
+    };
+
+    // The page only shows a fallback when the Service Worker did not.
+    if (!notificationShown && this.displayMode === 'browser' && this.#autoNotifyPush) {
+      showNotification();
+    }
+
+    this.#pushEvents.emit(pushData.topic ?? 'push', {
+      data: { ...pushData, notificationShown },
+      event,
+      notificationShown,
+      showNotification,
+    });
+  }
+
+  /**
    * Registers the service worker and handles version updates.
    * @param {RegistrationOptions} [options] - Standard Service Worker registration options.
    * @returns {Promise<void>} A promise that resolves when registration is attempted.
@@ -634,27 +690,9 @@ class TinyServiceWorker extends TinyPluginCore {
         )
           return;
 
-        // 1. Automatic browser notification for push events in browser mode
+        // 1. Push events forwarded by the Service Worker
         if (payload.type === 'sw:PushReceived') {
-          /** @type {TinyPushMessage} */
-          const pushData = payload.data;
-          if (this.displayMode === 'browser' && this.#autoNotifyPush) {
-            if ('Notification' in window) {
-              const { title = 'New Message', body = '', ...options } = pushData.notification ?? {};
-              // @ts-ignore
-              const notification = new Notification(title, { body, ...options });
-
-              notification.onclick = () => {
-                this.#emitMessage('sw:NotificationClicked', { title, body, options }, false);
-              };
-
-              this.log('info', 'Automatic browser notification triggered by push event.');
-            } else {
-              this.log('warn', 'Push received, but Notification API is not supported.');
-            }
-          }
-          // Always emit the event so plugins can still react to the data
-          this.#pushEvents.emit(pushData.topic ?? 'push', { data: payload.data, event });
+          this.#handlePushReceived(payload.data, event);
           return;
         }
 

@@ -2363,22 +2363,37 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
     }
 
     /** @type {import('./TinyPushRouter.mjs').TinyPushContext} */
-    const context = { event, message, engine: this, handled: false };
+    const context = { event, message, engine: this, handled: false, notificationShown: false };
 
     this.emit('push', context);
 
+    /** @type {null|Error} */
+    let errorNotification = null;
     try {
       const handled = await this.#pushRouter.dispatch(message, context);
 
       if (!handled && message.notification) {
         const { title, options } = TinyPushPayload.toNotification(message, pushCfg);
         await this.showNotification(title, options.body ?? '', options);
+        context.notificationShown = true;
       }
     } catch (error) {
-      this.emit('pushError', errorMaker(error, event));
+      const body = errorMaker(error, event);
+      errorNotification = body.error;
+      this.emit('pushError', body);
       this.log('error', 'Failed to handle push message.', error);
     } finally {
-      await TinyServiceWorkerEngine.#replyToAll({ type: 'sw:PushReceived', data: message }, false);
+      await TinyServiceWorkerEngine.#replyToAll(
+        {
+          type: 'sw:PushReceived',
+          data: {
+            ...message,
+            notificationShown: context.notificationShown === true,
+            error: errorNotification ? errorNotification.message : null,
+          },
+        },
+        false,
+      );
     }
   }
 
@@ -2854,6 +2869,12 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
             options: data?.options,
           });
           event.waitUntil(this.#handleNotificationClick(pseudoEvent));
+          return;
+        }
+
+        // 3.1 Handle Browser Notification Closes (Browser Close -> SW)
+        if (type === 'sw:NotificationClosed') {
+          this.emit('notificationclose', { event, data });
           return;
         }
 
