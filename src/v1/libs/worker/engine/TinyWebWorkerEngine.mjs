@@ -165,12 +165,19 @@ class TinyWebWorkerEngine extends TinyPluginCore {
 
   /**
    * Sends a unidirectional message to the main thread.
+   *
+   * Note: this intentionally reuses the `emit` name with a message-oriented
+   * signature. The rest parameter keeps it assignable to the inherited
+   * `EventEmitter.emit` contract.
+   *
+   * @override
    * @param {string} type - The identifier for the message type.
-   * @param {MessagePayload} [data] - The actual data content.
+   * @param {...any} args - The data content (only the first argument is used).
    * @returns {boolean} Always true when the message is dispatched.
    * @throws {TypeError} If type is not a string or data is invalid.
    */
-  emit(type, data) {
+  emit(type, ...args) {
+    const data = args[0];
     if (typeof type !== 'string') throw new TypeError('type must be a string.');
     if (
       typeof data !== 'undefined' &&
