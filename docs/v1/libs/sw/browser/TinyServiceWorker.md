@@ -174,6 +174,7 @@ These events are emitted by the `TinyServiceWorker` class to inform your applica
 | `sw:NotificationPermissionChanged` | `{ permission: NotificationPermission }` | Fired after `requestNotificationPermission()` resolves with the user's decision. |
 | `sw:RegistrationFailed` | `Error` | Fired when registration fails while a `waitForReady()` call is pending. |
 | `sw:PushReceived` | `{ data: any, event: MessageEvent }` | Fired when a push event is received. If in 'browser' mode and `autoNotifyPush` is enabled, a native browser notification is automatically displayed. |
+| `sw:PushReceived` | `{ data: any, event: MessageEvent }` | Internal message type intercepted by the manager. **Not** re-emitted through `addEventListener`; it is dispatched through the `pushEvents` emitter instead. See [Push Events](#-push-events-topic-based). |
 | `{CUSTOM EVENT}` | `{ event: Event, data: Record<string, any> }` | Fired when a message from `sw.js` is sent. |
 
 ### 📨 Custom Worker Messages
@@ -195,6 +196,34 @@ swManager.addEventListener((event) => {
   }
 });
 ```
+
+### 📲 Push Events (Topic-Based)
+
+Push messages are **not** delivered through `addEventListener`. They are dispatched by a dedicated emitter exposed through the `pushEvents` getter, which is keyed by the push **topic**. This isolates push handling from the regular message channel and lets you subscribe only to the topics you care about.
+
+**Main Thread side:**
+```javascript
+// Subscribe to a specific topic
+swManager.pushEvents.on('chat', ({ data }) => {
+  console.log(data.title, data.body);
+});
+
+// Subscribe to the default topic (used when the SW omits "topic")
+swManager.pushEvents.on('push', ({ data }) => {
+  console.log('Generic push received:', data);
+});
+```
+
+Each listener receives a `PushEventData` object:
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `data` | `TinyPushMessage & { notificationShown: boolean }` | The push payload merged with the notification state. |
+| `event` | `MessageEvent` | The original message event. |
+| `notificationShown` | `boolean` | `true` if the Service Worker already displayed a notification. |
+| `showNotification` | `(overrides?) => Notification \| null` | Helper that renders a fallback notification in the page. |
+
+> **Note:** When `displayMode === 'browser'` **and** `autoNotifyPush` is `true` **and** the Service Worker did **not** show a notification, the manager automatically calls `showNotification()` for you.
 
 ### 🚫 Event Blacklist (Third-Party Isolation)
 
@@ -299,6 +328,15 @@ TinyServiceWorker.postMessage({ type: 'PING' }, []);
 * `eventListeners`: `EventListener[]` - An array of all registered event listeners.
 * `autoNotifyPush`: `boolean` - Indicates if the browser should automatically show a notification when a push is received in browser mode.
 * `eventBlacklist`: `string[]` - A copy of every blacklisted event name.
+* `pushEvents`: `EventEmitter` - Emitter that dispatches push events, keyed by topic. See [Push Events](#-push-events-topic-based).
+
+### Static Methods
+
+| Method | Return | Description |
+| :--- | :--- | :--- |
+| `TinyServiceWorker.waitForReady()` | `Promise<ServiceWorkerRegistration>` | Resolves with the active registration once the Service Worker is ready. |
+| `TinyServiceWorker.postMessage(message, transfer?)` | `void` | Sends a raw message to the active Service Worker controller. |
+| `TinyServiceWorker.PUSH_TYPE` | `Object` | Read-only map of push type constants, re-exported for convenience. |
 
 ---
 

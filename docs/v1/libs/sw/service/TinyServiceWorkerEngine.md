@@ -41,6 +41,11 @@ Defines the operational behavior of the engine.
       * `codes` (Map<number, RouterCodeConfig>): A Map where keys are HTTP status codes and values are custom response handlers.
 * `push` (Object) — `PushOptions`: Configuration for push notification interception.
   * `enabled` (boolean): Activates/deactivates push event interception.
+  * `vapidPublicKey` (string): Base64 URL-safe VAPID public key.
+  * `subscribeEndpoint` (string): Backend route that persists subscriptions.
+  * `defaultIcon` (string): Fallback notification icon.
+  * `defaultBadge` (string): Fallback notification badge.
+  * `defaultUrl` (string): Fallback click URL.
 * `sync` (Object) — `SyncOptions`: Configuration for background sync event interception.
   * `enabled` (boolean): Activates/deactivates sync event interception.
 * `messaging` (Object):
@@ -359,6 +364,26 @@ The engine listens for `notificationclick` events. When a user interacts with a 
 1.  **Event Emission:** The engine emits a `notificationclick` event for internal handling.
 2.  **Automatic Cleanup:** The engine automatically calls `event.notification.close()` to dismiss the notification from the user's screen.
 
+### 🔕 Notification Close
+When a notification is dismissed by the user (either by clicking the close button or by the system), the engine emits a `notificationclose` event. The same event is emitted when the browser forwards a `sw:NotificationClosed` message to the Service Worker.
+
+```javascript
+engine.on('notificationclose', ({ event }) => {
+  console.log('Notification closed:', event);
+});
+```
+
+### 🔁 Subscription Change
+The browser fires a `pushsubscriptionchange` event when the push service rotates the subscription endpoint. Without a handler, the user would silently stop receiving pushes. The engine:
+1.  **Emits the event:** `pushsubscriptionchange` is emitted so your code can persist the new subscription.
+2.  **Broadcasts a message:** A `sw:PushSubscriptionChange` message is sent to every open client, allowing the main thread to re-sync the subscription with your backend.
+
+```javascript
+engine.on('pushsubscriptionchange', ({ event }) => {
+  // Persist the new subscription on your backend.
+});
+```
+
 ### 🛠️ Manual Notifications
 You can trigger a native browser notification directly from the Service Worker using the `showNotification` method.
 
@@ -557,11 +582,13 @@ The engine uses the following internal types:
 | :--- | :--- | :--- |
 | `sw:ApiResponse` | Browser → SW | Carries the response of an `emitApi` call. |
 | `sw:NotificationClicked` | Browser → SW | Forwards a notification click to the engine. |
+| `sw:NotificationClosed` | Browser → SW | Forwards a notification close to the engine. |
 | `sw:PrepareUpdate` | Browser → SW | Asks the engine to fetch and install a new version. |
 | `sw:Updated` | SW → Browser | The update finished and the new worker is waiting. |
 | `sw:UpdateError` | SW → Browser | The update failed. |
 | `sw:SkipWaiting` | Browser → SW | Promotes the waiting worker to active. |
 | `sw:PushReceived` | SW → Browser | A push event was received. |
+| `sw:PushSubscriptionChange` | SW → Browser | The push subscription changed and must be re-synced. |
 
 ---
 
