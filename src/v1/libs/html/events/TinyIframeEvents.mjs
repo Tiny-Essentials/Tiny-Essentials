@@ -34,6 +34,15 @@ const instances = new WeakMap();
  */
 
 /**
+ * Event map for {@link TinyIframeEvents}.
+ * All routed events are prefixed with `win:` followed by the event name.
+ * @typedef {Record<`win:${string}`, (payload: any, event: MessageEvent) => void> & Record<string, (...args: any[]) => void>} TinyIframeEventsMap
+ */
+
+/** @type {new (config?: TinyIframeEventsConfig) => import('../../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyIframeEventsMap>} */
+const TypedEventEmitter = /** @type {any} */ (EventEmitter);
+
+/**
  * A highly secure and flexible event routing system for structured communication
  * between a parent window and its iframe using `MessageChannel`.
  *
@@ -47,7 +56,7 @@ const instances = new WeakMap();
  * - Queue management for messages sent before the connection is established.
  * - Auto-reconnects and resets ports if the target iframe is reloaded.
  */
-class TinyIframeEvents extends EventEmitter {
+class TinyIframeEvents extends TypedEventEmitter {
   /** @type {Window} */
   #targetWindow;
 

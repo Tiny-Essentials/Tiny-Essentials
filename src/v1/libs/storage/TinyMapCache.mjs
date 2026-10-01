@@ -61,10 +61,29 @@ import { EventEmitter } from 'events';
  */
 
 /**
+ * Event map for {@link TinyMapCache}.
+ * @template T
+ * @typedef {Object} TinyMapCacheEvents
+ * @property {(payload: SetEventPayload<T>) => void} set - Emitted when an item is stored.
+ * @property {(payload: DeleteEventPayload<T>) => void} delete - Emitted when an item is removed.
+ * @property {(payload: ExpireEventPayload<T>) => void} expire - Emitted when an item expires.
+ * @property {(payload: PurgeEventPayload) => void} purge - Emitted after a purge cycle removes items.
+ * @property {() => void} clear - Emitted when the cache is cleared.
+ */
+
+/**
+ * @template T
+ * @typedef {import('../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyMapCacheEvents<T>>} TinyMapCacheEmitter
+ */
+
+/** @type {new () => TinyMapCacheEmitter<any>} */
+const TypedEventEmitter = /** @type {any} */ (EventEmitter);
+
+/**
  * @template {any} T
  * In-memory cache manager to prevent duplicate requests.
  */
-class TinyMapCache extends EventEmitter {
+class TinyMapCache extends TypedEventEmitter {
   /**
    * A private collection of all active `TinyMapCache` instances.
    * This set is used to facilitate cascaded operations (like `purgeExpired`) across all existing cache instances.

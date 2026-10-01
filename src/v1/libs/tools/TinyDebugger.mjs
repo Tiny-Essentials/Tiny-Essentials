@@ -40,10 +40,34 @@ import { browserIs } from '../../basics/browserDetector.mjs';
  */
 
 /**
- * A lightweight debugging utility that wraps console methods and provides event emission.
- * @extends EventEmitter
+ * Event map for {@link TinyDebugger}.
+ *
+ * `TinyDebugger` is a base class that is widely extended, so the event map is kept
+ * open (`Record<string, ...>`) to allow subclasses to emit their own events while
+ * still providing autocomplete for the well-known debug events.
+ *
+ * @typedef {{
+ *   setLogSubId: (value: string) => void,
+ *   setUseLogColors: (value: boolean) => void,
+ *   setDebugMode: (value: boolean) => void,
+ *   'debug:clear': () => void,
+ *   'debug:groupEnd': () => void,
+ *   'debug:logLabel': (logType: string, label?: string) => void,
+ *   'debug:timeLog': (label?: string, ...args: any[]) => void,
+ *   'debug:assert': (condition?: boolean, ...args: any[]) => void,
+ *   'debug:dir': (item?: any, options?: any) => void,
+ *   'debug:table': (tabularData?: any, properties?: string[]) => void,
+ *   'debug:log': (prefix: string, message: string, ...args: any[]) => void,
+ * } & Record<string, (...args: any[]) => void>} TinyDebuggerEvents
  */
-class TinyDebugger extends EventEmitter {
+
+/** @type {new () => import('../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyDebuggerEvents>} */
+const TypedEventEmitter = /** @type {any} */ (EventEmitter);
+
+/**
+ * A lightweight debugging utility that wraps console methods and provides event emission.
+ */
+class TinyDebugger extends TypedEventEmitter {
   /** @type {Partial<Console>} */
   #logger;
 

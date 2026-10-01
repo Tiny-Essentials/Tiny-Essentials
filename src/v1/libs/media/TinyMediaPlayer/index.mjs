@@ -31,11 +31,35 @@ import { createCheckDestroyed } from '../../utils/tools.mjs';
 const checkDestroy = createCheckDestroyed('BaseMediaAdapter');
 
 /**
+ * Event map for {@link BaseMediaAdapter}.
+ *
+ * Adapters bridge third-party players, so the event map is kept open
+ * (`Record<string, ...>`) to allow forwarding arbitrary player events while
+ * still providing autocomplete for the well-known ones.
+ *
+ * @typedef {{
+ *   destroyed: () => void,
+ *   volumeChange: (volume: number) => void,
+ *   seek: (time: number) => void,
+ *   play: () => void,
+ *   pause: () => void,
+ *   ended: () => void,
+ *   timeupdate: (data: ContentTimeData) => void,
+ *   onReady: () => void,
+ *   error: (error: any) => void,
+ *   onStateChange: (event: any) => void,
+ * } & Record<string, (...args: any[]) => void>} BaseMediaAdapterEvents
+ */
+
+/** @type {new () => import('../../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<BaseMediaAdapterEvents>} */
+const TypedEventEmitter = /** @type {any} */ (EventEmitter);
+
+/**
  * Interface definition for a Media Provider Adapter.
  * All specific API wrappers must extend and implement this class.
  * @abstract
  */
-class BaseMediaAdapter extends EventEmitter {
+class BaseMediaAdapter extends TypedEventEmitter {
   constructor() {
     if (new.target === BaseMediaAdapter) {
       throw new Error('BaseMediaAdapter is an abstract class and cannot be instantiated directly.');

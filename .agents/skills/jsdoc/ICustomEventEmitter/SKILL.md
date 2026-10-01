@@ -25,39 +25,39 @@ The `ICustomEventEmitter` typedef is already mapped in:
 src/v1/jsdoc/EventEmitter.mjs
 ```
 
-`ICustomEventEmitter` is a **generic type alias** (it declares `@template {Record<...>} MyEvents`). Because of that, you must **never** alias it with `@typedef`. Doing so erases the type parameter:
+`ICustomEventEmitter` is a **generic type alias** (it declares `@template {Record<...>} MyEvents`). You have three supported ways to reference it in your code without losing its generic type parameter.
 
-```javascript
-// WRONG — the type parameter is lost
-/**
- * @typedef {import('../jsdoc/EventEmitter.mjs').ICustomEventEmitter} ICustomEventEmitter
- */
+### 2.1. `@import` tag (TypeScript 5.5+)
 
-// Now this line fails: "Type 'ICustomEventEmitter' is not generic."
-/** @type {ICustomEventEmitter<ServerEvents>} */
-```
-
-Instead, reference it in one of the two supported ways below.
-
-### 2.1. Inline `import()` (works everywhere)
-
-```javascript
-/**
- * @implements {import('../jsdoc/EventEmitter.mjs').ICustomEventEmitter<DownloaderEvents>}
- */
-```
-
-### 2.2. `@import` tag (TypeScript 5.5+)
+The cleanest approach for modern environments.
 
 ```javascript
 /** @import { ICustomEventEmitter } from '../jsdoc/EventEmitter.mjs' */
 
-/**
- * @implements {ICustomEventEmitter<DownloaderEvents>}
- */
 ```
 
 > **Note:** adjust the relative path so it points to `src/v1/jsdoc/EventEmitter.mjs`.
+
+### 2.2. Inline `import()` (works everywhere)
+
+If you don't want to declare a type alias, you can type it inline when needed:
+
+```javascript
+/** @type {new () => import('../jsdoc/EventEmitter.mjs').ICustomEventEmitter<DownloaderEvents>} */
+
+```
+
+### 2.3. `@typedef` with `@template` (Traditional)
+
+If you use `@typedef`, you **must** include `@template T` so the generic parameter is not lost:
+
+```javascript
+/**
+ * @template T
+ * @typedef {import('../jsdoc/EventEmitter.mjs').ICustomEventEmitter<T>} ICustomEventEmitter
+ */
+
+```
 
 ---
 
@@ -117,38 +117,9 @@ You can also combine a fixed prefix with a template literal type:
 
 ### 5.1. On a class that extends `EventEmitter`
 
-Use `@implements` together with `@augments`. Reference `ICustomEventEmitter` **inline** so the type parameter survives.
+**Never use `@implements` for this.** `@implements` does not override inherited methods from the base class, so your `this.emit()` would remain untyped. Furthermore, TypeScript rejects type aliases with mapped types inside `@implements`.
 
-```javascript
-import { EventEmitter } from 'events';
-
-/**
- * @typedef {Object} DownloaderEvents
- * @property {(url: string) => void} start
- * @property {(url: string, received: number, total: number) => void} progress
- * @property {(url: string, error: Error) => void} error
- * @property {(url: string) => void} complete
- */
-
-/**
- * @class
- * @augments {EventEmitter}
- * @implements {import('../jsdoc/EventEmitter.mjs').ICustomEventEmitter<DownloaderEvents>}
- */
-export class Downloader extends EventEmitter {
-  /**
-   * @param {string} url
-   * @returns {void}
-   */
-  download(url) {
-    this.emit('start', url);
-    this.emit('progress', url, 0, 100);
-    this.emit('complete', url);
-  }
-}
-```
-
-If you prefer the `@import` tag, put it at the top of the file and use the short name:
+Instead, use the **Typed Base Class trick**. Cast `EventEmitter` to your custom type before extending it.
 
 ```javascript
 import { EventEmitter } from 'events';
@@ -159,21 +130,32 @@ import { EventEmitter } from 'events';
  * @typedef {Object} DownloaderEvents
  * @property {(url: string) => void} start
  * @property {(url: string, received: number, total: number) => void} progress
- * @property {(url: string, error: Error) => void} error
- * @property {(url: string) => void} complete
  */
+
+// 1. We cast EventEmitter to our generic type to inherit the correct signatures
+/** @type {new () => ICustomEventEmitter<DownloaderEvents>} */
+const TypedEmitter = /** @type {any} */ (EventEmitter);
 
 /**
  * @class
- * @augments {EventEmitter}
- * @implements {ICustomEventEmitter<DownloaderEvents>}
+ * @augments TypedEmitter
  */
-export class Downloader extends EventEmitter {}
+export class Downloader extends TypedEmitter {
+  /**
+   * @param {string} url
+   * @returns {void}
+   */
+  download(url) {
+    this.emit('start', url); // Autocomplete is now 100% working here!
+    this.emit('progress', url, 0, 100);
+  }
+}
+
 ```
 
 ### 5.2. On a standalone `EventEmitter`
 
-When you do not need a subclass, type the variable directly with `@type`. The `import()` form is required here because there is no `@implements` slot.
+When you do not need a subclass, type the variable directly with `@type`.
 
 ```javascript
 import { EventEmitter } from 'events';
@@ -195,13 +177,13 @@ Both forms give you the same autocomplete and type checking.
 ## 6. API reference
 
 | Method | Signature | Description |
-|--------|-----------|-------------|
+| --- | --- | --- |
 | `on` | `(event, listener) => this` | Registers a listener. |
 | `once` | `(event, listener) => this` | Registers a listener that runs only once. |
-| `off` | `(event, listener) => this` | Removes a listener. |
+| `off` | `(event, listener) => this` | Alias of `removeListener`. |
 | `addListener` | `(event, listener) => this` | Alias of `on`. |
-| `removeListener` | `(event, listener) => this` | Alias of `off`. |
-| `removeAllListeners` | `(event?) => this` | Removes all listeners (from one event or from all). |
+| `removeListener` | `(event, listener) => this` | Removes a listener. |
+| `removeAllListeners` | `(event?: string | symbol) => this` |
 | `prependListener` | `(event, listener) => this` | Adds the listener to the front of the queue. |
 | `prependOnceListener` | `(event, listener) => this` | Adds a one-shot listener to the front of the queue. |
 | `emit` | `(event, ...args) => boolean` | Emits the event. `args` are typed by `Parameters<MyEvents[K]>`. |
@@ -219,18 +201,19 @@ Both forms give you the same autocomplete and type checking.
 4. **Never pass a raw string to `emit`.** If the name is not in the map, the type breaks. That is the point.
 5. **Keep the event typedef close** to the class that uses it.
 6. **Prefer the object typedef** when events have distinct signatures. **Prefer `Record<string, ...>`** when the shape repeats.
-7. **Never alias `ICustomEventEmitter` with `@typedef`.** Always use inline `import()` or the `@import` tag so the `@template` parameter is preserved.
+7. **Preserve generic arguments.** If you alias `ICustomEventEmitter` with `@typedef`, always use `@template T` so the generic argument evaluates correctly.
+7. **Never use `@implements`.** Always use the typed base class trick `const TypedEmitter = EventEmitter` to inherit method signatures properly.
 
 ---
 
 ## 8. Common errors
 
 | Symptom | Likely cause | Fix |
-|---------|--------------|-----|
-| `Type 'ICustomEventEmitter' is not generic` | The type was aliased with `@typedef {import(...)}`. | Use inline `import()` or the `@import` tag. |
-| `emit` accepts any argument | The editor did not resolve the `@implements`. | Restart the TypeScript Server (`Ctrl+Shift+P` → *Restart TS Server*). |
+| --- | --- | --- |
+| `A class can only implement an object type...` | You tried to use `@implements` with a generic type alias containing mapped types. | Remove `@implements` and use the typed base class trick (`extends TypedEmitter`). |
+| `emit` accepts any argument | You extended `EventEmitter` directly instead of your `TypedEmitter` reference. | Create `const TypedEmitter` casted to your custom type, and `extend` it. |
+| `Type 'ICustomEventEmitter' is not generic` | The type was aliased with `@typedef` without declaring `@template T`. | Use `@import`, inline `import()`, or add `@template T` to the typedef. |
 | No autocomplete on `on` | The event typedef is out of scope. | Move the typedef to the same file or import it with `@import`. |
-| `@implements` shows an error | The class does not extend `EventEmitter`. | Add `@augments {EventEmitter}` and `extends EventEmitter`. |
 | `listenerCount` complains about `undefined` | The second parameter is required by the typedef. | Pass `undefined` explicitly: `emitter.listenerCount('x', undefined)`. |
 | `Record<string, ...>` erases autocomplete for known events | The index signature accepts any string. | Use the object typedef when you need a closed set of names. |
 
@@ -239,8 +222,8 @@ Both forms give you the same autocomplete and type checking.
 ## 9. Quick checklist
 
 - [ ] Did I import `EventEmitter` from `events`?
-- [ ] Did I reference `ICustomEventEmitter` **inline** with `import()` or via the `@import` tag (never with `@typedef`)?
+- [ ] Did I pass the generic argument properly using `@import`, inline `import()`, or a `@template` typedef?
 - [ ] Did I choose between the object typedef and `Record<string, ...>`?
-- [ ] Does the class have both `@augments {EventEmitter}` and `@implements {ICustomEventEmitter<...>}` (or a `@type` on a standalone emitter)?
+- [ ] Did I create the `TypedEmitter` intermediate class correctly and `extend` it?
 - [ ] Do all `emit` calls use names that exist in the map?
 - [ ] Do the `emit` arguments match the listener signature?

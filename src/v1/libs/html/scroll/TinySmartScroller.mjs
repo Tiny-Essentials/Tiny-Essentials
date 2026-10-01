@@ -32,6 +32,18 @@ const checkDestroy = createCheckDestroyed('TinySmartScroller');
  */
 
 /**
+ * Event map for {@link TinySmartScroller}.
+ * @typedef {Object} TinySmartScrollerEvents
+ * @property {(data: any) => void} onScrollBoundary - Emitted when the scroll boundary state changes.
+ * @property {(data: any) => void} onExtraScrollBoundary - Emitted when the custom scroll boundary state changes.
+ * @property {(data: any) => void} onAutoScroll - Emitted when an auto-scroll occurs.
+ * @property {(data: any) => void} onScrollPause - Emitted when auto-scroll is paused.
+ */
+
+/** @type {new (...args: any[]) => import('../../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinySmartScrollerEvents>} */
+const TypedEventEmitter = /** @type {any} */ (EventEmitter);
+
+/**
  * TinySmartScroller is a utility class designed to enhance and manage scroll behaviors within containers or the window.
  *
  * It enables advanced scroll monitoring, auto-scrolling to bottom, preserving scroll position during DOM changes,
@@ -49,7 +61,7 @@ const checkDestroy = createCheckDestroyed('TinySmartScroller');
  * This class is **not framework-dependent** and works with vanilla DOM elements and the window object.
  * @template {Element|Window} HTMLTarget
  */
-class TinySmartScroller extends EventEmitter {
+class TinySmartScroller extends TypedEventEmitter {
   static Utils = { ...TinyCollision, TinyHtml };
 
   /** @type {WeakMap<Element, NodeSizes>} */

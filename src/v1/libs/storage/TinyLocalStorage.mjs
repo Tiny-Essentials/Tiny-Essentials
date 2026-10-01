@@ -71,6 +71,25 @@ const customTypesFreezed = new Set([
  */
 
 /**
+ * Event map for {@link TinyLocalStorage}.
+ * @typedef {Object} TinyLocalStorageEvents
+ * @property {(ev: StorageEvent) => void} storage - Emitted when a cross-tab storage event is received.
+ * @property {(name: string, data: any) => void} setJson - Emitted when a JSON value is stored.
+ * @property {(name: string, data: Date) => void} setDate - Emitted when a Date is stored.
+ * @property {(name: string, data: RegExp) => void} setRegExp - Emitted when a RegExp is stored.
+ * @property {(name: string, data: bigint) => void} setBigInt - Emitted when a BigInt is stored.
+ * @property {(name: string, data: symbol) => void} setSymbol - Emitted when a Symbol is stored.
+ * @property {(name: string, data: any) => void} setItem - Emitted when a raw item is stored.
+ * @property {(name: string, data: string) => void} setString - Emitted when a string is stored.
+ * @property {(name: string, data: number) => void} setNumber - Emitted when a number is stored.
+ * @property {(name: string, data: boolean) => void} setBool - Emitted when a boolean is stored.
+ * @property {(name: string) => void} removeItem - Emitted when an item is removed.
+ */
+
+/** @type {new (dbName?: string) => import('../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyLocalStorageEvents>} */
+const TypedEventEmitter = /** @type {any} */ (EventEmitter);
+
+/**
  * A powerful wrapper for Web Storage (`localStorage` or `sessionStorage`) that supports
  * type-safe methods and full JSON-like structure encoding and decoding.
  *
@@ -94,7 +113,7 @@ const customTypesFreezed = new Set([
  *
  * This class is suitable for applications that require structured persistence in the browser.
  */
-class TinyLocalStorage extends EventEmitter {
+class TinyLocalStorage extends TypedEventEmitter {
   /**
    * Checks whether a JSON-serializable type is already registered.
    *

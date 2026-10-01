@@ -142,10 +142,28 @@ const checkDestroy = createCheckDestroyed('TinyRadioFm');
 //////////////////////////////////////////////////////////////////
 
 /**
+ * Event map for {@link TinyRadioFm}.
+ * @typedef {Object} TinyRadioFmEvents
+ * @property {(data: { seed: number }) => void} seedChanged - Emitted when the seed changes.
+ * @property {(data: { config: RadioConfig }) => void} configChanged - Emitted when the configuration changes.
+ * @property {(data: { type: string, data: MediaContent }) => void} contentAdded - Emitted when content is added.
+ * @property {(data: { id: string }) => void} contentRemoved - Emitted when content is removed.
+ * @property {(task: ScheduledTask) => void} taskScheduled - Emitted when a task is scheduled.
+ * @property {(task: ScheduledTask) => void} taskExecuted - Emitted when a scheduled task is executed.
+ * @property {(data: { contentId: string }) => void} customPositionExpired - Emitted when a custom position expires.
+ * @property {(data: { targetDate: number, limit: number, resultCount: number }) => void} timelineQueried - Emitted after a timeline query.
+ * @property {(data: { data: TinyRadioFmImport }) => void} stateImported - Emitted after a state import.
+ * @property {(data: { timestamp: number }) => void} destroyed - Emitted when the instance is destroyed.
+ */
+
+/** @type {new (initialData?: TinyRadioFmImport|null, seed?: number) => import('../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyRadioFmEvents>} */
+const TypedEventEmitter = /** @type {any} */ (EventEmitter);
+
+/**
  * A deterministic, seed-based radio management system with scheduled adaptations and weighted random generation.
  * @beta
  */
-class TinyRadioFm extends EventEmitter {
+class TinyRadioFm extends TypedEventEmitter {
   /**
    * A Static Factory Method that prepares a MediaContent object by
    * extracting metadata from an audio source.

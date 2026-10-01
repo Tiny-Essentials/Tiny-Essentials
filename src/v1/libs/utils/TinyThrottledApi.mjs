@@ -13,11 +13,26 @@ const checkDestroy = createCheckDestroyed('TinyThrottledApi');
  */
 
 /**
+ * Event map for {@link TinyThrottledApi}.
+ * @typedef {Object} TinyThrottledApiEvents
+ * @property {(id: string) => void} ExecTask - Emitted when a task starts executing.
+ * @property {(id: string) => void} TaskEnded - Emitted when a task finishes executing.
+ * @property {(id: string) => void} WaitingTask - Emitted when a task is queued and waiting for a slot.
+ * @property {() => void} Destroyed - Emitted when the instance is destroyed.
+ * @property {(value: number) => void} SetConcurrencyLimit - Emitted when the concurrency limit changes.
+ * @property {(value: number) => void} SetTimeoutValue - Emitted when the timeout value changes.
+ * @property {(value: number) => void} SetTimeoutLimit - Emitted when the timeout limit changes.
+ */
+
+/** @type {new () => import('../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyThrottledApiEvents>} */
+const TypedEventEmitter = /** @type {any} */ (EventEmitter);
+
+/**
  * A client that manages asynchronous requests with a concurrency limit.
  * It uses TinyPromiseQueue to manage waiting tasks and waitForTrue to poll for availability.
  * @template {(...args: any) => Promise<any>} API
  */
-class TinyThrottledApi extends EventEmitter {
+class TinyThrottledApi extends TypedEventEmitter {
   static TinyTimeout = TinyTimeout;
   /** @type {number} The current number of active asynchronous operations. */
   #activeCount = 0;

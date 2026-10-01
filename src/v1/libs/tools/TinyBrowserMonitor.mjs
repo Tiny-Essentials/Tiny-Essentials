@@ -167,10 +167,33 @@ const checkDestroy = createCheckDestroyed('TinyBrowserMonitor');
  */
 
 /**
+ * Event map for {@link TinyBrowserMonitor}.
+ * @typedef {Object} TinyBrowserMonitorEvents
+ * @property {(metrics: Readonly<WindowMetrics>) => void} WindowResize - Emitted when the window is resized.
+ * @property {(metrics: Readonly<FrameRateMetrics>) => void} FPS - Emitted with the latest FPS sample.
+ * @property {(status: Readonly<BatteryStatus>) => void} BatteryUpdated - Emitted when the battery status changes.
+ * @property {(usage: Readonly<MemoryUsage>) => void} MemoryUsage - Emitted when the memory usage is sampled.
+ * @property {(oldItem: ResourceMetric|undefined, newItem: ResourceMetric) => void} ResourceAdded - Emitted when a resource is added.
+ * @property {(oldItem: ResourceMetric|undefined, newItem: ResourceMetric) => void} ResourceDeleted - Emitted when a resource is removed.
+ * @property {(oldItem: ResourceMetric|undefined, newItem: ResourceMetric) => void} ResourceEdited - Emitted when a resource is edited.
+ * @property {(paint: Readonly<PaintMetrics>) => void} PaintUpdated - Emitted when paint metrics change.
+ * @property {(navigation: Partial<NavigationMetrics>) => void} NavigationUpdated - Emitted when navigation metrics change.
+ * @property {(data: { layoutShift: number }) => void} LayoutShiftUpdated - Emitted when the layout shift changes.
+ * @property {(data: { lcp: number }) => void} LcpUpdated - Emitted when the LCP value changes.
+ * @property {(data: { lcp: number[] }) => void} LongTaskUpdated - Emitted when long tasks are recorded.
+ * @property {(status: Readonly<ConnectivityStatus>) => void} ConnectivityUpdated - Emitted when connectivity changes.
+ * @property {(data: NetworkEvent) => void} NetworkUpdated - Emitted with the full network report.
+ * @property {() => void} Destroyed - Emitted when the monitor is destroyed.
+ */
+
+/** @type {new (options?: MonitorOptions) => import('../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyBrowserMonitorEvents>} */
+const TypedEventEmitter = /** @type {any} */ (EventEmitter);
+
+/**
  * An advanced monitor that tracks connectivity, connection quality, battery,
  * device constraints, and comprehensive performance metrics.
  */
-class TinyBrowserMonitor extends EventEmitter {
+class TinyBrowserMonitor extends TypedEventEmitter {
   /**
    * A list of all valid identifiers for the monitoring systems.
    * @type {SystemValue[]}

@@ -14,9 +14,20 @@ const pollClosedInterval = new WeakMap();
 /**
  * @callback handler
  * A function to handle incoming event payloads.
- * @param {any} payload - The data sent by the emitter.
- * @param {MessageEvent<any>} event - Metadata about the message.
+ * @param {any} [payload] - The data sent by the emitter.
+ * @param {MessageEvent<any>} [event] - Metadata about the message.
  */
+
+/**
+ * Event map for {@link TinyNewWinEvents}.
+ * Routed events are prefixed with `win:` followed by the route name.
+ * @typedef {Record<`win:${string}`, (payload: any, event: MessageEvent) => void> & {
+ *   WINDOW_REF_CLOSED: () => void,
+ * }} TinyNewWinEventsMap
+ */
+
+/** @type {new (settings?: { targetOrigin?: string, url?: string, name?: string, features?: string }) => import('../../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyNewWinEventsMap>} */
+const TypedEventEmitter = /** @type {any} */ (EventEmitter);
 
 /**
  * TinyNewWinEvents provides structured communication between a main window
@@ -27,7 +38,7 @@ const pollClosedInterval = new WeakMap();
  *
  * @class
  */
-class TinyNewWinEvents extends EventEmitter {
+class TinyNewWinEvents extends TypedEventEmitter {
   /** @type {Window|null} Reference to the opened or parent window */
   #windowRef;
 

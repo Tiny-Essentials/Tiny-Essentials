@@ -106,6 +106,18 @@ const checkDestroy = createCheckDestroyed('TinyAdvancedRaffle');
  */
 
 /**
+ * Event map for {@link TinyAdvancedRaffle}.
+ * @typedef {Object} TinyAdvancedRaffleEvents
+ * @property {(item: ItemData) => void} itemAdded - Emitted when an item is added.
+ * @property {(id: string) => void} itemRemoved - Emitted when an item is removed.
+ * @property {(data: { id: string, weight: number }) => void} weightChanged - Emitted when an item's base weight changes.
+ * @property {(result: DrawOne) => void} draw - Emitted after a successful draw.
+ */
+
+/** @type {new () => import('../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyAdvancedRaffleEvents>} */
+const TypedEventEmitter = /** @type {any} */ (EventEmitter);
+
+/**
  * TinyAdvancedRaffle — A high-performance, fully customizable raffle system.
  *
  * This class provides advanced item drawing capabilities with:
@@ -119,7 +131,7 @@ const checkDestroy = createCheckDestroyed('TinyAdvancedRaffle');
  *
  * @class
  */
-class TinyAdvancedRaffle extends EventEmitter {
+class TinyAdvancedRaffle extends TypedEventEmitter {
   /**
    * Whether this instance has been destroyed.
    * @type {boolean}
