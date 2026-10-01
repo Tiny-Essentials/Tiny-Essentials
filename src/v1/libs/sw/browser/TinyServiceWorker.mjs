@@ -91,7 +91,7 @@ const postMessage = (message, transfer) => {
 
 /**
  * An event emitter that dispatches push events keyed by topic.
- * @typedef {ICustomEventEmitter<Record<string, (payload: PushEventData) => void>>} PushEventEmitter
+ * @typedef {import('../../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<Record<string, (payload: PushEventData) => void>>} PushEventEmitter
  */
 
 /**
