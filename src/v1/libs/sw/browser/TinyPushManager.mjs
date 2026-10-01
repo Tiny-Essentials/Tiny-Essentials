@@ -9,12 +9,17 @@ import { requestNotificationPermission } from './utils.mjs';
  */
 
 /**
+ * Describes the optional backend routes used to persist or remove a
+ * `PushSubscription`.
+ *
  * @typedef {Object} TinyPushEndpoints
  * @property {string} [subscribe] - `POST` route that persists a subscription.
  * @property {string} [unsubscribe] - `DELETE` route that removes a subscription.
  */
 
 /**
+ * Describes every option accepted by the `TinyPushManager` constructor.
+ *
  * @typedef {Object} TinyPushManagerOptions
  * @property {ServiceWorkerRegistration} registration - The active registration.
  * @property {string} vapidPublicKey - Base64 URL-safe VAPID public key.
@@ -24,12 +29,35 @@ import { requestNotificationPermission } from './utils.mjs';
  */
 
 /**
+ * Represents an immutable snapshot of the manager state exposed to observers.
+ *
  * @typedef {Object} TinyPushState
  * @property {'unsupported'|'unsubscribed'|'subscribed'|'denied'|'pending'} status - Current status.
  * @property {PushSubscription|null} subscription - The active subscription, when any.
  * @property {string|null} error - The last error message, when any.
  */
 
+/**
+ * Manages the full lifecycle of a browser `PushSubscription` in the page context.
+ *
+ * The manager is a thin, framework-agnostic wrapper around `PushManager`. It never
+ * talks to a push service directly: it delegates subscription creation to the
+ * `PushManager` API and persistence to two optional backend routes (`subscribe`
+ * and `unsubscribe`). Every state transition is broadcast to the optional
+ * `onChange` observer, which makes it easy to bind the manager to any UI layer.
+ *
+ * @example
+ * const manager = new TinyPushManager({
+ *   registration: await navigator.serviceWorker.ready,
+ *   vapidPublicKey: 'YOUR_PUBLIC_KEY',
+ *   endpoints: { subscribe: '/api/push', unsubscribe: '/api/push' },
+ *   onChange: (state) => console.log(state.status),
+ * });
+ *
+ * await manager.subscribe();
+ *
+ * @beta
+ */
 class TinyPushManager {
   static #PUSH_TYPE = PUSH_TYPE;
   static get PUSH_TYPE() {
@@ -99,25 +127,27 @@ class TinyPushManager {
     return bytes;
   }
 
-  /** @type {ServiceWorkerRegistration} */
+  /** @type {ServiceWorkerRegistration} The service worker registration that owns the push subscription. */
   #registration;
 
-  /** @type {string} */
+  /** @type {string} The Base64 URL-safe VAPID public key used to create subscriptions. */
   #vapidPublicKey;
 
-  /** @type {TinyPushEndpoints} */
+  /** @type {TinyPushEndpoints} The backend routes used to persist and remove subscriptions. */
   #endpoints;
 
-  /** @type {typeof fetch} */
+  /** @type {typeof fetch} The fetch implementation used for backend calls. */
   #fetch;
 
-  /** @type {((state: TinyPushState) => void)|null} */
+  /** @type {((state: TinyPushState) => void)|null} The observer notified whenever the state changes. */
   #onChange;
 
-  /** @type {TinyPushState} */
+  /** @type {TinyPushState} The current internal state of the manager. */
   #state = { status: 'unsubscribed', subscription: null, error: null };
 
   /**
+   * Creates a manager bound to a service worker registration.
+   *
    * @param {TinyPushManagerOptions} options - The manager options.
    * @throws {TypeError} If `options` is invalid.
    */
@@ -246,7 +276,7 @@ class TinyPushManager {
    * Pushes the subscription to the backend.
    *
    * @param {PushSubscription} subscription - The subscription to upload.
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} A promise that resolves once the upload finishes.
    * @throws {Error} If the backend responds with a non-2xx status.
    */
   async #upload(subscription) {
@@ -267,7 +297,7 @@ class TinyPushManager {
    * Updates the internal state and notifies the observer.
    *
    * @param {Partial<TinyPushState>} patch - The fields to merge.
-   * @returns {void}
+   * @returns {void} Nothing is returned; the state is updated in place.
    */
   #setState(patch) {
     this.#state = { ...this.#state, ...patch };

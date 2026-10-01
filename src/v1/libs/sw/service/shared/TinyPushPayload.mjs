@@ -12,6 +12,9 @@ import { PUSH_TYPE } from '../../utils.mjs';
 /** @typedef {import('../../utils.mjs').TinyPushMessage} TinyPushMessage */
 
 /**
+ * Holds the fallback values applied when an incoming message omits the
+ * corresponding optional notification field.
+ *
  * @typedef {Object} TinyPushNotificationDefaults
  * @property {string} [defaultIcon] - Fallback icon.
  * @property {string} [defaultBadge] - Fallback badge.
@@ -25,6 +28,7 @@ const MAX_TTL_SECONDS = 2419200;
  *
  * Every method is static and side effect free, so the class is safe to import
  * from both the page and the Service Worker.
+ * @beta
  */
 class TinyPushPayload {
   static #PUSH_TYPE = PUSH_TYPE;
@@ -32,10 +36,10 @@ class TinyPushPayload {
     return TinyPushPayload.#PUSH_TYPE;
   }
 
-  /** @type {number} */
+  /** @type {number} The current payload schema version. */
   static VERSION = 1;
 
-  /** @type {number} */
+  /** @type {number} The maximum allowed TTL, in seconds. */
   static MAX_TTL = MAX_TTL_SECONDS;
 
   /**

@@ -13,24 +13,30 @@ const checkDestroy = createCheckDestroyed('TinyServiceWorker');
  */
 
 /**
+ * Represents the options object passed to an API handler registered via `onApi`.
  * @typedef {Object} ApiHandlerOptions
  * @property {MessagePayload} [data] - The payload received from the browser.
  * @property {string} correlationId - The request ID.
  */
 
 /**
+ * A function that processes an incoming API request coming from the Service Worker
+ * and optionally returns the response payload.
  * @callback ApiHandlerCallback
- * @param {ApiHandlerOptions} options - Options for the API handler.
+ * @param {ApiHandlerOptions} options - The options for the API handler, containing the request data and correlation ID.
  * @returns {Promise<MessagePayload|undefined> | (MessagePayload|undefined)} The response payload.
  */
 
 /**
+ * Represents a message exchanged between the page and the Service Worker.
  * @typedef {Object} ServiceWorkerMessagePayload
  * @property {string} type - The identifier for the message type.
  * @property {MessagePayload} [data] - The actual data content of the message.
  */
 
 /**
+ * Represents the non-standard `beforeinstallprompt` event used to trigger
+ * the native PWA installation flow.
  * @typedef {Object} BeforeInstallPromptEvent
  * @property {() => void} preventDefault - Prevents the default browser behavior.
  * @property {Promise<{ outcome: 'accepted' | 'dismissed' }>} userChoice - A promise that resolves with the user's choice.
@@ -75,14 +81,16 @@ const postMessage = (message, transfer) => {
 /** @typedef {import('../utils.mjs').TinyPushMessage} TinyPushMessage */
 
 /**
+ * Represents the object emitted for every push event received from the Service Worker.
  * @typedef {Object} PushEventData
- * @property {TinyPushMessage & { notificationShown: boolean }} data
- * @property {MessageEvent<any>} event
- * @property {boolean} notificationShown
- * @property {(overrides?: Partial<import('./TinyNotificationAdapter.mjs').BrowserNotificationOptions>) => Notification|null} showNotification
+ * @property {TinyPushMessage & { notificationShown: boolean }} data - The push payload merged with the notification state.
+ * @property {MessageEvent<any>} event - The original message event.
+ * @property {boolean} notificationShown - Whether the Service Worker already displayed a notification.
+ * @property {(overrides?: Partial<import('./TinyNotificationAdapter.mjs').BrowserNotificationOptions>) => Notification|null} showNotification - Helper that renders a fallback notification in the page.
  */
 
 /**
+ * An event emitter that dispatches push events keyed by topic.
  * @typedef {ICustomEventEmitter<Record<string, (payload: PushEventData) => void>>} PushEventEmitter
  */
 
@@ -164,7 +172,7 @@ class TinyServiceWorker extends TinyPluginCore {
   /** @type {(() => void) | null} Handler for the appinstalled event. */
   #appInstalledHandler = null;
 
-  /** @type {PushEventEmitter} */
+  /** @type {PushEventEmitter} Emitter used to dispatch push events to subscribers. */
   #pushEvents = new EventEmitter();
 
   /** @type {boolean} Internal flag to track if the instance has been destroyed. */

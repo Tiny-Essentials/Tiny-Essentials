@@ -79,6 +79,10 @@
       "require": "./dist/v1/webTemplates/media/MediaValidator/v1/Browser/index.cjs",
       "import": "./dist/v1/webTemplates/media/MediaValidator/v1/Browser/index.mjs"
     },
+    "./jsdoc/EventEmitter": {
+      "require": "./dist/v1/jsdoc/EventEmitter.cjs",
+      "import": "./dist/v1/jsdoc/EventEmitter.mjs"
+    },
     "./regexp": {
       "require": "./dist/v1/regexp/index.cjs",
       "import": "./dist/v1/regexp/index.mjs"

@@ -8,6 +8,9 @@ import { PUSH_TYPE } from '../utils.mjs';
  */
 
 /**
+ * Describes the mutable state shared between the router and the active handler
+ * during a single dispatch cycle.
+ *
  * @typedef {Object} TinyPushContext
  * @property {PushEvent} event - The native push event.
  * @property {import('./shared/TinyPushPayload.mjs').TinyPushMessage} message - The normalized message.
@@ -17,6 +20,8 @@ import { PUSH_TYPE } from '../utils.mjs';
  */
 
 /**
+ * Handles a normalized push message that matched a route.
+ *
  * @callback TinyPushHandler
  * @param {import('./shared/TinyPushPayload.mjs').TinyPushMessage} message - The normalized message.
  * @param {TinyPushContext} context - The dispatch context.
@@ -24,12 +29,19 @@ import { PUSH_TYPE } from '../utils.mjs';
  */
 
 /**
+ * Decides whether a normalized push message is allowed to reach a handler.
+ *
  * @callback TinyPushGuard
  * @param {import('./shared/TinyPushPayload.mjs').TinyPushMessage} message - The normalized message.
  * @param {TinyPushContext} context - The dispatch context.
  * @returns {Promise<boolean>|boolean} Return `false` to drop the message.
  */
 
+/**
+ * Routes normalized push messages to registered handlers based on `message.type`.
+ *
+ * @beta
+ */
 class TinyPushRouter {
   static #PUSH_TYPE = PUSH_TYPE;
   static get PUSH_TYPE() {

@@ -8,13 +8,13 @@ import { PUSH_TYPE } from '../utils.mjs';
 
 const codeIs = TinyHttpResponseRegistry.codeIs;
 
-/** @type {readonly InstallStrategy[]} */
+/** @type {readonly InstallStrategy[]} The list of accepted install strategies. */
 const INSTALL_STRATEGIES = Object.freeze(['immediate', 'wait', 'manual']);
 
-/** @type {readonly ActivateStrategy[]} */
+/** @type {readonly ActivateStrategy[]} The list of accepted activate strategies. */
 const ACTIVATE_STRATEGIES = Object.freeze(['immediate', 'wait', 'manual']);
 
-/** @type {readonly LifecycleOrder[]} */
+/** @type {readonly LifecycleOrder[]} The list of accepted lifecycle orders. */
 const LIFECYCLE_ORDERS = Object.freeze(['before', 'after']);
 
 /**
@@ -89,7 +89,7 @@ const PHASE_ORDER_KEY = Object.freeze({
  * Callback for the sync handler.
  * @callback SyncCallback
  * @param {SyncEventObj} msg - The sync event object.
- * @returns {Promise<void> | void}
+ * @returns {Promise<void> | void} A promise that settles once the handler finishes, or nothing when the handler is synchronous.
  */
 
 /**
@@ -102,7 +102,7 @@ const PHASE_ORDER_KEY = Object.freeze({
  * Callback for install and activate lifecycle handlers.
  * @callback LifecycleCallback
  * @param {LifecycleEventObj} msg - The lifecycle event object.
- * @returns {Promise<void> | void}
+ * @returns {Promise<void> | void} A promise that settles once the handler finishes, or nothing when the handler is synchronous.
  */
 
 ///////////////////////////////////////////////////////////////////
@@ -113,10 +113,11 @@ const PHASE_ORDER_KEY = Object.freeze({
  * @param {string} type - The type identifier for the api reply message.
  * @param {MessagePayload} [data] - The payload to be sent in the api reply.
  * @param {number} [timeout=10000] - Wait time.
- * @returns {Promise<any>}
+ * @returns {Promise<any>} A promise that resolves with the response payload sent back by the message source.
  */
 
 /**
+ * Options object passed to every API handler registered through {@link TinyServiceWorkerEngine#onApi}.
  * @typedef {Object} ApiHandlerOptions
  * @property {MessagePayload} [data] - The payload received from the browser.
  * @property {string} clientId - The ID of the client that sent the message.
@@ -129,6 +130,7 @@ const PHASE_ORDER_KEY = Object.freeze({
  */
 
 /**
+ * Handles an API call received from the browser and returns the payload that must be sent back.
  * @callback ApiHandlerCallback
  * @param {ApiHandlerOptions} options - Options for the API handler.
  * @returns {Promise<MessagePayload|undefined> | (MessagePayload|undefined)} The response payload.
@@ -194,6 +196,7 @@ const PHASE_ORDER_KEY = Object.freeze({
  */
 
 /**
+ * A partial configuration object for background sync interception settings.
  * @typedef {Object} PartialSyncOptions
  * @property {boolean} [enabled] - Indicates if sync interception is enabled.
  */
@@ -306,10 +309,10 @@ const PHASE_ORDER_KEY = Object.freeze({
  * Represents the raw values returned by a fetch checker.
  * @typedef {Object} FetchCheckerValues
  * @property {number} code - The HTTP status code associated with the fetch result.
- * @property {boolean} needValidation
- * @property {boolean} continueCheck
- * @property {string} [customPath]
- * @property {string} [customMsg]
+ * @property {boolean} needValidation - Whether the router must build a response for the current request.
+ * @property {boolean} continueCheck - Whether the next registered fetch listener is still allowed to run.
+ * @property {string} [customPath] - Overrides the path served by the router for this request.
+ * @property {string} [customMsg] - Overrides the message attached to the generated response.
  */
 
 /**
@@ -348,6 +351,7 @@ const PHASE_ORDER_KEY = Object.freeze({
  */
 
 /**
+ * Options accepted by the broadcast reply helpers, such as {@link TinyServiceWorkerEngine.replyToAll}.
  * @typedef {Object} MessageReplyToAllOptions
  * @property {string} type - The type identifier for the reply message.
  * @property {MessagePayload} [data] - The payload to be sent in the reply.
@@ -423,7 +427,7 @@ const PHASE_ORDER_KEY = Object.freeze({
 
 ///////////////////////////////////////////////////////////////////
 
-/** @type {ServiceWorkerGlobalScope} */
+/** @type {ServiceWorkerGlobalScope} The global scope of the Service Worker, aliased for readability. */
 // @ts-ignore
 const sw = self;
 
@@ -439,6 +443,7 @@ const errorMaker = (err, event) => ({
 });
 
 /**
+ * The category of an HTTP status code, used to route responses to the correct handler.
  * @typedef {'info'|'success'|'redirect'|'client-error'|'server-error'|'unknown'} HttpResponseType
  */
 
@@ -487,14 +492,14 @@ const getResType = (code) => {
  * @extends Event
  */
 class MockNotificationEvent extends Event {
-  /** @type {ExtendableMessageEvent} */
+  /** @type {ExtendableMessageEvent} The wrapped message event. */
   #event;
   /**
    * @type {string}
    * Required by NotificationEvent interface
    */
   #action;
-  /** @type {Notification} */
+  /** @type {Notification} The mocked notification instance. */
   #notification;
 
   get notification() {
@@ -807,22 +812,22 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
     return !this.#config.spaMode ? path : this.#globalMsgCode.spaPath;
   }
 
-  /** @type {Map<string, ApiHandlerCallback>} */
+  /** @type {Map<string, ApiHandlerCallback>} The registered API handlers, keyed by call type. */
   #apiHandlers = new Map();
 
-  /** @type {Map<string, SyncCallback>} */
+  /** @type {Map<string, SyncCallback>} The registered sync listeners, keyed by sync tag. */
   #syncListeners = new Map();
 
-  /** @type {Map<string, LifecycleCallback>} */
+  /** @type {Map<string, LifecycleCallback>} The registered install listeners, keyed by tag. */
   #installListeners = new Map();
 
-  /** @type {Map<string, LifecycleCallback>} */
+  /** @type {Map<string, LifecycleCallback>} The registered activate listeners, keyed by tag. */
   #activateListeners = new Map();
 
-  /** @type {Map<string, {resolve: (value: any) => void, reject: (reason: Error) => void, timer: NodeJS.Timeout}>} */
+  /** @type {Map<string, {resolve: (value: any) => void, reject: (reason: Error) => void, timer: NodeJS.Timeout}>} The in-flight API requests, keyed by correlation id. */
   #pendingRequests = new Map();
 
-  /** @type {GlobalMsgCode} */
+  /** @type {GlobalMsgCode} The active global message table used to build responses. */
   #globalMsgCode = {
     spaPath: '/index.html',
     unknown: {
@@ -847,7 +852,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
     },
   };
 
-  /** @type {{ 200: DefaultCodeData, 404: DefaultCodeData, 500: DefaultCodeData }} */
+  /** @type {{ 200: DefaultCodeData, 404: DefaultCodeData, 500: DefaultCodeData }} The built-in response handlers, keyed by HTTP status code. */
   #defaultCode = {
     200: {
       pathGetter: (path) => this.globalPathGetter(path),
@@ -2131,7 +2136,7 @@ class TinyServiceWorkerEngine extends TinyPluginCore {
 
   /**
    * Returns the number of registered sync listeners.
-   * @returns {number}
+   * @returns {number} The count of registered sync listeners.
    */
   get syncListenerSize() {
     return this.#syncListeners.size;
