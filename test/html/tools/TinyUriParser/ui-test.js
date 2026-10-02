@@ -8,77 +8,12 @@ import { MatrixProtocolParsers } from '/src/v1/libs/tools/TinyUriParser/MatrixPr
 import { DiscordProtocolParsers } from '/src/v1/libs/tools/TinyUriParser/Discord.mjs';
 import { BlueSkyProtocolParsers } from '/src/v1/libs/tools/TinyUriParser/BlueSky.mjs';
 
-window.TinyUriParser = TinyUriParser;
-window.MatrixProtocolParsers = MatrixProtocolParsers;
-window.DiscordProtocolParsers = DiscordProtocolParsers;
-window.BlueSkyProtocolParsers = BlueSkyProtocolParsers;
-
-// 1. Initialize the parser with the custom map
-const parser = new TinyUriParser(...MatrixProtocolParsers, ...DiscordProtocolParsers, ...BlueSkyProtocolParsers);
-window.parser = parser;
-
-// DOM Elements
-const inputField = document.getElementById('uri-input');
-const runBtn = document.getElementById('run-btn');
-const exampleBtn = document.getElementById('example-btn');
-const clearBtn = document.getElementById('clear-btn');
-const consoleOutput = document.getElementById('console-output');
-const statusDot = document.getElementById('status-dot');
-
 /**
- * Updates the visual console with formatted data.
- * @param {Error} err - Whether the data represents an error.
- * @param {any} [data] - The data to display.
+ * A curated collection of example URIs, grouped by the protocol they exercise.
+ * @type {Record<'matrix' | 'discord' | 'bluesky', string[]>}
  */
-const updateConsole = (err, data = null) => {
-  if (err) {
-    consoleOutput.textContent = `[ERROR] ${err.name || 'Error'}: ${err.message}`;
-    consoleOutput.classList.add('text-error');
-    consoleOutput.classList.remove('text-success');
-    statusDot.style.backgroundColor = 'var(--error)';
-  } else {
-    consoleOutput.textContent = JSON.stringify(data, null, 2);
-    consoleOutput.classList.remove('text-error');
-    consoleOutput.classList.add('text-success');
-    statusDot.style.backgroundColor = 'var(--success)';
-  }
-};
-
-/**
- * Executes the parser on the current input.
- * Displays both the parsed object and the reconstructed URI string for debugging.
- */
-const executeParse = () => {
-  const uriValue = inputField.value.trim();
-
-  if (!uriValue) {
-    updateConsole({ message: 'Input is empty. Please provide a URI.' });
-    return;
-  }
-
-  try {
-    // 1. Perform the parsing
-    const parsedResult = parser.parse(uriValue);
-
-    // 2. Perform the reconstruction (stringify) using the parsed result
-    const reconstructedUri = parser.stringify(parsedResult);
-
-    // 3. Wrap both results in a single object to display them together in the console
-    updateConsole(null, {
-      parsed: parsedResult,
-      reconstructed: reconstructedUri,
-    });
-  } catch (error) {
-    // If either parse() or stringify() throws an error, it will be caught here.
-    updateConsole(error);
-  }
-};
-
-// Event Listeners
-runBtn.addEventListener('click', executeParse);
-
-exampleBtn.addEventListener('click', () => {
-  const examples = [
+const EXAMPLES = {
+  matrix: [
     'https://matrix.to/#/@yasmin:pony.house',
 
     'matrix:u/@yasmin:pony.house',
@@ -122,11 +57,124 @@ exampleBtn.addEventListener('click', () => {
 
     '@jasmindreasond:pony.house',
     'https://matrix.to/#/%40jasmindreasond%3Apony.house',
-  ];
-  // Pick a random example for testing
-  const randomExample = examples[Math.floor(Math.random() * examples.length)];
-  inputField.value = randomExample;
+  ],
+  discord: [
+    '<@123456789012345678>',
+    '<@!123456789012345678>',
+    '<@&123456789012345678>',
+    '<#123456789012345678>',
+    '<:party_pony:123456789012345678>',
+    '<a:party_pony:123456789012345678>',
+    '<t:1618953630>',
+    '<t:1618953630:R>',
+    '</play:123456789012345678>',
+    'https://discord.gg/ponyhouse',
+    'https://discord.com/channels/123456789012345678/987654321098765432/111111111111111111',
+  ],
+  bluesky: [
+    'alice.bsky.social',
+    'did:plc:z72i7hdynmk6r22z27h6tvur',
+    'did:web:example.com',
+    'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3k2abcd',
+    'https://bsky.app/profile/alice.bsky.social',
+    'https://bsky.app/profile/alice.bsky.social/post/3k2abcd',
+    'https://bsky.app/profile/alice.bsky.social/feed/3k2abcd',
+  ],
+};
+
+// Expose the classes and parsers on the window object for manual debugging.
+window.TinyUriParser = TinyUriParser;
+window.MatrixProtocolParsers = MatrixProtocolParsers;
+window.DiscordProtocolParsers = DiscordProtocolParsers;
+window.BlueSkyProtocolParsers = BlueSkyProtocolParsers;
+
+// 1. Initialize the parser with the combined list of protocol parsers.
+//    Order matters: the first parser whose predicate returns `true` wins.
+const parser = new TinyUriParser(
+  ...MatrixProtocolParsers,
+  ...DiscordProtocolParsers,
+  ...BlueSkyProtocolParsers,
+);
+window.parser = parser;
+
+// DOM Elements
+const inputField = document.getElementById('uri-input');
+const runBtn = document.getElementById('run-btn');
+const clearBtn = document.getElementById('clear-btn');
+const consoleOutput = document.getElementById('console-output');
+const statusDot = document.getElementById('status-dot');
+const exampleButtons = document.querySelectorAll('[data-protocol]');
+
+/**
+ * Updates the visual console with formatted data.
+ * @param {Error | null} err - The error to display, or `null` on success.
+ * @param {unknown} [data] - The data to display when no error occurred.
+ * @returns {void}
+ */
+const updateConsole = (err, data = null) => {
+  if (err) {
+    consoleOutput.textContent = `[ERROR] ${err.name || 'Error'}: ${err.message}`;
+    consoleOutput.classList.add('text-error');
+    consoleOutput.classList.remove('text-success');
+    statusDot.style.backgroundColor = 'var(--error)';
+  } else {
+    consoleOutput.textContent = JSON.stringify(data, null, 2);
+    consoleOutput.classList.remove('text-error');
+    consoleOutput.classList.add('text-success');
+    statusDot.style.backgroundColor = 'var(--success)';
+  }
+};
+
+/**
+ * Executes the parser on the current input.
+ * Displays both the parsed object and the reconstructed URI string for debugging.
+ * @returns {void}
+ */
+const executeParse = () => {
+  const uriValue = inputField.value.trim();
+
+  if (!uriValue) {
+    updateConsole({ name: 'InputError', message: 'Input is empty. Please provide a URI.' });
+    return;
+  }
+
+  try {
+    // 1. Perform the parsing
+    const parsedResult = parser.parse(uriValue);
+
+    // 2. Perform the reconstruction (stringify) using the parsed result
+    const reconstructedUri = parser.stringify(parsedResult);
+
+    // 3. Wrap both results in a single object to display them together in the console
+    updateConsole(null, {
+      parsed: parsedResult,
+      reconstructed: reconstructedUri,
+    });
+  } catch (error) {
+    // If either parse() or stringify() throws an error, it will be caught here.
+    updateConsole(error);
+  }
+};
+
+/**
+ * Picks a random example for the given protocol and immediately parses it.
+ * @param {string} protocol - The protocol key (e.g., 'matrix', 'discord', 'bluesky').
+ * @returns {void}
+ */
+const loadExample = (protocol) => {
+  const pool = EXAMPLES[protocol];
+  if (!pool || pool.length === 0) return;
+  inputField.value = pool[Math.floor(Math.random() * pool.length)];
   executeParse();
+};
+
+// Event Listeners
+runBtn.addEventListener('click', executeParse);
+
+exampleButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    loadExample(button.dataset.protocol);
+  });
 });
 
 clearBtn.addEventListener('click', () => {

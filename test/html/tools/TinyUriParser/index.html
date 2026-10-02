@@ -11,7 +11,7 @@
       <header>
         <div class="badge">QA Environment</div>
         <h1>TinyUriParser <span class="subtitle">Test Suite</span></h1>
-        <p>Testing multi-protocol parsing: MXC, Matrix Scheme, Web, and Custom.</p>
+        <p>Testing multi-protocol parsing: Matrix, Discord, and BlueSky.</p>
       </header>
 
       <main>
@@ -27,8 +27,14 @@
 
           <div class="button-group">
             <button id="run-btn" class="btn-primary">Execute Parse</button>
-            <button id="example-btn" class="btn-secondary">Load Example</button>
             <button id="clear-btn" class="btn-ghost">Clear</button>
+          </div>
+
+          <div class="example-group">
+            <span class="example-label">Load Example</span>
+            <button class="btn-secondary btn-small" data-protocol="matrix">Matrix</button>
+            <button class="btn-secondary btn-small" data-protocol="discord">Discord</button>
+            <button class="btn-secondary btn-small" data-protocol="bluesky">BlueSky</button>
           </div>
         </section>
 
