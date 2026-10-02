@@ -315,6 +315,10 @@
       "require": "./dist/v1/libs/tools/TinyUriParser/MatrixProtocol.cjs",
       "import": "./dist/v1/libs/tools/TinyUriParser/MatrixProtocol.mjs"
     },
+    "./libs/tools/TinyUriParser/Discord": {
+      "require": "./dist/v1/libs/tools/TinyUriParser/Discord.cjs",
+      "import": "./dist/v1/libs/tools/TinyUriParser/Discord.mjs"
+    },
     "./libs/tools/TinyBrowserMonitor": {
       "require": "./dist/v1/libs/tools/TinyBrowserMonitor.cjs",
       "import": "./dist/v1/libs/tools/TinyBrowserMonitor.mjs"

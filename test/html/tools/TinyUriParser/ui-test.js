@@ -5,12 +5,16 @@
 
 import { TinyUriParser } from '/src/v1/libs/tools/TinyUriParser.mjs';
 import { MatrixProtocolParsers } from '/src/v1/libs/tools/TinyUriParser/MatrixProtocol.mjs';
+import { DiscordProtocolParsers } from '/src/v1/libs/tools/TinyUriParser/Discord.mjs';
+import { BlueSkyProtocolParsers } from '/src/v1/libs/tools/TinyUriParser/BlueSky.mjs';
 
 window.TinyUriParser = TinyUriParser;
 window.MatrixProtocolParsers = MatrixProtocolParsers;
+window.DiscordProtocolParsers = DiscordProtocolParsers;
+window.BlueSkyProtocolParsers = BlueSkyProtocolParsers;
 
 // 1. Initialize the parser with the custom map
-const parser = new TinyUriParser(...MatrixProtocolParsers);
+const parser = new TinyUriParser(...MatrixProtocolParsers, ...DiscordProtocolParsers, ...BlueSkyProtocolParsers);
 window.parser = parser;
 
 // DOM Elements
