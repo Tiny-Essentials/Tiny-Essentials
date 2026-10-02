@@ -91,6 +91,29 @@ const examples = {
           Timestamp (R): <t:1790907670:R>
           Timestamp (s): <t:1790907670:s>
           Timestamp (S): <t:1790907670:S>
+
+          Testing Discord CDN Assets:
+          Emoji: https://cdn.discordapp.com/emojis/123456789012345678.png
+          Guild Icon: https://cdn.discordapp.com/icons/123456789012345678/abc123def456.png?size=128
+          Guild Splash: https://cdn.discordapp.com/splashes/123456789012345678/abc123def456.png
+          Discovery Splash: https://cdn.discordapp.com/discovery-splashes/123456789012345678/abc123def456.png
+          Banner: https://cdn.discordapp.com/banners/123456789012345678/abc123def456.png
+          Default Avatar: https://cdn.discordapp.com/embed/avatars/0.png
+          User Avatar: https://cdn.discordapp.com/avatars/123456789012345678/a_abc123def456.webp
+          Member Avatar: https://cdn.discordapp.com/guilds/123456789012345678/users/987654321098765432/avatars/abc123def456.png
+          Member Banner: https://cdn.discordapp.com/guilds/123456789012345678/users/987654321098765432/banners/abc123def456.png
+          Avatar Decoration: https://cdn.discordapp.com/avatar-decoration-presets/abc123def456.png
+          App Icon: https://cdn.discordapp.com/app-icons/123456789012345678/abc123def456.png
+          App Asset: https://cdn.discordapp.com/app-assets/123456789012345678/abc123def456.png
+          Achievement Icon: https://cdn.discordapp.com/app-assets/123456789012345678/achievements/987654321098765432/icons/abc123def456.png
+          Store Asset: https://cdn.discordapp.com/app-assets/123456789012345678/store/abc123def456
+          Sticker Pack Banner: https://cdn.discordapp.com/app-assets/710982414301790216/store/abc123def456.png
+          Team Icon: https://cdn.discordapp.com/team-icons/123456789012345678/abc123def456.png
+          Sticker: https://cdn.discordapp.com/stickers/123456789012345678.png
+          Sticker (media host): https://media.discordapp.net/stickers/123456789012345678.gif
+          Role Icon: https://cdn.discordapp.com/role-icons/123456789012345678/abc123def456.png
+          Event Cover: https://cdn.discordapp.com/guild-events/123456789012345678/abc123def456.png
+          Tag Badge: https://cdn.discordapp.com/guild-tag-badges/123456789012345678/abc123def456.png
         `
     .trim()
     .replace(/  /g, ''),

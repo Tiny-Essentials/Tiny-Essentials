@@ -104,6 +104,46 @@ import TinyUriParser from '../TinyUriParser.mjs';
  */
 
 /**
+ * The category of a Discord CDN asset.
+ * @typedef {'emoji' | 'guild_icon' | 'guild_splash' | 'guild_discovery_splash' | 'banner' | 'default_user_avatar' | 'user_avatar' | 'guild_member_avatar' | 'avatar_decoration' | 'application_icon' | 'application_asset' | 'achievement_icon' | 'store_page_asset' | 'sticker_pack_banner' | 'team_icon' | 'sticker' | 'role_icon' | 'guild_scheduled_event_cover' | 'guild_member_banner' | 'guild_tag_badge'} DiscordCdnKind
+ */
+
+/**
+ * The named path segments extracted from a Discord CDN URL.
+ * @typedef {Object} DiscordCdnSegments
+ * @property {string} [guildId] - The guild snowflake, when present.
+ * @property {string} [userId] - The user snowflake, when present.
+ * @property {string} [applicationId] - The application snowflake, when present.
+ * @property {string} [achievementId] - The achievement snowflake, when present.
+ * @property {string} [teamId] - The team snowflake, when present.
+ * @property {string} [eventId] - The scheduled event snowflake, when present.
+ * @property {string} [roleId] - The role snowflake, when present.
+ * @property {string} [id] - The generic snowflake (emoji, sticker, banner), when present.
+ * @property {string} [index] - The default avatar index, when present.
+ */
+
+/**
+ * Represents a parsed Discord CDN asset URL.
+ * @typedef {Object} DiscordCdnData
+ * @property {'cdn_asset'} dataType - The discriminator for a CDN asset element.
+ * @property {DiscordCdnKind} kind - The category of the asset.
+ * @property {string} host - The CDN host (e.g., `cdn.discordapp.com`).
+ * @property {string} path - The raw path that follows the CDN host.
+ * @property {string} hash - The asset hash or filename, without the extension.
+ * @property {string} ext - The file extension, without the leading dot.
+ * @property {DiscordCdnSegments} segments - The named path segments.
+ * @property {DiscordQueryParams} params - The decoded query string parameters.
+ * @property {string} url - The canonical CDN URL.
+ */
+
+/**
+ * A supported Discord CDN route.
+ * @typedef {Object} DiscordCdnRoute
+ * @property {DiscordCdnKind} kind - The asset category.
+ * @property {string} template - The path template, using `:name` placeholders.
+ */
+
+/**
  * Matches a Discord mention: `<@id>`, `<@!id>`, `<@&id>` or `<#id>`.
  * @type {RegExp}
  */
@@ -160,6 +200,208 @@ const obfuscatedInviteRegex =
  */
 const messageLinkRegex =
   /^https?:\/\/(?:www\.)?discord(?:app)?\.com\/channels\/(?<guildId>@me|\d+)\/(?<channelId>\d+)\/(?<messageId>\d+)\/?(?:\?(?<query>[^#\s]*))?$/;
+
+/**
+ * The hosts that serve Discord CDN assets.
+ * @type {readonly string[]}
+ */
+const CDN_HOSTS = Object.freeze(['cdn.discordapp.com', 'media.discordapp.net']);
+
+/**
+ * The file extensions recognized on the Discord CDN.
+ * @type {readonly string[]}
+ */
+const CDN_EXTENSIONS = Object.freeze(['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif', 'json']);
+
+/**
+ * Matches a Discord CDN URL and captures the host, path and query string.
+ * @type {RegExp}
+ */
+const cdnRegex =
+  /^https?:\/\/(?<host>cdn\.discordapp\.com|media\.discordapp\.net)\/(?<path>[^?#]+)(?:\?(?<query>[^#\s]*))?$/;
+
+/**
+ * The regular expression fragment used for each placeholder name.
+ * @type {Readonly<Record<string, string>>}
+ */
+const CDN_PLACEHOLDER_PATTERNS = Object.freeze({
+  ext: '[a-z0-9]+',
+  hash: '[A-Za-z0-9_.\\-]+',
+  index: '\\d+',
+  id: '\\d+',
+});
+
+/**
+ * The ordered list of supported Discord CDN routes.
+ * Order matters: more specific routes must be declared first.
+ * @type {readonly DiscordCdnRoute[]}
+ */
+const CDN_ROUTES = Object.freeze([
+  { kind: 'guild_member_avatar', template: 'guilds/:guildId/users/:userId/avatars/:hash.:ext' },
+  { kind: 'guild_member_banner', template: 'guilds/:guildId/users/:userId/banners/:hash.:ext' },
+  {
+    kind: 'achievement_icon',
+    template: 'app-assets/:applicationId/achievements/:achievementId/icons/:hash.:ext',
+  },
+  { kind: 'sticker_pack_banner', template: 'app-assets/:applicationId/store/:hash.:ext' },
+  { kind: 'store_page_asset', template: 'app-assets/:applicationId/store/:hash' },
+  { kind: 'application_asset', template: 'app-assets/:applicationId/:hash.:ext' },
+  { kind: 'application_icon', template: 'app-icons/:applicationId/:hash.:ext' },
+  { kind: 'guild_icon', template: 'icons/:guildId/:hash.:ext' },
+  { kind: 'guild_splash', template: 'splashes/:guildId/:hash.:ext' },
+  { kind: 'guild_discovery_splash', template: 'discovery-splashes/:guildId/:hash.:ext' },
+  { kind: 'banner', template: 'banners/:id/:hash.:ext' },
+  { kind: 'default_user_avatar', template: 'embed/avatars/:index.:ext' },
+  { kind: 'user_avatar', template: 'avatars/:userId/:hash.:ext' },
+  { kind: 'avatar_decoration', template: 'avatar-decoration-presets/:hash.:ext' },
+  { kind: 'team_icon', template: 'team-icons/:teamId/:hash.:ext' },
+  { kind: 'emoji', template: 'emojis/:id.:ext' },
+  { kind: 'sticker', template: 'stickers/:id.:ext' },
+  { kind: 'role_icon', template: 'role-icons/:roleId/:hash.:ext' },
+  { kind: 'guild_scheduled_event_cover', template: 'guild-events/:eventId/:hash.:ext' },
+  { kind: 'guild_tag_badge', template: 'guild-tag-badges/:guildId/:hash.:ext' },
+]);
+
+/**
+ * The set of supported CDN asset kinds.
+ * @type {ReadonlySet<DiscordCdnKind>}
+ */
+const CDN_KINDS = new Set(CDN_ROUTES.map((route) => route.kind));
+
+/**
+ * Escapes a string for literal use inside a regular expression.
+ * @param {string} value - The literal string to escape.
+ * @returns {string} The escaped string.
+ */
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Compiles a CDN route template into a regular expression and an ordered list of placeholder names.
+ * @param {string} template - The path template (e.g., `icons/:guildId/:hash.:ext`).
+ * @returns {{ regex: RegExp, names: string[] }} The compiled route.
+ */
+const compileCdnTemplate = (template) => {
+  /** @type {string[]} */
+  const names = [];
+  let pattern = '';
+  let cursor = 0;
+  const placeholderRegex = /:(\w+)/g;
+  let match;
+  while ((match = placeholderRegex.exec(template)) !== null) {
+    pattern += escapeRegex(template.slice(cursor, match.index));
+    const name = match[1];
+    names.push(name);
+    pattern += `(${CDN_PLACEHOLDER_PATTERNS[name] ?? '\\d+'})`;
+    cursor = match.index + match[0].length;
+  }
+  pattern += escapeRegex(template.slice(cursor));
+  return { regex: new RegExp(`^${pattern}$`), names };
+};
+
+/**
+ * The compiled CDN routes, in declaration order.
+ * @type {readonly { kind: DiscordCdnKind, regex: RegExp, names: string[] }[]}
+ */
+const COMPILED_CDN_ROUTES = Object.freeze(
+  CDN_ROUTES.map(({ kind, template }) => ({ kind, ...compileCdnTemplate(template) })),
+);
+
+/**
+ * Builds a canonical Discord CDN URL.
+ * @param {string} host - The CDN host.
+ * @param {string} path - The path that follows the host.
+ * @param {DiscordQueryParams} params - The query string parameters.
+ * @returns {string} The canonical CDN URL.
+ */
+const buildCdnUrl = (host, path, params) => `https://${host}/${path}${buildQuery(params)}`;
+
+/**
+ * Validates a parsed Discord CDN asset object.
+ * @param {DiscordCdnData} data - The CDN asset data to validate.
+ * @returns {void}
+ * @throws {TypeError} If any property is missing or of an invalid type.
+ */
+const validateCdnData = (data) => {
+  if (typeof data.kind !== 'string' || !CDN_KINDS.has(data.kind)) {
+    throw new TypeError(`DiscordCdnData: invalid kind "${data.kind}".`);
+  }
+  if (typeof data.host !== 'string' || !CDN_HOSTS.includes(data.host)) {
+    throw new TypeError(`DiscordCdnData: invalid host "${data.host}".`);
+  }
+  if (typeof data.path !== 'string' || data.path.length === 0) {
+    throw new TypeError('DiscordCdnData: path must be a non-empty string.');
+  }
+  if (typeof data.hash !== 'string') {
+    throw new TypeError('DiscordCdnData: hash must be a string.');
+  }
+  if (typeof data.ext !== 'string' || (data.ext !== '' && !CDN_EXTENSIONS.includes(data.ext))) {
+    throw new TypeError(`DiscordCdnData: unsupported extension "${data.ext}".`);
+  }
+  if (data.segments === null || typeof data.segments !== 'object' || Array.isArray(data.segments)) {
+    throw new TypeError('DiscordCdnData: segments must be a plain object.');
+  }
+  if (data.params === null || typeof data.params !== 'object' || Array.isArray(data.params)) {
+    throw new TypeError('DiscordCdnData: params must be a plain object.');
+  }
+  if (typeof data.url !== 'string' || data.url.length === 0) {
+    throw new TypeError('DiscordCdnData: url must be a non-empty string.');
+  }
+};
+
+/**
+ * Parses a Discord CDN asset URL.
+ * @param {string} uri - The raw CDN URL.
+ * @returns {DiscordCdnData} The parsed CDN asset data.
+ * @throws {TypeError} If the input is not a string or fails validation.
+ * @throws {SyntaxError} If the input does not match any known CDN route.
+ */
+const parseCdnAsset = (uri) => {
+  if (typeof uri !== 'string') {
+    throw new TypeError('DiscordCdnData: uri must be a string.');
+  }
+  const urlMatch = cdnRegex.exec(uri);
+  if (!urlMatch || !urlMatch.groups) {
+    throw new SyntaxError(`Invalid Discord CDN URL: ${uri}`);
+  }
+  const { host, path, query } = urlMatch.groups;
+  for (const route of COMPILED_CDN_ROUTES) {
+    const routeMatch = route.regex.exec(path);
+    if (!routeMatch) continue;
+    /** @type {Record<string, string>} */
+    const captures = {};
+    route.names.forEach((name, index) => {
+      captures[name] = routeMatch[index + 1];
+    });
+    const { hash = '', ext = '', ...segments } = captures;
+    const params = parseQuery(query);
+    /** @type {DiscordCdnData} */
+    const data = {
+      dataType: 'cdn_asset',
+      kind: route.kind,
+      host,
+      path,
+      hash,
+      ext,
+      segments: /** @type {DiscordCdnSegments} */ (segments),
+      params,
+      url: buildCdnUrl(host, path, params),
+    };
+    validateCdnData(data);
+    return data;
+  }
+  throw new SyntaxError(`Unsupported Discord CDN path: ${path}`);
+};
+
+/**
+ * Reconstructs a Discord CDN URL from parsed data.
+ * @param {DiscordCdnData} data - The CDN asset data.
+ * @returns {string} The reconstructed CDN URL.
+ * @throws {TypeError} If the data is invalid.
+ */
+const stringifyCdnAsset = (data) => {
+  validateCdnData(data);
+  return buildCdnUrl(data.host, data.path, data.params);
+};
 
 /**
  * The list of supported guild navigation targets.
@@ -271,11 +513,11 @@ const validateTimestampData = (data) => {
 };
 
 /**
-* Splits a raw command path into its structural parts.
-* @param {string} name - The raw command path (e.g., `play music`).
-* @returns {DiscordCommandPath} The split command path.
-* @throws {TypeError} If the name is not a valid command path.
-*/
+ * Splits a raw command path into its structural parts.
+ * @param {string} name - The raw command path (e.g., `play music`).
+ * @returns {DiscordCommandPath} The split command path.
+ * @throws {TypeError} If the name is not a valid command path.
+ */
 const splitCommandPath = (name) => {
   if (typeof name !== 'string' || !/^[\w-]+(?: [\w-]+){0,2}$/.test(name)) {
     throw new TypeError(
@@ -504,12 +746,12 @@ const parseTimestamp = (uri) => {
 };
 
 /**
-* Builds and validates a `DiscordCommandData` object from a raw command path.
-* @param {string} name - The full command path (e.g., `play music`).
-* @param {string} id - The snowflake identifier of the command.
-* @returns {DiscordCommandData} The validated command data.
-* @throws {TypeError} If the resulting object is invalid.
-*/
+ * Builds and validates a `DiscordCommandData` object from a raw command path.
+ * @param {string} name - The full command path (e.g., `play music`).
+ * @param {string} id - The snowflake identifier of the command.
+ * @returns {DiscordCommandData} The validated command data.
+ * @throws {TypeError} If the resulting object is invalid.
+ */
 const buildCommandData = (name, id) => {
   /** @type {DiscordCommandData} */
   const data = { dataType: 'command', name, ...splitCommandPath(name), id };
@@ -828,10 +1070,21 @@ export const DiscordMessageLinkParser = TinyUriParser.buildParserPair(
 );
 
 /**
+ * A parser pair for Discord CDN assets (`https://cdn.discordapp.com/...`).
+ */
+export const DiscordCdnParser = TinyUriParser.buildParserPair(
+  'cdn_asset',
+  (uriString) => cdnRegex.test(uriString),
+  parseCdnAsset,
+  stringifyCdnAsset,
+);
+
+/**
  * An array of Discord parser pairs, ordered from the most specific to the most permissive.
  */
 export const DiscordProtocolParsers = Object.freeze([
   DiscordMessageLinkParser,
+  DiscordCdnParser,
   DiscordInviteParser,
   DiscordGameProfileParser,
   DiscordGuildNavigationParser,

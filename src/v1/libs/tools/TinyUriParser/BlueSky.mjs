@@ -449,8 +449,7 @@ const parseWebUrl = (uri) => {
   const actorType = actor.dataType;
   const actorString = getActorString(actor);
   const collection = kind === '' ? null : WEB_KIND_TO_COLLECTION[kind];
-  const atUri =
-    collection && rkey ? parseAtUri(`at://${actorString}/${collection}/${rkey}`) : null;
+  const atUri = collection && rkey ? parseAtUri(`at://${actorString}/${collection}/${rkey}`) : null;
 
   /** @type {BlueSkyWebUrlData} */
   const data = {
