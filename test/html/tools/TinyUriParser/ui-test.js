@@ -4,7 +4,7 @@
  */
 
 import { TinyUriParser } from '/src/v1/libs/tools/TinyUriParser.mjs';
-import * as MatrixProtocol  from '/src/v1/libs/tools/TinyUriParser/MatrixProtocol.mjs';
+import * as MatrixProtocol from '/src/v1/libs/tools/TinyUriParser/MatrixProtocol.mjs';
 import * as Discord from '/src/v1/libs/tools/TinyUriParser/Discord.mjs';
 import * as BlueSky from '/src/v1/libs/tools/TinyUriParser/BlueSky.mjs';
 
@@ -129,6 +129,26 @@ const EXAMPLES = {
   ],
 };
 
+/**
+ * A single selectable example, flattened from {@link EXAMPLES}.
+ * @typedef {Object} ExampleReference
+ * @property {number} id - Position of the example inside the flattened list.
+ * @property {string} protocol - Protocol group the example belongs to.
+ * @property {string} uri - The raw URI string injected into the textarea.
+ */
+
+/**
+ * Flattened, index-addressable version of {@link EXAMPLES}.
+ * @type {ExampleReference[]}
+ */
+const EXAMPLE_REFERENCES = [];
+
+for (const [protocol, uris] of Object.entries(EXAMPLES)) {
+  for (const uri of uris) {
+    EXAMPLE_REFERENCES.push({ id: EXAMPLE_REFERENCES.length, protocol, uri });
+  }
+}
+
 // Expose the classes and parsers on the window object for manual debugging.
 window.TinyUriParser = TinyUriParser;
 Object.assign(window, MatrixProtocol);
@@ -150,6 +170,7 @@ const runBtn = document.getElementById('run-btn');
 const clearBtn = document.getElementById('clear-btn');
 const consoleOutput = document.getElementById('console-output');
 const statusDot = document.getElementById('status-dot');
+const exampleSelect = document.getElementById('example-select');
 const exampleButtons = document.querySelectorAll('[data-protocol]');
 
 /**
@@ -204,28 +225,70 @@ const executeParse = () => {
 };
 
 /**
- * Picks a random example for the given protocol and immediately parses it.
- * @param {string} protocol - The protocol key (e.g., 'matrix', 'discord', 'bluesky').
+ * Writes an example into the textarea, syncs the `<select>` and runs the parser.
+ * @param {ExampleReference} reference - The example to load.
  * @returns {void}
  */
-const loadExample = (protocol) => {
-  const pool = EXAMPLES[protocol];
-  if (!pool || pool.length === 0) return;
-  inputField.value = pool[Math.floor(Math.random() * pool.length)];
+const loadExample = (reference) => {
+  exampleSelect.value = String(reference.id);
+  inputField.value = reference.uri;
   executeParse();
+};
+
+/**
+ * Picks a random example for the given protocol and loads it.
+ * @param {string} protocol - One of the keys of {@link EXAMPLES}.
+ * @returns {void}
+ */
+const loadRandomExample = (protocol) => {
+  const pool = EXAMPLE_REFERENCES.filter((reference) => reference.protocol === protocol);
+  if (pool.length === 0) return;
+  loadExample(pool[Math.floor(Math.random() * pool.length)]);
+};
+
+/**
+ * Renders every entry of {@link EXAMPLE_REFERENCES} inside the example `<select>`,
+ * grouped by protocol using `<optgroup>` elements.
+ * @returns {void}
+ */
+const populateExampleSelect = () => {
+  /** @type {Map<string, HTMLOptGroupElement>} */
+  const groups = new Map();
+
+  for (const reference of EXAMPLE_REFERENCES) {
+    if (!groups.has(reference.protocol)) {
+      const group = document.createElement('optgroup');
+      group.label = reference.protocol;
+      groups.set(reference.protocol, group);
+      exampleSelect.append(group);
+    }
+
+    const option = document.createElement('option');
+    option.value = String(reference.id);
+    option.textContent = reference.uri;
+    option.title = reference.uri;
+    groups.get(reference.protocol).append(option);
+  }
 };
 
 // Event Listeners
 runBtn.addEventListener('click', executeParse);
 
+exampleSelect.addEventListener('change', () => {
+  const selectedId = Number.parseInt(exampleSelect.value, 10);
+  const reference = EXAMPLE_REFERENCES.find((item) => item.id === selectedId);
+  if (reference) loadExample(reference);
+});
+
 exampleButtons.forEach((button) => {
   button.addEventListener('click', () => {
-    loadExample(button.dataset.protocol);
+    loadRandomExample(button.dataset.protocol);
   });
 });
 
 clearBtn.addEventListener('click', () => {
   inputField.value = '';
+  exampleSelect.value = '';
   consoleOutput.textContent = 'Ready for execution...';
   consoleOutput.classList.remove('text-error', 'text-success');
   statusDot.style.backgroundColor = 'var(--text-secondary)';
@@ -238,3 +301,6 @@ inputField.addEventListener('keydown', (e) => {
     executeParse();
   }
 });
+
+// Initial render
+populateExampleSelect();

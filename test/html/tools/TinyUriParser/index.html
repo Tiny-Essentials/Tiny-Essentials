@@ -31,10 +31,23 @@
           </div>
 
           <div class="example-group">
-            <span class="example-label">Load Example</span>
-            <button class="btn-secondary btn-small" data-protocol="matrix">Matrix</button>
-            <button class="btn-secondary btn-small" data-protocol="discord">Discord</button>
-            <button class="btn-secondary btn-small" data-protocol="bluesky">BlueSky</button>
+            <div class="example-picker">
+              <label class="example-label" for="example-select">Load Example</label>
+              <div class="picker-controls">
+                <select id="example-select">
+                  <option value="" disabled selected>Select an example…</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="example-picker">
+              <span class="example-label">Random</span>
+              <div class="picker-controls">
+                <button class="btn-secondary btn-small" data-protocol="matrix">Matrix</button>
+                <button class="btn-secondary btn-small" data-protocol="discord">Discord</button>
+                <button class="btn-secondary btn-small" data-protocol="bluesky">BlueSky</button>
+              </div>
+            </div>
           </div>
         </section>
 
