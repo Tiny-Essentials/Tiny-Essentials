@@ -31,29 +31,6 @@ The core of this utility is the `UsernameRegexOptions` object. This object defin
 
 ---
 
-## 📚 Predefined Templates
-
-To speed up your development, you can use pre-configured templates for popular social platforms. These templates are stored in the following path:
-
-`tiny-essentials/regexp/Username/templates`
-
-**Available Templates:**
-
-*   `BlueSky`
-*   `Discord`
-*   `MatrixProtocol`
-
-**Example Usage:**
-Instead of manually defining every property, you can import a template directly:
-
-```javascript
-import BlueSkyRegex from 'tiny-essentials/regexp/Username/templates/BlueSky';
-import DiscordRegex from 'tiny-essentials/regexp/Username/templates/Discord';
-import MatrixProtocolRegex from 'tiny-essentials/regexp/Username/templates/MatrixProtocol';
-```
-
----
-
 ## 📖 API Reference
 
 ### 1. `isValidUsername(string, options)`

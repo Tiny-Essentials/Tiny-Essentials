@@ -4,9 +4,13 @@
  */
 
 import { TinyUriParser } from '/src/v1/libs/tools/TinyUriParser.mjs';
-import { MatrixProtocolParsers } from '/src/v1/libs/tools/TinyUriParser/MatrixProtocol.mjs';
-import { DiscordProtocolParsers } from '/src/v1/libs/tools/TinyUriParser/Discord.mjs';
-import { BlueSkyProtocolParsers } from '/src/v1/libs/tools/TinyUriParser/BlueSky.mjs';
+import * as MatrixProtocol  from '/src/v1/libs/tools/TinyUriParser/MatrixProtocol.mjs';
+import * as Discord from '/src/v1/libs/tools/TinyUriParser/Discord.mjs';
+import * as BlueSky from '/src/v1/libs/tools/TinyUriParser/BlueSky.mjs';
+
+const { MatrixProtocolParsers } = MatrixProtocol;
+const { DiscordProtocolParsers } = Discord;
+const { BlueSkyProtocolParsers } = BlueSky;
 
 /**
  * A curated collection of example URIs, grouped by the protocol they exercise.
@@ -127,9 +131,9 @@ const EXAMPLES = {
 
 // Expose the classes and parsers on the window object for manual debugging.
 window.TinyUriParser = TinyUriParser;
-window.MatrixProtocolParsers = MatrixProtocolParsers;
-window.DiscordProtocolParsers = DiscordProtocolParsers;
-window.BlueSkyProtocolParsers = BlueSkyProtocolParsers;
+Object.assign(window, MatrixProtocol);
+Object.assign(window, Discord);
+Object.assign(window, BlueSky);
 
 // 1. Initialize the parser with the combined list of protocol parsers.
 //    Order matters: the first parser whose predicate returns `true` wins.
