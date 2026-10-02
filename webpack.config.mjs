@@ -76,18 +76,8 @@ addModule(
   'TinyWebWorkerEngine',
   true,
 );
-addModule(
-  1,
-  './src/v1/libs/sw/service/build/TinyPushPayload.mjs',
-  'TinyPushPayload',
-  true,
-);
-addModule(
-  1,
-  './src/v1/libs/sw/service/build/TinyPushRouter.mjs',
-  'TinyPushRouter',
-  true,
-);
+addModule(1, './src/v1/libs/sw/service/build/TinyPushPayload.mjs', 'TinyPushPayload', true);
+addModule(1, './src/v1/libs/sw/service/build/TinyPushRouter.mjs', 'TinyPushRouter', true);
 addModule(1, './src/v1/libs/storage/TinySetMapDatabase.mjs', 'TinySetMapPackage');
 addModule(1, './src/v1/libs/math/TinyMamdaniInferenceSystem.mjs', 'TinyMaInSys');
 addModule(1, './src/v1/libs/plugin/TinyPlugin.mjs', 'TinyPluginPackage');
