@@ -47,7 +47,9 @@ To speed up your development, you can use pre-configured templates for popular s
 Instead of manually defining every property, you can import a template directly:
 
 ```javascript
+import BlueSkyRegex from 'tiny-essentials/regexp/Username/templates/BlueSky';
 import DiscordRegex from 'tiny-essentials/regexp/Username/templates/Discord';
+import MatrixProtocolRegex from 'tiny-essentials/regexp/Username/templates/MatrixProtocol';
 ```
 
 ---

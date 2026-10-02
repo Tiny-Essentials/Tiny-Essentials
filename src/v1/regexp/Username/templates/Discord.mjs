@@ -34,9 +34,58 @@ const CDN_EXT = '\\.(?:jpg|jpeg|png|webp|gif|avif)';
 const CDN_HASH = '[A-Za-z0-9_-]+';
 
 /**
+ * The Discord spoiler delimiter.
+ * @type {string}
+ */
+const SPOILER = '||';
+
+/**
+ * Matches any character that may appear inside a spoiler, including single
+ * pipes. Two consecutive pipes terminate the spoiler and are therefore excluded.
+ * @type {string}
+ */
+const SPOILER_CONTENT = '[^|]|\\|(?!\\|)';
+
+/**
+ * The prefix Discord prepends to attachments marked as spoilers.
+ * @type {string}
+ */
+const MEDIA_SPOILER_PREFIX = 'SPOILER_';
+
+/**
+ * A Discord attachment filename, including its extension.
+ * @type {string}
+ */
+const CDN_FILENAME = '[^\\s/?#]+';
+
+/**
  * Discord Protocol
  */
 const DiscordRegex = Object.freeze({
+  /**
+   * Spoiler Code
+   * Format: ||hidden text||
+   * @type {UsernameRegexTemplate}
+   */
+  spoiler: {
+    prefix: SPOILER,
+    validValues: SPOILER_CONTENT,
+    length: [1, 2000],
+    domain: SPOILER,
+  },
+
+  /**
+   * Media Spoiler Filename
+   * Format: SPOILER_filename.ext
+   * @type {UsernameRegexTemplate}
+   */
+  mediaSpoiler: {
+    prefix: MEDIA_SPOILER_PREFIX,
+    validValues: '[^\\s]',
+    length: [1, 256],
+    domainPattern: '\\.[a-zA-Z0-9]+',
+  },
+
   /**
    * Standard User Mention Code
    * Format: <@USER_ID>
@@ -191,6 +240,20 @@ const DiscordRegex = Object.freeze({
     validValues: '[a-z-]',
     length: [1, 12],
     domainPattern: '(?::[0-9]{17,22})?>',
+  },
+
+  /**
+   * CDN: Attachment
+   * Format: https://cdn.discordapp.com/attachments/CHANNEL_ID/ATTACHMENT_ID/FILENAME
+   * The filename may carry the "SPOILER_" prefix when the upload was marked as a spoiler.
+   * @type {UsernameRegexTemplate}
+   */
+  cdnAttachment: {
+    start: `${CDN_HOST}/attachments/`,
+    validValues: '[0-9]',
+    length: [17, 22],
+    domainPattern: `/[0-9]{17,22}/${CDN_FILENAME}`,
+    end: OPTIONAL_QUERY_STRING,
   },
 
   /**

@@ -105,7 +105,7 @@ import TinyUriParser from '../TinyUriParser.mjs';
 
 /**
  * The category of a Discord CDN asset.
- * @typedef {'emoji' | 'guild_icon' | 'guild_splash' | 'guild_discovery_splash' | 'banner' | 'default_user_avatar' | 'user_avatar' | 'guild_member_avatar' | 'avatar_decoration' | 'application_icon' | 'application_asset' | 'achievement_icon' | 'store_page_asset' | 'sticker_pack_banner' | 'team_icon' | 'sticker' | 'role_icon' | 'guild_scheduled_event_cover' | 'guild_member_banner' | 'guild_tag_badge'} DiscordCdnKind
+ * @typedef {'attachment' | 'emoji' | 'guild_icon' | 'guild_splash' | 'guild_discovery_splash' | 'banner' | 'default_user_avatar' | 'user_avatar' | 'guild_member_avatar' | 'avatar_decoration' | 'application_icon' | 'application_asset' | 'achievement_icon' | 'store_page_asset' | 'sticker_pack_banner' | 'team_icon' | 'sticker' | 'role_icon' | 'guild_scheduled_event_cover' | 'guild_member_banner' | 'guild_tag_badge'} DiscordCdnKind
  */
 
 /**
@@ -113,6 +113,8 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * @typedef {Object} DiscordCdnSegments
  * @property {string} [guildId] - The guild snowflake, when present.
  * @property {string} [userId] - The user snowflake, when present.
+ * @property {string} [channelId] - The channel snowflake, when present.
+ * @property {string} [attachmentId] - The attachment snowflake, when present.
  * @property {string} [applicationId] - The application snowflake, when present.
  * @property {string} [achievementId] - The achievement snowflake, when present.
  * @property {string} [teamId] - The team snowflake, when present.
@@ -129,8 +131,10 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * @property {DiscordCdnKind} kind - The category of the asset.
  * @property {string} host - The CDN host (e.g., `cdn.discordapp.com`).
  * @property {string} path - The raw path that follows the CDN host.
- * @property {string} hash - The asset hash or filename, without the extension.
+ * @property {string} hash - The asset hash, or the filename without its extension.
  * @property {string} ext - The file extension, without the leading dot.
+ * @property {string | null} filename - The raw attachment filename, or `null` for non-attachments.
+ * @property {boolean} spoiler - Whether the attachment is flagged as a spoiler.
  * @property {DiscordCdnSegments} segments - The named path segments.
  * @property {DiscordQueryParams} params - The decoded query string parameters.
  * @property {string} url - The canonical CDN URL.
@@ -229,6 +233,7 @@ const CDN_PLACEHOLDER_PATTERNS = Object.freeze({
   hash: '[A-Za-z0-9_.\\-]+',
   index: '\\d+',
   id: '\\d+',
+  filename: '[^\\s/?#]+',
 });
 
 /**
@@ -237,6 +242,7 @@ const CDN_PLACEHOLDER_PATTERNS = Object.freeze({
  * @type {readonly DiscordCdnRoute[]}
  */
 const CDN_ROUTES = Object.freeze([
+  { kind: 'attachment', template: 'attachments/:channelId/:attachmentId/:filename' },
   { kind: 'guild_member_avatar', template: 'guilds/:guildId/users/:userId/avatars/:hash.:ext' },
   { kind: 'guild_member_banner', template: 'guilds/:guildId/users/:userId/banners/:hash.:ext' },
   {
@@ -334,8 +340,18 @@ const validateCdnData = (data) => {
   if (typeof data.hash !== 'string') {
     throw new TypeError('DiscordCdnData: hash must be a string.');
   }
-  if (typeof data.ext !== 'string' || (data.ext !== '' && !CDN_EXTENSIONS.includes(data.ext))) {
+  if (typeof data.ext !== 'string') {
+    throw new TypeError('DiscordCdnData: ext must be a string.');
+  }
+  // Attachments may carry any extension, so the whitelist only applies to hashed assets.
+  if (data.kind !== 'attachment' && data.ext !== '' && !CDN_EXTENSIONS.includes(data.ext)) {
     throw new TypeError(`DiscordCdnData: unsupported extension "${data.ext}".`);
+  }
+  if (data.filename !== null && typeof data.filename !== 'string') {
+    throw new TypeError('DiscordCdnData: filename must be a string or null.');
+  }
+  if (typeof data.spoiler !== 'boolean') {
+    throw new TypeError('DiscordCdnData: spoiler must be a boolean.');
   }
   if (data.segments === null || typeof data.segments !== 'object' || Array.isArray(data.segments)) {
     throw new TypeError('DiscordCdnData: segments must be a plain object.');
@@ -372,7 +388,15 @@ const parseCdnAsset = (uri) => {
     route.names.forEach((name, index) => {
       captures[name] = routeMatch[index + 1];
     });
-    const { hash = '', ext = '', ...segments } = captures;
+    const { hash = '', ext = '', filename, ...segments } = captures;
+    const isAttachment = typeof filename === 'string';
+    const lastDot = isAttachment ? filename.lastIndexOf('.') : -1;
+    const resolvedExt = lastDot > 0 ? filename.slice(lastDot + 1).toLowerCase() : ext;
+    const resolvedHash = isAttachment
+      ? lastDot > 0
+        ? filename.slice(0, lastDot)
+        : filename
+      : hash;
     const params = parseQuery(query);
     /** @type {DiscordCdnData} */
     const data = {
@@ -380,8 +404,10 @@ const parseCdnAsset = (uri) => {
       kind: route.kind,
       host,
       path,
-      hash,
-      ext,
+      hash: resolvedHash,
+      ext: resolvedExt,
+      filename: filename ?? null,
+      spoiler: isAttachment ? filename.startsWith('SPOILER_') : false,
       segments: /** @type {DiscordCdnSegments} */ (segments),
       params,
       url: buildCdnUrl(host, path, params),

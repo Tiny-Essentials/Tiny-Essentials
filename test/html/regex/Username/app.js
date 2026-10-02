@@ -114,6 +114,20 @@ const examples = {
           Role Icon: https://cdn.discordapp.com/role-icons/123456789012345678/abc123def456.png
           Event Cover: https://cdn.discordapp.com/guild-events/123456789012345678/abc123def456.png
           Tag Badge: https://cdn.discordapp.com/guild-tag-badges/123456789012345678/abc123def456.png
+
+          Testing Discord Spoilers:
+          Inline: ||this is a spoiler||
+          With pipe: ||the answer is 1|2||
+          Multiline: ||line one
+          line two||
+          Multiple: ||first|| and ||second||
+          Media: https://cdn.discordapp.com/attachments/123456789012345678/987654321098765432/SPOILER_cat.png
+
+          Testing Discord Attachments:
+          PDF: https://cdn.discordapp.com/attachments/123456789012345678/987654321098765432/report.pdf
+          Spoiler: https://cdn.discordapp.com/attachments/123456789012345678/987654321098765432/SPOILER_cat.png
+          Tarball: https://cdn.discordapp.com/attachments/123456789012345678/987654321098765432/archive.tar.gz
+          Signed: https://media.discordapp.net/attachments/123456789012345678/987654321098765432/photo.webp?ex=6600000000&is=65fe8e80&hm=abc123
         `
     .trim()
     .replace(/  /g, ''),

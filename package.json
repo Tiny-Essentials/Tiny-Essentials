@@ -115,6 +115,10 @@
       "require": "./dist/v1/regexp/Username/index.cjs",
       "import": "./dist/v1/regexp/Username/index.mjs"
     },
+    "./regexp/Username/templates/MatrixProtocol": {
+      "require": "./dist/v1/regexp/Username/templates/MatrixProtocol.cjs",
+      "import": "./dist/v1/regexp/Username/templates/MatrixProtocol.mjs"
+    },
     "./regexp/Username/templates/BlueSky": {
       "require": "./dist/v1/regexp/Username/templates/BlueSky.cjs",
       "import": "./dist/v1/regexp/Username/templates/BlueSky.mjs"
@@ -126,10 +130,6 @@
     "./regexp/Username/templates/deprecated/Discord": {
       "require": "./dist/v1/regexp/Username/templates/deprecated/Discord.cjs",
       "import": "./dist/v1/regexp/Username/templates/deprecated/Discord.mjs"
-    },
-    "./regexp/Username/templates/MatrixProtocol": {
-      "require": "./dist/v1/regexp/Username/templates/MatrixProtocol.cjs",
-      "import": "./dist/v1/regexp/Username/templates/MatrixProtocol.mjs"
     },
     "./basics": {
       "require": "./dist/v1/basics/index.cjs",

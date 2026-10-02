@@ -107,6 +107,12 @@ const EXAMPLES = {
     'https://cdn.discordapp.com/role-icons/123456789012345678/abc123def456.png',
     'https://cdn.discordapp.com/guild-events/123456789012345678/abc123def456.png',
     'https://cdn.discordapp.com/guild-tag-badges/123456789012345678/abc123def456.png',
+
+    // Attachments
+    'https://cdn.discordapp.com/attachments/123456789012345678/987654321098765432/report.pdf',
+    'https://cdn.discordapp.com/attachments/123456789012345678/987654321098765432/SPOILER_cat.png',
+    'https://cdn.discordapp.com/attachments/123456789012345678/987654321098765432/archive.tar.gz',
+    'https://media.discordapp.net/attachments/123456789012345678/987654321098765432/photo.webp?ex=6600000000&is=65fe8e80&hm=abc123',
   ],
   bluesky: [
     'alice.bsky.social',
