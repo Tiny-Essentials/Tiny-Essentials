@@ -68,7 +68,10 @@ const EXAMPLES = {
     '<t:1618953630>',
     '<t:1618953630:R>',
     '</play:123456789012345678>',
-    'https://discord.gg/ponyhouse',
+    'https://discord.gg/XXXXXXXXXX',
+    'https://discord.gg/customname',
+    'https://discord.com/invite/XXXXXXXXXX',
+    'https://discord.gg/XXXXXXXXXX?utm_source=Discord&utm_medium=social',
     'https://discord.com/channels/123456789012345678/987654321098765432/111111111111111111',
   ],
   bluesky: [
