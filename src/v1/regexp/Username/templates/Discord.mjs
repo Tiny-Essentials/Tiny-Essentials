@@ -73,6 +73,18 @@ const DiscordRegex = Object.freeze({
     domainPattern: ':[0-9]{17,22}>',
   },
   /**
+   * Timestamp Code
+   * Format: <t:TIMESTAMP:STYLE> or <t:TIMESTAMP>
+   * Styles: t, T, d, D, f, F, R, s, S
+   * @type {UsernameRegexTemplate}
+   */
+  timestamp: {
+    prefix: '<t:',
+    validValues: '[0-9]',
+    length: [1, 15],
+    domainPattern: '(?::[tTdDfFRsS])?>',
+  },
+  /**
    * Slash Command Mention Code
    * Format: </name:ID> or </name subcommand:ID>
    * @type {UsernameRegexTemplate}

@@ -60,6 +60,18 @@ const examples = {
           Animated Emoji: <a:tinywag:123456789012345678>
           Slash Command (Simple): </play:123456789012345678>
           Slash Command (With Subcommand): </play music:123456789012345678>
+
+          Testing Discord Timestamps:
+          Timestamp (Default): <t:1790907670>
+          Timestamp (F): <t:1790907670:F>
+          Timestamp (f): <t:1790907670:f>
+          Timestamp (D): <t:1790907670:D>
+          Timestamp (d): <t:1790907670:d>
+          Timestamp (t): <t:1790907670:t>
+          Timestamp (T): <t:1790907670:T>
+          Timestamp (R): <t:1790907670:R>
+          Timestamp (s): <t:1790907670:s>
+          Timestamp (S): <t:1790907670:S>
         `
     .trim()
     .replace(/  /g, ''),
