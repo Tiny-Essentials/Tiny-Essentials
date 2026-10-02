@@ -319,6 +319,10 @@
       "require": "./dist/v1/libs/tools/TinyUriParser/Discord.cjs",
       "import": "./dist/v1/libs/tools/TinyUriParser/Discord.mjs"
     },
+    "./libs/tools/TinyUriParser/BlueSky": {
+      "require": "./dist/v1/libs/tools/TinyUriParser/BlueSky.cjs",
+      "import": "./dist/v1/libs/tools/TinyUriParser/BlueSky.mjs"
+    },
     "./libs/tools/TinyBrowserMonitor": {
       "require": "./dist/v1/libs/tools/TinyBrowserMonitor.cjs",
       "import": "./dist/v1/libs/tools/TinyBrowserMonitor.mjs"
