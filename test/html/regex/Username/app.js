@@ -56,11 +56,30 @@ const examples = {
           Nickname Mention: <@!123456789012345678>
           Role Mention: <@&123456789012345678>
           Channel Mention: <#123456789012345678>
+          Game Profile: <@$1402418491272986635>
           Custom Emoji: <:tinycatface:123456789012345678>
           Animated Emoji: <a:tinywag:123456789012345678>
+
           Slash Command (Simple): </play:123456789012345678>
           Slash Command (With Subcommand): </play music:123456789012345678>
+          Slash Command (With Group): </foo group bar:123456789012345678>
 
+          Guild Navigation (Customize): <id:customize>
+          Guild Navigation (Browse): <id:browse>
+          Guild Navigation (Guide): <id:guide>
+          Guild Navigation (Linked Roles): <id:linked-roles>
+          Guild Navigation (Specific Role): <id:linked-roles:123456789012345678>
+
+          Message Link: https://discord.com/channels/123456789012345678/987654321098765432/111111111111111111
+          Message Link (with params): https://discord.com/channels/123456789012345678/987654321098765432/111111111111111111?jump=1
+          Message Link (me): https://discord.com/channels/@me/987654321098765432/111111111111111111
+          Message Link (me) (with params): https://discord.com/channels/@me/987654321098765432/111111111111111111?jump=1
+          
+          Invite (with params): https://discord.gg/XXXXXXXXXX?utm_source=Discord&utm_medium=social
+          Invite: https://discord.gg/XXXXXXXXXX
+          Invite: https://discord.com/invite/XXXXXXXXXX
+          Invite: https://discord.com/invite/XXXXXXXXXX?utm_source=Discord&utm_medium=social
+          
           Testing Discord Timestamps:
           Timestamp (Default): <t:1790907670>
           Timestamp (F): <t:1790907670:F>

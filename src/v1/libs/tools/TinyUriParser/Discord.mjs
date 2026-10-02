@@ -11,12 +11,37 @@ import TinyUriParser from '../TinyUriParser.mjs';
  */
 
 /**
+ * A plain key/value map of decoded query string parameters.
+ * @typedef {Record<string, string>} DiscordQueryParams
+ */
+
+/**
  * Represents a parsed Discord mention element.
  * @typedef {Object} DiscordMentionData
  * @property {'mention'} dataType - The discriminator for a mention element.
  * @property {DiscordMentionTarget} target - The kind of entity being mentioned.
  * @property {string} id - The snowflake identifier of the mentioned entity.
  * @property {boolean} isNickname - Whether the mention uses the nickname syntax (`<@!id>`).
+ */
+
+/**
+ * Represents a parsed Discord game profile element.
+ * @typedef {Object} DiscordGameProfileData
+ * @property {'game_profile'} dataType - The discriminator for a game profile element.
+ * @property {string} id - The snowflake identifier of the game.
+ */
+
+/**
+ * The in-application navigation tab targeted by a guild navigation element.
+ * @typedef {'customize' | 'browse' | 'guide' | 'linked-roles'} DiscordGuildNavigationTarget
+ */
+
+/**
+ * Represents a parsed Discord guild navigation element.
+ * @typedef {Object} DiscordGuildNavigationData
+ * @property {'guild_navigation'} dataType - The discriminator for a guild navigation element.
+ * @property {DiscordGuildNavigationTarget} target - The navigation tab to open.
+ * @property {string | null} roleId - The linked role snowflake, or `null` when the tab has no role.
  */
 
 /**
@@ -37,10 +62,21 @@ import TinyUriParser from '../TinyUriParser.mjs';
  */
 
 /**
+ * The structural parts of a Discord slash command path.
+ * @typedef {Object} DiscordCommandPath
+ * @property {string} command - The root command name.
+ * @property {string | null} subcommandGroup - The subcommand group, or `null` when absent.
+ * @property {string | null} subcommand - The subcommand, or `null` when absent.
+ */
+
+/**
  * Represents a parsed Discord slash command element.
  * @typedef {Object} DiscordCommandData
  * @property {'command'} dataType - The discriminator for a command element.
- * @property {string} name - The command name, without the leading slash.
+ * @property {string} name - The full command path, without the leading slash (e.g., `play music`).
+ * @property {string} command - The root command name.
+ * @property {string | null} subcommandGroup - The subcommand group, or `null` when absent.
+ * @property {string | null} subcommand - The subcommand, or `null` when absent.
  * @property {string} id - The snowflake identifier of the command.
  */
 
@@ -52,7 +88,7 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * @property {'discord.gg' | 'discord.com' | 'discordapp.com'} host - The normalized host.
  * @property {'invite' | 'servers' | null} kind - The path kind, or `null` for short links.
  * @property {boolean} obfuscated - Whether the source used whitespace obfuscation.
- * @property {Record<string, string>} params - The decoded query string parameters.
+ * @property {DiscordQueryParams} params - The decoded query string parameters.
  * @property {string} url - The canonical invite URL.
  */
 
@@ -63,6 +99,8 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * @property {string} guildId - The guild snowflake, or '@me' for direct messages.
  * @property {string} channelId - The channel snowflake.
  * @property {string} messageId - The message snowflake.
+ * @property {DiscordQueryParams} params - The decoded query string parameters.
+ * @property {string} url - The canonical message URL.
  */
 
 /**
@@ -70,6 +108,18 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * @type {RegExp}
  */
 const mentionRegex = /^<(?<prefix>@!?|@&|#)(?<id>\d+)>$/;
+
+/**
+ * Matches a Discord game profile: `<@$id>`.
+ * @type {RegExp}
+ */
+const gameProfileRegex = /^<@\$(?<id>\d+)>$/;
+
+/**
+ * Matches a Discord guild navigation element: `<id:type>` or `<id:linked-roles:roleId>`.
+ * @type {RegExp}
+ */
+const guildNavigationRegex = /^<id:(?<target>[a-z-]+)(?::(?<roleId>\d+))?>$/;
 
 /**
  * Matches a Discord custom emoji: `<:name:id>` or `<a:name:id>`.
@@ -84,10 +134,11 @@ const emojiRegex = /^<(?<animated>a)?:(?<name>\w+):(?<id>\d+)>$/;
 const timestampRegex = /^<t:(?<timestamp>\d+)(?::(?<style>[tTdDfFRsS]))?>$/;
 
 /**
- * Matches a Discord slash command: `</name:id>`.
+ * Matches a Discord slash command: `</name:id>`, `</name subcommand:id>` or
+ * `</name group subcommand:id>`.
  * @type {RegExp}
  */
-const commandRegex = /^<\/(?<name>[\w-]+):(?<id>\d+)>$/;
+const commandRegex = /^<\/(?<name>[\w-]+(?: [\w-]+){0,2}):(?<id>\d+)>$/;
 
 /**
  * Matches a standard Discord invite URL, with an optional query string.
@@ -104,20 +155,36 @@ const obfuscatedInviteRegex =
   /^\s*(?<host>discord(?:app)?\s*\.\s*(?:gg|co(?:m)?))(?:\s*\/\s*(?:(?<kind>invite|servers)\s*\/\s*)?)(?<code>[\w-]+)(?:\s*\?\s*(?<query>[^#\s]*))?\s*$/i;
 
 /**
- * Matches a Discord message URL.
+ * Matches a Discord message URL, with an optional query string.
  * @type {RegExp}
  */
 const messageLinkRegex =
-  /^https?:\/\/(?:www\.)?discord(?:app)?\.com\/channels\/(?<guildId>@me|\d+)\/(?<channelId>\d+)\/(?<messageId>\d+)\/?$/;
+  /^https?:\/\/(?:www\.)?discord(?:app)?\.com\/channels\/(?<guildId>@me|\d+)\/(?<channelId>\d+)\/(?<messageId>\d+)\/?(?:\?(?<query>[^#\s]*))?$/;
+
+/**
+ * The list of supported guild navigation targets.
+ * @type {readonly DiscordGuildNavigationTarget[]}
+ */
+const GUILD_NAVIGATION_TARGETS = Object.freeze(['customize', 'browse', 'guide', 'linked-roles']);
 
 /**
  * Parses a raw query string into a plain object of key/value pairs.
  * @param {string | undefined} rawQuery - The raw query string, without the leading `?`.
- * @returns {Record<string, string>} The parsed query parameters.
+ * @returns {DiscordQueryParams} The parsed query parameters.
  */
 const parseQuery = (rawQuery) => {
   if (!rawQuery) return {};
   return Object.fromEntries(new URLSearchParams(rawQuery).entries());
+};
+
+/**
+ * Serializes a parameter map into a canonical query string.
+ * @param {DiscordQueryParams} params - The parameters to serialize.
+ * @returns {string} The serialized query string, including the leading `?`, or an empty string.
+ */
+const buildQuery = (params) => {
+  const query = new URLSearchParams(params).toString();
+  return query ? `?${query}` : '';
 };
 
 /**
@@ -135,6 +202,36 @@ const validateMentionData = (data) => {
   }
   if (typeof data.isNickname !== 'boolean') {
     throw new TypeError('DiscordMentionData: isNickname must be a boolean.');
+  }
+};
+
+/**
+ * Validates a parsed Discord game profile object.
+ * @param {DiscordGameProfileData} data - The game profile data to validate.
+ * @returns {void}
+ * @throws {TypeError} If any property is missing or of an invalid type.
+ */
+const validateGameProfileData = (data) => {
+  if (typeof data.id !== 'string' || !/^\d+$/.test(data.id)) {
+    throw new TypeError('DiscordGameProfileData: id must be a numeric string.');
+  }
+};
+
+/**
+ * Validates a parsed Discord guild navigation object.
+ * @param {DiscordGuildNavigationData} data - The guild navigation data to validate.
+ * @returns {void}
+ * @throws {TypeError} If any property is missing or of an invalid type.
+ */
+const validateGuildNavigationData = (data) => {
+  if (!GUILD_NAVIGATION_TARGETS.includes(data.target)) {
+    throw new TypeError(`DiscordGuildNavigationData: invalid target "${data.target}".`);
+  }
+  if (data.roleId !== null && (typeof data.roleId !== 'string' || !/^\d+$/.test(data.roleId))) {
+    throw new TypeError('DiscordGuildNavigationData: roleId must be a numeric string or null.');
+  }
+  if (data.target !== 'linked-roles' && data.roleId !== null) {
+    throw new TypeError('DiscordGuildNavigationData: roleId is only valid for "linked-roles".');
   }
 };
 
@@ -174,14 +271,45 @@ const validateTimestampData = (data) => {
 };
 
 /**
+* Splits a raw command path into its structural parts.
+* @param {string} name - The raw command path (e.g., `play music`).
+* @returns {DiscordCommandPath} The split command path.
+* @throws {TypeError} If the name is not a valid command path.
+*/
+const splitCommandPath = (name) => {
+  if (typeof name !== 'string' || !/^[\w-]+(?: [\w-]+){0,2}$/.test(name)) {
+    throw new TypeError(
+      'DiscordCommandData: name must contain one to three space-separated segments.',
+    );
+  }
+  const [command, second, third] = name.split(' ');
+  return {
+    command,
+    subcommandGroup: third === undefined ? null : second,
+    subcommand: second === undefined ? null : (third ?? second),
+  };
+};
+
+/**
  * Validates a parsed Discord command object.
  * @param {DiscordCommandData} data - The command data to validate.
  * @returns {void}
  * @throws {TypeError} If any property is missing or of an invalid type.
  */
 const validateCommandData = (data) => {
-  if (typeof data.name !== 'string' || data.name.length === 0) {
-    throw new TypeError('DiscordCommandData: name must be a non-empty string.');
+  const expected = splitCommandPath(data.name);
+  if (data.command !== expected.command) {
+    throw new TypeError(`DiscordCommandData: command must be "${expected.command}".`);
+  }
+  if (data.subcommandGroup !== expected.subcommandGroup) {
+    throw new TypeError(
+      `DiscordCommandData: subcommandGroup must be ${JSON.stringify(expected.subcommandGroup)}.`,
+    );
+  }
+  if (data.subcommand !== expected.subcommand) {
+    throw new TypeError(
+      `DiscordCommandData: subcommand must be ${JSON.stringify(expected.subcommand)}.`,
+    );
   }
   if (typeof data.id !== 'string' || !/^\d+$/.test(data.id)) {
     throw new TypeError('DiscordCommandData: id must be a numeric string.');
@@ -237,6 +365,12 @@ const validateMessageLinkData = (data) => {
   if (typeof data.messageId !== 'string' || !/^\d+$/.test(data.messageId)) {
     throw new TypeError('DiscordMessageLinkData: messageId must be a numeric string.');
   }
+  if (data.params === null || typeof data.params !== 'object' || Array.isArray(data.params)) {
+    throw new TypeError('DiscordMessageLinkData: params must be a plain object.');
+  }
+  if (typeof data.url !== 'string' || data.url.length === 0) {
+    throw new TypeError('DiscordMessageLinkData: url must be a non-empty string.');
+  }
 };
 
 /**
@@ -269,6 +403,52 @@ const parseMention = (uri) => {
   /** @type {DiscordMentionData} */
   const data = { dataType: 'mention', target, id, isNickname };
   validateMentionData(data);
+  return data;
+};
+
+/**
+ * Parses a Discord game profile element.
+ * @param {string} uri - The raw game profile string (e.g., `<@$1402418491272986635>`).
+ * @returns {DiscordGameProfileData} The parsed game profile data.
+ * @throws {TypeError} If the input is not a string or fails validation.
+ * @throws {SyntaxError} If the input does not match the game profile grammar.
+ */
+const parseGameProfile = (uri) => {
+  if (typeof uri !== 'string') {
+    throw new TypeError('DiscordGameProfileData: uri must be a string.');
+  }
+  const match = gameProfileRegex.exec(uri);
+  if (!match || !match.groups) {
+    throw new SyntaxError(`Invalid Discord game profile: ${uri}`);
+  }
+  /** @type {DiscordGameProfileData} */
+  const data = { dataType: 'game_profile', id: match.groups.id };
+  validateGameProfileData(data);
+  return data;
+};
+
+/**
+ * Parses a Discord guild navigation element.
+ * @param {string} uri - The raw guild navigation string (e.g., `<id:linked-roles:123>`).
+ * @returns {DiscordGuildNavigationData} The parsed guild navigation data.
+ * @throws {TypeError} If the input is not a string or fails validation.
+ * @throws {SyntaxError} If the input does not match the guild navigation grammar.
+ */
+const parseGuildNavigation = (uri) => {
+  if (typeof uri !== 'string') {
+    throw new TypeError('DiscordGuildNavigationData: uri must be a string.');
+  }
+  const match = guildNavigationRegex.exec(uri);
+  if (!match || !match.groups) {
+    throw new SyntaxError(`Invalid Discord guild navigation: ${uri}`);
+  }
+  /** @type {DiscordGuildNavigationData} */
+  const data = {
+    dataType: 'guild_navigation',
+    target: /** @type {DiscordGuildNavigationTarget} */ (match.groups.target),
+    roleId: match.groups.roleId ?? null,
+  };
+  validateGuildNavigationData(data);
   return data;
 };
 
@@ -324,8 +504,22 @@ const parseTimestamp = (uri) => {
 };
 
 /**
+* Builds and validates a `DiscordCommandData` object from a raw command path.
+* @param {string} name - The full command path (e.g., `play music`).
+* @param {string} id - The snowflake identifier of the command.
+* @returns {DiscordCommandData} The validated command data.
+* @throws {TypeError} If the resulting object is invalid.
+*/
+const buildCommandData = (name, id) => {
+  /** @type {DiscordCommandData} */
+  const data = { dataType: 'command', name, ...splitCommandPath(name), id };
+  validateCommandData(data);
+  return data;
+};
+
+/**
  * Parses a Discord slash command element.
- * @param {string} uri - The raw command string (e.g., `</play:123>`).
+ * @param {string} uri - The raw command string (e.g., `</play music:123>`).
  * @returns {DiscordCommandData} The parsed command data.
  * @throws {TypeError} If the input is not a string or fails validation.
  * @throws {SyntaxError} If the input does not match the command grammar.
@@ -338,10 +532,7 @@ const parseCommand = (uri) => {
   if (!match || !match.groups) {
     throw new SyntaxError(`Invalid Discord command: ${uri}`);
   }
-  /** @type {DiscordCommandData} */
-  const data = { dataType: 'command', name: match.groups.name, id: match.groups.id };
-  validateCommandData(data);
-  return data;
+  return buildCommandData(match.groups.name, match.groups.id);
 };
 
 /**
@@ -359,13 +550,25 @@ const normalizeHost = (rawHost) => {
  * @param {string} host - The normalized host.
  * @param {string | null} kind - The path kind, or `null` for short links.
  * @param {string} code - The invite code or server slug.
- * @param {Record<string, string>} params - The query string parameters.
+ * @param {DiscordQueryParams} params - The query string parameters.
  * @returns {string} The canonical invite URL.
  */
 const buildInviteUrl = (host, kind, code, params) => {
   const base = kind ? `https://${host}/${kind}/${code}` : `https://${host}/${code}`;
-  const query = new URLSearchParams(params).toString();
-  return query ? `${base}?${query}` : base;
+  return `${base}${buildQuery(params)}`;
+};
+
+/**
+ * Builds the canonical message URL for a guild, channel, message and query.
+ * @param {string} guildId - The guild snowflake, or '@me' for direct messages.
+ * @param {string} channelId - The channel snowflake.
+ * @param {string} messageId - The message snowflake.
+ * @param {DiscordQueryParams} params - The query string parameters.
+ * @returns {string} The canonical message URL.
+ */
+const buildMessageLinkUrl = (guildId, channelId, messageId, params) => {
+  const base = `https://discord.com/channels/${guildId}/${channelId}/${messageId}`;
+  return `${base}${buildQuery(params)}`;
 };
 
 /**
@@ -438,12 +641,16 @@ const parseMessageLink = (uri) => {
   if (!match || !match.groups) {
     throw new SyntaxError(`Invalid Discord message link: ${uri}`);
   }
+  const { guildId, channelId, messageId } = match.groups;
+  const params = parseQuery(match.groups.query);
   /** @type {DiscordMessageLinkData} */
   const data = {
     dataType: 'message_link',
-    guildId: match.groups.guildId,
-    channelId: match.groups.channelId,
-    messageId: match.groups.messageId,
+    guildId,
+    channelId,
+    messageId,
+    params,
+    url: buildMessageLinkUrl(guildId, channelId, messageId, params),
   };
   validateMessageLinkData(data);
   return data;
@@ -460,6 +667,28 @@ const stringifyMention = (data) => {
   if (data.target === 'channel') return `<#${data.id}>`;
   if (data.target === 'role') return `<@&${data.id}>`;
   return data.isNickname ? `<@!${data.id}>` : `<@${data.id}>`;
+};
+
+/**
+ * Reconstructs a Discord game profile string from parsed data.
+ * @param {DiscordGameProfileData} data - The game profile data.
+ * @returns {string} The reconstructed game profile string.
+ * @throws {TypeError} If the data is invalid.
+ */
+const stringifyGameProfile = (data) => {
+  validateGameProfileData(data);
+  return `<@$${data.id}>`;
+};
+
+/**
+ * Reconstructs a Discord guild navigation string from parsed data.
+ * @param {DiscordGuildNavigationData} data - The guild navigation data.
+ * @returns {string} The reconstructed guild navigation string.
+ * @throws {TypeError} If the data is invalid.
+ */
+const stringifyGuildNavigation = (data) => {
+  validateGuildNavigationData(data);
+  return data.roleId ? `<id:${data.target}:${data.roleId}>` : `<id:${data.target}>`;
 };
 
 /**
@@ -514,7 +743,7 @@ const stringifyInvite = (data) => {
  */
 const stringifyMessageLink = (data) => {
   validateMessageLinkData(data);
-  return `https://discord.com/channels/${data.guildId}/${data.channelId}/${data.messageId}`;
+  return buildMessageLinkUrl(data.guildId, data.channelId, data.messageId, data.params);
 };
 
 /**
@@ -525,6 +754,26 @@ export const DiscordMentionParser = TinyUriParser.buildParserPair(
   (uriString) => mentionRegex.test(uriString),
   parseMention,
   stringifyMention,
+);
+
+/**
+ * A parser pair for Discord game profiles (`<@$id>`).
+ */
+export const DiscordGameProfileParser = TinyUriParser.buildParserPair(
+  'game_profile',
+  (uriString) => gameProfileRegex.test(uriString),
+  parseGameProfile,
+  stringifyGameProfile,
+);
+
+/**
+ * A parser pair for Discord guild navigation (`<id:type>`, `<id:linked-roles:id>`).
+ */
+export const DiscordGuildNavigationParser = TinyUriParser.buildParserPair(
+  'guild_navigation',
+  (uriString) => guildNavigationRegex.test(uriString),
+  parseGuildNavigation,
+  stringifyGuildNavigation,
 );
 
 /**
@@ -584,6 +833,8 @@ export const DiscordMessageLinkParser = TinyUriParser.buildParserPair(
 export const DiscordProtocolParsers = Object.freeze([
   DiscordMessageLinkParser,
   DiscordInviteParser,
+  DiscordGameProfileParser,
+  DiscordGuildNavigationParser,
   DiscordMentionParser,
   DiscordEmojiParser,
   DiscordTimestampParser,

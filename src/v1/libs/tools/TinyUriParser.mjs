@@ -115,44 +115,42 @@ class TinyUriParser {
    * @throws {TypeError} If any provided parser is not a valid ParserPair.
    */
   constructor(...parsers) {
-    for (const i in parsers) {
-      const parser = parsers[i];
-
+    for (const [index, parser] of parsers.entries()) {
       // 1. Check if the argument is an array (the base of a tuple/ParserPair)
       if (!Array.isArray(parser)) {
-        throw new TypeError(`Parser at index ${i} must be an array representing a ParserPair.`);
+        throw new TypeError(`Parser at index ${index} must be an array representing a ParserPair.`);
       }
 
       // 2. Check if the array has exactly four elements [Type, ParseChecker, ParserCallback, StringifyCallback]
       if (parser.length !== 4) {
-        throw new TypeError(`Parser at index ${i} must contain exactly 4 elements.`);
+        throw new TypeError(`Parser at index ${index} must contain exactly 4 elements.`);
       }
 
       // 3. Validate that the first element is a string (Type)
-      if (parser.length !== 4) {
+      if (typeof parser[0] !== 'string') {
         throw new TypeError(
-          `The first element of the parser at index ${i} must be a string (Type).`,
+          `The first element of the parser at index ${index} must be a string (Type).`,
         );
       }
 
       // 4. Validate that the second element is a function (ParseChecker)
       if (typeof parser[1] !== 'function') {
         throw new TypeError(
-          `The second element of the parser at index ${i} must be a function (ParseChecker).`,
+          `The second element of the parser at index ${index} must be a function (ParseChecker).`,
         );
       }
 
       // 5. Validate that the third element is a function (ParserCallback)
       if (typeof parser[2] !== 'function') {
         throw new TypeError(
-          `The third element of the parser at index ${i} must be a function (ParserCallback).`,
+          `The third element of the parser at index ${index} must be a function (ParserCallback).`,
         );
       }
 
       // 6. Validate that the fourth element is a function (StringifyCallback)
       if (typeof parser[3] !== 'function') {
         throw new TypeError(
-          `The fourth element of the parser at index ${i} must be a function (StringifyCallback).`,
+          `The fourth element of the parser at index ${index} must be a function (StringifyCallback).`,
         );
       }
     }

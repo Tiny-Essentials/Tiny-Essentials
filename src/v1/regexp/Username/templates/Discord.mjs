@@ -144,14 +144,14 @@ const DiscordRegex = Object.freeze({
     ],
     // Standard URL detectors.
     start: '(?:https?://)?(?:discord\\.gg/|(discord|discordapp)\\.com/(invite|servers)/)',
-    validValues: '[a-zA-Z0-9]',
+    validValues: '[a-zA-Z0-9_-]',
     length: [2, 300],
     // Keeps "?utm_source=..." and friends attached to the invite code.
     end: OPTIONAL_QUERY_STRING,
   },
 
   /**
-   * Game Profile Mention
+   * Game Profile Mention Code
    * Format: <@$GAME_ID>
    * @type {UsernameRegexTemplate}
    */
@@ -163,13 +163,14 @@ const DiscordRegex = Object.freeze({
   },
 
   /**
-   * Guild Navigation
+   * Guild Navigation Code
    * Format: <id:TYPE> or <id:linked-roles:ROLE_ID>
+   * Types: customize, browse, guide, linked-roles
    * @type {UsernameRegexTemplate}
    */
   guildNavigation: {
     prefix: '<id:',
-    validValues: '[a-z]',
+    validValues: '[a-z-]',
     length: [1, 12],
     domainPattern: '(?::[0-9]{17,22})?>',
   },
