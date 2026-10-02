@@ -48,8 +48,12 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * Represents a parsed Discord invite link.
  * @typedef {Object} DiscordInviteData
  * @property {'invite'} dataType - The discriminator for an invite element.
- * @property {string} code - The invite code.
- * @property {string} url - The normalized invite URL.
+ * @property {string} code - The invite code or server slug.
+ * @property {'discord.gg' | 'discord.com' | 'discordapp.com'} host - The normalized host.
+ * @property {'invite' | 'servers' | null} kind - The path kind, or `null` for short links.
+ * @property {boolean} obfuscated - Whether the source used whitespace obfuscation.
+ * @property {Record<string, string>} params - The decoded query string parameters.
+ * @property {string} url - The canonical invite URL.
  */
 
 /**
@@ -86,11 +90,18 @@ const timestampRegex = /^<t:(?<timestamp>\d+)(?::(?<style>[tTdDfFRsS]))?>$/;
 const commandRegex = /^<\/(?<name>[\w-]+):(?<id>\d+)>$/;
 
 /**
- * Matches a Discord invite URL.
+ * Matches a standard Discord invite URL, with an optional query string.
  * @type {RegExp}
  */
 const inviteRegex =
-  /^https?:\/\/(?:www\.)?(?:discord\.gg|discord(?:app)?\.com\/invite)\/(?<code>[\w-]+)\/?$/;
+  /^(?:https?:\/\/)?(?:www\.)?(?:(?<shortHost>discord\.gg)\/(?<shortCode>[\w-]+)|(?<fullHost>discord(?:app)?\.com)\/(?<kind>invite|servers)\/(?<code>[\w-]+))\/?(?:\?(?<query>[^#\s]*))?$/i;
+
+/**
+ * Matches a whitespace-obfuscated Discord invite, with an optional query string.
+ * @type {RegExp}
+ */
+const obfuscatedInviteRegex =
+  /^\s*(?<host>discord(?:app)?\s*\.\s*(?:gg|co(?:m)?))(?:\s*\/\s*(?:(?<kind>invite|servers)\s*\/\s*)?)(?<code>[\w-]+)(?:\s*\?\s*(?<query>[^#\s]*))?\s*$/i;
 
 /**
  * Matches a Discord message URL.
@@ -98,6 +109,16 @@ const inviteRegex =
  */
 const messageLinkRegex =
   /^https?:\/\/(?:www\.)?discord(?:app)?\.com\/channels\/(?<guildId>@me|\d+)\/(?<channelId>\d+)\/(?<messageId>\d+)\/?$/;
+
+/**
+ * Parses a raw query string into a plain object of key/value pairs.
+ * @param {string | undefined} rawQuery - The raw query string, without the leading `?`.
+ * @returns {Record<string, string>} The parsed query parameters.
+ */
+const parseQuery = (rawQuery) => {
+  if (!rawQuery) return {};
+  return Object.fromEntries(new URLSearchParams(rawQuery).entries());
+};
 
 /**
  * Validates a parsed Discord mention object.
@@ -176,6 +197,24 @@ const validateCommandData = (data) => {
 const validateInviteData = (data) => {
   if (typeof data.code !== 'string' || data.code.length === 0) {
     throw new TypeError('DiscordInviteData: code must be a non-empty string.');
+  }
+  if (!['discord.gg', 'discord.com', 'discordapp.com'].includes(data.host)) {
+    throw new TypeError(`DiscordInviteData: invalid host "${data.host}".`);
+  }
+  if (data.kind !== null && data.kind !== 'invite' && data.kind !== 'servers') {
+    throw new TypeError(`DiscordInviteData: invalid kind "${data.kind}".`);
+  }
+  if (data.host === 'discord.gg' && data.kind !== null) {
+    throw new TypeError('DiscordInviteData: discord.gg must not include a path kind.');
+  }
+  if (data.host !== 'discord.gg' && data.kind === null) {
+    throw new TypeError('DiscordInviteData: this host requires a path kind.');
+  }
+  if (typeof data.obfuscated !== 'boolean') {
+    throw new TypeError('DiscordInviteData: obfuscated must be a boolean.');
+  }
+  if (data.params === null || typeof data.params !== 'object' || Array.isArray(data.params)) {
+    throw new TypeError('DiscordInviteData: params must be a plain object.');
   }
   if (typeof data.url !== 'string' || data.url.length === 0) {
     throw new TypeError('DiscordInviteData: url must be a non-empty string.');
@@ -306,6 +345,58 @@ const parseCommand = (uri) => {
 };
 
 /**
+ * Normalizes a raw host by removing whitespace and lowercasing it.
+ * @param {string} rawHost - The raw host captured by a regular expression.
+ * @returns {string} The normalized host.
+ */
+const normalizeHost = (rawHost) => {
+  const compact = rawHost.replace(/\s+/g, '').toLowerCase();
+  return compact === 'discord.co' ? 'discord.com' : compact;
+};
+
+/**
+ * Builds the canonical invite URL for a normalized host, kind, code and query.
+ * @param {string} host - The normalized host.
+ * @param {string | null} kind - The path kind, or `null` for short links.
+ * @param {string} code - The invite code or server slug.
+ * @param {Record<string, string>} params - The query string parameters.
+ * @returns {string} The canonical invite URL.
+ */
+const buildInviteUrl = (host, kind, code, params) => {
+  const base = kind ? `https://${host}/${kind}/${code}` : `https://${host}/${code}`;
+  const query = new URLSearchParams(params).toString();
+  return query ? `${base}?${query}` : base;
+};
+
+/**
+ * Builds and validates a `DiscordInviteData` object.
+ * @param {string} rawHost - The raw host captured by a regular expression.
+ * @param {string | null} rawKind - The raw path kind, or `null`.
+ * @param {string} code - The invite code or server slug.
+ * @param {string | undefined} rawQuery - The raw query string, without the leading `?`.
+ * @param {boolean} obfuscated - Whether the source used whitespace obfuscation.
+ * @returns {DiscordInviteData} The validated invite data.
+ * @throws {TypeError} If the resulting object is invalid.
+ */
+const buildInviteData = (rawHost, rawKind, code, rawQuery, obfuscated) => {
+  const host = normalizeHost(rawHost);
+  const kind = rawKind ? rawKind.toLowerCase() : null;
+  const params = parseQuery(rawQuery);
+  /** @type {DiscordInviteData} */
+  const data = {
+    dataType: 'invite',
+    code,
+    host: /** @type {DiscordInviteData['host']} */ (host),
+    kind: /** @type {DiscordInviteData['kind']} */ (kind),
+    obfuscated,
+    params,
+    url: buildInviteUrl(host, kind, code, params),
+  };
+  validateInviteData(data);
+  return data;
+};
+
+/**
  * Parses a Discord invite link.
  * @param {string} uri - The raw invite URL.
  * @returns {DiscordInviteData} The parsed invite data.
@@ -316,18 +407,20 @@ const parseInvite = (uri) => {
   if (typeof uri !== 'string') {
     throw new TypeError('DiscordInviteData: uri must be a string.');
   }
-  const match = inviteRegex.exec(uri);
-  if (!match || !match.groups) {
-    throw new SyntaxError(`Invalid Discord invite: ${uri}`);
+
+  const cleanMatch = inviteRegex.exec(uri);
+  if (cleanMatch?.groups) {
+    const { shortHost, shortCode, fullHost, kind, code, query } = cleanMatch.groups;
+    return buildInviteData(shortHost ?? fullHost, kind ?? null, shortCode ?? code, query, false);
   }
-  /** @type {DiscordInviteData} */
-  const data = {
-    dataType: 'invite',
-    code: match.groups.code,
-    url: `https://discord.gg/${match.groups.code}`,
-  };
-  validateInviteData(data);
-  return data;
+
+  const obfuscatedMatch = obfuscatedInviteRegex.exec(uri);
+  if (obfuscatedMatch?.groups) {
+    const { host, kind, code, query } = obfuscatedMatch.groups;
+    return buildInviteData(host, kind ?? null, code, query, true);
+  }
+
+  throw new SyntaxError(`Invalid Discord invite: ${uri}`);
 };
 
 /**
@@ -405,12 +498,12 @@ const stringifyCommand = (data) => {
 /**
  * Reconstructs a Discord invite URL from parsed data.
  * @param {DiscordInviteData} data - The invite data.
- * @returns {string} The reconstructed invite URL.
+ * @returns {string} The canonical invite URL.
  * @throws {TypeError} If the data is invalid.
  */
 const stringifyInvite = (data) => {
   validateInviteData(data);
-  return `https://discord.gg/${data.code}`;
+  return buildInviteUrl(data.host, data.kind, data.code, data.params);
 };
 
 /**
@@ -465,11 +558,12 @@ export const DiscordCommandParser = TinyUriParser.buildParserPair(
 );
 
 /**
- * A parser pair for Discord invite links (`https://discord.gg/...`).
+ * A parser pair for Discord invite links (`discord.gg/...`, `discord.com/invite/...`,
+ * `discord.com/servers/...`), including whitespace-obfuscated variants.
  */
 export const DiscordInviteParser = TinyUriParser.buildParserPair(
   'invite',
-  (uriString) => inviteRegex.test(uriString),
+  (uriString) => inviteRegex.test(uriString) || obfuscatedInviteRegex.test(uriString),
   parseInvite,
   stringifyInvite,
 );
