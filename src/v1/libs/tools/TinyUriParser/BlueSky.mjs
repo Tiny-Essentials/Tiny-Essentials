@@ -49,14 +49,15 @@ import TinyUriParser from '../TinyUriParser.mjs';
  */
 
 /**
- * Represents a parsed BlueSky web URL.
+ * Represents a parsed BlueSky web URL, with its actor and AT URI fully resolved.
  * @typedef {Object} BlueSkyWebUrlData
  * @property {'web_url'} dataType - The discriminator for a web URL element.
- * @property {string} actor - The handle or DID present in the URL.
- * @property {'did' | 'handle'} actorType - The kind of actor.
+ * @property {string} url - The original URL.
  * @property {BlueSkyWebUrlKind} kind - The resource kind, or an empty string for a profile.
  * @property {string} rkey - The record key, or an empty string for a profile.
- * @property {string} url - The original URL.
+ * @property {'did' | 'handle'} actorType - The kind of actor.
+ * @property {BlueSkyHandleData | BlueSkyDidData} actor - The fully parsed actor.
+ * @property {BlueSkyAtUriData | null} atUri - The equivalent AT URI, or `null` for a profile.
  */
 
 /**
@@ -65,6 +66,16 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * @property {'hashtag'} dataType - The discriminator for a hashtag element.
  * @property {string} tag - The tag, without the leading `#`.
  */
+
+/**
+ * Maps a BlueSky web URL kind to its canonical collection NSID.
+ * @type {Readonly<Record<'post' | 'feed' | 'lists', string>>}
+ */
+const WEB_KIND_TO_COLLECTION = Object.freeze({
+  post: 'app.bsky.feed.post',
+  feed: 'app.bsky.feed.generator',
+  lists: 'app.bsky.graph.list',
+});
 
 /**
  * The maximum length of a BlueSky handle, in characters.
@@ -279,23 +290,35 @@ const validateAtUriData = (data) => {
  * Validates a parsed BlueSky web URL object.
  * @param {BlueSkyWebUrlData} data - The web URL data to validate.
  * @returns {void}
- * @throws {TypeError} If any property is missing or of an invalid type.
+ * @throws {TypeError} If any property is missing, of an invalid type, or inconsistent.
  */
 const validateWebUrlData = (data) => {
-  if (typeof data.actor !== 'string' || data.actor.length === 0) {
-    throw new TypeError('BlueSkyWebUrlData: actor must be a non-empty string.');
-  }
-  if (data.actorType !== 'did' && data.actorType !== 'handle') {
-    throw new TypeError(`BlueSkyWebUrlData: invalid actorType "${data.actorType}".`);
+  if (typeof data.url !== 'string' || data.url.length === 0) {
+    throw new TypeError('BlueSkyWebUrlData: url must be a non-empty string.');
   }
   if (!['', 'post', 'feed', 'lists'].includes(data.kind)) {
     throw new TypeError(`BlueSkyWebUrlData: invalid kind "${data.kind}".`);
   }
+  if (data.actorType !== 'did' && data.actorType !== 'handle') {
+    throw new TypeError(`BlueSkyWebUrlData: invalid actorType "${data.actorType}".`);
+  }
+  if (data.actor === null || typeof data.actor !== 'object') {
+    throw new TypeError('BlueSkyWebUrlData: actor must be a parsed object.');
+  }
+  if (data.actor.dataType !== data.actorType) {
+    throw new TypeError('BlueSkyWebUrlData: actorType must match the parsed actor.');
+  }
   if (typeof data.rkey !== 'string') {
     throw new TypeError('BlueSkyWebUrlData: rkey must be a string.');
   }
-  if (typeof data.url !== 'string' || data.url.length === 0) {
-    throw new TypeError('BlueSkyWebUrlData: url must be a non-empty string.');
+  if (data.atUri !== null && data.atUri.dataType !== 'at_uri') {
+    throw new TypeError('BlueSkyWebUrlData: atUri must be a parsed AT URI or null.');
+  }
+  if (data.kind !== '' && data.atUri === null) {
+    throw new TypeError('BlueSkyWebUrlData: atUri is required when kind is set.');
+  }
+  if (data.kind === '' && data.atUri !== null) {
+    throw new TypeError('BlueSkyWebUrlData: atUri must be null for a profile URL.');
   }
 };
 
@@ -394,7 +417,15 @@ const parseAtUri = (uri) => {
 };
 
 /**
- * Parses a BlueSky web URL element.
+ * Extracts the canonical string form from a parsed BlueSky actor.
+ * Narrows the union via the `dataType` discriminant.
+ * @param {BlueSkyHandleData | BlueSkyDidData} actor - The parsed actor.
+ * @returns {string} The canonical actor string (a handle or a DID).
+ */
+const getActorString = (actor) => (actor.dataType === 'did' ? actor.did : actor.handle);
+
+/**
+ * Parses a BlueSky web URL element by delegating to the handle, DID and AT URI parsers.
  * @param {string} uri - The raw web URL string.
  * @returns {BlueSkyWebUrlData} The parsed web URL data.
  * @throws {TypeError} If the input is not a string or fails validation.
@@ -408,15 +439,28 @@ const parseWebUrl = (uri) => {
   if (!match || !match.groups) {
     throw new SyntaxError(`Invalid BlueSky web URL: ${uri}`);
   }
-  const { actor } = match.groups;
+
+  const { actor: rawActor } = match.groups;
+  const kind = /** @type {BlueSkyWebUrlKind} */ (match.groups.kind ?? '');
+  const rkey = match.groups.rkey ?? '';
+
+  // Delegate to the existing parsers instead of duplicating their logic.
+  const actor = rawActor.startsWith('did:') ? parseDid(rawActor) : parseHandle(rawActor);
+  const actorType = actor.dataType;
+  const actorString = getActorString(actor);
+  const collection = kind === '' ? null : WEB_KIND_TO_COLLECTION[kind];
+  const atUri =
+    collection && rkey ? parseAtUri(`at://${actorString}/${collection}/${rkey}`) : null;
+
   /** @type {BlueSkyWebUrlData} */
   const data = {
     dataType: 'web_url',
-    actor,
-    actorType: actor.startsWith('did:') ? 'did' : 'handle',
-    kind: /** @type {BlueSkyWebUrlKind} */ (match.groups.kind ?? ''),
-    rkey: match.groups.rkey ?? '',
     url: uri,
+    kind,
+    rkey,
+    actorType,
+    actor,
+    atUri,
   };
   validateWebUrlData(data);
   return data;
@@ -484,8 +528,9 @@ const stringifyAtUri = (data) => {
  */
 const stringifyWebUrl = (data) => {
   validateWebUrlData(data);
-  if (!data.kind) return `https://bsky.app/profile/${data.actor}`;
-  return `https://bsky.app/profile/${data.actor}/${data.kind}/${data.rkey}`;
+  const actorString = getActorString(data.actor);
+  if (!data.kind) return `https://bsky.app/profile/${actorString}`;
+  return `https://bsky.app/profile/${actorString}/${data.kind}/${data.rkey}`;
 };
 
 /**
