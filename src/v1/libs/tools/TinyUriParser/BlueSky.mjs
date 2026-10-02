@@ -11,34 +11,49 @@ import TinyUriParser from '../TinyUriParser.mjs';
  */
 
 /**
- * Represents a parsed BlueSky handle (e.g., `@alice.bsky.social`).
+ * Represents a parsed BlueSky handle, decomposed into its DNS components.
  * @typedef {Object} BlueSkyHandleData
  * @property {'handle'} dataType - The discriminator for a handle element.
- * @property {string} handle - The handle, without the leading `@`.
+ * @property {string} handle - The full normalized handle, without the leading `@`.
+ * @property {string[]} labels - The DNS labels, in order (e.g., `['alice', 'bsky', 'social']`).
+ * @property {number} labelCount - The number of DNS labels.
+ * @property {string} tld - The top-level domain (the last label).
+ * @property {string} domain - The best-effort registrable domain (last two labels).
+ * @property {string | null} subdomain - Everything before the registrable domain, or `null`.
+ * @property {boolean} isBskyHosted - Whether the handle ends with `bsky.social`.
+ * @property {boolean} isCustomDomain - The logical inverse of `isBskyHosted`.
  */
 
 /**
  * Represents a parsed BlueSky Decentralized Identifier (DID).
  * @typedef {Object} BlueSkyDidData
  * @property {'did'} dataType - The discriminator for a DID element.
+ * @property {string} did - The full DID string.
  * @property {'plc' | 'web'} method - The DID method.
- * @property {string} identifier - The method-specific identifier.
+ * @property {string} identifier - The raw, method-specific identifier.
+ * @property {string | null} domain - The decoded domain (only for `did:web`).
+ * @property {number | null} port - The decoded TCP port (only for `did:web`).
+ * @property {string[]} pathSegments - The decoded path segments (only for `did:web`).
  */
 
 /**
- * Represents a parsed AT URI (e.g., `at://did:plc:x/app.bsky.feed.post/y`).
+ * Represents a parsed AT URI.
  * @typedef {Object} BlueSkyAtUriData
  * @property {'at_uri'} dataType - The discriminator for an AT URI element.
- * @property {string} authority - The authority segment (DID or handle).
+ * @property {string} uri - The full AT URI.
+ * @property {string} authority - The authority segment (a DID or a handle).
+ * @property {'did' | 'handle'} authorityType - The kind of authority.
  * @property {string} collection - The collection NSID (e.g., `app.bsky.feed.post`).
+ * @property {string[]} collectionParts - The NSID split by dots.
  * @property {string} rkey - The record key.
  */
 
 /**
- * Represents a parsed BlueSky web URL (e.g., `https://bsky.app/...`).
+ * Represents a parsed BlueSky web URL.
  * @typedef {Object} BlueSkyWebUrlData
  * @property {'web_url'} dataType - The discriminator for a web URL element.
  * @property {string} actor - The handle or DID present in the URL.
+ * @property {'did' | 'handle'} actorType - The kind of actor.
  * @property {BlueSkyWebUrlKind} kind - The resource kind, or an empty string for a profile.
  * @property {string} rkey - The record key, or an empty string for a profile.
  * @property {string} url - The original URL.
@@ -50,6 +65,30 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * @property {'hashtag'} dataType - The discriminator for a hashtag element.
  * @property {string} tag - The tag, without the leading `#`.
  */
+
+/**
+ * The maximum length of a BlueSky handle, in characters.
+ * @type {number}
+ */
+const HANDLE_MAX_LENGTH = 253;
+
+/**
+ * The maximum length of a single DNS label, in characters.
+ * @type {number}
+ */
+const HANDLE_LABEL_MAX_LENGTH = 63;
+
+/**
+ * The suffix used by BlueSky-hosted accounts.
+ * @type {string}
+ */
+const BSKY_HOSTED_SUFFIX = 'bsky.social';
+
+/**
+ * A single DNS label: alphanumeric, with internal hyphens, 1-63 characters.
+ * @type {RegExp}
+ */
+const handleLabelRegex = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i;
 
 /**
  * Matches a BlueSky handle, with an optional leading `@`.
@@ -84,15 +123,92 @@ const webUrlRegex =
 const hashtagRegex = /^#(?<tag>\p{L}[\p{L}\p{N}_]*)$/u;
 
 /**
+ * Decomposes a validated, lowercase handle into its DNS components.
+ * @param {string} handle - The normalized, lowercase handle.
+ * @returns {BlueSkyHandleData} The decomposed handle data.
+ */
+const decomposeHandle = (handle) => {
+  const labels = handle.split('.');
+  const isBskyHosted = handle === BSKY_HOSTED_SUFFIX || handle.endsWith(`.${BSKY_HOSTED_SUFFIX}`);
+  const subLabels = labels.slice(0, -2);
+  return {
+    dataType: 'handle',
+    handle,
+    labels,
+    labelCount: labels.length,
+    tld: labels[labels.length - 1],
+    domain: labels.slice(-2).join('.'),
+    subdomain: subLabels.length > 0 ? subLabels.join('.') : null,
+    isBskyHosted,
+    isCustomDomain: !isBskyHosted,
+  };
+};
+
+/**
  * Validates a parsed BlueSky handle object.
  * @param {BlueSkyHandleData} data - The handle data to validate.
  * @returns {void}
  * @throws {TypeError} If any property is missing or of an invalid type.
+ * @throws {RangeError} If any length constraint is violated.
+ * @throws {SyntaxError} If any DNS label is malformed.
  */
 const validateHandleData = (data) => {
   if (typeof data.handle !== 'string' || data.handle.length === 0) {
     throw new TypeError('BlueSkyHandleData: handle must be a non-empty string.');
   }
+  if (data.handle.length > HANDLE_MAX_LENGTH) {
+    throw new RangeError(
+      `BlueSkyHandleData: handle must not exceed ${HANDLE_MAX_LENGTH} characters.`,
+    );
+  }
+  if (!Array.isArray(data.labels) || data.labels.length < 2) {
+    throw new TypeError('BlueSkyHandleData: labels must contain at least two entries.');
+  }
+  for (const label of data.labels) {
+    if (typeof label !== 'string' || label.length === 0 || label.length > HANDLE_LABEL_MAX_LENGTH) {
+      throw new RangeError('BlueSkyHandleData: each label must be between 1 and 63 characters.');
+    }
+    if (!handleLabelRegex.test(label)) {
+      throw new SyntaxError(`BlueSkyHandleData: invalid DNS label "${label}".`);
+    }
+  }
+  if (data.labelCount !== data.labels.length) {
+    throw new TypeError('BlueSkyHandleData: labelCount must match the number of labels.');
+  }
+  if (data.tld !== data.labels[data.labels.length - 1]) {
+    throw new TypeError('BlueSkyHandleData: tld must match the last label.');
+  }
+  if (typeof data.domain !== 'string' || !data.domain.includes('.')) {
+    throw new TypeError('BlueSkyHandleData: domain must be a dotted string.');
+  }
+  if (data.subdomain !== null && typeof data.subdomain !== 'string') {
+    throw new TypeError('BlueSkyHandleData: subdomain must be a string or null.');
+  }
+  if (typeof data.isBskyHosted !== 'boolean' || typeof data.isCustomDomain !== 'boolean') {
+    throw new TypeError('BlueSkyHandleData: hosting flags must be booleans.');
+  }
+  if (data.isBskyHosted === data.isCustomDomain) {
+    throw new TypeError('BlueSkyHandleData: hosting flags must be complementary.');
+  }
+};
+
+/**
+ * Decodes the method-specific identifier of a `did:web` DID.
+ * @param {string} identifier - The raw identifier (e.g., `example.com%3A3000:user:alice`).
+ * @returns {{ domain: string, port: number | null, pathSegments: string[] }} The decoded parts.
+ */
+const decodeDidWeb = (identifier) => {
+  const [hostPart, ...pathSegments] = identifier.split(':');
+  const decodedHost = decodeURIComponent(hostPart);
+  const separatorIndex = decodedHost.indexOf(':');
+  if (separatorIndex === -1) {
+    return { domain: decodedHost, port: null, pathSegments };
+  }
+  return {
+    domain: decodedHost.slice(0, separatorIndex),
+    port: Number(decodedHost.slice(separatorIndex + 1)),
+    pathSegments,
+  };
 };
 
 /**
@@ -100,6 +216,7 @@ const validateHandleData = (data) => {
  * @param {BlueSkyDidData} data - The DID data to validate.
  * @returns {void}
  * @throws {TypeError} If any property is missing or of an invalid type.
+ * @throws {RangeError} If the port is out of range.
  */
 const validateDidData = (data) => {
   if (data.method !== 'plc' && data.method !== 'web') {
@@ -107,6 +224,27 @@ const validateDidData = (data) => {
   }
   if (typeof data.identifier !== 'string' || data.identifier.length === 0) {
     throw new TypeError('BlueSkyDidData: identifier must be a non-empty string.');
+  }
+  if (data.did !== `did:${data.method}:${data.identifier}`) {
+    throw new TypeError('BlueSkyDidData: did must match the method and identifier.');
+  }
+  if (!Array.isArray(data.pathSegments)) {
+    throw new TypeError('BlueSkyDidData: pathSegments must be an array.');
+  }
+  if (data.method === 'web') {
+    if (typeof data.domain !== 'string' || data.domain.length === 0) {
+      throw new TypeError('BlueSkyDidData: domain is required for did:web.');
+    }
+    if (
+      data.port !== null &&
+      (!Number.isInteger(data.port) || data.port < 1 || data.port > 65535)
+    ) {
+      throw new RangeError('BlueSkyDidData: port must be a valid TCP port or null.');
+    }
+    return;
+  }
+  if (data.domain !== null || data.port !== null) {
+    throw new TypeError('BlueSkyDidData: only did:web supports domain and port.');
   }
 };
 
@@ -117,11 +255,20 @@ const validateDidData = (data) => {
  * @throws {TypeError} If any property is missing or of an invalid type.
  */
 const validateAtUriData = (data) => {
+  if (typeof data.uri !== 'string' || !data.uri.startsWith('at://')) {
+    throw new TypeError('BlueSkyAtUriData: uri must start with "at://".');
+  }
   if (typeof data.authority !== 'string' || data.authority.length === 0) {
     throw new TypeError('BlueSkyAtUriData: authority must be a non-empty string.');
   }
-  if (typeof data.collection !== 'string' || data.collection.length === 0) {
-    throw new TypeError('BlueSkyAtUriData: collection must be a non-empty string.');
+  if (data.authorityType !== 'did' && data.authorityType !== 'handle') {
+    throw new TypeError(`BlueSkyAtUriData: invalid authorityType "${data.authorityType}".`);
+  }
+  if (typeof data.collection !== 'string' || !data.collection.includes('.')) {
+    throw new TypeError('BlueSkyAtUriData: collection must be a dotted NSID.');
+  }
+  if (!Array.isArray(data.collectionParts) || data.collectionParts.join('.') !== data.collection) {
+    throw new TypeError('BlueSkyAtUriData: collectionParts must match the collection.');
   }
   if (typeof data.rkey !== 'string' || data.rkey.length === 0) {
     throw new TypeError('BlueSkyAtUriData: rkey must be a non-empty string.');
@@ -137,6 +284,9 @@ const validateAtUriData = (data) => {
 const validateWebUrlData = (data) => {
   if (typeof data.actor !== 'string' || data.actor.length === 0) {
     throw new TypeError('BlueSkyWebUrlData: actor must be a non-empty string.');
+  }
+  if (data.actorType !== 'did' && data.actorType !== 'handle') {
+    throw new TypeError(`BlueSkyWebUrlData: invalid actorType "${data.actorType}".`);
   }
   if (!['', 'post', 'feed', 'lists'].includes(data.kind)) {
     throw new TypeError(`BlueSkyWebUrlData: invalid kind "${data.kind}".`);
@@ -162,7 +312,7 @@ const validateHashtagData = (data) => {
 };
 
 /**
- * Parses a BlueSky handle element.
+ * Parses a BlueSky handle element into its DNS components.
  * @param {string} uri - The raw handle string (e.g., `@alice.bsky.social`).
  * @returns {BlueSkyHandleData} The parsed handle data.
  * @throws {TypeError} If the input is not a string or fails validation.
@@ -176,8 +326,7 @@ const parseHandle = (uri) => {
   if (!match || !match.groups) {
     throw new SyntaxError(`Invalid BlueSky handle: ${uri}`);
   }
-  /** @type {BlueSkyHandleData} */
-  const data = { dataType: 'handle', handle: match.groups.handle };
+  const data = decomposeHandle(match.groups.handle.toLowerCase());
   validateHandleData(data);
   return data;
 };
@@ -197,11 +346,18 @@ const parseDid = (uri) => {
   if (!match || !match.groups) {
     throw new SyntaxError(`Invalid BlueSky DID: ${uri}`);
   }
+  const method = /** @type {'plc' | 'web'} */ (match.groups.method);
+  const decoded =
+    method === 'web'
+      ? decodeDidWeb(match.groups.identifier)
+      : { domain: null, port: null, pathSegments: [] };
   /** @type {BlueSkyDidData} */
   const data = {
     dataType: 'did',
-    method: /** @type {'plc' | 'web'} */ (match.groups.method),
+    did: uri,
+    method,
     identifier: match.groups.identifier,
+    ...decoded,
   };
   validateDidData(data);
   return data;
@@ -222,12 +378,16 @@ const parseAtUri = (uri) => {
   if (!match || !match.groups) {
     throw new SyntaxError(`Invalid BlueSky AT URI: ${uri}`);
   }
+  const { authority, collection, rkey } = match.groups;
   /** @type {BlueSkyAtUriData} */
   const data = {
     dataType: 'at_uri',
-    authority: match.groups.authority,
-    collection: match.groups.collection,
-    rkey: match.groups.rkey,
+    uri,
+    authority,
+    authorityType: authority.startsWith('did:') ? 'did' : 'handle',
+    collection,
+    collectionParts: collection.split('.'),
+    rkey,
   };
   validateAtUriData(data);
   return data;
@@ -248,10 +408,12 @@ const parseWebUrl = (uri) => {
   if (!match || !match.groups) {
     throw new SyntaxError(`Invalid BlueSky web URL: ${uri}`);
   }
+  const { actor } = match.groups;
   /** @type {BlueSkyWebUrlData} */
   const data = {
     dataType: 'web_url',
-    actor: match.groups.actor,
+    actor,
+    actorType: actor.startsWith('did:') ? 'did' : 'handle',
     kind: /** @type {BlueSkyWebUrlKind} */ (match.groups.kind ?? ''),
     rkey: match.groups.rkey ?? '',
     url: uri,
@@ -300,7 +462,7 @@ const stringifyHandle = (data) => {
  */
 const stringifyDid = (data) => {
   validateDidData(data);
-  return `did:${data.method}:${data.identifier}`;
+  return data.did;
 };
 
 /**
