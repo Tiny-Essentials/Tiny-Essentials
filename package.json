@@ -79,6 +79,10 @@
       "require": "./dist/v1/webTemplates/media/MediaValidator/v1/Browser/index.cjs",
       "import": "./dist/v1/webTemplates/media/MediaValidator/v1/Browser/index.mjs"
     },
+    "./webTemplates/multiformats/14.0/IPFSHasher": {
+      "require": "./dist/v1/webTemplates/multiformats/IPFSHasher/14.0/index.cjs",
+      "import": "./dist/v1/webTemplates/multiformats/IPFSHasher/14.0/index.mjs"
+    },
     "./jsdoc/EventEmitter": {
       "require": "./dist/v1/jsdoc/EventEmitter.cjs",
       "import": "./dist/v1/jsdoc/EventEmitter.mjs"

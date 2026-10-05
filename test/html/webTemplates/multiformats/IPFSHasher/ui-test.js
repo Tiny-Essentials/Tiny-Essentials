@@ -1,4 +1,4 @@
-import IPFSHasher from '/src/v1/webTemplates/multiformats/IPFSHasher/index.mjs';
+import IPFSHasher from '/src/v1/webTemplates/multiformats/IPFSHasher/14.0/index.mjs';
 
 /** @type {HTMLPreElement} */
 const output = document.getElementById('output');
