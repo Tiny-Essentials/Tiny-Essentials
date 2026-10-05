@@ -1,4 +1,4 @@
-import { TinyRouter } from '/src/v1/libs/router/TinyRouter.mjs';
+import TinyRouter from '/src/v1/libs/router/TinyRouter.mjs';
 
 const rootPath = location.pathname;
 

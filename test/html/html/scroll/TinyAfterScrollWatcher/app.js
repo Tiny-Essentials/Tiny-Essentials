@@ -1,4 +1,4 @@
-import { TinyAfterScrollWatcher } from '/src/v1/libs/html/scroll/TinyAfterScrollWatcher.mjs';
+import TinyAfterScrollWatcher from '/src/v1/libs/html/scroll/TinyAfterScrollWatcher.mjs';
 window.TinyAfterScrollWatcher = TinyAfterScrollWatcher;
 
 // Watcher for the whole window

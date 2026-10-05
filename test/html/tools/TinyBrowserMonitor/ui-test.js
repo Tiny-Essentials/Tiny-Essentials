@@ -4,7 +4,7 @@
  * Refactored to use granular event updates for real-time performance.
  */
 
-import { TinyBrowserMonitor } from '/src/v1/libs/tools/TinyBrowserMonitor.mjs';
+import TinyBrowserMonitor from '/src/v1/libs/tools/TinyBrowserMonitor.mjs';
 
 window.TinyBrowserMonitor = TinyBrowserMonitor;
 

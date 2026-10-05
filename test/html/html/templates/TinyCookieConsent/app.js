@@ -1,4 +1,4 @@
-import { TinyCookieConsent } from '/src/v1/libs/html/templates/TinyCookieConsent.mjs';
+import TinyCookieConsent from '/src/v1/libs/html/templates/TinyCookieConsent.mjs';
 
 const consent = new TinyCookieConsent({
   animationDuration: 2000,

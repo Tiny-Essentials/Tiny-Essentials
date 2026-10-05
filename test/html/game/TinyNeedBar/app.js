@@ -1,4 +1,4 @@
-import { TinyNeedBar } from '/src/v1/libs/game/TinyNeedBar.mjs';
+import TinyNeedBar from '/src/v1/libs/game/TinyNeedBar.mjs';
 
 window.TinyNeedBar = TinyNeedBar;
 let bar = null;

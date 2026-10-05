@@ -1,4 +1,4 @@
-import { TinyClassManager } from '/src/v1/libs/tools/TinyClassManager.mjs';
+import TinyClassManager from '/src/v1/libs/tools/TinyClassManager.mjs';
 
 // ============================================================================
 // Mock Data & Plugins

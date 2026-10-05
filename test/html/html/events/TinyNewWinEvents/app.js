@@ -1,4 +1,4 @@
-import { TinyNewWinEvents } from '../src/v1/libs/html/events/TinyNewWinEvents.mjs';
+import TinyNewWinEvents from '/src/v1/libs/html/events/TinyNewWinEvents.mjs';
 
 const log = (msg) => {
   document.querySelector('#log').textContent += msg + '\n';

@@ -1,4 +1,4 @@
-import { TinyDragger } from '/src/v1/libs/html/drag/TinyDragger.mjs';
+import TinyDragger from '/src/v1/libs/html/drag/TinyDragger.mjs';
 window.TinyDragger = TinyDragger;
 
 document.addEventListener('DOMContentLoaded', () => {

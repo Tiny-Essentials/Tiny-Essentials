@@ -1,5 +1,5 @@
-import { TinyHtml } from '/src/v1/libs/html/TinyHtml.mjs';
-import { TinyDragger } from '/src/v1/libs/html/drag/TinyDragger.mjs';
+import TinyHtml from '/src/v1/libs/html/TinyHtml.mjs';
+import TinyDragger from '/src/v1/libs/html/drag/TinyDragger.mjs';
 import * as tinyCollisions from '/src/v1/basics/collision.mjs';
 Object.assign(window, tinyCollisions);
 window.TinyHtml = TinyHtml;

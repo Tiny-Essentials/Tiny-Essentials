@@ -1,4 +1,4 @@
-import { TinyHtml } from '/src/v1/libs/html/TinyHtml.mjs';
+import TinyHtml from '/src/v1/libs/html/TinyHtml.mjs';
 
 const box = TinyHtml.getById('box');
 const jBox = $('#jbox');

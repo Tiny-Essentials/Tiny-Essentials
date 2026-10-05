@@ -1,4 +1,4 @@
-import { TinyDayNightCycle } from '/src/v1/libs/game/TinyDayNightCycle.mjs';
+import TinyDayNightCycle from '/src/v1/libs/game/TinyDayNightCycle.mjs';
 import { multiplyArrayBlocks } from '/src/v1/basics/array.mjs';
 window.TinyDayNightCycle = TinyDayNightCycle;
 /* ===========================

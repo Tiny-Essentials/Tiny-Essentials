@@ -1,4 +1,4 @@
-import { TinyPasswordValidator } from '/src/v1/libs/tools/TinyPasswordValidator.mjs';
+import TinyPasswordValidator from '/src/v1/libs/tools/TinyPasswordValidator.mjs';
 import { hashText } from '/src/v1/basics/crypto.mjs';
 
 TinyPasswordValidator.hashText = hashText;

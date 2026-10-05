@@ -1,4 +1,4 @@
-import { TinyLoadingScreen } from '/src/v1/libs/html/templates/TinyLoadingScreen.mjs';
+import TinyLoadingScreen from '/src/v1/libs/html/templates/TinyLoadingScreen.mjs';
 // Loader on body
 const loader = new TinyLoadingScreen();
 loader.defaultMessage = 'Loading...';

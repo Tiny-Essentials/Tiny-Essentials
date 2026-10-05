@@ -1,5 +1,5 @@
-import { TinyHtml } from '/src/v1/libs/html/TinyHtml.mjs';
-import { TinyHtmlElems } from '/src/v1/libs/html/TinyHtml/index.mjs';
+import TinyHtml from '/src/v1/libs/html/TinyHtml.mjs';
+import TinyHtmlElems from '/src/v1/libs/html/TinyHtml/index.mjs';
 
 window.TinyHtmlElems = TinyHtmlElems;
 window.TinyHtml = TinyHtml;
@@ -69,7 +69,7 @@ window.tinyImg = new TinyHtmlElems.Img({
 
 base.append(TinyHtml.createFrom('br'));
 window.tinyImg = new TinyHtmlElems.Iframe({
-  src: '/TinyI18.html',
+  src: '/text/TinyI18',
   height: 500,
   width: 1000,
 }).appendTo(base);

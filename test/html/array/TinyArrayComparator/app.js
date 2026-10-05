@@ -1,4 +1,4 @@
-import { TinyArrayComparator } from '/src/v1/libs/array/TinyArrayComparator.mjs';
+import TinyArrayComparator from '/src/v1/libs/array/TinyArrayComparator.mjs';
 
 const oldFileInput = document.getElementById('oldFileInput');
 const newFileInput = document.getElementById('newFileInput');

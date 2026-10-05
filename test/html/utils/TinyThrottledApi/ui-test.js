@@ -3,8 +3,8 @@
  * Bridge logic for the TinyThrottledApi Testing Environment.
  */
 
-import { TinyThrottledApi } from '/src/v1/libs/utils/TinyThrottledApi.mjs';
-import { TinyTimeout } from '/src/v1/libs/math/TinyTimeout.mjs';
+import TinyThrottledApi from '/src/v1/libs/utils/TinyThrottledApi.mjs';
+import TinyTimeout from '/src/v1/libs/math/TinyTimeout.mjs';
 
 window.TinyThrottledApi = TinyThrottledApi;
 window.TinyTimeout = TinyTimeout;

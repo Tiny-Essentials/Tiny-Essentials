@@ -6,7 +6,7 @@
  * {@link GROUPS} registry.
  */
 
-import { TinyOPFSFileSystem } from '/src/v1/libs/fs/plugins/OPFS/index.mjs';
+import TinyOPFSFileSystem from '/src/v1/libs/fs/plugins/OPFS/index.mjs';
 import * as path from '/src/v1/libs/fs/path.mjs';
 import * as encoding from '/src/v1/libs/fs/encoding.mjs';
 import { constants } from '/src/v1/libs/fs/constants.mjs';

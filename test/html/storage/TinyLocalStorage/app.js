@@ -1,4 +1,4 @@
-import { TinyLocalStorage } from '/src/v1/libs/storage/TinyLocalStorage.mjs';
+import TinyLocalStorage from '/src/v1/libs/storage/TinyLocalStorage.mjs';
 
 const storage = new TinyLocalStorage('TinyTest');
 window.tinyLocalStorage = storage;

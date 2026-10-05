@@ -1,4 +1,4 @@
-import { TinyArrayPaginator } from '/src/v1/libs/array/TinyArrayPaginator.mjs';
+import TinyArrayPaginator from '/src/v1/libs/array/TinyArrayPaginator.mjs';
 
 // Example dataset
 const dataset = Array.from({ length: 50 }, (_, i) => ({

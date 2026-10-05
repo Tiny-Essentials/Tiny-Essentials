@@ -1,4 +1,4 @@
-import { TinyAnalogClock } from '/src/v1/libs/html/templates/TinyAnalogClock.mjs';
+import TinyAnalogClock from '/src/v1/libs/html/templates/TinyAnalogClock.mjs';
 
 // 1. Initialize the clock
 const myClock = new TinyAnalogClock({ borderColor: '#ff0055' });

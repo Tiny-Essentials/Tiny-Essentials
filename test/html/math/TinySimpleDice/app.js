@@ -1,4 +1,4 @@
-import { TinySimpleDice } from '/src/v1/libs/math/TinySimpleDice.mjs';
+import TinySimpleDice from '/src/v1/libs/math/TinySimpleDice.mjs';
 let dice = null;
 window.TinySimpleDice = TinySimpleDice;
 

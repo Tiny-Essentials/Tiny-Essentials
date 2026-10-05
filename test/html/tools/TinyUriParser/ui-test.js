@@ -3,7 +3,7 @@
  * Connects the UI components to the TinyUriParser class.
  */
 
-import { TinyUriParser } from '/src/v1/libs/tools/TinyUriParser.mjs';
+import TinyUriParser from '/src/v1/libs/tools/TinyUriParser.mjs';
 import * as MatrixProtocol from '/src/v1/libs/tools/TinyUriParser/MatrixProtocol.mjs';
 import * as Discord from '/src/v1/libs/tools/TinyUriParser/Discord.mjs';
 import * as BlueSky from '/src/v1/libs/tools/TinyUriParser/BlueSky.mjs';

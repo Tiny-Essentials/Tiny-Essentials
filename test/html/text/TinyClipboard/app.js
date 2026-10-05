@@ -1,5 +1,5 @@
-import { TinyClipboard } from '/src/v1/libs/text/TinyClipboard.mjs';
-import { TinyHtml } from '/src/v1/libs/html/TinyHtml.mjs';
+import TinyClipboard from '/src/v1/libs/text/TinyClipboard.mjs';
+import TinyHtml from '/src/v1/libs/html/TinyHtml.mjs';
 window.TinyClipboard = TinyClipboard;
 window.TinyHtml = TinyHtml;
 TinyHtml.elemDebug = true;

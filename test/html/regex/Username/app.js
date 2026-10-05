@@ -3,9 +3,9 @@
  * Note: The paths must match your local directory structure.
  */
 import { extractUsernames } from '/src/v1/regexp/Username/index.mjs';
-import { BlueSkyRegex } from '/src/v1/regexp/Username/templates/BlueSky.mjs';
-import { DiscordRegex } from '/src/v1/regexp/Username/templates/Discord.mjs';
-import { MatrixProtocolRegex } from '/src/v1/regexp/Username/templates/MatrixProtocol.mjs';
+import BlueSkyRegex from '/src/v1/regexp/Username/templates/BlueSky.mjs';
+import DiscordRegex from '/src/v1/regexp/Username/templates/Discord.mjs';
+import MatrixProtocolRegex from '/src/v1/regexp/Username/templates/MatrixProtocol.mjs';
 
 // DOM Elements
 const testInput = document.getElementById('testInput');

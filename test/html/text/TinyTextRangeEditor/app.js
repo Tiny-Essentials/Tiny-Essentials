@@ -1,4 +1,4 @@
-import { TinyTextRangeEditor } from '/src/v1/libs/text/TinyTextRangeEditor.mjs';
+import TinyTextRangeEditor from '/src/v1/libs/text/TinyTextRangeEditor.mjs';
 window.TinyTextRangeEditor = TinyTextRangeEditor;
 
 const textarea = document.getElementById('editor');

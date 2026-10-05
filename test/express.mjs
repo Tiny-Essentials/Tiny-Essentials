@@ -159,15 +159,6 @@ const jsLoader = async (filePath, fileName, req, res) => {
       );
     }
 
-    // Normalização de export default
-    code = code.replace(/export\s+default\s+([a-zA-Z0-9_$]+)\s*;?/g, 'export { $1 };');
-
-    // Conversão de 'import something from "module";' para 'import { something } from "module";'
-    code = code.replace(
-      /import\s+([a-zA-Z0-9_$]+)\s+from\s+(['"][^'"]+['"]);?/g,
-      'import { $1 } from $2;',
-    );
-
     res.type('application/javascript');
     res.send(code);
   } catch (err) {

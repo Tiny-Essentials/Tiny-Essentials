@@ -1,6 +1,6 @@
-import { TinyInventory } from '/src/v1/libs/game/TinyInventory.mjs';
-import { TinyInventoryTrader } from '/src/v1/libs/game/TinyInventoryTrader.mjs';
-import { TinyToastNotify } from '/src/v1/libs/html/notification/TinyToastNotify.mjs';
+import TinyInventory from '/src/v1/libs/game/TinyInventory.mjs';
+import TinyInventoryTrader from '/src/v1/libs/game/TinyInventoryTrader.mjs';
+import TinyToastNotify from '/src/v1/libs/html/notification/TinyToastNotify.mjs';
 
 const tinyToast = new TinyToastNotify('bottom', 'right', 3000, 60);
 window.TinyInventory = TinyInventory;

@@ -1,4 +1,4 @@
-import { TinyTimeout } from '/src/v1/libs/math/TinyTimeout.mjs';
+import TinyTimeout from '/src/v1/libs/math/TinyTimeout.mjs';
 window.TinyTimeout = TinyTimeout;
 
 let instance = null;

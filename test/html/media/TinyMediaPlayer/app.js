@@ -1,4 +1,4 @@
-import { TinyMediaPlayer } from '/src/v1/libs/media/TinyMediaPlayer.mjs';
+import TinyMediaPlayer from '/src/v1/libs/media/TinyMediaPlayer.mjs';
 import { YoutubeMediaAdapter } from '/src/v1/libs/media/TinyMediaPlayer/Youtube.mjs';
 import { SoundCloudMediaAdapter } from '/src/v1/libs/media/TinyMediaPlayer/SoundCloud.mjs';
 import { HtmlAudioAdapter } from '/src/v1/libs/media/TinyMediaPlayer/HtmlAudio.mjs';

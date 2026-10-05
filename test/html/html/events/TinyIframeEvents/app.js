@@ -1,4 +1,4 @@
-import { TinyIframeEvents } from '../src/v1/libs/html/events/TinyIframeEvents.mjs';
+import TinyIframeEvents from '/src/v1/libs/html/events/TinyIframeEvents.mjs';
 
 const iframe = document.getElementById('myIframe');
 

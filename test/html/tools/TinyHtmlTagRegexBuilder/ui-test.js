@@ -1,4 +1,4 @@
-import { TinyHtmlTagRegexBuilder } from '/src/v1/libs/tools/TinyHtmlTagRegexBuilder.mjs';
+import TinyHtmlTagRegexBuilder from '/src/v1/libs/tools/TinyHtmlTagRegexBuilder.mjs';
 
 /**
  * UI Controller for the TinyHtmlTagRegexBuilder Test Environment.

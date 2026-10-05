@@ -1,9 +1,9 @@
-import { TinyDragDropDetector } from '/src/v1/libs/html/drag/TinyDragDropDetector.mjs';
-import { TinyRadioFm } from '/src/v1/libs/media/TinyRadioFm.mjs';
-import { TinyMediaPlayer } from '/src/v1/libs/media/TinyMediaPlayer.mjs';
+import TinyDragDropDetector from '/src/v1/libs/html/drag/TinyDragDropDetector.mjs';
+import TinyRadioFm from '/src/v1/libs/media/TinyRadioFm.mjs';
+import TinyMediaPlayer from '/src/v1/libs/media/TinyMediaPlayer.mjs';
 import { HtmlAudioAdapter } from '/src/v1/libs/media/TinyMediaPlayer/HtmlAudio.mjs';
 import { MockMediaAdapter } from '/src/v1/libs/media/TinyMediaPlayer/Mock.mjs';
-import { TinyPromiseQueue } from '/src/v1/libs/utils/TinyPromiseQueue.mjs';
+import TinyPromiseQueue from '/src/v1/libs/utils/TinyPromiseQueue.mjs';
 import { parseBlob } from 'https://cdn.jsdelivr.net/npm/music-metadata@11.13.0/+esm';
 
 window.TinyRadioFm = TinyRadioFm;

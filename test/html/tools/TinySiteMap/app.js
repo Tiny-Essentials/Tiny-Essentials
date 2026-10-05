@@ -1,7 +1,7 @@
 // --- PASTE YOUR CLASS HERE OR IMPORT IT ---
 // For this single-file demonstration, I am including the class directly.
 // In a real environment, you would use: import TinySiteMap from './TinySiteMap.js';
-import { TinySiteMap } from '/src/v1/libs/tools/TinySiteMap.mjs';
+import TinySiteMap from '/src/v1/libs/tools/TinySiteMap.mjs';
 
 // --- TEST SUITE LOGIC ---
 

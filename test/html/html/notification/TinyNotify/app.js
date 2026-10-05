@@ -1,5 +1,5 @@
-import { TinyNotifyCenter } from '/src/v1/libs/html/notification/TinyNotifyCenter.mjs';
-import { TinyToastNotify } from '/src/v1/libs/html/notification/TinyToastNotify.mjs';
+import TinyNotifyCenter from '/src/v1/libs/html/notification/TinyNotifyCenter.mjs';
+import TinyToastNotify from '/src/v1/libs/html/notification/TinyToastNotify.mjs';
 window.TinyNotifyCenter = TinyNotifyCenter;
 window.TinyToastNotify = TinyToastNotify;
 

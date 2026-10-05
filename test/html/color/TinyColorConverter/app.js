@@ -1,5 +1,5 @@
-import { TinyHtml } from '/src/v1/libs/html/TinyHtml.mjs';
-import { TinyColorConverter } from '/src/v1/libs/color/TinyColorConverter.mjs';
+import TinyHtml from '/src/v1/libs/html/TinyHtml.mjs';
+import TinyColorConverter from '/src/v1/libs/color/TinyColorConverter.mjs';
 
 window.TinyHtml = TinyHtml;
 window.TinyColorConverter = TinyColorConverter;

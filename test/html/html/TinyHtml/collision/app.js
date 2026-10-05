@@ -1,5 +1,5 @@
 import * as tinyHtml from '/src/v1/basics/html.mjs';
-import { TinyHtml } from '/src/v1/libs/html/TinyHtml.mjs';
+import TinyHtml from '/src/v1/libs/html/TinyHtml.mjs';
 import * as tinyCollisions from '/src/v1/basics/collision.mjs';
 Object.assign(window, tinyCollisions);
 Object.assign(window, tinyHtml);

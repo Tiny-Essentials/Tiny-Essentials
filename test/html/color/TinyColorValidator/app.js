@@ -1,4 +1,4 @@
-import { TinyColorValidator } from '/src/v1/libs/color/TinyColorValidator.mjs';
+import TinyColorValidator from '/src/v1/libs/color/TinyColorValidator.mjs';
 
 const {
   isColor,

@@ -1,4 +1,4 @@
-import { TinyGamepad } from '/src/v1/libs/game/TinyGamepad.mjs';
+import TinyGamepad from '/src/v1/libs/game/TinyGamepad.mjs';
 
 window.TinyGamepad = TinyGamepad;
 let tg = null;

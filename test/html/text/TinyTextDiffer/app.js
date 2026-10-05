@@ -1,4 +1,4 @@
-import { TinyTextDiffer } from '/src/v1/libs/text/TinyTextDiffer.mjs';
+import TinyTextDiffer from '/src/v1/libs/text/TinyTextDiffer.mjs';
 
 /** @type {TinyTextDiffer} */
 const differ = new TinyTextDiffer(['Hello World', 'Hellow World!']);
