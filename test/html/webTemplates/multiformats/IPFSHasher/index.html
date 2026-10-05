@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IPFSHasher — Test Console</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "events": "https://esm.sh/events@3.3.0",
+          "multiformats/cid": "https://esm.sh/multiformats@14.0.5/cid",
+          "multiformats/hashes/sha2": "https://esm.sh/multiformats@14.0.5/hashes/sha2"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>IPFSHasher <span class="tag">Test Console</span></h1>
+      <p class="subtitle">Local CID generation harness for the IPFSHasher module.</p>
+    </header>
+
+    <main class="grid">
+      <section class="panel">
+        <h2>1. Configuration</h2>
+        <div class="field">
+          <label for="cid-version">CID Version</label>
+          <select id="cid-version">
+            <option value="v1">v1 (raw codec)</option>
+            <option value="v0">v0 (dag-pb)</option>
+          </select>
+        </div>
+        <button id="btn-construct" class="btn primary">Instantiate IPFSHasher</button>
+        <p id="instance-status" class="status">Status: not instantiated</p>
+      </section>
+
+      <section class="panel">
+        <h2>2. Input Data</h2>
+        <div class="field">
+          <label for="input-data">Raw data (UTF-8 string)</label>
+          <textarea id="input-data" rows="5" placeholder="Hello IPFS">Hello IPFS</textarea>
+        </div>
+        <div class="field">
+          <label for="file-input">…or load a file</label>
+          <input type="file" id="file-input" />
+        </div>
+        <button id="btn-generate" class="btn primary">Run generate()</button>
+      </section>
+
+      <section class="panel full">
+        <h2>3. Output</h2>
+        <div class="output-actions">
+          <button id="btn-clear" class="btn ghost">Clear</button>
+        </div>
+        <pre id="output" class="console"></pre>
+      </section>
+    </main>
+
+    <script type="module" src="ui-test.js"></script>
+  </body>
+</html>
