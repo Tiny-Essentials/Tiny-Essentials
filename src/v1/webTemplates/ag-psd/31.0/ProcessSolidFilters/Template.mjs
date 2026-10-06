@@ -347,6 +347,7 @@ export function createProcessPsdSolidFilters(validator, createCanvas, readPsd, e
    * @param {DefaultConfig} defaultConfig - The fallback configuration for the remaining layers.
    * @returns {Promise<ProcessedPsdResult<Data>>} Results of the separated and reconstructed images, and pixel statistics.
    * @throws {Error|TypeError} If the parameters or the file are invalid.
+   * @beta
    */
   return async function processPsdSolidFilters(psdInput, filters, defaultConfig) {
     if (!Array.isArray(filters)) {

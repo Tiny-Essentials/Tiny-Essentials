@@ -21,6 +21,7 @@ const createBrowserCanvas = (width, height) => {
  * @param {import('./Template.mjs').DefaultConfig} defaultConfig - The fallback configuration for the remaining layers.
  * @returns {Promise<import('./Template.mjs').ProcessedPsdResult<Blob>>} Results of the separated and reconstructed images, and pixel statistics.
  * @throws {Error|TypeError} If the parameters or the file are invalid.
+ * @beta
  */
 export const processPsdSolidFiltersFromFile = createProcessPsdSolidFilters(
   async (fileInput) => {
