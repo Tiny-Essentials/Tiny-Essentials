@@ -300,7 +300,42 @@ DOM.runTestBtn.addEventListener('click', async () => {
 
     // 3. Display Stats
     DOM.stats.textContent = JSON.stringify(result.stats, null, 2);
-    console.log(result.stats, result.vectorData);
+
+    // 3.1. Layer breakdown (one row per processed layer)
+    if (result.vectorData.length > 0) {
+      console.table(
+        result.vectorData.map((layer) => ({
+          Layer: layer.name,
+          'Filter ID': layer.filterId,
+          Opacity: `${Math.round(layer.opacity * 100)}%`,
+          Position: `${layer.bounds.x}, ${layer.bounds.y}`,
+          Size: `${layer.bounds.width}×${layer.bounds.height}`,
+        })),
+      );
+    } else {
+      console.warn('⚠️ No layers were processed. Is the PSD empty or fully hidden?');
+    }
+
+    // 3.2. Statistics breakdown (one row per filter, plus unclaimed/unfiltered)
+    const totalPixels = Object.values(result.stats).reduce((sum, count) => sum + count, 0);
+    const emptyFilters = [];
+
+    console.table(
+      Object.entries(result.stats).map(([id, count]) => {
+        if (count === 0) emptyFilters.push(id);
+
+        return {
+          Filter: id,
+          Pixels: count.toLocaleString('en-US'),
+          Coverage: totalPixels > 0 ? `${((count / totalPixels) * 100).toFixed(2)}%` : '0.00%',
+          Status: count === 0 ? '⚠️ Empty' : '✅ OK',
+        };
+      }),
+    );
+
+    if (emptyFilters.length > 0) {
+      console.warn(`⚠️ ${emptyFilters.length} filter(s) matched no pixels:`, emptyFilters);
+    }
 
     // 4. Display Images
     for (const item of result.separatedImages) {
