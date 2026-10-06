@@ -3,9 +3,9 @@ import { createProcessPsdSolidFilters } from './Template.mjs';
 
 /**
  * Creates a native browser Canvas element.
- * @param {number} width
- * @param {number} height
- * @returns {HTMLCanvasElement}
+ * @param {number} width - The width to assign to the new canvas, in pixels.
+ * @param {number} height - The height to assign to the new canvas, in pixels.
+ * @returns {HTMLCanvasElement} A new detached HTMLCanvasElement with the requested dimensions.
  */
 const createBrowserCanvas = (width, height) => {
   const canvas = document.createElement('canvas');

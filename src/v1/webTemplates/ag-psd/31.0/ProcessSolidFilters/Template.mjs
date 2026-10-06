@@ -1,4 +1,5 @@
 /**
+ * Describes a single filter that claims layers by matching their names.
  * @typedef {Object} FilterConfig
  * @property {string} id - Filter identifier (e.g., 'artist1').
  * @property {string} color - Color in HEX format (e.g., '#ffffff').
@@ -12,17 +13,20 @@
  */
 
 /**
+ * Describes how the layers nested inside a claimed folder must be handled.
  * @typedef {Object} FolderOptions
  * @property {'inherit'|'exclude'|'custom'} [subfolders='inherit'] - How nested folders are handled. 'inherit' applies the parent filter to every subfolder, 'exclude' leaves subfolders untouched, and 'custom' delegates to 'childFilter'.
  * @property {FilterConfig|FilterConfig[]} [childFilter] - Filter(s) matched against nested folders when 'subfolders' is 'custom'.
  */
 
 /**
+ * Describes the fallback configuration applied to layers that no filter claims.
  * @typedef {Object} DefaultConfig
  * @property {string} color - Color in HEX format for layers that do not match filters.
  */
 
 /**
+ * Describes the complete result produced by processing a PSD file.
  * @template {Buffer|Blob} Data
  * @typedef {Object} ProcessedPsdResult
  * @property {Data} fullImageBuffer - PNG Buffer or Blob of the complete reconstructed image.
@@ -32,6 +36,7 @@
  */
 
 /**
+ * Describes the position and size of a layer inside the document.
  * @typedef {Object} VectorBounds
  * @property {number} x - The horizontal offset of the layer inside the document, in pixels.
  * @property {number} y - The vertical offset of the layer inside the document, in pixels.
@@ -40,6 +45,7 @@
  */
 
 /**
+ * Describes the vector representation of a single processed layer.
  * @typedef {Object} LayerVectorData
  * @property {string} name - The original name of the layer inside the PSD file.
  * @property {string} filterId - The ID of the filter that claimed this layer, or 'unfiltered'.
@@ -263,7 +269,7 @@ function findFolderMatcher(folderName, matchers) {
  * @param {ReturnType<typeof buildMatchers>} matchers - The matchers active in the current scope.
  * @param {boolean} parentVisible - Whether the parent node is visible.
  * @param {Array<{ layer: any, filterId: string }>} result - The output array, in painting order.
- * @returns {void}
+ * @returns {void} This function mutates the 'result' array instead of returning a value.
  */
 function collectLayers(children, matchers, parentVisible, result) {
   for (const layer of children) {
@@ -291,7 +297,7 @@ function collectLayers(children, matchers, parentVisible, result) {
  * @param {ReturnType<typeof buildMatchers>[number]} matcher - The matcher that claimed the folder.
  * @param {ReturnType<typeof buildMatchers>} matchers - The matchers active in the parent scope.
  * @param {Array<{ layer: any, filterId: string }>} result - The output array, in painting order.
- * @returns {void}
+ * @returns {void} This function mutates the 'result' array instead of returning a value.
  */
 function collectClaimedLayers(folder, matcher, matchers, result) {
   const options = matcher.folder;
@@ -318,6 +324,9 @@ function collectClaimedLayers(folder, matcher, matchers, result) {
 }
 
 /**
+ * Creates a PSD processing function bound to a specific runtime environment.
+ * The returned function extracts solid colors, resolves which filter claims each pixel,
+ * and produces both a composite image and one image per filter.
  * @template {Buffer | ArrayBuffer} ValidatorResult
  * @template {Buffer|Blob} Data
  * @template {string | Blob | HTMLInputElement} PsdInput
@@ -325,9 +334,9 @@ function collectClaimedLayers(folder, matcher, matchers, result) {
  * @template {import('canvas').CanvasRenderingContext2D | CanvasRenderingContext2D} UniversalCanvasRenderingContext2D
  * @template {import('canvas').ImageData | ImageData} UniversalImageData
  *
- * @param {(psdInput: PsdInput) => Promise<ValidatorResult>} validator
- * @param {(width: number, height: number) => UniversalCanvas} createCanvas
- * @param {typeof import('ag-psd').readPsd} readPsd
+ * @param {(psdInput: PsdInput) => Promise<ValidatorResult>} validator - Loads the PSD source and returns its raw bytes for the current environment.
+ * @param {(width: number, height: number) => UniversalCanvas} createCanvas - Factory that allocates a canvas compatible with the current environment.
+ * @param {typeof import('ag-psd').readPsd} readPsd - The ag-psd parser used to decode the raw bytes into a PSD tree.
  * @param {(canvas: UniversalCanvas) => Promise<Data>} exportCanvas - Injected function to handle environment-specific export.
  */
 export function createProcessPsdSolidFilters(validator, createCanvas, readPsd, exportCanvas) {
