@@ -1,4 +1,4 @@
-import { processPsdSolidFiltersFromFile } from './FileImplementation.mjs';
+import { processPsdSolidFiltersFromFile } from '/src/v1/webTemplates/psd/ProcessSolidFilters/31.0/FileInput.mjs';
 
 /**
  * @typedef {Object} UIFilterRow
@@ -116,6 +116,7 @@ DOM.runTestBtn.addEventListener('click', async () => {
 
     // 3. Display Stats
     DOM.stats.textContent = JSON.stringify(result.stats, null, 2);
+    console.log(result.stats, result.vectorData);
 
     // 4. Display Images
     for (const item of result.separatedImages) {

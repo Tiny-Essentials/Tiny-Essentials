@@ -16,6 +16,23 @@
  * @property {Data} fullImageBuffer - PNG Buffer or Blob of the complete reconstructed image.
  * @property {Array<{ id: string, buffer: Data }>} separatedImages - Array containing the results of each isolated color.
  * @property {Record<string, number>} stats - Object reporting the integer number of pixels claimed by each filter.
+ * @property {LayerVectorData[]} vectorData - Vector representation of every layer that was processed, in painting order.
+ */
+
+/**
+ * @typedef {Object} VectorBounds
+ * @property {number} x - The horizontal offset of the layer inside the document, in pixels.
+ * @property {number} y - The vertical offset of the layer inside the document, in pixels.
+ * @property {number} width - The width of the layer, in pixels.
+ * @property {number} height - The height of the layer, in pixels.
+ */
+
+/**
+ * @typedef {Object} LayerVectorData
+ * @property {string} name - The original name of the layer inside the PSD file.
+ * @property {string} filterId - The ID of the filter that claimed this layer, or 'unfiltered'.
+ * @property {number} opacity - The effective opacity of the layer, from 0 to 1.
+ * @property {VectorBounds} bounds - The bounding box of the layer in the document space.
  */
 
 /**
@@ -65,6 +82,38 @@ function getPaintingOrderLayers(children, parentVisible = true) {
 }
 
 /**
+ * Builds the vector representation of a single PSD layer.
+ * @param {any} layer - The raw ag-psd layer node.
+ * @param {string} filterId - The ID of the filter that claimed this layer.
+ * @param {number} opacity - The effective opacity of the layer, from 0 to 1.
+ * @returns {LayerVectorData} The vector data describing the layer geometry.
+ * @throws {TypeError} If the layer, filterId, or opacity are invalid.
+ */
+function buildLayerVectorData(layer, filterId, opacity) {
+  if (layer === null || typeof layer !== 'object') {
+    throw new TypeError("The 'layer' argument must be a valid PSD layer object.");
+  }
+  if (typeof filterId !== 'string') {
+    throw new TypeError("The 'filterId' argument must be a string.");
+  }
+  if (typeof opacity !== 'number' || Number.isNaN(opacity)) {
+    throw new TypeError("The 'opacity' argument must be a valid number.");
+  }
+
+  return {
+    name: typeof layer.name === 'string' ? layer.name : '',
+    filterId: filterId,
+    opacity: opacity,
+    bounds: {
+      x: typeof layer.left === 'number' ? layer.left : 0,
+      y: typeof layer.top === 'number' ? layer.top : 0,
+      width: layer.canvas ? layer.canvas.width : 0,
+      height: layer.canvas ? layer.canvas.height : 0,
+    },
+  };
+}
+
+/**
  * @template {Buffer | ArrayBuffer} ValidatorResult
  * @template {Buffer|Blob} Data
  * @template {string | Blob | HTMLInputElement} PsdInput
@@ -110,6 +159,9 @@ export function createProcessPsdSolidFilters(validator, createCanvas, readPsd, e
     const ownerMap = new Array(W * H).fill(null);
     const flatLayers = getPaintingOrderLayers(psd.children || []);
 
+    /** @type {LayerVectorData[]} */
+    const vectorData = [];
+
     // 2. Pixel-by-Pixel Processing (Bottom-Up)
     for (const layer of flatLayers) {
       if (!layer.canvas) continue; // Ignores layers that do not have image data
@@ -122,12 +174,14 @@ export function createProcessPsdSolidFilters(validator, createCanvas, readPsd, e
         }
       }
 
+      // Layer opacity affects pixel alpha
+      const layerOpacity = layer.opacity !== undefined ? layer.opacity / 255 : 1;
+
+      vectorData.push(buildLayerVectorData(layer, filterId, layerOpacity));
+
       const ctx = layer.canvas.getContext('2d');
       const imgData = ctx.getImageData(0, 0, layer.canvas.width, layer.canvas.height);
       const data = imgData.data;
-
-      // Layer opacity affects pixel alpha
-      const layerOpacity = layer.opacity !== undefined ? layer.opacity / 255 : 1;
 
       for (let y = 0; y < layer.canvas.height; y++) {
         for (let x = 0; x < layer.canvas.width; x++) {
@@ -219,6 +273,7 @@ export function createProcessPsdSolidFilters(validator, createCanvas, readPsd, e
       fullImageBuffer: fullBuffer,
       separatedImages: separatedImagesArray,
       stats: stats,
+      vectorData: vectorData,
     };
   };
 }
