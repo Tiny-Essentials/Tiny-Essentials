@@ -254,3 +254,38 @@ input[type='color'] {
   color: var(--text-dim);
   margin: 0 0 10px;
 }
+
+/* Folder Options */
+.folder-options {
+  margin-top: 10px;
+  border-top: 1px dashed var(--border);
+  padding-top: 10px;
+}
+.folder-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.folder-settings {
+  margin-top: 10px;
+  padding-left: 10px;
+  border-left: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.child-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.child-filters:not(:empty) {
+  margin-bottom: 8px;
+}
+.child-filters .filter-card {
+  background: #141414;
+  border-left: 2px solid var(--accent-primary);
+}

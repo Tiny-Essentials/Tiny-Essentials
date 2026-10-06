@@ -8,6 +8,13 @@
  * @property {string|string[]} [equals] - Exact value(s) the layer name must be equal to.
  * @property {RegExp|RegExp[]} [matches] - Regular expression(s) the layer name must satisfy. Avoid the global (g) flag, as it makes the RegExp stateful.
  * @property {(layerName: string) => boolean} [test] - Custom predicate for advanced matching.
+ * @property {boolean|FolderOptions} [folder] - When enabled, the filter also matches folders, claiming every layer inside them.
+ */
+
+/**
+ * @typedef {Object} FolderOptions
+ * @property {'inherit'|'exclude'|'custom'} [subfolders='inherit'] - How nested folders are handled. 'inherit' applies the parent filter to every subfolder, 'exclude' leaves subfolders untouched, and 'custom' delegates to 'childFilter'.
+ * @property {FilterConfig|FilterConfig[]} [childFilter] - Filter(s) matched against nested folders when 'subfolders' is 'custom'.
  */
 
 /**
@@ -61,29 +68,6 @@ function hexToRgba(hex) {
 
   const bigint = parseInt(normalizedHex, 16);
   return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255, 255];
-}
-
-/**
- * Flattens the PSD hierarchy to simulate the actual painting order (bottom-to-top).
- * @param {any[]} children - Children of a PSD node.
- * @param {boolean} [parentVisible=true] - Whether the parent group is visible.
- * @returns {any[]} Flat array containing only visible layers in overlapping order.
- */
-function getPaintingOrderLayers(children, parentVisible = true) {
-  /** @type {any[]} */
-  let result = [];
-  // ag-psd usually stores layers from bottom to top in the children array.
-  for (let i = 0; i < children.length; i++) {
-    const layer = children[i];
-    const isVisible = parentVisible && layer.hidden !== true;
-
-    if (layer.children) {
-      result = result.concat(getPaintingOrderLayers(layer.children, isVisible));
-    } else if (isVisible) {
-      result.push(layer);
-    }
-  }
-  return result;
 }
 
 /**
@@ -183,6 +167,157 @@ function buildFilterPredicate(filter) {
 }
 
 /**
+ * Normalizes the 'folder' option of a filter into a consistent object.
+ * @param {boolean|FolderOptions|undefined} folder - The raw folder option.
+ * @returns {{ subfolders: 'inherit'|'exclude'|'custom', childFilter: FilterConfig[] }|null} The normalized options, or null when folder mode is disabled.
+ * @throws {TypeError} If the folder option is invalid.
+ */
+function normalizeFolderOptions(folder) {
+  if (folder === undefined || folder === false) {
+    return null;
+  }
+  if (folder === true) {
+    return { subfolders: 'inherit', childFilter: [] };
+  }
+  if (typeof folder !== 'object' || folder === null) {
+    throw new TypeError("The 'folder' option must be a boolean or an object.");
+  }
+  const subfolders = folder.subfolders ?? 'inherit';
+  if (!['inherit', 'exclude', 'custom'].includes(subfolders)) {
+    throw new TypeError("The 'subfolders' option must be 'inherit', 'exclude', or 'custom'.");
+  }
+  return {
+    subfolders,
+    childFilter: folder.childFilter ? toArray(folder.childFilter) : [],
+  };
+}
+
+/**
+ * Compiles an array of filter configurations into reusable matchers.
+ * @param {FilterConfig[]} filters - The filter configurations to compile.
+ * @returns {Array<{ id: string, predicate: (layerName: string) => boolean, folder: { subfolders: string, childFilter: FilterConfig[] }|null }>} The compiled matchers.
+ */
+function buildMatchers(filters) {
+  return filters.map((filter) => ({
+    id: filter.id,
+    predicate: buildFilterPredicate(filter),
+    folder: normalizeFolderOptions(filter.folder),
+  }));
+}
+
+/**
+ * Recursively collects every filter, including the ones nested inside folder options.
+ * @param {FilterConfig[]} filters - The filters to expand.
+ * @param {FilterConfig[]} [acc] - The accumulator used during recursion.
+ * @returns {FilterConfig[]} Every filter, flattened.
+ */
+function flattenFilters(filters, acc = []) {
+  for (const filter of filters) {
+    acc.push(filter);
+    if (filter.folder && typeof filter.folder === 'object' && filter.folder.childFilter) {
+      flattenFilters(toArray(filter.folder.childFilter), acc);
+    }
+  }
+  return acc;
+}
+
+/**
+ * Resolves the filter id for a single layer name.
+ * @param {string} layerName - The name of the layer.
+ * @param {ReturnType<typeof buildMatchers>} matchers - The active matchers.
+ * @returns {string} The id of the first matching filter, or 'unfiltered'.
+ */
+function resolveLayerFilterId(layerName, matchers) {
+  if (typeof layerName !== 'string') {
+    return 'unfiltered';
+  }
+  for (const matcher of matchers) {
+    if (matcher.predicate(layerName)) {
+      return matcher.id;
+    }
+  }
+  return 'unfiltered';
+}
+
+/**
+ * Finds the first folder matcher that claims the given folder name.
+ * @param {string} folderName - The name of the folder.
+ * @param {ReturnType<typeof buildMatchers>} matchers - The active matchers.
+ * @returns {ReturnType<typeof buildMatchers>[number]|null} The matching matcher, or null when no folder matcher applies.
+ */
+function findFolderMatcher(folderName, matchers) {
+  if (typeof folderName !== 'string') {
+    return null;
+  }
+  for (const matcher of matchers) {
+    if (matcher.folder && matcher.predicate(folderName)) {
+      return matcher;
+    }
+  }
+  return null;
+}
+
+/**
+ * Traverses the PSD tree, resolving the filter id of every visible layer.
+ * @param {any[]} children - The PSD nodes to traverse.
+ * @param {ReturnType<typeof buildMatchers>} matchers - The matchers active in the current scope.
+ * @param {boolean} parentVisible - Whether the parent node is visible.
+ * @param {Array<{ layer: any, filterId: string }>} result - The output array, in painting order.
+ * @returns {void}
+ */
+function collectLayers(children, matchers, parentVisible, result) {
+  for (const layer of children) {
+    const isVisible = parentVisible && layer.hidden !== true;
+    if (!isVisible) {
+      continue;
+    }
+
+    if (layer.children) {
+      const matcher = findFolderMatcher(layer.name, matchers);
+      if (matcher) {
+        collectClaimedLayers(layer, matcher, matchers, result);
+      } else {
+        collectLayers(layer.children, matchers, isVisible, result);
+      }
+    } else {
+      result.push({ layer, filterId: resolveLayerFilterId(layer.name, matchers) });
+    }
+  }
+}
+
+/**
+ * Claims every layer inside a folder for a given matcher, honoring the subfolder strategy.
+ * @param {any} folder - The folder node that was claimed.
+ * @param {ReturnType<typeof buildMatchers>[number]} matcher - The matcher that claimed the folder.
+ * @param {ReturnType<typeof buildMatchers>} matchers - The matchers active in the parent scope.
+ * @param {Array<{ layer: any, filterId: string }>} result - The output array, in painting order.
+ * @returns {void}
+ */
+function collectClaimedLayers(folder, matcher, matchers, result) {
+  const options = matcher.folder;
+  for (const child of folder.children) {
+    if (child.hidden === true) {
+      continue;
+    }
+
+    if (!child.children) {
+      result.push({ layer: child, filterId: matcher.id });
+      continue;
+    }
+
+    const subfolders = options?.subfolders;
+    if (subfolders === 'inherit') {
+      collectClaimedLayers(child, matcher, matchers, result);
+    } else if (subfolders === 'exclude') {
+      collectLayers([child], matchers, true, result);
+    } else if (subfolders === 'custom') {
+      const childMatchers = buildMatchers(options?.childFilter ?? []);
+      collectLayers([child], childMatchers, true, result);
+    }
+  }
+}
+
+/**
  * @template {Buffer | ArrayBuffer} ValidatorResult
  * @template {Buffer|Blob} Data
  * @template {string | Blob | HTMLInputElement} PsdInput
@@ -218,35 +353,27 @@ export function createProcessPsdSolidFilters(validator, createCanvas, readPsd, e
     const W = psd.width;
     const H = psd.height;
 
+    const allFilters = flattenFilters(filters);
+
     const colorMap = new Map();
-    for (const f of filters) {
+    for (const f of allFilters) {
       colorMap.set(f.id, hexToRgba(f.color));
     }
     colorMap.set('unfiltered', hexToRgba(defaultConfig.color));
 
-    const matchers = filters.map((filter) => ({
-      id: filter.id,
-      predicate: buildFilterPredicate(filter),
-    }));
-
     // 1D array to store which ID dominates each pixel in the space (W * H)
     const ownerMap = new Array(W * H).fill(null);
-    const flatLayers = getPaintingOrderLayers(psd.children || []);
+    const matchers = buildMatchers(filters);
+    /** @type {Array<{ layer: any, filterId: string }>} */
+    const resolvedLayers = [];
+    collectLayers(psd.children || [], matchers, true, resolvedLayers);
 
     /** @type {LayerVectorData[]} */
     const vectorData = [];
 
     // 2. Pixel-by-Pixel Processing (Bottom-Up)
-    for (const layer of flatLayers) {
+    for (const { layer, filterId } of resolvedLayers) {
       if (!layer.canvas) continue; // Ignores layers that do not have image data
-
-      let filterId = 'unfiltered';
-      for (const matcher of matchers) {
-        if (layer.name && matcher.predicate(layer.name)) {
-          filterId = matcher.id;
-          break;
-        }
-      }
 
       // Layer opacity affects pixel alpha
       const layerOpacity = layer.opacity !== undefined ? layer.opacity / 255 : 1;
@@ -282,7 +409,7 @@ export function createProcessPsdSolidFilters(validator, createCanvas, readPsd, e
     const stats = { unclaimed: 0 };
     /** @type {Record<string, { canvas: UniversalCanvas; ctx: UniversalCanvasRenderingContext2D; imgData: UniversalImageData }>} */
     const separatedData = {};
-    const ids = ['unfiltered', ...filters.map((f) => f.id)];
+    const ids = ['unfiltered', ...new Set(allFilters.map((f) => f.id))];
 
     ids.forEach((id) => {
       stats[id] = 0;

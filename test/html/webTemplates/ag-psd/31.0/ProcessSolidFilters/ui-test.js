@@ -1,6 +1,25 @@
 import { processPsdSolidFiltersFromFile } from '/src/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/FileInput.mjs';
 
 /**
+ * @typedef {Object} FolderOptions
+ * @property {'inherit'|'exclude'|'custom'} [subfolders] - How nested folders are handled.
+ * @property {FilterConfig|FilterConfig[]} [childFilter] - Nested filters used when 'subfolders' is 'custom'.
+ */
+
+/**
+ * @typedef {Object} FilterConfig
+ * @property {string} id - Filter identifier.
+ * @property {string} color - Color in HEX format.
+ * @property {string|string[]} [startsWith] - Prefix criterion.
+ * @property {string|string[]} [endsWith] - Suffix criterion.
+ * @property {string|string[]} [contains] - Substring criterion.
+ * @property {string|string[]} [equals] - Equality criterion.
+ * @property {RegExp|RegExp[]} [matches] - Regular expression criterion.
+ * @property {(layerName: string) => boolean} [test] - Custom predicate criterion.
+ * @property {boolean|FolderOptions} [folder] - When enabled, the filter also claims folders.
+ */
+
+/**
  * @typedef {Object} MatchTypeOption
  * @property {string} value - The criterion key expected by the filter engine.
  * @property {string} label - The human readable label shown in the UI.
@@ -167,7 +186,87 @@ function createCriterionRow() {
 }
 
 /**
- * Creates a filter card with an ID, a color and a dynamic list of criteria.
+ * Creates a controller that appends filter cards into a container.
+ * @param {HTMLElement} container - The element that holds the filter cards.
+ * @returns {{ add: () => void }} The list controller.
+ */
+function createFilterList(container) {
+  return {
+    add() {
+      filterCounter += 1;
+      container.appendChild(createFilterCard(filterCounter));
+    },
+  };
+}
+
+/**
+ * Builds the folder options block of a filter card.
+ * @returns {HTMLDivElement} The assembled folder options element.
+ */
+function createFolderOptions() {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'folder-options';
+
+  const toggle = document.createElement('label');
+  toggle.className = 'folder-toggle';
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.className = 'folder-enabled';
+  const toggleText = document.createElement('span');
+  toggleText.textContent = 'Apply to folders';
+  toggle.append(checkbox, toggleText);
+
+  const settings = document.createElement('div');
+  settings.className = 'folder-settings';
+  settings.hidden = true;
+
+  const strategy = document.createElement('select');
+  strategy.className = 'folder-subfolders';
+  const strategies = [
+    { value: 'inherit', label: 'Inherit (all subfolders)' },
+    { value: 'exclude', label: 'Exclude subfolders' },
+    { value: 'custom', label: 'Custom child filter' },
+  ];
+  for (const item of strategies) {
+    const option = document.createElement('option');
+    option.value = item.value;
+    option.textContent = item.label;
+    strategy.appendChild(option);
+  }
+
+  const childWrapper = document.createElement('div');
+  childWrapper.className = 'child-filters-wrapper';
+  childWrapper.hidden = true;
+
+  const childContainer = document.createElement('div');
+  childContainer.className = 'child-filters';
+
+  const childList = createFilterList(childContainer);
+  const addChildBtn = document.createElement('button');
+  addChildBtn.type = 'button';
+  addChildBtn.className = 'btn-ghost btn-small';
+  addChildBtn.textContent = '+ Add Child Filter';
+  addChildBtn.addEventListener('click', () => childList.add());
+
+  childWrapper.append(childContainer, addChildBtn);
+
+  checkbox.addEventListener('change', () => {
+    settings.hidden = !checkbox.checked;
+  });
+  strategy.addEventListener('change', () => {
+    childWrapper.hidden = strategy.value !== 'custom';
+    if (strategy.value === 'custom' && childContainer.children.length === 0) {
+      childList.add();
+    }
+  });
+
+  settings.append(strategy, childWrapper);
+  wrapper.append(toggle, settings);
+  return wrapper;
+}
+
+/**
+ * Creates a filter card with an ID, a color, a dynamic list of criteria and folder options.
  * @param {number} index - The index used to build the default identifier.
  * @returns {HTMLDivElement} The assembled filter card element.
  */
@@ -209,7 +308,7 @@ function createFilterCard(index) {
     criteriaList.appendChild(createCriterionRow());
   });
 
-  card.append(header, criteriaList, addCriterionBtn);
+  card.append(header, criteriaList, addCriterionBtn, createFolderOptions());
   return card;
 }
 
@@ -229,36 +328,65 @@ function addFilterCard() {
  * @returns {FilterConfig|null} The filter configuration, or null when the card has no criteria.
  */
 function buildFilterConfig(card, index) {
-  const idInput = /** @type {HTMLInputElement} */ (card.querySelector('.filter-id'));
-  const colorInput = /** @type {HTMLInputElement} */ (card.querySelector('.filter-color'));
-
+  const idInput = card.querySelector(':scope > .filter-header > .filter-id');
+  const colorInput = card.querySelector(':scope > .filter-header > .filter-color');
   const filter = {
     id: idInput.value.trim() || `filter-${index}`,
     color: colorInput.value,
   };
   const target = /** @type {Record<string, unknown>} */ (filter);
-
   let criteriaCount = 0;
-  const rows = card.querySelectorAll('.criterion-row');
 
-  for (const row of rows) {
-    const type = /** @type {HTMLSelectElement} */ (row.querySelector('.criterion-type')).value;
-    const rawValue = /** @type {HTMLInputElement} */ (row.querySelector('.criterion-value')).value;
-
+  const criteriaList = card.querySelector(':scope > .criteria-list');
+  for (const row of criteriaList.querySelectorAll(':scope > .criterion-row')) {
+    const type = row.querySelector('.criterion-type').value;
+    const rawValue = row.querySelector('.criterion-value').value;
     if (rawValue.trim() === '') {
       continue;
     }
-
     target[type] = parseCriterionValue(type, rawValue);
     criteriaCount += 1;
   }
 
-  return criteriaCount > 0 ? /** @type {FilterConfig} */ (filter) : null;
+  if (criteriaCount === 0) {
+    return null;
+  }
+
+  const folderOptions = card.querySelector(':scope > .folder-options');
+  const checkbox = folderOptions.querySelector(':scope > .folder-toggle > .folder-enabled');
+  if (checkbox.checked) {
+    const strategy = folderOptions.querySelector(
+      ':scope > .folder-settings > .folder-subfolders',
+    ).value;
+    if (strategy === 'custom') {
+      const childContainer = folderOptions.querySelector(
+        ':scope > .folder-settings > .child-filters-wrapper > .child-filters',
+      );
+      target.folder = { subfolders: 'custom', childFilter: buildFilterList(childContainer) };
+    } else {
+      target.folder = { subfolders: strategy };
+    }
+  }
+
+  return /** @type {FilterConfig} */ (filter);
+}
+
+/**
+ * Reads every filter card inside a container.
+ * @param {HTMLElement} container - The element that holds the filter cards.
+ * @returns {FilterConfig[]} The list of parsed filter configurations.
+ */
+function buildFilterList(container) {
+  const cards = container.querySelectorAll(':scope > .filter-card');
+  return Array.from(cards)
+    .map((card, index) => buildFilterConfig(/** @type {HTMLDivElement} */ (card), index + 1))
+    .filter((filter) => filter !== null);
 }
 
 // Initialization: Add one default filter row
-DOM.addFilterBtn.addEventListener('click', addFilterCard);
-addFilterCard();
+const filterList = createFilterList(DOM.filterContainer);
+DOM.addFilterBtn.addEventListener('click', () => filterList.add());
+filterList.add();
 
 // Main Execution Logic
 DOM.runTestBtn.addEventListener('click', async () => {
@@ -276,10 +404,7 @@ DOM.runTestBtn.addEventListener('click', async () => {
   // 1. Collect Filter Configs
   let filters;
   try {
-    const cards = DOM.filterContainer.querySelectorAll('.filter-card');
-    filters = Array.from(cards)
-      .map((card, index) => buildFilterConfig(/** @type {HTMLDivElement} */ (card), index + 1))
-      .filter((filter) => filter !== null);
+    filters = buildFilterList(DOM.filterContainer);
   } catch (err) {
     logConsole(`Configuration Error: ${err.message}`, true);
     return;
