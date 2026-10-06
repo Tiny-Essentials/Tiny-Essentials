@@ -216,7 +216,7 @@ Here, you can navigate through different sections of the project. Below are the 
 
 #### 4.2. **`webTemplates/vite/`**
 
-- 🚀 **[TinyVitePwaPlugin](./webTemplates/vite/7.3/plugins/TinyVitePwaPlugin.md) — A plugin that makes Progressive Web App integration seamless within a Vite-based project.
+- 🚀 **[TinyVitePwaPlugin](./webTemplates/vite/7.3/plugins/TinyVitePwaPlugin.md)** — A plugin that makes Progressive Web App integration seamless within a Vite-based project.
 - 🚀 **[githubUtils](./webTemplates/vite/7.3/plugins/githubUtils.md)** — A lightweight Vite plugin for deploying Single Page Applications (SPAs) to GitHub Pages.
 
 #### 4.3. **`webTemplates/media/`**
