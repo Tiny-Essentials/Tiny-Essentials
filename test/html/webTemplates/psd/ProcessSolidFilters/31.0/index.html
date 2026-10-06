@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PSD Color Extractor | QA Environment</title>
+    <link rel="stylesheet" href="style.css" />
+    <!-- Import Map to resolve ag-psd in the browser -->
+    <script type="importmap">
+      {
+        "imports": {
+          "ag-psd": "https://cdn.jsdelivr.net/npm/ag-psd@3.0.0/+esm"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <header>
+      <h1>PSD Solid Filter Tester</h1>
+      <p>Expert QA Interface for Layer Color Extraction</p>
+    </header>
+
+    <main>
+      <!-- Configuration Panel -->
+      <section class="config-panel">
+        <div class="card">
+          <h3>1. Input File</h3>
+          <div class="input-group">
+            <label for="psd-file">Select PSD File</label>
+            <input type="file" id="psd-file" accept=".psd" />
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>2. Filter Configuration</h3>
+          <div id="filter-container">
+            <!-- Filter rows will be injected here -->
+          </div>
+          <button id="add-filter-btn" class="btn-secondary">+ Add Filter</button>
+
+          <div class="input-group mt-20">
+            <label for="default-color">Default Fallback Color</label>
+            <input type="color" id="default-color" value="#000000" />
+          </div>
+        </div>
+
+        <button id="run-test-btn" class="btn-primary">Execute Test</button>
+      </section>
+
+      <!-- Results Panel -->
+      <section class="results-panel">
+        <div class="card">
+          <h3>Execution Output</h3>
+          <div id="console-output" class="console">
+            <span class="dim">Waiting for execution...</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Statistics</h3>
+          <pre id="stats-output" class="stats-view">{}</pre>
+        </div>
+
+        <div class="card">
+          <h3>Visual Results</h3>
+          <div id="image-results" class="image-grid">
+            <!-- Generated images will appear here -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- The bridge logic -->
+    <script type="module" src="ui-test.js"></script>
+  </body>
+</html>

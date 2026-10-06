@@ -1,0 +1,199 @@
+/* Theme Variables */
+:root {
+  --bg-color: #121212;
+  --card-bg: #1e1e1e;
+  --text-main: #e0e0e0;
+  --text-dim: #a0a0a0;
+  --accent-primary: #3d5afe;
+  --accent-hover: #536dfe;
+  --accent-secondary: #37474f;
+  --error: #cf6679;
+  --success: #03dac6;
+  --border: #333333;
+}
+
+/* Base Styles */
+body {
+  margin: 0;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.6;
+}
+
+header {
+  padding: 2rem;
+  background-color: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+}
+
+header p {
+  margin: 5px 0 0;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 20px;
+  padding: 20px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Layout Components */
+.card {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+}
+
+.card h3 {
+  margin-top: 0;
+  font-size: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Form Elements */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+label {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+input[type='text'],
+input[type='number'],
+select {
+  background: #2c2c2c;
+  border: 1px solid var(--border);
+  color: white;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 5px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+/* Buttons */
+button {
+  cursor: pointer;
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-weight: 600;
+  border: none;
+  transition: background 0.2s;
+}
+
+.btn-primary {
+  background-color: var(--accent-primary);
+  color: white;
+  width: 100%;
+  font-size: 1rem;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+}
+
+.btn-secondary {
+  background-color: var(--accent-secondary);
+  color: white;
+  font-size: 0.85rem;
+}
+
+.btn-danger {
+  background-color: transparent;
+  color: var(--error);
+  border: 1px solid var(--error);
+  padding: 5px 10px;
+}
+
+.btn-danger:hover {
+  background-color: var(--error);
+  color: white;
+}
+
+/* Output Components */
+.console {
+  background: #000;
+  color: var(--success);
+  font-family: 'Fira Code', monospace;
+  padding: 15px;
+  border-radius: 4px;
+  min-height: 60px;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+}
+
+.console .dim {
+  color: var(--text-dim);
+}
+.console .error {
+  color: var(--error);
+}
+
+.stats-view {
+  background: #1a1a1a;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  overflow-x: auto;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.image-card {
+  text-align: center;
+}
+
+.image-card img {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #000;
+}
+
+.image-card p {
+  font-size: 0.75rem;
+  margin: 5px 0;
+  color: var(--text-dim);
+}
+
+.mt-20 {
+  margin-top: 20px;
+}
