@@ -1,4 +1,4 @@
-import { processPsdSolidFiltersFromFile } from '/src/v1/webTemplates/psd/ProcessSolidFilters/31.0/FileInput.mjs';
+import { processPsdSolidFiltersFromFile } from '/src/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/FileInput.mjs';
 
 /**
  * @typedef {Object} UIFilterRow

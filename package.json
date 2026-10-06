@@ -80,8 +80,20 @@
       "import": "./dist/v1/webTemplates/media/MediaValidator/v1/Browser/index.mjs"
     },
     "./webTemplates/multiformats/14.0/IPFSHasher": {
-      "require": "./dist/v1/webTemplates/multiformats/IPFSHasher/14.0/index.cjs",
-      "import": "./dist/v1/webTemplates/multiformats/IPFSHasher/14.0/index.mjs"
+      "require": "./dist/v1/webTemplates/multiformats/14.0/IPFSHasher/index.cjs",
+      "import": "./dist/v1/webTemplates/multiformats/14.0/IPFSHasher/index.mjs"
+    },
+    "./webTemplates/ag-psd/31.0/ProcessSolidFilters": {
+      "require": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Node.cjs",
+      "import": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Node.mjs"
+    },
+    "./webTemplates/ag-psd/31.0/ProcessSolidFilters/Browser": {
+      "require": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Browser.cjs",
+      "import": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Browser.mjs"
+    },
+    "./webTemplates/ag-psd/31.0/ProcessSolidFilters/FileInput": {
+      "require": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/FileInput.cjs",
+      "import": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/FileInput.mjs"
     },
     "./jsdoc/EventEmitter": {
       "require": "./dist/v1/jsdoc/EventEmitter.cjs",
