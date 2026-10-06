@@ -46,6 +46,7 @@ import "tiny-essentials/css/TinyNotify.min.css";
 
 Direct access to smaller utilities:
 
+* `basics/crypto`
 * `basics/mediaContent`
 * `basics/array`
 * `basics/clock`
@@ -69,6 +70,29 @@ Direct access to file utilities:
 
 ---
 
+## 🧩 Regexp
+
+* `regexp`
+* `regexp/SegmentExtractor`
+* `regexp/UrlDetector`
+* `regexp/Ipv4`
+* `regexp/Ipv6`
+* `regexp/Email`
+* `regexp/Glob`
+* `regexp/Username`
+* `regexp/Username/templates/MatrixProtocol`
+* `regexp/Username/templates/BlueSky`
+* `regexp/Username/templates/Discord`
+* `regexp/Username/templates/deprecated/Discord`
+
+---
+
+## 📖 JSDoc
+
+* `jsdoc/EventEmitter`
+
+---
+
 ## 📚 Libs Modules
 
 Each library can be imported separately:
@@ -78,11 +102,25 @@ Each library can be imported separately:
   * **Utils & Tools**
     * `libs/utils/tools`
     * `libs/utils/UltraRandomMsgGen`
+    * `libs/utils/TinyCloner`
     * `libs/utils/TinyPromiseQueue`
+    * `libs/utils/TinyThrottledApi`
     * `libs/tools/TinyDebugger`
+    * `libs/tools/TinyBrowserMonitor`
     * `libs/tools/TinyClassManager`
     * `libs/tools/TinyClassManager/TinyPluginInliner`
     * `libs/tools/TinyPkgExportValidator`
+    * `libs/tools/TinyHtmlTagRegexBuilder`
+    * `libs/tools/TinyPasswordValidator`
+    * `libs/tools/TinyUriParser`
+    * `libs/tools/TinyUriParser/MatrixProtocol`
+    * `libs/tools/TinyUriParser/Discord`
+    * `libs/tools/TinyUriParser/BlueSky`
+    * `libs/router/TinyRouter`
+
+  * **Plugin**
+    * `libs/plugin/TinyVersion`
+    * `libs/plugin/TinyPlugin`
 
   * **Color**
     * `libs/color/ColorSafeStringify`
@@ -101,6 +139,7 @@ Each library can be imported separately:
     * `libs/text/TinyTextarea`
     * `libs/text/TinyI18`
     * `libs/text/TinyI18/Browser`
+    * `libs/text/TinyI18/Browser-NON-DOM`
     * `libs/text/TinyClipboard`
     * `libs/text/TinyTextDiffer`
 
@@ -135,6 +174,46 @@ Each library can be imported separately:
 
   * **Storage**
     * `libs/storage/TinyLocalStorage`
+    * `libs/storage/TinyMapCache`
+    * `libs/storage/TinySetMapDatabase`
+
+  * **File System (FS)**
+    * `libs/fs/TinyFSCore`
+    * `libs/fs/path`
+    * `libs/fs/constants`
+    * `libs/fs/encoding`
+    * `libs/fs/error`
+    * `libs/fs/handle`
+    * `libs/fs/stats`
+    * `libs/fs/plugins/OPFS`
+    * `libs/fs/plugins/OPFS/StorageBucket`
+
+  * **Service Worker**
+    * `libs/sw/service/TinyServiceWorkerEngine`
+    * `libs/sw/service/TinyPushRouter`
+    * `libs/sw/service/plugins/GlobCachePlugin`
+    * `libs/sw/service/plugins/TabManager`
+    * `libs/sw/service/plugins/Ping`
+    * `libs/sw/service/plugins/ViteFileDetector`
+    * `libs/sw/service/plugins/GlobBypassPlugin`
+    * `libs/sw/service/shared/TinyPushPayload`
+    * `libs/sw/browser/TinyServiceWorker`
+    * `libs/sw/browser/TinyPushManager`
+    * `libs/sw/browser/TinyNotificationAdapter`
+    * `libs/sw/browser/plugins/TabManager`
+
+  * **Web Worker**
+    * `libs/worker/engine/TinyWebWorkerEngine`
+    * `libs/worker/browser/TinyWebWorker`
+
+  * **HTTP Response Registry**
+    * `libs/tools/TinyHttpResponseRegistry`
+    * `libs/tools/TinyHttpResponseRegistry/Browser`
+    * `libs/tools/TinyHttpResponseRegistry/Browser-NON-DOM`
+    * `libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes`
+    * `libs/tools/TinyHttpResponseRegistry/RequestCodes`
+    * `libs/tools/TinyHttpResponseRegistry/EmptyRequestCodes`
+    * `libs/tools/TinyHttpResponseRegistry/JsDoc`
 
 * **Media 🎬**
 
@@ -233,6 +312,27 @@ Each library can be imported separately:
 * `webTemplates/bootstrap/5.3/html/BootstrapDialogs`
 * `webTemplates/bootstrap/5.3/scss/input/Placeholder-Colors-Fix.scss`
 * `webTemplates/bootstrap/5.3/scss/spacing/Spacing-Plus.scss`
+
+### Vite 7.3 ⚡
+
+* `webTemplates/vite/7.3/plugins/TinyVitePwaPlugin`
+* `webTemplates/vite/7.3/plugins/githubUtils`
+
+### Media Validator 🎞️
+
+* `webTemplates/media/MediaValidator/v1/Node`
+* `webTemplates/media/MediaValidator/v1/Browser`
+
+### Multiformats 14.0 🧬
+
+* `webTemplates/multiformats/14.0/IPFSHasher`
+
+### ag-psd 31.0 🖼️
+
+* `webTemplates/ag-psd/31.0/ProcessSolidFilters`
+* `webTemplates/ag-psd/31.0/ProcessSolidFilters/Template`
+* `webTemplates/ag-psd/31.0/ProcessSolidFilters/Browser`
+* `webTemplates/ag-psd/31.0/ProcessSolidFilters/FileInput`
 
 ---
 
