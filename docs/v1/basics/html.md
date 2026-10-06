@@ -1,3 +1,5 @@
+# 🖼️ Html
+
 ### 📖 `readBase64Blob(file: File, isDataUrl?: boolean | string): Promise<string>`
 
 Reads a file and returns its Base64 content using the FileReader API, with optional formatting as a full Data URL.

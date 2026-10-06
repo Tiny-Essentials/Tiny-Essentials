@@ -1,3 +1,5 @@
+# 🔍 ObjFilter (deprecated)
+
 ### 🔍 `objType(obj, [type])`
 
 Get the type of any value, or check it against a known type.

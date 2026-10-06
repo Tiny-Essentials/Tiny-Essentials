@@ -1,3 +1,5 @@
+# 🔁 Promise Utils
+
 ### 🔁 `waitForTrue(getValue, checkInterval = 100)`
 
 Waits until a provided function returns `true`, polling periodically.

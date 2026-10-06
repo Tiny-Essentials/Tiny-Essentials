@@ -1,4 +1,3 @@
-
 # ✍️ text.mjs
 
 A simple utility for transforming text into title case formats.

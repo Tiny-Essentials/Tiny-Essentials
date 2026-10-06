@@ -1,3 +1,5 @@
+# 🌐 Html (deprecated)
+
 ### 🌐 `fetchTemplate(...)`
 
 Loads data from a remote URL using the Fetch API, with support for custom HTTP methods, retries, timeouts, headers, and even external abort controllers.

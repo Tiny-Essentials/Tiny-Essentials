@@ -1,3 +1,5 @@
+# 🔄 AsyncReplace
+
 ## `asyncReplace(str, regex, asyncFn)` 🔄
 
 Asynchronously replaces matches in a string using a regular expression and an async function.
