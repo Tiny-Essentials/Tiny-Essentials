@@ -87,6 +87,10 @@
       "require": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Node.cjs",
       "import": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Node.mjs"
     },
+    "./webTemplates/ag-psd/31.0/ProcessSolidFilters/Template": {
+      "require": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Template.cjs",
+      "import": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Template.mjs"
+    },
     "./webTemplates/ag-psd/31.0/ProcessSolidFilters/Browser": {
       "require": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Browser.cjs",
       "import": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Browser.mjs"
