@@ -1,12 +1,44 @@
 import { processPsdSolidFiltersFromFile } from '/src/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/FileInput.mjs';
 
 /**
- * @typedef {Object} UIFilterRow
- * @property {HTMLInputElement} idInput
- * @property {HTMLInputElement} colorInput
- * @property {HTMLInputElement} prefixInput
- * @property {HTMLButtonElement} removeBtn
+ * @typedef {Object} MatchTypeOption
+ * @property {string} value - The criterion key expected by the filter engine.
+ * @property {string} label - The human readable label shown in the UI.
+ * @property {string} placeholder - The placeholder shown in the value input.
  */
+
+/**
+ * @typedef {Object} FilterConfig
+ * @property {string} id - Filter identifier.
+ * @property {string} color - Color in HEX format.
+ * @property {string|string[]} [startsWith] - Prefix criterion.
+ * @property {string|string[]} [endsWith] - Suffix criterion.
+ * @property {string|string[]} [contains] - Substring criterion.
+ * @property {string|string[]} [equals] - Equality criterion.
+ * @property {RegExp|RegExp[]} [matches] - Regular expression criterion.
+ * @property {(layerName: string) => boolean} [test] - Custom predicate criterion.
+ */
+
+/** @type {MatchTypeOption[]} */
+const MATCH_TYPES = [
+  { value: 'startsWith', label: 'Starts With', placeholder: 'layer-, art_' },
+  { value: 'endsWith', label: 'Ends With', placeholder: '-shadow, -line' },
+  { value: 'contains', label: 'Contains', placeholder: 'lineart, sketch' },
+  { value: 'equals', label: 'Equals', placeholder: 'background' },
+  { value: 'matches', label: 'RegExp', placeholder: '/^bg_\\d+$/i' },
+  { value: 'test', label: 'Custom Function', placeholder: '(name) => name.length > 10' },
+];
+
+const COLOR_PALETTE = [
+  '#e6194b',
+  '#3cb44b',
+  '#4363d8',
+  '#f58231',
+  '#911eb4',
+  '#42d4f4',
+  '#f032e6',
+  '#bfef45',
+];
 
 const DOM = {
   fileInput: document.getElementById('psd-file'),
@@ -19,53 +51,214 @@ const DOM = {
   imageGrid: document.getElementById('image-results'),
 };
 
+let filterCounter = 0;
+let colorCursor = 0;
+
+/**
+ * Returns the next color of the palette in a cyclic fashion.
+ * @returns {string} A HEX color string.
+ */
+function nextColor() {
+  const color = COLOR_PALETTE[colorCursor % COLOR_PALETTE.length];
+  colorCursor += 1;
+  return color;
+}
+
 /**
  * Logs messages to the visual console.
- * @param {string} message
- * @param {boolean} isError
+ * @param {string} message - The message to display.
+ * @param {boolean} [isError=false] - Whether the message represents an error.
+ * @returns {void}
  */
 function logConsole(message, isError = false) {
-  const span = document.createElement('div');
-  span.textContent = `> ${new Date().toLocaleTimeString()}: ${message}`;
-  if (isError) span.className = 'error';
-  DOM.console.appendChild(span);
+  const line = document.createElement('div');
+  line.textContent = `> ${new Date().toLocaleTimeString()}: ${message}`;
+  if (isError) {
+    line.className = 'error';
+  }
+  DOM.console.appendChild(line);
   DOM.console.scrollTop = DOM.console.scrollHeight;
 }
 
 /**
- * Creates a new filter row in the UI.
- * @returns {UIFilterRow}
+ * Compiles a raw string into a RegExp, supporting the /pattern/flags syntax.
+ * @param {string} input - The raw regular expression source.
+ * @returns {RegExp} The compiled regular expression.
+ * @throws {SyntaxError} If the pattern is not a valid regular expression.
  */
-function createFilterRow() {
-  const div = document.createElement('div');
-  div.className = 'filter-row';
+function parseRegExp(input) {
+  const match = input.match(/^\/(.*)\/([a-z]*)$/i);
+  return match ? new RegExp(match[1], match[2]) : new RegExp(input);
+}
+
+/**
+ * Compiles a raw string into a predicate function.
+ * @param {string} input - A string that evaluates to a function.
+ * @returns {(layerName: string) => boolean} The compiled predicate.
+ * @throws {TypeError} If the expression does not evaluate to a function.
+ */
+function parseFunction(input) {
+  // The QA interface intentionally evaluates developer input to test custom predicates.
+  const factory = new Function(`"use strict"; return (${input});`);
+  const fn = factory();
+  if (typeof fn !== 'function') {
+    throw new TypeError('The custom criterion must evaluate to a function.');
+  }
+  return fn;
+}
+
+/**
+ * Converts a raw criterion value into the type expected by the filter engine.
+ * @param {string} type - The criterion key (e.g. 'startsWith').
+ * @param {string} rawValue - The raw value typed by the user.
+ * @returns {string|string[]|RegExp|((layerName: string) => boolean)} The parsed value.
+ * @throws {SyntaxError|TypeError} If the value cannot be parsed for the given type.
+ */
+function parseCriterionValue(type, rawValue) {
+  const trimmed = rawValue.trim();
+  if (type === 'matches') {
+    return parseRegExp(trimmed);
+  }
+  if (type === 'test') {
+    return parseFunction(trimmed);
+  }
+  const parts = trimmed
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+  return parts.length === 1 ? parts[0] : parts;
+}
+
+/**
+ * Creates a single criterion row (type selector + value input + remove button).
+ * @returns {HTMLDivElement} The assembled criterion row element.
+ */
+function createCriterionRow() {
+  const row = document.createElement('div');
+  row.className = 'criterion-row';
+
+  const typeSelect = document.createElement('select');
+  typeSelect.className = 'criterion-type';
+  for (const option of MATCH_TYPES) {
+    const opt = document.createElement('option');
+    opt.value = option.value;
+    opt.textContent = option.label;
+    typeSelect.appendChild(opt);
+  }
+
+  const valueInput = document.createElement('input');
+  valueInput.type = 'text';
+  valueInput.className = 'criterion-value';
+  valueInput.placeholder = MATCH_TYPES[0].placeholder;
+
+  typeSelect.addEventListener('change', () => {
+    const selected = MATCH_TYPES.find((item) => item.value === typeSelect.value);
+    valueInput.placeholder = selected ? selected.placeholder : '';
+  });
+
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.textContent = '✕';
+  removeBtn.className = 'btn-danger btn-small';
+  removeBtn.addEventListener('click', () => row.remove());
+
+  row.append(typeSelect, valueInput, removeBtn);
+  return row;
+}
+
+/**
+ * Creates a filter card with an ID, a color and a dynamic list of criteria.
+ * @param {number} index - The index used to build the default identifier.
+ * @returns {HTMLDivElement} The assembled filter card element.
+ */
+function createFilterCard(index) {
+  const card = document.createElement('div');
+  card.className = 'filter-card';
+
+  const header = document.createElement('div');
+  header.className = 'filter-header';
 
   const idInput = document.createElement('input');
-  idInput.placeholder = 'ID (e.g. artist1)';
   idInput.type = 'text';
+  idInput.className = 'filter-id';
+  idInput.placeholder = `ID (e.g. artist${index})`;
+  idInput.value = `artist${index}`;
 
   const colorInput = document.createElement('input');
   colorInput.type = 'color';
-  colorInput.value = '#ff0000';
-
-  const prefixInput = document.createElement('input');
-  prefixInput.placeholder = 'Prefix (e.g. layer-)';
-  prefixInput.type = 'text';
+  colorInput.className = 'filter-color';
+  colorInput.value = nextColor();
 
   const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
   removeBtn.textContent = '✕';
-  removeBtn.className = 'btn-danger';
-  removeBtn.onclick = () => div.remove();
+  removeBtn.className = 'btn-danger btn-small';
+  removeBtn.addEventListener('click', () => card.remove());
 
-  div.append(idInput, colorInput, prefixInput, removeBtn);
-  DOM.filterContainer.appendChild(div);
+  header.append(idInput, colorInput, removeBtn);
 
-  return { idInput, colorInput, prefixInput, removeBtn };
+  const criteriaList = document.createElement('div');
+  criteriaList.className = 'criteria-list';
+  criteriaList.appendChild(createCriterionRow());
+
+  const addCriterionBtn = document.createElement('button');
+  addCriterionBtn.type = 'button';
+  addCriterionBtn.className = 'btn-ghost';
+  addCriterionBtn.textContent = '+ Add Criterion (AND)';
+  addCriterionBtn.addEventListener('click', () => {
+    criteriaList.appendChild(createCriterionRow());
+  });
+
+  card.append(header, criteriaList, addCriterionBtn);
+  return card;
+}
+
+/**
+ * Adds a new filter card to the container.
+ * @returns {void}
+ */
+function addFilterCard() {
+  filterCounter += 1;
+  DOM.filterContainer.appendChild(createFilterCard(filterCounter));
+}
+
+/**
+ * Reads a filter card and converts it into a FilterConfig object.
+ * @param {HTMLDivElement} card - The filter card element.
+ * @param {number} index - The index used as a fallback identifier.
+ * @returns {FilterConfig|null} The filter configuration, or null when the card has no criteria.
+ */
+function buildFilterConfig(card, index) {
+  const idInput = /** @type {HTMLInputElement} */ (card.querySelector('.filter-id'));
+  const colorInput = /** @type {HTMLInputElement} */ (card.querySelector('.filter-color'));
+
+  const filter = {
+    id: idInput.value.trim() || `filter-${index}`,
+    color: colorInput.value,
+  };
+  const target = /** @type {Record<string, unknown>} */ (filter);
+
+  let criteriaCount = 0;
+  const rows = card.querySelectorAll('.criterion-row');
+
+  for (const row of rows) {
+    const type = /** @type {HTMLSelectElement} */ (row.querySelector('.criterion-type')).value;
+    const rawValue = /** @type {HTMLInputElement} */ (row.querySelector('.criterion-value')).value;
+
+    if (rawValue.trim() === '') {
+      continue;
+    }
+
+    target[type] = parseCriterionValue(type, rawValue);
+    criteriaCount += 1;
+  }
+
+  return criteriaCount > 0 ? /** @type {FilterConfig} */ (filter) : null;
 }
 
 // Initialization: Add one default filter row
-DOM.addFilterBtn.addEventListener('click', createFilterRow);
-createFilterRow();
+DOM.addFilterBtn.addEventListener('click', addFilterCard);
+addFilterCard();
 
 // Main Execution Logic
 DOM.runTestBtn.addEventListener('click', async () => {
@@ -81,36 +274,27 @@ DOM.runTestBtn.addEventListener('click', async () => {
   }
 
   // 1. Collect Filter Configs
-  const filters = [];
-  const rows = DOM.filterContainer.querySelectorAll('.filter-row');
-
-  for (const row of rows) {
-    const idInput = row.querySelector('input[placeholder*="ID"]');
-    const colorInput = row.querySelector('input[type="color"]');
-    const prefixInput = row.querySelector('input[placeholder*="Prefix"]');
-
-    // Convert hex color to #RRGGBB for the input
-    const hexColor = rgbToHex(colorInput.value);
-
-    filters.push({
-      id: idInput.value || `filter-${filters.length}`,
-      color: hexColor,
-      startsWith: prefixInput.value || '',
-    });
+  let filters;
+  try {
+    const cards = DOM.filterContainer.querySelectorAll('.filter-card');
+    filters = Array.from(cards)
+      .map((card, index) => buildFilterConfig(/** @type {HTMLDivElement} */ (card), index + 1))
+      .filter((filter) => filter !== null);
+  } catch (err) {
+    logConsole(`Configuration Error: ${err.message}`, true);
+    return;
   }
 
-  const defaultConfig = {
-    color: rgbToHex(DOM.defaultColor.value),
-  };
+  const defaultConfig = { color: DOM.defaultColor.value };
 
   logConsole('Starting PSD processing...');
+  console.log('Filters:', filters);
 
   try {
     const startTime = performance.now();
 
     // 2. Call the module
     const result = await processPsdSolidFiltersFromFile(DOM.fileInput, filters, defaultConfig);
-
     const duration = ((performance.now() - startTime) / 1000).toFixed(2);
     logConsole(`Success! Processed in ${duration}s`);
 
@@ -149,14 +333,3 @@ DOM.runTestBtn.addEventListener('click', async () => {
     console.error(err);
   }
 });
-
-/**
- * Helper to ensure color format is correct for the logic
- * @param {string} rgb
- * @returns {string}
- */
-function rgbToHex(rgb) {
-  // This is a simplified helper for the UI color picker
-  // The browser's input type="color" already returns #rrggbb
-  return rgb.startsWith('#') ? rgb : `#${rgb}`;
-}

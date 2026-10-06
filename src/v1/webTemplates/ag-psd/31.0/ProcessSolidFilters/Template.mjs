@@ -2,7 +2,12 @@
  * @typedef {Object} FilterConfig
  * @property {string} id - Filter identifier (e.g., 'artist1').
  * @property {string} color - Color in HEX format (e.g., '#ffffff').
- * @property {string} startsWith - Prefix to capture the layer (e.g., 'artist-layer-').
+ * @property {string|string[]} [startsWith] - Prefix(es) the layer name must start with.
+ * @property {string|string[]} [endsWith] - Suffix(es) the layer name must end with.
+ * @property {string|string[]} [contains] - Substring(s) the layer name must contain.
+ * @property {string|string[]} [equals] - Exact value(s) the layer name must be equal to.
+ * @property {RegExp|RegExp[]} [matches] - Regular expression(s) the layer name must satisfy. Avoid the global (g) flag, as it makes the RegExp stateful.
+ * @property {(layerName: string) => boolean} [test] - Custom predicate for advanced matching.
  */
 
 /**
@@ -114,6 +119,70 @@ function buildLayerVectorData(layer, filterId, opacity) {
 }
 
 /**
+ * Normalizes a value into an array so it can be iterated uniformly.
+ * @template T
+ * @param {T|T[]} value - A single value or an array of values.
+ * @returns {T[]} The value wrapped in an array when it is not one already.
+ */
+function toArray(value) {
+  return Array.isArray(value) ? value : [value];
+}
+
+/**
+ * Compiles a single filter configuration into a reusable predicate.
+ * All criteria declared in the filter are combined with a logical AND.
+ * Values inside a single criterion are combined with a logical OR.
+ * @param {FilterConfig} filter - The filter configuration to compile.
+ * @returns {(layerName: string) => boolean} A predicate that returns true when a layer name matches.
+ * @throws {TypeError} If the filter or any of its properties are invalid.
+ */
+function buildFilterPredicate(filter) {
+  if (filter === null || typeof filter !== 'object') {
+    throw new TypeError('Each filter must be a valid object.');
+  }
+  if (typeof filter.id !== 'string' || filter.id.length === 0) {
+    throw new TypeError("Each filter must declare a non-empty string 'id'.");
+  }
+
+  /** @type {Array<(layerName: string) => boolean>} */
+  const criteria = [];
+
+  if (filter.startsWith !== undefined) {
+    const patterns = toArray(filter.startsWith);
+    criteria.push((name) => patterns.some((pattern) => name.startsWith(pattern)));
+  }
+  if (filter.endsWith !== undefined) {
+    const patterns = toArray(filter.endsWith);
+    criteria.push((name) => patterns.some((pattern) => name.endsWith(pattern)));
+  }
+  if (filter.contains !== undefined) {
+    const patterns = toArray(filter.contains);
+    criteria.push((name) => patterns.some((pattern) => name.includes(pattern)));
+  }
+  if (filter.equals !== undefined) {
+    const patterns = toArray(filter.equals);
+    criteria.push((name) => patterns.some((pattern) => name === pattern));
+  }
+  if (filter.matches !== undefined) {
+    const patterns = toArray(filter.matches);
+    criteria.push((name) => patterns.some((pattern) => pattern.test(name)));
+  }
+  if (filter.test !== undefined) {
+    if (typeof filter.test !== 'function') {
+      throw new TypeError("The 'test' property must be a function.");
+    }
+    const customTest = filter.test;
+    criteria.push((name) => customTest(name) === true);
+  }
+
+  if (criteria.length === 0) {
+    throw new TypeError(`The filter '${filter.id}' must declare at least one matching criterion.`);
+  }
+
+  return (layerName) => criteria.every((criterion) => criterion(layerName));
+}
+
+/**
  * @template {Buffer | ArrayBuffer} ValidatorResult
  * @template {Buffer|Blob} Data
  * @template {string | Blob | HTMLInputElement} PsdInput
@@ -155,6 +224,11 @@ export function createProcessPsdSolidFilters(validator, createCanvas, readPsd, e
     }
     colorMap.set('unfiltered', hexToRgba(defaultConfig.color));
 
+    const matchers = filters.map((filter) => ({
+      id: filter.id,
+      predicate: buildFilterPredicate(filter),
+    }));
+
     // 1D array to store which ID dominates each pixel in the space (W * H)
     const ownerMap = new Array(W * H).fill(null);
     const flatLayers = getPaintingOrderLayers(psd.children || []);
@@ -167,9 +241,9 @@ export function createProcessPsdSolidFilters(validator, createCanvas, readPsd, e
       if (!layer.canvas) continue; // Ignores layers that do not have image data
 
       let filterId = 'unfiltered';
-      for (const f of filters) {
-        if (layer.name && layer.name.startsWith(f.startsWith)) {
-          filterId = f.id;
+      for (const matcher of matchers) {
+        if (layer.name && matcher.predicate(layer.name)) {
+          filterId = matcher.id;
           break;
         }
       }
