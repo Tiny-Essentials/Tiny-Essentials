@@ -285,8 +285,7 @@ parser.parse('discord.gg/abc?ref=friend');
 //     host: 'discord.gg',
 //     kind: null,
 //     obfuscated: false,
-//     params: { ref: 'friend' },
-//     url: 'https://discord.gg/abc?ref=friend'
+//     params: { ref: 'friend' }
 //   }
 // }
 ```
@@ -306,8 +305,7 @@ parser.parse('https://discord.com/channels/1/2/3');
 //     guildId: '1',
 //     channelId: '2',
 //     messageId: '3',
-//     params: {},
-//     url: 'https://discord.com/channels/1/2/3'
+//     params: {}
 //   }
 // }
 ```
@@ -342,8 +340,7 @@ parser.parse('https://cdn.discordapp.com/icons/123/abc.png?size=128');
 //     filename: null,
 //     spoiler: false,
 //     segments: { guildId: '123' },
-//     params: { size: '128' },
-//     url: 'https://cdn.discordapp.com/icons/123/abc.png?size=128'
+//     params: { size: '128' }
 //   }
 // }
 ```

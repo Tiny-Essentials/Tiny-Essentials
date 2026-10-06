@@ -50,6 +50,5 @@ The most complex and versatile structure.
 ### 3. `MatrixWebData` 🌐
 Used when parsing full browser URLs.
 - `dataType`: Always `'matrix_web_url'`.
-- `originalUrl`: The exact string you provided.
 - `decodedFragment`: The part of the URL after the `#`.
 - `parsed`: A nested `MatrixSchemeData` object containing the actual resource info.
