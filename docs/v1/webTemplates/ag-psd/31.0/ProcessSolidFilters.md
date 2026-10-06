@@ -2,10 +2,6 @@
 
 > Extract solid colors from PSD layers, generate separated images per filter, and get pixel statistics — in **Node.js** and the **Browser**, with the exact same API.
 
-[![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A518-339933?logo=node.js&logoColor=white)](#-nodejs-usage)
-[![Browser](https://img.shields.io/badge/Browser-ESM-4285F4?logo=googlechrome&logoColor=white)](#-browser-usage)
-[![ag-psd](https://img.shields.io/badge/built%20on-ag--psd-8A2BE2)](#-how-it-works)
-
 ---
 
 ## 📖 Table of Contents
