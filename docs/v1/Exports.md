@@ -100,6 +100,7 @@ Each library can be imported separately:
     * `libs/text/TinyTextRangeEditor`
     * `libs/text/TinyTextarea`
     * `libs/text/TinyI18`
+    * `libs/text/TinyI18/Browser`
     * `libs/text/TinyClipboard`
     * `libs/text/TinyTextDiffer`
 

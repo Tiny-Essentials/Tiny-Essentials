@@ -5,12 +5,13 @@ A multi-layered JavaScript utility for identifying the user's web browser and re
 ## 📋 Table of Contents
 1. [Data Types](#📋-data-types)
 2. [Core Functions](#🛠️-core-functions)
-   - [isBrowserAgent](#1-isbrowseragent)
-   - [getBrowserCssPrefix](#2-getbrowsercssprefix)
-   - [getDuckTyping](#3-getducktyping)
+   - [isBrowser](#1-isbrowser)
+   - [isBrowserAgent](#3-isbrowseragent)
+   - [getBrowserCssPrefix](#4-getbrowsercssprefix)
+   - [getDuckTyping](#5-getducktyping)
 3. [Advanced Detection](#🎯-advanced-detection)
-   - [getBrowserPings](#4-getbrowserpings)
-   - [browserIs](#5-browseris)
+   - [getBrowserPings](#6-getbrowserpings)
+   - [browserIs](#7-browseris)
 
 ---
 
@@ -38,7 +39,23 @@ An object returned by feature detection, containing boolean flags:
 
 ## 🛠️ Core Functions
 
-### 1. `isBrowserAgent()`
+### 1. `isBrowser()`
+Checks if the current execution environment is a web browser.
+
+* **Returns:** `boolean` (`true` if in a browser, `false` otherwise).
+* **Best use case:** To prevent runtime errors when accessing browser-specific globals (like `window` or `document`) in non-browser environments like Node.js.
+
+```javascript
+import { isBrowser } from 'tiny-essentials/basics/browserDetector';
+
+if (isBrowser()) {
+  console.log("Environment is a browser. Accessing window safely... ✅");
+} else {
+  console.log("Environment is not a browser (e.g., Node.js). 🖥️");
+}
+```
+
+### 2. `isBrowserAgent()`
 Parses the `navigator.userAgent` string to provide a quick identification of the browser.
 
 * **Returns:** `BrowserDetected`
@@ -52,7 +69,7 @@ console.log(`You are using: ${browser}`);
 // Output example: "chrome"
 ```
 
-### 2. `getBrowserCssPrefix()`
+### 3. `getBrowserCssPrefix()`
 Inspects the computed styles of the document to determine the CSS rendering engine.
 
 * **Returns:** `'gecko' | 'webkit' | 'trident' | 'other'`
@@ -67,14 +84,14 @@ if (engine === 'webkit') {
 }
 ```
 
-### 3. `getDuckTyping()`
+### 4. `getDuckTyping()`
 Performs deep feature detection by checking for the existence of specific global objects and APIs.
 
 * **Returns:** `DuckTypingResult`
 * **Best use case:** When you need to know exactly which features are available in the current environment.
 
 ```javascript
-import { getDuckTyping } from './browserDetector.js';
+import { getDuckTyping } from 'tiny-essentials/basics/browserDetector';
 
 const features = getDuckTyping();
 
@@ -93,7 +110,7 @@ if (features.isBlink) {
 
 These functions aggregate the results from the core functions to provide the highest possible accuracy.
 
-### 4. `getBrowserPings(disable = [])`
+### 5. `getBrowserPings(disable = [])`
 Aggregates detection results from all three methods (User Agent, CSS Prefix, and Duck Typing) to provide a "ping count" for each browser.
 
 * **Parameters:** 
@@ -113,7 +130,7 @@ const filteredCounts = getBrowserPings(['ie']);
 console.log(filteredCounts);
 ```
 
-### 5. `browserIs(disable = [])`
+### 6. `browserIs(disable = [])`
 The most reliable method. It runs all detection strategies and returns the browser that received the highest number of "pings."
 
 * **Parameters:** 

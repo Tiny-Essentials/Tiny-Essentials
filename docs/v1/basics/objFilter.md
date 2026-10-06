@@ -4,20 +4,19 @@ Type detection, extension, and analysis made easy — simple and extensible type
 
 ## Overview
 
-`objFilter.mjs` is a utility module that provides a structured and extensible way to validate, infer, and count object types in JavaScript. It’s designed to work in both Node.js and browser environments and is perfect for libraries that need consistent, extensible type-checking logic.
+`objFilter.mjs` is a utility module that provides a structured and extensible way to validate, infer, and analyze types in JavaScript. It is designed to work in both Node.js and browser environments, making it ideal for libraries that require consistent, predictable, and highly customizable type-checking logic.
 
-Whether you’re validating inputs, writing schema validators, or building tools that need to "understand" JavaScript data — this module has your back!
+Whether you are building a schema validator, a data transformation pipeline, or debugging complex nested objects, `objFilter.mjs` provides the tools to "understand" your data precisely.
 
 ---
 
 ## Features
 
-- ✅ Precise type detection (`undefined`, `null`, `array`, `date`, etc.)
-- ➕ Custom type extensions with ordering
-- 🔄 Reorder type checking priority
-- 🔍 Safe and predictable type checks
-- 🧮 Count values in arrays and objects
-- 🚫 No dependencies
+- ✅ **Precise Type Detection**: Detects primitives, built-in objects (`Map`, `Set`, `Date`, etc.), and even browser-specific types.
+- ➕ **Extensible Architecture**: Easily add custom types with specific validation and cloning logic.
+- 🔄 **Priority Control**: Reorder the evaluation sequence to ensure specific types (like `array`) are caught before generic ones (like `object`).
+- 🔍 **Deep Cloning Support**: Integrated cloning logic within the type registry for seamless data duplication.
+- 🚫 **Zero Dependencies**: Lightweight and pure JavaScript.
 
 ---
 
@@ -25,34 +24,22 @@ Whether you’re validating inputs, writing schema validators, or building tools
 
 ### 🔍 `checkObj(obj)`
 
-Checks the type of a given object and returns the validation result if a known type is detected.
+Evaluates an object against the registered validators and returns the first match found.
 
-```js
+```javascript
 checkObj('hello');
 // { valid: true, type: "string" }
 
-checkObj(123);
-// { valid: true, type: "number" }
+checkObj(new Map());
+// { valid: Map(0) {}, type: "map" }
 
 checkObj(undefined);
-// { valid: true, type: "undefined" }
-
-checkObj(Symbol('sym'));
-// { valid: true, type: "symbol" }
-
-checkObj(() => {});
-// { valid: true, type: "function" }
-
-checkObj(null);
-// { valid: true, type: "null" }
-
-checkObj(Object.create(null));
-// { valid: true, type: "object" }
+// { valid: null, type: null }
 ```
 
-Returns:
-- `{ valid: true, type: "<type>" }` if the type is recognized
-- `{ valid: null, type: null }` if no matching type is found
+**Returns:**
+- `{ valid: any, type: string }` if a match is found (`valid` contains the truthy result of the validator).
+- `{ valid: null, type: null }` if no match is found.
 
 ---
 
@@ -60,23 +47,25 @@ Returns:
 
 Returns the detected type name of a given value as a string.
 
-```js
+```javascript
 objTypeName([]); // "array"
 objTypeName(null); // "null"
 objTypeName(new Set()); // "set"
+objTypeName(123); // "number"
+objTypeName(Symbol('foo')); // "symbol"
 ```
 
-Returns:
+**Returns:**
 - A string representing the type name (e.g., `"array"`, `"date"`, `"map"`).
-- `"unknown"` if no matching type is found.
+- `"unknown"` if no match is found.
 
 ---
 
 ### ✅ `isObjType(obj, type)`
 
-Checks whether a given object matches a specific type. This check is case-insensitive.
+A strict boolean check to see if a value matches a specific type name. This check is case-insensitive.
 
-```js
+```javascript
 isObjType([], 'array'); // true
 isObjType({}, 'object'); // true
 isObjType('hello', 'string'); // true
@@ -87,82 +76,64 @@ isObjType(123, 'boolean'); // false
 
 ---
 
-### ➕ `extendObjType(newTypes, [index])`
+### ➕ `extendObjType(ni, [index])`
 
-Add your own custom types. You can optionally define where in the check order they go.
+Add your own custom types to the registry. You can provide types as an object, an array of tuples, or a single tuple.
 
-```js
+**Using an Object:**
+```javascript
 extendObjType({
-  customElement: val => val && val.tagName === 'MY-ELEMENT'
+  customType: val => typeof val === 'symbol'
 });
 ```
 
-```js
+**Using an Array of Tuples:**
+```javascript
 extendObjType([
-  [ 'alpha', val => typeof val === 'string' ],
-  [ 'beta', val => Array.isArray(val) ]
+  ['alpha', val => typeof val === 'string'],
+  ['beta', val => Array.isArray(val), (val) => [...val]] // [key, validator, cloner]
 ]);
 ```
 
-This will insert `customElement` before the built-in `object` type unless a position is specified.
+**Using a Single Tuple:**
+```javascript
+extendObjType(['gamma', val => typeof val === 'number']);
+```
+
+*Note: If no `index` is provided, the type is inserted before the 'object' type or at the end of the registry.*
 
 ---
 
 ### 🔁 `reorderObjTypeOrder(newOrder)`
 
-Set a custom priority order for how types are checked (must include only known types).
+Sets a custom priority for type detection. All provided names must already exist in the registry.
 
-```js
-reorderObjTypeOrder([
-  'string',
-  'number',
-  'array',
-  'object'
-]);
-```
-
-Returns `true` if successful, or `false` if the order includes unknown types.
-
----
-
-### 📋 `cloneObjTypeOrder()`
-
-Safely get a copy of the current type evaluation order.
-
-```js
-const currentOrder = cloneObjTypeOrder();
+```javascript
+reorderObjTypeOrder(['string', 'number', 'array', 'object']);
 ```
 
 ---
 
 ## Supported Types
 
-Here’s a full list of supported type names (in their default order):
+By default, the following types are supported (order may vary if customized):
 
-- `undefined`
-- `null`
-- `boolean`
-- `number`
-- `bigint`
-- `string`
-- `symbol`
-- `function`
-- `array`
-- `buffer`
-- `date`
-- `regexp`
-- `map`
-- `set`
-- `weakmap`
-- `weakset`
-- `promise`
-- `htmlElement`
-- `object`
-
-You can change this order or insert your own types with `extendObjType`.
+- **Primitives**: `undefined`, `null`, `boolean`, `number`, `nannumber`, `bigint`, `string`, `symbol`, `function`.
+- **Built-in Objects**: `array`, `date`, `regexp`, `map`, `set`, `weakmap`, `weakset`, `promise`, `url`.
+- **Browser Specific**: `file`, `htmlelement` (only available in browser environments).
+- **Generic**: `object`.
 
 ---
 
-### 🛠️ `getCheckObj()`
+## API Reference
 
-This function creates a clone of the functions from the `typeValidator` object. It returns a new object where the keys are the same and the values are the cloned functions.
+| Function | Description |
+| :--- | :--- |
+| `checkObj(obj)` | Returns the first matching type and its validation result. |
+| `objTypeName(val)` | Returns the type name as a string. |
+| `isObjType(obj, type)` | Returns `true` if the value matches the type. |
+| `extendObjType(ni, index)` | Adds new types to the registry. |
+| `reorderObjTypeOrder(newOrder)` | Changes the priority of type checking. |
+| `cloneObjTypeOrder()` | Returns a copy of the current evaluation order. |
+| `getObjTypeOrder()` | Returns a copy of the current evaluation order. |
+| `getObjTypeRegistry()` | Returns a clone of the entire type registry. |

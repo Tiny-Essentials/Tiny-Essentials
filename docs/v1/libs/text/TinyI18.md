@@ -46,6 +46,14 @@ await TinyI18.mergeLocaleFiles({
 
 ### Properties 🛠️
 
+#### `destroyed` 🔹
+
+Indicates whether the instance has been destroyed.
+
+* **Type:** `boolean`
+
+---
+
 #### `currentLocale` 🔹
 
 The currently selected locale, or `null` if only the default locale is active.
@@ -81,6 +89,14 @@ Whether strict mode is enabled.
 * `true` → Missing keys, invalid regex, or helper errors throw exceptions.
 
 * `false` → Failures are ignored silently, returning fallback values.
+
+* **Type:** `boolean`
+
+---
+
+#### `acceptNullResults` 🔹
+
+Whether null results are accepted when a translation is missing.
 
 * **Type:** `boolean`
 
@@ -191,8 +207,8 @@ Resolves a key exactly in the provided locale order.
 
 **Parameters:**
 
-| Name    | Type       | Description                    |
-| ------- | ---------- | ------------------------------ |
+| Name   | Type     | Description                               |
+| ------- | -------- | ----------------------------------------- |
 | `order` | `string[]` | Array of locale codes to check |
 | `key`   | `string`   | Exact key to look up           |
 
@@ -206,10 +222,10 @@ Resolves a key by matching regex patterns in locale tables.
 
 **Parameters:**
 
-| Name    | Type       | Description                               |
-| ------- | ---------- | ----------------------------------------- |
-| `order` | `string[]` | Array of locale codes in resolution order |
-| `key`   | `string`   | Key to match against patterns             |
+| Name               | Type     | Description                               |
+| ------------------ | -------- | ----------------------------------------- |
+| `order`            | `string[]` | Array of locale codes to check |
+| `key`              | `string`   | Input string to test against regex patterns |
 
 **Returns:** `any` – Value associated with matched pattern, or `undefined`
 
@@ -227,10 +243,10 @@ Converts a raw translation entry into a final string for display.
 
 **Parameters:**
 
-| Name     | Type     | Description                           |                                |                       |
-| -------- | -------- | ------------------------------------- | ------------------------------ | --------------------- |
-| `value`  | `string` | HelperCallback                        | { \$fn: string; args?: any }\` | Raw translation entry |
-| `params` | `Dict`   | Optional parameters for interpolation |                                |                       |
+| Name     | Type                                                              | Description                                                               |                       |
+| -------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------ | --------------------- |
+| `value`  | `string` | `HelperCallback`                        | `{ $fn: string; args?: any }` | Raw translation entry |
+| `params` | `Dict`   | Optional parameters for interpolation |                                                               |
 
 **Returns:** `string` – Materialized result
 
@@ -242,10 +258,10 @@ Interpolates `{named}` placeholders in a string using given parameters.
 
 **Parameters:**
 
-| Name       | Type     | Description                       |
-| ---------- | -------- | --------------------------------- |
-| `template` | `string` | Template string with placeholders |
-| `params`   | `Dict`   | Values to interpolate             |
+| Name       | Type         | Description                                |
+| ---------- | ------------ | ------------------------------------------ |
+| `template` | `string`     | Template string with placeholders |
+| `params`   | `Dict`       | Values to interpolate             |
 
 **Returns:** `string` – Interpolated string
 
@@ -257,9 +273,9 @@ Safely retrieves a nested property using dot notation.
 
 **Parameters:**
 
-| Name   | Type     | Description                          |
-| ------ | -------- | ------------------------------------ |
-| `obj`  | `Dict`   | Object to retrieve from              |
+| Name   | Type  | Description                               |
+| ------ | ----- | ----------------------------------------- |
+| `obj`  | `Dict` | Object to retrieve from              |
 | `path` | `string` | Dot-separated path (e.g., `"a.b.c"`) |
 
 **Returns:** `any` – Value at path or `undefined`
@@ -298,9 +314,9 @@ Removes a previously loaded locale from memory (except default).
 
 **Parameters:**
 
-| Name     | Type     | Description           |
-| -------- | -------- | --------------------- |
-| `locale` | `string` | Locale code to unload |
+| Name     | Type     | Description                 |
+| -------- | -------- | --------------------------- |
+| `locale` | `string` | Locale code                 |
 
 ---
 
@@ -314,11 +330,11 @@ Loads a locale JSON file and flattens it into internal maps (file mode only).
 
 * Dot-flattens nested keys
 * Compiles `$pattern` entries into RegExp
-* Preserves `$fn` placeholders for helper resolution
+* Preserves `$fn` references for later resolution via helpers
 
 **Parameters:**
 
-| Name     | Type         | Description         |
+| Name     | Type         | Description |
 | -------- | ------------ | ------------------- |
 | `locale` | `LocaleCode` | Locale code to load |
 
@@ -333,7 +349,7 @@ Strict mode → throws on invalid regex; otherwise returns a never-matching rege
 
 **Parameters:**
 
-| Name  | Type     | Description                    |
+| Name  | Type     | Description |
 | ----- | -------- | ------------------------------ |
 | `src` | `string` | Regex source string (no flags) |
 
@@ -350,11 +366,11 @@ Normalizes a JSON value from file mode into internal representation.
 
 **Parameters:**
 
-| Name | Type     | Description |                |
-| ---- | -------- | ----------- | -------------- |
-| `v`  | \`string | FileValue\` | Raw JSON value |
+| Name | Type | Description |                |
+| ---- | ---- | -------------- | -------------- |
+| `v`  | `string | FileValue` | Raw JSON value |
 
-**Returns:** `string | { $fn: string, args?: any }`
+**Returns:** `string | { $fn: string; args?: any }`
 
 ---
 
@@ -376,7 +392,7 @@ Creates a new TinyI18 instance for managing localized strings and patterns.
 
 **Parameters:**
 
-| Name      | Type             | Description          |
+| Name      | Type             | Description             |
 | --------- | ---------------- | -------------------- |
 | `options` | `TinyI18Options` | Configuration object |
 
@@ -399,10 +415,10 @@ Registers a helper function for function-based entries or `$fn` references.
 
 **Parameters:**
 
-| Name   | Type             | Description          |
-| ------ | ---------------- | -------------------- |
-| `name` | `string`         | Helper function name |
-| `fn`   | `HelperCallback` | Callback function    |
+| Name   | Type     | Description         |
+| ------ | -------- | -------------------- |
+| `name` | `string` | Helper function name |
+| `fn` | `HelperCallback` | Callback function    |
 
 ---
 
@@ -412,23 +428,23 @@ Removes a previously registered helper function.
 
 **Parameters:**
 
-| Name   | Type     | Description              |
-| ------ | -------- | ------------------------ |
-| `name` | `string` | Name of helper to remove |
+| Name     | Type     | Description |
+| -------- | -------- | ------------------------ |
+| `name` | `string` | Name of the helper to remove |
 
-**Returns:** `boolean` – `true` if removed, `false` if not found
+**Returns:** `boolean` – `true` if the helper was removed, `false` if it was not found
 
 ---
 
 ### `loadLocaleLocal(locale, data)` 📦
 
-Loads or updates locale data in-memory (local mode only).
+Loads or updates a locale data in-memory (local mode only).
 
 **Parameters:**
 
-| Name     | Type         | Description      |
-| -------- | ------------ | ---------------- |
-| `locale` | `LocaleCode` | Locale code      |
+| Name     | Type     | Description |
+| -------- | -------- | ---------------- |
+| `locale` | `LocaleCode` | Locale code |
 | `data`   | `Dict`       | Translation data |
 
 ---
@@ -437,14 +453,14 @@ Loads or updates locale data in-memory (local mode only).
 
 Sets the currently selected locale. In file mode, loads from disk.
 
-* Keeps only default + selected locale in memory
+* Keeps only the default + selected locale in memory
 * Unloads previous selected locale
 
 **Parameters:**
 
-| Name     | Type         | Description |                                             |
-| -------- | ------------ | ----------- | ------------------------------------------- |
-| `locale` | \`LocaleCode | null\`      | Locale code, or `null` to keep only default |
+| Name     | Type | Description |                                             |
+| -------- | ------------------------------------------- | ------------------------------------------------ |
+| `locale` | `LocaleCode | null` | Locale code, or `null` to keep only default |
 
 **Returns:** `Promise<void>`
 
@@ -460,9 +476,9 @@ Resolves a translation by **exact key**.
 
 | Name      | Type             | Description                                      |
 | --------- | ---------------- | ------------------------------------------------ |
-| `key`     | `string`         | Translation key (dot.notation)                   |
+| `key`     | `string`         | Translation key (dot.notation) |
 | `params`  | `Dict`           | Optional parameters for interpolation or helpers |
-| `options` | `ResolveOptions` | Optional resolution overrides                    |
+| `options` | `ResolveOptions` | Optional resolution overrides |
 
 **Returns:** `any` – Usually `string`, but may be HTMLElement, DocumentFragment, or helper return type
 
@@ -478,10 +494,10 @@ Resolves a translation by **regex pattern match**.
 
 **Parameters:**
 
-| Name      | Type             | Description                            |
-| --------- | ---------------- | -------------------------------------- |
-| `key`     | `string`         | Input string to match against patterns |
-| `options` | `ResolveOptions` | Optional resolution overrides          |
+| Name     | Type     | Description                                      |
+| -------- | -------- | ------------------------------------------------ |
+| `key`     | `string` | Input string to match against regex patterns |
+| `options` | `ResolveOptions` | Optional resolution overrides |
 
 **Returns:** `any` – Translation value
 
@@ -496,8 +512,6 @@ Clears all loaded locales except the default.
 * Selected locale becomes `null`
 * In file mode, non-default locales are unloaded
 
-**Returns:** `void`
-
 ---
 
 ### `getStatsForLocale(locale)` 📊
@@ -506,10 +520,20 @@ Returns statistics for a specific locale.
 
 **Parameters:**
 
-| Name     | Type         | Description            |
-| -------- | ------------ | ---------------------- |
-| `locale` | `LocaleCode` | Locale code to inspect |
+| Name     | Type     | Description |
+| -------- | -------- | ---------------------- |
+| `locale` | `string` | Locale code to inspect |
 
 **Returns:** `StatLocale` – Locale stats including number of strings, patterns, and flags
 
-**Throws:** Error if locale is not registered
+**Throws:** Error if the locale is not registered
+
+---
+
+### `destroy()` 🗑️
+
+Destroys the TinyI18 instance, clearing all internal maps and references to free up memory. Once destroyed, the instance cannot be reused.
+
+**Throws:** `Error` if the instance has already been destroyed.
+
+**Returns:** `void`

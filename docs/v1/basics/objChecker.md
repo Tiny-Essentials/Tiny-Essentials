@@ -58,3 +58,58 @@ isJsonObject(Object.create(null)); // false
 * is **directly** inherited from `Object.prototype`
 
 Use this when you need to strictly validate a raw JSON object (like the output of `JSON.parse()` or manual object literals).
+
+---
+
+### 🛠️ `isClass(target)`
+
+Determines whether the provided value is a class constructor.
+
+```js
+isClass(class MyClass {}) // true
+isClass(function MyFunc() {}) // false
+isClass(123) // Throws TypeError
+```
+
+🔒 This function ensures:
+
+* The target is a function.
+* The function is a class constructor (cannot be called without `new`).
+
+---
+
+### 🛠️ `isClassInstance(value)` and `isAnyClassInstance(value)`
+
+Determines whether a given value is an instance of a class.
+
+```js
+class MyClass {}
+isClassInstance(new MyClass()) // true
+isClassInstance({}) // false
+isClassInstance(null) // false
+```
+
+```js
+class PlayerData {}
+
+const player = new PlayerData();
+const nativeMap = new Map();
+const nativeUrl = new URL('https://example.com');
+const plainObject = { name: "Yasmin" };
+const nullObject = Object.create(null);
+
+console.log(isAnyClassInstance(player));       // true (Custom class)
+console.log(isAnyClassInstance(nativeMap));    // true (Native class)
+console.log(isAnyClassInstance(nativeUrl));    // true (Native class)
+console.log(isAnyClassInstance(new Date()));   // true (Native class)
+
+console.log(isAnyClassInstance(plainObject));  // false
+console.log(isAnyClassInstance(nullObject));   // false
+console.log(isAnyClassInstance("Yasmin"));     // false (Primitive string)
+```
+
+🔒 This function ensures:
+
+* The value is a non-null object.
+* The object has a custom prototype (it is not a plain object and does not have a null prototype).
+* The object's constructor is defined using the ES6 `class` syntax.

@@ -150,6 +150,17 @@ The core logic. It traverses the `exports` field and checks the filesystem.
 
 ---
 
+### `async execCommandTester(actions)`
+
+**Method**
+
+Provides a CLI-based testing interface to execute specific methods or tasks defined in the `actions` object via command-line arguments.
+
+* **Returns:** `Promise<void>`
+* **Throws:** `TypeError` if `actions` is not a non-null object.
+
+---
+
 ### `get results()`
 
 **Getter**
@@ -163,7 +174,40 @@ Returns a detailed list of the validation results.
 
 ---
 
-### 📝 Customizing Messages (Templates)
+## 🚀 CLI Testing (Developer Mode)
+
+The `execCommandTester` method allows you to turn your script into a CLI tool easily, making it ideal for testing specific workflows without running the entire suite.
+
+### Example Setup
+
+```javascript
+// test-tool.mjs
+import TinyPkgExportValidator from 'tiny-essentials/libs/tools/TinyPkgExportValidator';
+
+const validator = new TinyPkgExportValidator('./package.json', '.');
+
+await validator.execCommandTester({
+  validate: async () => {
+    // Script test...
+  },
+  info: async () => {
+    console.log('Validator Version: 1.0.0');
+    console.log('Status: Ready');
+  }
+});
+```
+
+### Usage via Terminal
+
+1. **Run all registered actions:**
+   `node test-tool.mjs`
+
+2. **Run a specific action (e.g., only 'validate'):**
+   `node test-tool.mjs validate`
+
+---
+
+## 📝 Customizing Messages (Templates)
 
 The `messages` option allows you to override the default output. You can use **placeholders** within your strings to inject dynamic data at runtime.
 

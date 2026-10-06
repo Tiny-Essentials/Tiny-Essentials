@@ -9,7 +9,7 @@ It provides a non-blocking, Promise-based workflow and features a robust configu
 *   **💎 Promise-Based:** All dialogs are `async`, allowing for clean `await` syntax in your business logic.
 *   **🎨 Deep Customization:** Every single part of the modal (header, body, footer, buttons, etc.) can be styled with custom CSS classes and inline styles.
 *   **🛡️ Security Focused:** Uses strict DOM manipulation to prevent XSS attacks.
-*   **⏳ Loading State:** Includes a built-in, non-dismissible global loading overlay for background tasks.
+*   **⏳ Loading State:** Includes a built-in, non-dismissible global loading overlay for background tasks with customization support.
 *   **🧹 Automatic Cleanup:** Automatically manages DOM elements and body classes (`modal-open`) to prevent memory leaks or broken scrolling.
 
 ---
@@ -43,10 +43,10 @@ window.prompt = (msg, def) => BootstrapDialogs.prompt(msg, def);
 >
 > If you use this replacement, you **must** update your existing code to use `await` when calling these functions.
 >
-> **❌ Old (Synchronous):**
+> ❌ **Old (Synchronous):**
 > `if (confirm("Are you sure?")) { ... }`
 >
-> **✅ New (Asynchronous):**
+> ✅ **New (Asynchronous):**
 > `if (await confirm("Are you sure?")) { ... }`
 
 ---
@@ -74,7 +74,7 @@ Used to customize specific parts of the modal.
 | `styles` | `Object<string, string>` | CSS properties and values (e.g., `{ 'color': 'red' }`). |
 
 #### `ModalOptions` 📋
-Configuration options for individual dialog calls.
+Configuration options for customization of the modal structure.
 | Property | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `title` | `string` | `'Alert'` | Text for the modal header. |
@@ -106,21 +106,33 @@ Displays a confirmation modal with "Yes" and "No" options.
 *   **Returns:** `Promise<boolean>` (Resolves `true` if confirmed, `false` if cancelled).
 *   **Usage:** 
     ```javascript
-    const isDeleted = await confirm('Are you sure you want to delete this?');
+    const isDeleted = await confirm('Do you really want to delete this user?', {
+      title: '⚠️ Warning',
+      confirmText: 'Delete Forever',
+      cancelText: 'Keep User',
+      confirmBtnConfig: { className: 'btn-danger' }
+    });
     ```
 
 ### ⌨️ `prompt(message, defaultValue, options)`
 Displays a modal with a text input field.
+*   **Parameters:**
+    *   `message` (string): The instruction or question.
+    *   `defaultValue` (string): The initial value for the input field.
+    *   `options` (`ModalOptions`): Configuration options.
 *   **Returns:** `Promise<string | null>` (Resolves with the input value, or `null` if cancelled).
 *   **Usage:**
     ```javascript
     const name = await prompt('Enter your name', 'Guest');
     ```
 
-### ⏳ `showLoading(message)`
+### ⏳ `showLoading(message, config)`
 Displays a global, non-dismissible loading spinner.
+*   **Parameters:**
+    *   `message` (string): The text to display.
+    *   `config` (`CustomElementConfig`): Customization for the loading message element.
 *   **Returns:** `void`
-*   **Usage:** `showLoading('Fetching data...');`
+*   **Usage:** `showLoading('Fetching data...', { className: 'text-warning' });`
 
 ### ✅ `hideLoading()`
 Removes the loading overlay.
