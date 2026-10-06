@@ -89,7 +89,6 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * @property {'invite' | 'servers' | null} kind - The path kind, or `null` for short links.
  * @property {boolean} obfuscated - Whether the source used whitespace obfuscation.
  * @property {DiscordQueryParams} params - The decoded query string parameters.
- * @property {string} url - The canonical invite URL.
  */
 
 /**
@@ -100,7 +99,6 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * @property {string} channelId - The channel snowflake.
  * @property {string} messageId - The message snowflake.
  * @property {DiscordQueryParams} params - The decoded query string parameters.
- * @property {string} url - The canonical message URL.
  */
 
 /**
@@ -137,7 +135,6 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * @property {boolean} spoiler - Whether the attachment is flagged as a spoiler.
  * @property {DiscordCdnSegments} segments - The named path segments.
  * @property {DiscordQueryParams} params - The decoded query string parameters.
- * @property {string} url - The canonical CDN URL.
  */
 
 /**
@@ -359,9 +356,6 @@ const validateCdnData = (data) => {
   if (data.params === null || typeof data.params !== 'object' || Array.isArray(data.params)) {
     throw new TypeError('DiscordCdnData: params must be a plain object.');
   }
-  if (typeof data.url !== 'string' || data.url.length === 0) {
-    throw new TypeError('DiscordCdnData: url must be a non-empty string.');
-  }
 };
 
 /**
@@ -410,7 +404,6 @@ const parseCdnAsset = (uri) => {
       spoiler: isAttachment ? filename.startsWith('SPOILER_') : false,
       segments: /** @type {DiscordCdnSegments} */ (segments),
       params,
-      url: buildCdnUrl(host, path, params),
     };
     validateCdnData(data);
     return data;
@@ -612,9 +605,6 @@ const validateInviteData = (data) => {
   if (data.params === null || typeof data.params !== 'object' || Array.isArray(data.params)) {
     throw new TypeError('DiscordInviteData: params must be a plain object.');
   }
-  if (typeof data.url !== 'string' || data.url.length === 0) {
-    throw new TypeError('DiscordInviteData: url must be a non-empty string.');
-  }
 };
 
 /**
@@ -635,9 +625,6 @@ const validateMessageLinkData = (data) => {
   }
   if (data.params === null || typeof data.params !== 'object' || Array.isArray(data.params)) {
     throw new TypeError('DiscordMessageLinkData: params must be a plain object.');
-  }
-  if (typeof data.url !== 'string' || data.url.length === 0) {
-    throw new TypeError('DiscordMessageLinkData: url must be a non-empty string.');
   }
 };
 
@@ -861,7 +848,6 @@ const buildInviteData = (rawHost, rawKind, code, rawQuery, obfuscated) => {
     kind: /** @type {DiscordInviteData['kind']} */ (kind),
     obfuscated,
     params,
-    url: buildInviteUrl(host, kind, code, params),
   };
   validateInviteData(data);
   return data;
@@ -918,7 +904,6 @@ const parseMessageLink = (uri) => {
     channelId,
     messageId,
     params,
-    url: buildMessageLinkUrl(guildId, channelId, messageId, params),
   };
   validateMessageLinkData(data);
   return data;

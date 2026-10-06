@@ -28,7 +28,6 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * Represents a parsed BlueSky Decentralized Identifier (DID).
  * @typedef {Object} BlueSkyDidData
  * @property {'did'} dataType - The discriminator for a DID element.
- * @property {string} did - The full DID string.
  * @property {'plc' | 'web'} method - The DID method.
  * @property {string} identifier - The raw, method-specific identifier.
  * @property {string | null} domain - The decoded domain (only for `did:web`).
@@ -40,7 +39,6 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * Represents a parsed AT URI.
  * @typedef {Object} BlueSkyAtUriData
  * @property {'at_uri'} dataType - The discriminator for an AT URI element.
- * @property {string} uri - The full AT URI.
  * @property {string} authority - The authority segment (a DID or a handle).
  * @property {'did' | 'handle'} authorityType - The kind of authority.
  * @property {string} collection - The collection NSID (e.g., `app.bsky.feed.post`).
@@ -52,7 +50,6 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * Represents a parsed BlueSky web URL, with its actor and AT URI fully resolved.
  * @typedef {Object} BlueSkyWebUrlData
  * @property {'web_url'} dataType - The discriminator for a web URL element.
- * @property {string} url - The original URL.
  * @property {BlueSkyWebUrlKind} kind - The resource kind, or an empty string for a profile.
  * @property {string} rkey - The record key, or an empty string for a profile.
  * @property {'did' | 'handle'} actorType - The kind of actor.
@@ -132,6 +129,20 @@ const webUrlRegex =
  * @type {RegExp}
  */
 const hashtagRegex = /^#(?<tag>\p{L}[\p{L}\p{N}_]*)$/u;
+
+/**
+ * Builds the canonical DID string from its decomposed parts.
+ * @param {BlueSkyDidData} data - The parsed DID data.
+ * @returns {string} The full DID string (e.g., `did:plc:abc123`).
+ */
+const buildDidString = (data) => `did:${data.method}:${data.identifier}`;
+
+/**
+ * Builds the canonical AT URI string from its decomposed parts.
+ * @param {BlueSkyAtUriData} data - The parsed AT URI data.
+ * @returns {string} The full AT URI string (e.g., `at://did:plc:abc/app.bsky.feed.post/123`).
+ */
+const buildAtUriString = (data) => `at://${data.authority}/${data.collection}/${data.rkey}`;
 
 /**
  * Decomposes a validated, lowercase handle into its DNS components.
@@ -236,9 +247,6 @@ const validateDidData = (data) => {
   if (typeof data.identifier !== 'string' || data.identifier.length === 0) {
     throw new TypeError('BlueSkyDidData: identifier must be a non-empty string.');
   }
-  if (data.did !== `did:${data.method}:${data.identifier}`) {
-    throw new TypeError('BlueSkyDidData: did must match the method and identifier.');
-  }
   if (!Array.isArray(data.pathSegments)) {
     throw new TypeError('BlueSkyDidData: pathSegments must be an array.');
   }
@@ -266,9 +274,6 @@ const validateDidData = (data) => {
  * @throws {TypeError} If any property is missing or of an invalid type.
  */
 const validateAtUriData = (data) => {
-  if (typeof data.uri !== 'string' || !data.uri.startsWith('at://')) {
-    throw new TypeError('BlueSkyAtUriData: uri must start with "at://".');
-  }
   if (typeof data.authority !== 'string' || data.authority.length === 0) {
     throw new TypeError('BlueSkyAtUriData: authority must be a non-empty string.');
   }
@@ -293,9 +298,6 @@ const validateAtUriData = (data) => {
  * @throws {TypeError} If any property is missing, of an invalid type, or inconsistent.
  */
 const validateWebUrlData = (data) => {
-  if (typeof data.url !== 'string' || data.url.length === 0) {
-    throw new TypeError('BlueSkyWebUrlData: url must be a non-empty string.');
-  }
   if (!['', 'post', 'feed', 'lists'].includes(data.kind)) {
     throw new TypeError(`BlueSkyWebUrlData: invalid kind "${data.kind}".`);
   }
@@ -377,7 +379,6 @@ const parseDid = (uri) => {
   /** @type {BlueSkyDidData} */
   const data = {
     dataType: 'did',
-    did: uri,
     method,
     identifier: match.groups.identifier,
     ...decoded,
@@ -405,7 +406,6 @@ const parseAtUri = (uri) => {
   /** @type {BlueSkyAtUriData} */
   const data = {
     dataType: 'at_uri',
-    uri,
     authority,
     authorityType: authority.startsWith('did:') ? 'did' : 'handle',
     collection,
@@ -422,7 +422,7 @@ const parseAtUri = (uri) => {
  * @param {BlueSkyHandleData | BlueSkyDidData} actor - The parsed actor.
  * @returns {string} The canonical actor string (a handle or a DID).
  */
-const getActorString = (actor) => (actor.dataType === 'did' ? actor.did : actor.handle);
+const getActorString = (actor) => (actor.dataType === 'did' ? buildDidString(actor) : actor.handle);
 
 /**
  * Parses a BlueSky web URL element by delegating to the handle, DID and AT URI parsers.
@@ -454,7 +454,6 @@ const parseWebUrl = (uri) => {
   /** @type {BlueSkyWebUrlData} */
   const data = {
     dataType: 'web_url',
-    url: uri,
     kind,
     rkey,
     actorType,
@@ -505,7 +504,7 @@ const stringifyHandle = (data) => {
  */
 const stringifyDid = (data) => {
   validateDidData(data);
-  return data.did;
+  return buildDidString(data);
 };
 
 /**
@@ -516,7 +515,7 @@ const stringifyDid = (data) => {
  */
 const stringifyAtUri = (data) => {
   validateAtUriData(data);
-  return `at://${data.authority}/${data.collection}/${data.rkey}`;
+  return buildAtUriString(data);
 };
 
 /**

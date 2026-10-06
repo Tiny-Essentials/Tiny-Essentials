@@ -34,7 +34,6 @@ import TinyUriParser from '../TinyUriParser.mjs';
  * Represents the data structure for parsed Matrix Web URLs.
  * @typedef {Object} MatrixWebData
  * @property {'matrix_web_url'} dataType - The category of the data.
- * @property {string} originalUrl - The full original input URL.
  * @property {string} decodedFragment - The decoded string from the URL fragment.
  * @property {MatrixSchemeData | MXCData} parsed - The result of the parsed resource.
  */
@@ -150,13 +149,55 @@ const reconstructMatrixScheme = (parsed) => {
 };
 
 /**
- * Reconstructs a Matrix Web URL from parsed data.
- * @param {MatrixWebData} parsed
- * @returns {string}
+ * Rebuilds the `matrix.to` fragment for a parsed Matrix scheme resource.
+ * @param {MatrixSchemeData} parsed - The parsed Matrix scheme data.
+ * @returns {string} The `matrix.to` fragment (e.g., `#room:server.com`).
+ * @throws {TypeError} If the resource type is unsupported.
  */
-const reconstructMatrixWebUrl = (parsed) => {
-  // We return the original URL stored in the data for maximum fidelity
-  return parsed.originalUrl;
+const buildMatrixToFragment = (parsed) => {
+  const baseType = parsed.type === 'event' ? parsed.subType : parsed.type;
+  const prefixMap = { room: '#', roomId: '!', user: '@' };
+  // @ts-ignore
+  const prefix = prefixMap[baseType];
+  if (!prefix) {
+    throw new TypeError(`MatrixWebData: unsupported resource type "${baseType}".`);
+  }
+  let fragment = `${prefix}${parsed.resourceId}`;
+  if (parsed.server) {
+    fragment += `:${parsed.server}`;
+  }
+  if (parsed.type === 'event' && parsed.eventId) {
+    fragment += `/${parsed.eventId.startsWith('$') ? parsed.eventId : `$${parsed.eventId}`}`;
+  }
+  return fragment;
+};
+
+/**
+ * Reconstructs a Matrix Web URL from parsed data.
+ *
+ * The URL is rebuilt from the structured `parsed` payload, so the object does
+ * not need to keep a redundant copy of the original string in memory.
+ *
+ * @param {MatrixWebData} data - The parsed web URL data.
+ * @returns {string} The reconstructed Matrix Web URL.
+ * @throws {TypeError} If the data is malformed.
+ */
+const reconstructMatrixWebUrl = (data) => {
+  if (data === null || typeof data !== 'object') {
+    throw new TypeError('MatrixWebData: data must be an object.');
+  }
+  const { parsed } = data;
+  if (parsed === null || typeof parsed !== 'object') {
+    throw new TypeError('MatrixWebData: parsed must be an object.');
+  }
+  if (parsed.dataType === 'mxc') {
+    return `https://matrix.to/#/${reconstructMxc(parsed)}`;
+  }
+  const query =
+    parsed.params && Object.keys(parsed.params).length > 0
+      ? `?${new URLSearchParams(parsed.params)}`
+      : '';
+  return `https://matrix.to/#/${buildMatrixToFragment(parsed)}${query}`;
 };
 
 /**
@@ -311,7 +352,6 @@ const parseWebUrl = (url) => {
 
   return {
     dataType: 'matrix_web_url',
-    originalUrl: url,
     decodedFragment,
     parsed: parsedResource,
   };
