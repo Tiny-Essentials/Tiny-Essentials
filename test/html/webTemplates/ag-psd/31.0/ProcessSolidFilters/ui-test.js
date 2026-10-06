@@ -68,6 +68,7 @@ const DOM = {
   console: document.getElementById('console-output'),
   stats: document.getElementById('stats-output'),
   imageGrid: document.getElementById('image-results'),
+  tableResults: document.getElementById('table-results'),
 };
 
 let filterCounter = 0;
@@ -388,12 +389,80 @@ const filterList = createFilterList(DOM.filterContainer);
 DOM.addFilterBtn.addEventListener('click', () => filterList.add());
 filterList.add();
 
+/**
+ * Renders a table into the results panel.
+ * @param {string} title - The table caption.
+ * @param {Array<Record<string, string|number>>} rows - The rows to render.
+ * @returns {void}
+ */
+function renderTable(title, rows) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'data-table-wrapper';
+
+  const heading = document.createElement('h4');
+  heading.textContent = title;
+  wrapper.appendChild(heading);
+
+  if (rows.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'hint';
+    empty.textContent = 'No data.';
+    wrapper.appendChild(empty);
+    DOM.tableResults.appendChild(wrapper);
+    return;
+  }
+
+  const columns = Object.keys(rows[0]);
+  const table = document.createElement('table');
+  table.className = 'data-table';
+
+  const thead = document.createElement('thead');
+  const headRow = document.createElement('tr');
+  for (const column of columns) {
+    const th = document.createElement('th');
+    th.textContent = column;
+    headRow.appendChild(th);
+  }
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  for (const row of rows) {
+    const tr = document.createElement('tr');
+    for (const column of columns) {
+      const td = document.createElement('td');
+      td.textContent = String(row[column]);
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+
+  const scroll = document.createElement('div');
+  scroll.className = 'data-table-scroll';
+  scroll.appendChild(table);
+  wrapper.appendChild(scroll);
+  DOM.tableResults.appendChild(wrapper);
+}
+
+/**
+ * Renders a table in the browser and mirrors it to the devtools console.
+ * @param {string} title - The table caption.
+ * @param {Array<Record<string, string|number>>} rows - The rows to render.
+ * @returns {void}
+ */
+function logTable(title, rows) {
+  console.table(rows);
+  renderTable(title, rows);
+}
+
 // Main Execution Logic
 DOM.runTestBtn.addEventListener('click', async () => {
   // Reset UI
   DOM.console.innerHTML = '';
   DOM.stats.textContent = '{}';
   DOM.imageGrid.innerHTML = '';
+  DOM.tableResults.innerHTML = '';
 
   const file = DOM.fileInput.files[0];
   if (!file) {
@@ -428,7 +497,8 @@ DOM.runTestBtn.addEventListener('click', async () => {
 
     // 3.1. Layer breakdown (one row per processed layer)
     if (result.vectorData.length > 0) {
-      console.table(
+      logTable(
+        'Layers',
         result.vectorData.map((layer) => ({
           Layer: layer.name,
           'Filter ID': layer.filterId,
@@ -444,6 +514,21 @@ DOM.runTestBtn.addEventListener('click', async () => {
     // 3.2. Statistics breakdown (one row per filter, plus unclaimed/unfiltered)
     const totalPixels = Object.values(result.stats).reduce((sum, count) => sum + count, 0);
     const emptyFilters = [];
+    logTable(
+      'Statistics',
+      Object.entries(result.stats).map(([id, count]) => {
+        if (count === 0) emptyFilters.push(id);
+        return {
+          Filter: id,
+          Pixels: count.toLocaleString('en-US'),
+          Coverage: totalPixels > 0 ? `${((count / totalPixels) * 100).toFixed(2)}%` : '0.00%',
+          Status: count === 0 ? '⚠️ Empty' : '✅ OK',
+        };
+      }),
+    );
+    if (emptyFilters.length > 0) {
+      console.warn(`⚠️ ${emptyFilters.length} filter(s) matched no pixels:`, emptyFilters);
+    }
 
     console.table(
       Object.entries(result.stats).map(([id, count]) => {
