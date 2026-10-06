@@ -354,7 +354,7 @@ The system is architected using a **Client-Server model** within the browser:
 To set up the background engine and enable full feature sets like **Fetch Interception** and **Automatic Error Routing**, you must implement the engine in your Service Worker file.
 
 **Learn how to configure the engine here:**
-👉 [TinyServiceWorkerEngine](./pwa/TinyServiceWorkerEngine.md)
+👉 [TinyServiceWorkerEngine](../service/TinyServiceWorkerEngine.md)
 
 > **Pro Tip:** The true power of this system is realized when both modules are active, enabling real-time, bidirectional communication between your UI and the background process via the **Messaging System**.
 
@@ -362,4 +362,4 @@ To set up the background engine and enable full feature sets like **Fetch Interc
 
 ## 🧩 TinyPlugin Ecosystem Integration
 
-`TinyServiceWorker` is not a standalone utility; it is a first-class citizen of the **[TinyPlugin](../plugin/TinyPlugin.md)** architecture.
+`TinyServiceWorker` is not a standalone utility; it is a first-class citizen of the **[TinyPlugin](../../plugin/TinyPlugin.md)** architecture.

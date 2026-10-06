@@ -733,7 +733,7 @@ While the `TinyServiceWorkerEngine` manages the background logic and network int
 
 ### 📍 Recommended Next Step
 To learn how to communicate with the engine from your web application, please refer to the integration guide here:
-👉 [TinyServiceWorker](../TinyServiceWorker.md)
+👉 [TinyServiceWorker](../browser/TinyServiceWorker.md)
 
 **Why integrate both?**
 Using both modules allows you to fully leverage the **Messaging System**. This enables your website to:
