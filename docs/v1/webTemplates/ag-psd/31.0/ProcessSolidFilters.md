@@ -19,12 +19,13 @@
    - [Browser Usage](#-browser-usage)
    - [Browser File Input Usage](#-browser-file-input-usage)
 6. [🎯 Filter Criteria (Matching Rules)](#-filter-criteria-matching-rules)
-7. [🧩 API Reference](#-api-reference)
-8. [📊 Understanding the Result](#-understanding-the-result)
-9. [🍳 Recipes & Daily Workflow](#-recipes--daily-workflow)
-10. [🔒 Validation & Error Handling](#-validation--error-handling)
-11. [🐛 Troubleshooting](#-troubleshooting)
-12. [🧱 Extending the Library](#-extending-the-library)
+7. [📂 Folder Matching](#-folder-matching)
+8. [🧩 API Reference](#-api-reference)
+9. [📊 Understanding the Result](#-understanding-the-result)
+10. [🍳 Recipes & Daily Workflow](#-recipes--daily-workflow)
+11. [🔒 Validation & Error Handling](#-validation--error-handling)
+12. [🐛 Troubleshooting](#-troubleshooting)
+13. [🧱 Extending the Library](#-extending-the-library)
 
 ---
 
@@ -37,6 +38,7 @@ Think of it as a **paint-by-numbers engine**:
 - 🖌️ Each **filter** you define owns one color.
 - 🧱 Layers are processed in **painting order** (bottom → top).
 - 🏆 When two layers overlap, the **top one wins**.
+- 📂 Filters can claim an entire **folder** at once, with configurable subfolder behavior.
 - 🗂️ You get back a **full composite**, one **image per filter**, **pixel statistics**, and **vector metadata** for every layer.
 
 ---
@@ -50,6 +52,7 @@ Think of it as a **paint-by-numbers engine**:
 | 🧮 **Pixel Statistics** | Know exactly how many pixels each filter claimed. |
 | 📐 **Vector Metadata** | Get the bounding box, opacity, and name of every layer. |
 | 🧩 **Composable Filters** | Combine `startsWith`, `endsWith`, `contains`, `equals`, `matches`, and custom `test`. |
+| 📂 **Folder-Aware Matching** | Claim a whole folder at once, with per-subfolder strategies. |
 | 🛡️ **Strict Validation** | Every public function throws `TypeError` or `Error` on invalid input. |
 
 ---
@@ -58,7 +61,7 @@ Think of it as a **paint-by-numbers engine**:
 
 ```
 ┌────────────────┐     ┌──────────────────┐     ┌────────────────────┐
-│  PSD File      │ ──▶ │  Flatten Layers  │ ──▶ │  Match Each Layer  │
+│  PSD File      │ ──▶ │  Walk Layer Tree │ ──▶ │  Match Each Node   │
 │  (ag-psd)      │     │  (bottom → top)  │     │  against filters   │
 └────────────────┘     └──────────────────┘     └─────────┬──────────┘
                                                           │
@@ -70,10 +73,11 @@ Think of it as a **paint-by-numbers engine**:
 ```
 
 1. **Read** the PSD into a raw buffer.
-2. **Flatten** the layer tree, keeping only visible layers in painting order.
+2. **Walk** the layer tree recursively, keeping only visible layers in painting order.
 3. **Match** each layer name against your filters (first match wins).
-4. **Paint** the `ownerMap`: each pixel stores the `id` of the filter that owns it.
-5. **Export** the composite image, one image per filter, stats, and vector data.
+4. **Claim** every layer inside a matched folder, honoring its subfolder strategy.
+5. **Paint** the `ownerMap`: each pixel stores the `id` of the filter that owns it.
+6. **Export** the composite image, one image per filter, stats, and vector data.
 
 > 💡 **Why a flat `ownerMap`?** It's a single `Array<W * H>` of strings. It's cache-friendly, easy to reason about, and lets us do a single pass at the end to build every output image.
 
@@ -180,6 +184,7 @@ Every filter can combine **multiple criteria**. All criteria inside a single fil
 | `equals` | `string \| string[]` | Layer name must be exactly equal to the value(s). |
 | `matches` | `RegExp \| RegExp[]` | Layer name must match the RegExp(s). |
 | `test` | `(name: string) => boolean` | Custom predicate for advanced matching. |
+| `folder` | `boolean \| FolderOptions` | When enabled, the filter also claims folders. See [Folder Matching](#-folder-matching). |
 
 ### 🧪 Example: Combining criteria
 
@@ -195,6 +200,69 @@ Every filter can combine **multiple criteria**. All criteria inside a single fil
 ```
 
 > ⚠️ **Avoid the global flag (`/g`)** in `matches`. RegExp objects with `/g` are **stateful** (they remember `lastIndex`), which causes bugs across multiple layers. Use `/pattern/i` instead of `/pattern/gi`.
+
+---
+
+## 📂 Folder Matching
+
+By default, filters only match **leaf layers**. Enable the `folder` option to let a filter claim an **entire folder** — every layer inside it inherits the filter's color.
+
+```javascript
+{
+  id: 'character',
+  color: '#FF0000',
+  equals: 'Character', // matches the folder named "Character"
+  folder: true,        // shorthand for { subfolders: 'inherit' }
+}
+```
+
+### Subfolder strategies
+
+The `folder` option accepts a `FolderOptions` object to control what happens with **nested folders**:
+
+| `subfolders` | Behavior |
+| --- | --- |
+| `'inherit'` *(default)* | Every subfolder inherits the parent filter. The whole tree gets the same color. |
+| `'exclude'` | Only the layers **directly** inside the folder are claimed. Subfolders fall back to the outer scope. |
+| `'custom'` | Subfolders are matched against `childFilter` instead. |
+
+### Example: three strategies
+
+```javascript
+const filters = [
+  // 1. Whole folder, subfolders inherit the same filter
+  {
+    id: 'character',
+    color: '#FF0000',
+    equals: 'Character',
+    folder: true,
+  },
+
+  // 2. Whole folder, but subfolders are ignored
+  {
+    id: 'background',
+    color: '#00FF00',
+    equals: 'Background',
+    folder: { subfolders: 'exclude' },
+  },
+
+  // 3. Subfolders use their own nested filters
+  {
+    id: 'ui',
+    color: '#0000FF',
+    equals: 'UI',
+    folder: {
+      subfolders: 'custom',
+      childFilter: [
+        { id: 'ui-buttons', color: '#FFFF00', equals: 'buttons', folder: true },
+        { id: 'ui-icons', color: '#FF00FF', equals: 'icons', folder: true },
+      ],
+    },
+  },
+];
+```
+
+> 💡 **Order matters.** Filters are evaluated top to bottom, and the **first match wins**. Folder filters are resolved before descending into their children, so they take priority over layer filters.
 
 ---
 
@@ -241,6 +309,18 @@ interface FilterConfig {
   equals?: string | string[];
   matches?: RegExp | RegExp[];
   test?: (layerName: string) => boolean;
+  folder?: boolean | FolderOptions;
+}
+```
+
+#### `FolderOptions`
+
+```typescript
+interface FolderOptions {
+  /** How nested folders are handled. Defaults to 'inherit'. */
+  subfolders?: 'inherit' | 'exclude' | 'custom';
+  /** Nested filters used when 'subfolders' is 'custom'. */
+  childFilter?: FilterConfig | FilterConfig[];
 }
 ```
 
@@ -339,7 +419,20 @@ const filters = ['alice', 'bob', 'carol'].map((name, i) => ({
 }));
 ```
 
-### 🔍 Recipe 2: Debug which layer went where
+### 📂 Recipe 2: Color an entire folder, but keep subfolders separate
+
+```javascript
+const filters = [
+  {
+    id: 'character',
+    color: '#FF0000',
+    equals: 'Character',
+    folder: { subfolders: 'custom', childFilter: [] }, // empty = subfolders stay unfiltered
+  },
+];
+```
+
+### 🔍 Recipe 3: Debug which layer went where
 
 ```javascript
 for (const layer of result.vectorData) {
@@ -347,7 +440,7 @@ for (const layer of result.vectorData) {
 }
 ```
 
-### 📉 Recipe 3: Detect empty filters
+### 📉 Recipe 4: Detect empty filters
 
 ```javascript
 for (const [id, count] of Object.entries(result.stats)) {
@@ -355,7 +448,7 @@ for (const [id, count] of Object.entries(result.stats)) {
 }
 ```
 
-### 🖼️ Recipe 4: Convert a Blob to a data URL (browser)
+### 🖼️ Recipe 5: Convert a Blob to a data URL (browser)
 
 ```javascript
 const toDataURL = (blob) =>
@@ -380,6 +473,7 @@ The library is **defensive by design**. Every public entry point validates its a
 | `defaultConfig.color` is missing | `Error` |
 | A filter has no `id` | `TypeError` |
 | A filter has no matching criteria | `TypeError` |
+| `folder.subfolders` is not `'inherit' \| 'exclude' \| 'custom'` | `TypeError` |
 | Invalid HEX color | `Error` |
 | File not found (Node.js) | `Error` |
 | Wrong input type for the environment | `TypeError` |
@@ -415,6 +509,15 @@ try {
   return false;
 }}
 ```
+</details>
+
+<details>
+<summary><strong>❓ My folder filter is not claiming the layers inside it</strong></summary>
+
+- Make sure `folder` is set to `true` or an object — omitting it disables folder matching.
+- Confirm the folder name matches your criterion (e.g., `equals: 'Character'`).
+- Check the `subfolders` strategy. With `'exclude'`, nested folders are **not** claimed.
+- Verify the folder is **visible**. Hidden folders (`layer.hidden === true`) are skipped entirely.
 </details>
 
 <details>
