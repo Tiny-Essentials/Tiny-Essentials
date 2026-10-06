@@ -26,11 +26,6 @@ Here, you can navigate through different sections of the project. Below are the 
 - 🔐 **[Crypto](./basics/crypto.md)** — A lightweight utility for generating cryptographic hashes (e.g., SHA-256) using the Web Crypto API.
 - 🔁 **[PromiseUtils](./basics/promiseUtils.md)** — Promise helpers such as `waitForTrue` and `createSingletonTask` for polling and single-flight async tasks.
 
-#### 1.1. **`basics/deprecated`**
-
-- 🌐 **[Html (deprecated)](./basics/deprecated/html.md)** — Legacy HTML helpers, including `fetchTemplate` for remote data loading with retries, timeouts, and abort support.
-- 🔍 **[ObjFilter (deprecated)](./basics/deprecated/objFilter.md)** — Legacy `objType` type detection and validation helper.
-
 ### 2. **`libs/`**
 
 ### 2.1. **`libs/storage`**
