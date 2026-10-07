@@ -57,7 +57,7 @@ class TestReporter {
     console.log(
       `   ${this.#colors.green}Result:${this.#colors.reset} ${result.isValid ? 'Valid' : 'Invalid'} | Strength: ${result.strength}`,
     );
-    if (result.errors.length > 0) {
+    if (Array.isArray(result?.errors) && result.errors.length > 0) {
       result.errors.forEach((err) =>
         console.log(`   ${this.#colors.yellow}└─ Error: ${err}${this.#colors.reset}`),
       );

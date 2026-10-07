@@ -25,9 +25,20 @@ const inputFiles = getAllInputFiles();
 // Prepare Plugins
 const plugins = [resolve({ preferBuiltins: true }), json(), commonjs(), preserveDirectories()];
 
+// Dependencies must be treated as external, including their subpaths
+// (e.g. "multiformats/cid"), otherwise Rollup bundles them and, with
+// preserveModules enabled, dumps them into dist/node_modules.
+const externalDependencies = [
+  ...Object.keys(pkg.dependencies || {}),
+  ...Object.keys(pkg.devDependencies || {}),
+];
+
+const isExternal = (id) =>
+  externalDependencies.some((dep) => id === dep || id.startsWith(`${dep}/`));
+
 export default [
   {
-    external: [...Object.keys(pkg.dependencies || {}), ...Object.keys(pkg.devDependencies || {})],
+    external: isExternal,
     input: inputFiles,
     output: {
       dir: 'dist',
