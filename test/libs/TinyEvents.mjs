@@ -91,10 +91,7 @@ const testEvents = async () => {
   t.equal(iframeEvents.selfType, 'parent', 'Detects the parent context');
   t.equal(iframeEvents.ready, false, 'Starts not ready');
   t.equal(typeof iframeEvents.secretEventName, 'string', 'Exposes the secret event name');
-  t.throws(
-    () => new TinyIframeEvents({ targetIframe: {} }),
-    'Rejects an invalid iframe element',
-  );
+  t.throws(() => new TinyIframeEvents({ targetIframe: {} }), 'Rejects an invalid iframe element');
 
   section('TinyIframeEvents - configuration', '⚙️');
   iframeEvents.secretEventName = '__custom__';

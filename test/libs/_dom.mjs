@@ -500,7 +500,11 @@ export function installDOM() {
     getComputedStyle: () => ({}),
     requestAnimationFrame: (/** @type {Function} */ cb) => setTimeout(() => cb(Date.now()), 0),
     cancelAnimationFrame: (/** @type {any} */ id) => clearTimeout(id),
-    matchMedia: () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }),
+    matchMedia: () => ({
+      matches: false,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }),
   };
 
   globalThis.document = document;

@@ -119,12 +119,16 @@ const testDragger = async () => {
   t.deepEqual(dragger.getMoveVibration(), [5], 'setVibrationPattern stores the move pattern');
   t.throws(() => dragger.setVibrationPattern({ startPattern: 'nope' }), 'Validates the patterns');
   dragger.disableVibration();
-  t.deepEqual(dragger.getVibrations(), {
-    start: false,
-    end: false,
-    collide: false,
-    move: false,
-  }, 'disableVibration resets the patterns');
+  t.deepEqual(
+    dragger.getVibrations(),
+    {
+      start: false,
+      end: false,
+      collide: false,
+      move: false,
+    },
+    'disableVibration resets the patterns',
+  );
 
   // -------------------------------------------------------------------
   // Enable / disable / destroy

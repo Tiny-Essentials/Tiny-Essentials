@@ -96,7 +96,11 @@ const testSmartScroller = async () => {
   scroller.addAttributeFilter('data-test');
   t.equal(scroller.hasAttributeFilter('data-test'), true, 'addAttributeFilter registers a filter');
   scroller.removeAttributeFilter('data-test');
-  t.equal(scroller.hasAttributeFilter('data-test'), false, 'removeAttributeFilter removes a filter');
+  t.equal(
+    scroller.hasAttributeFilter('data-test'),
+    false,
+    'removeAttributeFilter removes a filter',
+  );
   t.throws(() => scroller.addAttributeFilter(5), 'addAttributeFilter validates the input');
 
   // -------------------------------------------------------------------

@@ -15,7 +15,11 @@ import { TestRunner, section, color } from './_helpers.mjs';
 
 import * as path from '../../dist/v1/libs/fs/path.mjs';
 import * as encoding from '../../dist/v1/libs/fs/encoding.mjs';
-import { constants, DEFAULT_FILE_MODE, DEFAULT_DIRECTORY_MODE } from '../../dist/v1/libs/fs/constants.mjs';
+import {
+  constants,
+  DEFAULT_FILE_MODE,
+  DEFAULT_DIRECTORY_MODE,
+} from '../../dist/v1/libs/fs/constants.mjs';
 
 // ---------------------------------------------------------------------------
 // Minimal in-memory File System Access API
@@ -32,7 +36,8 @@ class MemoryFileHandle {
       name: this.name,
       size: data.byteLength,
       lastModified: Date.now(),
-      arrayBuffer: async () => data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength),
+      arrayBuffer: async () =>
+        data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength),
       text: async () => new TextDecoder().decode(data),
     };
   }
@@ -152,7 +157,11 @@ const testFs = async () => {
 
   await fs.writeFile('/hello.txt', 'hello world');
   f.equal(await fs.exists('/hello.txt'), true, 'writeFile creates a file');
-  f.equal(await fs.readFile('/hello.txt', { encoding: 'utf8' }), 'hello world', 'readFile reads it back');
+  f.equal(
+    await fs.readFile('/hello.txt', { encoding: 'utf8' }),
+    'hello world',
+    'readFile reads it back',
+  );
 
   await fs.appendFile('/hello.txt', '!');
   f.equal(

@@ -58,7 +58,11 @@ const testPushPayload = async () => {
 
   t.equal(TinyPushPayload.from({ data: [] }).data, undefined, 'Drops an array data value');
   t.equal(TinyPushPayload.from({ data: null }).data, undefined, 'Drops a null data value');
-  t.deepEqual(TinyPushPayload.from({ data: { a: 1 } }).data, { a: 1 }, 'Keeps an object data value');
+  t.deepEqual(
+    TinyPushPayload.from({ data: { a: 1 } }).data,
+    { a: 1 },
+    'Keeps an object data value',
+  );
 
   t.equal(Object.isFrozen(TinyPushPayload.from({})), true, 'Returns a frozen object');
 

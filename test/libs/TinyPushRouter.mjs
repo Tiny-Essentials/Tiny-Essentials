@@ -11,7 +11,8 @@
 
 import { TestRunner, section, color } from './_helpers.mjs';
 
-const { default: TinyPushRouter } = await import('../../dist/v1/libs/sw/service/TinyPushRouter.mjs');
+const { default: TinyPushRouter } =
+  await import('../../dist/v1/libs/sw/service/TinyPushRouter.mjs');
 
 /**
  * Node.js port of the browser TinyPushRouter test environment.
@@ -72,9 +73,11 @@ const testPushRouter = async () => {
 
   let guarded = 0;
   const guardedRouter = new TinyPushRouter();
-  guardedRouter.use(() => false).on('a', () => {
-    guarded += 1;
-  });
+  guardedRouter
+    .use(() => false)
+    .on('a', () => {
+      guarded += 1;
+    });
   t.equal(await guardedRouter.dispatch({ type: 'a' }, {}), true, 'A guard may drop the message');
   t.equal(guarded, 0, 'Dropped messages never reach the handler');
 
@@ -110,7 +113,11 @@ const testPushRouter = async () => {
     .catch((error) => {
       captured = error;
     });
-  t.equal(await errorRouter.dispatch({ type: 'a' }, {}), true, 'Routes errors to the catch handler');
+  t.equal(
+    await errorRouter.dispatch({ type: 'a' }, {}),
+    true,
+    'Routes errors to the catch handler',
+  );
   t.equal(captured?.message, 'boom', 'Forwards the thrown error');
 
   const rethrow = new TinyPushRouter();
