@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TinyMediaLoader · Test Harness</title>
-  <link rel="stylesheet" href="style.css" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TinyMediaLoader · Test Harness</title>
+    <link rel="stylesheet" href="style.css" />
     <script type="importmap">
       {
         "imports": {
@@ -12,279 +12,334 @@
         }
       }
     </script>
-</head>
-<body>
-  <header class="topbar">
-    <div class="topbar__brand">
-      <span class="topbar__pulse" aria-hidden="true"></span>
-      <h1>TinyMediaLoader <span>Test Harness</span></h1>
-    </div>
-    <div class="topbar__actions">
-      <label class="switch" title="Log every forwarded DOM event (noisy)">
-        <input type="checkbox" id="cfg-verbose" />
-        <span>Verbose DOM events</span>
-      </label>
-      <button type="button" class="btn btn--ghost" id="btn-clear-console">Clear console</button>
-      <button type="button" class="btn btn--danger" id="btn-destroy-all">Destroy all</button>
-    </div>
-  </header>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar__brand">
+        <span class="topbar__pulse" aria-hidden="true"></span>
+        <h1>TinyMediaLoader <span>Test Harness</span></h1>
+      </div>
+      <div class="topbar__actions">
+        <label class="switch" title="Log every forwarded DOM event (noisy)">
+          <input type="checkbox" id="cfg-verbose" />
+          <span>Verbose DOM events</span>
+        </label>
+        <button type="button" class="btn btn--ghost" id="btn-clear-console">Clear console</button>
+        <button type="button" class="btn btn--danger" id="btn-destroy-all">Destroy all</button>
+      </div>
+    </header>
 
-  <main class="layout">
-    <div class="column">
+    <main class="layout">
+      <div class="column">
+        <!-- ══════════════════ SHARED CONFIGURATION ══════════════════ -->
+        <section class="panel">
+          <header class="panel__head">
+            <h2>Shared configuration</h2>
+            <span class="badge badge--muted">MediaLoaderOptions</span>
+          </header>
 
-      <!-- ══════════════════ SHARED CONFIGURATION ══════════════════ -->
-      <section class="panel">
-        <header class="panel__head">
-          <h2>Shared configuration</h2>
-          <span class="badge badge--muted">MediaLoaderOptions</span>
-        </header>
-
-        <div class="panel__body">
-          <div class="field">
-            <label for="cfg-src">src</label>
-            <div class="field__inline">
-              <input type="text" id="cfg-src" placeholder="https://example.com/media.png" spellcheck="false" />
-              <select id="cfg-preset" class="grow-0">
-                <option value="">Presets…</option>
-                <optgroup label="Image">
-                  <option value="https://mdn.github.io/shared-assets/images/examples/firefox-logo.svg">firefox-logo.svg</option>
-                  <option value="https://picsum.photos/seed/tiny/800/450">picsum 800×450</option>
-                </optgroup>
-                <optgroup label="Video">
-                  <option value="https://mdn.github.io/shared-assets/videos/flower.mp4">flower.mp4</option>
-                </optgroup>
-                <optgroup label="Audio">
-                  <option value="https://mdn.github.io/shared-assets/audio/t-rex-roar.mp3">t-rex-roar.mp3</option>
-                </optgroup>
-              </select>
-            </div>
-          </div>
-
-          <div class="grid grid--4">
+          <div class="panel__body">
             <div class="field">
-              <label for="cfg-timeout">timeout (ms)</label>
-              <input type="number" id="cfg-timeout" value="30000" min="0" step="500" />
-            </div>
-            <div class="field">
-              <label for="cfg-crossorigin">crossOrigin</label>
-              <select id="cfg-crossorigin">
-                <option value="">(null)</option>
-                <option value="anonymous">anonymous</option>
-                <option value="use-credentials">use-credentials</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="cfg-preload">preload</label>
-              <select id="cfg-preload">
-                <option value="none">none</option>
-                <option value="metadata" selected>metadata</option>
-                <option value="auto">auto</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="cfg-decoding">decoding <span class="hint">(image)</span></label>
-              <select id="cfg-decoding">
-                <option value="async" selected>async</option>
-                <option value="sync">sync</option>
-                <option value="auto">auto</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="toggles">
-            <label class="switch"><input type="checkbox" id="cfg-stream" /><span>stream</span></label>
-            <label class="switch"><input type="checkbox" id="cfg-autoreload" /><span>autoReload</span></label>
-            <label class="switch"><input type="checkbox" id="cfg-autoplay" /><span>autoplay</span></label>
-            <label class="switch"><input type="checkbox" id="cfg-loop" /><span>loop</span></label>
-            <label class="switch"><input type="checkbox" id="cfg-muted" /><span>muted</span></label>
-            <label class="switch"><input type="checkbox" id="cfg-automount" checked /><span>auto-mount</span></label>
-          </div>
-
-          <fieldset class="fieldset">
-            <legend>Shared TinyMediaCache</legend>
-            <div class="grid grid--4">
-              <label class="switch"><input type="checkbox" id="cfg-cache" /><span>enabled</span></label>
-              <div class="field">
-                <label for="cfg-cache-max">maxItems</label>
-                <input type="number" id="cfg-cache-max" value="20" min="1" />
-              </div>
-              <div class="field">
-                <label for="cfg-cache-ttl">ttl (ms)</label>
-                <input type="number" id="cfg-cache-ttl" value="0" min="0" step="1000" />
-              </div>
-              <div class="field">
-                <label for="cfg-cache-strategy">strategy</label>
-                <select id="cfg-cache-strategy">
-                  <option value="manual" selected>manual</option>
-                  <option value="auto">auto</option>
-                  <option value="ttl">ttl</option>
+              <label for="cfg-src">src</label>
+              <div class="field__inline">
+                <input type="text" id="cfg-src" placeholder="/temp/test.mp4" spellcheck="false" />
+                <select id="cfg-preset" class="grow-0" title="Fill the src field only">
+                  <option value="">Presets…</option>
+                  <optgroup label="Image">
+                    <option value="/6d01c26e-e523-4439-8bfc-f656a83cdab0.png">
+                      image · 6d01c26e….png
+                    </option>
+                    <option
+                      value="https://mdn.github.io/shared-assets/images/examples/firefox-logo.svg"
+                    >
+                      firefox-logo.svg
+                    </option>
+                    <option value="https://picsum.photos/seed/tiny/800/450">picsum 800×450</option>
+                  </optgroup>
+                  <optgroup label="Video">
+                    <option value="/temp/test.mp4">video · test.mp4</option>
+                    <option value="https://mdn.github.io/shared-assets/videos/flower.mp4">
+                      flower.mp4
+                    </option>
+                  </optgroup>
+                  <optgroup label="Audio">
+                    <option value="/temp/test.mp3">audio · test.mp3</option>
+                    <option value="https://mdn.github.io/shared-assets/audio/t-rex-roar.mp3">
+                      t-rex-roar.mp3
+                    </option>
+                  </optgroup>
                 </select>
               </div>
             </div>
+
+            <div class="quickstart">
+              <span class="quickstart__label">Quick start</span>
+              <button type="button" class="btn btn--primary" data-preset="image">▶ Image</button>
+              <button type="button" class="btn btn--primary" data-preset="audio">▶ Audio</button>
+              <button type="button" class="btn btn--primary" data-preset="video">▶ Video</button>
+              <span class="quickstart__hint">src + new() + load() + mount()</span>
+            </div>
+
+            <div class="grid grid--4">
+              <div class="field">
+                <label for="cfg-timeout">timeout (ms)</label>
+                <input type="number" id="cfg-timeout" value="30000" min="0" step="500" />
+              </div>
+              <div class="field">
+                <label for="cfg-crossorigin">crossOrigin</label>
+                <select id="cfg-crossorigin">
+                  <option value="">(null)</option>
+                  <option value="anonymous">anonymous</option>
+                  <option value="use-credentials">use-credentials</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="cfg-preload">preload</label>
+                <select id="cfg-preload">
+                  <option value="none">none</option>
+                  <option value="metadata" selected>metadata</option>
+                  <option value="auto">auto</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="cfg-decoding">decoding <span class="hint">(image)</span></label>
+                <select id="cfg-decoding">
+                  <option value="async" selected>async</option>
+                  <option value="sync">sync</option>
+                  <option value="auto">auto</option>
+                </select>
+              </div>
+            </div>
+
             <div class="toggles">
-              <label class="switch"><input type="checkbox" id="cfg-cache-ignore" /><span>ignoreSearch</span></label>
+              <label class="switch"
+                ><input type="checkbox" id="cfg-stream" /><span>stream</span></label
+              >
+              <label class="switch"
+                ><input type="checkbox" id="cfg-autoreload" /><span>autoReload</span></label
+              >
+              <label class="switch"
+                ><input type="checkbox" id="cfg-autoplay" /><span>autoplay</span></label
+              >
+              <label class="switch"><input type="checkbox" id="cfg-loop" /><span>loop</span></label>
+              <label class="switch"
+                ><input type="checkbox" id="cfg-muted" /><span>muted</span></label
+              >
+              <label class="switch"
+                ><input type="checkbox" id="cfg-automount" checked /><span>auto-mount</span></label
+              >
             </div>
-          </fieldset>
-        </div>
-      </section>
 
-      <!-- ══════════════════ LOADER PANELS ══════════════════ -->
-      <section class="panel loader" data-loader="image">
-        <header class="panel__head">
-          <h2>TinyImageLoader</h2>
-          <span class="badge" data-role="state">idle</span>
+            <fieldset class="fieldset">
+              <legend>Shared TinyMediaCache</legend>
+              <div class="grid grid--4">
+                <label class="switch"
+                  ><input type="checkbox" id="cfg-cache" /><span>enabled</span></label
+                >
+                <div class="field">
+                  <label for="cfg-cache-max">maxItems</label>
+                  <input type="number" id="cfg-cache-max" value="20" min="1" />
+                </div>
+                <div class="field">
+                  <label for="cfg-cache-ttl">ttl (ms)</label>
+                  <input type="number" id="cfg-cache-ttl" value="0" min="0" step="1000" />
+                </div>
+                <div class="field">
+                  <label for="cfg-cache-strategy">strategy</label>
+                  <select id="cfg-cache-strategy">
+                    <option value="manual" selected>manual</option>
+                    <option value="auto">auto</option>
+                    <option value="ttl">ttl</option>
+                  </select>
+                </div>
+              </div>
+              <div class="toggles">
+                <label class="switch"
+                  ><input type="checkbox" id="cfg-cache-ignore" /><span>ignoreSearch</span></label
+                >
+              </div>
+            </fieldset>
+          </div>
+        </section>
+
+        <!-- ══════════════════ LOADER PANELS ══════════════════ -->
+        <section class="panel loader" data-loader="image">
+          <header class="panel__head">
+            <h2>TinyImageLoader</h2>
+            <span class="badge" data-role="state">idle</span>
+          </header>
+          <div class="panel__body">
+            <div class="btn-row">
+              <button type="button" class="btn btn--primary" data-action="create">new</button>
+              <button type="button" class="btn" data-action="load">load()</button>
+              <button type="button" class="btn" data-action="reload">reload()</button>
+              <button type="button" class="btn" data-action="abort">abort()</button>
+              <button type="button" class="btn" data-action="inspect">inspect()</button>
+              <button type="button" class="btn" data-action="destroy">destroy()</button>
+            </div>
+            <div class="progress"><div class="progress__bar" data-role="bar"></div></div>
+            <dl class="kv" data-role="state"></dl>
+            <div class="stage" data-role="stage"></div>
+          </div>
+        </section>
+
+        <section class="panel loader" data-loader="video">
+          <header class="panel__head">
+            <h2>TinyVideoLoader</h2>
+            <span class="badge" data-role="state">idle</span>
+          </header>
+          <div class="panel__body">
+            <div class="btn-row">
+              <button type="button" class="btn btn--primary" data-action="create">new</button>
+              <button type="button" class="btn" data-action="load">load()</button>
+              <button type="button" class="btn" data-action="reload">reload()</button>
+              <button type="button" class="btn" data-action="abort">abort()</button>
+              <button type="button" class="btn" data-action="inspect">inspect()</button>
+              <button type="button" class="btn" data-action="destroy">destroy()</button>
+            </div>
+            <div class="progress"><div class="progress__bar" data-role="bar"></div></div>
+            <dl class="kv" data-role="state"></dl>
+            <div class="stage" data-role="stage"></div>
+          </div>
+        </section>
+
+        <section class="panel loader" data-loader="audio">
+          <header class="panel__head">
+            <h2>TinyAudioLoader</h2>
+            <span class="badge" data-role="state">idle</span>
+          </header>
+          <div class="panel__body">
+            <div class="btn-row">
+              <button type="button" class="btn btn--primary" data-action="create">new</button>
+              <button type="button" class="btn" data-action="load">load()</button>
+              <button type="button" class="btn" data-action="reload">reload()</button>
+              <button type="button" class="btn" data-action="abort">abort()</button>
+              <button type="button" class="btn" data-action="inspect">inspect()</button>
+              <button type="button" class="btn" data-action="destroy">destroy()</button>
+            </div>
+            <div class="progress"><div class="progress__bar" data-role="bar"></div></div>
+            <dl class="kv" data-role="state"></dl>
+            <div class="stage" data-role="stage"></div>
+          </div>
+        </section>
+
+        <!-- ══════════════════ CACHE PANEL ══════════════════ -->
+        <section class="panel">
+          <header class="panel__head">
+            <h2>TinyMediaCache</h2>
+            <span class="badge badge--muted">static + instance</span>
+          </header>
+          <div class="panel__body">
+            <div class="grid grid--3">
+              <div class="field">
+                <label for="cache-url">url</label>
+                <input
+                  type="text"
+                  id="cache-url"
+                  value="https://example.com/a.png"
+                  spellcheck="false"
+                />
+              </div>
+              <div class="field">
+                <label for="cache-blob">blob text</label>
+                <input type="text" id="cache-blob" value="hello tiny cache" spellcheck="false" />
+              </div>
+              <div class="field">
+                <label for="cache-pin">pin value</label>
+                <select id="cache-pin">
+                  <option value="true" selected>true</option>
+                  <option value="false">false</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button type="button" class="btn btn--primary" data-cache="construct">
+                new TinyMediaCache()
+              </button>
+              <button type="button" class="btn" data-cache="set">set()</button>
+              <button type="button" class="btn" data-cache="get">get()</button>
+              <button type="button" class="btn" data-cache="has">has()</button>
+              <button type="button" class="btn" data-cache="acquire">acquire()</button>
+              <button type="button" class="btn" data-cache="release">release()</button>
+              <button type="button" class="btn" data-cache="pin">pin()</button>
+              <button type="button" class="btn" data-cache="prune">prune()</button>
+              <button type="button" class="btn" data-cache="stats">stats</button>
+              <button type="button" class="btn" data-cache="clear">clear()</button>
+              <button type="button" class="btn btn--danger" data-cache="destroy">destroy()</button>
+            </div>
+
+            <div class="btn-row">
+              <button type="button" class="btn btn--ghost" data-cache="static-has">
+                TinyMediaCache.has()
+              </button>
+              <button type="button" class="btn btn--ghost" data-cache="static-size">
+                TinyMediaCache.size
+              </button>
+              <button type="button" class="btn btn--ghost" data-cache="static-bytes">
+                TinyMediaCache.bytes
+              </button>
+              <button type="button" class="btn btn--ghost" data-cache="static-instances">
+                TinyMediaCache.instances
+              </button>
+              <button type="button" class="btn btn--ghost" data-cache="static-clear">
+                TinyMediaCache.clear()
+              </button>
+              <button type="button" class="btn btn--danger" data-cache="static-destroy-all">
+                TinyMediaCache.destroyAll()
+              </button>
+            </div>
+
+            <pre class="readout" id="cache-readout">// no cache instance</pre>
+          </div>
+        </section>
+
+        <!-- ══════════════════ PROGRESS PANEL ══════════════════ -->
+        <section class="panel">
+          <header class="panel__head">
+            <h2>TinyMediaProgress</h2>
+            <span class="badge badge--muted">value object</span>
+          </header>
+          <div class="panel__body">
+            <div class="grid grid--3">
+              <div class="field">
+                <label for="progress-total">total (bytes)</label>
+                <input type="number" id="progress-total" value="1048576" min="0" />
+              </div>
+              <div class="field">
+                <label for="progress-bytes">push(bytes)</label>
+                <input type="number" id="progress-bytes" value="65536" min="0" />
+              </div>
+              <div class="field">
+                <label>&nbsp;</label>
+                <button type="button" class="btn btn--primary" id="btn-progress-construct">
+                  new TinyMediaProgress()
+                </button>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button type="button" class="btn" data-progress="start">start()</button>
+              <button type="button" class="btn" data-progress="push">push()</button>
+              <button type="button" class="btn" data-progress="snapshot">snapshot()</button>
+              <button type="button" class="btn" data-progress="reset">reset()</button>
+            </div>
+
+            <pre class="readout" id="progress-readout">// no progress instance</pre>
+          </div>
+        </section>
+      </div>
+
+      <!-- ══════════════════ CONSOLE ══════════════════ -->
+      <aside class="console">
+        <header class="console__head">
+          <h2>Output</h2>
+          <span class="badge badge--muted" id="console-count">0</span>
         </header>
-        <div class="panel__body">
-          <div class="btn-row">
-            <button type="button" class="btn btn--primary" data-action="create">new</button>
-            <button type="button" class="btn" data-action="load">load()</button>
-            <button type="button" class="btn" data-action="reload">reload()</button>
-            <button type="button" class="btn" data-action="abort">abort()</button>
-            <button type="button" class="btn" data-action="inspect">inspect()</button>
-            <button type="button" class="btn" data-action="destroy">destroy()</button>
-          </div>
-          <div class="progress"><div class="progress__bar" data-role="bar"></div></div>
-          <dl class="kv" data-role="state"></dl>
-          <div class="stage" data-role="stage"></div>
-        </div>
-      </section>
+        <div class="console__body" id="console-output"></div>
+      </aside>
+    </main>
 
-      <section class="panel loader" data-loader="video">
-        <header class="panel__head">
-          <h2>TinyVideoLoader</h2>
-          <span class="badge" data-role="state">idle</span>
-        </header>
-        <div class="panel__body">
-          <div class="btn-row">
-            <button type="button" class="btn btn--primary" data-action="create">new</button>
-            <button type="button" class="btn" data-action="load">load()</button>
-            <button type="button" class="btn" data-action="reload">reload()</button>
-            <button type="button" class="btn" data-action="abort">abort()</button>
-            <button type="button" class="btn" data-action="inspect">inspect()</button>
-            <button type="button" class="btn" data-action="destroy">destroy()</button>
-          </div>
-          <div class="progress"><div class="progress__bar" data-role="bar"></div></div>
-          <dl class="kv" data-role="state"></dl>
-          <div class="stage" data-role="stage"></div>
-        </div>
-      </section>
-
-      <section class="panel loader" data-loader="audio">
-        <header class="panel__head">
-          <h2>TinyAudioLoader</h2>
-          <span class="badge" data-role="state">idle</span>
-        </header>
-        <div class="panel__body">
-          <div class="btn-row">
-            <button type="button" class="btn btn--primary" data-action="create">new</button>
-            <button type="button" class="btn" data-action="load">load()</button>
-            <button type="button" class="btn" data-action="reload">reload()</button>
-            <button type="button" class="btn" data-action="abort">abort()</button>
-            <button type="button" class="btn" data-action="inspect">inspect()</button>
-            <button type="button" class="btn" data-action="destroy">destroy()</button>
-          </div>
-          <div class="progress"><div class="progress__bar" data-role="bar"></div></div>
-          <dl class="kv" data-role="state"></dl>
-          <div class="stage" data-role="stage"></div>
-        </div>
-      </section>
-
-      <!-- ══════════════════ CACHE PANEL ══════════════════ -->
-      <section class="panel">
-        <header class="panel__head">
-          <h2>TinyMediaCache</h2>
-          <span class="badge badge--muted">static + instance</span>
-        </header>
-        <div class="panel__body">
-          <div class="grid grid--3">
-            <div class="field">
-              <label for="cache-url">url</label>
-              <input type="text" id="cache-url" value="https://example.com/a.png" spellcheck="false" />
-            </div>
-            <div class="field">
-              <label for="cache-blob">blob text</label>
-              <input type="text" id="cache-blob" value="hello tiny cache" spellcheck="false" />
-            </div>
-            <div class="field">
-              <label for="cache-pin">pin value</label>
-              <select id="cache-pin">
-                <option value="true" selected>true</option>
-                <option value="false">false</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="btn-row">
-            <button type="button" class="btn btn--primary" data-cache="construct">new TinyMediaCache()</button>
-            <button type="button" class="btn" data-cache="set">set()</button>
-            <button type="button" class="btn" data-cache="get">get()</button>
-            <button type="button" class="btn" data-cache="has">has()</button>
-            <button type="button" class="btn" data-cache="acquire">acquire()</button>
-            <button type="button" class="btn" data-cache="release">release()</button>
-            <button type="button" class="btn" data-cache="pin">pin()</button>
-            <button type="button" class="btn" data-cache="prune">prune()</button>
-            <button type="button" class="btn" data-cache="stats">stats</button>
-            <button type="button" class="btn" data-cache="clear">clear()</button>
-            <button type="button" class="btn btn--danger" data-cache="destroy">destroy()</button>
-          </div>
-
-          <div class="btn-row">
-            <button type="button" class="btn btn--ghost" data-cache="static-has">TinyMediaCache.has()</button>
-            <button type="button" class="btn btn--ghost" data-cache="static-size">TinyMediaCache.size</button>
-            <button type="button" class="btn btn--ghost" data-cache="static-bytes">TinyMediaCache.bytes</button>
-            <button type="button" class="btn btn--ghost" data-cache="static-instances">TinyMediaCache.instances</button>
-            <button type="button" class="btn btn--ghost" data-cache="static-clear">TinyMediaCache.clear()</button>
-            <button type="button" class="btn btn--danger" data-cache="static-destroy-all">TinyMediaCache.destroyAll()</button>
-          </div>
-
-          <pre class="readout" id="cache-readout">// no cache instance</pre>
-        </div>
-      </section>
-
-      <!-- ══════════════════ PROGRESS PANEL ══════════════════ -->
-      <section class="panel">
-        <header class="panel__head">
-          <h2>TinyMediaProgress</h2>
-          <span class="badge badge--muted">value object</span>
-        </header>
-        <div class="panel__body">
-          <div class="grid grid--3">
-            <div class="field">
-              <label for="progress-total">total (bytes)</label>
-              <input type="number" id="progress-total" value="1048576" min="0" />
-            </div>
-            <div class="field">
-              <label for="progress-bytes">push(bytes)</label>
-              <input type="number" id="progress-bytes" value="65536" min="0" />
-            </div>
-            <div class="field">
-              <label>&nbsp;</label>
-              <button type="button" class="btn btn--primary" id="btn-progress-construct">new TinyMediaProgress()</button>
-            </div>
-          </div>
-
-          <div class="btn-row">
-            <button type="button" class="btn" data-progress="start">start()</button>
-            <button type="button" class="btn" data-progress="push">push()</button>
-            <button type="button" class="btn" data-progress="snapshot">snapshot()</button>
-            <button type="button" class="btn" data-progress="reset">reset()</button>
-          </div>
-
-          <pre class="readout" id="progress-readout">// no progress instance</pre>
-        </div>
-      </section>
-    </div>
-
-    <!-- ══════════════════ CONSOLE ══════════════════ -->
-    <aside class="console">
-      <header class="console__head">
-        <h2>Output</h2>
-        <span class="badge badge--muted" id="console-count">0</span>
-      </header>
-      <div class="console__body" id="console-output"></div>
-    </aside>
-  </main>
-
-  <script type="module" src="ui-test.js"></script>
-</body>
+    <script type="module" src="ui-test.js"></script>
+  </body>
 </html>

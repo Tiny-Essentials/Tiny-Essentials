@@ -63,12 +63,15 @@ function describe(value, depth = 0) {
   if (type === 'number' || type === 'boolean' || type === 'bigint') return String(value);
   if (type === 'function') return `[Function ${value.name || 'anonymous'}]`;
   if (value instanceof Error) return `${value.name}: ${value.message}`;
-  if (value instanceof Blob) return `Blob(${value.type || 'application/octet-stream'}, ${formatBytes(value.size)})`;
+  if (value instanceof Blob)
+    return `Blob(${value.type || 'application/octet-stream'}, ${formatBytes(value.size)})`;
   if (value instanceof HTMLElement) return `<${value.tagName.toLowerCase()}>`;
   if (depth > 3) return '…';
   if (Array.isArray(value)) return `[${value.map((item) => describe(item, depth + 1)).join(', ')}]`;
   if (type === 'object') {
-    const pairs = Object.entries(value).map(([key, item]) => `${key}: ${describe(item, depth + 1)}`);
+    const pairs = Object.entries(value).map(
+      ([key, item]) => `${key}: ${describe(item, depth + 1)}`,
+    );
     return `{ ${pairs.join(', ')} }`;
   }
   return String(value);
@@ -231,7 +234,9 @@ function ensureCache() {
 function renderLoaderState(kind) {
   const panel = panelFor(kind);
   const target = /** @type {HTMLElement} */ ($('[data-role="state"]', panel));
-  const badge = /** @type {HTMLElement} */ ($('[data-role="state"]', panel.parentElement === null ? panel : panel));
+  const badge = /** @type {HTMLElement} */ (
+    $('[data-role="state"]', panel.parentElement === null ? panel : panel)
+  );
   const loader = loaders[kind];
 
   if (!loader) {
@@ -442,84 +447,88 @@ function printCache(value) {
   cacheReadout.textContent = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
 }
 
-$('#cache-readout').closest('.panel')?.addEventListener('click', (event) => {
-  const button = /** @type {HTMLElement} */ (event.target).closest('[data-cache]');
-  if (!button) return;
+$('#cache-readout')
+  .closest('.panel')
+  ?.addEventListener('click', (event) => {
+    const button = /** @type {HTMLElement} */ (event.target).closest('[data-cache]');
+    if (!button) return;
 
-  const action = button.getAttribute('data-cache');
-  const url = textOf('cache-url');
+    const action = button.getAttribute('data-cache');
+    const url = textOf('cache-url');
 
-  try {
-    switch (action) {
-      case 'construct':
-        sharedCache = new TinyMediaCache({
-          maxItems: numberOf('cfg-cache-max', 20),
-          ttl: numberOf('cfg-cache-ttl', 0),
-          strategy: byId('cfg-cache-strategy').value,
-          ignoreSearch: isChecked('cfg-cache-ignore'),
-        });
-        log('success', 'new TinyMediaCache()', sharedCache.stats);
-        break;
-      case 'set':
-        printCache(sharedCache.set(url, new Blob([textOf('cache-blob')], { type: 'text/plain' })));
-        break;
-      case 'get':
-        printCache(sharedCache.get(url) ?? 'null');
-        break;
-      case 'has':
-        printCache(String(sharedCache.has(url)));
-        break;
-      case 'acquire':
-        printCache(sharedCache.acquire(url) ?? 'null');
-        break;
-      case 'release':
-        printCache(String(sharedCache.release(url)));
-        break;
-      case 'pin':
-        printCache(String(sharedCache.pin(url, byId('cache-pin').value === 'true')));
-        break;
-      case 'prune':
-        printCache(`removed: ${sharedCache.prune()}`);
-        break;
-      case 'stats':
-        printCache(sharedCache.stats);
-        break;
-      case 'clear':
-        sharedCache.clear();
-        printCache('cleared');
-        break;
-      case 'destroy':
-        sharedCache.destroy();
-        printCache('destroyed');
-        break;
-      case 'static-has':
-        printCache(String(TinyMediaCache.has(url)));
-        break;
-      case 'static-size':
-        printCache(String(TinyMediaCache.size));
-        break;
-      case 'static-bytes':
-        printCache(formatBytes(TinyMediaCache.bytes));
-        break;
-      case 'static-instances':
-        printCache(`instances: ${TinyMediaCache.instances.length}`);
-        break;
-      case 'static-clear':
-        TinyMediaCache.clear();
-        printCache('shared registry cleared');
-        break;
-      case 'static-destroy-all':
-        TinyMediaCache.destroyAll();
-        printCache('all instances destroyed');
-        break;
-      default:
-        break;
+    try {
+      switch (action) {
+        case 'construct':
+          sharedCache = new TinyMediaCache({
+            maxItems: numberOf('cfg-cache-max', 20),
+            ttl: numberOf('cfg-cache-ttl', 0),
+            strategy: byId('cfg-cache-strategy').value,
+            ignoreSearch: isChecked('cfg-cache-ignore'),
+          });
+          log('success', 'new TinyMediaCache()', sharedCache.stats);
+          break;
+        case 'set':
+          printCache(
+            sharedCache.set(url, new Blob([textOf('cache-blob')], { type: 'text/plain' })),
+          );
+          break;
+        case 'get':
+          printCache(sharedCache.get(url) ?? 'null');
+          break;
+        case 'has':
+          printCache(String(sharedCache.has(url)));
+          break;
+        case 'acquire':
+          printCache(sharedCache.acquire(url) ?? 'null');
+          break;
+        case 'release':
+          printCache(String(sharedCache.release(url)));
+          break;
+        case 'pin':
+          printCache(String(sharedCache.pin(url, byId('cache-pin').value === 'true')));
+          break;
+        case 'prune':
+          printCache(`removed: ${sharedCache.prune()}`);
+          break;
+        case 'stats':
+          printCache(sharedCache.stats);
+          break;
+        case 'clear':
+          sharedCache.clear();
+          printCache('cleared');
+          break;
+        case 'destroy':
+          sharedCache.destroy();
+          printCache('destroyed');
+          break;
+        case 'static-has':
+          printCache(String(TinyMediaCache.has(url)));
+          break;
+        case 'static-size':
+          printCache(String(TinyMediaCache.size));
+          break;
+        case 'static-bytes':
+          printCache(formatBytes(TinyMediaCache.bytes));
+          break;
+        case 'static-instances':
+          printCache(`instances: ${TinyMediaCache.instances.length}`);
+          break;
+        case 'static-clear':
+          TinyMediaCache.clear();
+          printCache('shared registry cleared');
+          break;
+        case 'static-destroy-all':
+          TinyMediaCache.destroyAll();
+          printCache('all instances destroyed');
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      log('error', `cache.${action}() threw`, error);
+      printCache(`${error.name}: ${error.message}`);
     }
-  } catch (error) {
-    log('error', `cache.${action}() threw`, error);
-    printCache(`${error.name}: ${error.message}`);
-  }
-});
+  });
 
 /* ══════════════════════════════════════════════════════════════════
    PROGRESS PANEL
@@ -565,9 +574,68 @@ $$('[data-progress]').forEach((button) => {
    GLOBAL CONTROLS
    ══════════════════════════════════════════════════════════════════ */
 
+/**
+ * Maps a loader kind to the local fixture served by the dev server.
+ * @type {Record<'image'|'audio'|'video', { src: string, label: string }>}
+ */
+const PRESETS = {
+  image: { src: '/6d01c26e-e523-4439-8bfc-f656a83cdab0.png', label: 'image' },
+  audio: { src: '/temp/test.mp3', label: 'audio' },
+  video: { src: '/temp/test.mp4', label: 'video' },
+};
+
+/**
+ * Infers the loader kind from a file extension.
+ * @param {string} src - The source URL or path.
+ * @returns {'image'|'audio'|'video'|null} The detected kind, or `null` when unknown.
+ */
+function detectKind(src) {
+  const clean = src.split('?')[0].split('#')[0].toLowerCase();
+  if (/\.(png|jpe?g|gif|webp|avif|svg|bmp|ico)$/.test(clean)) return 'image';
+  if (/\.(mp3|wav|ogg|oga|m4a|aac|flac|opus)$/.test(clean)) return 'audio';
+  if (/\.(mp4|webm|ogv|mov|m4v|mkv)$/.test(clean)) return 'video';
+  return null;
+}
+
+/**
+ * Fills the shared form, creates a loader and immediately loads the fixture.
+ * @param {'image'|'audio'|'video'} kind - The loader to exercise.
+ * @returns {Promise<void>} Resolves once the load settles.
+ */
+async function runPreset(kind) {
+  const preset = PRESETS[kind];
+  if (!preset) {
+    log('error', `Unknown preset: ${kind}`);
+    return;
+  }
+
+  byId('cfg-src').value = preset.src;
+  log('info', `[${kind}] quick start → ${preset.src}`);
+
+  try {
+    createLoader(kind);
+    await loadLoader(kind);
+  } catch (error) {
+    log('error', `[${kind}] quick start failed`, error);
+    return;
+  }
+
+  panelFor(kind).scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+$$('[data-preset]').forEach((button) => {
+  button.addEventListener('click', () => {
+    const kind = button.getAttribute('data-preset');
+    if (kind) runPreset(/** @type {'image'|'audio'|'video'} */ (kind));
+  });
+});
+
 $('#cfg-preset').addEventListener('change', (event) => {
   const value = /** @type {HTMLSelectElement} */ (event.target).value;
-  if (value) byId('cfg-src').value = value;
+  if (!value) return;
+  byId('cfg-src').value = value;
+  const kind = detectKind(value);
+  log('info', `src set to ${value}`, kind ? `(detected: ${kind})` : '(unknown kind)');
 });
 
 $('#btn-clear-console').addEventListener('click', () => {
@@ -601,6 +669,8 @@ window.addEventListener('unhandledrejection', (event) => {
 
 ['image', 'video', 'audio'].forEach(bindLoaderPanel);
 ['image', 'video', 'audio'].forEach(renderLoaderState);
+
+byId('cfg-src').value = PRESETS.video.src;
 
 log('success', 'Harness ready', {
   TinyMediaLoader: typeof TinyMediaLoader,

@@ -5,39 +5,39 @@
 :root {
   /* ── Base palette ─────────────────────────────────────────────
      Raw values. Never reference these outside the semantic layer. */
-  --c-void:        #070910;
-  --c-surface-1:   #0d1119;
-  --c-surface-2:   #121826;
-  --c-surface-3:   #18202f;
-  --c-line:        #1f2a3c;
-  --c-text:        #e6ecf5;
-  --c-text-dim:    #93a1b8;
-  --c-text-faint:  #5d6b83;
-  --c-accent:      #5eead4;
-  --c-accent-ink:  #04211d;
-  --c-info:        #7dd3fc;
-  --c-success:     #86efac;
-  --c-warn:        #fcd34d;
-  --c-danger:      #fca5a5;
-  --c-event:       #c4b5fd;
+  --c-void: #070910;
+  --c-surface-1: #0d1119;
+  --c-surface-2: #121826;
+  --c-surface-3: #18202f;
+  --c-line: #1f2a3c;
+  --c-text: #e6ecf5;
+  --c-text-dim: #93a1b8;
+  --c-text-faint: #5d6b83;
+  --c-accent: #5eead4;
+  --c-accent-ink: #04211d;
+  --c-info: #7dd3fc;
+  --c-success: #86efac;
+  --c-warn: #fcd34d;
+  --c-danger: #fca5a5;
+  --c-event: #c4b5fd;
 
   /* ── Semantic tokens ──────────────────────────────────────────
      Consumed by the components below. */
-  --bg-app:            var(--c-void);        /* <body> background */
-  --bg-panel:          var(--c-surface-1);   /* .panel, .console */
-  --bg-input:          var(--c-surface-2);   /* input, select, .readout */
-  --bg-raised:         var(--c-surface-3);   /* hovered rows, table heads */
-  --border-soft:       var(--c-line);        /* every 1px border */
-  --text-primary:      var(--c-text);        /* body copy */
-  --text-secondary:    var(--c-text-dim);    /* labels, <dt> */
-  --text-muted:        var(--c-text-faint);  /* hints, placeholders */
-  --accent:            var(--c-accent);      /* focus ring, primary button */
-  --accent-ink:        var(--c-accent-ink);  /* text over --accent */
-  --level-info:        var(--c-info);        /* .log--info */
-  --level-success:     var(--c-success);     /* .log--success */
-  --level-warn:        var(--c-warn);        /* .log--warn */
-  --level-error:       var(--c-danger);      /* .log--error */
-  --level-event:       var(--c-event);       /* .log--event */
+  --bg-app: var(--c-void); /* <body> background */
+  --bg-panel: var(--c-surface-1); /* .panel, .console */
+  --bg-input: var(--c-surface-2); /* input, select, .readout */
+  --bg-raised: var(--c-surface-3); /* hovered rows, table heads */
+  --border-soft: var(--c-line); /* every 1px border */
+  --text-primary: var(--c-text); /* body copy */
+  --text-secondary: var(--c-text-dim); /* labels, <dt> */
+  --text-muted: var(--c-text-faint); /* hints, placeholders */
+  --accent: var(--c-accent); /* focus ring, primary button */
+  --accent-ink: var(--c-accent-ink); /* text over --accent */
+  --level-info: var(--c-info); /* .log--info */
+  --level-success: var(--c-success); /* .log--success */
+  --level-warn: var(--c-warn); /* .log--warn */
+  --level-error: var(--c-danger); /* .log--error */
+  --level-event: var(--c-event); /* .log--event */
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -61,8 +61,7 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(1200px 600px at 15% -10%, rgb(94 234 212 / 6%), transparent 60%),
-    var(--bg-app);
+    radial-gradient(1200px 600px at 15% -10%, rgb(94 234 212 / 6%), transparent 60%), var(--bg-app);
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 14px;
@@ -264,7 +263,9 @@ textarea {
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 input[type='text']:focus,
@@ -333,7 +334,11 @@ input::placeholder {
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background 0.14s, border-color 0.14s, transform 0.06s, color 0.14s;
+  transition:
+    background 0.14s,
+    border-color 0.14s,
+    transform 0.06s,
+    color 0.14s;
 }
 
 .btn:hover {
@@ -516,17 +521,37 @@ input::placeholder {
   white-space: pre-wrap;
 }
 
-.log--info    { border-left-color: var(--level-info); }
-.log--success { border-left-color: var(--level-success); }
-.log--warn    { border-left-color: var(--level-warn); }
-.log--error   { border-left-color: var(--level-error); }
-.log--event   { border-left-color: var(--level-event); }
+.log--info {
+  border-left-color: var(--level-info);
+}
+.log--success {
+  border-left-color: var(--level-success);
+}
+.log--warn {
+  border-left-color: var(--level-warn);
+}
+.log--error {
+  border-left-color: var(--level-error);
+}
+.log--event {
+  border-left-color: var(--level-event);
+}
 
-.log--info    .log__msg { color: var(--level-info); }
-.log--success .log__msg { color: var(--level-success); }
-.log--warn    .log__msg { color: var(--level-warn); }
-.log--error   .log__msg { color: var(--level-error); }
-.log--event   .log__msg { color: var(--level-event); }
+.log--info .log__msg {
+  color: var(--level-info);
+}
+.log--success .log__msg {
+  color: var(--level-success);
+}
+.log--warn .log__msg {
+  color: var(--level-warn);
+}
+.log--error .log__msg {
+  color: var(--level-error);
+}
+.log--event .log__msg {
+  color: var(--level-event);
+}
 
 /* ── Scrollbars ───────────────────────────────────────────────── */
 
@@ -551,4 +576,32 @@ input::placeholder {
 ::selection {
   color: var(--accent-ink);
   background: var(--accent);
+}
+
+/* ── Quick start ──────────────────────────────────────────────── */
+
+.quickstart {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgb(94 234 212 / 4%);
+  border: 1px dashed rgb(94 234 212 / 22%);
+  border-radius: var(--radius-md);
+}
+
+.quickstart__label {
+  margin-right: 4px;
+  font-size: 11px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.quickstart__hint {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
 }
