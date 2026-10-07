@@ -10,7 +10,7 @@ import TinyMediaLoader from './TinyMediaLoader.mjs';
  * @property {number} [timeout] - Maximum time in milliseconds before the load is aborted.
  * @property {string|null} [crossOrigin] - The CORS mode applied to the image.
  * @property {'sync'|'async'|'auto'} [decoding] - The decoding hint passed to the browser.
- * @property {HTMLElement|null} [element] - An existing DOM element to adopt.
+ * @property {HTMLImageElement|null} [element] - An existing DOM element to adopt.
  * @property {boolean} [autoReload] - Whether an external `src` change triggers a reload.
  * @property {boolean} [stream] - Whether to download the image through fetch for byte progress.
  * @property {import('./TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
