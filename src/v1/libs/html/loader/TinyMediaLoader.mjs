@@ -359,7 +359,7 @@ class TinyMediaLoader extends EventEmitter {
    */
   get signal() {
     if (!this.#controller) {
-      this.#controller = new AbortController();
+      throw new Error('Signal does not exist.');
     }
     return this.#controller;
   }
@@ -455,7 +455,7 @@ class TinyMediaLoader extends EventEmitter {
       this.#endTime = performance.now();
       this.#metadata = this.#buildMetadata();
       this.#setState(TinyMediaLoader.MediaState.LOADED);
-      this.emit('load', this.metadata);
+      this.emit('loaded', this.metadata);
       return this.metadata;
     } catch (error) {
       this.#endTime = performance.now();

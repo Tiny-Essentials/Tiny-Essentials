@@ -150,7 +150,7 @@ const LOADER_CLASSES = {
 
 const CUSTOM_EVENTS = [
   'loadstart',
-  'load',
+  'loaded',
   'loadend',
   'error',
   'abort',
