@@ -167,6 +167,7 @@ class TinyImageLoader extends TinyMediaLoader {
     const cached = cache?.acquire(this.src);
     if (cached) {
       this.emit('cachehit', cached);
+      this._setInternalSrc(cached.objectUrl);
       image.src = cached.objectUrl;
       return;
     }
@@ -197,14 +198,18 @@ class TinyImageLoader extends TinyMediaLoader {
     const blob = new Blob(parts, {
       type: response.headers.get('content-type') || 'image/*',
     });
+
     if (cache) {
       const entry = cache.set(this.src, blob);
       cache.acquire(this.src);
       this.emit('cachemiss', entry);
+      this._setInternalSrc(entry.objectUrl);
       image.src = entry.objectUrl;
       return;
     }
+
     this.#objectUrl = URL.createObjectURL(blob);
+    this._setInternalSrc(this.#objectUrl);
     image.src = this.#objectUrl;
   }
 

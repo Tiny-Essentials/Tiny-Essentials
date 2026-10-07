@@ -28,6 +28,14 @@ import TinyMediaCache from './TinyMediaCache.mjs';
  */
 
 /**
+ * Describes the payload emitted when the element swaps the network source for
+ * an internal object URL (or the reverse) during a streamed load.
+ * @typedef {Object} MediaSrcTransitionPayload
+ * @property {string} src - The original network source URL.
+ * @property {string|null} internalSrc - The internal object URL, or null when it is cleared.
+ */
+
+/**
  * Describes the immutable snapshot of everything known about a finished load.
  * @typedef {Object} MediaMetadata
  * @property {string} src - The resolved source URL.
@@ -149,6 +157,8 @@ class TinyMediaLoader extends EventEmitter {
   #cacheAcquired = false;
   /** @type {boolean} */
   #aborted = false;
+  /** @type {string|null} */
+  #internalSrc = null;
   /** @type {ReturnType<typeof setTimeout>|null} */
   #timeoutId = null;
 
@@ -209,6 +219,14 @@ class TinyMediaLoader extends EventEmitter {
    */
   get src() {
     return this.#src;
+  }
+
+  /**
+   * The internal object URL currently assigned to the element.
+   * @returns {string|null} The object URL assigned internally, or null when the element uses the network source.
+   */
+  get internalSrc() {
+    return this.#internalSrc;
   }
 
   /**
@@ -444,6 +462,7 @@ class TinyMediaLoader extends EventEmitter {
     this._detachEvents();
     this._releaseFromCache();
     this.#aborted = false;
+    this.#internalSrc = null;
     this.#startTime = performance.now();
     this.#endTime = 0;
     this._createProgress(0);
@@ -582,6 +601,24 @@ class TinyMediaLoader extends EventEmitter {
    */
   _setCacheHint(value) {
     this.#cacheHint = Boolean(value);
+  }
+
+  /**
+   * Records the internal object URL assigned to the element so the mutation
+   * observer treats the swap as an internal transition instead of an external
+   * source change. Emits `srctransition` with the original and internal sources.
+   * @protected
+   * @param {string|null} url - The object URL assigned internally, or null to clear it.
+   * @returns {void}
+   * @throws {TypeError} If `url` is neither a string nor null.
+   */
+  _setInternalSrc(url) {
+    if (url !== null && typeof url !== 'string') {
+      throw new TypeError('The "url" argument must be a string or null.');
+    }
+    this.#internalSrc = url;
+    this._flushMutations();
+    this.emit('srctransition', { src: this.#src, internalSrc: url });
   }
 
   /**
@@ -745,7 +782,7 @@ class TinyMediaLoader extends EventEmitter {
       return;
     }
     const next = element.getAttribute('src') ?? '';
-    if (next === this.#src) {
+    if (next === this.#src || next === this.#internalSrc) {
       return;
     }
     this.#applySrc(next);

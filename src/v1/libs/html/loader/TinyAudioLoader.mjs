@@ -202,6 +202,7 @@ class TinyAudioLoader extends TinyMediaLoader {
     if (cached) {
       this.emit('cachehit', cached);
       this.#streamedSize = cached.size;
+      this._setInternalSrc(cached.objectUrl);
       audio.src = cached.objectUrl;
       audio.load();
       return;
@@ -241,12 +242,14 @@ class TinyAudioLoader extends TinyMediaLoader {
       const entry = cache.set(this.src, blob);
       cache.acquire(this.src);
       this.emit('cachemiss', entry);
+      this._setInternalSrc(entry.objectUrl);
       audio.src = entry.objectUrl;
       audio.load();
       return;
     }
 
     this.#objectUrl = URL.createObjectURL(blob);
+    this._setInternalSrc(this.#objectUrl);
     audio.src = this.#objectUrl;
     audio.load();
   }

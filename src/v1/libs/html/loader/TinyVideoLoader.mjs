@@ -199,6 +199,7 @@ class TinyVideoLoader extends TinyMediaLoader {
     if (cached) {
       this.emit('cachehit', cached);
       this.#streamedSize = cached.size;
+      this._setInternalSrc(cached.objectUrl);
       video.src = cached.objectUrl;
       video.load();
       return;
@@ -238,12 +239,14 @@ class TinyVideoLoader extends TinyMediaLoader {
       const entry = cache.set(this.src, blob);
       cache.acquire(this.src);
       this.emit('cachemiss', entry);
+      this._setInternalSrc(entry.objectUrl);
       video.src = entry.objectUrl;
       video.load();
       return;
     }
 
     this.#objectUrl = URL.createObjectURL(blob);
+    this._setInternalSrc(this.#objectUrl);
     video.src = this.#objectUrl;
     video.load();
   }
