@@ -66,6 +66,19 @@ import TinyMediaCache from './TinyMediaCache.mjs';
  */
 
 /**
+ * @typedef {Object} MediaStateChangePayload
+ * @property {string} state - The new state.
+ * @property {string} previous - The previous state.
+ * @property {string} src - The source URL the transition belongs to.
+ */
+
+/**
+ * @typedef {Object} MediaTimeoutPayload
+ * @property {string} src - The source URL that timed out.
+ * @property {number} timeout - The configured timeout in milliseconds.
+ */
+
+/**
  * Base class that orchestrates the full lifecycle of a media element.
  * It must be extended. Concrete subclasses implement `_createElement`,
  * `_startLoad`, `_getMetadataDetails`, `_abort` and `_cleanup`.
@@ -118,6 +131,12 @@ class TinyMediaLoader extends EventEmitter {
   #detachers = [];
   /** @type {TinyMediaCache|null} */
   #cache = null;
+  /** @type {boolean} */
+  #cacheAcquired = false;
+  /** @type {boolean} */
+  #aborted = false;
+  /** @type {ReturnType<typeof setTimeout>|null} */
+  #timeoutId = null;
 
   /** @type {MediaMetadata} */
   #metadata = {
@@ -307,6 +326,19 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
+   * Registers a DOM listener that is removed on the next load or on destroy.
+   * @protected
+   * @param {HTMLElement} element - The source element.
+   * @param {string} type - The DOM event name.
+   * @param {EventListener} handler - The listener to register.
+   * @returns {void}
+   */
+  _on(element, type, handler) {
+    element.addEventListener(type, handler);
+    this.#detachers.push(() => element.removeEventListener(type, handler));
+  }
+
+  /**
    * Forwards DOM events from an element to this emitter.
    * @protected
    * @param {HTMLElement} element - The source element.
@@ -315,9 +347,7 @@ class TinyMediaLoader extends EventEmitter {
    */
   _forwardEvents(element, events) {
     for (const name of events) {
-      const handler = (/** @type {Event} */ event) => this.emit(name, event);
-      element.addEventListener(name, handler);
-      this.#detachers.push(() => element.removeEventListener(name, handler));
+      this._on(element, name, (event) => this.emit(name, event));
     }
   }
 
@@ -349,23 +379,35 @@ class TinyMediaLoader extends EventEmitter {
       throw new Error('Cannot load media without a source.');
     }
 
+    this._detachEvents();
+    this._releaseFromCache();
+    this.#aborted = false;
     this.#startTime = performance.now();
+    this.#endTime = 0;
     this._createProgress(0);
-    this.#state = TinyMediaLoader.MediaState.LOADING;
+    this.#setState(TinyMediaLoader.MediaState.LOADING);
     this.emit('loadstart', { src: this.#src });
 
     try {
       await this.#withTimeout(this._startLoad());
       this.#endTime = performance.now();
       this.#metadata = this.#buildMetadata();
-      this.#state = TinyMediaLoader.MediaState.LOADED;
+      this.#setState(TinyMediaLoader.MediaState.LOADED);
       this.emit('load', this.metadata);
       return this.metadata;
     } catch (error) {
       this.#endTime = performance.now();
-      this.#state = TinyMediaLoader.MediaState.ERROR;
-      this.emit('error', error);
+      if (this.#aborted) {
+        this.#aborted = false;
+        this.#setState(TinyMediaLoader.MediaState.IDLE);
+        this.emit('abort', { src: this.#src });
+      } else {
+        this.#setState(TinyMediaLoader.MediaState.ERROR);
+        this.#emitError(/** @type {Error} */ (error));
+      }
       throw error;
+    } finally {
+      this.emit('loadend', { src: this.#src, state: this.#state });
     }
   }
 
@@ -381,8 +423,25 @@ class TinyMediaLoader extends EventEmitter {
     if (this.#state === TinyMediaLoader.MediaState.DESTROYED) {
       throw new Error('Cannot reload a destroyed media loader.');
     }
+    this.#progress?.reset();
     this.#state = TinyMediaLoader.MediaState.IDLE;
     return this.load();
+  }
+
+  /**
+   * Cancels the in-flight load, if any.
+   * @returns {boolean} True when a load was cancelled.
+   */
+  abort() {
+    if (this.#state !== TinyMediaLoader.MediaState.LOADING) {
+      return false;
+    }
+    this.#aborted = true;
+    this._abort();
+    if (this.#controller) {
+      this.#controller.abort();
+    }
+    return true;
   }
 
   /**
@@ -414,12 +473,14 @@ class TinyMediaLoader extends EventEmitter {
     this._cleanup();
     this._detachEvents();
     this.#stopObserver();
+    if (this.#timeoutId !== null) {
+      clearTimeout(this.#timeoutId);
+      this.#timeoutId = null;
+    }
     if (this.#controller) {
       this.#controller.abort();
     }
-    if (this.#cache && this.#src) {
-      this.#cache.release(this.#src);
-    }
+    this._releaseFromCache();
     this.#state = TinyMediaLoader.MediaState.DESTROYED;
     this.emit('destroy', undefined);
     this.removeAllListeners();
@@ -459,6 +520,34 @@ class TinyMediaLoader extends EventEmitter {
    */
   _setCacheHint(value) {
     this.#cacheHint = Boolean(value);
+  }
+
+  /**
+   * Acquires the current source from the shared cache and remembers the reference.
+   * @protected
+   * @returns {import('./TinyMediaCache.mjs').MediaCacheEntry|null}
+   */
+  _acquireFromCache() {
+    if (!this.#cache) {
+      return null;
+    }
+    const entry = this.#cache.acquire(this.#src);
+    if (entry) {
+      this.#cacheAcquired = true;
+    }
+    return entry;
+  }
+
+  /**
+   * Releases the reference held on the shared cache entry, when present.
+   * @protected
+   * @returns {void}
+   */
+  _releaseFromCache() {
+    if (this.#cache && this.#cacheAcquired) {
+      this.#cache.release(this.#src);
+      this.#cacheAcquired = false;
+    }
   }
 
   /**
@@ -514,6 +603,31 @@ class TinyMediaLoader extends EventEmitter {
   _flushMutations() {
     if (this.#observer) {
       this.#observer.takeRecords();
+    }
+  }
+
+  /**
+   * Applies a state transition and notifies the listeners.
+   * @param {string} next - The next state.
+   * @returns {void}
+   */
+  #setState(next) {
+    if (this.#state === next) {
+      return;
+    }
+    const previous = this.#state;
+    this.#state = next;
+    this.emit('statechange', { state: next, previous, src: this.#src });
+  }
+
+  /**
+   * Emits an `error` event without crashing when nobody is listening.
+   * @param {Error} error - The error to report.
+   * @returns {void}
+   */
+  #emitError(error) {
+    if (this.listenerCount('error') > 0) {
+      this.emit('error', error);
     }
   }
 
@@ -605,17 +719,21 @@ class TinyMediaLoader extends EventEmitter {
       return promise;
     }
     return new Promise((resolve, reject) => {
-      const id = setTimeout(() => {
+      this.#timeoutId = setTimeout(() => {
+        this.#timeoutId = null;
         this._abort();
+        this.emit('timeout', { src: this.#src, timeout: this.#timeout });
         reject(new Error(`Media load timed out after ${this.#timeout}ms.`));
       }, this.#timeout);
       promise.then(
         (value) => {
-          clearTimeout(id);
+          if (this.#timeoutId !== null) clearTimeout(this.#timeoutId);
+          this.#timeoutId = null;
           resolve(value);
         },
         (error) => {
-          clearTimeout(id);
+          if (this.#timeoutId !== null) clearTimeout(this.#timeoutId);
+          this.#timeoutId = null;
           reject(error);
         },
       );

@@ -150,6 +150,20 @@ class TinyMediaProgress {
   }
 
   /**
+   * Resets every counter so the instance can be reused.
+   * @returns {TinyMediaProgress} The current instance for chaining.
+   */
+  reset() {
+    this.#loaded = 0;
+    this.#chunks = 0;
+    this.#rate = 0;
+    this.#lastLoaded = 0;
+    this.#startTime = 0;
+    this.#lastTime = 0;
+    return this;
+  }
+
+  /**
    * @returns {MediaProgressSnapshot} An immutable snapshot of the current state.
    */
   snapshot() {

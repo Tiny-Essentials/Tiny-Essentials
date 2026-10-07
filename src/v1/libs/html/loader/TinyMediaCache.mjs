@@ -71,7 +71,7 @@ class TinyMediaCache {
   /** @type {Map<string, MediaCacheRecord>} */
   static #blobs = new Map();
   /** @type {number} */
-  static #evictions = 0;
+  #evictions = 0;
 
   /** @type {Map<string, MediaCacheEntry>} */
   #entries = new Map();
@@ -238,7 +238,7 @@ class TinyMediaCache {
       refs,
       hits: this.#hits,
       misses: this.#misses,
-      evictions: TinyMediaCache.#evictions,
+      evictions: this.#evictions,
       instances: TinyMediaCache.#instances.size,
       blobs: TinyMediaCache.#blobs.size,
     };
@@ -287,6 +287,7 @@ class TinyMediaCache {
    * @returns {MediaCacheEntry|null}
    */
   get(url) {
+    this.#assertAlive();
     const key = this.#key(url);
     const entry = this.#entries.get(key);
     if (!entry) {
@@ -308,7 +309,9 @@ class TinyMediaCache {
    * @returns {boolean}
    */
   has(url) {
-    return this.get(url) !== null;
+    this.#assertAlive();
+    const entry = this.#entries.get(this.#key(url));
+    return entry !== undefined && !this.#isExpired(entry);
   }
 
   /**
@@ -317,6 +320,7 @@ class TinyMediaCache {
    * @returns {MediaCacheEntry|null} The acquired entry, or null when missing.
    */
   acquire(url) {
+    this.#assertAlive();
     const entry = this.get(url);
     if (!entry) {
       return null;
@@ -331,6 +335,7 @@ class TinyMediaCache {
    * @returns {boolean} True when the entry was released.
    */
   release(url) {
+    this.#assertAlive();
     const key = this.#key(url);
     const entry = this.#entries.get(key);
     if (!entry) {
@@ -379,6 +384,7 @@ class TinyMediaCache {
    * @returns {number} The number of removed entries.
    */
   prune() {
+    this.#assertAlive();
     let removed = 0;
     for (const [key, entry] of this.#entries) {
       if (this.#isExpired(entry)) {
@@ -395,6 +401,7 @@ class TinyMediaCache {
    * @returns {void}
    */
   clear() {
+    this.#assertAlive();
     for (const key of Array.from(this.#entries.keys())) {
       this.#entries.delete(key);
       TinyMediaCache.#release(key);
@@ -435,7 +442,7 @@ class TinyMediaCache {
         break;
       }
       this.delete(entry.key);
-      TinyMediaCache.#evictions += 1;
+      this.#evictions += 1;
       overflow -= 1;
     }
   }

@@ -123,8 +123,8 @@ class TinyAudioLoader extends TinyMediaLoader {
 
     // Time-based progress only makes sense when we are not downloading the file ourselves.
     if (!this.#stream) {
-      audio.addEventListener('progress', () => this.#updateTimeProgress());
-      audio.addEventListener('loadedmetadata', () => this.#updateTimeProgress());
+      this._on(audio, 'progress', () => this.#updateTimeProgress());
+      this._on(audio, 'loadedmetadata', () => this.#updateTimeProgress());
     }
 
     if (this.#crossOrigin) {
@@ -171,7 +171,7 @@ class TinyAudioLoader extends TinyMediaLoader {
    */
   async #streamInto(audio) {
     const cache = this.cache;
-    const cached = cache?.acquire(this.src);
+    const cached = this._acquireFromCache();
     if (cached) {
       this.emit('cachehit', cached);
       this.#streamedSize = cached.size;
@@ -238,13 +238,14 @@ class TinyAudioLoader extends TinyMediaLoader {
     for (let i = 0; i < buffered.length; i += 1) {
       loaded += buffered.end(i) - buffered.start(i);
     }
+    const tracker = this.progress;
     this.emit('progress', {
       loaded,
       total: audio.duration,
       remaining: Math.max(0, audio.duration - loaded),
       percent: Math.min(100, (loaded / audio.duration) * 100),
       rate: 0,
-      elapsed: 0,
+      elapsed: tracker ? tracker.elapsed : 0,
       eta: 0,
       chunks: buffered.length,
     });
@@ -306,9 +307,6 @@ class TinyAudioLoader extends TinyMediaLoader {
    * @returns {void}
    */
   _cleanup() {
-    if (this.cache && this.src) {
-      this.cache.release(this.src);
-    }
     if (this.#objectUrl) {
       URL.revokeObjectURL(this.#objectUrl);
       this.#objectUrl = null;

@@ -124,7 +124,6 @@ class TinyImageLoader extends TinyMediaLoader {
       await this.#streamInto(image);
     } else {
       image.src = this.src;
-      this._setCacheHint(image.complete && image.naturalWidth > 0);
     }
 
     await ready;
@@ -212,6 +211,10 @@ class TinyImageLoader extends TinyMediaLoader {
    * @returns {void}
    */
   _abort() {
+    if (this.#objectUrl) {
+      URL.revokeObjectURL(this.#objectUrl);
+      this.#objectUrl = null;
+    }
     if (this.#image) {
       this.#image.removeAttribute('src');
       this._flushMutations();
@@ -224,9 +227,6 @@ class TinyImageLoader extends TinyMediaLoader {
    * @returns {void}
    */
   _cleanup() {
-    if (this.cache && this.src) {
-      this.cache.release(this.src);
-    }
     if (this.#objectUrl) {
       URL.revokeObjectURL(this.#objectUrl);
       this.#objectUrl = null;
