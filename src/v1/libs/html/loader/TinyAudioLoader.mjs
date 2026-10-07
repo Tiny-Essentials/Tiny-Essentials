@@ -134,7 +134,6 @@ class TinyAudioLoader extends TinyMediaLoader {
     audio.autoplay = this.#autoplay;
     audio.loop = this.#loop;
     audio.muted = this.#muted;
-    audio.playsInline = true;
 
     const ready = new Promise((resolve, reject) => {
       const onLoaded = () => {
@@ -185,6 +184,9 @@ class TinyAudioLoader extends TinyMediaLoader {
     if (!response.ok) {
       throw new Error(`Failed to fetch audio: ${response.status} ${response.statusText}`);
     }
+    if (!response.body) {
+      throw new Error('The response body is not readable.');
+    }
 
     const total = Number(response.headers.get('content-length')) || 0;
     const progress = this._createProgress(total);
@@ -202,7 +204,8 @@ class TinyAudioLoader extends TinyMediaLoader {
       this._emitProgress();
     }
 
-    const blob = new Blob(chunks, {
+    const parts = /** @type {BlobPart[]} */ (/** @type {unknown} */ (chunks));
+    const blob = new Blob(parts, {
       type: response.headers.get('content-type') || 'audio/*',
     });
     this.#streamedSize = blob.size;

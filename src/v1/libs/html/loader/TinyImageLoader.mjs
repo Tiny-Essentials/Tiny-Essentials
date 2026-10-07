@@ -156,6 +156,10 @@ class TinyImageLoader extends TinyMediaLoader {
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
     }
+    if (!response.body) {
+      throw new Error('The response body is not readable.');
+    }
+
     const total = Number(response.headers.get('content-length')) || 0;
     const progress = this._createProgress(total);
     const reader = response.body.getReader();
@@ -170,7 +174,9 @@ class TinyImageLoader extends TinyMediaLoader {
       progress.push(value.byteLength);
       this._emitProgress();
     }
-    const blob = new Blob(chunks, {
+
+    const parts = /** @type {BlobPart[]} */ (/** @type {unknown} */ (chunks));
+    const blob = new Blob(parts, {
       type: response.headers.get('content-type') || 'image/*',
     });
     if (cache) {

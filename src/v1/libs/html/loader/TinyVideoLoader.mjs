@@ -184,6 +184,9 @@ class TinyVideoLoader extends TinyMediaLoader {
     if (!response.ok) {
       throw new Error(`Failed to fetch video: ${response.status} ${response.statusText}`);
     }
+    if (!response.body) {
+      throw new Error('The response body is not readable.');
+    }
 
     const total = Number(response.headers.get('content-length')) || 0;
     const progress = this._createProgress(total);
@@ -201,7 +204,8 @@ class TinyVideoLoader extends TinyMediaLoader {
       this._emitProgress();
     }
 
-    const blob = new Blob(chunks, {
+    const parts = /** @type {BlobPart[]} */ (/** @type {unknown} */ (chunks));
+    const blob = new Blob(parts, {
       type: response.headers.get('content-type') || 'video/*',
     });
     this.#streamedSize = blob.size;
