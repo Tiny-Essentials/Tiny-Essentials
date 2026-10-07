@@ -38,6 +38,9 @@ import testSmartScroller from './libs/TinySmartScroller.mjs';
 import testEvents from './libs/TinyEvents.mjs';
 import testTinyHtml from './libs/TinyHtml.mjs';
 import testFs from './libs/fs.mjs';
+import testNotificationAdapter from './libs/TinyNotificationAdapter.mjs';
+import testPushPayload from './libs/TinyPushPayload.mjs';
+import testPushRouter from './libs/TinyPushRouter.mjs';
 
 new TinyPkgExportValidator('../package.json', '../')
   .execCommandTester(
@@ -80,6 +83,9 @@ new TinyPkgExportValidator('../package.json', '../')
       events: testEvents,
       html: testTinyHtml,
       fs: testFs,
+      notificationAdapter: testNotificationAdapter,
+      pushPayload: testPushPayload,
+      pushRouter: testPushRouter,
     },
     process.argv,
   )

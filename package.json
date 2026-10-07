@@ -1,6 +1,6 @@
 {
   "name": "tiny-essentials",
-  "version": "1.29.1",
+  "version": "1.29.2",
   "description": "Collection of small, essential scripts designed to be used across various projects. These simple utilities are crafted for speed, ease of use, and versatility.",
   "bin": {
     "tiny-essentials-fork": "./TinyFork.mjs"
@@ -50,6 +50,9 @@
     "test:mjs:events": "node test/index.mjs events",
     "test:mjs:html": "node test/index.mjs html",
     "test:mjs:fs": "node test/index.mjs fs",
+    "test:mjs:notificationadapter": "node test/index.mjs notificationAdapter",
+    "test:mjs:pushpayload": "node test/index.mjs pushPayload",
+    "test:mjs:pushrouter": "node test/index.mjs pushRouter",
     "prettier": "npm run prettier:src && npm run prettier:build && npm run prettier:builder && npm run prettier:test && npm run prettier:rollup.config && npm run prettier:webpack.config && npm run prettier:tiny_fork && npm run prettier:check_exports",
     "prettier:src": "prettier --write ./src/*",
     "prettier:build": "prettier --write ./build/*",
