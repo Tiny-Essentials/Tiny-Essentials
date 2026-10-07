@@ -6,6 +6,7 @@
 import TinyMediaLoader from './TinyMediaLoader.mjs';
 
 /**
+ * Configuration options for {@link TinyAudioLoader}.
  * @typedef {Object} AudioLoaderOptions
  * @property {string} [src] - The audio source URL.
  * @property {number} [timeout] - Maximum time in milliseconds before the load is aborted.
@@ -26,30 +27,31 @@ import TinyMediaLoader from './TinyMediaLoader.mjs';
  */
 class TinyAudioLoader extends TinyMediaLoader {
   /**
+   * The uppercase tag name of the element this loader creates.
    * @override
-   * @returns {string}
+   * @returns {string} The literal string `'AUDIO'`.
    */
   static get tagName() {
     return 'AUDIO';
   }
 
-  /** @type {HTMLAudioElement|null} */
+  /** @type {HTMLAudioElement|null} The underlying audio element, or `null` before creation. */
   #audio;
-  /** @type {string|null} */
+  /** @type {string|null} The CORS mode applied to the audio, or `null` for none. */
   #crossOrigin;
-  /** @type {boolean} */
+  /** @type {boolean} Whether the audio should autoplay. */
   #autoplay;
-  /** @type {boolean} */
+  /** @type {boolean} Whether the audio should loop. */
   #loop;
-  /** @type {boolean} */
+  /** @type {boolean} Whether the audio should be muted. */
   #muted;
-  /** @type {'none'|'metadata'|'auto'} */
+  /** @type {'none'|'metadata'|'auto'} The preload strategy. */
   #preload;
-  /** @type {boolean} */
+  /** @type {boolean} Whether to download the audio through fetch for byte progress. */
   #stream;
-  /** @type {string|null} */
+  /** @type {string|null} The object URL created for a streamed download, if any. */
   #objectUrl = null;
-  /** @type {number} */
+  /** @type {number} The number of bytes downloaded through the streaming path. */
   #streamedSize = 0;
 
   /**
@@ -84,16 +86,41 @@ class TinyAudioLoader extends TinyMediaLoader {
 
   /**
    * The underlying `<audio>` element.
-   * @returns {HTMLAudioElement|null}
+   * @returns {HTMLAudioElement|null} The underlying `<audio>` element, or `null` before the load starts.
    */
   get audio() {
     return this.#audio;
   }
 
   /**
+   * The object URL created for a streamed download when no cache is used.
+   * @returns {string|null} The blob object URL, or `null` when streaming is disabled or cached.
+   */
+  get objectUrl() {
+    return this.#objectUrl;
+  }
+
+  /**
+   * The number of bytes downloaded through the streaming path.
+   * @returns {number} The total streamed size in bytes, or `0` when not streaming.
+   */
+  get streamedSize() {
+    return this.#streamedSize;
+  }
+
+  /**
+   * Whether the audio is downloaded through fetch for byte-level progress.
+   * @returns {boolean} `true` when the streaming path is enabled.
+   */
+  get stream() {
+    return this.#stream;
+  }
+
+  /**
+   * Creates the audio element, wires its events, and starts the load.
    * @override
    * @protected
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} Resolves once the audio metadata is loaded.
    */
   async _startLoad() {
     const audio = /** @type {HTMLAudioElement} */ (this._resolveElement());
@@ -166,7 +193,7 @@ class TinyAudioLoader extends TinyMediaLoader {
    * Downloads the audio through fetch, emitting byte-level progress.
    * Falls back to the shared cache when a matching entry exists.
    * @param {HTMLAudioElement} audio - The target audio element.
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} Resolves once the audio source is assigned and loading has started.
    * @throws {Error} If the network request fails.
    */
   async #streamInto(audio) {
@@ -226,7 +253,7 @@ class TinyAudioLoader extends TinyMediaLoader {
 
   /**
    * Reads the buffered TimeRanges and emits a normalized progress event.
-   * @returns {void}
+   * @returns {void} Nothing. The method emits a `progress` event as a side effect.
    */
   #updateTimeProgress() {
     const audio = this.#audio;
@@ -253,7 +280,7 @@ class TinyAudioLoader extends TinyMediaLoader {
 
   /**
    * Derives the MIME type from the source extension.
-   * @returns {string}
+   * @returns {string} The derived MIME type, for example `audio/mp3`.
    */
   #getMimeType() {
     const clean = this.src.split('?')[0].split('#')[0];
@@ -263,9 +290,10 @@ class TinyAudioLoader extends TinyMediaLoader {
   }
 
   /**
+   * Builds the metadata descriptor for the loaded audio.
    * @override
    * @protected
-   * @returns {import('./TinyMediaLoader.mjs').MediaMetadataDetails}
+   * @returns {import('./TinyMediaLoader.mjs').MediaMetadataDetails} The audio metadata with zeroed dimensions.
    */
   _getMetadataDetails() {
     const audio = this.#audio;
@@ -280,18 +308,20 @@ class TinyAudioLoader extends TinyMediaLoader {
   }
 
   /**
+   * Creates the underlying `<audio>` element.
    * @override
    * @protected
-   * @returns {HTMLAudioElement}
+   * @returns {HTMLAudioElement} A new detached audio element.
    */
   _createElement() {
     return document.createElement('audio');
   }
 
   /**
+   * Aborts the current load and releases the element source.
    * @override
    * @protected
-   * @returns {void}
+   * @returns {void} Nothing.
    */
   _abort() {
     if (this.#audio) {
@@ -302,9 +332,10 @@ class TinyAudioLoader extends TinyMediaLoader {
   }
 
   /**
+   * Releases the object URL and detaches the audio element.
    * @override
    * @protected
-   * @returns {void}
+   * @returns {void} Nothing.
    */
   _cleanup() {
     if (this.#objectUrl) {

@@ -93,6 +93,54 @@ class TinyMediaCache {
   #destroyed = false;
 
   /**
+   * The number of failed lookups recorded by this cache.
+   * @returns {number} The current miss count.
+   */
+  get misses() {
+    return this.#misses;
+  }
+
+  /**
+   * Whether the query string is ignored when building cache keys.
+   * @returns {boolean} True when the query string is ignored.
+   */
+  get ignoreSearch() {
+    return this.#ignoreSearch;
+  }
+
+  /**
+   * The cleanup strategy applied when an entry reaches zero references.
+   * @returns {MediaCacheStrategy} The active cleanup strategy.
+   */
+  get strategy() {
+    return this.#strategy;
+  }
+
+  /**
+   * The entry lifetime in milliseconds.
+   * @returns {number} The entry lifetime in milliseconds (0 = never expires).
+   */
+  get ttl() {
+    return this.#ttl;
+  }
+
+  /**
+   * The maximum number of entries allowed in this cache.
+   * @returns {number} The maximum number of entries.
+   */
+  get maxItems() {
+    return this.#maxItems;
+  }
+
+  /**
+   * The number of entries evicted by the limit enforcement.
+   * @returns {number} The current eviction count.
+   */
+  get evictions() {
+    return this.#evictions;
+  }
+
+  /**
    * @param {MediaCacheOptions} [options] - The cache configuration.
    * @throws {TypeError} If `options` is not a plain object.
    * @throws {RangeError} If `maxItems` is not a positive number.
@@ -305,8 +353,9 @@ class TinyMediaCache {
   }
 
   /**
+   * Checks whether a live entry exists for the given URL.
    * @param {string} url - The media URL.
-   * @returns {boolean}
+   * @returns {boolean} True when a non-expired entry exists.
    */
   has(url) {
     this.#assertAlive();
@@ -448,22 +497,25 @@ class TinyMediaCache {
   }
 
   /**
+   * Checks whether an entry has passed its expiration time.
    * @param {MediaCacheEntry} entry - The entry to test.
-   * @returns {boolean}
+   * @returns {boolean} True when the entry has expired.
    */
   #isExpired(entry) {
     return entry.expiresAt > 0 && Date.now() >= entry.expiresAt;
   }
 
   /**
+   * Builds the normalized cache key for a URL.
    * @param {string} url - The media URL.
-   * @returns {string}
+   * @returns {string} The normalized cache key.
    */
   #key(url) {
     return TinyMediaCache.#normalize(url, this.#ignoreSearch);
   }
 
   /**
+   * Ensures the cache has not been destroyed.
    * @returns {void}
    * @throws {Error} If the cache was destroyed.
    */
@@ -474,9 +526,10 @@ class TinyMediaCache {
   }
 
   /**
+   * Normalizes a URL into a cache key.
    * @param {string} url - The media URL.
    * @param {boolean} ignoreSearch - Whether the query string is ignored.
-   * @returns {string}
+   * @returns {string} The normalized cache key.
    * @throws {TypeError} If `url` is not a string.
    */
   static #normalize(url, ignoreSearch) {
@@ -492,9 +545,10 @@ class TinyMediaCache {
   }
 
   /**
+   * Registers a blob in the shared registry and returns its record.
    * @param {string} key - The normalized cache key.
    * @param {Blob} blob - The blob to register.
-   * @returns {MediaCacheRecord}
+   * @returns {MediaCacheRecord} The shared registry record.
    */
   static #acquire(key, blob) {
     const existing = TinyMediaCache.#blobs.get(key);
@@ -513,6 +567,7 @@ class TinyMediaCache {
   }
 
   /**
+   * Releases a reference in the shared registry and revokes the object URL when unused.
    * @param {string} key - The normalized cache key.
    * @returns {void}
    */

@@ -22,8 +22,9 @@ import TinyMediaLoader from './TinyMediaLoader.mjs';
  */
 class TinyImageLoader extends TinyMediaLoader {
   /**
+   * Retrieves the tag name used to create the underlying element.
    * @override
-   * @returns {string}
+   * @returns {string} The uppercase tag name, always `'IMG'`.
    */
   static get tagName() {
     return 'IMG';
@@ -41,6 +42,7 @@ class TinyImageLoader extends TinyMediaLoader {
   #objectUrl = null;
 
   /**
+   * Creates a new image loader and validates the provided options.
    * @param {ImageLoaderOptions} [options] - The loader configuration.
    * @throws {TypeError} If `crossOrigin` is not a string or null.
    * @throws {TypeError} If `decoding` is not a string.
@@ -62,10 +64,26 @@ class TinyImageLoader extends TinyMediaLoader {
 
   /**
    * The underlying `<img>` element.
-   * @returns {HTMLImageElement|null}
+   * @returns {HTMLImageElement|null} The current image element, or `null` before the load starts.
    */
   get image() {
     return this.#image;
+  }
+
+  /**
+   * The object URL created for the streamed image.
+   * @returns {string|null} The blob object URL, or `null` when the image is not streamed.
+   */
+  get objectUrl() {
+    return this.#objectUrl;
+  }
+
+  /**
+   * Indicates whether the image is downloaded through fetch for byte-level progress.
+   * @returns {boolean} `true` when streaming is enabled, otherwise `false`.
+   */
+  get stream() {
+    return this.#stream;
   }
 
   /**
@@ -91,9 +109,10 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
+   * Resolves the target element, wires the load listeners and decodes the image.
    * @override
    * @protected
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} A promise that resolves once the image is decoded and ready.
    */
   async _startLoad() {
     const image = /** @type {HTMLImageElement} */ (this._resolveElement());
@@ -140,7 +159,7 @@ class TinyImageLoader extends TinyMediaLoader {
   /**
    * Downloads the image through fetch, emitting byte-level progress.
    * @param {HTMLImageElement} image - The target image element.
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} A promise that resolves once the image element points to the blob URL.
    * @throws {Error} If the network request fails.
    */
   async #streamInto(image) {
@@ -190,9 +209,10 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
+   * Builds the metadata descriptor for the loaded image.
    * @override
    * @protected
-   * @returns {import('./TinyMediaLoader.mjs').MediaMetadataDetails}
+   * @returns {import('./TinyMediaLoader.mjs').MediaMetadataDetails} The image metadata details.
    */
   _getMetadataDetails() {
     const image = this.#image;
@@ -206,9 +226,10 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
+   * Revokes the object URL and clears the source of the image element.
    * @override
    * @protected
-   * @returns {void}
+   * @returns {void} This method does not return a value.
    */
   _abort() {
     if (this.#objectUrl) {
@@ -222,9 +243,10 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
+   * Detaches the load handlers, revokes the object URL and clears the source of the image element.
    * @override
    * @protected
-   * @returns {void}
+   * @returns {void} This method does not return a value.
    */
   _cleanup() {
     if (this.#objectUrl) {
@@ -240,16 +262,18 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
+   * Creates the `<img>` element used by the loader.
    * @override
    * @protected
-   * @returns {HTMLImageElement}
+   * @returns {HTMLImageElement} A new, detached image element.
    */
   _createElement() {
     return document.createElement('img');
   }
 
   /**
-   * @returns {string}
+   * Extracts the lowercase file extension from the image source.
+   * @returns {string} The file extension without a dot, or `'png'` when none is found.
    */
   #getExtension() {
     const clean = this.src.split('?')[0].split('#')[0];

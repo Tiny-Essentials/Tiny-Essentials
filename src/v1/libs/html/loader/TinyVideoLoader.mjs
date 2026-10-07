@@ -26,7 +26,7 @@ import TinyMediaLoader from './TinyMediaLoader.mjs';
 class TinyVideoLoader extends TinyMediaLoader {
   /**
    * @override
-   * @returns {string}
+   * @returns {string} The uppercase tag name of the underlying media element.
    */
   static get tagName() {
     return 'VIDEO';
@@ -90,9 +90,33 @@ class TinyVideoLoader extends TinyMediaLoader {
   }
 
   /**
+   * The object URL created for a streamed video, or `null` when the video is not streamed.
+   * @returns {string|null} The object URL of the streamed blob, or `null` when no streamed blob exists.
+   */
+  get objectUrl() {
+    return this.#objectUrl;
+  }
+
+  /**
+   * The total size in bytes of the video downloaded through the streaming path.
+   * @returns {number} The number of bytes streamed, or `0` when the video was not streamed.
+   */
+  get streamedSize() {
+    return this.#streamedSize;
+  }
+
+  /**
+   * Indicates whether the loader downloads the video through fetch for byte-level progress.
+   * @returns {boolean} `true` when streaming is enabled, otherwise `false`.
+   */
+  get stream() {
+    return this.#stream;
+  }
+
+  /**
    * @override
    * @protected
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} A promise that resolves once the video is ready and playback can start.
    */
   async _startLoad() {
     const video = /** @type {HTMLVideoElement} */ (this._resolveElement());
@@ -226,7 +250,7 @@ class TinyVideoLoader extends TinyMediaLoader {
 
   /**
    * Reads the buffered TimeRanges and emits a normalized progress event.
-   * @returns {void}
+   * @returns {void} This method does not return a value.
    */
   #updateTimeProgress() {
     const video = this.#video;
@@ -253,7 +277,7 @@ class TinyVideoLoader extends TinyMediaLoader {
 
   /**
    * Derives the MIME type from the source extension.
-   * @returns {string}
+   * @returns {string} The MIME type derived from the source file extension.
    */
   #getMimeType() {
     const clean = this.src.split('?')[0].split('#')[0];
@@ -265,7 +289,7 @@ class TinyVideoLoader extends TinyMediaLoader {
   /**
    * @override
    * @protected
-   * @returns {import('./TinyMediaLoader.mjs').MediaMetadataDetails}
+   * @returns {import('./TinyMediaLoader.mjs').MediaMetadataDetails} The resolved metadata for the video.
    */
   _getMetadataDetails() {
     const video = this.#video;
@@ -282,7 +306,7 @@ class TinyVideoLoader extends TinyMediaLoader {
   /**
    * @override
    * @protected
-   * @returns {HTMLVideoElement}
+   * @returns {HTMLVideoElement} A newly created `<video>` element.
    */
   _createElement() {
     return document.createElement('video');
@@ -291,7 +315,7 @@ class TinyVideoLoader extends TinyMediaLoader {
   /**
    * @override
    * @protected
-   * @returns {void}
+   * @returns {void} This method does not return a value.
    */
   _abort() {
     if (this.#video) {
@@ -304,7 +328,7 @@ class TinyVideoLoader extends TinyMediaLoader {
   /**
    * @override
    * @protected
-   * @returns {void}
+   * @returns {void} This method does not return a value.
    */
   _cleanup() {
     if (this.#objectUrl) {

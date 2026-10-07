@@ -9,6 +9,8 @@ import TinyMediaProgress from './TinyMediaProgress.mjs';
 import TinyMediaCache from './TinyMediaCache.mjs';
 
 /**
+ * Describes the configuration object accepted by the {@link TinyMediaLoader} constructor.
+ * Every property is optional, so a loader can be created empty and configured later.
  * @typedef {Object} MediaLoaderOptions
  * @property {string} [src] - The media source URL.
  * @property {number} [timeout] - Maximum time in milliseconds before the load is aborted.
@@ -18,12 +20,15 @@ import TinyMediaCache from './TinyMediaCache.mjs';
  */
 
 /**
+ * Describes the payload emitted whenever the source URL changes, whether the change
+ * originated inside the loader or from an external DOM mutation.
  * @typedef {Object} MediaSrcChangePayload
  * @property {string} src - The new source URL.
  * @property {string} previousSrc - The previous source URL.
  */
 
 /**
+ * Describes the immutable snapshot of everything known about a finished load.
  * @typedef {Object} MediaMetadata
  * @property {string} src - The resolved source URL.
  * @property {string} type - The media MIME type (e.g., "image/png").
@@ -37,6 +42,8 @@ import TinyMediaCache from './TinyMediaCache.mjs';
  */
 
 /**
+ * Describes the media specific values returned by the abstract `_getMetadataDetails` hook
+ * and merged into the final {@link MediaMetadata} object.
  * @typedef {Object} MediaMetadataDetails
  * @property {string} type - The media MIME type.
  * @property {number} width - The intrinsic width in pixels.
@@ -46,26 +53,32 @@ import TinyMediaCache from './TinyMediaCache.mjs';
  */
 
 /**
+ * Handles a successful media load.
  * @typedef {(metadata: MediaMetadata) => void} MediaLoadHandler
  */
 
 /**
+ * Handles a failed media load.
  * @typedef {(error: Error) => void} MediaErrorHandler
  */
 
 /**
+ * Handles the start of a media load.
  * @typedef {(payload: { src: string }) => void} MediaStartHandler
  */
 
 /**
+ * Handles a source URL change.
  * @typedef {(payload: MediaSrcChangePayload) => void} MediaSrcChangeHandler
  */
 
 /**
+ * Handles an event that carries no payload.
  * @typedef {() => void} MediaVoidHandler
  */
 
 /**
+ * Describes the payload emitted on every state machine transition.
  * @typedef {Object} MediaStateChangePayload
  * @property {string} state - The new state.
  * @property {string} previous - The previous state.
@@ -73,6 +86,7 @@ import TinyMediaCache from './TinyMediaCache.mjs';
  */
 
 /**
+ * Describes the payload emitted when a load exceeds the configured timeout.
  * @typedef {Object} MediaTimeoutPayload
  * @property {string} src - The source URL that timed out.
  * @property {number} timeout - The configured timeout in milliseconds.
@@ -99,7 +113,7 @@ class TinyMediaLoader extends EventEmitter {
   /**
    * The uppercase tag name of the element this loader manages.
    * Subclasses must override it so the constructor can validate adopted elements.
-   * @returns {string}
+   * @returns {string} The uppercase tag name, or an empty string when the subclass does not override it.
    */
   static get tagName() {
     return '';
@@ -191,7 +205,7 @@ class TinyMediaLoader extends EventEmitter {
 
   /**
    * The current source URL.
-   * @returns {string}
+   * @returns {string} The current source URL, or an empty string when unset.
    */
   get src() {
     return this.#src;
@@ -220,8 +234,56 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
+   * Indicates whether the last load was cancelled through {@link TinyMediaLoader#abort}.
+   * @returns {boolean} True when the in-flight load was aborted.
+   */
+  get aborted() {
+    return this.#aborted;
+  }
+
+  /**
+   * Indicates whether this loader currently holds a reference on a shared cache entry.
+   * @returns {boolean} True while a cache reference is held.
+   */
+  get cacheAcquired() {
+    return this.#cacheAcquired;
+  }
+
+  /**
+   * Indicates whether an external `src` change triggers an automatic reload.
+   * @returns {boolean} True when automatic reloading is enabled.
+   */
+  get autoReload() {
+    return this.#autoReload;
+  }
+
+  /**
+   * Indicates whether the last load was served from the cache.
+   * @returns {boolean} True when the last load was a cache hit.
+   */
+  get cacheHint() {
+    return this.#cacheHint;
+  }
+
+  /**
+   * The epoch timestamp, in milliseconds, captured when the last load finished.
+   * @returns {number} The end timestamp, or 0 when no load has finished yet.
+   */
+  get endTime() {
+    return this.#endTime;
+  }
+
+  /**
+   * The high resolution timestamp captured when the last load started.
+   * @returns {number} The start timestamp, or 0 when no load has started yet.
+   */
+  get startTime() {
+    return this.#startTime;
+  }
+
+  /**
    * The current lifecycle state.
-   * @returns {string}
+   * @returns {string} One of the {@link TinyMediaLoader.MediaState} values.
    */
   get state() {
     return this.#state;
@@ -229,7 +291,7 @@ class TinyMediaLoader extends EventEmitter {
 
   /**
    * The underlying DOM element (available after construction of the subclass).
-   * @returns {HTMLElement|null}
+   * @returns {HTMLElement|null} The managed element, or null before it is created.
    */
   get element() {
     return this.#element;
@@ -237,7 +299,7 @@ class TinyMediaLoader extends EventEmitter {
 
   /**
    * A defensive copy of the last known metadata.
-   * @returns {MediaMetadata}
+   * @returns {MediaMetadata} A shallow copy that is safe for the caller to mutate.
    */
   get metadata() {
     return { ...this.#metadata };
@@ -306,7 +368,7 @@ class TinyMediaLoader extends EventEmitter {
    * Creates a fresh progress tracker and resets the AbortController.
    * @protected
    * @param {number} [total] - The total number of bytes (0 when unknown).
-   * @returns {TinyMediaProgress}
+   * @returns {TinyMediaProgress} The freshly created and already started progress tracker.
    */
   _createProgress(total = 0) {
     this.#controller = new AbortController();
@@ -365,7 +427,7 @@ class TinyMediaLoader extends EventEmitter {
 
   /**
    * Starts loading the media and resolves with the final metadata.
-   * @returns {Promise<MediaMetadata>}
+   * @returns {Promise<MediaMetadata>} A promise that resolves with the final metadata of the loaded media.
    * @throws {Error} If the loader was destroyed or has no source.
    */
   async load() {
@@ -413,7 +475,7 @@ class TinyMediaLoader extends EventEmitter {
 
   /**
    * Resets the state machine and loads the current source again.
-   * @returns {Promise<MediaMetadata>}
+   * @returns {Promise<MediaMetadata>} A promise that resolves with the metadata of the new load.
    * @throws {Error} If the loader is loading or was destroyed.
    */
   async reload() {
@@ -764,7 +826,7 @@ class TinyMediaLoader extends EventEmitter {
    * Returns the media-specific metadata. Must be implemented by subclasses.
    * @abstract
    * @protected
-   * @returns {MediaMetadataDetails}
+   * @returns {MediaMetadataDetails} The media specific metadata details.
    */
   _getMetadataDetails() {
     return { type: '', width: 0, height: 0, duration: 0, size: 0 };

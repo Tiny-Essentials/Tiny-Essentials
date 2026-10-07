@@ -4,6 +4,10 @@
  */
 
 /**
+ * A point-in-time snapshot of the download progress. It exposes both the raw
+ * byte counters and the derived metrics (rate, ETA and completion percentage)
+ * so that consumers can render progress without recalculating anything.
+ *
  * @typedef {Object} MediaProgressSnapshot
  * @property {number} loaded - The number of bytes downloaded so far.
  * @property {number} total - The total number of bytes (0 when unknown).
