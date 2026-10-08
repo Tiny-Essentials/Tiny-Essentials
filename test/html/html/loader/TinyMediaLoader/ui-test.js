@@ -125,8 +125,14 @@ const LOADER_CLASSES = {
   audio: TinyAudioLoader,
 };
 
+/**
+ * Events emitted by the loader itself (not forwarded from the DOM).
+ * Keep this list in sync with the `this.emit(...)` calls in TinyMediaLoader.
+ * @type {string[]}
+ */
 const CUSTOM_EVENTS = [
   'loadstart',
+  'metadata',
   'loaded',
   'loadend',
   'error',
@@ -139,6 +145,15 @@ const CUSTOM_EVENTS = [
   'cachemiss',
   'destroy',
 ];
+
+/**
+ * Custom events whose payload is a full MediaMetadata snapshot. They are the
+ * only ones allowed to refresh the card metadata block, because calling
+ * `loader.metadata` from inside a `statechange` handler would read a stale
+ * object.
+ * @type {Set<string>}
+ */
+const METADATA_EVENTS = new Set(['metadata', 'loaded']);
 
 const DOM_EVENTS = [
   'loadedmetadata',
@@ -214,12 +229,31 @@ function detectKind(src) {
 }
 
 /**
- * Wraps a source in the throttled endpoint when the toggle is on.
+ * Indicates whether a source must bypass the throttled endpoint. The `/__slow`
+ * route only serves files that live under the public directory, so external
+ * origins, data URLs and blob URLs are used as is.
+ * @param {string} raw - The raw source URL.
+ * @returns {boolean} True when the source must not be wrapped.
+ */
+function isExternal(raw) {
+  return /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(raw) || /^(?:data|blob):/i.test(raw);
+}
+
+/**
+ * Wraps a source in the throttled endpoint when the toggle is on. External
+ * sources are returned untouched because the development server cannot proxy
+ * them.
  * @param {string} raw - The original source URL.
  * @returns {string} The URL the loader must fetch.
  */
 function buildSrc(raw) {
-  if (!isChecked('cfg-slow')) return raw;
+  if (!isChecked('cfg-slow')) {
+    return raw;
+  }
+  if (isExternal(raw)) {
+    log('warn', `[throttle] bypassed for external source: ${raw}`);
+    return raw;
+  }
   const params = new URLSearchParams({
     src: raw,
     chunk: String(numberOf('cfg-slow-chunk', 65536)),
@@ -337,9 +371,16 @@ function wire(entry) {
   for (const name of CUSTOM_EVENTS) {
     loader.on(name, (payload) => {
       pushTimeline(entry, name);
-      if (name === 'error') log('error', `[#${id}] error`, payload);
-      else if (name !== 'statechange') log('event', `[#${id}] ${name}`, payload);
-      renderMeta(entry);
+      if (name === 'error') {
+        log('error', `[#${id}] error`, payload);
+      } else if (name === 'metadata') {
+        log('info', `[#${id}] metadata (early)`, payload);
+      } else if (name !== 'statechange') {
+        log('event', `[#${id}] ${name}`, payload);
+      }
+      if (METADATA_EVENTS.has(name) || name === 'statechange') {
+        renderMeta(entry);
+      }
     });
   }
   for (const name of DOM_EVENTS) {
