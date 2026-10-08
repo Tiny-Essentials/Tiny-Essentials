@@ -183,7 +183,7 @@ class TinyImageLoader extends TinyMediaLoader {
       return;
     }
 
-    const url = this._createObjectUrl(blob);
+    const url = this._cacheBlob(blob);
     this._setInternalSrc(url);
     image.src = url;
   }

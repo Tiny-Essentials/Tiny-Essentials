@@ -16,6 +16,7 @@ import TinyMediaCache from './TinyMediaCache.mjs';
  * @property {number} [timeout] - Maximum time in milliseconds before the load is aborted.
  * @property {HTMLElement|null} [element] - An existing DOM element to adopt.
  * @property {boolean} [autoReload] - Whether an external `src` change triggers a reload.
+ * @property {boolean} [originalSrc] - Whether the original URL is mirrored into the `original-src` attribute.
  * @property {TinyMediaCache|null} [cache] - An optional shared memory cache.
  */
 
@@ -163,6 +164,8 @@ class TinyMediaLoader extends EventEmitter {
   #timeoutId = null;
   /** @type {string|null} */
   #objectUrl = null;
+  /** @type {boolean} */
+  #originalSrc = false;
 
   /** @type {MediaMetadata} */
   #metadata = {
@@ -189,7 +192,14 @@ class TinyMediaLoader extends EventEmitter {
     if (options === null || typeof options !== 'object') {
       throw new TypeError('The "options" argument must be an object.');
     }
-    const { src, timeout = 30000, element = null, autoReload = false } = options;
+    const {
+      src,
+      timeout = 30000,
+      element = null,
+      autoReload = false,
+      originalSrc = false,
+    } = options;
+
     if (src !== undefined && typeof src !== 'string') {
       throw new TypeError('The "src" option must be a string.');
     }
@@ -199,6 +209,10 @@ class TinyMediaLoader extends EventEmitter {
     if (element !== null && !(element instanceof HTMLElement)) {
       throw new TypeError('The "element" option must be an HTMLElement or null.');
     }
+    if (typeof originalSrc !== 'boolean') {
+      throw new TypeError('The "originalSrc" option must be a boolean.');
+    }
+
     super();
     const expectedTag = /** @type {typeof TinyMediaLoader} */ (this.constructor).tagName;
     if (element && expectedTag && element.tagName !== expectedTag) {
@@ -207,6 +221,7 @@ class TinyMediaLoader extends EventEmitter {
     this.#src = src ?? element?.getAttribute('src') ?? '';
     this.#timeout = timeout;
     this.#autoReload = Boolean(autoReload);
+    this.#originalSrc = originalSrc;
     this.#cache = options.cache ?? null;
     this.#metadata.src = this.#src;
     if (element) {
@@ -237,6 +252,14 @@ class TinyMediaLoader extends EventEmitter {
    */
   get internalSrc() {
     return this.#internalSrc;
+  }
+
+  /**
+   * Whether the loader mirrors the original URL into the `original-src` attribute.
+   * @returns {boolean} True when the attribute is managed by this loader.
+   */
+  get originalSrc() {
+    return this.#originalSrc;
   }
 
   /**
@@ -615,7 +638,8 @@ class TinyMediaLoader extends EventEmitter {
   /**
    * Records the internal object URL assigned to the element so the mutation
    * observer treats the swap as an internal transition instead of an external
-   * source change. Emits `srctransition` with the original and internal sources.
+   * source change. It also mirrors the network URL into the `original-src`
+   * attribute while an object URL is active.
    * @protected
    * @param {string|null} url - The object URL assigned internally, or null to clear it.
    * @returns {void}
@@ -626,8 +650,27 @@ class TinyMediaLoader extends EventEmitter {
       throw new TypeError('The "url" argument must be a string or null.');
     }
     this.#internalSrc = url;
+    this.#syncOriginalSrc();
     this._flushMutations();
     this.emit('srctransition', { src: this.#src, internalSrc: url });
+  }
+
+  /**
+   * Mirrors the original network URL into the `original-src` attribute while an
+   * object URL is active, and removes it otherwise. The attribute is skipped
+   * when the loader was created with `originalSrc: false`.
+   * @returns {void}
+   */
+  #syncOriginalSrc() {
+    const element = this.#element;
+    if (!element || !this.#originalSrc) {
+      return;
+    }
+    if (this.#internalSrc) {
+      element.setAttribute('original-src', this.#src);
+    } else {
+      element.removeAttribute('original-src');
+    }
   }
 
   /**
@@ -675,6 +718,28 @@ class TinyMediaLoader extends EventEmitter {
       element.addEventListener('error', onError);
       signal.addEventListener('abort', onAbort, { once: true });
     });
+  }
+
+  /**
+   * Stores a downloaded blob in the shared cache when one is configured and
+   * returns the URL the element must render. When no cache is present the blob
+   * is exposed through a private object URL instead.
+   * @protected
+   * @param {Blob} blob - The downloaded blob.
+   * @returns {string} The URL the element must use as its source.
+   * @throws {TypeError} If `blob` is not a Blob.
+   */
+  _cacheBlob(blob) {
+    if (!(blob instanceof Blob)) {
+      throw new TypeError('The "blob" argument must be a Blob.');
+    }
+    if (this.#cache) {
+      const entry = this.#cache.set(this.#src, blob);
+      this.#cache.acquire(this.#src);
+      this.emit('cachemiss', entry);
+      return entry.objectUrl;
+    }
+    return this._createObjectUrl(blob);
   }
 
   /**
@@ -987,7 +1052,7 @@ class TinyMediaLoader extends EventEmitter {
     if (typeof media.load === 'function') {
       media.load();
     }
-    this._flushMutations();
+    this._setInternalSrc(null);
   }
 
   /**

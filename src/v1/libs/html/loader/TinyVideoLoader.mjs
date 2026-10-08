@@ -220,7 +220,7 @@ class TinyVideoLoader extends TinyMediaLoader {
       return;
     }
 
-    const url = this._createObjectUrl(blob);
+    const url = this._cacheBlob(blob);
     this._setInternalSrc(url);
     video.src = url;
     video.load();
