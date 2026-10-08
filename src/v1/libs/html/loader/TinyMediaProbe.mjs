@@ -285,7 +285,7 @@ class TinyMediaProbe {
    * Reads an EBML variable-length integer.
    * @param {number} offset - The first byte of the integer.
    * @param {boolean} keepMarker - Whether the length marker bit is preserved.
-   * @returns<{ value: number, length: number }|null>} The decoded value and its byte length, or null when incomplete.
+   * @returns {{ value: number, length: number }|null} The decoded value and its byte length, or null when incomplete.
    */
   #readVint(offset, keepMarker) {
     if (offset >= this.#buffer.length) {

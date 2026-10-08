@@ -7,7 +7,9 @@
 import { EventEmitter } from 'events';
 import TinyMediaProgress from './TinyMediaProgress.mjs';
 import TinyMediaCache from './TinyMediaCache.mjs';
+
 import TinyMediaProbe from './TinyMediaProbe.mjs';
+import TinyImageProbe from './TinyImageProbe.mjs';
 
 /**
  * Describes the configuration object accepted by the {@link TinyMediaLoader} constructor.
@@ -891,69 +893,20 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
-   * Builds a decoder backed by the WebCodecs `ImageDecoder`.
+   * Builds a decoder backed by the container header parser.
    * @param {string} mime - The image MIME type.
-   * @returns {MediaEarlyDecoder|null} The decoder, or null when the format is unsupported.
+   * @returns {MediaEarlyDecoder} The decoder.
    */
   #createImageDecoder(mime) {
-    if (typeof ImageDecoder === 'undefined') {
-      return null;
-    }
-    if (typeof ImageDecoder.isTypeSupported === 'function' && !ImageDecoder.isTypeSupported(mime)) {
-      return null;
-    }
-
-    /** @type {ReadableStreamDefaultController<Uint8Array>} */
-    let controller;
-    const stream = new ReadableStream({
-      start(inner) {
-        controller = inner;
-      },
-    });
-
-    let decoder;
-    try {
-      decoder = new ImageDecoder({ data: stream, type: mime });
-    } catch {
-      return null;
-    }
-
-    let closed = false;
-
-    decoder
-      .decode()
-      .then(({ image }) => {
-        if (!closed) {
-          this._emitMetadata({ width: image.displayWidth, height: image.displayHeight });
-        }
-        image.close();
-      })
-      .catch(() => {
-        // The header was not parsed before the stream closed: the final
-        // metadata still carries the decoded dimensions.
-      });
-
+    const probe = new TinyImageProbe(mime);
     return {
       write: (chunk) => {
-        try {
-          controller.enqueue(chunk);
-        } catch {
-          // The decoder closed the stream early: nothing else to push.
+        const size = probe.push(chunk);
+        if (size) {
+          this._emitMetadata(size);
         }
       },
-      close: () => {
-        closed = true;
-        try {
-          controller.close();
-        } catch {
-          // The stream was already closed.
-        }
-        try {
-          decoder.close();
-        } catch {
-          // The decoder was already released.
-        }
-      },
+      close: () => probe.close(),
     };
   }
 
