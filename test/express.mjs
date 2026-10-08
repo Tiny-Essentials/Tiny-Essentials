@@ -21,6 +21,37 @@ const imgDir = path.join(__dirname, './img');
 const errorsDir = path.join(__dirname, './errors');
 const projectRoot = path.join(__dirname, '../');
 
+/**
+ * Directories searched by the throttled endpoint, in order. The first match
+ * wins, so `publicDir` keeps priority over `imgDir` when both contain a file
+ * with the same name.
+ * @type {string[]}
+ */
+const mediaRoots = [publicDir, imgDir];
+
+/**
+ * Resolves a request path against every allowed media root.
+ * @param {string} target - The path taken from the `src` query parameter.
+ * @returns {string|null} The first existing file, or null when none matches.
+ */
+function resolveMedia(target) {
+  const relative = target.replace(/^[/\\]+/, '');
+  for (const root of mediaRoots) {
+    const candidate = path.resolve(root, relative);
+    if (!candidate.startsWith(root + path.sep)) {
+      continue;
+    }
+    try {
+      if (fs.statSync(candidate).isFile()) {
+        return candidate;
+      }
+    } catch {
+      // Not in this root: try the next one.
+    }
+  }
+  return null;
+}
+
 app.use((req, res, next) => {
   // Website you wish to allow to connect
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -311,9 +342,9 @@ app.get('/__slow', async (req, res) => {
   const chunkSize = Math.max(1, Number(req.query.chunk) || 65536);
   const delay = Math.max(0, Number(req.query.delay) || 0);
 
-  const filePath = path.resolve(publicDir, `.${target}`);
-  if (filePath !== publicDir && !filePath.startsWith(publicDir + path.sep)) {
-    return res.status(403).send('Access denied: path is outside the public directory.');
+  const filePath = resolveMedia(target);
+  if (!filePath) {
+    return res.status(404).send(`Not found: ${target}`);
   }
 
   let stats;
@@ -321,9 +352,6 @@ app.get('/__slow', async (req, res) => {
     stats = await fs.promises.stat(filePath);
   } catch {
     return res.status(404).send(`Not found: ${target}`);
-  }
-  if (!stats.isFile()) {
-    return res.status(404).send(`Not a file: ${target}`);
   }
 
   if (req.query.type) {
@@ -380,12 +408,15 @@ app.get('/__fixtures', async (req, res) => {
         if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
         await walk(full);
       } else if (extensions.has(path.extname(entry.name).toLowerCase())) {
-        found.push('/' + path.relative(publicDir, full).split(path.sep).join('/'));
+        const relative = path.relative(publicDir, full);
+        found.push('/' + relative.split(path.sep).join('/'));
       }
     }
   };
   try {
-    await walk(publicDir);
+    for (const root of mediaRoots) {
+      await walk(root);
+    }
     res.json(found);
   } catch (err) {
     res.status(500).json({ error: err.message });
