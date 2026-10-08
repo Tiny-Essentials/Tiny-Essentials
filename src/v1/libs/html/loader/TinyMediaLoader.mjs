@@ -494,13 +494,9 @@ class TinyMediaLoader extends EventEmitter {
     if (patch === null || typeof patch !== 'object') {
       throw new TypeError('The "patch" argument must be an object.');
     }
-    /** @type {Partial<MediaMetadata>} */
-    const clean = {};
-    for (const [key, value] of Object.entries(patch)) {
-      if (value !== undefined) {
-        clean[key] = value;
-      }
-    }
+    const clean = /** @type {Partial<MediaMetadata>} */ (
+      Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined))
+    );
     this.#partial = { ...this.#partial, ...clean };
     this.#metadata = { ...this.#metadata, ...clean };
     this.emit('metadata', this.metadata);
