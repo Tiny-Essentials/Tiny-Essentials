@@ -38,8 +38,6 @@ class TinyImageLoader extends TinyMediaLoader {
   #decoding;
   /** @type {boolean} */
   #stream;
-  /** @type {string|null} */
-  #objectUrl = null;
 
   /**
    * Creates a new image loader and validates the provided options.
@@ -68,14 +66,6 @@ class TinyImageLoader extends TinyMediaLoader {
    */
   get image() {
     return this.#image;
-  }
-
-  /**
-   * The object URL created for the streamed image.
-   * @returns {string|null} The blob object URL, or `null` when the image is not streamed.
-   */
-  get objectUrl() {
-    return this.#objectUrl;
   }
 
   /**
@@ -122,22 +112,7 @@ class TinyImageLoader extends TinyMediaLoader {
     }
     image.decoding = this.#decoding;
 
-    const ready = new Promise((resolve, reject) => {
-      const onLoad = () => {
-        cleanup();
-        resolve(undefined);
-      };
-      const onError = () => {
-        cleanup();
-        reject(new Error(`Failed to load image: ${this.src}`));
-      };
-      const cleanup = () => {
-        image.removeEventListener('load', onLoad);
-        image.removeEventListener('error', onError);
-      };
-      image.addEventListener('load', onLoad);
-      image.addEventListener('error', onError);
-    });
+    const ready = this._waitForMedia(image, 'load');
 
     if (this.#stream) {
       await this.#streamInto(image);
@@ -208,9 +183,9 @@ class TinyImageLoader extends TinyMediaLoader {
       return;
     }
 
-    this.#objectUrl = URL.createObjectURL(blob);
-    this._setInternalSrc(this.#objectUrl);
-    image.src = this.#objectUrl;
+    const url = this._createObjectUrl(blob);
+    this._setInternalSrc(url);
+    image.src = url;
   }
 
   /**
@@ -231,33 +206,13 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
-   * Revokes the object URL and clears the source of the image element.
-   * @override
-   * @protected
-   * @returns {void} This method does not return a value.
-   */
-  _abort() {
-    if (this.#objectUrl) {
-      URL.revokeObjectURL(this.#objectUrl);
-      this.#objectUrl = null;
-    }
-    if (this.#image) {
-      this.#image.removeAttribute('src');
-      this._flushMutations();
-    }
-  }
-
-  /**
    * Detaches the load handlers, revokes the object URL and clears the source of the image element.
    * @override
    * @protected
    * @returns {void} This method does not return a value.
    */
   _cleanup() {
-    if (this.#objectUrl) {
-      URL.revokeObjectURL(this.#objectUrl);
-      this.#objectUrl = null;
-    }
+    this._revokeObjectUrl();
     if (this.#image) {
       this.#image.onload = null;
       this.#image.onerror = null;

@@ -46,8 +46,6 @@ class TinyVideoLoader extends TinyMediaLoader {
   #preload;
   /** @type {boolean} */
   #stream;
-  /** @type {string|null} */
-  #objectUrl = null;
   /** @type {number} */
   #streamedSize = 0;
 
@@ -87,14 +85,6 @@ class TinyVideoLoader extends TinyMediaLoader {
    */
   get video() {
     return this.#video;
-  }
-
-  /**
-   * The object URL created for a streamed video, or `null` when the video is not streamed.
-   * @returns {string|null} The object URL of the streamed blob, or `null` when no streamed blob exists.
-   */
-  get objectUrl() {
-    return this.#objectUrl;
   }
 
   /**
@@ -159,22 +149,7 @@ class TinyVideoLoader extends TinyMediaLoader {
     video.muted = this.#muted;
     video.playsInline = true;
 
-    const ready = new Promise((resolve, reject) => {
-      const onLoaded = () => {
-        cleanup();
-        resolve(undefined);
-      };
-      const onError = () => {
-        cleanup();
-        reject(new Error(`Failed to load video: ${this.src}`));
-      };
-      const cleanup = () => {
-        video.removeEventListener('loadeddata', onLoaded);
-        video.removeEventListener('error', onError);
-      };
-      video.addEventListener('loadeddata', onLoaded);
-      video.addEventListener('error', onError);
-    });
+    const ready = this._waitForMedia(video, 'loadeddata');
 
     if (this.#stream) {
       await this.#streamInto(video);
@@ -245,9 +220,9 @@ class TinyVideoLoader extends TinyMediaLoader {
       return;
     }
 
-    this.#objectUrl = URL.createObjectURL(blob);
-    this._setInternalSrc(this.#objectUrl);
-    video.src = this.#objectUrl;
+    const url = this._createObjectUrl(blob);
+    this._setInternalSrc(url);
+    video.src = url;
     video.load();
   }
 
@@ -320,24 +295,8 @@ class TinyVideoLoader extends TinyMediaLoader {
    * @protected
    * @returns {void} This method does not return a value.
    */
-  _abort() {
-    if (this.#video) {
-      this.#video.removeAttribute('src');
-      this.#video.load();
-      this._flushMutations();
-    }
-  }
-
-  /**
-   * @override
-   * @protected
-   * @returns {void} This method does not return a value.
-   */
   _cleanup() {
-    if (this.#objectUrl) {
-      URL.revokeObjectURL(this.#objectUrl);
-      this.#objectUrl = null;
-    }
+    this._revokeObjectUrl();
     if (this.#video) {
       this.#video.pause();
       this.#video.removeAttribute('src');

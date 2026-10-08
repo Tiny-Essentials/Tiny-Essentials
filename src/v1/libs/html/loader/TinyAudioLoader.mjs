@@ -49,8 +49,6 @@ class TinyAudioLoader extends TinyMediaLoader {
   #preload;
   /** @type {boolean} Whether to download the audio through fetch for byte progress. */
   #stream;
-  /** @type {string|null} The object URL created for a streamed download, if any. */
-  #objectUrl = null;
   /** @type {number} The number of bytes downloaded through the streaming path. */
   #streamedSize = 0;
 
@@ -90,14 +88,6 @@ class TinyAudioLoader extends TinyMediaLoader {
    */
   get audio() {
     return this.#audio;
-  }
-
-  /**
-   * The object URL created for a streamed download when no cache is used.
-   * @returns {string|null} The blob object URL, or `null` when streaming is disabled or cached.
-   */
-  get objectUrl() {
-    return this.#objectUrl;
   }
 
   /**
@@ -162,22 +152,7 @@ class TinyAudioLoader extends TinyMediaLoader {
     audio.loop = this.#loop;
     audio.muted = this.#muted;
 
-    const ready = new Promise((resolve, reject) => {
-      const onLoaded = () => {
-        cleanup();
-        resolve(undefined);
-      };
-      const onError = () => {
-        cleanup();
-        reject(new Error(`Failed to load audio: ${this.src}`));
-      };
-      const cleanup = () => {
-        audio.removeEventListener('loadeddata', onLoaded);
-        audio.removeEventListener('error', onError);
-      };
-      audio.addEventListener('loadeddata', onLoaded);
-      audio.addEventListener('error', onError);
-    });
+    const ready = this._waitForMedia(audio, 'loadeddata');
 
     if (this.#stream) {
       await this.#streamInto(audio);
@@ -248,9 +223,9 @@ class TinyAudioLoader extends TinyMediaLoader {
       return;
     }
 
-    this.#objectUrl = URL.createObjectURL(blob);
-    this._setInternalSrc(this.#objectUrl);
-    audio.src = this.#objectUrl;
+    const url = this._createObjectUrl(blob);
+    this._setInternalSrc(url);
+    audio.src = url;
     audio.load();
   }
 
@@ -321,30 +296,13 @@ class TinyAudioLoader extends TinyMediaLoader {
   }
 
   /**
-   * Aborts the current load and releases the element source.
-   * @override
-   * @protected
-   * @returns {void} Nothing.
-   */
-  _abort() {
-    if (this.#audio) {
-      this.#audio.removeAttribute('src');
-      this.#audio.load();
-      this._flushMutations();
-    }
-  }
-
-  /**
    * Releases the object URL and detaches the audio element.
    * @override
    * @protected
    * @returns {void} Nothing.
    */
   _cleanup() {
-    if (this.#objectUrl) {
-      URL.revokeObjectURL(this.#objectUrl);
-      this.#objectUrl = null;
-    }
+    this._revokeObjectUrl();
     if (this.#audio) {
       this.#audio.pause();
       this.#audio.removeAttribute('src');

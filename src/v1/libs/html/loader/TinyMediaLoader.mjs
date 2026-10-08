@@ -161,6 +161,8 @@ class TinyMediaLoader extends EventEmitter {
   #internalSrc = null;
   /** @type {ReturnType<typeof setTimeout>|null} */
   #timeoutId = null;
+  /** @type {string|null} */
+  #objectUrl = null;
 
   /** @type {MediaMetadata} */
   #metadata = {
@@ -211,6 +213,14 @@ class TinyMediaLoader extends EventEmitter {
       this.#element = element;
       this.#startObserver();
     }
+  }
+
+  /**
+   * The object URL created for a streamed blob, when one exists.
+   * @returns {string|null} The active object URL, or null when none was created.
+   */
+  get objectUrl() {
+    return this.#objectUrl;
   }
 
   /**
@@ -383,13 +393,12 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
-   * Creates a fresh progress tracker and resets the AbortController.
+   * Creates a fresh progress tracker for the current load.
    * @protected
    * @param {number} [total] - The total number of bytes (0 when unknown).
    * @returns {TinyMediaProgress} The freshly created and already started progress tracker.
    */
   _createProgress(total = 0) {
-    this.#controller = new AbortController();
     this.#progress = new TinyMediaProgress(total).start();
     return this.#progress;
   }
@@ -465,6 +474,7 @@ class TinyMediaLoader extends EventEmitter {
     this.#internalSrc = null;
     this.#startTime = performance.now();
     this.#endTime = 0;
+    this.#createController();
     this._createProgress(0);
     this.#setState(TinyMediaLoader.MediaState.LOADING);
     this.emit('loadstart', { src: this.#src });
@@ -474,8 +484,8 @@ class TinyMediaLoader extends EventEmitter {
       this.#endTime = performance.now();
       this.#metadata = this.#buildMetadata();
       this.#setState(TinyMediaLoader.MediaState.LOADED);
-      this.emit('loaded', this.metadata);
-      return this.metadata;
+      this.emit('loaded', this.#metadata);
+      return this.#metadata;
     } catch (error) {
       this.#endTime = performance.now();
       if (this.#aborted) {
@@ -518,7 +528,6 @@ class TinyMediaLoader extends EventEmitter {
       return false;
     }
     this.#aborted = true;
-    this._abort();
     if (this.#controller) {
       this.#controller.abort();
     }
@@ -551,6 +560,10 @@ class TinyMediaLoader extends EventEmitter {
     if (this.#state === TinyMediaLoader.MediaState.DESTROYED) {
       return;
     }
+    this.#state = TinyMediaLoader.MediaState.DESTROYED;
+    if (this.#controller) {
+      this.#controller.abort();
+    }
     this._cleanup();
     this._detachEvents();
     this.#stopObserver();
@@ -558,11 +571,7 @@ class TinyMediaLoader extends EventEmitter {
       clearTimeout(this.#timeoutId);
       this.#timeoutId = null;
     }
-    if (this.#controller) {
-      this.#controller.abort();
-    }
     this._releaseFromCache();
-    this.#state = TinyMediaLoader.MediaState.DESTROYED;
     this.emit('destroy', undefined);
     this.removeAllListeners();
     this.#element = null;
@@ -619,6 +628,53 @@ class TinyMediaLoader extends EventEmitter {
     this.#internalSrc = url;
     this._flushMutations();
     this.emit('srctransition', { src: this.#src, internalSrc: url });
+  }
+
+  /**
+   * Waits for a media element to become ready while staying bound to the
+   * current abort signal. The returned promise rejects as soon as the loader is
+   * aborted, which prevents the caller from awaiting a download that will never
+   * finish.
+   * @protected
+   * @param {HTMLElement} element - The media element being loaded.
+   * @param {string} [readyEvent] - The DOM event that signals a successful load.
+   * @returns {Promise<void>} Resolves once the media is ready.
+   * @throws {TypeError} If `element` is not an HTMLElement.
+   * @throws {TypeError} If `readyEvent` is not a string.
+   */
+  _waitForMedia(element, readyEvent = 'loadeddata') {
+    if (!(element instanceof HTMLElement)) {
+      throw new TypeError('The "element" argument must be an HTMLElement.');
+    }
+    if (typeof readyEvent !== 'string') {
+      throw new TypeError('The "readyEvent" argument must be a string.');
+    }
+    if (!this.#controller) {
+      throw new Error('Signal does not exist to wait for media.');
+    }
+    const { signal } = this.#controller;
+    return new Promise((resolve, reject) => {
+      const onReady = () => {
+        cleanup();
+        resolve(undefined);
+      };
+      const onError = () => {
+        cleanup();
+        reject(new Error(`Failed to load media: ${this.#src}`));
+      };
+      const onAbort = () => {
+        cleanup();
+        reject(new DOMException('The media load was aborted.', 'AbortError'));
+      };
+      const cleanup = () => {
+        element.removeEventListener(readyEvent, onReady);
+        element.removeEventListener('error', onError);
+        signal.removeEventListener('abort', onAbort);
+      };
+      element.addEventListener(readyEvent, onReady);
+      element.addEventListener('error', onError);
+      signal.addEventListener('abort', onAbort, { once: true });
+    });
   }
 
   /**
@@ -703,6 +759,44 @@ class TinyMediaLoader extends EventEmitter {
     if (this.#observer) {
       this.#observer.takeRecords();
     }
+  }
+
+  /**
+   * Creates an object URL for a blob and revokes the previous one.
+   * @protected
+   * @param {Blob} blob - The blob to expose through an object URL.
+   * @returns {string} The newly created object URL.
+   * @throws {TypeError} If `blob` is not a Blob.
+   */
+  _createObjectUrl(blob) {
+    if (!(blob instanceof Blob)) {
+      throw new TypeError('The "blob" argument must be a Blob.');
+    }
+    this._revokeObjectUrl();
+    this.#objectUrl = URL.createObjectURL(blob);
+    return this.#objectUrl;
+  }
+
+  /**
+   * Revokes the current object URL, if any.
+   * @protected
+   * @returns {void}
+   */
+  _revokeObjectUrl() {
+    if (this.#objectUrl) {
+      URL.revokeObjectURL(this.#objectUrl);
+      this.#objectUrl = null;
+    }
+  }
+
+  /**
+   * Creates a fresh AbortController for the current load and links its signal to
+   * the coupled element, so aborting the signal stops the native download.
+   * @returns {void}
+   */
+  #createController() {
+    this.#controller = new AbortController();
+    this.#controller.signal.addEventListener('abort', () => this._abort(), { once: true });
   }
 
   /**
@@ -820,7 +914,9 @@ class TinyMediaLoader extends EventEmitter {
     return new Promise((resolve, reject) => {
       this.#timeoutId = setTimeout(() => {
         this.#timeoutId = null;
-        this._abort();
+        if (this.#controller) {
+          this.#controller.abort();
+        }
         this.emit('timeout', { src: this.#src, timeout: this.#timeout });
         reject(new Error(`Media load timed out after ${this.#timeout}ms.`));
       }, this.#timeout);
@@ -870,12 +966,29 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
-   * Aborts an in-flight load. Subclasses should override when the media supports it.
-   * @abstract
+   * Aborts the network activity of the coupled element. It works for `<img>`,
+   * `<audio>` and `<video>`: all three expose `removeAttribute`, while only the
+   * media elements expose `pause` and `load`. Subclasses that hold extra
+   * resources must override this method and call `super._abort()`.
    * @protected
    * @returns {void}
    */
-  _abort() {}
+  _abort() {
+    this._revokeObjectUrl();
+    const element = this.#element;
+    if (!element) {
+      return;
+    }
+    const media = /** @type {Partial<HTMLMediaElement>} */ (element);
+    if (typeof media.pause === 'function') {
+      media.pause();
+    }
+    element.removeAttribute('src');
+    if (typeof media.load === 'function') {
+      media.load();
+    }
+    this._flushMutations();
+  }
 
   /**
    * Releases any listener or timer created by the subclass.
