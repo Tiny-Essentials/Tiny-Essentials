@@ -46,8 +46,6 @@ class TinyVideoLoader extends TinyMediaLoader {
   #preload;
   /** @type {boolean} */
   #stream;
-  /** @type {number} */
-  #streamedSize = 0;
 
   /**
    * @param {VideoLoaderOptions} [options] - The loader configuration.
@@ -85,14 +83,6 @@ class TinyVideoLoader extends TinyMediaLoader {
    */
   get video() {
     return this.#video;
-  }
-
-  /**
-   * The total size in bytes of the video downloaded through the streaming path.
-   * @returns {number} The number of bytes streamed, or `0` when the video was not streamed.
-   */
-  get streamedSize() {
-    return this.#streamedSize;
   }
 
   /**
@@ -173,7 +163,6 @@ class TinyVideoLoader extends TinyMediaLoader {
     const cached = this._acquireFromCache();
     if (cached) {
       this.emit('cachehit', cached);
-      this.#streamedSize = cached.size;
       this._setInternalSrc(cached.objectUrl);
       video.src = cached.objectUrl;
       video.load();
@@ -208,7 +197,6 @@ class TinyVideoLoader extends TinyMediaLoader {
     const blob = new Blob(parts, {
       type: response.headers.get('content-type') || 'video/*',
     });
-    this.#streamedSize = blob.size;
 
     if (cache) {
       const entry = cache.set(this.src, blob);
@@ -277,7 +265,7 @@ class TinyVideoLoader extends TinyMediaLoader {
       width: video?.videoWidth ?? 0,
       height: video?.videoHeight ?? 0,
       duration: Number.isFinite(duration) ? duration : 0,
-      size: this._getResourceSize() || this.#streamedSize,
+      size: this._getResourceSize(),
     };
   }
 

@@ -200,7 +200,7 @@ class TinyImageLoader extends TinyMediaLoader {
       type: image?.naturalWidth ? `image/${this.#getExtension()}` : 'image/*',
       width: image?.naturalWidth ?? 0,
       height: image?.naturalHeight ?? 0,
-      duration: 0,
+      duration: NaN,
       size: this._getResourceSize(),
     };
   }

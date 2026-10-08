@@ -49,8 +49,6 @@ class TinyAudioLoader extends TinyMediaLoader {
   #preload;
   /** @type {boolean} Whether to download the audio through fetch for byte progress. */
   #stream;
-  /** @type {number} The number of bytes downloaded through the streaming path. */
-  #streamedSize = 0;
 
   /**
    * @param {AudioLoaderOptions} [options] - The loader configuration.
@@ -88,14 +86,6 @@ class TinyAudioLoader extends TinyMediaLoader {
    */
   get audio() {
     return this.#audio;
-  }
-
-  /**
-   * The number of bytes downloaded through the streaming path.
-   * @returns {number} The total streamed size in bytes, or `0` when not streaming.
-   */
-  get streamedSize() {
-    return this.#streamedSize;
   }
 
   /**
@@ -176,7 +166,6 @@ class TinyAudioLoader extends TinyMediaLoader {
     const cached = this._acquireFromCache();
     if (cached) {
       this.emit('cachehit', cached);
-      this.#streamedSize = cached.size;
       this._setInternalSrc(cached.objectUrl);
       audio.src = cached.objectUrl;
       audio.load();
@@ -211,7 +200,6 @@ class TinyAudioLoader extends TinyMediaLoader {
     const blob = new Blob(parts, {
       type: response.headers.get('content-type') || 'audio/*',
     });
-    this.#streamedSize = blob.size;
 
     if (cache) {
       const entry = cache.set(this.src, blob);
@@ -281,7 +269,7 @@ class TinyAudioLoader extends TinyMediaLoader {
       width: 0,
       height: 0,
       duration: Number.isFinite(duration) ? duration : 0,
-      size: this._getResourceSize() || this.#streamedSize,
+      size: this._getResourceSize(),
     };
   }
 

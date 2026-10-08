@@ -166,6 +166,8 @@ class TinyMediaLoader extends EventEmitter {
   #objectUrl = null;
   /** @type {boolean} */
   #originalSrc = false;
+  /** @type {number} */
+  #resourceSize = 0;
 
   /** @type {MediaMetadata} */
   #metadata = {
@@ -357,6 +359,14 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
+   * The total size in bytes of the media downloaded through the streaming path.
+   * @returns {number} The number of bytes streamed, or `0` when the media was not streamed.
+   */
+  get resourceSize() {
+    return this.#resourceSize;
+  }
+
+  /**
    * @returns {boolean} True while the media is loading.
    */
   get isLoading() {
@@ -495,6 +505,7 @@ class TinyMediaLoader extends EventEmitter {
     this._releaseFromCache();
     this.#aborted = false;
     this.#internalSrc = null;
+    this.#resourceSize = 0;
     this.#startTime = performance.now();
     this.#endTime = 0;
     this.#createController();
@@ -733,6 +744,7 @@ class TinyMediaLoader extends EventEmitter {
     if (!(blob instanceof Blob)) {
       throw new TypeError('The "blob" argument must be a Blob.');
     }
+    this._setResourceSize(blob.size);
     if (this.#cache) {
       const entry = this.#cache.set(this.#src, blob);
       this.#cache.acquire(this.#src);
@@ -797,11 +809,31 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
-   * Reads the decoded size of the resource from the Resource Timing API.
+   * Records the exact byte size of the media when it is known without the
+   * Resource Timing API, for example right after a streamed download.
+   * @protected
+   * @param {number} size - The size in bytes.
+   * @returns {void}
+   * @throws {RangeError} If `size` is not a positive number.
+   */
+  _setResourceSize(size) {
+    if (typeof size !== 'number' || Number.isNaN(size) || size < 0) {
+      throw new RangeError('The "size" argument must be a positive number.');
+    }
+    this.#resourceSize = size;
+  }
+
+  /**
+   * Reads the decoded size of the resource. It prefers the size captured from a
+   * streamed blob and falls back to the Resource Timing API, whose entries are
+   * keyed by absolute URL.
    * @protected
    * @returns {number} The size in bytes, or 0 when unavailable.
    */
   _getResourceSize() {
+    if (this.#resourceSize > 0) {
+      return this.#resourceSize;
+    }
     if (typeof performance === 'undefined' || typeof performance.getEntriesByName !== 'function') {
       return 0;
     }
