@@ -2,7 +2,7 @@
  * @fileoverview Concrete loader for images. Exposes cache detection, aspect
  * ratio helpers and full control over the decode step.
  */
-import TinyMediaLoader from './TinyMediaLoader.mjs';
+import TinyMediaLoader from '../TinyMediaLoader.mjs';
 
 /**
  * @typedef {Object} ImageLoaderOptions
@@ -14,7 +14,7 @@ import TinyMediaLoader from './TinyMediaLoader.mjs';
  * @property {boolean} [earlyDecode] - Whether to decode the dimensions from the response headers using WebCodecs.
  * @property {boolean} [autoReload] - Whether an external `src` change triggers a reload.
  * @property {boolean} [stream] - Whether to download the image through fetch for byte progress.
- * @property {import('./TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
+ * @property {import('../utils/TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
  */
 
 /**
@@ -156,7 +156,7 @@ class TinyImageLoader extends TinyMediaLoader {
    * Builds the metadata descriptor for the loaded image.
    * @override
    * @protected
-   * @returns {import('./TinyMediaLoader.mjs').MediaMetadataDetails} The image metadata details.
+   * @returns {import('../TinyMediaLoader.mjs').MediaMetadataDetails} The image metadata details.
    */
   _getMetadataDetails() {
     const image = this.#image;

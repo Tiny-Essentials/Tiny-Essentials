@@ -2,7 +2,7 @@
  * @fileoverview Concrete loader for videos. Mirrors the ImageLoader API so the
  * two are interchangeable inside a factory.
  */
-import TinyMediaLoader from './TinyMediaLoader.mjs';
+import TinyMediaLoader from '../TinyMediaLoader.mjs';
 
 /**
  * @typedef {Object} VideoLoaderOptions
@@ -16,7 +16,7 @@ import TinyMediaLoader from './TinyMediaLoader.mjs';
  * @property {HTMLVideoElement|null} [element] - An existing DOM element to adopt.
  * @property {boolean} [autoReload] - Whether an external `src` change triggers a reload.
  * @property {boolean} [stream] - Whether to download the video through fetch for byte progress.
- * @property {import('./TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
+ * @property {import('../utils/TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
  */
 
 /**
@@ -215,7 +215,7 @@ class TinyVideoLoader extends TinyMediaLoader {
   /**
    * @override
    * @protected
-   * @returns {import('./TinyMediaLoader.mjs').MediaMetadataDetails} The resolved metadata for the video.
+   * @returns {import('../TinyMediaLoader.mjs').MediaMetadataDetails} The resolved metadata for the video.
    */
   _getMetadataDetails() {
     const video = this.#video;

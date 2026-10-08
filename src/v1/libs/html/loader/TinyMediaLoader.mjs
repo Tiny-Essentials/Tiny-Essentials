@@ -5,11 +5,11 @@
  */
 
 import { EventEmitter } from 'events';
-import TinyMediaProgress from './TinyMediaProgress.mjs';
-import TinyMediaCache from './TinyMediaCache.mjs';
+import TinyMediaProgress from './utils/TinyMediaProgress.mjs';
+import TinyMediaCache from './utils/TinyMediaCache.mjs';
 
-import TinyMediaProbe from './TinyMediaProbe.mjs';
-import TinyImageProbe from './TinyImageProbe.mjs';
+import TinyMediaProbe from './probe/TinyMediaProbe.mjs';
+import TinyImageProbe from './probe/TinyImageProbe.mjs';
 
 /**
  * Describes the configuration object accepted by the {@link TinyMediaLoader} constructor.
@@ -220,7 +220,7 @@ class TinyMediaLoader extends EventEmitter {
       element = null,
       autoReload = false,
       originalSrc = false,
-      earlyDecode = false,
+      earlyDecode = true,
     } = options;
 
     if (src !== undefined && typeof src !== 'string') {
@@ -945,7 +945,7 @@ class TinyMediaLoader extends EventEmitter {
    * snapshot reports `fromCache: true` and restores the values that the
    * download path would have recorded, since no network request runs here.
    * @protected
-   * @returns {import('./TinyMediaCache.mjs').MediaCacheEntry|null}
+   * @returns {import('./utils/TinyMediaCache.mjs').MediaCacheEntry|null}
    */
   _acquireFromCache() {
     if (!this.#cache) {

@@ -5,11 +5,11 @@
  * loader instance so that two loads can be compared side by side.
  */
 
-import TinyImageLoader from '/src/v1/libs/html/loader/TinyImageLoader.mjs';
-import TinyVideoLoader from '/src/v1/libs/html/loader/TinyVideoLoader.mjs';
-import TinyAudioLoader from '/src/v1/libs/html/loader/TinyAudioLoader.mjs';
-import TinyMediaCache from '/src/v1/libs/html/loader/TinyMediaCache.mjs';
-import TinyMediaProgress from '/src/v1/libs/html/loader/TinyMediaProgress.mjs';
+import TinyImageLoader from '/src/v1/libs/html/loader/formats/TinyImageLoader.mjs';
+import TinyVideoLoader from '/src/v1/libs/html/loader/formats/TinyVideoLoader.mjs';
+import TinyAudioLoader from '/src/v1/libs/html/loader/formats/TinyAudioLoader.mjs';
+import TinyMediaCache from '/src/v1/libs/html/loader/utils/TinyMediaCache.mjs';
+import TinyMediaProgress from '/src/v1/libs/html/loader/utils/TinyMediaProgress.mjs';
 
 /* ══════════════════════════════════════════════════════════════════
    DOM HELPERS

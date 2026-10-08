@@ -3,7 +3,7 @@
  * two are interchangeable inside a factory. Audio has no intrinsic dimensions,
  * so width and height are always 0.
  */
-import TinyMediaLoader from './TinyMediaLoader.mjs';
+import TinyMediaLoader from '../TinyMediaLoader.mjs';
 
 /**
  * Configuration options for {@link TinyAudioLoader}.
@@ -18,7 +18,7 @@ import TinyMediaLoader from './TinyMediaLoader.mjs';
  * @property {HTMLAudioElement|null} [element] - An existing DOM element to adopt.
  * @property {boolean} [autoReload] - Whether an external `src` change triggers a reload.
  * @property {boolean} [stream] - Whether to download the audio through fetch for byte progress.
- * @property {import('./TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
+ * @property {import('../utils/TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
  */
 
 /**
@@ -219,7 +219,7 @@ class TinyAudioLoader extends TinyMediaLoader {
    * Builds the metadata descriptor for the loaded audio.
    * @override
    * @protected
-   * @returns {import('./TinyMediaLoader.mjs').MediaMetadataDetails} The audio metadata with zeroed dimensions.
+   * @returns {import('../TinyMediaLoader.mjs').MediaMetadataDetails} The audio metadata with zeroed dimensions.
    */
   _getMetadataDetails() {
     const audio = this.#audio;
