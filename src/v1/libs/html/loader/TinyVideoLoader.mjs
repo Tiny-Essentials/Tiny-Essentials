@@ -159,7 +159,6 @@ class TinyVideoLoader extends TinyMediaLoader {
    * @throws {Error} If the network request fails.
    */
   async #streamInto(video) {
-    const cache = this.cache;
     const cached = this._acquireFromCache();
     if (cached) {
       this.emit('cachehit', cached);
@@ -168,46 +167,7 @@ class TinyVideoLoader extends TinyMediaLoader {
       video.load();
       return;
     }
-
-    const response = await fetch(this.src, { signal: this.signal.signal });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch video: ${response.status} ${response.statusText}`);
-    }
-    if (!response.body) {
-      throw new Error('The response body is not readable.');
-    }
-
-    const total = Number(response.headers.get('content-length')) || 0;
-    const progress = this._createProgress(total);
-    const reader = response.body.getReader();
-    /** @type {Uint8Array[]} */
-    const chunks = [];
-
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-      chunks.push(value);
-      progress.push(value.byteLength);
-      this._emitProgress();
-    }
-
-    const parts = /** @type {BlobPart[]} */ (/** @type {unknown} */ (chunks));
-    const blob = new Blob(parts, {
-      type: response.headers.get('content-type') || 'video/*',
-    });
-
-    if (cache) {
-      const entry = cache.set(this.src, blob);
-      cache.acquire(this.src);
-      this.emit('cachemiss', entry);
-      this._setInternalSrc(entry.objectUrl);
-      video.src = entry.objectUrl;
-      video.load();
-      return;
-    }
-
+    const blob = await this._downloadStream(this.src);
     const url = this._cacheBlob(blob);
     this._setInternalSrc(url);
     video.src = url;

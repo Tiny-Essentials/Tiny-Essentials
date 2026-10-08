@@ -138,51 +138,14 @@ class TinyImageLoader extends TinyMediaLoader {
    * @throws {Error} If the network request fails.
    */
   async #streamInto(image) {
-    const cache = this.cache;
-    const cached = cache?.acquire(this.src);
+    const cached = this._acquireFromCache();
     if (cached) {
       this.emit('cachehit', cached);
       this._setInternalSrc(cached.objectUrl);
       image.src = cached.objectUrl;
       return;
     }
-    const response = await fetch(this.src, { signal: this.signal.signal });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
-    }
-    if (!response.body) {
-      throw new Error('The response body is not readable.');
-    }
-
-    const total = Number(response.headers.get('content-length')) || 0;
-    const progress = this._createProgress(total);
-    const reader = response.body.getReader();
-    /** @type {Uint8Array[]} */
-    const chunks = [];
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-      chunks.push(value);
-      progress.push(value.byteLength);
-      this._emitProgress();
-    }
-
-    const parts = /** @type {BlobPart[]} */ (/** @type {unknown} */ (chunks));
-    const blob = new Blob(parts, {
-      type: response.headers.get('content-type') || 'image/*',
-    });
-
-    if (cache) {
-      const entry = cache.set(this.src, blob);
-      cache.acquire(this.src);
-      this.emit('cachemiss', entry);
-      this._setInternalSrc(entry.objectUrl);
-      image.src = entry.objectUrl;
-      return;
-    }
-
+    const blob = await this._downloadStream(this.src);
     const url = this._cacheBlob(blob);
     this._setInternalSrc(url);
     image.src = url;

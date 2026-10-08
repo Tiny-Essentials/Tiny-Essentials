@@ -395,9 +395,21 @@ app.get('/__slow', async (req, res) => {
 app.get('/__fixtures', async (req, res) => {
   disableCache(res);
   const extensions = new Set([
-    '.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.svg',
-    '.mp4', '.webm', '.mov',
-    '.mp3', '.wav', '.ogg', '.m4a', '.flac',
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.gif',
+    '.webp',
+    '.avif',
+    '.svg',
+    '.mp4',
+    '.webm',
+    '.mov',
+    '.mp3',
+    '.wav',
+    '.ogg',
+    '.m4a',
+    '.flac',
   ]);
   const found = [];
   const walk = async (dir) => {

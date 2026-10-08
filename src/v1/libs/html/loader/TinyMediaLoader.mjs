@@ -169,6 +169,9 @@ class TinyMediaLoader extends EventEmitter {
   /** @type {number} */
   #resourceSize = 0;
 
+  /** @type {Partial<MediaMetadata>} */
+  #partial = {};
+
   /** @type {MediaMetadata} */
   #metadata = {
     src: '',
@@ -448,6 +451,24 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
+   * Merges a partial metadata patch into the current snapshot and notifies the
+   * listeners. It is called as soon as the response headers arrive, so a
+   * consumer can render the file type and size before the download finishes.
+   * @protected
+   * @param {Partial<MediaMetadata>} patch - The values to merge.
+   * @returns {void}
+   * @throws {TypeError} If `patch` is not a plain object.
+   */
+  _emitMetadata(patch) {
+    if (patch === null || typeof patch !== 'object') {
+      throw new TypeError('The "patch" argument must be an object.');
+    }
+    this.#partial = { ...this.#partial, ...patch };
+    this.#metadata = { ...this.#metadata, ...patch };
+    this.emit('metadata', this.metadata);
+  }
+
+  /**
    * Registers a DOM listener that is removed on the next load or on destroy.
    * @protected
    * @param {HTMLElement} element - The source element.
@@ -506,6 +527,7 @@ class TinyMediaLoader extends EventEmitter {
     this.#aborted = false;
     this.#internalSrc = null;
     this.#resourceSize = 0;
+    this.#partial = {};
     this.#startTime = performance.now();
     this.#endTime = 0;
     this.#createController();
@@ -755,6 +777,60 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
+   * Downloads a media resource through fetch. It emits a `metadata` event as
+   * soon as the response headers arrive and a `progress` event for every
+   * chunk, then resolves with the fully buffered blob.
+   * @protected
+   * @param {string} url - The resource to download.
+   * @returns {Promise<Blob>} The fully downloaded blob.
+   * @throws {TypeError} If `url` is not a string.
+   * @throws {Error} If the request fails or the body is not readable.
+   */
+  async _downloadStream(url) {
+    if (typeof url !== 'string') {
+      throw new TypeError('The "url" argument must be a string.');
+    }
+    const response = await fetch(url, { signal: this.signal.signal });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch media: ${response.status} ${response.statusText}`);
+    }
+    if (!response.body) {
+      throw new Error('The response body is not readable.');
+    }
+
+    const type = response.headers.get('content-type') || '';
+    const total = Number(response.headers.get('content-length')) || 0;
+    /** @type {Partial<MediaMetadata>} */
+    const patch = {};
+    if (type) {
+      patch.type = type;
+    }
+    if (total > 0) {
+      patch.size = total;
+    }
+    if (Object.keys(patch).length > 0) {
+      this._emitMetadata(patch);
+    }
+
+    const progress = this._createProgress(total);
+    const reader = response.body.getReader();
+    /** @type {Uint8Array[]} */
+    const chunks = [];
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      chunks.push(value);
+      progress.push(value.byteLength);
+      this._emitProgress();
+    }
+
+    const parts = /** @type {BlobPart[]} */ (/** @type {unknown} */ (chunks));
+    return new Blob(parts, { type: type || 'application/octet-stream' });
+  }
+
+  /**
    * Acquires the current source from the shared cache and remembers the reference.
    * @protected
    * @returns {import('./TinyMediaCache.mjs').MediaCacheEntry|null}
@@ -997,6 +1073,7 @@ class TinyMediaLoader extends EventEmitter {
       loadTime: this.#endTime - this.#startTime,
       timestamp: Date.now(),
       ...this._getMetadataDetails(),
+      ...this.#partial,
     };
   }
 
