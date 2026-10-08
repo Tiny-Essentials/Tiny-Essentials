@@ -528,6 +528,7 @@ class TinyMediaLoader extends EventEmitter {
     this.#internalSrc = null;
     this.#resourceSize = 0;
     this.#partial = {};
+    this.#cacheHint = false;
     this.#startTime = performance.now();
     this.#endTime = 0;
     this.#createController();
@@ -831,7 +832,9 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
-   * Acquires the current source from the shared cache and remembers the reference.
+   * Acquires the current source from the shared cache and remembers the
+   * reference. A successful acquisition also flags the metadata so the final
+   * snapshot reports `fromCache: true`.
    * @protected
    * @returns {import('./TinyMediaCache.mjs').MediaCacheEntry|null}
    */
@@ -842,6 +845,7 @@ class TinyMediaLoader extends EventEmitter {
     const entry = this.#cache.acquire(this.#src);
     if (entry) {
       this.#cacheAcquired = true;
+      this._setCacheHint(true);
     }
     return entry;
   }
