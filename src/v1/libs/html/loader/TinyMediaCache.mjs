@@ -189,6 +189,14 @@ class TinyMediaCache {
   }
 
   /**
+   * A read-only snapshot of the shared blob registry.
+   * @returns {Array<{ key: string, objectUrl: string, refs: number, size: number }>} One record per cached blob.
+   */
+  static get registry() {
+    return Array.from(TinyMediaCache.#blobs, ([key, record]) => ({ key, ...record }));
+  }
+
+  /**
    * Every live cache instance.
    * @returns {TinyMediaCache[]}
    */
@@ -290,6 +298,14 @@ class TinyMediaCache {
       instances: TinyMediaCache.#instances.size,
       blobs: TinyMediaCache.#blobs.size,
     };
+  }
+
+  /**
+   * A read-only snapshot of every entry held by this cache.
+   * @returns {MediaCacheEntry[]} A shallow copy of the entries.
+   */
+  entries() {
+    return Array.from(this.#entries.values(), (entry) => ({ ...entry }));
   }
 
   /**

@@ -291,6 +291,107 @@ const installNodeModules = (modNames, globalNames, globalResults) => async (req,
   }
 };
 
+/**
+ * Streams a file from the public directory at a controlled pace.
+ *
+ * Throttling is what makes streaming and abort observable: a local file loads
+ * in a couple of milliseconds, so without it the progress bar jumps from 0 to
+ * 100 and `abort()` has no window to run in.
+ *
+ * Query parameters:
+ * - `src`   (required) Path relative to the public directory.
+ * - `chunk` (default 65536) Bytes per read.
+ * - `delay` (default 0) Milliseconds to wait between chunks.
+ * - `type`  (optional) Overrides the Content-Type header.
+ */
+app.get('/__slow', async (req, res) => {
+  disableCache(res);
+
+  const target = String(req.query.src || '');
+  const chunkSize = Math.max(1, Number(req.query.chunk) || 65536);
+  const delay = Math.max(0, Number(req.query.delay) || 0);
+
+  const filePath = path.resolve(publicDir, `.${target}`);
+  if (filePath !== publicDir && !filePath.startsWith(publicDir + path.sep)) {
+    return res.status(403).send('Access denied: path is outside the public directory.');
+  }
+
+  let stats;
+  try {
+    stats = await fs.promises.stat(filePath);
+  } catch {
+    return res.status(404).send(`Not found: ${target}`);
+  }
+  if (!stats.isFile()) {
+    return res.status(404).send(`Not a file: ${target}`);
+  }
+
+  if (req.query.type) {
+    res.setHeader('Content-Type', String(req.query.type));
+  } else {
+    res.type(filePath);
+  }
+  res.setHeader('Content-Length', String(stats.size));
+  res.setHeader('Accept-Ranges', 'none');
+  res.setHeader('Cache-Control', 'no-store');
+
+  const stream = fs.createReadStream(filePath, { highWaterMark: chunkSize });
+  let closed = false;
+  const cleanup = () => {
+    closed = true;
+    stream.destroy();
+  };
+  req.on('close', cleanup);
+  res.on('close', cleanup);
+
+  try {
+    for await (const chunk of stream) {
+      if (closed) return;
+      if (!res.write(chunk)) {
+        await new Promise((resolve) => res.once('drain', resolve));
+      }
+      if (delay > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+    if (!closed) res.end();
+  } catch {
+    if (!res.writableEnded) res.end();
+  }
+});
+
+/**
+ * Lists the media files available under the public directory so the harness can
+ * populate its presets without hardcoding paths.
+ */
+app.get('/__fixtures', async (req, res) => {
+  disableCache(res);
+  const extensions = new Set([
+    '.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.svg',
+    '.mp4', '.webm', '.mov',
+    '.mp3', '.wav', '.ogg', '.m4a', '.flac',
+  ]);
+  const found = [];
+  const walk = async (dir) => {
+    const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+        await walk(full);
+      } else if (extensions.has(path.extname(entry.name).toLowerCase())) {
+        found.push('/' + path.relative(publicDir, full).split(path.sep).join('/'));
+      }
+    }
+  };
+  try {
+    await walk(publicDir);
+    res.json(found);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Serve buffer global para o navegador
 app.get(
   '/__buffer.js',

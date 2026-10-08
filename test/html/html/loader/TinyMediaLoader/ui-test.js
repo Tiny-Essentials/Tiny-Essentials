@@ -1,10 +1,10 @@
 /**
  * @fileoverview Bridge between the test harness UI and the TinyMediaLoader
- * family. This file never re-implements library logic: it only instantiates
- * the public classes, calls their public API and renders the results.
+ * family. It never re-implements library logic: it instantiates the public
+ * classes, calls their public API and renders the results. Every card owns one
+ * loader instance so that two loads can be compared side by side.
  */
 
-import TinyMediaLoader from '/src/v1/libs/html/loader/TinyMediaLoader.mjs';
 import TinyImageLoader from '/src/v1/libs/html/loader/TinyImageLoader.mjs';
 import TinyVideoLoader from '/src/v1/libs/html/loader/TinyVideoLoader.mjs';
 import TinyAudioLoader from '/src/v1/libs/html/loader/TinyAudioLoader.mjs';
@@ -45,8 +45,7 @@ function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
   const units = ['B', 'KB', 'MB', 'GB'];
   const index = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
-  const value = bytes / 1024 ** index;
-  return `${value.toFixed(index === 0 ? 0 : 2)} ${units[index]}`;
+  return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 2)} ${units[index]}`;
 }
 
 /**
@@ -113,34 +112,12 @@ function log(level, message, payload) {
   logCount += 1;
   consoleCountEl.textContent = String(logCount);
 
-  while (consoleEl.childElementCount > MAX_LOGS) {
-    consoleEl.lastElementChild?.remove();
-  }
-}
-
-/**
- * Runs a callback and reports the result in the console.
- * @param {string} label - The label printed before the result.
- * @param {() => unknown} callback - The code under test.
- * @returns {unknown} Whatever the callback returned, or `undefined` on throw.
- */
-function attempt(label, callback) {
-  try {
-    const result = callback();
-    log('success', `${label} →`, result);
-    return result;
-  } catch (error) {
-    log('error', `${label} threw →`, error);
-    return undefined;
-  }
+  while (consoleEl.childElementCount > MAX_LOGS) consoleEl.lastElementChild?.remove();
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   LOADER PANELS
+   CONFIGURATION
    ══════════════════════════════════════════════════════════════════ */
-
-/** @type {Record<string, any>} */
-const loaders = { image: null, video: null, audio: null };
 
 const LOADER_CLASSES = {
   image: TinyImageLoader,
@@ -157,6 +134,7 @@ const CUSTOM_EVENTS = [
   'timeout',
   'statechange',
   'srcchange',
+  'srctransition',
   'cachehit',
   'cachemiss',
   'destroy',
@@ -185,20 +163,29 @@ const DOM_EVENTS = [
 /** @type {TinyMediaCache|null} */
 let sharedCache = null;
 
-/** @param {string} kind */
-const panelFor = (kind) => /** @type {HTMLElement} */ ($(`.loader[data-loader="${kind}"]`));
+/**
+ * Returns the shared cache, creating it on first use.
+ * @returns {TinyMediaCache} The shared cache instance.
+ */
+function ensureCache() {
+  if (!sharedCache || sharedCache.destroyed) {
+    sharedCache = new TinyMediaCache({ maxItems: 50, ttl: 0, strategy: 'manual' });
+    log('info', 'TinyMediaCache created', sharedCache.stats);
+  }
+  return sharedCache;
+}
 
 /**
- * Reads the shared configuration form.
+ * Reads the spawn form.
  * @returns {Record<string, any>} The parsed configuration values.
  */
 function readConfig() {
   return {
     src: textOf('cfg-src'),
+    kind: byId('cfg-kind').value,
     timeout: numberOf('cfg-timeout', 30000),
     crossOrigin: byId('cfg-crossorigin').value || null,
     preload: byId('cfg-preload').value,
-    decoding: byId('cfg-decoding').value,
     stream: isChecked('cfg-stream'),
     autoReload: isChecked('cfg-autoreload'),
     autoplay: isChecked('cfg-autoplay'),
@@ -210,59 +197,107 @@ function readConfig() {
 }
 
 /**
- * Returns the shared cache, creating it on first use.
- * @returns {TinyMediaCache} The shared cache instance.
+ * Infers the loader kind from a file extension.
+ * @param {string} src - The source URL or path.
+ * @returns {'image'|'audio'|'video'|null} The detected kind, or null when unknown.
  */
-function ensureCache() {
-  if (!sharedCache || sharedCache.destroyed) {
-    sharedCache = new TinyMediaCache({
-      maxItems: numberOf('cfg-cache-max', 20),
-      ttl: numberOf('cfg-cache-ttl', 0),
-      strategy: byId('cfg-cache-strategy').value,
-      ignoreSearch: isChecked('cfg-cache-ignore'),
-    });
-    log('info', 'TinyMediaCache created', sharedCache.stats);
+function detectKind(src) {
+  let candidate = src;
+  if (candidate.startsWith('/__slow')) {
+    candidate = new URL(candidate, location.origin).searchParams.get('src') || '';
   }
-  return sharedCache;
+  const clean = candidate.split('?')[0].split('#')[0].toLowerCase();
+  if (/\.(png|jpe?g|gif|webp|avif|svg|bmp|ico)$/.test(clean)) return 'image';
+  if (/\.(mp3|wav|ogg|oga|m4a|aac|flac|opus)$/.test(clean)) return 'audio';
+  if (/\.(mp4|webm|ogv|mov|m4v|mkv)$/.test(clean)) return 'video';
+  return null;
 }
 
 /**
- * Renders the live state of one loader inside its panel.
- * @param {string} kind - The loader key (`image`, `video` or `audio`).
+ * Wraps a source in the throttled endpoint when the toggle is on.
+ * @param {string} raw - The original source URL.
+ * @returns {string} The URL the loader must fetch.
+ */
+function buildSrc(raw) {
+  if (!isChecked('cfg-slow')) return raw;
+  const params = new URLSearchParams({
+    src: raw,
+    chunk: String(numberOf('cfg-slow-chunk', 65536)),
+    delay: String(numberOf('cfg-slow-delay', 150)),
+  });
+  return `/__slow?${params}`;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LAB
+   ══════════════════════════════════════════════════════════════════ */
+
+const labEl = $('#lab');
+const labCountEl = $('#lab-count');
+const labDiffEl = $('#lab-diff');
+
+/** @type {Map<number, any>} */
+const instances = new Map();
+let nextId = 1;
+
+/**
+ * Builds the DOM skeleton of a card.
+ * @param {number} id - The instance id.
+ * @param {string} kind - The loader kind.
+ * @param {string} src - The resolved source URL.
+ * @returns {HTMLElement} The card element.
+ */
+function createCard(id, kind, src) {
+  const card = document.createElement('article');
+  card.className = 'card';
+  card.dataset.status = 'idle';
+  card.innerHTML = `
+    <header class="card__head">
+      <span class="card__kind">${kind} #${id}</span>
+      <span class="badge" data-role="state">idle</span>
+      <button class="btn btn--ghost card__close" data-role="remove" title="Remove">✕</button>
+    </header>
+    <div class="card__stage" data-role="stage"></div>
+    <div class="progress"><div class="progress__bar" data-role="bar"></div></div>
+    <dl class="kv" data-role="meta"></dl>
+    <div class="card__actions">
+      <button class="btn" data-role="load">load()</button>
+      <button class="btn" data-role="abort">abort()</button>
+      <button class="btn" data-role="reload">reload()</button>
+      <button class="btn btn--danger" data-role="destroy">destroy()</button>
+    </div>
+    <ol class="timeline" data-role="timeline"></ol>
+  `;
+  card.title = src;
+  return card;
+}
+
+/**
+ * Renders the metadata block of a card.
+ * @param {any} entry - The instance registry entry.
  * @returns {void}
  */
-function renderLoaderState(kind) {
-  const panel = panelFor(kind);
-  const target = /** @type {HTMLElement} */ ($('[data-role="state"]', panel));
-  const badge = /** @type {HTMLElement} */ (
-    $('[data-role="state"]', panel.parentElement === null ? panel : panel)
-  );
-  const loader = loaders[kind];
-
+function renderMeta(entry) {
+  const { loader, card } = entry;
+  const target = $('[data-role="meta"]', card);
+  const badge = $('[data-role="state"]', card);
   if (!loader) {
-    target.innerHTML = '<dt>instance</dt><dd>null</dd>';
-    badge.textContent = 'idle';
+    target.replaceChildren();
+    badge.textContent = 'null';
     return;
   }
-
   const meta = loader.metadata;
+  const element = loader.element;
   const rows = [
-    ['state', loader.state],
-    ['src', loader.src || '—'],
-    ['isLoading', String(loader.isLoading)],
-    ['isLoaded', String(loader.isLoaded)],
-    ['hasError', String(loader.hasError)],
-    ['cacheHint', String(loader.cacheHint)],
-    ['cacheAcquired', String(loader.cacheAcquired)],
-    ['aborted', String(loader.aborted)],
+    ['size', `${formatBytes(meta.size)} (${meta.size} B)`],
+    ['loadTime', `${Number(meta.loadTime).toFixed(1)} ms`],
+    ['fromCache', String(meta.fromCache)],
     ['type', meta.type || '—'],
     ['dimensions', `${meta.width} × ${meta.height}`],
     ['duration', `${Number(meta.duration).toFixed(2)} s`],
-    ['size', formatBytes(meta.size)],
-    ['fromCache', String(meta.fromCache)],
-    ['loadTime', `${Number(meta.loadTime).toFixed(1)} ms`],
+    ['original-src', element?.getAttribute('original-src') ?? '—'],
+    ['element.src', element?.getAttribute('src')?.slice(0, 42) ?? '—'],
   ];
-
   target.replaceChildren(
     ...rows.flatMap(([key, value]) => {
       const dt = document.createElement('dt');
@@ -273,62 +308,77 @@ function renderLoaderState(kind) {
       return [dt, dd];
     }),
   );
-
   badge.textContent = loader.state;
+  card.dataset.status = loader.state;
 }
 
 /**
- * Attaches every observable event of a loader to the visual console.
- * @param {string} kind - The loader key.
- * @param {any} loader - The loader instance.
+ * Appends a timestamped line to the card timeline.
+ * @param {any} entry - The instance registry entry.
+ * @param {string} label - The event name.
  * @returns {void}
  */
-function wireLoaderEvents(kind, loader) {
+function pushTimeline(entry, label) {
+  const list = $('[data-role="timeline"]', entry.card);
+  const item = document.createElement('li');
+  const elapsed = entry.startedAt ? `+${(performance.now() - entry.startedAt).toFixed(0)}ms` : '—';
+  item.textContent = `${elapsed.padStart(8)} · ${label}`;
+  list.prepend(item);
+  while (list.childElementCount > 24) list.lastElementChild?.remove();
+}
+
+/**
+ * Wires the loader events into the card and the console.
+ * @param {any} entry - The instance registry entry.
+ * @returns {void}
+ */
+function wire(entry) {
+  const { loader, card, id } = entry;
   for (const name of CUSTOM_EVENTS) {
     loader.on(name, (payload) => {
-      if (name === 'error') {
-        log('error', `[${kind}] error`, payload);
-      } else {
-        log('event', `[${kind}] ${name}`, payload);
-      }
-      renderLoaderState(kind);
+      pushTimeline(entry, name);
+      if (name === 'error') log('error', `[#${id}] error`, payload);
+      else if (name !== 'statechange') log('event', `[#${id}] ${name}`, payload);
+      renderMeta(entry);
     });
   }
-
   for (const name of DOM_EVENTS) {
     loader.on(name, () => {
-      if (!isChecked('cfg-verbose')) return;
-      log('info', `[${kind}] ${name}`);
+      if (isChecked('cfg-verbose')) log('info', `[#${id}] ${name}`);
     });
   }
-
   loader.on('progress', (snapshot) => {
-    const panel = panelFor(kind);
-    const bar = /** @type {HTMLElement} */ ($('[data-role="bar"]', panel));
+    const bar = $('[data-role="bar"]', card);
     bar.style.width = `${Math.min(100, snapshot.percent || 0).toFixed(1)}%`;
-    if (isChecked('cfg-verbose')) {
-      log('info', `[${kind}] progress ${snapshot.percent.toFixed(1)}%`, snapshot);
-    }
+    if (isChecked('cfg-verbose'))
+      log('info', `[#${id}] progress ${snapshot.percent.toFixed(1)}%`, snapshot);
+  });
+  card.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-role]');
+    if (!button) return;
+    const role = button.getAttribute('data-role');
+    if (role === 'remove') removeInstance(id);
+    if (role === 'load') loadInstance(id);
+    if (role === 'abort') abortInstance(id);
+    if (role === 'reload') reloadInstance(id);
+    if (role === 'destroy') destroyInstance(id);
   });
 }
 
 /**
- * Creates a fresh loader instance for the given panel.
- * @param {string} kind - The loader key.
- * @returns {void}
+ * Creates a loader instance and its card.
+ * @param {Record<string, any>} config - The spawn configuration.
+ * @returns {any} The created registry entry.
  */
-function createLoader(kind) {
-  const config = readConfig();
-
-  if (loaders[kind]) {
-    log('warn', `[${kind}] replacing the previous instance`);
-    try {
-      loaders[kind].destroy();
-    } catch (error) {
-      log('error', `[${kind}] destroy failed`, error);
-    }
+function spawn(config) {
+  const kind = config.kind === 'auto' ? detectKind(config.src) : config.kind;
+  if (!kind) {
+    log('error', `Could not detect the media kind for ${config.src}`);
+    return null;
   }
-
+  const id = nextId++;
+  const card = createCard(id, kind, config.src);
+  const LoaderClass = LOADER_CLASSES[kind];
   const options = {
     src: config.src,
     timeout: config.timeout,
@@ -337,206 +387,175 @@ function createLoader(kind) {
     stream: config.stream,
     cache: config.useCache ? ensureCache() : null,
   };
-
   if (kind === 'image') {
-    options.decoding = config.decoding;
+    options.decoding = 'async';
   } else {
     options.preload = config.preload;
     options.autoplay = config.autoplay;
     options.loop = config.loop;
     options.muted = config.muted;
   }
-
-  const LoaderClass = LOADER_CLASSES[kind];
   const loader = new LoaderClass(options);
-  loaders[kind] = loader;
-  wireLoaderEvents(kind, loader);
-  renderLoaderState(kind);
-  log('success', `[${kind}] ${LoaderClass.name} created`, options);
+  const entry = { id, kind, card, loader, startedAt: 0 };
+  instances.set(id, entry);
+  wire(entry);
+  labEl.append(card);
+  renderMeta(entry);
+  updateLabCount();
+  log('success', `[#${id}] ${LoaderClass.name} created`, options);
+  return entry;
 }
 
 /**
- * Mounts the loader element into the panel stage.
- * @param {string} kind - The loader key.
- * @returns {void}
- */
-function mountLoader(kind) {
-  const loader = loaders[kind];
-  if (!loader) return;
-  const stage = /** @type {HTMLElement} */ ($('[data-role="stage"]', panelFor(kind)));
-  stage.replaceChildren();
-  loader.mount(stage);
-  log('info', `[${kind}] mounted into the stage`);
-}
-
-/**
- * Runs `load()` and reports the outcome.
- * @param {string} kind - The loader key.
+ * Loads one instance and mounts it on success.
+ * @param {number} id - The instance id.
  * @returns {Promise<void>} Resolves once the load settles.
  */
-async function loadLoader(kind) {
-  const loader = loaders[kind];
-  if (!loader) {
-    log('warn', `[${kind}] create the loader first`);
-    return;
-  }
+async function loadInstance(id) {
+  const entry = instances.get(id);
+  if (!entry) return;
+  entry.startedAt = performance.now();
+  pushTimeline(entry, 'load() called');
   try {
-    const metadata = await loader.load();
+    const metadata = await entry.loader.load();
     if (isChecked('cfg-automount')) {
-      mountLoader(kind);
+      const stage = $('[data-role="stage"]', entry.card);
+      stage.replaceChildren();
+      entry.loader.mount(stage);
     }
-    log('success', `[${kind}] load() resolved`, metadata);
+    log('success', `[#${id}] load() resolved`, metadata);
   } catch (error) {
-    log('error', `[${kind}] load() rejected`, error);
+    log('error', `[#${id}] load() rejected`, error);
   } finally {
-    renderLoaderState(kind);
+    renderMeta(entry);
   }
 }
 
 /**
- * Binds every button of a loader panel.
- * @param {string} kind - The loader key.
+ * Aborts one instance.
+ * @param {number} id - The instance id.
  * @returns {void}
  */
-function bindLoaderPanel(kind) {
-  const panel = panelFor(kind);
+function abortInstance(id) {
+  const entry = instances.get(id);
+  if (!entry) return;
+  const result = entry.loader.abort();
+  pushTimeline(entry, `abort() → ${result}`);
+  log(result ? 'warn' : 'info', `[#${id}] abort() → ${result}`);
+}
 
-  panel.addEventListener('click', async (event) => {
-    const button = /** @type {HTMLElement} */ (event.target).closest('[data-action]');
-    if (!button) return;
-    const action = button.getAttribute('data-action');
+/**
+ * Reloads one instance.
+ * @param {number} id - The instance id.
+ * @returns {Promise<void>} Resolves once the reload settles.
+ */
+async function reloadInstance(id) {
+  const entry = instances.get(id);
+  if (!entry) return;
+  entry.startedAt = performance.now();
+  try {
+    await entry.loader.reload();
+  } catch (error) {
+    log('error', `[#${id}] reload() rejected`, error);
+  }
+}
 
-    try {
-      if (action === 'create') createLoader(kind);
-      if (action === 'load') await loadLoader(kind);
-      if (action === 'reload') {
-        const metadata = await loaders[kind].reload();
-        log('success', `[${kind}] reload() resolved`, metadata);
-      }
-      if (action === 'abort') log('info', `[${kind}] abort() →`, loaders[kind].abort());
-      if (action === 'inspect') {
-        log('info', `[${kind}] metadata`, loaders[kind].metadata);
-        log('info', `[${kind}] element`, loaders[kind].element);
-      }
-      if (action === 'destroy') {
-        loaders[kind].destroy();
-        loaders[kind] = null;
-        $('[data-role="stage"]', panel).replaceChildren();
-        log('success', `[${kind}] destroy() completed`);
-      }
-    } catch (error) {
-      log('error', `[${kind}] ${action}() threw`, error);
-    } finally {
-      renderLoaderState(kind);
-    }
-  });
+/**
+ * Destroys one instance and removes its card.
+ * @param {number} id - The instance id.
+ * @returns {void}
+ */
+function destroyInstance(id) {
+  const entry = instances.get(id);
+  if (!entry) return;
+  try {
+    entry.loader.destroy();
+  } catch (error) {
+    log('error', `[#${id}] destroy() threw`, error);
+  }
+  entry.card.remove();
+  instances.delete(id);
+  updateLabCount();
+}
+
+/**
+ * Removes one instance without destroying it.
+ * @param {number} id - The instance id.
+ * @returns {void}
+ */
+function removeInstance(id) {
+  const entry = instances.get(id);
+  if (!entry) return;
+  entry.card.remove();
+  instances.delete(id);
+  updateLabCount();
+}
+
+/**
+ * Refreshes the instance counter and the cold/warm diff line.
+ * @returns {void}
+ */
+function updateLabCount() {
+  labCountEl.textContent = `${instances.size} instance${instances.size === 1 ? '' : 's'}`;
+  const loaded = Array.from(instances.values()).filter((entry) => entry.loader.isLoaded);
+  if (loaded.length < 2) {
+    labDiffEl.textContent = '';
+    return;
+  }
+  const [cold, warm] = loaded;
+  const sizeDelta = warm.loader.metadata.size - cold.loader.metadata.size;
+  const timeDelta = warm.loader.metadata.loadTime - cold.loader.metadata.loadTime;
+  labDiffEl.textContent =
+    `#${cold.id} → #${warm.id} · ` +
+    `size Δ ${sizeDelta >= 0 ? '+' : ''}${sizeDelta} B · ` +
+    `loadTime Δ ${timeDelta >= 0 ? '+' : ''}${timeDelta.toFixed(1)} ms · ` +
+    `fromCache ${cold.loader.metadata.fromCache} → ${warm.loader.metadata.fromCache}`;
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   CACHE PANEL
+   CACHE INSPECTOR
    ══════════════════════════════════════════════════════════════════ */
 
-const cacheReadout = /** @type {HTMLElement} */ ($('#cache-readout'));
+const cacheRowsEl = $('#cache-rows');
+const cacheSummaryEl = $('#cache-summary');
 
 /**
- * Prints a value in the cache readout block.
- * @param {unknown} value - The value to print.
+ * Rebuilds the cache table from the shared registry.
  * @returns {void}
  */
-function printCache(value) {
-  cacheReadout.textContent = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+function renderCache() {
+  const registry = TinyMediaCache.registry;
+  cacheSummaryEl.textContent = `${registry.length} blobs · ${formatBytes(TinyMediaCache.bytes)}`;
+  cacheRowsEl.replaceChildren(
+    ...registry.map((record) => {
+      const row = document.createElement('tr');
+      const key = document.createElement('td');
+      key.textContent = record.key.length > 48 ? `…${record.key.slice(-46)}` : record.key;
+      key.title = record.key;
+      const size = document.createElement('td');
+      size.textContent = formatBytes(record.size);
+      const refs = document.createElement('td');
+      refs.textContent = String(record.refs);
+      const url = document.createElement('td');
+      url.textContent = record.objectUrl.slice(0, 24);
+      url.title = record.objectUrl;
+      row.append(key, size, refs, url);
+      return row;
+    }),
+  );
 }
 
-$('#cache-readout')
-  .closest('.panel')
-  ?.addEventListener('click', (event) => {
-    const button = /** @type {HTMLElement} */ (event.target).closest('[data-cache]');
-    if (!button) return;
-
-    const action = button.getAttribute('data-cache');
-    const url = textOf('cache-url');
-
-    try {
-      switch (action) {
-        case 'construct':
-          sharedCache = new TinyMediaCache({
-            maxItems: numberOf('cfg-cache-max', 20),
-            ttl: numberOf('cfg-cache-ttl', 0),
-            strategy: byId('cfg-cache-strategy').value,
-            ignoreSearch: isChecked('cfg-cache-ignore'),
-          });
-          log('success', 'new TinyMediaCache()', sharedCache.stats);
-          break;
-        case 'set':
-          printCache(
-            sharedCache.set(url, new Blob([textOf('cache-blob')], { type: 'text/plain' })),
-          );
-          break;
-        case 'get':
-          printCache(sharedCache.get(url) ?? 'null');
-          break;
-        case 'has':
-          printCache(String(sharedCache.has(url)));
-          break;
-        case 'acquire':
-          printCache(sharedCache.acquire(url) ?? 'null');
-          break;
-        case 'release':
-          printCache(String(sharedCache.release(url)));
-          break;
-        case 'pin':
-          printCache(String(sharedCache.pin(url, byId('cache-pin').value === 'true')));
-          break;
-        case 'prune':
-          printCache(`removed: ${sharedCache.prune()}`);
-          break;
-        case 'stats':
-          printCache(sharedCache.stats);
-          break;
-        case 'clear':
-          sharedCache.clear();
-          printCache('cleared');
-          break;
-        case 'destroy':
-          sharedCache.destroy();
-          printCache('destroyed');
-          break;
-        case 'static-has':
-          printCache(String(TinyMediaCache.has(url)));
-          break;
-        case 'static-size':
-          printCache(String(TinyMediaCache.size));
-          break;
-        case 'static-bytes':
-          printCache(formatBytes(TinyMediaCache.bytes));
-          break;
-        case 'static-instances':
-          printCache(`instances: ${TinyMediaCache.instances.length}`);
-          break;
-        case 'static-clear':
-          TinyMediaCache.clear();
-          printCache('shared registry cleared');
-          break;
-        case 'static-destroy-all':
-          TinyMediaCache.destroyAll();
-          printCache('all instances destroyed');
-          break;
-        default:
-          break;
-      }
-    } catch (error) {
-      log('error', `cache.${action}() threw`, error);
-      printCache(`${error.name}: ${error.message}`);
-    }
-  });
+setInterval(() => {
+  if (isChecked('cache-live')) renderCache();
+}, 500);
+$('#btn-cache-refresh').addEventListener('click', renderCache);
 
 /* ══════════════════════════════════════════════════════════════════
    PROGRESS PANEL
    ══════════════════════════════════════════════════════════════════ */
 
-/** @type {TinyMediaProgress|null} */
 let progress = null;
-const progressReadout = /** @type {HTMLElement} */ ($('#progress-readout'));
+const progressReadout = $('#progress-readout');
 
 /** @returns {void} */
 function printProgress() {
@@ -554,10 +573,7 @@ $('#btn-progress-construct').addEventListener('click', () => {
 $$('[data-progress]').forEach((button) => {
   button.addEventListener('click', () => {
     const action = button.getAttribute('data-progress');
-    if (!progress) {
-      log('warn', 'Create a TinyMediaProgress instance first');
-      return;
-    }
+    if (!progress) return log('warn', 'Create a TinyMediaProgress instance first');
     try {
       if (action === 'start') progress.start();
       if (action === 'push') progress.push(numberOf('progress-bytes', 0));
@@ -574,68 +590,33 @@ $$('[data-progress]').forEach((button) => {
    GLOBAL CONTROLS
    ══════════════════════════════════════════════════════════════════ */
 
-/**
- * Maps a loader kind to the local fixture served by the dev server.
- * @type {Record<'image'|'audio'|'video', { src: string, label: string }>}
- */
-const PRESETS = {
-  image: { src: '/6d01c26e-e523-4439-8bfc-f656a83cdab0.png', label: 'image' },
-  audio: { src: '/temp/test.mp3', label: 'audio' },
-  video: { src: '/temp/test.mp4', label: 'video' },
-};
-
-/**
- * Infers the loader kind from a file extension.
- * @param {string} src - The source URL or path.
- * @returns {'image'|'audio'|'video'|null} The detected kind, or `null` when unknown.
- */
-function detectKind(src) {
-  const clean = src.split('?')[0].split('#')[0].toLowerCase();
-  if (/\.(png|jpe?g|gif|webp|avif|svg|bmp|ico)$/.test(clean)) return 'image';
-  if (/\.(mp3|wav|ogg|oga|m4a|aac|flac|opus)$/.test(clean)) return 'audio';
-  if (/\.(mp4|webm|ogv|mov|m4v|mkv)$/.test(clean)) return 'video';
-  return null;
-}
-
-/**
- * Fills the shared form, creates a loader and immediately loads the fixture.
- * @param {'image'|'audio'|'video'} kind - The loader to exercise.
- * @returns {Promise<void>} Resolves once the load settles.
- */
-async function runPreset(kind) {
-  const preset = PRESETS[kind];
-  if (!preset) {
-    log('error', `Unknown preset: ${kind}`);
-    return;
-  }
-
-  byId('cfg-src').value = preset.src;
-  log('info', `[${kind}] quick start → ${preset.src}`);
-
-  try {
-    createLoader(kind);
-    await loadLoader(kind);
-  } catch (error) {
-    log('error', `[${kind}] quick start failed`, error);
-    return;
-  }
-
-  panelFor(kind).scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-$$('[data-preset]').forEach((button) => {
-  button.addEventListener('click', () => {
-    const kind = button.getAttribute('data-preset');
-    if (kind) runPreset(/** @type {'image'|'audio'|'video'} */ (kind));
-  });
+$('#btn-spawn').addEventListener('click', () => {
+  const config = readConfig();
+  config.src = buildSrc(config.src);
+  spawn(config);
 });
 
-$('#cfg-preset').addEventListener('change', (event) => {
-  const value = /** @type {HTMLSelectElement} */ (event.target).value;
-  if (!value) return;
-  byId('cfg-src').value = value;
-  const kind = detectKind(value);
-  log('info', `src set to ${value}`, kind ? `(detected: ${kind})` : '(unknown kind)');
+$('#btn-spawn-pair').addEventListener('click', async () => {
+  const config = readConfig();
+  if (!config.useCache) {
+    log('warn', 'Enable "use cache" so the second load can be a cache hit.');
+  }
+  const resolved = buildSrc(config.src);
+  const cold = spawn({ ...config, src: resolved });
+  if (!cold) return;
+  await loadInstance(cold.id);
+  const warm = spawn({ ...config, src: resolved });
+  if (!warm) return;
+  await loadInstance(warm.id);
+  updateLabCount();
+});
+
+$('#btn-load-all').addEventListener('click', () => {
+  for (const id of instances.keys()) loadInstance(id);
+});
+
+$('#btn-abort-all').addEventListener('click', () => {
+  for (const id of instances.keys()) abortInstance(id);
 });
 
 $('#btn-clear-console').addEventListener('click', () => {
@@ -645,35 +626,46 @@ $('#btn-clear-console').addEventListener('click', () => {
 });
 
 $('#btn-destroy-all').addEventListener('click', () => {
-  for (const kind of Object.keys(loaders)) {
-    if (!loaders[kind]) continue;
-    try {
-      loaders[kind].destroy();
-      loaders[kind] = null;
-      $('[data-role="stage"]', panelFor(kind)).replaceChildren();
-      renderLoaderState(kind);
-    } catch (error) {
-      log('error', `[${kind}] destroy() threw`, error);
-    }
-  }
+  for (const id of Array.from(instances.keys())) destroyInstance(id);
   log('success', 'All loaders destroyed');
+});
+
+$('#cfg-preset').addEventListener('change', (event) => {
+  const value = event.target.value;
+  if (!value) return;
+  byId('cfg-src').value = value;
+  const kind = detectKind(value);
+  log('info', `src set to ${value}`, kind ? `(detected: ${kind})` : '(unknown kind)');
+});
+
+/**
+ * Updates the resolved URL preview.
+ * @returns {void}
+ */
+function updateSlowPreview() {
+  const raw = textOf('cfg-src') || '/temp/test.mp4';
+  const resolved = buildSrc(raw);
+  $('#slow-preview').textContent = resolved.length > 60 ? `…${resolved.slice(-58)}` : resolved;
+  $('#slow-preview').title = resolved;
+}
+
+['cfg-src', 'cfg-slow', 'cfg-slow-chunk', 'cfg-slow-delay'].forEach((id) => {
+  byId(id).addEventListener('input', updateSlowPreview);
+  byId(id).addEventListener('change', updateSlowPreview);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  log('error', 'Unhandled rejection', event.reason);
 });
 
 /* ══════════════════════════════════════════════════════════════════
    BOOT
    ══════════════════════════════════════════════════════════════════ */
 
-window.addEventListener('unhandledrejection', (event) => {
-  log('error', 'Unhandled rejection', event.reason);
-});
-
-['image', 'video', 'audio'].forEach(bindLoaderPanel);
-['image', 'video', 'audio'].forEach(renderLoaderState);
-
-byId('cfg-src').value = PRESETS.video.src;
-
+byId('cfg-src').value = '/temp/test.mp4';
+updateSlowPreview();
+renderCache();
 log('success', 'Harness ready', {
-  TinyMediaLoader: typeof TinyMediaLoader,
   TinyMediaCache: typeof TinyMediaCache,
   TinyMediaProgress: typeof TinyMediaProgress,
 });
