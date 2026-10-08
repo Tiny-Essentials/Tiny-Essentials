@@ -7,6 +7,7 @@
 import { EventEmitter } from 'events';
 import TinyMediaProgress from './TinyMediaProgress.mjs';
 import TinyMediaCache from './TinyMediaCache.mjs';
+import TinyMediaProbe from './TinyMediaProbe.mjs';
 
 /**
  * Describes the configuration object accepted by the {@link TinyMediaLoader} constructor.
@@ -482,6 +483,8 @@ class TinyMediaLoader extends EventEmitter {
    * Merges a partial metadata patch into the current snapshot and notifies the
    * listeners. It is called as soon as the response headers arrive, so a
    * consumer can render the file type and size before the download finishes.
+   * Keys whose value is `undefined` are ignored, so a decoder that cannot
+   * resolve a dimension never clobbers a value that was already known.
    * @protected
    * @param {Partial<MediaMetadata>} patch - The values to merge.
    * @returns {void}
@@ -491,8 +494,15 @@ class TinyMediaLoader extends EventEmitter {
     if (patch === null || typeof patch !== 'object') {
       throw new TypeError('The "patch" argument must be an object.');
     }
-    this.#partial = { ...this.#partial, ...patch };
-    this.#metadata = { ...this.#metadata, ...patch };
+    /** @type {Partial<MediaMetadata>} */
+    const clean = {};
+    for (const [key, value] of Object.entries(patch)) {
+      if (value !== undefined) {
+        clean[key] = value;
+      }
+    }
+    this.#partial = { ...this.#partial, ...clean };
+    this.#metadata = { ...this.#metadata, ...clean };
     this.emit('metadata', this.metadata);
   }
 
@@ -864,26 +874,40 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
-   * Creates the WebCodecs decoder used to read the intrinsic dimensions before
-   * the download finishes. It is a no-op when early decoding is disabled, when
-   * the browser has no `ImageDecoder` or when the MIME type is not a supported
-   * image. Failures are swallowed on purpose: early decoding is best-effort.
+   * Creates the header decoder used to read the intrinsic dimensions before the
+   * download finishes. Images go through the WebCodecs `ImageDecoder`; videos
+   * are parsed from the container header by {@link TinyMediaProbe}. It is a
+   * no-op when early decoding is disabled or the MIME type is not supported.
+   * Failures are swallowed on purpose: early decoding is best-effort.
    * @param {string} type - The MIME type from the response headers.
    * @returns {void}
    */
   #openDecoder(type) {
-    if (!this.#earlyDecode || typeof ImageDecoder === 'undefined') {
+    if (!this.#earlyDecode) {
       return;
     }
-    const mime = type.split(';')[0].trim();
-    if (!mime.startsWith('image/')) {
-      return;
+    const mime = type.split(';')[0].trim().toLowerCase();
+    if (mime.startsWith('image/')) {
+      this.#decoder = this.#createImageDecoder(mime);
+    } else if (mime.startsWith('video/')) {
+      this.#decoder = this.#createVideoDecoder(mime);
+    }
+  }
+
+  /**
+   * Builds a decoder backed by the WebCodecs `ImageDecoder`.
+   * @param {string} mime - The image MIME type.
+   * @returns {MediaEarlyDecoder|null} The decoder, or null when the format is unsupported.
+   */
+  #createImageDecoder(mime) {
+    if (typeof ImageDecoder === 'undefined') {
+      return null;
     }
     if (typeof ImageDecoder.isTypeSupported === 'function' && !ImageDecoder.isTypeSupported(mime)) {
-      return;
+      return null;
     }
 
-    /** @type {ReadableStreamDefaultController<any>} */
+    /** @type {ReadableStreamDefaultController<Uint8Array>} */
     let controller;
     const stream = new ReadableStream({
       start(inner) {
@@ -895,23 +919,25 @@ class TinyMediaLoader extends EventEmitter {
     try {
       decoder = new ImageDecoder({ data: stream, type: mime });
     } catch {
-      return;
+      return null;
     }
 
-    decoder.tracks.ready
-      .then(() => {
-        const track = decoder.tracks.selectedTrack;
-        if (!track) {
-          return;
+    let closed = false;
+
+    decoder
+      .decode()
+      .then(({ image }) => {
+        if (!closed) {
+          this._emitMetadata({ width: image.displayWidth, height: image.displayHeight });
         }
-        this._emitMetadata({ width: track.codedWidth, height: track.codedHeight });
+        image.close();
       })
       .catch(() => {
         // The header was not parsed before the stream closed: the final
         // metadata still carries the decoded dimensions.
       });
 
-    this.#decoder = {
+    return {
       write: (chunk) => {
         try {
           controller.enqueue(chunk);
@@ -920,6 +946,7 @@ class TinyMediaLoader extends EventEmitter {
         }
       },
       close: () => {
+        closed = true;
         try {
           controller.close();
         } catch {
@@ -931,6 +958,24 @@ class TinyMediaLoader extends EventEmitter {
           // The decoder was already released.
         }
       },
+    };
+  }
+
+  /**
+   * Builds a decoder backed by the container header parser.
+   * @param {string} mime - The video MIME type.
+   * @returns {MediaEarlyDecoder} The decoder.
+   */
+  #createVideoDecoder(mime) {
+    const probe = new TinyMediaProbe(mime);
+    return {
+      write: (chunk) => {
+        const size = probe.push(chunk);
+        if (size) {
+          this._emitMetadata(size);
+        }
+      },
+      close: () => probe.close(),
     };
   }
 
