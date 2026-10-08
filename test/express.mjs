@@ -15,6 +15,88 @@ const port = 3145;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const MIME_TYPES = {
+  // === TEXTO ===
+  '.html': 'text/html; charset=utf-8',
+  '.htm': 'text/html; charset=utf-8',
+  '.css': 'text/css',
+  '.js': 'text/javascript',
+  '.mjs': 'text/javascript',
+  '.txt': 'text/plain; charset=utf-8',
+  '.csv': 'text/csv',
+  '.md': 'text/markdown',
+  '.xml': 'application/xml',
+
+  // === IMAGENS ===
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.bmp': 'image/bmp',
+  '.tiff': 'image/tiff',
+  '.tif': 'image/tiff',
+  '.avif': 'image/avif',
+
+  // === ÁUDIO ===
+  '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+  '.ogg': 'audio/ogg',
+  '.m4a': 'audio/x-m4a',
+  '.aac': 'audio/aac',
+  '.flac': 'audio/flac',
+  '.mid': 'audio/midi',
+  '.midi': 'audio/midi',
+
+  // === VÍDEO ===
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.ogv': 'video/ogg',
+  '.avi': 'video/x-msvideo',
+  '.mov': 'video/quicktime',
+  '.mpeg': 'video/mpeg',
+  '.mkv': 'video/x-matroska',
+
+  // === DOCUMENTOS / OFFICE ===
+  '.pdf': 'application/pdf',
+  '.json': 'application/json',
+  '.pdf': 'application/pdf',
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.xls': 'application/vnd.ms-excel',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.ppt': 'application/vnd.ms-powerpoint',
+  '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  '.odt': 'application/vnd.oasis.opendocument.text',
+  '.ods': 'application/vnd.oasis.opendocument.spreadsheet',
+
+  // === COMPACTADOS / ARQUIVOS ===
+  '.zip': 'application/zip',
+  '.rar': 'application/x-rar-compressed',
+  '.tar': 'application/x-tar',
+  '.gz': 'application/gzip',
+  '.7z': 'application/x-7z-compressed',
+
+  // === FONTES ===
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
+  '.eot': 'application/vnd.ms-fontobject',
+
+  // === OUTROS / BINÁRIOS ===
+  '.exe': 'application/octet-stream',
+  '.bin': 'application/octet-stream',
+  '.wasm': 'application/wasm',
+};
+
+function getContentTypeNative(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  return MIME_TYPES[ext] || 'application/octet-stream';
+}
+
 // Define a pasta pública
 const publicDir = path.join(__dirname, './html');
 const imgDir = path.join(__dirname, './img');
@@ -347,6 +429,7 @@ app.get('/__slow', async (req, res) => {
     return res.status(404).send(`Not found: ${target}`);
   }
 
+  /** @type {fs.Stats} */
   let stats;
   try {
     stats = await fs.promises.stat(filePath);
@@ -354,11 +437,7 @@ app.get('/__slow', async (req, res) => {
     return res.status(404).send(`Not found: ${target}`);
   }
 
-  if (req.query.type) {
-    res.setHeader('Content-Type', String(req.query.type));
-  } else {
-    res.type(filePath);
-  }
+  res.type(getContentTypeNative(filePath));
   res.setHeader('Content-Length', String(stats.size));
   res.setHeader('Accept-Ranges', 'none');
   res.setHeader('Cache-Control', 'no-store');

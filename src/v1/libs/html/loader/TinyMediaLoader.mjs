@@ -17,6 +17,7 @@ import TinyMediaCache from './TinyMediaCache.mjs';
  * @property {HTMLElement|null} [element] - An existing DOM element to adopt.
  * @property {boolean} [autoReload] - Whether an external `src` change triggers a reload.
  * @property {boolean} [originalSrc] - Whether the original URL is mirrored into the `original-src` attribute.
+ * @property {boolean} [earlyDecode] - Whether to decode image dimensions from the response headers using WebCodecs.
  * @property {TinyMediaCache|null} [cache] - An optional shared memory cache.
  */
 
@@ -102,6 +103,15 @@ import TinyMediaCache from './TinyMediaCache.mjs';
  */
 
 /**
+ * Handle returned by the early decoder factory. It is a thin wrapper around the
+ * WebCodecs `ImageDecoder` so the loader can push chunks and release the
+ * decoder without knowing whether the API is available.
+ * @typedef {Object} MediaEarlyDecoder
+ * @property {(chunk: Uint8Array) => void} write - Pushes a chunk into the decoder.
+ * @property {() => void} close - Closes the decoder and releases its resources.
+ */
+
+/**
  * Base class that orchestrates the full lifecycle of a media element.
  * It must be extended. Concrete subclasses implement `_createElement`,
  * `_startLoad`, `_getMetadataDetails`, `_abort` and `_cleanup`.
@@ -168,6 +178,10 @@ class TinyMediaLoader extends EventEmitter {
   #originalSrc = false;
   /** @type {number} */
   #resourceSize = 0;
+  /** @type {boolean} */
+  #earlyDecode = false;
+  /** @type {MediaEarlyDecoder|null} */
+  #decoder = null;
 
   /** @type {Partial<MediaMetadata>} */
   #partial = {};
@@ -203,6 +217,7 @@ class TinyMediaLoader extends EventEmitter {
       element = null,
       autoReload = false,
       originalSrc = false,
+      earlyDecode = false,
     } = options;
 
     if (src !== undefined && typeof src !== 'string') {
@@ -217,6 +232,9 @@ class TinyMediaLoader extends EventEmitter {
     if (typeof originalSrc !== 'boolean') {
       throw new TypeError('The "originalSrc" option must be a boolean.');
     }
+    if (typeof earlyDecode !== 'boolean') {
+      throw new TypeError('The "earlyDecode" option must be a boolean.');
+    }
 
     super();
     const expectedTag = /** @type {typeof TinyMediaLoader} */ (this.constructor).tagName;
@@ -228,7 +246,8 @@ class TinyMediaLoader extends EventEmitter {
     this.#autoReload = Boolean(autoReload);
     this.#originalSrc = originalSrc;
     this.#cache = options.cache ?? null;
-    this.#metadata.src = this.#src;
+    this.#resetLoadState();
+    this.#earlyDecode = earlyDecode;
     if (element) {
       this.#element = element;
       this.#startObserver();
@@ -265,6 +284,15 @@ class TinyMediaLoader extends EventEmitter {
    */
   get originalSrc() {
     return this.#originalSrc;
+  }
+
+  /**
+   * Whether the loader decodes the image dimensions from the response headers
+   * through the WebCodecs `ImageDecoder`.
+   * @returns {boolean} True when early decoding is enabled.
+   */
+  get earlyDecode() {
+    return this.#earlyDecode;
   }
 
   /**
@@ -524,13 +552,8 @@ class TinyMediaLoader extends EventEmitter {
 
     this._detachEvents();
     this._releaseFromCache();
-    this.#aborted = false;
-    this.#internalSrc = null;
-    this.#resourceSize = 0;
-    this.#partial = {};
-    this.#cacheHint = false;
-    this.#startTime = performance.now();
-    this.#endTime = 0;
+    this.#resetLoadState();
+    this.#closeDecoder();
     this.#createController();
     this._createProgress(0);
     this.#setState(TinyMediaLoader.MediaState.LOADING);
@@ -628,6 +651,7 @@ class TinyMediaLoader extends EventEmitter {
       clearTimeout(this.#timeoutId);
       this.#timeoutId = null;
     }
+    this.#closeDecoder();
     this._releaseFromCache();
     this.emit('destroy', undefined);
     this.removeAllListeners();
@@ -780,7 +804,9 @@ class TinyMediaLoader extends EventEmitter {
   /**
    * Downloads a media resource through fetch. It emits a `metadata` event as
    * soon as the response headers arrive and a `progress` event for every
-   * chunk, then resolves with the fully buffered blob.
+   * chunk, then resolves with the fully buffered blob. When `earlyDecode` is
+   * enabled and the browser supports WebCodecs, the intrinsic dimensions are
+   * emitted before the download completes.
    * @protected
    * @param {string} url - The resource to download.
    * @returns {Promise<Blob>} The fully downloaded blob.
@@ -813,18 +839,24 @@ class TinyMediaLoader extends EventEmitter {
       this._emitMetadata(patch);
     }
 
+    this.#openDecoder(type);
     const progress = this._createProgress(total);
     const reader = response.body.getReader();
     /** @type {Uint8Array[]} */
     const chunks = [];
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        chunks.push(value);
+        this.#decoder?.write(value);
+        progress.push(value.byteLength);
+        this._emitProgress();
       }
-      chunks.push(value);
-      progress.push(value.byteLength);
-      this._emitProgress();
+    } finally {
+      this.#closeDecoder();
     }
 
     const parts = /** @type {BlobPart[]} */ (/** @type {unknown} */ (chunks));
@@ -832,9 +864,92 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
+   * Creates the WebCodecs decoder used to read the intrinsic dimensions before
+   * the download finishes. It is a no-op when early decoding is disabled, when
+   * the browser has no `ImageDecoder` or when the MIME type is not a supported
+   * image. Failures are swallowed on purpose: early decoding is best-effort.
+   * @param {string} type - The MIME type from the response headers.
+   * @returns {void}
+   */
+  #openDecoder(type) {
+    if (!this.#earlyDecode || typeof ImageDecoder === 'undefined') {
+      return;
+    }
+    const mime = type.split(';')[0].trim();
+    if (!mime.startsWith('image/')) {
+      return;
+    }
+    if (typeof ImageDecoder.isTypeSupported === 'function' && !ImageDecoder.isTypeSupported(mime)) {
+      return;
+    }
+
+    /** @type {ReadableStreamDefaultController<any>} */
+    let controller;
+    const stream = new ReadableStream({
+      start(inner) {
+        controller = inner;
+      },
+    });
+
+    let decoder;
+    try {
+      decoder = new ImageDecoder({ data: stream, type: mime });
+    } catch {
+      return;
+    }
+
+    decoder.tracks.ready
+      .then(() => {
+        const track = decoder.tracks.selectedTrack;
+        if (!track) {
+          return;
+        }
+        this._emitMetadata({ width: track.codedWidth, height: track.codedHeight });
+      })
+      .catch(() => {
+        // The header was not parsed before the stream closed: the final
+        // metadata still carries the decoded dimensions.
+      });
+
+    this.#decoder = {
+      write: (chunk) => {
+        try {
+          controller.enqueue(chunk);
+        } catch {
+          // The decoder closed the stream early: nothing else to push.
+        }
+      },
+      close: () => {
+        try {
+          controller.close();
+        } catch {
+          // The stream was already closed.
+        }
+        try {
+          decoder.close();
+        } catch {
+          // The decoder was already released.
+        }
+      },
+    };
+  }
+
+  /**
+   * Releases the early decoder, if one was created.
+   * @returns {void}
+   */
+  #closeDecoder() {
+    if (this.#decoder) {
+      this.#decoder.close();
+      this.#decoder = null;
+    }
+  }
+
+  /**
    * Acquires the current source from the shared cache and remembers the
-   * reference. A successful acquisition also flags the metadata so the final
-   * snapshot reports `fromCache: true`.
+   * reference. A successful acquisition flags the metadata so the final
+   * snapshot reports `fromCache: true` and restores the values that the
+   * download path would have recorded, since no network request runs here.
    * @protected
    * @returns {import('./TinyMediaCache.mjs').MediaCacheEntry|null}
    */
@@ -846,6 +961,10 @@ class TinyMediaLoader extends EventEmitter {
     if (entry) {
       this.#cacheAcquired = true;
       this._setCacheHint(true);
+      this._setResourceSize(entry.size);
+      if (entry.type) {
+        this._emitMetadata({ type: entry.type });
+      }
     }
     return entry;
   }
@@ -974,6 +1093,42 @@ class TinyMediaLoader extends EventEmitter {
   #createController() {
     this.#controller = new AbortController();
     this.#controller.signal.addEventListener('abort', () => this._abort(), { once: true });
+  }
+
+  /**
+   * Builds a fresh metadata object for the current source. Every field is
+   * explicit so a new property can never be forgotten here.
+   * @returns {MediaMetadata} A zeroed metadata snapshot.
+   */
+  #createMetadata() {
+    return {
+      src: this.#src,
+      type: '',
+      width: 0,
+      height: 0,
+      duration: 0,
+      size: 0,
+      fromCache: false,
+      loadTime: 0,
+      timestamp: 0,
+    };
+  }
+
+  /**
+   * Resets every field that is scoped to a single load. It is called at the
+   * very beginning of {@link TinyMediaLoader#load} so that a failed, aborted or
+   * cached load can never leak its state into the next one.
+   * @returns {void}
+   */
+  #resetLoadState() {
+    this.#aborted = false;
+    this.#internalSrc = null;
+    this.#resourceSize = 0;
+    this.#cacheHint = false;
+    this.#partial = {};
+    this.#startTime = performance.now();
+    this.#endTime = 0;
+    this.#metadata = this.#createMetadata();
   }
 
   /**

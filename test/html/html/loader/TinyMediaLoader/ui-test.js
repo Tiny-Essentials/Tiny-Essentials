@@ -322,6 +322,7 @@ function renderMeta(entry) {
   }
   const meta = loader.metadata;
   const element = loader.element;
+  console.log(meta);
   const rows = [
     ['size', `${formatBytes(meta.size)} (${meta.size} B)`],
     ['loadTime', `${Number(meta.loadTime).toFixed(1)} ms`],
