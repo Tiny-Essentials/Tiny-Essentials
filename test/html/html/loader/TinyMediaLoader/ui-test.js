@@ -329,6 +329,7 @@ function renderMeta(entry) {
     ['fromCache', String(meta.fromCache)],
     ['type', meta.type || '—'],
     ['dimensions', `${meta.width} × ${meta.height}`],
+    ['frames', String(meta.frames) || '0'],
     ['duration', `${Number(meta.duration).toFixed(2)} s`],
     ['original-src', element?.getAttribute('original-src') ?? '—'],
     ['element.src', element?.getAttribute('src')?.slice(0, 42) ?? '—'],

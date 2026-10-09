@@ -52,6 +52,7 @@ import TinyImageProbe from './probe/TinyImageProbe.mjs';
  * @property {boolean} fromCache - Whether the media was served from the cache.
  * @property {number} loadTime - The total load time in milliseconds.
  * @property {number} timestamp - The epoch timestamp when the load finished.
+ * @property {number} frames - The number of frames (1 for still images, NaN when unknown).
  */
 
 /**
@@ -112,6 +113,7 @@ import TinyImageProbe from './probe/TinyImageProbe.mjs';
  * @typedef {Object} MediaEarlyDecoder
  * @property {(chunk: Uint8Array) => void} write - Pushes a chunk into the decoder.
  * @property {() => void} close - Closes the decoder and releases its resources.
+ * @property {() => Partial<MediaMetadata>|null} [finalize] - Flushes the metadata that is only known at the end of the stream.
  */
 
 /**
@@ -200,6 +202,7 @@ class TinyMediaLoader extends EventEmitter {
     fromCache: false,
     loadTime: 0,
     timestamp: 0,
+    frames: NaN,
   };
 
   /**
@@ -801,7 +804,7 @@ class TinyMediaLoader extends EventEmitter {
     }
     this._setResourceSize(blob.size);
     if (this.#cache) {
-      const entry = this.#cache.set(this.#src, blob);
+      const entry = this.#cache.set(this.#src, blob, false, this.#partial);
       this.#cache.acquire(this.#src);
       this.emit('cachemiss', entry);
       return entry.objectUrl;
@@ -929,14 +932,24 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
-   * Releases the early decoder, if one was created.
+   * Releases the early decoder, if one was created. When the decoder exposes a
+   * `finalize` hook, it runs first so the metadata that is only known at the
+   * end of the stream (for example the frame count of an animated GIF) is
+   * emitted before the decoder is torn down.
    * @returns {void}
    */
   #closeDecoder() {
-    if (this.#decoder) {
-      this.#decoder.close();
-      this.#decoder = null;
+    if (!this.#decoder) {
+      return;
     }
+    if (typeof this.#decoder.finalize === 'function') {
+      const final = this.#decoder.finalize();
+      if (final) {
+        this._emitMetadata(final);
+      }
+    }
+    this.#decoder.close();
+    this.#decoder = null;
   }
 
   /**
@@ -958,6 +971,9 @@ class TinyMediaLoader extends EventEmitter {
       this._setResourceSize(entry.size);
       if (entry.type) {
         this._emitMetadata({ type: entry.type });
+      }
+      if (entry.metadata) {
+        this._emitMetadata(entry.metadata);
       }
     }
     return entry;
@@ -1105,6 +1121,7 @@ class TinyMediaLoader extends EventEmitter {
       fromCache: false,
       loadTime: 0,
       timestamp: 0,
+      frames: NaN,
     };
   }
 
@@ -1239,6 +1256,7 @@ class TinyMediaLoader extends EventEmitter {
       fromCache: this.#cacheHint || this._detectCache(),
       loadTime: this.#endTime - this.#startTime,
       timestamp: Date.now(),
+      frames: NaN,
       ...this._getMetadataDetails(),
       ...this.#partial,
     };
