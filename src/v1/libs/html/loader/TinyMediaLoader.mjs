@@ -1167,17 +1167,20 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
-   * Starts observing the element for external `src` mutations.
+   * Starts observing the element for external `src` and `original-src`
+   * mutations. The `original-src` attribute is only observed when the loader
+   * was created with `originalSrc: true`, so a page that never opts into the
+   * feature pays no cost for it.
    * @returns {void}
    */
   #startObserver() {
     if (this.#observer || typeof MutationObserver === 'undefined' || !this.#element) {
       return;
     }
-    this.#observer = new MutationObserver(() => this.#handleExternalSrcChange());
+    this.#observer = new MutationObserver((records) => this.#handleExternalSrcChange(records));
     this.#observer.observe(this.#element, {
       attributes: true,
-      attributeFilter: ['src'],
+      attributeFilter: this.#originalSrc ? ['src', 'original-src'] : ['src'],
     });
   }
 
@@ -1193,16 +1196,27 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
-   * Reacts to a `src` attribute change that did not come from this class.
+   * Reacts to a `src` or `original-src` attribute change that did not come
+   * from this class. When both attributes change in the same batch,
+   * `original-src` wins because it carries the network URL, while `src` may
+   * hold an object URL that this class created itself.
+   * @param {MutationRecord[]} records - The records delivered by the observer.
    * @returns {void}
    */
-  #handleExternalSrcChange() {
+  #handleExternalSrcChange(records) {
     const element = this.#element;
     if (!element) {
       return;
     }
-    const next = element.getAttribute('src') ?? '';
-    if (next === this.#src || next === this.#internalSrc) {
+    let next = null;
+    for (const { attributeName } of records) {
+      if (attributeName === 'original-src') {
+        next = element.getAttribute('original-src') ?? '';
+      } else if (attributeName === 'src' && next === null) {
+        next = element.getAttribute('src') ?? '';
+      }
+    }
+    if (next === null || next === this.#src || next === this.#internalSrc) {
       return;
     }
     this.#applySrc(next);
