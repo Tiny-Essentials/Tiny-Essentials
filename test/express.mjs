@@ -468,9 +468,22 @@ app.get('/__slow', async (req, res) => {
     const parsedStart = parseInt(parts[0], 10);
     const parsedEnd = parseInt(parts[1], 10);
 
-    // Se o navegador não mandar os valores direito, usamos os limites padrão
-    start = isNaN(parsedStart) ? 0 : parsedStart;
-    end = isNaN(parsedEnd) ? fileSize - 1 : parsedEnd;
+    if (isNaN(parsedStart) && !isNaN(parsedEnd)) {
+      // bytes=-500 (últimos 500 bytes)
+      start = Math.max(fileSize - parsedEnd, 0);
+      end = fileSize - 1;
+    } else if (!isNaN(parsedStart) && isNaN(parsedEnd)) {
+      // bytes=500- (do byte 500 até o final)
+      start = parsedStart;
+      end = fileSize - 1;
+    } else if (!isNaN(parsedStart) && !isNaN(parsedEnd)) {
+      // bytes=500-1000
+      start = parsedStart;
+      end = parsedEnd;
+    } else {
+      start = 0;
+      end = fileSize - 1;
+    }
 
     // Se o start pedido for maior que o arquivo, avisamos o navegador (Erro 416)
     if (start >= fileSize) {

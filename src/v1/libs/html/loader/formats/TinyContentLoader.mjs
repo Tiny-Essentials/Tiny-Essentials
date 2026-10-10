@@ -228,6 +228,7 @@ class TinyContentLoader extends TinyMediaLoader {
     let isAppending = false;
     let mseStarted = false;
     let fallbackTriggered = false;
+    let appendedBytes = 0;
 
     const triggerFallback = () => {
       if (fallbackTriggered) return;
@@ -260,6 +261,7 @@ class TinyContentLoader extends TinyMediaLoader {
       isAppending = true;
       try {
         const blob = /** @type {BufferSource} */ (queue.shift());
+        appendedBytes += blob.byteLength;
         sourceBuffer.appendBuffer(blob);
       } catch (e) {
         isAppending = false;
@@ -308,6 +310,20 @@ class TinyContentLoader extends TinyMediaLoader {
                 sourceBuffer = mse.addSourceBuffer(selectedType);
                 sourceBuffer.addEventListener('updateend', () => {
                   isAppending = false;
+                  
+                  if (!fallbackTriggered) {
+                    // Silent failure detection in videos (e.g. Firefox on unfragmented MP4)
+                    if (sourceBuffer?.buffered.length === 0 && appendedBytes > 256 * 1024) {
+                      triggerFallback();
+                      return;
+                    }
+                    // Infinite Chrome Duration Detection using MSE for audio
+                    if (media.duration === Infinity && this.#tag === 'audio') {
+                      triggerFallback();
+                      return;
+                    }
+                  }
+                  
                   appendNext();
                 });
                 sourceBuffer.addEventListener('error', () => {
