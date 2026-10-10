@@ -463,12 +463,13 @@ async function loadInstance(id) {
   entry.startedAt = performance.now();
   pushTimeline(entry, 'load() called');
   try {
-    const metadata = await entry.loader.load();
+    const loadPromise = entry.loader.load();
     if (readConfig().autoMount) {
       const stage = $('[data-role="stage"]', entry.card);
       stage.replaceChildren();
       entry.loader.mount(stage);
     }
+    const metadata = await loadPromise;
     log('success', `[#${id}] load() resolved`, metadata);
   } catch (error) {
     log('error', `[#${id}] load() rejected`, error);
