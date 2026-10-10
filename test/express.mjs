@@ -481,30 +481,41 @@ app.get('/__slow', async (req, res) => {
     }
   }
 
-  // Parse do cabeçalho Range (Multipart Range fallback para o primeiro range)
+  // Lógica de parsing HTTP Range RFC-compliant
   if (useRange) {
-    const parts = rangeHeader
-      .replace(/bytes=/, '')
-      .split(',')[0]
-      .split('-'); // Pegamos a 1º parte
-    const parsedStart = parseInt(parts[0], 10);
-    const parsedEnd = parseInt(parts[1], 10);
+    const rangeStr = rangeHeader.replace(/bytes=/i, '').trim();
+    // Pega o primeiro range se for um multipart (navegadores lidam bem com a primeira parte)
+    const firstRange = rangeStr.split(',')[0].trim();
 
-    if (isNaN(parsedStart) && !isNaN(parsedEnd)) {
-      start = Math.max(fileSize - parsedEnd, 0);
-    } else if (!isNaN(parsedStart) && isNaN(parsedEnd)) {
-      start = parsedStart;
-    } else if (!isNaN(parsedStart) && !isNaN(parsedEnd)) {
-      start = parsedStart;
-      end = Math.min(parsedEnd, fileSize - 1); // Trunca ao limite real
+    if (firstRange.startsWith('-')) {
+      // Suffix byte range (ex: "-500" pede os últimos 500 bytes)
+      const bytes = parseInt(firstRange.slice(1), 10);
+      if (!isNaN(bytes)) {
+        start = Math.max(0, fileSize - bytes);
+        end = fileSize - 1;
+      } else {
+        useRange = false;
+      }
+    } else {
+      const parts = firstRange.split('-');
+      const parsedStart = parseInt(parts[0], 10);
+      const parsedEnd = parseInt(parts[1], 10);
+
+      if (!isNaN(parsedStart)) {
+        start = parsedStart;
+        end = !isNaN(parsedEnd) ? Math.min(parsedEnd, fileSize - 1) : fileSize - 1;
+      } else {
+        useRange = false; // Inválido
+      }
     }
 
-    if (start >= fileSize || start > end) {
-      res.status(416).setHeader('Content-Range', `bytes */${fileSize}`);
-      return res.end();
+    if (useRange) {
+      if (start >= fileSize || start > end) {
+        res.status(416).setHeader('Content-Range', `bytes */${fileSize}`);
+        return res.end();
+      }
+      statusCode = 206;
     }
-
-    statusCode = 206;
   }
 
   const contentLength = Number(end - start) + 1;
@@ -516,6 +527,13 @@ app.get('/__slow', async (req, res) => {
     res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
   }
 
+  // Se a requisição for HEAD, nós encerramos imediatamente!
+  // Isso pula todo o processo de leitura do arquivo e os delays simulados.
+  if (req.method === 'HEAD') {
+    return res.end();
+  }
+
+  // O stream e o loop de lentidão continuam apenas se for um GET real
   const stream = fs.createReadStream(filePath, { start, end, highWaterMark: chunkSize });
   let closed = false;
   const cleanup = () => {

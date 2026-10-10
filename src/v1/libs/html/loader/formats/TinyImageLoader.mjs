@@ -17,6 +17,7 @@ const EMPTY_GIF = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
  * @property {boolean} [progressive] - Whether to show the image progressively while streaming (default true).
  * @property {boolean} [autoReload] - Whether an external `src` change triggers a reload.
  * @property {boolean} [stream] - Whether to download the image through fetch for byte progress.
+ * @property {boolean} [useHeadRequest] - Whether to perform a HEAD request to fetch HTTP headers before downloading.
  * @property {import('../utils/TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
  */
 
@@ -57,7 +58,7 @@ class TinyImageLoader extends TinyMediaLoader {
     ) {
       throw new TypeError('The "element" option must be an HTMLImageElement or null.');
     }
-    super(options);
+    super({ useHeadRequest: false, ...options });
     const { crossOrigin = null, decoding = 'async', stream = false } = options;
     if (crossOrigin !== null && typeof crossOrigin !== 'string') {
       throw new TypeError('The "crossOrigin" option must be a string or null.');

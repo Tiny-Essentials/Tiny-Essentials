@@ -214,20 +214,87 @@ function readConfig() {
 }
 
 /**
- * Infers the loader kind from a file extension.
- * @param {string} src - The source URL or path.
- * @returns {'image'|'audio'|'video'|null} The detected kind, or null when unknown.
+ * @param {string} url
+ * @returns {string}
  */
-function detectKind(src) {
+function getCleanUrl(src) {
   let candidate = src;
   if (candidate.startsWith('/__slow')) {
     candidate = new URL(candidate, location.origin).searchParams.get('src') || '';
   }
+  return candidate;
+}
+
+/**
+ * Último recurso: infere pela extensão da URL caso as requisições de rede falhem.
+ */
+function detectKindByExtension(src) {
+  const candidate = getCleanUrl(src);
   const clean = candidate.split('?')[0].split('#')[0].toLowerCase();
   if (/\.(png|jpe?g|gif|webp|avif|svg|bmp|ico)$/.test(clean)) return 'image';
   if (/\.(mp3|wav|ogg|oga|m4a|aac|flac|opus)$/.test(clean)) return 'audio';
   if (/\.(mp4|webm|ogv|mov|m4v|mkv)$/.test(clean)) return 'video';
   return null;
+}
+
+/**
+ * Padrão de Produção: Detecta o tipo de mídia de forma segura analisando
+ * o cabeçalho do servidor ou extraindo os Magic Numbers diretamente do arquivo.
+ */
+async function detectKindByContent(url) {
+  // 1. Tenta descobrir pelo Content-Type via requisição HEAD (Padrão mais seguro)
+  try {
+    const response = await fetch(getCleanUrl(url), { method: 'HEAD' });
+    const contentType = response.headers.get('content-type');
+    if (contentType) {
+      if (contentType.startsWith('image/')) return 'image';
+      if (contentType.startsWith('video/')) return 'video';
+      if (contentType.startsWith('audio/')) return 'audio';
+    }
+  } catch (e) {
+    // Falha silenciosa: O servidor pode não suportar HEAD ou ter CORS restrito.
+  }
+
+  // 2. Fallback: Lê os primeiros 64 bytes e identifica a assinatura do arquivo (Magic Numbers)
+  try {
+    const response = await fetch(url, {
+      headers: { Range: 'bytes=0-64' },
+    });
+
+    if (response.ok || response.status === 206) {
+      const buffer = await response.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+
+      const check = (sig, offset = 0) => sig.every((b, i) => bytes[offset + i] === b);
+
+      // Assinaturas de Imagem
+      if (check([0x89, 0x50, 0x4e, 0x47])) return 'image'; // PNG
+      if (check([0xff, 0xd8, 0xff])) return 'image'; // JPEG
+      if (check([0x47, 0x49, 0x46, 0x38])) return 'image'; // GIF
+      if (check([0x52, 0x49, 0x46, 0x46]) && check([0x57, 0x45, 0x42, 0x50], 8)) return 'image'; // WebP
+      if (check([0x42, 0x4d])) return 'image'; // BMP
+
+      // Assinaturas de Áudio puro
+      if (check([0x49, 0x44, 0x33]) || check([0xff, 0xfb])) return 'audio'; // MP3 (ID3 ou Header)
+      if (check([0x66, 0x4c, 0x61, 0x43])) return 'audio'; // FLAC
+      if (check([0x52, 0x49, 0x46, 0x46]) && check([0x57, 0x41, 0x56, 0x45], 8)) return 'audio'; // WAV
+
+      // Assinaturas de Containers (Vídeo/Áudio multiplexado)
+      if (check([0x66, 0x74, 0x79, 0x70], 4)) {
+        // ftyp (ISOBMFF). Se a sub-assinatura for M4A, geralmente é áudio exclusivo.
+        if (check([0x4d, 0x34, 0x41, 0x20], 8)) return 'audio';
+        return 'video'; // MP4 genérico assume vídeo na UI
+      }
+      if (check([0x1a, 0x45, 0xdf, 0xa3])) return 'video'; // WebM/MKV
+      if (check([0x4f, 0x67, 0x67, 0x53])) return 'video'; // Ogg
+      if (check([0x46, 0x4c, 0x56, 0x01])) return 'video'; // FLV
+    }
+  } catch (e) {
+    // Falha silenciosa: A rede falhou em baixar o chunk
+  }
+
+  // 3. Último recurso absoluto: extensão da URL
+  return detectKindByExtension(url);
 }
 
 /**
@@ -412,14 +479,20 @@ function wire(entry) {
 /**
  * Creates a loader instance and its card.
  * @param {Record<string, any>} config - The spawn configuration.
- * @returns {any} The created registry entry.
+ * @returns {Promise<any>} The created registry entry.
  */
-function spawn(config) {
-  const kind = config.kind === 'auto' ? detectKind(config.src) : config.kind;
+async function spawn(config) {
+  let kind = config.kind;
+
+  if (kind === 'auto') {
+    kind = await detectKindByContent(config.src);
+  }
+
   if (!kind) {
     log('error', `Could not detect the media kind for ${config.src}`);
     return null;
   }
+
   const id = nextId++;
   const card = createCard(id, kind, config.src);
   const LoaderClass = LOADER_CLASSES[kind];
@@ -637,10 +710,10 @@ $$('[data-progress]').forEach((button) => {
    GLOBAL CONTROLS
    ══════════════════════════════════════════════════════════════════ */
 
-$('#btn-spawn').addEventListener('click', () => {
+$('#btn-spawn').addEventListener('click', async () => {
   const config = readConfig();
   config.src = buildSrc(config.src);
-  spawn(config);
+  await spawn(config);
 });
 
 $('#btn-spawn-pair').addEventListener('click', async () => {
@@ -649,12 +722,15 @@ $('#btn-spawn-pair').addEventListener('click', async () => {
     log('warn', 'Enable "use cache" so the second load can be a cache hit.');
   }
   const resolved = buildSrc(config.src);
-  const cold = spawn({ ...config, src: resolved });
+
+  const cold = await spawn({ ...config, src: resolved });
   if (!cold) return;
   await loadInstance(cold.id);
-  const warm = spawn({ ...config, src: resolved });
+
+  const warm = await spawn({ ...config, src: resolved });
   if (!warm) return;
   await loadInstance(warm.id);
+
   updateLabCount();
 });
 
@@ -677,12 +753,12 @@ $('#btn-destroy-all').addEventListener('click', () => {
   log('success', 'All loaders destroyed');
 });
 
-$('#cfg-preset').addEventListener('change', (event) => {
+$('#cfg-preset').addEventListener('change', async (event) => {
   const value = event.target.value;
   if (!value) return;
   byId('cfg-src').value = value;
-  const kind = detectKind(value);
-  log('info', `src set to ${value}`, kind ? `(detected: ${kind})` : '(unknown kind)');
+  const kind = await detectKindByContent(value);
+  log('info', `src set to ${value}`, kind ? `(detected by content: ${kind})` : '(unknown kind)');
 });
 
 /**

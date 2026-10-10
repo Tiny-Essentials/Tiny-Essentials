@@ -19,6 +19,7 @@ import TinyMediaLoader from '../TinyMediaLoader.mjs';
  * @property {boolean} [progressive] - Whether to render progressively during fetch (default true).
  * @property {boolean} [autoReload] - Whether an external `src` change triggers a reload.
  * @property {boolean} [stream] - Whether to download the media through fetch for byte progress.
+ * @property {boolean} [useHeadRequest] - Whether to perform a HEAD request to fetch HTTP headers before downloading.
  * @property {import('../utils/TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
  */
 
@@ -78,7 +79,7 @@ class TinyContentLoader extends TinyMediaLoader {
    * @throws {TypeError} If `preload` is not a string.
    */
   constructor(tag, typesToTry, options = {}) {
-    super(options);
+    super({ useHeadRequest: false, ...options });
     const {
       crossOrigin = null,
       autoplay = false,
@@ -158,12 +159,12 @@ class TinyContentLoader extends TinyMediaLoader {
 
     this._on(media, 'loadedmetadata', () => {
       const patch = getMetadata(media);
-      if (Object.keys(patch).length > 0) this._emitMetadata(patch);
+      if (Object.keys(patch).length > 0) this._emitMetadata(patch, 'LOADED_METADATA');
     });
 
     this._on(media, 'durationchange', () => {
       if (Number.isFinite(media.duration)) {
-        this._emitMetadata({ duration: media.duration });
+        this._emitMetadata({ duration: media.duration }, 'DURATION_CHANGE');
       }
     });
 
@@ -229,11 +230,24 @@ class TinyContentLoader extends TinyMediaLoader {
     let fallbackTriggered = false;
     let appendedBytes = 0;
 
+    // Controlador isolado para o stream.
+    const fetchController = new AbortController();
+    const onLoaderAbort = () => fetchController.abort();
+    this.signal.signal.addEventListener('abort', onLoaderAbort);
+
     const triggerFallback = () => {
       if (fallbackTriggered) return;
       fallbackTriggered = true;
 
+      // Libera o Socket de rede imediatamente abortando o fetch!
+      // Isso impede que o browser congele a rede enfileirando requisições duplicadas.
+      fetchController.abort();
+
       const isMseUrl = this.#mseUrl && media.src === this.#mseUrl;
+
+      // Salva o estado atual de reprodução para restaurar pós-fallback
+      const currentTime = media.currentTime;
+      const wasPlaying = !media.paused && media.readyState >= 2;
 
       if (this.#mseUrl) {
         URL.revokeObjectURL(this.#mseUrl);
@@ -244,6 +258,16 @@ class TinyContentLoader extends TinyMediaLoader {
         this._setInternalSrc(null);
         media.src = this.src;
         this._flushMutations();
+
+        // Restaura o tempo em caso de seek fallback
+        if (currentTime > 0) {
+          const onLoadedMetadata = () => {
+            media.currentTime = currentTime;
+            if (wasPlaying) media.play().catch(() => {});
+            media.removeEventListener('loadedmetadata', onLoadedMetadata);
+          };
+          media.addEventListener('loadedmetadata', onLoadedMetadata);
+        }
       }
     };
 
@@ -288,121 +312,130 @@ class TinyContentLoader extends TinyMediaLoader {
       }
     };
 
-    const blob = await this._downloadStream(
-      this.src,
-      (chunk) => {
-        if (mseStarted && media.error) triggerFallback();
+    try {
+      const blob = await this._downloadStream(
+        this.src,
+        (chunk) => {
+          if (mseStarted && media.error) triggerFallback();
 
-        if (this.progressive && typeof MediaSource !== 'undefined' && !fallbackTriggered) {
-          if (!mseStarted) {
-            mseStarted = true;
-            mse = new MediaSource();
-            this.#mseUrl = URL.createObjectURL(mse);
-            this._setInternalSrc(this.#mseUrl);
-            media.src = this.#mseUrl;
-            this._flushMutations();
+          if (this.progressive && typeof MediaSource !== 'undefined' && !fallbackTriggered) {
+            if (!mseStarted) {
+              mseStarted = true;
+              mse = new MediaSource();
+              this.#mseUrl = URL.createObjectURL(mse);
+              this._setInternalSrc(this.#mseUrl);
+              media.src = this.#mseUrl;
+              this._flushMutations();
 
-            mse.addEventListener('sourceopen', () => {
-              const mime = this.metadata.type || this.#getMimeType();
-              let typesToTry = [mime];
-              // Suggest standard codecs for fragmented streams
-              for (const mimeName in this.#typesToTry) {
-                if (mime.includes(mimeName)) {
-                  for (const type of this.#typesToTry[mimeName]) {
-                    typesToTry.unshift(type.replace('{mime}', mime));
+              mse.addEventListener('sourceopen', () => {
+                const mime = this.metadata.type || this.#getMimeType();
+                let typesToTry = [mime];
+                // Suggest standard codecs for fragmented streams
+                for (const mimeName in this.#typesToTry) {
+                  if (mime.includes(mimeName)) {
+                    for (const type of this.#typesToTry[mimeName]) {
+                      typesToTry.unshift(type.replace('{mime}', mime));
+                    }
                   }
                 }
-              }
 
-              let selectedType = null;
-              for (const t of typesToTry) {
-                if (MediaSource.isTypeSupported(t)) {
-                  selectedType = t;
-                  break;
+                let selectedType = null;
+                for (const t of typesToTry) {
+                  if (MediaSource.isTypeSupported(t)) {
+                    selectedType = t;
+                    break;
+                  }
                 }
-              }
 
-              if (selectedType) {
-                if (!mse) {
-                  triggerFallback();
-                  return;
-                }
-                try {
-                  sourceBuffer = mse.addSourceBuffer(selectedType);
-                  sourceBuffer.addEventListener('updateend', () => {
-                    isAppending = false;
-
-                    if (!fallbackTriggered) {
-                      // Silent failure detection in videos (e.g. Firefox on unfragmented MP4)
-                      if (sourceBuffer?.buffered.length === 0 && appendedBytes > 256 * 1024) {
-                        triggerFallback();
-                        return;
-                      }
-                      // Infinite Chrome Duration Detection using MSE for audio
-                      if (media.duration === Infinity && this.#tag === 'audio') {
-                        triggerFallback();
-                        return;
-                      }
-                    }
-
-                    appendNext();
-                  });
-                  sourceBuffer.addEventListener('error', () => {
+                if (selectedType) {
+                  if (!mse) {
                     triggerFallback();
-                  });
-                  appendNext();
-                } catch {
+                    return;
+                  }
+                  try {
+                    sourceBuffer = mse.addSourceBuffer(selectedType);
+                    sourceBuffer.addEventListener('updateend', () => {
+                      isAppending = false;
+
+                      if (!fallbackTriggered) {
+                        // Silent failure detection in videos (e.g. Firefox on unfragmented MP4)
+                        if (sourceBuffer?.buffered.length === 0 && appendedBytes > 256 * 1024) {
+                          triggerFallback();
+                          return;
+                        }
+                      }
+                      appendNext();
+                    });
+                    sourceBuffer.addEventListener('error', () => {
+                      triggerFallback();
+                    });
+                    appendNext();
+                  } catch {
+                    triggerFallback();
+                  }
+                } else {
                   triggerFallback();
                 }
-              } else {
-                triggerFallback();
-              }
-              if (sourceBuffer && startByte > 0) {
-                sourceBuffer.abort();
-              }
-            });
-          }
+                if (sourceBuffer && startByte > 0) {
+                  sourceBuffer.abort();
+                }
+              });
+            }
 
-          if (!fallbackTriggered) {
-            queue.push(chunk);
-            if (mse && mse.readyState === 'open' && sourceBuffer) {
-              appendNext();
+            if (!fallbackTriggered) {
+              queue.push(chunk);
+              if (mse && mse.readyState === 'open' && sourceBuffer) {
+                appendNext();
+              }
             }
           }
-        }
-      },
-      startByte,
-    );
+        },
+        startByte,
+        fetchController.signal,
+      );
 
-    if (mse && !fallbackTriggered) {
-      const endStream = () => {
-        if (mse?.readyState === 'open' && !media.error) {
-          if (sourceBuffer && (sourceBuffer.updating || queue.length > 0)) {
-            setTimeout(endStream, 50);
-          } else {
-            try {
-              mse.endOfStream();
-            } catch (e) {}
+      if (mse && !fallbackTriggered) {
+        const endStream = () => {
+          if (mse?.readyState === 'open' && !media.error) {
+            if (sourceBuffer && (sourceBuffer.updating || queue.length > 0)) {
+              setTimeout(endStream, 50);
+            } else {
+              try {
+                mse.endOfStream();
+              } catch (e) {}
+            }
+          }
+        };
+        endStream();
+
+        // Só realiza o cache local do blob inteiro (evita arquivos corrompidos)
+        if (startByte === 0) this._cacheBlob(blob);
+      } else {
+        // Fallback to assigning the blob URL all at once (standard path or on MSE failure)
+        if (startByte === 0) {
+          const url = this._cacheBlob(blob);
+
+          // If we already fell back to the native network URL, we might be currently playing it!
+          // To avoid restarting the user's video, we only swap if playback hasn't advanced.
+          if (!fallbackTriggered || (media.paused && media.currentTime === 0)) {
+            this._setInternalSrc(url);
+            media.src = url;
+            this._flushMutations();
+            media.load();
           }
         }
-      };
-      endStream();
-
-      // Cache the completely downloaded blob into TinyMediaCache,
-      // but we DO NOT swap the media.src here to prevent playback restarts.
-      this._cacheBlob(blob);
-    } else {
-      // Fallback to assigning the blob URL all at once (standard path or on MSE failure)
-      const url = this._cacheBlob(blob);
-
-      // If we already fell back to the native network URL, we might be currently playing it!
-      // To avoid restarting the user's video, we only swap if playback hasn't advanced.
-      if (!fallbackTriggered || (media.paused && media.currentTime === 0)) {
-        this._setInternalSrc(url);
-        media.src = url;
-        this._flushMutations();
-        media.load();
       }
+    } catch (err) {
+      if (err instanceof Error) {
+        if (err.name === 'AbortError' && fallbackTriggered) {
+          // Saída graciosa. O fetch foi abortado deliberadamente
+          // para dar prioridade à conexão nativa do `<audio>`.
+          return;
+        }
+        throw err;
+      }
+    } finally {
+      this.signal.signal.removeEventListener('abort', onLoaderAbort);
     }
   }
 

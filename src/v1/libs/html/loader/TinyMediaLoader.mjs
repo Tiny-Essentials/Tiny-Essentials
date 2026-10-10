@@ -23,6 +23,7 @@ import TinyImageProbe from './probe/TinyImageProbe.mjs';
  * @property {boolean} [originalSrc] - Whether the original URL is mirrored into the `original-src` attribute.
  * @property {boolean} [earlyDecode] - Whether to decode image dimensions from the response headers using WebCodecs.
  * @property {boolean} [progressive] - Whether to render progressively during fetch (default true).
+ * @property {boolean} [useHeadRequest] - Whether to perform a HEAD request to fetch HTTP headers before downloading.
  * @property {TinyMediaCache|null} [cache] - An optional shared memory cache.
  */
 
@@ -55,6 +56,15 @@ import TinyImageProbe from './probe/TinyImageProbe.mjs';
  * @property {number} loadTime - The total load time in milliseconds.
  * @property {number} timestamp - The epoch timestamp when the load finished.
  * @property {number} frames - The number of frames (1 for still images, NaN when unknown).
+ * @property {Record<string, string>} [httpHeaders] - All HTTP response headers captured during the fetch.
+ */
+
+/**
+ * Describes the payload emitted when a new chunk is downloaded.
+ * @typedef {Object} MediaChunkPayload
+ * @property {Uint8Array} chunk - The binary chunk.
+ * @property {number} loaded - The total bytes downloaded so far.
+ * @property {number} total - The total bytes of the media (0 when unknown).
  */
 
 /**
@@ -159,6 +169,8 @@ class TinyMediaLoader extends EventEmitter {
   /** @type {number} */
   #endTime = 0;
   /** @type {boolean} */
+  #useHeadRequest = false;
+  /** @type {boolean} */
   #cacheHint = false;
   /** @type {boolean} */
   #autoReload = false;
@@ -192,6 +204,10 @@ class TinyMediaLoader extends EventEmitter {
   #decoder = null;
   /** @type {boolean} */
   #progressive = true;
+  /** @type {Response|null} */
+  #response = null;
+  /** @type {Response|null} */
+  #headResponse = null;
 
   /** @type {Partial<MediaMetadata>} */
   #partial = {};
@@ -230,6 +246,7 @@ class TinyMediaLoader extends EventEmitter {
       originalSrc = false,
       earlyDecode = true,
       progressive = true,
+      useHeadRequest = false,
     } = options;
 
     if (src !== undefined && typeof src !== 'string') {
@@ -262,12 +279,29 @@ class TinyMediaLoader extends EventEmitter {
     this.#originalSrc = originalSrc;
     this.#cache = options.cache ?? null;
     this.#resetLoadState();
+    this.#useHeadRequest = useHeadRequest;
     this.#earlyDecode = earlyDecode;
     this.#progressive = progressive;
     if (element) {
       this.#element = element;
       this.#startObserver();
     }
+  }
+
+  get response() {
+    return this.#response;
+  }
+
+  get headResponse() {
+    return this.#headResponse;
+  }
+
+  /**
+   * Whether to perform a HEAD request to fetch HTTP headers before downloading.
+   * @returns {boolean}
+   */
+  get useHeadRequest() {
+    return this.#useHeadRequest;
   }
 
   /**
@@ -510,10 +544,11 @@ class TinyMediaLoader extends EventEmitter {
    * resolve a dimension never clobbers a value that was already known.
    * @protected
    * @param {Partial<MediaMetadata>} patch - The values to merge.
+   * @param {'HEAD'|'GET'|'PROBE'|'DECODE'|'CACHE'|'LOADED_METADATA'|'DURATION_CHANGE'} type - The action type.
    * @returns {void}
    * @throws {TypeError} If `patch` is not a plain object.
    */
-  _emitMetadata(patch) {
+  _emitMetadata(patch, type) {
     if (patch === null || typeof patch !== 'object') {
       throw new TypeError('The "patch" argument must be an object.');
     }
@@ -522,7 +557,7 @@ class TinyMediaLoader extends EventEmitter {
     );
     this.#partial = { ...this.#partial, ...clean };
     this.#metadata = { ...this.#metadata, ...clean };
-    this.emit('metadata', this.metadata);
+    this.emit('metadata', this.metadata, type);
   }
 
   /**
@@ -831,20 +866,58 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
-   * Downloads a media resource through fetch. It emits a `metadata` event as
-   * soon as the response headers arrive and a `progress` event for every
-   * chunk, then resolves with the fully buffered blob.
+   * Downloads a media resource through fetch.
    * @protected
    * @param {string} url - The resource to download.
    * @param {(chunk: BlobPart, chunks: BlobPart[]) => void} [onChunk] - Optional chunk callback.
    * @param {number} [startByte=0] - The byte offset to start downloading from.
+   * @param {AbortSignal|null} [customSignal=null] - Signal to abort only the fetch without aborting the loader.
    * @returns {Promise<Blob>} The fully downloaded blob.
    * @throws {TypeError} If `url` is not a string.
    * @throws {Error} If the request fails or the body is not readable.
    */
-  async _downloadStream(url, onChunk, startByte = 0) {
+  async _downloadStream(url, onChunk, startByte = 0, customSignal = null) {
     if (typeof url !== 'string') {
       throw new TypeError('The "url" argument must be a string.');
+    }
+
+    let type = '';
+    let actualTotal = 0;
+    let headSuccess = false;
+
+    // 1. Optional: HEAD Fetch before GET to capture metadata quickly
+    if (this.#useHeadRequest && startByte === 0) {
+      try {
+        const headResponse = await fetch(url, {
+          method: 'HEAD',
+          signal: customSignal || this.signal.signal,
+        });
+        this.#headResponse = headResponse;
+        this.emit('headResponse', headResponse);
+        if (headResponse.ok) {
+          type = headResponse.headers.get('content-type') || '';
+          const cl = headResponse.headers.get('content-length');
+          if (cl) actualTotal = Number(cl);
+
+          // Capture all headers
+          /** @type {Record<string, string>} */
+          const headHeaders = {};
+          headResponse.headers.forEach((val, key) => {
+            headHeaders[key] = val;
+          });
+
+          const patch = {};
+          if (type) patch.type = type;
+          if (actualTotal > 0) patch.size = actualTotal;
+          if (Object.keys(headHeaders).length > 0) patch.httpHeaders = headHeaders;
+          if (Object.keys(patch).length > 0) {
+            this._emitMetadata(patch, 'HEAD');
+          }
+          headSuccess = true;
+        }
+      } catch (e) {
+        // Silent Head Failure (may be CORS restricted to HEAD only). Go to the GET.
+      }
     }
 
     const headers = new Headers();
@@ -852,34 +925,54 @@ class TinyMediaLoader extends EventEmitter {
       headers.set('Range', `bytes=${startByte}-`);
     }
 
+    // 2. Fetch real (GET)
     const response = await fetch(url, {
-      signal: this.signal.signal,
+      signal: customSignal || this.signal.signal,
       headers: headers,
     });
 
+    this.#response = response;
+    this.emit('response', response);
     if (!response.ok) {
       // If the server returns 416, the range is invalid
       if (response.status === 416) throw new Error('Requested range not satisfiable.');
       throw new Error(`Failed to fetch media: ${response.status} ${response.statusText}`);
     }
+    if (!response.body) throw new Error('The response body is not readable.');
 
-    if (!response.body) {
-      throw new Error('The response body is not readable.');
-    }
-
-    const type = response.headers.get('content-type') || '';
+    const getType = response.headers.get('content-type') || type;
     const total = Number(response.headers.get('content-length') || 0);
 
-    // If the server responded with Range, the 'total' is just the size of the piece.
-    // We need to add the offset to the actual file size.
-    const actualTotal = total > 0 ? total + startByte : 0;
+    // Ajuste de cálculo para Status 206
+    if (response.status === 206) {
+      const contentRange = response.headers.get('content-range');
+      if (contentRange) {
+        const match = contentRange.match(/\/(\d+)$/);
+        if (match) actualTotal = Number(match[1]);
+      }
+    } else {
+      actualTotal = total > 0 ? total + startByte : actualTotal;
+    }
 
+    // Capture all headers
+    /** @type {Record<string, string>} */
+    const getHeaders = {};
+    response.headers.forEach((val, key) => {
+      getHeaders[key] = val;
+    });
+
+    /** @type {Partial<MediaMetadata>} */
     const patch = {};
-    if (type) patch.type = type;
-    if (actualTotal > 0) patch.size = actualTotal;
-    if (Object.keys(patch).length > 0) this._emitMetadata(patch);
+    if (getType && getType !== type) {
+      patch.type = getType;
+      type = getType;
+    }
+    // Se o HEAD não rodou ou se a requisição GET é um Range, reemitimos o tamanho
+    if (actualTotal > 0 && (!headSuccess || response.status === 206)) patch.size = actualTotal;
+    if (Object.keys(getHeaders).length > 0) patch.httpHeaders = getHeaders;
+    if (Object.keys(patch).length > 0) this._emitMetadata(patch, 'GET');
 
-    this.#openDecoder(type);
+    this.#openDecoder(type); // O earlyDecode (Probe) ainda respeita a flag dele separadamente!
     const progress = this._createProgress(actualTotal);
     const reader = response.body.getReader();
     /** @type {BlobPart[]} */
@@ -898,6 +991,14 @@ class TinyMediaLoader extends EventEmitter {
 
         currentTotalLoaded += value.byteLength;
         progress.push(value.byteLength);
+
+        // Emite o chunk puro para bibliotecas externas
+        this.emit('chunk', {
+          chunk: value,
+          loaded: currentTotalLoaded,
+          total: actualTotal,
+        });
+
         this._emitProgress();
         if (onChunk) onChunk(value, chunks);
       }
@@ -943,7 +1044,7 @@ class TinyMediaLoader extends EventEmitter {
       write: (chunk) => {
         const size = probe.push(chunk);
         if (size) {
-          this._emitMetadata(size);
+          this._emitMetadata(size, 'PROBE');
         }
       },
       close: () => probe.close(),
@@ -961,7 +1062,7 @@ class TinyMediaLoader extends EventEmitter {
       write: (chunk) => {
         const size = probe.push(chunk);
         if (size) {
-          this._emitMetadata(size);
+          this._emitMetadata(size, 'PROBE');
         }
       },
       close: () => probe.close(),
@@ -982,7 +1083,7 @@ class TinyMediaLoader extends EventEmitter {
     if (typeof this.#decoder.finalize === 'function') {
       const final = this.#decoder.finalize();
       if (final) {
-        this._emitMetadata(final);
+        this._emitMetadata(final, 'DECODE');
       }
     }
     this.#decoder.close();
@@ -1007,10 +1108,10 @@ class TinyMediaLoader extends EventEmitter {
       this._setCacheHint(true);
       this._setResourceSize(entry.size);
       if (entry.type) {
-        this._emitMetadata({ type: entry.type });
+        this._emitMetadata({ type: entry.type }, 'CACHE');
       }
       if (entry.metadata) {
-        this._emitMetadata(entry.metadata);
+        this._emitMetadata(entry.metadata, 'CACHE');
       }
     }
     return entry;
@@ -1159,6 +1260,7 @@ class TinyMediaLoader extends EventEmitter {
       loadTime: 0,
       timestamp: 0,
       frames: NaN,
+      httpHeaders: {},
     };
   }
 

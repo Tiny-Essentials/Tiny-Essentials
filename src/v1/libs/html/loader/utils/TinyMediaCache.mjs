@@ -33,7 +33,7 @@
  * @property {number} lastAccess - The epoch timestamp of the last access.
  * @property {number} expiresAt - The epoch timestamp when the entry expires (0 = never).
  * @property {boolean} pinned - Whether the entry is protected from eviction.
- * @property {Record<string, number|string|boolean>} metadata - The probe metadata captured with the blob.
+ * @property {Record<string, any>} metadata - The probe metadata captured with the blob.
  */
 
 /**
@@ -331,7 +331,7 @@ class TinyMediaCache {
    * @param {string} url - The media URL.
    * @param {Blob} blob - The blob to cache.
    * @param {boolean} [pinned] - Whether the entry is protected from eviction.
-   * @param {Record<string, number|string|boolean>} [metadata] - The probe metadata captured with the blob.
+   * @param {Record<string, any>} [metadata] - The probe metadata captured with the blob.
    * @returns {MediaCacheEntry} The stored entry.
    * @throws {TypeError} If `blob` is not a Blob.
    * @throws {Error} If the cache was destroyed.
