@@ -118,7 +118,7 @@ class TinyImageLoader extends TinyMediaLoader {
   async _startLoad() {
     const image = /** @type {HTMLImageElement} */ (this._resolveElement());
     this.#image = image;
-    
+
     if (this.#crossOrigin) {
       image.crossOrigin = this.#crossOrigin;
     }
@@ -182,7 +182,7 @@ class TinyImageLoader extends TinyMediaLoader {
             const tempUrl = URL.createObjectURL(currentBlob);
             if (previousUrl) URL.revokeObjectURL(previousUrl);
             previousUrl = tempUrl;
-            
+
             // Explicitly marks the temporary URL as internal so the MutationObserver
             // ignores it and keeps the original source URL for the cache engine.
             this._setInternalSrc(tempUrl);

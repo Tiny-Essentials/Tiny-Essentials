@@ -7,6 +7,11 @@
  * AVI, AMV, Ogg/Theora, MPEG-1/2 elementary streams, MPEG program streams
  * (VOB), MPEG transport streams (TS, MTS, M2TS), FLV, ASF/WMV, RealMedia,
  * NSV and RoQ.
+ *
+ * Note on production usage for MP4: Ensure your videos are optimized for web streaming
+ * (e.g., encoded with ffmpeg `-movflags faststart`). This places the `moov` atom at the
+ * beginning of the file, allowing the probe to resolve dimensions within the first few kilobytes
+ * instead of requiring the entire file to be loaded into memory.
  */
 import TinyBufferReader, { TinyNeedMoreData } from '../utils/TinyBufferReader.mjs';
 import { findBox } from '../utils/TinyIsoBox.mjs';

@@ -187,7 +187,7 @@ class TinyContentLoader extends TinyMediaLoader {
       const ready = this._waitForMedia(media, 'loadeddata');
       ready.catch(() => {});
 
-      await this.#streamInto(media);
+      await this.#streamInto(media, 0);
 
       if (media.readyState < 2) {
         await ready;
@@ -202,13 +202,12 @@ class TinyContentLoader extends TinyMediaLoader {
   }
 
   /**
-   * Downloads the media through fetch, emitting byte-level progress.
-   * It optionally supports Media Source Extensions (MSE) allowing sequential partial stream parsing (YouTube-style buffering).
+   * Downloads the media through fetch, supporting byte-level progress and seeking.
    * @param {HTMLContentElement} media - The target media element.
+   * @param {number} startByte - The byte offset to start from.
    * @returns {Promise<void>}
-   * @throws {Error} If the network request fails.
    */
-  async #streamInto(media) {
+  async #streamInto(media, startByte) {
     const cached = this._acquireFromCache();
     if (cached) {
       this.emit('cachehit', cached);
@@ -248,6 +247,26 @@ class TinyContentLoader extends TinyMediaLoader {
       }
     };
 
+    // Handles user seeks outside the sequential buffered range to avoid MSE stalling.
+    const onSeeking = () => {
+      if (fallbackTriggered || !mseStarted || !sourceBuffer) return;
+      const time = media.currentTime;
+      let isBuffered = false;
+      const b = sourceBuffer.buffered;
+      for (let i = 0; i < b.length; i++) {
+        // Allows a small margin of error (0.1s)
+        if (time >= b.start(i) && time <= b.end(i) + 0.1) {
+          isBuffered = true;
+          break;
+        }
+      }
+      if (!isBuffered) {
+        triggerFallback();
+      }
+    };
+    media.addEventListener('seeking', onSeeking);
+    this._on(media, 'seeking', onSeeking); // Keeps it attached to our detach loop
+
     const appendNext = () => {
       if (mseStarted && media.error) triggerFallback();
       if (
@@ -269,84 +288,91 @@ class TinyContentLoader extends TinyMediaLoader {
       }
     };
 
-    const blob = await this._downloadStream(this.src, (chunk) => {
-      if (mseStarted && media.error) triggerFallback();
+    const blob = await this._downloadStream(
+      this.src,
+      (chunk) => {
+        if (mseStarted && media.error) triggerFallback();
 
-      if (this.progressive && typeof MediaSource !== 'undefined' && !fallbackTriggered) {
-        if (!mseStarted) {
-          mseStarted = true;
-          mse = new MediaSource();
-          this.#mseUrl = URL.createObjectURL(mse);
-          this._setInternalSrc(this.#mseUrl);
-          media.src = this.#mseUrl;
-          this._flushMutations();
+        if (this.progressive && typeof MediaSource !== 'undefined' && !fallbackTriggered) {
+          if (!mseStarted) {
+            mseStarted = true;
+            mse = new MediaSource();
+            this.#mseUrl = URL.createObjectURL(mse);
+            this._setInternalSrc(this.#mseUrl);
+            media.src = this.#mseUrl;
+            this._flushMutations();
 
-          mse.addEventListener('sourceopen', () => {
-            const mime = this.metadata.type || this.#getMimeType();
-            let typesToTry = [mime];
-            // Suggest standard codecs for fragmented streams
-            for (const mimeName in this.#typesToTry) {
-              if (mime.includes(mimeName)) {
-                for (const type of this.#typesToTry[mimeName]) {
-                  typesToTry.unshift(type.replace('{mime}', mime));
+            mse.addEventListener('sourceopen', () => {
+              const mime = this.metadata.type || this.#getMimeType();
+              let typesToTry = [mime];
+              // Suggest standard codecs for fragmented streams
+              for (const mimeName in this.#typesToTry) {
+                if (mime.includes(mimeName)) {
+                  for (const type of this.#typesToTry[mimeName]) {
+                    typesToTry.unshift(type.replace('{mime}', mime));
+                  }
                 }
               }
-            }
 
-            let selectedType = null;
-            for (const t of typesToTry) {
-              if (MediaSource.isTypeSupported(t)) {
-                selectedType = t;
-                break;
+              let selectedType = null;
+              for (const t of typesToTry) {
+                if (MediaSource.isTypeSupported(t)) {
+                  selectedType = t;
+                  break;
+                }
               }
-            }
 
-            if (selectedType) {
-              if (!mse) {
-                triggerFallback();
-                return;
-              }
-              try {
-                sourceBuffer = mse.addSourceBuffer(selectedType);
-                sourceBuffer.addEventListener('updateend', () => {
-                  isAppending = false;
-                  
-                  if (!fallbackTriggered) {
-                    // Silent failure detection in videos (e.g. Firefox on unfragmented MP4)
-                    if (sourceBuffer?.buffered.length === 0 && appendedBytes > 256 * 1024) {
-                      triggerFallback();
-                      return;
-                    }
-                    // Infinite Chrome Duration Detection using MSE for audio
-                    if (media.duration === Infinity && this.#tag === 'audio') {
-                      triggerFallback();
-                      return;
-                    }
-                  }
-                  
-                  appendNext();
-                });
-                sourceBuffer.addEventListener('error', () => {
+              if (selectedType) {
+                if (!mse) {
                   triggerFallback();
-                });
-                appendNext();
-              } catch {
+                  return;
+                }
+                try {
+                  sourceBuffer = mse.addSourceBuffer(selectedType);
+                  sourceBuffer.addEventListener('updateend', () => {
+                    isAppending = false;
+
+                    if (!fallbackTriggered) {
+                      // Silent failure detection in videos (e.g. Firefox on unfragmented MP4)
+                      if (sourceBuffer?.buffered.length === 0 && appendedBytes > 256 * 1024) {
+                        triggerFallback();
+                        return;
+                      }
+                      // Infinite Chrome Duration Detection using MSE for audio
+                      if (media.duration === Infinity && this.#tag === 'audio') {
+                        triggerFallback();
+                        return;
+                      }
+                    }
+
+                    appendNext();
+                  });
+                  sourceBuffer.addEventListener('error', () => {
+                    triggerFallback();
+                  });
+                  appendNext();
+                } catch {
+                  triggerFallback();
+                }
+              } else {
                 triggerFallback();
               }
-            } else {
-              triggerFallback();
-            }
-          });
-        }
+              if (sourceBuffer && startByte > 0) {
+                sourceBuffer.abort();
+              }
+            });
+          }
 
-        if (!fallbackTriggered) {
-          queue.push(chunk);
-          if (mse && mse.readyState === 'open' && sourceBuffer) {
-            appendNext();
+          if (!fallbackTriggered) {
+            queue.push(chunk);
+            if (mse && mse.readyState === 'open' && sourceBuffer) {
+              appendNext();
+            }
           }
         }
-      }
-    });
+      },
+      startByte,
+    );
 
     if (mse && !fallbackTriggered) {
       const endStream = () => {

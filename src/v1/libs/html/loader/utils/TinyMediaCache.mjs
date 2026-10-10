@@ -13,6 +13,7 @@
 /**
  * @typedef {Object} MediaCacheOptions
  * @property {number} [maxItems] - Maximum number of entries (Infinity by default).
+ * @property {number} [maxBytes] - Maximum cache size in bytes (Infinity by default).
  * @property {number} [ttl] - Entry lifetime in milliseconds (0 = never expires).
  * @property {MediaCacheStrategy} [strategy] - Cleanup strategy at zero references.
  * @property {boolean} [ignoreSearch] - Whether the query string is ignored when building keys.
@@ -79,6 +80,8 @@ class TinyMediaCache {
   /** @type {number} */
   #maxItems;
   /** @type {number} */
+  #maxBytes;
+  /** @type {number} */
   #ttl;
   /** @type {MediaCacheStrategy} */
   #strategy;
@@ -134,6 +137,14 @@ class TinyMediaCache {
   }
 
   /**
+   * The maximum size in bytes allowed in this cache.
+   * @returns {number} The maximum size in bytes.
+   */
+  get maxBytes() {
+    return this.#maxBytes;
+  }
+
+  /**
    * The number of entries evicted by the limit enforcement.
    * @returns {number} The current eviction count.
    */
@@ -145,6 +156,7 @@ class TinyMediaCache {
    * @param {MediaCacheOptions} [options] - The cache configuration.
    * @throws {TypeError} If `options` is not a plain object.
    * @throws {RangeError} If `maxItems` is not a positive number.
+   * @throws {RangeError} If `maxBytes` is not a positive number.
    * @throws {RangeError} If `ttl` is not a positive number.
    * @throws {TypeError} If `strategy` is not a known strategy.
    * @throws {TypeError} If `ignoreSearch` is not a boolean.
@@ -156,6 +168,7 @@ class TinyMediaCache {
     }
     const {
       maxItems = Infinity,
+      maxBytes = Infinity,
       ttl = 0,
       strategy = TinyMediaCache.Strategy.MANUAL,
       ignoreSearch = false,
@@ -163,6 +176,9 @@ class TinyMediaCache {
     } = options;
     if (typeof maxItems !== 'number' || Number.isNaN(maxItems) || maxItems < 1) {
       throw new RangeError('The "maxItems" option must be a positive number.');
+    }
+    if (typeof maxBytes !== 'number' || Number.isNaN(maxBytes) || maxBytes < 0) {
+      throw new RangeError('The "maxBytes" option must be a positive number.');
     }
     if (typeof ttl !== 'number' || Number.isNaN(ttl) || ttl < 0) {
       throw new RangeError('The "ttl" option must be a positive number.');
@@ -177,6 +193,7 @@ class TinyMediaCache {
       throw new RangeError('The "sweepInterval" option must be a positive number.');
     }
     this.#maxItems = maxItems;
+    this.#maxBytes = maxBytes;
     this.#ttl = ttl;
     this.#strategy = strategy;
     this.#ignoreSearch = ignoreSearch;
@@ -494,24 +511,29 @@ class TinyMediaCache {
   }
 
   /**
-   * Evicts the least recently used entries until the limit is respected.
+   * Evicts the least recently used entries until both the quantity limit
+   * and the byte limit are respected.
    * @returns {void}
    */
   #enforceLimit() {
-    if (this.#entries.size <= this.#maxItems) {
+    if (this.#entries.size <= this.#maxItems && this.bytes <= this.#maxBytes) {
       return;
     }
     const candidates = Array.from(this.#entries.values())
       .filter((entry) => !entry.pinned && entry.refs === 0)
       .sort((a, b) => a.lastAccess - b.lastAccess);
-    let overflow = this.#entries.size - this.#maxItems;
+
+    let currentBytes = this.bytes;
+    let currentItems = this.#entries.size;
+
     for (const entry of candidates) {
-      if (overflow <= 0) {
+      if (currentItems <= this.#maxItems && currentBytes <= this.#maxBytes) {
         break;
       }
       this.delete(entry.key);
       this.#evictions += 1;
-      overflow -= 1;
+      currentBytes -= entry.size;
+      currentItems -= 1;
     }
   }
 

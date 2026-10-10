@@ -144,13 +144,13 @@ app.use((req, res, next) => {
   // Cabeçalhos que o navegador pode enviar
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'Origin, X-Requested-With, Content-Type, Accept, Range, If-Range',
   );
 
   // Cabeçalhos que o frontend tem permissão para ler
   res.setHeader(
     'Access-Control-Expose-Headers',
-    'Content-Length, Content-Range, Accept-Ranges, Content-Type',
+    'Content-Length, Content-Range, Accept-Ranges, Content-Type, ETag, Last-Modified',
   );
 
   // REGRA DE OURO: Interceptar o preflight (OPTIONS) para que não caia no Erro 404!
@@ -456,44 +456,52 @@ app.get('/__slow', async (req, res) => {
   }
 
   const fileSize = stats.size;
-  const range = req.headers.range;
+  const rangeHeader = req.headers.range;
+  const ifRange = req.headers['if-range'];
+  const etag = `W/"${fileSize}-${stats.mtime.getTime()}"`;
+
+  res.setHeader('ETag', etag);
+  res.setHeader('Last-Modified', stats.mtime.toUTCString());
+  res.setHeader('Accept-Ranges', 'bytes');
+  res.setHeader('Cache-Control', 'no-store'); // Impedir cache estrito para simulação dev
+  res.type(getContentTypeNative(filePath));
 
   let start = 0;
   let end = fileSize - 1;
   let statusCode = 200;
 
-  // Lidar com requisições Range (crucial para <video> e <audio>)
-  if (range) {
-    const parts = range.replace(/bytes=/, '').split('-');
+  let useRange = !!rangeHeader && rangeHeader.startsWith('bytes=');
+
+  // Lidar com If-Range (Evitar enviar partes incorretas se o arquivo mudou no server)
+  if (useRange && ifRange) {
+    if (ifRange.startsWith('W/') || ifRange.startsWith('"')) {
+      if (ifRange !== etag) useRange = false;
+    } else {
+      if (new Date(ifRange).getTime() !== stats.mtime.getTime()) useRange = false;
+    }
+  }
+
+  // Parse do cabeçalho Range (Multipart Range fallback para o primeiro range)
+  if (useRange) {
+    const parts = rangeHeader
+      .replace(/bytes=/, '')
+      .split(',')[0]
+      .split('-'); // Pegamos a 1º parte
     const parsedStart = parseInt(parts[0], 10);
     const parsedEnd = parseInt(parts[1], 10);
 
     if (isNaN(parsedStart) && !isNaN(parsedEnd)) {
-      // bytes=-500 (últimos 500 bytes)
       start = Math.max(fileSize - parsedEnd, 0);
-      end = fileSize - 1;
     } else if (!isNaN(parsedStart) && isNaN(parsedEnd)) {
-      // bytes=500- (do byte 500 até o final)
       start = parsedStart;
-      end = fileSize - 1;
     } else if (!isNaN(parsedStart) && !isNaN(parsedEnd)) {
-      // bytes=500-1000
       start = parsedStart;
-      end = parsedEnd;
-    } else {
-      start = 0;
-      end = fileSize - 1;
+      end = Math.min(parsedEnd, fileSize - 1); // Trunca ao limite real
     }
 
-    // Se o start pedido for maior que o arquivo, avisamos o navegador (Erro 416)
-    if (start >= fileSize) {
+    if (start >= fileSize || start > end) {
       res.status(416).setHeader('Content-Range', `bytes */${fileSize}`);
       return res.end();
-    }
-
-    // O end nunca pode ser maior que o tamanho real do arquivo
-    if (end >= fileSize) {
-      end = fileSize - 1;
     }
 
     statusCode = 206;
@@ -502,10 +510,7 @@ app.get('/__slow', async (req, res) => {
   const contentLength = Number(end - start) + 1;
 
   res.status(statusCode);
-  res.type(getContentTypeNative(filePath));
   res.setHeader('Content-Length', String(contentLength));
-  res.setHeader('Accept-Ranges', 'bytes');
-  res.setHeader('Cache-Control', 'no-store');
 
   if (statusCode === 206) {
     res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
