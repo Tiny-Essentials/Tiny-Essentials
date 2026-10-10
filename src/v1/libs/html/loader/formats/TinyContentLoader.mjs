@@ -157,10 +157,12 @@ class TinyContentLoader extends TinyMediaLoader {
       'abort',
     ]);
 
-    this._on(media, 'loadedmetadata', () => {
+    const onMetadata = () => {
       const patch = getMetadata(media);
       if (Object.keys(patch).length > 0) this._emitMetadata(patch, 'LOADED_METADATA');
-    });
+    };
+
+    this._on(media, 'loadedmetadata', onMetadata);
 
     this._on(media, 'durationchange', () => {
       if (Number.isFinite(media.duration)) {
@@ -172,6 +174,10 @@ class TinyContentLoader extends TinyMediaLoader {
     if (!this.#stream) {
       this._on(media, 'progress', () => this.#updateTimeProgress());
       this._on(media, 'loadedmetadata', () => this.#updateTimeProgress());
+    }
+
+    if (media.readyState >= 1) {
+      onMetadata();
     }
 
     if (this.#crossOrigin) {
@@ -272,7 +278,7 @@ class TinyContentLoader extends TinyMediaLoader {
     };
 
     // Handles user seeks outside the sequential buffered range to avoid MSE stalling.
-    const onSeeking = () => {
+    this._on(media, 'seeking', () => {
       if (fallbackTriggered || !mseStarted || !sourceBuffer) return;
       const time = media.currentTime;
       let isBuffered = false;
@@ -287,9 +293,15 @@ class TinyContentLoader extends TinyMediaLoader {
       if (!isBuffered) {
         triggerFallback();
       }
-    };
-    media.addEventListener('seeking', onSeeking);
-    this._on(media, 'seeking', onSeeking); // Keeps it attached to our detach loop
+    });
+
+    // Infinite Chrome Duration Detection 
+    this._on(media, 'durationchange', () => {
+      if (fallbackTriggered || !mseStarted) return;
+      if (media.duration === Infinity) {
+        // triggerFallback();
+      }
+    });
 
     const appendNext = () => {
       if (mseStarted && media.error) triggerFallback();
