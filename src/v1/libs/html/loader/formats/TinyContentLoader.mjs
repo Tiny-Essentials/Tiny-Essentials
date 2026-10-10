@@ -195,6 +195,7 @@ class TinyContentLoader extends TinyMediaLoader {
     } else {
       const ready = this._waitForMedia(media, 'loadeddata');
       media.src = this.src;
+      this._flushMutations();
       media.load();
       await ready;
     }
@@ -213,6 +214,7 @@ class TinyContentLoader extends TinyMediaLoader {
       this.emit('cachehit', cached);
       this._setInternalSrc(cached.objectUrl);
       media.src = cached.objectUrl;
+      this._flushMutations();
       media.load();
       return;
     }
@@ -241,6 +243,7 @@ class TinyContentLoader extends TinyMediaLoader {
       if (isMseUrl || !media.hasAttribute('src')) {
         this._setInternalSrc(null);
         media.src = this.src;
+        this._flushMutations();
       }
     };
 
@@ -274,6 +277,7 @@ class TinyContentLoader extends TinyMediaLoader {
           this.#mseUrl = URL.createObjectURL(mse);
           this._setInternalSrc(this.#mseUrl);
           media.src = this.#mseUrl;
+          this._flushMutations();
 
           mse.addEventListener('sourceopen', () => {
             const mime = this.metadata.type || this.#getMimeType();
@@ -354,6 +358,7 @@ class TinyContentLoader extends TinyMediaLoader {
       if (!fallbackTriggered || (media.paused && media.currentTime === 0)) {
         this._setInternalSrc(url);
         media.src = url;
+        this._flushMutations();
         media.load();
       }
     }

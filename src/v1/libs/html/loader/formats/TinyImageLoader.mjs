@@ -118,20 +118,27 @@ class TinyImageLoader extends TinyMediaLoader {
   async _startLoad() {
     const image = /** @type {HTMLImageElement} */ (this._resolveElement());
     this.#image = image;
+    
     if (this.#crossOrigin) {
       image.crossOrigin = this.#crossOrigin;
     }
     image.decoding = this.#decoding;
 
+    // Resets the state machine attributes strictly prior to load guarantees so `EMPTY_GIF` sizes
+    // from a previously aborted fetch never mislead our `ready` completion conditions.
+    image.removeAttribute('src');
+    this._flushMutations();
+
+    let ready;
     if (this.#stream) {
-      await this.#streamInto(image);
+      ready = await this.#streamInto(image);
     } else {
+      ready = this._waitForMedia(image, 'load');
       image.src = this.src;
+      this._flushMutations();
     }
 
-    if (!image.complete || image.naturalWidth === 0) {
-      await this._waitForMedia(image, 'load');
-    }
+    await ready;
 
     if (typeof image.decode === 'function') {
       try {
@@ -146,7 +153,7 @@ class TinyImageLoader extends TinyMediaLoader {
    * Downloads the image through fetch, emitting byte-level progress.
    * Updates the image source progressively during the stream.
    * @param {HTMLImageElement} image - The target image element.
-   * @returns {Promise<void>} A promise that resolves once the image element points to the blob URL.
+   * @returns {Promise<Promise<void>>} A promise resolving to the final ready event load listener.
    * @throws {Error} If the network request fails.
    */
   async #streamInto(image) {
@@ -154,8 +161,10 @@ class TinyImageLoader extends TinyMediaLoader {
     if (cached) {
       this.emit('cachehit', cached);
       this._setInternalSrc(cached.objectUrl);
+      const ready = this._waitForMedia(image, 'load');
       image.src = cached.objectUrl;
-      return;
+      this._flushMutations();
+      return ready;
     }
 
     let lastUpdate = performance.now();
@@ -178,13 +187,17 @@ class TinyImageLoader extends TinyMediaLoader {
             // ignores it and keeps the original source URL for the cache engine.
             this._setInternalSrc(tempUrl);
             image.src = tempUrl;
+            this._flushMutations();
           }
         }
       });
 
       const url = this._cacheBlob(blob);
       this._setInternalSrc(url);
+      const ready = this._waitForMedia(image, 'load');
       image.src = url;
+      this._flushMutations();
+      return ready;
     } finally {
       if (previousUrl) URL.revokeObjectURL(previousUrl);
     }
@@ -218,6 +231,7 @@ class TinyImageLoader extends TinyMediaLoader {
     super._abort();
     if (this.#image) {
       this.#image.src = EMPTY_GIF;
+      this._flushMutations();
     }
   }
 
