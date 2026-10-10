@@ -4,6 +4,8 @@
  */
 import TinyMediaLoader from '../TinyMediaLoader.mjs';
 
+const EMPTY_GIF = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+
 /**
  * @typedef {Object} ImageLoaderOptions
  * @property {string} [src] - The image source URL.
@@ -122,18 +124,13 @@ class TinyImageLoader extends TinyMediaLoader {
     image.decoding = this.#decoding;
 
     if (this.#stream) {
-      const ready = this._waitForMedia(image, 'load');
-      ready.catch(() => {});
-
       await this.#streamInto(image);
-
-      if (!image.complete || image.naturalWidth === 0) {
-        await this._waitForMedia(image, 'load');
-      }
     } else {
-      const ready = this._waitForMedia(image, 'load');
       image.src = this.src;
-      await ready;
+    }
+
+    if (!image.complete || image.naturalWidth === 0) {
+      await this._waitForMedia(image, 'load');
     }
 
     if (typeof image.decode === 'function') {
@@ -176,6 +173,10 @@ class TinyImageLoader extends TinyMediaLoader {
             const tempUrl = URL.createObjectURL(currentBlob);
             if (previousUrl) URL.revokeObjectURL(previousUrl);
             previousUrl = tempUrl;
+            
+            // Explicitly marks the temporary URL as internal so the MutationObserver
+            // ignores it and keeps the original source URL for the cache engine.
+            this._setInternalSrc(tempUrl);
             image.src = tempUrl;
           }
         }
@@ -207,6 +208,20 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
+   * Aborts the fetch gracefully allowing a retry process to spin up safely on the same element instance without
+   * triggering stale asynchronous cache responses.
+   * @override
+   * @protected
+   * @returns {void}
+   */
+  _abort() {
+    super._abort();
+    if (this.#image) {
+      this.#image.src = EMPTY_GIF;
+    }
+  }
+
+  /**
    * Detaches the load handlers, revokes the object URL and clears the source of the image element.
    * @override
    * @protected
@@ -218,6 +233,7 @@ class TinyImageLoader extends TinyMediaLoader {
       this.#image.onload = null;
       this.#image.onerror = null;
       this.#image.removeAttribute('src');
+      this.#image.src = EMPTY_GIF;
       this._flushMutations();
     }
   }

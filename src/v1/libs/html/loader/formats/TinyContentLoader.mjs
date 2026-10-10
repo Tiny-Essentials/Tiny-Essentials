@@ -27,6 +27,20 @@ import TinyMediaLoader from '../TinyMediaLoader.mjs';
  */
 
 /**
+ * @param {HTMLVideoElement|HTMLAudioElement} media
+ */
+const getMetadata = (media) => {
+  /** @type {Partial<import('../TinyMediaLoader.mjs').MediaMetadata>} */
+  const patch = {};
+  if (Number.isFinite(media.duration)) patch.duration = media.duration;
+  if (media instanceof HTMLVideoElement) {
+    if (Number.isFinite(media.videoWidth)) patch.width = media.videoWidth;
+    if (Number.isFinite(media.videoHeight)) patch.height = media.videoHeight;
+  }
+  return patch;
+};
+
+/**
  * Loads a single media with full lifecycle control.
  * @extends {TinyMediaLoader<HTMLContentElement>}
  * @template {HTMLVideoElement|HTMLAudioElement} HTMLContentElement
@@ -143,13 +157,7 @@ class TinyContentLoader extends TinyMediaLoader {
     ]);
 
     this._on(media, 'loadedmetadata', () => {
-      /** @type {Partial<import('../TinyMediaLoader.mjs').MediaMetadata>} */
-      const patch = {};
-      if (Number.isFinite(media.duration)) patch.duration = media.duration;
-      if (media instanceof HTMLVideoElement && media.videoWidth) {
-        patch.width = media.videoWidth;
-        patch.height = media.videoHeight;
-      }
+      const patch = getMetadata(media);
       if (Object.keys(patch).length > 0) this._emitMetadata(patch);
     });
 
@@ -176,13 +184,13 @@ class TinyContentLoader extends TinyMediaLoader {
     media.controls = this.#controls;
 
     if (this.#stream) {
-      let ready = this._waitForMedia(media, 'loadeddata');
+      const ready = this._waitForMedia(media, 'loadeddata');
       ready.catch(() => {});
 
       await this.#streamInto(media);
 
       if (media.readyState < 2) {
-        await this._waitForMedia(media, 'loadeddata');
+        await ready;
       }
     } else {
       const ready = this._waitForMedia(media, 'loadeddata');
@@ -222,23 +230,30 @@ class TinyContentLoader extends TinyMediaLoader {
     const triggerFallback = () => {
       if (fallbackTriggered) return;
       fallbackTriggered = true;
-      
+
       const isMseUrl = this.#mseUrl && media.src === this.#mseUrl;
-      
+
       if (this.#mseUrl) {
         URL.revokeObjectURL(this.#mseUrl);
         this.#mseUrl = null;
       }
-      
-      if (isMseUrl || !media.src) {
+
+      if (isMseUrl || !media.hasAttribute('src')) {
         this._setInternalSrc(null);
         media.src = this.src;
       }
     };
 
     const appendNext = () => {
-      if (media.error) triggerFallback();
-      if (isAppending || queue.length === 0 || !sourceBuffer || sourceBuffer.updating || fallbackTriggered) return;
+      if (mseStarted && media.error) triggerFallback();
+      if (
+        isAppending ||
+        queue.length === 0 ||
+        !sourceBuffer ||
+        sourceBuffer.updating ||
+        fallbackTriggered
+      )
+        return;
       isAppending = true;
       try {
         const blob = /** @type {BufferSource} */ (queue.shift());
@@ -250,7 +265,7 @@ class TinyContentLoader extends TinyMediaLoader {
     };
 
     const blob = await this._downloadStream(this.src, (chunk) => {
-      if (media.error) triggerFallback();
+      if (mseStarted && media.error) triggerFallback();
 
       if (this.progressive && typeof MediaSource !== 'undefined' && !fallbackTriggered) {
         if (!mseStarted) {
@@ -333,7 +348,7 @@ class TinyContentLoader extends TinyMediaLoader {
     } else {
       // Fallback to assigning the blob URL all at once (standard path or on MSE failure)
       const url = this._cacheBlob(blob);
-      
+
       // If we already fell back to the native network URL, we might be currently playing it!
       // To avoid restarting the user's video, we only swap if playback hasn't advanced.
       if (!fallbackTriggered || (media.paused && media.currentTime === 0)) {
@@ -350,7 +365,8 @@ class TinyContentLoader extends TinyMediaLoader {
    */
   #updateTimeProgress() {
     const media = this.#media;
-    if (!media || !Number.isFinite(media.duration) || media.duration === 0) {
+    const { duration = 0, height = 0, width = 0 } = media ? getMetadata(media) : {};
+    if (!media || !Number.isFinite(duration) || duration === 0) {
       return;
     }
     const buffered = media.buffered;
@@ -361,9 +377,11 @@ class TinyContentLoader extends TinyMediaLoader {
     const tracker = this.progress;
     this.emit('progress', {
       loaded,
-      total: media.duration,
-      remaining: Math.max(0, media.duration - loaded),
-      percent: Math.min(100, (loaded / media.duration) * 100),
+      total: duration,
+      height,
+      width,
+      remaining: Math.max(0, duration - loaded),
+      percent: Math.min(100, (loaded / duration) * 100),
       rate: 0,
       elapsed: tracker ? tracker.elapsed : 0,
       eta: 0,
@@ -389,13 +407,8 @@ class TinyContentLoader extends TinyMediaLoader {
    */
   _getMetadataDetails() {
     const media = this.#media;
-    const duration = media ? media.duration : 0;
-    let width = 0;
-    let height = 0;
-    if (media instanceof HTMLVideoElement) {
-      width = media.videoWidth;
-      height = media.videoHeight;
-    }
+    const patch = media ? getMetadata(media) : {};
+    const { duration = 0, width = 0, height = 0 } = patch;
     return {
       type: this.#getMimeType(),
       width,
@@ -413,6 +426,19 @@ class TinyContentLoader extends TinyMediaLoader {
   _createElement() {
     // @ts-ignore
     return document.createElement(this.#tag);
+  }
+
+  /**
+   * @override
+   * @protected
+   * @returns {void}
+   */
+  _abort() {
+    if (this.#mseUrl) {
+      URL.revokeObjectURL(this.#mseUrl);
+      this.#mseUrl = null;
+    }
+    super._abort();
   }
 
   /**
