@@ -12,6 +12,7 @@ import TinyMediaLoader from '../TinyMediaLoader.mjs';
  * @property {'sync'|'async'|'auto'} [decoding] - The decoding hint passed to the browser.
  * @property {HTMLImageElement|null} [element] - An existing DOM element to adopt.
  * @property {boolean} [earlyDecode] - Whether to decode the dimensions from the response headers using WebCodecs.
+ * @property {boolean} [progressive] - Whether to show the image progressively while streaming (default true).
  * @property {boolean} [autoReload] - Whether an external `src` change triggers a reload.
  * @property {boolean} [stream] - Whether to download the image through fetch for byte progress.
  * @property {import('../utils/TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
@@ -19,7 +20,7 @@ import TinyMediaLoader from '../TinyMediaLoader.mjs';
 
 /**
  * Loads a single image with full lifecycle control.
- * @augments TinyMediaLoader
+ * @extends {TinyMediaLoader<HTMLImageElement>}
  */
 class TinyImageLoader extends TinyMediaLoader {
   /**
@@ -47,6 +48,13 @@ class TinyImageLoader extends TinyMediaLoader {
    * @throws {TypeError} If `decoding` is not a string.
    */
   constructor(options = {}) {
+    if (
+      options.element !== null &&
+      options.element !== undefined &&
+      !(options.element instanceof HTMLImageElement)
+    ) {
+      throw new TypeError('The "element" option must be an HTMLImageElement or null.');
+    }
     super(options);
     const { crossOrigin = null, decoding = 'async', stream = false } = options;
     if (crossOrigin !== null && typeof crossOrigin !== 'string') {
@@ -134,6 +142,7 @@ class TinyImageLoader extends TinyMediaLoader {
 
   /**
    * Downloads the image through fetch, emitting byte-level progress.
+   * Updates the image source progressively during the stream.
    * @param {HTMLImageElement} image - The target image element.
    * @returns {Promise<void>} A promise that resolves once the image element points to the blob URL.
    * @throws {Error} If the network request fails.
@@ -146,10 +155,33 @@ class TinyImageLoader extends TinyMediaLoader {
       image.src = cached.objectUrl;
       return;
     }
-    const blob = await this._downloadStream(this.src);
-    const url = this._cacheBlob(blob);
-    this._setInternalSrc(url);
-    image.src = url;
+
+    let lastUpdate = performance.now();
+    /** @type {string|null} */
+    let previousUrl = null;
+
+    try {
+      const blob = await this._downloadStream(this.src, (_, chunks) => {
+        if (this.progressive) {
+          const now = performance.now();
+          // Update visual image every 500ms to avoid thrashing CPU
+          if (now - lastUpdate > 500) {
+            lastUpdate = now;
+            const currentBlob = new Blob(chunks, { type: this.metadata.type || 'image/jpeg' });
+            const tempUrl = URL.createObjectURL(currentBlob);
+            if (previousUrl) URL.revokeObjectURL(previousUrl);
+            previousUrl = tempUrl;
+            image.src = tempUrl;
+          }
+        }
+      });
+
+      const url = this._cacheBlob(blob);
+      this._setInternalSrc(url);
+      image.src = url;
+    } finally {
+      if (previousUrl) URL.revokeObjectURL(previousUrl);
+    }
   }
 
   /**

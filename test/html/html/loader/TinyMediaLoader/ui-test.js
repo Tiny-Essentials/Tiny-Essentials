@@ -202,10 +202,12 @@ function readConfig() {
     crossOrigin: byId('cfg-crossorigin').value || null,
     preload: byId('cfg-preload').value,
     stream: isChecked('cfg-stream'),
+    progressive: isChecked('cfg-progressive'),
     autoReload: isChecked('cfg-autoreload'),
     autoplay: isChecked('cfg-autoplay'),
     loop: isChecked('cfg-loop'),
     muted: isChecked('cfg-muted'),
+    controls: isChecked('cfg-controls'),
     autoMount: isChecked('cfg-automount'),
     useCache: isChecked('cfg-cache'),
   };
@@ -322,7 +324,6 @@ function renderMeta(entry) {
   }
   const meta = loader.metadata;
   const element = loader.element;
-  console.log(meta);
   const rows = [
     ['size', `${formatBytes(meta.size)} (${meta.size} B)`],
     ['loadTime', `${Number(meta.loadTime).toFixed(1)} ms`],
@@ -428,6 +429,7 @@ function spawn(config) {
     crossOrigin: config.crossOrigin,
     autoReload: config.autoReload,
     stream: config.stream,
+    progressive: config.progressive,
     cache: config.useCache ? ensureCache() : null,
   };
   if (kind === 'image') {
@@ -437,6 +439,7 @@ function spawn(config) {
     options.autoplay = config.autoplay;
     options.loop = config.loop;
     options.muted = config.muted;
+    options.controls = config.controls;
   }
   const loader = new LoaderClass(options);
   const entry = { id, kind, card, loader, startedAt: 0 };
@@ -461,7 +464,7 @@ async function loadInstance(id) {
   pushTimeline(entry, 'load() called');
   try {
     const metadata = await entry.loader.load();
-    if (isChecked('cfg-automount')) {
+    if (readConfig().autoMount) {
       const stage = $('[data-role="stage"]', entry.card);
       stage.replaceChildren();
       entry.loader.mount(stage);

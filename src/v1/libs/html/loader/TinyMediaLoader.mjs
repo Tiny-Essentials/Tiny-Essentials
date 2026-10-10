@@ -14,13 +14,15 @@ import TinyImageProbe from './probe/TinyImageProbe.mjs';
 /**
  * Describes the configuration object accepted by the {@link TinyMediaLoader} constructor.
  * Every property is optional, so a loader can be created empty and configured later.
+ * @template {HTMLImageElement|HTMLVideoElement|HTMLAudioElement} HTMLMainElement
  * @typedef {Object} MediaLoaderOptions
  * @property {string} [src] - The media source URL.
  * @property {number} [timeout] - Maximum time in milliseconds before the load is aborted.
- * @property {HTMLElement|null} [element] - An existing DOM element to adopt.
+ * @property {HTMLMainElement|null} [element] - An existing DOM element to adopt.
  * @property {boolean} [autoReload] - Whether an external `src` change triggers a reload.
  * @property {boolean} [originalSrc] - Whether the original URL is mirrored into the `original-src` attribute.
  * @property {boolean} [earlyDecode] - Whether to decode image dimensions from the response headers using WebCodecs.
+ * @property {boolean} [progressive] - Whether to render progressively during fetch (default true).
  * @property {TinyMediaCache|null} [cache] - An optional shared memory cache.
  */
 
@@ -121,6 +123,7 @@ import TinyImageProbe from './probe/TinyImageProbe.mjs';
  * It must be extended. Concrete subclasses implement `_createElement`,
  * `_startLoad`, `_getMetadataDetails`, `_abort` and `_cleanup`.
  * @abstract
+ * @template {HTMLImageElement|HTMLVideoElement|HTMLAudioElement} HTMLMainElement
  */
 class TinyMediaLoader extends EventEmitter {
   /**
@@ -147,7 +150,7 @@ class TinyMediaLoader extends EventEmitter {
   #src;
   /** @type {string} */
   #state = TinyMediaLoader.MediaState.IDLE;
-  /** @type {HTMLElement|null} */
+  /** @type {HTMLMainElement|null} */
   #element = null;
   /** @type {number} */
   #timeout;
@@ -187,6 +190,8 @@ class TinyMediaLoader extends EventEmitter {
   #earlyDecode = false;
   /** @type {MediaEarlyDecoder|null} */
   #decoder = null;
+  /** @type {boolean} */
+  #progressive = true;
 
   /** @type {Partial<MediaMetadata>} */
   #partial = {};
@@ -206,7 +211,7 @@ class TinyMediaLoader extends EventEmitter {
   };
 
   /**
-   * @param {MediaLoaderOptions} [options] - The loader configuration.
+   * @param {MediaLoaderOptions<HTMLMainElement>} [options] - The loader configuration.
    * @throws {TypeError} If `options` is not a plain object.
    * @throws {TypeError} If `options.src` is not a string.
    * @throws {RangeError} If `options.timeout` is not a positive number.
@@ -224,6 +229,7 @@ class TinyMediaLoader extends EventEmitter {
       autoReload = false,
       originalSrc = false,
       earlyDecode = true,
+      progressive = true,
     } = options;
 
     if (src !== undefined && typeof src !== 'string') {
@@ -241,6 +247,9 @@ class TinyMediaLoader extends EventEmitter {
     if (typeof earlyDecode !== 'boolean') {
       throw new TypeError('The "earlyDecode" option must be a boolean.');
     }
+    if (typeof progressive !== 'boolean') {
+      throw new TypeError('The "progressive" option must be a boolean.');
+    }
 
     super();
     const expectedTag = /** @type {typeof TinyMediaLoader} */ (this.constructor).tagName;
@@ -254,6 +263,7 @@ class TinyMediaLoader extends EventEmitter {
     this.#cache = options.cache ?? null;
     this.#resetLoadState();
     this.#earlyDecode = earlyDecode;
+    this.#progressive = progressive;
     if (element) {
       this.#element = element;
       this.#startObserver();
@@ -299,6 +309,14 @@ class TinyMediaLoader extends EventEmitter {
    */
   get earlyDecode() {
     return this.#earlyDecode;
+  }
+
+  /**
+   * Whether the loader progressively updates the media element while downloading.
+   * @returns {boolean} True when progressive loading is enabled.
+   */
+  get progressive() {
+    return this.#progressive;
   }
 
   /**
@@ -381,7 +399,7 @@ class TinyMediaLoader extends EventEmitter {
 
   /**
    * The underlying DOM element (available after construction of the subclass).
-   * @returns {HTMLElement|null} The managed element, or null before it is created.
+   * @returns {HTMLMainElement|null} The managed element, or null before it is created.
    */
   get element() {
     return this.#element;
@@ -510,7 +528,7 @@ class TinyMediaLoader extends EventEmitter {
   /**
    * Registers a DOM listener that is removed on the next load or on destroy.
    * @protected
-   * @param {HTMLElement} element - The source element.
+   * @param {HTMLMainElement} element - The source element.
    * @param {string} type - The DOM event name.
    * @param {EventListener} handler - The listener to register.
    * @returns {void}
@@ -523,7 +541,7 @@ class TinyMediaLoader extends EventEmitter {
   /**
    * Forwards DOM events from an element to this emitter.
    * @protected
-   * @param {HTMLElement} element - The source element.
+   * @param {HTMLMainElement} element - The source element.
    * @param {string[]} events - The DOM event names to forward.
    * @returns {void}
    */
@@ -627,8 +645,8 @@ class TinyMediaLoader extends EventEmitter {
 
   /**
    * Appends the media element to a container.
-   * @param {HTMLElement} container - The parent element.
-   * @returns {TinyMediaLoader} The current instance for chaining.
+   * @param {HTMLMainElement} container - The parent element.
+   * @returns {TinyMediaLoader<HTMLMainElement>} The current instance for chaining.
    * @throws {TypeError} If `container` is not an HTMLElement.
    * @throws {Error} If the element has not been created yet.
    */
@@ -673,7 +691,7 @@ class TinyMediaLoader extends EventEmitter {
    * Returns the adopted element, creating a new one when none was provided.
    * Subclasses must call this inside `_startLoad`.
    * @protected
-   * @returns {HTMLElement}
+   * @returns {HTMLMainElement}
    */
   _resolveElement() {
     if (!this.#element) {
@@ -686,7 +704,7 @@ class TinyMediaLoader extends EventEmitter {
   /**
    * Registers a concrete DOM element. Kept for advanced subclasses.
    * @protected
-   * @param {HTMLElement} element - The element to expose through `element`.
+   * @param {HTMLMainElement} element - The element to expose through `element`.
    * @returns {void}
    */
   _setElement(element) {
@@ -748,7 +766,7 @@ class TinyMediaLoader extends EventEmitter {
    * aborted, which prevents the caller from awaiting a download that will never
    * finish.
    * @protected
-   * @param {HTMLElement} element - The media element being loaded.
+   * @param {HTMLMainElement} element - The media element being loaded.
    * @param {string} [readyEvent] - The DOM event that signals a successful load.
    * @returns {Promise<void>} Resolves once the media is ready.
    * @throws {TypeError} If `element` is not an HTMLElement.
@@ -815,16 +833,15 @@ class TinyMediaLoader extends EventEmitter {
   /**
    * Downloads a media resource through fetch. It emits a `metadata` event as
    * soon as the response headers arrive and a `progress` event for every
-   * chunk, then resolves with the fully buffered blob. When `earlyDecode` is
-   * enabled and the browser supports WebCodecs, the intrinsic dimensions are
-   * emitted before the download completes.
+   * chunk, then resolves with the fully buffered blob.
    * @protected
    * @param {string} url - The resource to download.
+   * @param {(chunk: BlobPart, chunks: BlobPart[]) => void} [onChunk] - Optional chunk callback.
    * @returns {Promise<Blob>} The fully downloaded blob.
    * @throws {TypeError} If `url` is not a string.
    * @throws {Error} If the request fails or the body is not readable.
    */
-  async _downloadStream(url) {
+  async _downloadStream(url, onChunk) {
     if (typeof url !== 'string') {
       throw new TypeError('The "url" argument must be a string.');
     }
@@ -853,7 +870,7 @@ class TinyMediaLoader extends EventEmitter {
     this.#openDecoder(type);
     const progress = this._createProgress(total);
     const reader = response.body.getReader();
-    /** @type {Uint8Array[]} */
+    /** @type {BlobPart[]} */
     const chunks = [];
     try {
       for (;;) {
@@ -865,6 +882,7 @@ class TinyMediaLoader extends EventEmitter {
         this.#decoder?.write(value);
         progress.push(value.byteLength);
         this._emitProgress();
+        if (onChunk) onChunk(value, chunks);
       }
     } finally {
       this.#closeDecoder();
@@ -1298,7 +1316,7 @@ class TinyMediaLoader extends EventEmitter {
    * Creates a brand new element. Must be implemented by subclasses.
    * @abstract
    * @protected
-   * @returns {HTMLElement}
+   * @returns {HTMLMainElement}
    */
   _createElement() {
     throw new Error('The "_createElement" method must be implemented by a subclass.');

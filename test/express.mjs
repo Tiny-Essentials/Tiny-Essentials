@@ -135,11 +135,29 @@ function resolveMedia(target) {
 }
 
 app.use((req, res, next) => {
-  // Website you wish to allow to connect
+  // Permite conexões de qualquer origem
   res.setHeader('Access-Control-Allow-Origin', '*');
 
-  // Request methods you wish to allow
+  // Métodos permitidos
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+  // Cabeçalhos que o navegador pode enviar
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Range',
+  );
+
+  // Cabeçalhos que o frontend tem permissão para ler
+  res.setHeader(
+    'Access-Control-Expose-Headers',
+    'Content-Length, Content-Range, Accept-Ranges, Content-Type',
+  );
+
+  // REGRA DE OURO: Interceptar o preflight (OPTIONS) para que não caia no Erro 404!
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
   next();
 });
 
@@ -437,27 +455,69 @@ app.get('/__slow', async (req, res) => {
     return res.status(404).send(`Not found: ${target}`);
   }
 
+  const fileSize = stats.size;
+  const range = req.headers.range;
+
+  let start = 0;
+  let end = fileSize - 1;
+  let statusCode = 200;
+
+  // Lidar com requisições Range (crucial para <video> e <audio>)
+  if (range) {
+    const parts = range.replace(/bytes=/, '').split('-');
+    const parsedStart = parseInt(parts[0], 10);
+    const parsedEnd = parseInt(parts[1], 10);
+
+    // Se o navegador não mandar os valores direito, usamos os limites padrão
+    start = isNaN(parsedStart) ? 0 : parsedStart;
+    end = isNaN(parsedEnd) ? fileSize - 1 : parsedEnd;
+
+    // Se o start pedido for maior que o arquivo, avisamos o navegador (Erro 416)
+    if (start >= fileSize) {
+      res.status(416).setHeader('Content-Range', `bytes */${fileSize}`);
+      return res.end();
+    }
+
+    // O end nunca pode ser maior que o tamanho real do arquivo
+    if (end >= fileSize) {
+      end = fileSize - 1;
+    }
+
+    statusCode = 206;
+  }
+
+  const contentLength = Number(end - start) + 1;
+
+  res.status(statusCode);
   res.type(getContentTypeNative(filePath));
-  res.setHeader('Content-Length', String(stats.size));
-  res.setHeader('Accept-Ranges', 'none');
+  res.setHeader('Content-Length', String(contentLength));
+  res.setHeader('Accept-Ranges', 'bytes');
   res.setHeader('Cache-Control', 'no-store');
 
-  const stream = fs.createReadStream(filePath, { highWaterMark: chunkSize });
+  if (statusCode === 206) {
+    res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+  }
+
+  const stream = fs.createReadStream(filePath, { start, end, highWaterMark: chunkSize });
   let closed = false;
   const cleanup = () => {
+    if (closed) return;
     closed = true;
     stream.destroy();
   };
+
+  // Limpamos o stream se a conexão cair ou der erro de leitura
   req.on('close', cleanup);
   res.on('close', cleanup);
+  stream.on('error', cleanup);
 
   try {
     for await (const chunk of stream) {
-      if (closed) return;
+      if (closed) break; // Para o loop se o navegador cancelar o carregamento
       if (!res.write(chunk)) {
         await new Promise((resolve) => res.once('drain', resolve));
       }
-      if (delay > 0) {
+      if (delay > 0 && !closed) {
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
