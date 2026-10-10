@@ -158,16 +158,21 @@ class TinyContentLoader extends TinyMediaLoader {
     if (media instanceof HTMLVideoElement) media.playsInline = true;
     media.controls = this.#controls;
 
-    const ready = this._waitForMedia(media, 'loadeddata');
-
     if (this.#stream) {
+      let ready = this._waitForMedia(media, 'loadeddata');
+      ready.catch(() => {});
+
       await this.#streamInto(media);
+
+      if (media.readyState < 2) {
+        await this._waitForMedia(media, 'loadeddata');
+      }
     } else {
+      const ready = this._waitForMedia(media, 'loadeddata');
       media.src = this.src;
       media.load();
+      await ready;
     }
-
-    await ready;
   }
 
   /**
@@ -198,10 +203,10 @@ class TinyContentLoader extends TinyMediaLoader {
     let mseFailed = false;
 
     const appendNext = () => {
-      if (isAppending || queue.length === 0 || !sourceBuffer || sourceBuffer.updating) return;
+      if (isAppending || queue.length === 0 || !sourceBuffer || sourceBuffer.updating || media.error) return;
       isAppending = true;
       try {
-        const blob = queue.shift();
+        const blob = /** @type {BufferSource} */ (queue.shift());
         sourceBuffer.appendBuffer(blob);
       } catch (e) {
         isAppending = false;
@@ -210,7 +215,7 @@ class TinyContentLoader extends TinyMediaLoader {
     };
 
     const blob = await this._downloadStream(this.src, (chunk) => {
-      if (this.progressive && typeof MediaSource !== 'undefined' && !mseFailed) {
+      if (this.progressive && typeof MediaSource !== 'undefined' && !mseFailed && !media.error) {
         if (!mseStarted) {
           mseStarted = true;
           mse = new MediaSource();
@@ -249,6 +254,9 @@ class TinyContentLoader extends TinyMediaLoader {
                   isAppending = false;
                   appendNext();
                 });
+                sourceBuffer.addEventListener('error', () => {
+                  mseFailed = true;
+                });
                 appendNext();
               } catch {
                 mseFailed = true;
@@ -259,7 +267,7 @@ class TinyContentLoader extends TinyMediaLoader {
           });
         }
 
-        if (!mseFailed) {
+        if (!mseFailed && !media.error) {
           queue.push(chunk);
           if (mse && mse.readyState === 'open' && sourceBuffer) {
             appendNext();
@@ -268,9 +276,9 @@ class TinyContentLoader extends TinyMediaLoader {
       }
     });
 
-    if (mse && !mseFailed) {
+    if (mse && !mseFailed && !media.error) {
       const endStream = () => {
-        if (mse?.readyState === 'open') {
+        if (mse?.readyState === 'open' && !media.error) {
           if (sourceBuffer && (sourceBuffer.updating || queue.length > 0)) {
             setTimeout(endStream, 50);
           } else {

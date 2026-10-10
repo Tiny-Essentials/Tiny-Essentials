@@ -48,7 +48,7 @@ class TinyVideoLoader extends TinyContentLoader {
     }
     const mimeType = {
       mp4: ['{mime}; codecs="avc1.42E01E, mp4a.40.2"', '{mime}; codecs="avc1.640028, mp4a.40.2"'],
-      webm: ['{mime}; codecs="vp9, opus', '{mime}; codecs="vp8, vorbis"'],
+      webm: ['{mime}; codecs="vp9, opus"', '{mime}; codecs="vp8, vorbis"'],
     };
     super('video', mimeType, options);
   }

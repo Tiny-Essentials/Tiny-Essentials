@@ -121,15 +121,20 @@ class TinyImageLoader extends TinyMediaLoader {
     }
     image.decoding = this.#decoding;
 
-    const ready = this._waitForMedia(image, 'load');
-
     if (this.#stream) {
-      await this.#streamInto(image);
-    } else {
-      image.src = this.src;
-    }
+      const ready = this._waitForMedia(image, 'load');
+      ready.catch(() => {});
 
-    await ready;
+      await this.#streamInto(image);
+
+      if (!image.complete || image.naturalWidth === 0) {
+        await this._waitForMedia(image, 'load');
+      }
+    } else {
+      const ready = this._waitForMedia(image, 'load');
+      image.src = this.src;
+      await ready;
+    }
 
     if (typeof image.decode === 'function') {
       try {
