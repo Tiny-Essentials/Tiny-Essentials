@@ -11,12 +11,12 @@ import { arraySortPositions } from '../src/v1/index.mjs';
 const app = express();
 const port = 3145;
 
-// Resolve __dirname (já que estamos usando ES Modules)
+// Resolve __dirname (since we are using ES Modules)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const MIME_TYPES = {
-  // === TEXTO ===
+  // === TEXT ===
   '.html': 'text/html; charset=utf-8',
   '.htm': 'text/html; charset=utf-8',
   '.css': 'text/css',
@@ -27,7 +27,7 @@ const MIME_TYPES = {
   '.md': 'text/markdown',
   '.xml': 'application/xml',
 
-  // === IMAGENS ===
+  // === IMAGES ===
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
@@ -40,7 +40,7 @@ const MIME_TYPES = {
   '.tif': 'image/tiff',
   '.avif': 'image/avif',
 
-  // === ÁUDIO ===
+  // === AUDIO ===
   '.mp3': 'audio/mpeg',
   '.wav': 'audio/wav',
   '.ogg': 'audio/ogg',
@@ -50,7 +50,7 @@ const MIME_TYPES = {
   '.mid': 'audio/midi',
   '.midi': 'audio/midi',
 
-  // === VÍDEO ===
+  // === VIDEO ===
   '.mp4': 'video/mp4',
   '.webm': 'video/webm',
   '.ogv': 'video/ogg',
@@ -59,7 +59,7 @@ const MIME_TYPES = {
   '.mpeg': 'video/mpeg',
   '.mkv': 'video/x-matroska',
 
-  // === DOCUMENTOS / OFFICE ===
+  // === DOCUMENTS / OFFICE ===
   '.pdf': 'application/pdf',
   '.json': 'application/json',
   '.pdf': 'application/pdf',
@@ -72,21 +72,21 @@ const MIME_TYPES = {
   '.odt': 'application/vnd.oasis.opendocument.text',
   '.ods': 'application/vnd.oasis.opendocument.spreadsheet',
 
-  // === COMPACTADOS / ARQUIVOS ===
+  // === ARCHIVES ===
   '.zip': 'application/zip',
   '.rar': 'application/x-rar-compressed',
   '.tar': 'application/x-tar',
   '.gz': 'application/gzip',
   '.7z': 'application/x-7z-compressed',
 
-  // === FONTES ===
+  // === FONTS ===
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
   '.ttf': 'font/ttf',
   '.otf': 'font/otf',
   '.eot': 'application/vnd.ms-fontobject',
 
-  // === OUTROS / BINÁRIOS ===
+  // === OTHER / BINARIES ===
   '.exe': 'application/octet-stream',
   '.bin': 'application/octet-stream',
   '.wasm': 'application/wasm',
@@ -97,7 +97,7 @@ function getContentTypeNative(filePath) {
   return MIME_TYPES[ext] || 'application/octet-stream';
 }
 
-// Define a pasta pública
+// Define the public directory
 const publicDir = path.join(__dirname, './html');
 const imgDir = path.join(__dirname, './img');
 const errorsDir = path.join(__dirname, './errors');
@@ -135,25 +135,25 @@ function resolveMedia(target) {
 }
 
 app.use((req, res, next) => {
-  // Permite conexões de qualquer origem
+  // Allow connections from any origin
   res.setHeader('Access-Control-Allow-Origin', '*');
 
-  // Métodos permitidos
+  // Allowed methods
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
 
-  // Cabeçalhos que o navegador pode enviar
+  // Headers the browser can send
   res.setHeader(
     'Access-Control-Allow-Headers',
     'Origin, X-Requested-With, Content-Type, Accept, Range, If-Range',
   );
 
-  // Cabeçalhos que o frontend tem permissão para ler
+  // Headers that the frontend is allowed to read
   res.setHeader(
     'Access-Control-Expose-Headers',
     'Content-Length, Content-Range, Accept-Ranges, Content-Type, ETag, Last-Modified',
   );
 
-  // REGRA DE OURO: Interceptar o preflight (OPTIONS) para que não caia no Erro 404!
+  // GOLDEN RULE: Intercept the preflight (OPTIONS) so it doesn't hit a 404 error!
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
@@ -257,7 +257,7 @@ const jsLoader = async (filePath, fileName, req, res) => {
   try {
     let code = await fs.promises.readFile(filePath, 'utf-8');
 
-    // Detecta imports de módulos Node e substitui por mocks
+    // Detects Node module imports and replaces them with mocks
     for (const modName of Object.keys(nodePolyfills)) {
       // import default
       code = code.replace(
@@ -304,7 +304,7 @@ const mdLoader = async (filePath, fileName, req, res) => {
     const mdContent = await fs.promises.readFile(filePath, 'utf-8');
     const html = marked.parse(mdContent);
 
-    // Envolve o HTML em um template básico
+    // Wraps the HTML in a basic template
     res.send(`
       <!DOCTYPE html>
       <html>
@@ -348,7 +348,7 @@ const readScss = async (filePath, fileName, req, res) => {
   }
 };
 
-// Middleware personalizado para .mjs
+// Custom middleware for .mjs
 const sources = ['src', 'dist'];
 const versions = ['legacy', '_', 'v1'];
 for (const src of sources) {
@@ -362,7 +362,7 @@ for (const src of sources) {
   }
 }
 
-// Instalar modulos externos
+// Install external modules
 /** @type {(modNames: string[], globalNames: string[], globalResults: string[]) => import('express').Application} */
 const installNodeModules = (modNames, globalNames, globalResults) => async (req, res, next) => {
   try {
@@ -463,7 +463,7 @@ app.get('/__slow', async (req, res) => {
   res.setHeader('ETag', etag);
   res.setHeader('Last-Modified', stats.mtime.toUTCString());
   res.setHeader('Accept-Ranges', 'bytes');
-  res.setHeader('Cache-Control', 'no-store'); // Impedir cache estrito para simulação dev
+  res.setHeader('Cache-Control', 'no-store'); // Prevent strict caching for development simulation
   res.type(getContentTypeNative(filePath));
 
   let start = 0;
@@ -472,7 +472,7 @@ app.get('/__slow', async (req, res) => {
 
   let useRange = !!rangeHeader && rangeHeader.startsWith('bytes=');
 
-  // Lidar com If-Range (Evitar enviar partes incorretas se o arquivo mudou no server)
+  // Handle If-Range (Avoid sending incorrect parts if the file changed on the server)
   if (useRange && ifRange) {
     if (ifRange.startsWith('W/') || ifRange.startsWith('"')) {
       if (ifRange !== etag) useRange = false;
@@ -481,14 +481,14 @@ app.get('/__slow', async (req, res) => {
     }
   }
 
-  // Lógica de parsing HTTP Range RFC-compliant
+  // RFC-compliant HTTP Range parsing logic
   if (useRange) {
     const rangeStr = rangeHeader.replace(/bytes=/i, '').trim();
-    // Pega o primeiro range se for um multipart (navegadores lidam bem com a primeira parte)
+    // Get the first range if it's a multipart (browsers handle the first part well)
     const firstRange = rangeStr.split(',')[0].trim();
 
     if (firstRange.startsWith('-')) {
-      // Suffix byte range (ex: "-500" pede os últimos 500 bytes)
+      // Suffix byte range (e.g., "-500" requests the last 500 bytes)
       const bytes = parseInt(firstRange.slice(1), 10);
       if (!isNaN(bytes)) {
         start = Math.max(0, fileSize - bytes);
@@ -505,7 +505,7 @@ app.get('/__slow', async (req, res) => {
         start = parsedStart;
         end = !isNaN(parsedEnd) ? Math.min(parsedEnd, fileSize - 1) : fileSize - 1;
       } else {
-        useRange = false; // Inválido
+        useRange = false; // Invalid
       }
     }
 
@@ -527,13 +527,13 @@ app.get('/__slow', async (req, res) => {
     res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
   }
 
-  // Se a requisição for HEAD, nós encerramos imediatamente!
-  // Isso pula todo o processo de leitura do arquivo e os delays simulados.
+  // If the request is HEAD, we end it immediately!
+  // This skips the entire file reading process and simulated delays.
   if (req.method === 'HEAD') {
     return res.end();
   }
 
-  // O stream e o loop de lentidão continuam apenas se for um GET real
+  // The stream and slow loop continue only if it is a real GET
   const stream = fs.createReadStream(filePath, { start, end, highWaterMark: chunkSize });
   let closed = false;
   const cleanup = () => {
@@ -542,7 +542,7 @@ app.get('/__slow', async (req, res) => {
     stream.destroy();
   };
 
-  // Limpamos o stream se a conexão cair ou der erro de leitura
+  // Clean up the stream if the connection drops or a read error occurs
   req.on('close', cleanup);
   res.on('close', cleanup);
   stream.on('error', cleanup);
@@ -610,7 +610,7 @@ app.get('/__fixtures', async (req, res) => {
   }
 });
 
-// Serve buffer global para o navegador
+// Serve global buffer for the browser
 app.get(
   '/__buffer.js',
   installNodeModules(['buffer'], ['Buffer'], ['window.Buffer = Buffer.Buffer;']),
@@ -620,7 +620,7 @@ app.get(
   installNodeModules(['jquery'], ['jQuery'], ['window.jQuery = jQuery; window.$ = jQuery;']),
 );
 
-// Middleware para servir arquivos estáticos
+// Middleware to serve static files
 app.use(express.static(publicDir));
 app.use(express.static(imgDir));
 app.use(express.static(errorsDir));
@@ -677,7 +677,7 @@ app.use((err, req, res, next) => {
   res.sendFile(path.join(__dirname, 'errors/500.html'));
 });
 
-// Inicia o servidor
+// Start the server
 app.listen(port, '127.0.0.1', () => {
   console.log(`Static server running at http://localhost:${port}`);
 });

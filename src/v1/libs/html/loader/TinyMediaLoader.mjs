@@ -943,7 +943,7 @@ class TinyMediaLoader extends EventEmitter {
     const getType = response.headers.get('content-type') || type;
     const total = Number(response.headers.get('content-length') || 0);
 
-    // Ajuste de cálculo para Status 206
+    // Calculation adjustment for Status 206
     if (response.status === 206) {
       const contentRange = response.headers.get('content-range');
       if (contentRange) {
@@ -967,7 +967,7 @@ class TinyMediaLoader extends EventEmitter {
       patch.type = getType;
       type = getType;
     }
-    // Se o HEAD não rodou ou se a requisição GET é um Range, reemitimos o tamanho
+    // If the HEAD request didn't run or if the GET request is a Range, we re-emit the size
     if (actualTotal > 0 && (!headSuccess || response.status === 206)) patch.size = actualTotal;
     if (Object.keys(getHeaders).length > 0) patch.httpHeaders = getHeaders;
     if (Object.keys(patch).length > 0) this._emitMetadata(patch, 'GET');
