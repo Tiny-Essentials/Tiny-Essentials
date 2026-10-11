@@ -8,9 +8,6 @@ import { EventEmitter } from 'events';
 import TinyMediaProgress from './utils/TinyMediaProgress.mjs';
 import TinyMediaCache from './utils/TinyMediaCache.mjs';
 
-import TinyMediaProbe from './probe/TinyMediaProbe.mjs';
-import TinyImageProbe from './probe/TinyImageProbe.mjs';
-
 /**
  * Describes the configuration object accepted by the {@link TinyMediaLoader} constructor.
  * Every property is optional, so a loader can be created empty and configured later.
@@ -76,6 +73,13 @@ import TinyImageProbe from './probe/TinyImageProbe.mjs';
  * @property {number} height - The intrinsic height in pixels.
  * @property {number} duration - The duration in seconds.
  * @property {number} size - The decoded size in bytes.
+ */
+
+/**
+ * @callback DecoderCreator
+ * Builds a decoder backed by the container header parser.
+ * @param {string} mime - The video MIME type.
+ * @returns {MediaEarlyDecoder} The decoder.
  */
 
 /**
@@ -208,6 +212,8 @@ class TinyMediaLoader extends EventEmitter {
   #response = null;
   /** @type {Response|null} */
   #headResponse = null;
+  /** @type {Map<string, DecoderCreator>} */
+  #decoders = new Map();
 
   /** @type {Partial<MediaMetadata>} */
   #partial = {};
@@ -515,6 +521,15 @@ class TinyMediaLoader extends EventEmitter {
   }
 
   /**
+   * @protected
+   * @param {string} mime
+   * @param {DecoderCreator} callback
+   */
+  _insertDecoder(mime, callback) {
+    this.#decoders.set(mime, callback);
+  }
+
+  /**
    * Creates a fresh progress tracker for the current load.
    * @protected
    * @param {number} [total] - The total number of bytes (0 when unknown).
@@ -717,6 +732,7 @@ class TinyMediaLoader extends EventEmitter {
     }
     this.#closeDecoder();
     this._releaseFromCache();
+    this.#decoders.clear();
     this.emit('destroy', undefined);
     this.removeAllListeners();
     this.#element = null;
@@ -1022,51 +1038,13 @@ class TinyMediaLoader extends EventEmitter {
    * @returns {void}
    */
   #openDecoder(type) {
-    if (!this.#earlyDecode) {
-      return;
-    }
+    if (!this.#earlyDecode) return;
     const mime = type.split(';')[0].trim().toLowerCase();
-    if (mime.startsWith('image/')) {
-      this.#decoder = this.#createImageDecoder(mime);
-    } else if (mime.startsWith('video/')) {
-      this.#decoder = this.#createVideoDecoder(mime);
-    }
-  }
-
-  /**
-   * Builds a decoder backed by the container header parser.
-   * @param {string} mime - The image MIME type.
-   * @returns {MediaEarlyDecoder} The decoder.
-   */
-  #createImageDecoder(mime) {
-    const probe = new TinyImageProbe(mime);
-    return {
-      write: (chunk) => {
-        const size = probe.push(chunk);
-        if (size) {
-          this._emitMetadata(size, 'PROBE');
-        }
-      },
-      close: () => probe.close(),
-    };
-  }
-
-  /**
-   * Builds a decoder backed by the container header parser.
-   * @param {string} mime - The video MIME type.
-   * @returns {MediaEarlyDecoder} The decoder.
-   */
-  #createVideoDecoder(mime) {
-    const probe = new TinyMediaProbe(mime);
-    return {
-      write: (chunk) => {
-        const size = probe.push(chunk);
-        if (size) {
-          this._emitMetadata(size, 'PROBE');
-        }
-      },
-      close: () => probe.close(),
-    };
+    this.#decoders.forEach((decoder, key) => {
+      if (!this.#decoder && mime.startsWith(`${key}/`)) {
+        this.#decoder = decoder(mime);
+      }
+    });
   }
 
   /**

@@ -13,8 +13,8 @@
  * beginning of the file, allowing the probe to resolve dimensions within the first few kilobytes
  * instead of requiring the entire file to be loaded into memory.
  */
-import TinyBufferReader, { TinyNeedMoreData } from '../utils/TinyBufferReader.mjs';
-import { findBox } from '../utils/TinyIsoBox.mjs';
+import TinyBufferReader, { TinyNeedMoreData } from '../../utils/TinyBufferReader.mjs';
+import { findBox } from '../../utils/TinyIsoBox.mjs';
 
 /**
  * @typedef {Object} MediaProbeSize

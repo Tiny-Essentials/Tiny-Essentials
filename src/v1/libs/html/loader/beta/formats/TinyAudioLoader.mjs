@@ -20,7 +20,7 @@ import TinyContentLoader from './TinyContentLoader.mjs';
  * @property {boolean} [progressive] - Whether to render progressively during fetch (default true).
  * @property {boolean} [autoReload] - Whether an external `src` change triggers a reload.
  * @property {boolean} [stream] - Whether to download the audio through fetch for byte progress.
- * @property {import('../utils/TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
+ * @property {import('../../utils/TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
  */
 
 /**

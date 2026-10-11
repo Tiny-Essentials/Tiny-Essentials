@@ -3,8 +3,13 @@
  * ratio helpers and full control over the decode step.
  */
 import TinyMediaLoader from '../TinyMediaLoader.mjs';
+import TinyImageProbe from '../probe/TinyImageProbe.mjs';
 
 const EMPTY_GIF = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+
+/**
+ * @typedef {import('../TinyMediaLoader.mjs').MediaEarlyDecoder} MediaEarlyDecoder
+ */
 
 /**
  * @typedef {Object} ImageLoaderOptions
@@ -69,6 +74,19 @@ class TinyImageLoader extends TinyMediaLoader {
     this.#crossOrigin = crossOrigin;
     this.#decoding = decoding;
     this.#image = null;
+
+    this._insertDecoder('image', (mime) => {
+      const probe = new TinyImageProbe(mime);
+      return {
+        write: (chunk) => {
+          const size = probe.push(chunk);
+          if (size) {
+            this._emitMetadata(size, 'PROBE');
+          }
+        },
+        close: () => probe.close(),
+      };
+    });
   }
 
   /**

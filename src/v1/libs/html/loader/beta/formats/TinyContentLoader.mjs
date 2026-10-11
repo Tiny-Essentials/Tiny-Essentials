@@ -1,7 +1,8 @@
 /**
  * @fileoverview Concrete loader for medias.
  */
-import TinyMediaLoader from '../TinyMediaLoader.mjs';
+import TinyMediaLoader from '../../TinyMediaLoader.mjs';
+import TinyMediaProbe from '../probe/TinyMediaProbe.mjs';
 
 /**
  * Configuration options for {@link TinyContentLoader}.
@@ -20,7 +21,11 @@ import TinyMediaLoader from '../TinyMediaLoader.mjs';
  * @property {boolean} [autoReload] - Whether an external `src` change triggers a reload.
  * @property {boolean} [stream] - Whether to download the media through fetch for byte progress.
  * @property {boolean} [useHeadRequest] - Whether to perform a HEAD request to fetch HTTP headers before downloading.
- * @property {import('../utils/TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
+ * @property {import('../../utils/TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
+ */
+
+/**
+ * @typedef {import('../../TinyMediaLoader.mjs').MediaEarlyDecoder} MediaEarlyDecoder
  */
 
 /**
@@ -31,7 +36,7 @@ import TinyMediaLoader from '../TinyMediaLoader.mjs';
  * @param {HTMLVideoElement|HTMLAudioElement} media
  */
 const getMetadata = (media) => {
-  /** @type {Partial<import('../TinyMediaLoader.mjs').MediaMetadata>} */
+  /** @type {Partial<import('../../TinyMediaLoader.mjs').MediaMetadata>} */
   const patch = {};
   if (Number.isFinite(media.duration)) patch.duration = media.duration;
   if (media instanceof HTMLVideoElement) {
@@ -108,6 +113,19 @@ class TinyContentLoader extends TinyMediaLoader {
     this.#controls = Boolean(controls);
     this.#media = null;
     this.#typesToTry = typesToTry;
+
+    this._insertDecoder('video', (mime) => {
+      const probe = new TinyMediaProbe(mime);
+      return {
+        write: (chunk) => {
+          const size = probe.push(chunk);
+          if (size) {
+            this._emitMetadata(size, 'PROBE');
+          }
+        },
+        close: () => probe.close(),
+      };
+    });
   }
 
   /**
@@ -530,7 +548,7 @@ class TinyContentLoader extends TinyMediaLoader {
   /**
    * @override
    * @protected
-   * @returns {import('../TinyMediaLoader.mjs').MediaMetadataDetails} The resolved metadata for the media.
+   * @returns {import('../../TinyMediaLoader.mjs').MediaMetadataDetails} The resolved metadata for the media.
    */
   _getMetadataDetails() {
     const media = this.#media;
