@@ -236,8 +236,8 @@ class TinyContentLoader extends TinyMediaLoader {
     let fallbackTriggered = false;
     let appendedBytes = 0;
 
-    // Controlador isolado para o stream.
-    const fetchController = new AbortController();
+    // Isolated controller for the stream.
+    let fetchController = new AbortController();
     const onLoaderAbort = () => fetchController.abort();
     this.signal.signal.addEventListener('abort', onLoaderAbort);
 
@@ -245,13 +245,13 @@ class TinyContentLoader extends TinyMediaLoader {
       if (fallbackTriggered) return;
       fallbackTriggered = true;
 
-      // Libera o Socket de rede imediatamente abortando o fetch!
-      // Isso impede que o browser congele a rede enfileirando requisições duplicadas.
+      // Immediately release the network socket by aborting the fetch!
+      // This prevents the browser from freezing the network by queuing duplicate requests.
       fetchController.abort();
 
       const isMseUrl = this.#mseUrl && media.src === this.#mseUrl;
 
-      // Salva o estado atual de reprodução para restaurar pós-fallback
+      // Saves the current playback state to restore after fallback
       const currentTime = media.currentTime;
       const wasPlaying = !media.paused && media.readyState >= 2;
 
@@ -277,31 +277,60 @@ class TinyContentLoader extends TinyMediaLoader {
       }
     };
 
-    // Handles user seeks outside the sequential buffered range to avoid MSE stalling.
-    this._on(media, 'seeking', () => {
-      if (fallbackTriggered || !mseStarted || !sourceBuffer) return;
-      const time = media.currentTime;
-      let isBuffered = false;
-      const b = sourceBuffer.buffered;
-      for (let i = 0; i < b.length; i++) {
-        // Allows a small margin of error (0.1s)
-        if (time >= b.start(i) && time <= b.end(i) + 0.1) {
-          isBuffered = true;
-          break;
+    // Buffer cleanup function (Item 2: Eviction)
+    const evictOldBuffer = () => {
+      if (!sourceBuffer || sourceBuffer.updating || fallbackTriggered) return;
+      const currentTime = media.currentTime;
+      if (sourceBuffer.buffered.length > 0) {
+        const bufferStart = sourceBuffer.buffered.start(0);
+        // If there are more than 30 seconds behind, delete up to 10 seconds before the current moment
+        if (currentTime - bufferStart > 30) {
+          try {
+            sourceBuffer.remove(bufferStart, currentTime - 10);
+          } catch (e) {}
         }
       }
-      if (!isBuffered) {
-        triggerFallback();
-      }
-    });
+    };
 
-    // Infinite Chrome Duration Detection 
-    this._on(media, 'durationchange', () => {
-      if (fallbackTriggered || !mseStarted) return;
-      if (media.duration === Infinity) {
-        // triggerFallback();
-      }
-    });
+    // ITEM 3: New seek listener outside of the isolated buffer (Avoids duplicate listeners)
+    if (!media.hasAttribute('data-seek-bound')) {
+      media.setAttribute('data-seek-bound', 'true');
+      this._on(media, 'seeking', () => {
+        if (fallbackTriggered || !mseStarted || !sourceBuffer) return;
+        const time = media.currentTime;
+        let isBuffered = false;
+        const b = sourceBuffer.buffered;
+
+        for (let i = 0; i < b.length; i++) {
+          // Allows a small margin of error (0.1s)
+          if (time >= b.start(i) && time <= b.end(i) + 0.1) {
+            isBuffered = true;
+            break;
+          }
+        }
+
+        if (!isBuffered) {
+          // Abort current fetch to jump to the new time
+          fetchController.abort();
+          if (sourceBuffer.updating) sourceBuffer.abort();
+          queue = [];
+          isAppending = false;
+
+          // Heuristic byte-range calculation (Ideally requires Sidx/moov atom demuxing, but solves 90% of CBR cases)
+          const totalBytes = this.metadata.size || this._getResourceSize();
+          const duration = this.metadata.duration || media.duration;
+
+          if (totalBytes > 0 && duration > 0) {
+            const estimatedByte = Math.floor((time / duration) * totalBytes);
+            // Generate new controller for the next request
+            fetchController = new AbortController();
+            startStream(estimatedByte); // Restarts the stream from the new byte
+          } else {
+            triggerFallback();
+          }
+        }
+      });
+    }
 
     const appendNext = () => {
       if (mseStarted && media.error) triggerFallback();
@@ -313,6 +342,7 @@ class TinyContentLoader extends TinyMediaLoader {
         fallbackTriggered
       )
         return;
+
       isAppending = true;
       try {
         const blob = /** @type {BufferSource} */ (queue.shift());
@@ -324,111 +354,99 @@ class TinyContentLoader extends TinyMediaLoader {
       }
     };
 
-    try {
-      const blob = await this._downloadStream(
-        this.src,
-        (chunk) => {
-          if (mseStarted && media.error) triggerFallback();
+    /** @param {number} byteOffset */
+    const startStream = async (byteOffset) => {
+      try {
+        const blob = await this._downloadStream(
+          this.src,
+          (chunk) => {
+            if (mseStarted && media.error) triggerFallback();
 
-          if (this.progressive && typeof MediaSource !== 'undefined' && !fallbackTriggered) {
-            if (!mseStarted) {
-              mseStarted = true;
-              mse = new MediaSource();
-              this.#mseUrl = URL.createObjectURL(mse);
-              this._setInternalSrc(this.#mseUrl);
-              media.src = this.#mseUrl;
-              this._flushMutations();
+            if (this.progressive && typeof MediaSource !== 'undefined' && !fallbackTriggered) {
+              if (!mseStarted) {
+                mseStarted = true;
+                mse = new MediaSource();
+                this.#mseUrl = URL.createObjectURL(mse);
+                this._setInternalSrc(this.#mseUrl);
+                media.src = this.#mseUrl;
+                this._flushMutations();
 
-              mse.addEventListener('sourceopen', () => {
-                const mime = this.metadata.type || this.#getMimeType();
-                let typesToTry = [mime];
-                // Suggest standard codecs for fragmented streams
-                for (const mimeName in this.#typesToTry) {
-                  if (mime.includes(mimeName)) {
-                    for (const type of this.#typesToTry[mimeName]) {
-                      typesToTry.unshift(type.replace('{mime}', mime));
+                mse.addEventListener('sourceopen', () => {
+                  const mime = this.metadata.type || this.#getMimeType();
+                  let typesToTry = [mime];
+                  for (const mimeName in this.#typesToTry) {
+                    if (mime.includes(mimeName)) {
+                      for (const type of this.#typesToTry[mimeName]) {
+                        typesToTry.unshift(type.replace('{mime}', mime));
+                      }
                     }
                   }
-                }
 
-                let selectedType = null;
-                for (const t of typesToTry) {
-                  if (MediaSource.isTypeSupported(t)) {
-                    selectedType = t;
-                    break;
+                  let selectedType = null;
+                  for (const t of typesToTry) {
+                    if (MediaSource.isTypeSupported(t)) {
+                      selectedType = t;
+                      break;
+                    }
                   }
-                }
 
-                if (selectedType) {
-                  if (!mse) {
-                    triggerFallback();
-                    return;
-                  }
-                  try {
-                    sourceBuffer = mse.addSourceBuffer(selectedType);
-                    sourceBuffer.addEventListener('updateend', () => {
-                      isAppending = false;
+                  if (selectedType && mse) {
+                    try {
+                      sourceBuffer = mse.addSourceBuffer(selectedType);
+                      sourceBuffer.addEventListener('updateend', () => {
+                        isAppending = false;
+                        evictOldBuffer(); // Executes the GC after each append
 
-                      if (!fallbackTriggered) {
-                        // Silent failure detection in videos (e.g. Firefox on unfragmented MP4)
-                        if (sourceBuffer?.buffered.length === 0 && appendedBytes > 256 * 1024) {
+                        if (
+                          !fallbackTriggered &&
+                          sourceBuffer?.buffered.length === 0 &&
+                          appendedBytes > 256 * 1024
+                        ) {
                           triggerFallback();
                           return;
                         }
-                      }
+                        appendNext();
+                      });
+                      sourceBuffer.addEventListener('error', triggerFallback);
                       appendNext();
-                    });
-                    sourceBuffer.addEventListener('error', () => {
+                    } catch {
                       triggerFallback();
-                    });
-                    appendNext();
-                  } catch {
+                    }
+                  } else {
                     triggerFallback();
                   }
-                } else {
-                  triggerFallback();
-                }
-                if (sourceBuffer && startByte > 0) {
-                  sourceBuffer.abort();
-                }
-              });
-            }
 
-            if (!fallbackTriggered) {
-              queue.push(chunk);
-              if (mse && mse.readyState === 'open' && sourceBuffer) {
-                appendNext();
+                  if (sourceBuffer && byteOffset > 0) sourceBuffer.abort();
+                });
+              }
+
+              if (!fallbackTriggered) {
+                queue.push(chunk);
+                if (mse && mse.readyState === 'open' && sourceBuffer) appendNext();
               }
             }
-          }
-        },
-        startByte,
-        fetchController.signal,
-      );
+          },
+          byteOffset,
+          fetchController.signal,
+        );
 
-      if (mse && !fallbackTriggered) {
-        const endStream = () => {
-          if (mse?.readyState === 'open' && !media.error) {
-            if (sourceBuffer && (sourceBuffer.updating || queue.length > 0)) {
-              setTimeout(endStream, 50);
-            } else {
-              try {
-                mse.endOfStream();
-              } catch (e) {}
+        if (mse && !fallbackTriggered) {
+          const endStream = () => {
+            if (mse?.readyState === 'open' && !media.error) {
+              if (sourceBuffer && (sourceBuffer.updating || queue.length > 0)) {
+                setTimeout(endStream, 50);
+              } else {
+                try {
+                  mse.endOfStream();
+                } catch (e) {}
+              }
             }
-          }
-        };
-        endStream();
+          };
+          endStream();
 
-        // Só realiza o cache local do blob inteiro (evita arquivos corrompidos)
-        if (startByte === 0) this._cacheBlob(blob);
-      } else {
-        // Fallback to assigning the blob URL all at once (standard path or on MSE failure)
-        if (startByte === 0) {
+          if (byteOffset === 0 && blob.size > 0) this._cacheBlob(blob);
+        } else if (byteOffset === 0 && blob.size > 0) {
           const url = this._cacheBlob(blob);
-
-          // If we already fell back to the native network URL, we might be currently playing it!
-          // To avoid restarting the user's video, we only swap if playback hasn't advanced.
           if (!fallbackTriggered || (media.paused && media.currentTime === 0)) {
             this._setInternalSrc(url);
             media.src = url;
@@ -436,16 +454,20 @@ class TinyContentLoader extends TinyMediaLoader {
             media.load();
           }
         }
-      }
-    } catch (err) {
-      if (err instanceof Error) {
-        if (err.name === 'AbortError' && fallbackTriggered) {
-          // Saída graciosa. O fetch foi abortado deliberadamente
-          // para dar prioridade à conexão nativa do `<audio>`.
-          return;
+      } catch (err) {
+        if (err instanceof Error) {
+          if (
+            err.name === 'AbortError' &&
+            (fallbackTriggered || media.hasAttribute('data-seek-bound'))
+          )
+            return;
+          throw err;
         }
-        throw err;
       }
+    };
+
+    try {
+      await startStream(startByte);
     } finally {
       this.signal.signal.removeEventListener('abort', onLoaderAbort);
     }
