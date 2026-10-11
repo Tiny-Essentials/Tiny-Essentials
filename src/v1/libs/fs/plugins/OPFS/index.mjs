@@ -144,7 +144,6 @@ class TinyOPFSFileSystem extends TinyFSCore {
   }
 
   /**
-   * @override
    * @param {string} targetPath Absolute path of the file.
    * @returns {Promise<Uint8Array>} The raw file contents.
    */
@@ -160,7 +159,6 @@ class TinyOPFSFileSystem extends TinyFSCore {
   }
 
   /**
-   * @override
    * @param {string} targetPath Absolute path of the file.
    * @param {Uint8Array} bytes Payload to persist.
    * @param {import('../../index.mjs').TWriteFileOptions} options Write options.
@@ -185,7 +183,6 @@ class TinyOPFSFileSystem extends TinyFSCore {
   }
 
   /**
-   * @override
    * @param {string} targetPath Absolute path of the directory.
    * @returns {Promise<import('../../stats.mjs').FSDirectoryEntry[]>} The directory entries.
    */
@@ -200,7 +197,6 @@ class TinyOPFSFileSystem extends TinyFSCore {
   }
 
   /**
-   * @override
    * @param {string} targetPath Absolute path of the directory.
    * @param {import('../../index.mjs').TMkdirOptions} options Creation options.
    * @returns {Promise<void>} Resolves once the directory exists.
@@ -230,7 +226,6 @@ class TinyOPFSFileSystem extends TinyFSCore {
   }
 
   /**
-   * @override
    * @param {string} targetPath Absolute path of the entry.
    * @param {import('../../index.mjs').TRmOptions} options Removal options.
    * @returns {Promise<void>} Resolves once the entry is gone.
@@ -260,7 +255,6 @@ class TinyOPFSFileSystem extends TinyFSCore {
   }
 
   /**
-   * @override
    * @param {string} targetPath Absolute path of the entry.
    * @returns {Promise<import('../../stats.mjs').FSStatDescriptor | undefined>}
    */
@@ -285,7 +279,6 @@ class TinyOPFSFileSystem extends TinyFSCore {
   }
 
   /**
-   * @override
    * @param {string} oldPath Current absolute path.
    * @param {string} newPath Target absolute path.
    * @returns {Promise<void>} Resolves once the move is complete.
@@ -317,7 +310,6 @@ class TinyOPFSFileSystem extends TinyFSCore {
   }
 
   /**
-   * @override
    * @param {string} sourcePath Absolute path of the source file.
    * @param {string} destinationPath Absolute path of the destination file.
    * @returns {Promise<void>} Resolves once the copy is complete.

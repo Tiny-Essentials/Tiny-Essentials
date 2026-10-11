@@ -30,7 +30,6 @@ import TinyContentLoader from './TinyContentLoader.mjs';
 class TinyAudioLoader extends TinyContentLoader {
   /**
    * The uppercase tag name of the element this loader creates.
-   * @override
    * @returns {string} The literal string `'AUDIO'`.
    */
   static get tagName() {

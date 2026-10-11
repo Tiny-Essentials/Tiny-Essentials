@@ -28,7 +28,6 @@ const EMPTY_GIF = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 class TinyImageLoader extends TinyMediaLoader {
   /**
    * Retrieves the tag name used to create the underlying element.
-   * @override
    * @returns {string} The uppercase tag name, always `'IMG'`.
    */
   static get tagName() {
@@ -112,7 +111,6 @@ class TinyImageLoader extends TinyMediaLoader {
 
   /**
    * Resolves the target element, wires the load listeners and decodes the image.
-   * @override
    * @protected
    * @returns {Promise<void>} A promise that resolves once the image is decoded and ready.
    */
@@ -206,7 +204,6 @@ class TinyImageLoader extends TinyMediaLoader {
 
   /**
    * Builds the metadata descriptor for the loaded image.
-   * @override
    * @protected
    * @returns {import('../TinyMediaLoader.mjs').MediaMetadataDetails} The image metadata details.
    */
@@ -224,7 +221,6 @@ class TinyImageLoader extends TinyMediaLoader {
   /**
    * Aborts the fetch gracefully allowing a retry process to spin up safely on the same element instance without
    * triggering stale asynchronous cache responses.
-   * @override
    * @protected
    * @returns {void}
    */
@@ -238,7 +234,6 @@ class TinyImageLoader extends TinyMediaLoader {
 
   /**
    * Detaches the load handlers, revokes the object URL and clears the source of the image element.
-   * @override
    * @protected
    * @returns {void} This method does not return a value.
    */
@@ -255,7 +250,6 @@ class TinyImageLoader extends TinyMediaLoader {
 
   /**
    * Creates the `<img>` element used by the loader.
-   * @override
    * @protected
    * @returns {HTMLImageElement} A new, detached image element.
    */

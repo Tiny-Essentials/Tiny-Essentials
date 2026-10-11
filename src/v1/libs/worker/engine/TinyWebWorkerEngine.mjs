@@ -170,7 +170,6 @@ class TinyWebWorkerEngine extends TinyPluginCore {
    * signature. The rest parameter keeps it assignable to the inherited
    * `EventEmitter.emit` contract.
    *
-   * @override
    * @param {string} type - The identifier for the message type.
    * @param {...any} args - The data content (only the first argument is used).
    * @returns {boolean} Always true when the message is dispatched.

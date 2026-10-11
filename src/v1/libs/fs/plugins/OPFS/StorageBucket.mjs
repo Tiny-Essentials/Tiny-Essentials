@@ -165,7 +165,6 @@ class TinyStorageBucketFileSystem extends TinyOPFSFileSystem {
   }
 
   /**
-   * @override
    * @returns {Promise<FileSystemDirectoryHandle>} The bucket root directory.
    * @throws {Error} When the Storage Buckets API is not available.
    */

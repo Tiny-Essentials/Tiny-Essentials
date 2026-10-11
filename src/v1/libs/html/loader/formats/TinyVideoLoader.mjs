@@ -26,7 +26,6 @@ import TinyContentLoader from './TinyContentLoader.mjs';
  */
 class TinyVideoLoader extends TinyContentLoader {
   /**
-   * @override
    * @returns {string} The uppercase tag name of the underlying media element.
    */
   static get tagName() {
