@@ -236,6 +236,14 @@ class TinyContentLoader extends TinyMediaLoader {
     let fallbackTriggered = false;
     let appendedBytes = 0;
 
+    const infinityCheck = () => {
+      if (media.duration === Infinity && !fallbackTriggered) {
+        triggerFallback();
+      }
+    };
+    media.addEventListener('durationchange', infinityCheck);
+    media.addEventListener('loadedmetadata', infinityCheck);
+
     // Isolated controller for the stream.
     let fetchController = new AbortController();
     const onLoaderAbort = () => fetchController.abort();
@@ -244,6 +252,9 @@ class TinyContentLoader extends TinyMediaLoader {
     const triggerFallback = () => {
       if (fallbackTriggered) return;
       fallbackTriggered = true;
+
+      media.removeEventListener('durationchange', infinityCheck);
+      media.removeEventListener('loadedmetadata', infinityCheck);
 
       // Immediately release the network socket by aborting the fetch!
       // This prevents the browser from freezing the network by queuing duplicate requests.
@@ -470,6 +481,8 @@ class TinyContentLoader extends TinyMediaLoader {
       await startStream(startByte);
     } finally {
       this.signal.signal.removeEventListener('abort', onLoaderAbort);
+      media.removeEventListener('durationchange', infinityCheck);
+      media.removeEventListener('loadedmetadata', infinityCheck);
     }
   }
 
