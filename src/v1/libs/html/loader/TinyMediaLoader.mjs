@@ -988,7 +988,7 @@ class TinyMediaLoader extends EventEmitter {
     if (Object.keys(getHeaders).length > 0) patch.httpHeaders = getHeaders;
     if (Object.keys(patch).length > 0) this._emitMetadata(patch, 'GET');
 
-    this.#openDecoder(type); // O earlyDecode (Probe) ainda respeita a flag dele separadamente!
+    this.#openDecoder(type); // The earlyDecode (Probe) still respects its flag separately!
     const progress = this._createProgress(actualTotal);
     const reader = response.body.getReader();
     /** @type {BlobPart[]} */
@@ -1008,7 +1008,7 @@ class TinyMediaLoader extends EventEmitter {
         currentTotalLoaded += value.byteLength;
         progress.push(value.byteLength);
 
-        // Emite o chunk puro para bibliotecas externas
+        // Emit the raw chunk for external libraries
         this.emit('chunk', {
           chunk: value,
           loaded: currentTotalLoaded,

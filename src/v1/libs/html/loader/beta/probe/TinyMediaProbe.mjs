@@ -827,6 +827,7 @@ const FORMATS = Object.freeze([
 
 /**
  * Reads the intrinsic dimensions of a video stream from its container header.
+ * @beta
  */
 class TinyMediaProbe {
   /** @type {Uint8Array} */

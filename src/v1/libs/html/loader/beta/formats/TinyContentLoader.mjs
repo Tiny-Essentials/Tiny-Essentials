@@ -51,6 +51,7 @@ const getMetadata = (media) => {
  * @extends {TinyMediaLoader<HTMLContentElement>}
  * @template {HTMLVideoElement|HTMLAudioElement} HTMLContentElement
  * @template {'video'|'audio'} Tag
+ * @beta
  */
 class TinyContentLoader extends TinyMediaLoader {
   /** @type {HTMLContentElement|null} The underlying media element, or `null` before creation. */
@@ -294,7 +295,7 @@ class TinyContentLoader extends TinyMediaLoader {
         media.src = this.src;
         this._flushMutations();
 
-        // Restaura o tempo em caso de seek fallback
+        // Restore time in case of seek fallback
         if (currentTime > 0) {
           const onLoadedMetadata = () => {
             media.currentTime = currentTime;

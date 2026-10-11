@@ -23,6 +23,7 @@ import TinyContentLoader from './TinyContentLoader.mjs';
 /**
  * Loads a single video with full lifecycle control.
  * @extends {TinyContentLoader<HTMLVideoElement, 'video'>}
+ * @beta
  */
 class TinyVideoLoader extends TinyContentLoader {
   /**

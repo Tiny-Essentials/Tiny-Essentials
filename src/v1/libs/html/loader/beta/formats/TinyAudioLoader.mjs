@@ -26,6 +26,7 @@ import TinyContentLoader from './TinyContentLoader.mjs';
 /**
  * Loads a single audio track with full lifecycle control.
  * @extends {TinyContentLoader<HTMLAudioElement, 'audio'>}
+ * @beta
  */
 class TinyAudioLoader extends TinyContentLoader {
   /**
