@@ -332,7 +332,7 @@ class TinyImageLoader extends TinyMediaLoader {
         cached.metadata?.animation &&
         this.#frames.length === 0
       ) {
-        // Processamos o buffer da cache. O método #extractGifFrames cuidará de 
+        // Processamos o buffer da cache. O método #extractGifFrames cuidará de
         // reutilizar URLs existentes ou adicionar novos frames à cache.
         await this.#parseAnimationFromBuffer(await cached.blob.arrayBuffer());
       }
@@ -409,10 +409,281 @@ class TinyImageLoader extends TinyMediaLoader {
 
     if (mime === 'image/gif') {
       this.#extractGifFrames(bytes);
+    } else if (mime === 'image/webp') {
+      this.#extractWebpFrames(bytes);
+    } else if (mime === 'image/png' || mime === 'image/apng') {
+      this.#extractApngFrames(bytes);
+    } else if (mime === 'image/avif') {
+      this.#extractAvifFrames(bytes);
     }
-    // Outros formatos (APNG, WebP, AVIF) seguirão a mesma arquitetura de Blob slicing.
-    // O fallback atual extrai apenas o script para WebP/APNG caso o parser principal ainda não suporte,
-    // mas a base de Blobs mantém o sistema escalável sem canvas.
+  }
+
+  /**
+   * Calculates the CRC-32 checksum for a given byte array.
+   * @param {Uint8Array} bytes
+   * @returns {number}
+   */
+  #crc32(bytes) {
+    let c = 0xffffffff;
+    for (let i = 0; i < bytes.length; i++) {
+      c ^= bytes[i];
+      for (let j = 0; j < 8; j++) {
+        c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+      }
+    }
+    return (c ^ 0xffffffff) >>> 0;
+  }
+
+  /**
+   * Extracts animation metadata from an AVIF stream.
+   * @param {Uint8Array} bytes
+   */
+  #extractAvifFrames(bytes) {
+    const anim = this.metadata.animation;
+    if (anim && anim.frames > 1) {
+      // Calculate individual frame delays evenly from the total duration
+      const delay = Math.max(10, Math.round(anim.duration / anim.frames));
+      for (let i = 0; i < anim.frames; i++) {
+        this.#animationScript.push({ delay });
+      }
+    }
+  }
+
+  /**
+   * Slices a WebP binary into multiple valid single-frame WebP blobs.
+   * @param {Uint8Array} bytes
+   */
+  #extractWebpFrames(bytes) {
+    if (bytes.length < 12) return;
+    let offset = 12;
+
+    let vp8x = null;
+    let anim = null;
+    const preDataChunks = [];
+    const frames = [];
+
+    while (offset + 8 <= bytes.length) {
+      const view = new DataView(bytes.buffer, bytes.byteOffset + offset, 8);
+      const fourcc = String.fromCharCode(
+        bytes[offset],
+        bytes[offset + 1],
+        bytes[offset + 2],
+        bytes[offset + 3],
+      );
+      const size = view.getUint32(4, true);
+      const payloadEnd = offset + 8 + size + (size % 2);
+
+      if (payloadEnd > bytes.length) break;
+
+      const chunkBytes = bytes.subarray(offset, payloadEnd);
+
+      if (fourcc === 'VP8X') {
+        vp8x = chunkBytes;
+      } else if (fourcc === 'ANIM') {
+        anim = chunkBytes;
+      } else if (fourcc === 'ANMF') {
+        const payload = offset + 8;
+        const dur = bytes[payload + 12] | (bytes[payload + 13] << 8) | (bytes[payload + 14] << 16);
+        frames.push({ chunk: chunkBytes, delay: dur });
+      } else {
+        if (!frames.length && fourcc !== 'VP8 ' && fourcc !== 'VP8L') {
+          preDataChunks.push(chunkBytes);
+        }
+      }
+
+      offset = payloadEnd;
+    }
+
+    if (frames.length === 0) return;
+
+    for (let i = 0; i < frames.length; i++) {
+      const frame = frames[i];
+      let delay = frame.delay;
+      if (delay <= 10) delay = 100;
+      this.#animationScript.push({ delay });
+
+      if (this.#animationControl !== 'script-only') {
+        const cacheKey = `${this.src}???frame=${this.#frames.length}`;
+        let url = null;
+
+        if (this.cache) {
+          const existing = this.cache.get(cacheKey);
+          if (existing) {
+            url = existing.objectUrl;
+            this.cache.acquire(cacheKey);
+          }
+        }
+
+        if (!url) {
+          const outChunks = [];
+          if (vp8x) outChunks.push(vp8x);
+          if (anim) outChunks.push(anim);
+          for (const chunk of preDataChunks) outChunks.push(chunk);
+          outChunks.push(frame.chunk);
+
+          let totalPayloadSize = 4;
+          for (const c of outChunks) totalPayloadSize += c.length;
+
+          const riffHeader = new Uint8Array(12);
+          const riffView = new DataView(riffHeader.buffer);
+          riffHeader.set([0x52, 0x49, 0x46, 0x46], 0);
+          riffView.setUint32(4, totalPayloadSize, true);
+          riffHeader.set([0x57, 0x45, 0x42, 0x50], 8);
+
+          const blob = new Blob([riffHeader, ...outChunks], { type: 'image/webp' });
+
+          if (this.cache) {
+            const entry = this.cache.set(cacheKey, blob, false);
+            this.cache.acquire(cacheKey);
+            url = entry.objectUrl;
+          } else {
+            url = URL.createObjectURL(blob);
+          }
+        }
+        this.#frames.push({ url, cacheKey });
+      }
+
+      if (this.#animationControl === 'native') break;
+    }
+  }
+
+  /**
+   * Slices an APNG binary into multiple valid single-frame APNG blobs.
+   * @param {Uint8Array} bytes
+   */
+  #extractApngFrames(bytes) {
+    const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    if (bytes.length < 8) return;
+
+    let offset = 8;
+    const preDataChunks = [];
+    let iend = null;
+    const frames = [];
+    let currentFrame = null;
+    let seenIdatOrFctl = false;
+
+    while (offset + 8 <= bytes.length) {
+      const view = new DataView(bytes.buffer, bytes.byteOffset + offset, 8);
+      const size = view.getUint32(0);
+      const type = String.fromCharCode(
+        bytes[offset + 4],
+        bytes[offset + 5],
+        bytes[offset + 6],
+        bytes[offset + 7],
+      );
+      const chunkEnd = offset + 12 + size;
+
+      if (chunkEnd > bytes.length) break;
+
+      const chunkBytes = bytes.subarray(offset, chunkEnd);
+
+      if (type === 'acTL') {
+        // Skip original global animation controller
+      } else if (type === 'fcTL') {
+        seenIdatOrFctl = true;
+        if (currentFrame) frames.push(currentFrame);
+        const fcTLView = new DataView(bytes.buffer, bytes.byteOffset + offset + 8, 26);
+        const delayNum = fcTLView.getUint16(20);
+        const delayDen = fcTLView.getUint16(22) || 100;
+        const delay = delayDen === 0 ? 100 : Math.round((delayNum / delayDen) * 1000);
+        currentFrame = { fctl: chunkBytes, dataChunks: [], delay };
+      } else if (type === 'IDAT') {
+        seenIdatOrFctl = true;
+        if (currentFrame) {
+          currentFrame.dataChunks.push({ type: 'IDAT', bytes: chunkBytes });
+        }
+      } else if (type === 'fdAT') {
+        seenIdatOrFctl = true;
+        if (currentFrame) {
+          currentFrame.dataChunks.push({ type: 'fdAT', bytes: chunkBytes });
+        }
+      } else if (type === 'IEND') {
+        iend = chunkBytes;
+        break;
+      } else {
+        if (!seenIdatOrFctl) {
+          preDataChunks.push(chunkBytes);
+        }
+      }
+
+      offset = chunkEnd;
+    }
+
+    if (currentFrame) frames.push(currentFrame);
+    if (frames.length === 0) return;
+
+    for (let i = 0; i < frames.length; i++) {
+      const frame = frames[i];
+      let delay = frame.delay;
+      if (delay <= 10) delay = 100;
+      this.#animationScript.push({ delay });
+
+      if (this.#animationControl !== 'script-only') {
+        const cacheKey = `${this.src}???frame=${this.#frames.length}`;
+        let url = null;
+
+        if (this.cache) {
+          const existing = this.cache.get(cacheKey);
+          if (existing) {
+            url = existing.objectUrl;
+            this.cache.acquire(cacheKey);
+          }
+        }
+
+        if (!url) {
+          let seq = 0;
+
+          // Force a new 1-frame animation controller for this chunk
+          const acTL = new Uint8Array(20);
+          const acTLView = new DataView(acTL.buffer);
+          acTLView.setUint32(0, 8);
+          acTL.set([0x61, 0x63, 0x54, 0x4c], 4);
+          acTLView.setUint32(8, 1);
+          acTLView.setUint32(12, 0);
+          acTLView.setUint32(16, this.#crc32(acTL.subarray(4, 16)));
+
+          const fctl = new Uint8Array(frame.fctl);
+          const fctlView = new DataView(fctl.buffer);
+          fctlView.setUint32(8, seq++);
+          fctlView.setUint32(fctl.length - 4, this.#crc32(fctl.subarray(4, fctl.length - 4)));
+
+          const outChunks = [new Uint8Array(signature), ...preDataChunks, acTL, fctl];
+
+          for (const chunk of frame.dataChunks) {
+            if (chunk.type === 'IDAT') {
+              outChunks.push(chunk.bytes);
+            } else if (chunk.type === 'fdAT') {
+              // Convert fdAT to standard IDAT by removing sequence number
+              const idatChunk = new Uint8Array(chunk.bytes.length - 4);
+              const idatView = new DataView(idatChunk.buffer);
+              idatView.setUint32(0, chunk.bytes.length - 16);
+              idatChunk.set([0x49, 0x44, 0x41, 0x54], 4);
+              idatChunk.set(chunk.bytes.subarray(12, chunk.bytes.length - 4), 8);
+              idatView.setUint32(
+                idatChunk.length - 4,
+                this.#crc32(idatChunk.subarray(4, idatChunk.length - 4)),
+              );
+              outChunks.push(idatChunk);
+            }
+          }
+
+          if (iend) outChunks.push(iend);
+
+          const blob = new Blob(outChunks, { type: 'image/apng' });
+
+          if (this.cache) {
+            const entry = this.cache.set(cacheKey, blob, false);
+            this.cache.acquire(cacheKey);
+            url = entry.objectUrl;
+          } else {
+            url = URL.createObjectURL(blob);
+          }
+        }
+        this.#frames.push({ url, cacheKey });
+      }
+
+      if (this.#animationControl === 'native') break;
+    }
   }
 
   /**
@@ -528,11 +799,11 @@ class TinyImageLoader extends TinyMediaLoader {
     const frame = this.#frames[this.#currentFrameIndex];
     const scriptStep = this.#animationScript[this.#currentFrameIndex];
     const delay = (scriptStep?.delay || 100) / this.#playbackRate;
-    
+
     this._setInternalSrc(frame.url);
     this.#image.src = frame.url;
     this._flushMutations();
-    
+
     this.#playbackTimer = setTimeout(() => {
       this.#currentFrameIndex = (this.#currentFrameIndex + 1) % this.#frames.length;
       this.#playLoop();
@@ -598,10 +869,10 @@ class TinyImageLoader extends TinyMediaLoader {
   _cleanup() {
     this._revokeObjectUrl();
     this.pause();
-    
+
     // Utiliza o método auxiliar para limpar a cache de frames
     this._releaseAnimationFrames();
-    
+
     this.#originalAnimatedUrl = null;
 
     if (this.#image) {
