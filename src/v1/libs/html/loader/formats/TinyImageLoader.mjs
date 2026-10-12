@@ -471,7 +471,7 @@ class TinyImageLoader extends TinyMediaLoader {
         this.#animationScript.push({ delay });
 
         if (this.#animationControl !== 'script-only') {
-          const cacheKey = `${this.src}?frame=${this.#frames.length}`;
+          const cacheKey = `${this.src}???frame=${this.#frames.length}`;
           let url = null;
 
           // 1. Tenta recuperar o frame existente da cache para evitar duplicatas
@@ -571,15 +571,11 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
-   * Detaches the load handlers, revokes the object URL and clears the source of the image element.
+   * Releases all acquired animation frames from the cache or revokes their object URLs.
    * @protected
-   * @returns {void} This method does not return a value.
+   * @returns {void}
    */
-  _cleanup() {
-    this._revokeObjectUrl();
-    this.pause();
-
-    // Release todos os frames gerados do TinyMediaCache
+  _releaseAnimationFrames() {
     for (const frame of this.#frames) {
       if (this.cache) {
         this.cache.release(frame.cacheKey);
@@ -591,6 +587,20 @@ class TinyImageLoader extends TinyMediaLoader {
     this.#frames = [];
     this.#animationScript = [];
     this.#currentFrameIndex = 0;
+  }
+
+  /**
+   * Detaches the load handlers, revokes the object URL and clears the source of the image element.
+   * @protected
+   * @returns {void} This method does not return a value.
+   */
+  _cleanup() {
+    this._revokeObjectUrl();
+    this.pause();
+    
+    // Utiliza o método auxiliar para limpar a cache de frames
+    this._releaseAnimationFrames();
+    
     this.#originalAnimatedUrl = null;
 
     if (this.#image) {
