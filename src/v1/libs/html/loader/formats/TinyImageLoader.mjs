@@ -324,12 +324,15 @@ class TinyImageLoader extends TinyMediaLoader {
       this._setInternalSrc(cached.objectUrl);
       this.#originalAnimatedUrl = cached.objectUrl;
 
-      // Se for Cache Hit, precisamos restaurar o ambiente de animação caso não exista
+      // Se a imagem for animada e o controle não for 'none', precisamos popular this.#frames.
+      // Mesmo que seja 'native', precisamos do primeiro frame para a função freeze().
       if (
         this.#animationControl !== 'none' &&
         cached.metadata?.animation &&
         this.#frames.length === 0
       ) {
+        // Processamos o buffer da cache. O método #extractGifFrames cuidará de 
+        // reutilizar URLs existentes ou adicionar novos frames à cache.
         await this.#parseAnimationFromBuffer(await cached.blob.arrayBuffer());
       }
 
@@ -468,30 +471,40 @@ class TinyImageLoader extends TinyMediaLoader {
         this.#animationScript.push({ delay });
 
         if (this.#animationControl !== 'script-only') {
-          // Montar o Blob do frame exato combinando o Header Global + GCE + Imagem isolada
-          const frameBytes = new Uint8Array(
-            globalHeader.length + (gce ? gce.length : 0) + (imgEnd - imgStart) + 1,
-          );
+          const cacheKey = `${this.src}?frame=${this.#frames.length}`;
+          let url = null;
 
-          frameBytes.set(globalHeader, 0);
-          let cursor = globalHeader.length;
-
-          if (gce) {
-            frameBytes.set(gce, cursor);
-            cursor += gce.length;
+          // 1. Tenta recuperar o frame existente da cache para evitar duplicatas
+          if (this.cache) {
+            const existing = this.cache.get(cacheKey);
+            if (existing) {
+              url = existing.objectUrl;
+              this.cache.acquire(cacheKey);
+            }
           }
 
-          frameBytes.set(bytes.subarray(imgStart, imgEnd), cursor);
-          frameBytes[frameBytes.length - 1] = 0x3b; // Assinatura de Fim do GIF
+          // 2. Se não existir na cache, cria o Blob e armazena
+          if (!url) {
+            const frameBytes = new Uint8Array(
+              globalHeader.length + (gce ? gce.length : 0) + (imgEnd - imgStart) + 1,
+            );
+            frameBytes.set(globalHeader, 0);
+            let cursor = globalHeader.length;
+            if (gce) {
+              frameBytes.set(gce, cursor);
+              cursor += gce.length;
+            }
+            frameBytes.set(bytes.subarray(imgStart, imgEnd), cursor);
+            frameBytes[frameBytes.length - 1] = 0x3b;
 
-          const blob = new Blob([frameBytes], { type: 'image/gif' });
-          const cacheKey = `${this.src}?frame=${this.#frames.length}`;
-          let url = URL.createObjectURL(blob);
-
-          if (this.cache) {
-            const entry = this.cache.set(cacheKey, blob, false);
-            this.cache.acquire(cacheKey);
-            url = entry.objectUrl;
+            const blob = new Blob([frameBytes], { type: 'image/gif' });
+            if (this.cache) {
+              const entry = this.cache.set(cacheKey, blob, false);
+              this.cache.acquire(cacheKey);
+              url = entry.objectUrl;
+            } else {
+              url = URL.createObjectURL(blob);
+            }
           }
 
           this.#frames.push({ url, cacheKey });
