@@ -55,11 +55,11 @@ class TinyVideoLoader extends TinyContentLoader {
     super('video', mimeType, options);
   }
 
-   /**
+  /**
    * The underlying `<video>` element managed by the loader.
    * @returns {HTMLVideoElement|null} The underlying `<video>` element, or null before the load starts.
    */
-   get video() {
+  get video() {
     return this.media;
   }
 }

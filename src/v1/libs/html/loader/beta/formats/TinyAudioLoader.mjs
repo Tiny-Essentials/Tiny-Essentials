@@ -63,9 +63,9 @@ class TinyAudioLoader extends TinyContentLoader {
   }
 
   /**
-  * The underlying `<audio>` element managed by the loader.
-  * @returns {HTMLAudioElement|null} The underlying `<audio>` element, or `null` before the load starts.
-  */
+   * The underlying `<audio>` element managed by the loader.
+   * @returns {HTMLAudioElement|null} The underlying `<audio>` element, or `null` before the load starts.
+   */
   get audio() {
     return this.media;
   }

@@ -56,19 +56,19 @@ const HIGH_PROFILES = new Set([100, 110, 122, 244, 44, 83, 86, 118, 128, 138, 13
  * @param {number} [offset] - The offset at which to perform the test.
  * @returns {boolean} True when the buffer starts with the signature at the specified offset.
  */
- function matches(bytes, signature, offset = 0) {
+function matches(bytes, signature, offset = 0) {
   if (bytes.length < offset + signature.length) {
     return false;
   }
   return signature.every((byte, index) => bytes[offset + index] === byte);
 }
 
- /**
-  * Strips H.264 emulation prevention bytes (0x000003) from a NAL unit to recover the raw bitstream.
-  * @param {Uint8Array} data - The raw NAL unit containing emulation bytes.
-  * @returns {Uint8Array} The unescaped NAL unit.
-  */
- function unescapeNal(data) {
+/**
+ * Strips H.264 emulation prevention bytes (0x000003) from a NAL unit to recover the raw bitstream.
+ * @param {Uint8Array} data - The raw NAL unit containing emulation bytes.
+ * @returns {Uint8Array} The unescaped NAL unit.
+ */
+function unescapeNal(data) {
   const output = new Uint8Array(data.length);
   let size = 0;
   for (let i = 0; i < data.length; i += 1) {
@@ -81,12 +81,12 @@ const HIGH_PROFILES = new Set([100, 110, 122, 244, 44, 83, 86, 118, 128, 138, 13
   return output.subarray(0, size);
 }
 
- /**
-  * Parses an H.264 Sequence Parameter Set (SPS) NAL unit to extract the image dimensions.
-  * @param {Uint8Array} data - The SPS NAL unit, including its 1-byte NAL header.
-  * @returns {MediaProbeSize|null} The extracted width and height, or null when the SPS is malformed or unsupported.
-  */
- function readH264Sps(data) {
+/**
+ * Parses an H.264 Sequence Parameter Set (SPS) NAL unit to extract the image dimensions.
+ * @param {Uint8Array} data - The SPS NAL unit, including its 1-byte NAL header.
+ * @returns {MediaProbeSize|null} The extracted width and height, or null when the SPS is malformed or unsupported.
+ */
+function readH264Sps(data) {
   const bytes = unescapeNal(data);
   let bit = 0;
   const readBit = () => (bytes[bit >> 3] >> (7 - (bit++ & 7))) & 1;
@@ -183,12 +183,12 @@ const HIGH_PROFILES = new Set([100, 110, 122, 244, 44, 83, 86, 118, 128, 138, 13
 /* ISO base media file format (MP4, MOV, M4V, 3GP, 3G2)                       */
 /* -------------------------------------------------------------------------- */
 
- /**
-  * Parses a resource using the ISO Base Media File Format (ISO BMFF) to extract dimensions.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
-  */
- function parseIsoBmff(reader) {
+/**
+ * Parses a resource using the ISO Base Media File Format (ISO BMFF) to extract dimensions.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
+ */
+function parseIsoBmff(reader) {
   const end = reader.limit;
   const moov = findBox(reader, 0, end, new Set(['moov']));
   if (moov) {
@@ -231,23 +231,23 @@ const HIGH_PROFILES = new Set([100, 110, 122, 244, 44, 83, 86, 118, 128, 138, 13
 /* Matroska / WebM                                                            */
 /* -------------------------------------------------------------------------- */
 
- /**
-  * Parses a resource using the WebM/Matroska container format to extract dimensions.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
-  */
- function parseWebm(reader) {
+/**
+ * Parses a resource using the WebM/Matroska container format to extract dimensions.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
+ */
+function parseWebm(reader) {
   return scanWebm(reader, 0, reader.limit);
 }
 
- /**
-  * Scans a range of bytes for WebM/Matroska elements to locate video dimensions.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @param {number} start - The absolute offset of the first byte in the range.
-  * @param {number} end - The absolute offset marking the end of the range.
-  * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
-  */
- function scanWebm(reader, start, end) {
+/**
+ * Scans a range of bytes for WebM/Matroska elements to locate video dimensions.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @param {number} start - The absolute offset of the first byte in the range.
+ * @param {number} end - The absolute offset marking the end of the range.
+ * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
+ */
+function scanWebm(reader, start, end) {
   let offset = start;
   while (offset < end) {
     const id = readVint(reader, offset, true);
@@ -277,14 +277,14 @@ const HIGH_PROFILES = new Set([100, 110, 122, 244, 44, 83, 86, 118, 128, 138, 13
   return null;
 }
 
- /**
-  * Parses the `Video` element of a WebM/Matroska stream to extract dimensions.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @param {number} start - The absolute offset of the first byte of the `Video` payload.
-  * @param {number} end - The absolute offset marking the end of the `Video` payload.
-  * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
-  */
- function readWebmVideo(reader, start, end) {
+/**
+ * Parses the `Video` element of a WebM/Matroska stream to extract dimensions.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @param {number} start - The absolute offset of the first byte of the `Video` payload.
+ * @param {number} end - The absolute offset marking the end of the `Video` payload.
+ * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
+ */
+function readWebmVideo(reader, start, end) {
   let width = 0;
   let height = 0;
   let offset = start;
@@ -312,14 +312,14 @@ const HIGH_PROFILES = new Set([100, 110, 122, 244, 44, 83, 86, 118, 128, 138, 13
   return width > 0 && height > 0 ? { width, height } : null;
 }
 
- /**
-  * Decodes a Variable-length Integer (VINT) from the buffer.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @param {number} offset - The absolute offset of the first byte of the integer.
-  * @param {boolean} keepMarker - Whether the length marker bit should be preserved in the returned value.
-  * @returns {{ value: number, length: number }|null} An object containing the decoded value and the number of bytes read, or null on failure.
-  */
- function readVint(reader, offset, keepMarker) {
+/**
+ * Decodes a Variable-length Integer (VINT) from the buffer.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @param {number} offset - The absolute offset of the first byte of the integer.
+ * @param {boolean} keepMarker - Whether the length marker bit should be preserved in the returned value.
+ * @returns {{ value: number, length: number }|null} An object containing the decoded value and the number of bytes read, or null on failure.
+ */
+function readVint(reader, offset, keepMarker) {
   const bytes = reader.buffer;
   if (offset >= bytes.length) {
     return null;
@@ -344,14 +344,14 @@ const HIGH_PROFILES = new Set([100, 110, 122, 244, 44, 83, 86, 118, 128, 138, 13
   return { value, length };
 }
 
- /**
-  * Reads a raw unsigned integer of a specified length from the buffer.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @param {number} offset - The absolute offset of the first byte of the integer.
-  * @param {number} length - The number of bytes to read.
-  * @returns {number} The decoded integer value.
-  */
- function readUint(reader, offset, length) {
+/**
+ * Reads a raw unsigned integer of a specified length from the buffer.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @param {number} offset - The absolute offset of the first byte of the integer.
+ * @param {number} length - The number of bytes to read.
+ * @returns {number} The decoded integer value.
+ */
+function readUint(reader, offset, length) {
   const bytes = reader.buffer;
   let value = 0;
   for (let i = 0; i < length; i += 1) {
@@ -364,12 +364,12 @@ const HIGH_PROFILES = new Set([100, 110, 122, 244, 44, 83, 86, 118, 128, 138, 13
 /* AVI / AMV                                                                  */
 /* -------------------------------------------------------------------------- */
 
- /**
-  * Parses an AVI or AMV resource to extract dimensions.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
-  */
- function parseAvi(reader) {
+/**
+ * Parses an AVI or AMV resource to extract dimensions.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
+ */
+function parseAvi(reader) {
   const end = reader.limit;
   let offset = 12;
   while (offset + 8 <= end) {
@@ -387,12 +387,12 @@ const HIGH_PROFILES = new Set([100, 110, 122, 244, 44, 83, 86, 118, 128, 138, 13
   return null;
 }
 
- /**
-  * Parses an AMV resource to extract dimensions.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
-  */
- function parseAmv(reader) {
+/**
+ * Parses an AMV resource to extract dimensions.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
+ */
+function parseAmv(reader) {
   const end = reader.limit;
   let offset = 12;
   while (offset + 8 <= end) {
@@ -437,12 +437,12 @@ function parseOgg(reader) {
 /* MPEG-1/2 elementary stream                                                 */
 /* -------------------------------------------------------------------------- */
 
- /**
-  * Parses an MPEG-1 or MPEG-2 elementary stream to extract dimensions.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
-  */
- function parseMpeg(reader) {
+/**
+ * Parses an MPEG-1 or MPEG-2 elementary stream to extract dimensions.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
+ */
+function parseMpeg(reader) {
   const end = reader.limit;
   for (let offset = 0; offset + 12 <= end; offset += 1) {
     reader.seek(offset);
@@ -465,12 +465,12 @@ function parseOgg(reader) {
 /* FLV (FLV, F4V, F4P, F4A, F4B)                                              */
 /* -------------------------------------------------------------------------- */
 
- /**
-  * Parses a Flash Video (FLV) resource to extract dimensions.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
-  */
- function parseFlv(reader) {
+/**
+ * Parses a Flash Video (FLV) resource to extract dimensions.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
+ */
+function parseFlv(reader) {
   reader.seek(5);
   let offset = reader.uint32();
   const end = reader.limit;
@@ -491,14 +491,14 @@ function parseOgg(reader) {
   return null;
 }
 
- /**
-  * Parses the video tag payload of an FLV stream to extract dimensions.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @param {number} start - The absolute offset of the first byte of the video tag payload.
-  * @param {number} end - The absolute offset marking the end of the video tag payload.
-  * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
-  */
- function readFlvVideo(reader, start, end) {
+/**
+ * Parses the video tag payload of an FLV stream to extract dimensions.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @param {number} start - The absolute offset of the first byte of the video tag payload.
+ * @param {number} end - The absolute offset marking the end of the video tag payload.
+ * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
+ */
+function readFlvVideo(reader, start, end) {
   if (start + 16 > end) {
     return null;
   }
@@ -525,12 +525,12 @@ function parseOgg(reader) {
 /* MPEG program stream (VOB)                                                  */
 /* -------------------------------------------------------------------------- */
 
- /**
-  * Parses an MPEG Program Stream (VOB) to extract dimensions.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
-  */
- function parseMpegPs(reader) {
+/**
+ * Parses an MPEG Program Stream (VOB) to extract dimensions.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
+ */
+function parseMpegPs(reader) {
   const end = reader.limit;
   for (let offset = 0; offset + 12 <= end; offset += 1) {
     reader.seek(offset);
@@ -553,12 +553,12 @@ function parseOgg(reader) {
 /* MPEG transport stream (TS, MTS, M2TS)                                      */
 /* -------------------------------------------------------------------------- */
 
- /**
-  * Parses an MPEG Transport Stream (TS) to extract dimensions.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
-  */
- function parseMpegTs(reader) {
+/**
+ * Parses an MPEG Transport Stream (TS) to extract dimensions.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
+ */
+function parseMpegTs(reader) {
   const end = reader.limit;
   const base = findTsSync(reader, end);
   if (base === -1) {
@@ -575,13 +575,13 @@ function parseOgg(reader) {
   return findTsSps(reader, base, end, videoPid);
 }
 
- /**
-  * Searches for the first MPEG-TS synchronization byte (0x47) in the buffer.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @param {number} end - The absolute offset marking the end of the buffer.
-  * @returns {number} The absolute offset of the first synchronization byte, or -1 if not found.
-  */
- function findTsSync(reader, end) {
+/**
+ * Searches for the first MPEG-TS synchronization byte (0x47) in the buffer.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @param {number} end - The absolute offset marking the end of the buffer.
+ * @returns {number} The absolute offset of the first synchronization byte, or -1 if not found.
+ */
+function findTsSync(reader, end) {
   for (let offset = 0; offset + 376 < Math.min(end, 8192); offset += 1) {
     if (reader.seek(offset).uint8() !== 0x47) {
       continue;
@@ -593,14 +593,14 @@ function parseOgg(reader) {
   return -1;
 }
 
- /**
-  * Searches for the Program Map Table (PMT) PID within an MPEG-TS stream.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @param {number} base - The absolute offset of the first synchronization byte.
-  * @param {number} end - The absolute offset marking the end of the buffer.
-  * @returns {number} The PMT PID, or -1 if not found.
-  */
- function findTsPmtPid(reader, base, end) {
+/**
+ * Searches for the Program Map Table (PMT) PID within an MPEG-TS stream.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @param {number} base - The absolute offset of the first synchronization byte.
+ * @param {number} end - The absolute offset marking the end of the buffer.
+ * @returns {number} The PMT PID, or -1 if not found.
+ */
+function findTsPmtPid(reader, base, end) {
   for (let offset = base; offset + 188 <= end; offset += 188) {
     reader.seek(offset);
     if (reader.uint8() !== 0x47) {
@@ -629,15 +629,15 @@ function parseOgg(reader) {
   return -1;
 }
 
- /**
-  * Searches for the elementary video stream PID using the PMT.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @param {number} base - The absolute offset of the first synchronization byte.
-  * @param {number} end - The absolute offset marking the end of the buffer.
-  * @param {number} pmtPid - The PMT PID found previously.
-  * @returns {number} The elementary video PID, or -1 if not found.
-  */
- function findTsVideoPid(reader, base, end, pmtPid) {
+/**
+ * Searches for the elementary video stream PID using the PMT.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @param {number} base - The absolute offset of the first synchronization byte.
+ * @param {number} end - The absolute offset marking the end of the buffer.
+ * @param {number} pmtPid - The PMT PID found previously.
+ * @returns {number} The elementary video PID, or -1 if not found.
+ */
+function findTsVideoPid(reader, base, end, pmtPid) {
   for (let offset = base; offset + 188 <= end; offset += 188) {
     reader.seek(offset);
     if (reader.uint8() !== 0x47) {
@@ -669,15 +669,15 @@ function parseOgg(reader) {
   return -1;
 }
 
- /**
-  * Parses the Sequence Parameter Set (SPS) of an MPEG-TS video stream to extract dimensions.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @param {number} base - The absolute offset of the first synchronization byte.
-  * @param {number} end - The absolute offset marking the end of the buffer.
-  * @param {number} pid - The elementary video PID.
-  * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
-  */
- function findTsSps(reader, base, end, pid) {
+/**
+ * Parses the Sequence Parameter Set (SPS) of an MPEG-TS video stream to extract dimensions.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @param {number} base - The absolute offset of the first synchronization byte.
+ * @param {number} end - The absolute offset marking the end of the buffer.
+ * @param {number} pid - The elementary video PID.
+ * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
+ */
+function findTsSps(reader, base, end, pid) {
   const payload = [];
   for (let offset = base; offset + 188 <= end; offset += 188) {
     reader.seek(offset);
@@ -715,12 +715,12 @@ function parseOgg(reader) {
 /* ASF (WMV, ASF)                                                             */
 /* -------------------------------------------------------------------------- */
 
- /**
-  * Parses an ASF (Advanced Systems Format) resource to extract dimensions.
-  * @param {TinyBufferReader} reader - The binary cursor used for reading.
-  * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
-  */
- function parseAsf(reader) {
+/**
+ * Parses an ASF (Advanced Systems Format) resource to extract dimensions.
+ * @param {TinyBufferReader} reader - The binary cursor used for reading.
+ * @returns {MediaProbeSize|null} The extracted dimensions, or null if not found.
+ */
+function parseAsf(reader) {
   const end = reader.limit;
   const guid = [
     0xc0, 0xef, 0x19, 0xbc, 0x4d, 0x4b, 0xcf, 0x11, 0xa8, 0xfd, 0x00, 0x80, 0x5f, 0x5c, 0x44, 0x2b,

@@ -53,7 +53,7 @@ import TinyMediaCache from './utils/TinyMediaCache.mjs';
  * @property {boolean} fromCache - Whether the media was served from the cache.
  * @property {number} loadTime - The total load time in milliseconds.
  * @property {number} timestamp - The epoch timestamp when the load finished.
- * @property {import('./probe/TinyImageProbe.mjs').AnimationProbeData | null} animation - The number of frames (1 for still images, NaN when unknown).
+ * @property {import('./probe/TinyImageProbe.mjs').AnimationProbeData | null} animation - The animation data.
  * @property {Record<string, string>} [httpHeaders] - All HTTP response headers captured during the fetch.
  */
 
