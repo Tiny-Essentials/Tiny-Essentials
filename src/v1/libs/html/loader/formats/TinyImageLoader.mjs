@@ -228,6 +228,7 @@ class TinyImageLoader extends TinyMediaLoader {
    */
   play() {
     if (this.#animationControl !== 'controlled') return;
+    if (this.#playbackTimer) return;
     this.#isPlaying = true;
     this.#isFrozen = false;
     this.#playLoop();
