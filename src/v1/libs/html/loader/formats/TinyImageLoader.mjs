@@ -86,11 +86,11 @@ class TinyImageLoader extends TinyMediaLoader {
           }
         },
         close: () => {
-          // Quando o download/stream termina, chamamos o finalize()
-          // para coletar toda a metadata de animação acumulada.
+          // When the download/stream ends, we call finalize()
+          // to collect all accumulated animation metadata.
           const animationData = probe.finalize();
           if (animationData) {
-            // Emite as informações avançadas (frames, loopCount, duration)
+            // Emits advanced information (frames, loopCount, duration)
             this._emitMetadata(animationData, 'PROBE_ANIMATION');
           }
           probe.close();

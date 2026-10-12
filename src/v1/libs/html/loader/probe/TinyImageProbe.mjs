@@ -367,11 +367,11 @@ function getAvifAnimation(bytes) {
   const reader = new TinyBufferReader(bytes);
   const end = reader.limit;
 
-  // Encontra a caixa principal
+  // Find the main box
   const moov = findBox(reader, 0, end, new Set(['moov']));
   if (!moov) return null;
 
-  // Encontra o cabeçalho do filme (duração da animação)
+  // Find the movie header (animation duration)
   const mvhd = findBox(reader, moov.dataStart, moov.dataEnd, new Set(['mvhd']));
   let duration = 0;
   if (mvhd) {
@@ -394,7 +394,7 @@ function getAvifAnimation(bytes) {
     }
   }
 
-  // Mergulha pelas caixas container até chegar na tabela de tamanhos (stsz) para contar os frames
+  // Dive through container boxes until reaching the sample size table (stsz) to count frames
   const trak = findBox(reader, moov.dataStart, moov.dataEnd, new Set(['trak']));
   if (!trak) return null;
 
@@ -527,7 +527,7 @@ class TinyImageProbe {
   }
 
   /**
-   * Helper interno para invocar o extrator correto baseado no formato.
+   * Internal helper to invoke the correct extractor based on the format.
    */
   #extractAnimation() {
     const name = this.#format?.name;
@@ -550,7 +550,7 @@ class TinyImageProbe {
     }
     if (this.#abandoned) return null;
 
-    // Se já resolvemos a dimensão e sabemos que é uma imagem estática, descartamos o resto.
+    // If dimensions are already resolved and we know it's a static image, we discard the rest.
     if (this.#resolved && !this.#animated) {
       return null;
     }
@@ -571,18 +571,18 @@ class TinyImageProbe {
       this.#animated = ['gif', 'webp', 'png', 'avif'].includes(this.#format.name);
     }
 
-    // Se as dimensões já foram resolvidas e a imagem for animada, procuramos por novos frames.
+    // If dimensions are already resolved and the image is animated, we look for new frames.
     if (this.#resolved && this.#animated) {
       const anim = this.#extractAnimation();
       if (anim && anim.frames > this.#lastFrames) {
         this.#lastFrames = anim.frames;
-        // Retornamos as dimensões conhecidas + a animação atualizada para o loader emitir
+        // Return known dimensions + updated animation for the loader to emit
         return { width: this.#width, height: this.#height, animation: anim };
       }
       return null;
     }
 
-    // PRIMEIRA RESOLUÇÃO DO HEADER:
+    // FIRST HEADER RESOLUTION:
     try {
       const size = this.#format.parse(new TinyBufferReader(this.#buffer));
       if (size) {
@@ -597,7 +597,7 @@ class TinyImageProbe {
             this.#lastFrames = anim.frames;
           }
         } else {
-          this.#buffer = new Uint8Array(0); // Libera memória imediata se for estática
+          this.#buffer = new Uint8Array(0); // Release memory immediately if static
         }
         return size;
       }
@@ -605,7 +605,7 @@ class TinyImageProbe {
       if (!(error instanceof TinyNeedMoreData)) throw error;
     }
 
-    // Abandona a leitura apenas se o cabeçalho estourar o limite E a dimensão ainda não foi resolvida
+    // Abandon reading only if the header exceeds the limit AND dimensions are not yet resolved
     if (this.#buffer.length > this.#maxBytes && !this.#resolved) {
       this.#abandoned = true;
       this.#buffer = new Uint8Array(0);
