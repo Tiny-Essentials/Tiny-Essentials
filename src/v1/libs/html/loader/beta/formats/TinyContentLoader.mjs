@@ -29,11 +29,14 @@ import TinyMediaProbe from '../probe/TinyMediaProbe.mjs';
  */
 
 /**
+ * Maps media format identifiers to an ordered list of MIME types to attempt when probing.
  * @typedef {Record<string, string[]>} TypesToTry
  */
 
 /**
- * @param {HTMLVideoElement|HTMLAudioElement} media
+ * Extracts a partial metadata snapshot from a native media element.
+ * @param {HTMLVideoElement|HTMLAudioElement} media - The media element to probe.
+ * @returns {Partial<import('../../TinyMediaLoader.mjs').MediaMetadata>} A patch containing resolved dimensions and duration.
  */
 const getMetadata = (media) => {
   /** @type {Partial<import('../../TinyMediaLoader.mjs').MediaMetadata>} */
@@ -47,7 +50,8 @@ const getMetadata = (media) => {
 };
 
 /**
- * Loads a single media with full lifecycle control.
+ * Base class for media loaders that support complex content types (audio and video)
+ * and optional Media Source Extensions (MSE) streaming.
  * @extends {TinyMediaLoader<HTMLContentElement>}
  * @template {HTMLVideoElement|HTMLAudioElement} HTMLContentElement
  * @template {'video'|'audio'} Tag
@@ -78,8 +82,9 @@ class TinyContentLoader extends TinyMediaLoader {
   #typesToTry = {};
 
   /**
-   * @param {Tag} tag
-   * @param {TypesToTry} typesToTry
+   * Initializes a content loader for a specific media tag and set of candidate MIME types.
+   * @param {Tag} tag - The HTML tag name (e.g., 'video' or 'audio').
+   * @param {TypesToTry} typesToTry - The mapping of format keys to candidate MIME types.
    * @param {VideoLoaderOptions<HTMLContentElement>} [options] - The loader configuration.
    * @throws {TypeError} If `crossOrigin` is not a string or null.
    * @throws {TypeError} If `preload` is not a string.
@@ -130,8 +135,8 @@ class TinyContentLoader extends TinyMediaLoader {
   }
 
   /**
-   * The underlying the element.
-   * @returns {HTMLContentElement|null}
+   * The underlying media element managed by the loader.
+   * @returns {HTMLContentElement|null} The element instance, or null before it is created.
    */
   get media() {
     return this.#media;
@@ -146,10 +151,12 @@ class TinyContentLoader extends TinyMediaLoader {
   }
 
   /**
-   * @override
-   * @protected
-   * @returns {Promise<void>} A promise that resolves once the media is ready and playback can start.
-   */
+  * Orchestrates the initial load of the media, wiring up DOM events and initiating
+  * either a native load or a streamed fetch.
+  * @override
+  * @protected
+  * @returns {Promise<void>} A promise that resolves once the media is ready and playback can start.
+  */
   async _startLoad() {
     const media = /** @type {HTMLContentElement} */ (this._resolveElement());
     this.#media = media;
@@ -228,11 +235,12 @@ class TinyContentLoader extends TinyMediaLoader {
   }
 
   /**
-   * Downloads the media through fetch, supporting byte-level progress and seeking.
-   * @param {HTMLContentElement} media - The target media element.
-   * @param {number} startByte - The byte offset to start from.
-   * @returns {Promise<void>}
-   */
+  * Downloads the media through fetch and pipes the data into a MediaSource (MSE)
+  * if available, enabling byte-level progress and seamless seeking.
+  * @param {HTMLContentElement} media - The target media element.
+  * @param {number} startByte - The byte offset to start the download from.
+  * @returns {Promise<void>} A promise that resolves when the stream is established.
+  */
   async #streamInto(media, startByte) {
     const cached = this._acquireFromCache();
     if (cached) {
@@ -506,9 +514,10 @@ class TinyContentLoader extends TinyMediaLoader {
   }
 
   /**
-   * Reads the buffered TimeRanges and emits a normalized progress event.
-   * @returns {void} This method does not return a value.
-   */
+  * Calculates the total buffered duration of the media and emits a progress event
+  * based on time instead of bytes.
+  * @returns {void} This method does not return a value.
+  */
   #updateTimeProgress() {
     const media = this.#media;
     const { duration = 0, height = 0, width = 0 } = media ? getMetadata(media) : {};
@@ -536,9 +545,10 @@ class TinyContentLoader extends TinyMediaLoader {
   }
 
   /**
-   * Derives the MIME type from the source extension.
-   * @returns {string} The MIME type derived from the source file extension.
-   */
+  * Derives a generic MIME type (e.g., 'video/mp4') based on the file extension
+  * of the current source URL.
+  * @returns {string} The derived MIME type, or a generic fallback if no extension is found.
+  */
   #getMimeType() {
     const clean = this.src.split('?')[0].split('#')[0];
     const dot = clean.lastIndexOf('.');
@@ -547,10 +557,12 @@ class TinyContentLoader extends TinyMediaLoader {
   }
 
   /**
-   * @override
-   * @protected
-   * @returns {import('../../TinyMediaLoader.mjs').MediaMetadataDetails} The resolved metadata for the media.
-   */
+  * Extracts the metadata specific to content media (video/audio), such as
+  * dimensions and duration, to be merged into the final metadata object.
+  * @override
+  * @protected
+  * @returns {import('../../TinyMediaLoader.mjs').MediaMetadataDetails} The resolved metadata for the media.
+  */
   _getMetadataDetails() {
     const media = this.#media;
     const patch = media ? getMetadata(media) : {};
@@ -565,20 +577,22 @@ class TinyContentLoader extends TinyMediaLoader {
   }
 
   /**
-   * @override
-   * @protected
-   * @returns {HTMLContentElement} A newly created element.
-   */
+  * Creates the appropriate HTML media element based on the configured tag.
+  * @override
+  * @protected
+  * @returns {HTMLContentElement} A newly created HTMLAudioElement or HTMLVideoElement.
+  */
   _createElement() {
     // @ts-ignore
     return document.createElement(this.#tag);
   }
 
   /**
-   * @override
-   * @protected
-   * @returns {void}
-   */
+  * Aborts the media load and cleans up any active MSE object URLs to release memory.
+  * @override
+  * @protected
+  * @returns {void}
+  */
   _abort() {
     if (this.#mseUrl) {
       URL.revokeObjectURL(this.#mseUrl);
@@ -588,10 +602,12 @@ class TinyContentLoader extends TinyMediaLoader {
   }
 
   /**
-   * @override
-   * @protected
-   * @returns {void} This method does not return a value.
-   */
+  * Releases MSE resources, revokes object URLs, and resets the media element
+  * to prevent memory leaks.
+  * @override
+  * @protected
+  * @returns {void} This method does not return a value.
+  */
   _cleanup() {
     if (this.#mseUrl) {
       URL.revokeObjectURL(this.#mseUrl);

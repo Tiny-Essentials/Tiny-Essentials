@@ -27,6 +27,7 @@ import TinyContentLoader from './TinyContentLoader.mjs';
  */
 class TinyVideoLoader extends TinyContentLoader {
   /**
+   * Retrieves the uppercase tag name of the element this loader creates.
    * @returns {string} The uppercase tag name of the underlying media element.
    */
   static get tagName() {
@@ -34,6 +35,7 @@ class TinyVideoLoader extends TinyContentLoader {
   }
 
   /**
+   * Creates a new video loader and validates the provided options.
    * @param {VideoLoaderOptions} [options] - The loader configuration.
    * @throws {TypeError} If `crossOrigin` is not a string or null.
    * @throws {TypeError} If `preload` is not a string.
@@ -53,11 +55,11 @@ class TinyVideoLoader extends TinyContentLoader {
     super('video', mimeType, options);
   }
 
-  /**
-   * The underlying `<video>` element.
-   * @returns {HTMLVideoElement|null}
+   /**
+   * The underlying `<video>` element managed by the loader.
+   * @returns {HTMLVideoElement|null} The underlying `<video>` element, or null before the load starts.
    */
-  get video() {
+   get video() {
     return this.media;
   }
 }

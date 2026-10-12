@@ -30,7 +30,7 @@ import TinyContentLoader from './TinyContentLoader.mjs';
  */
 class TinyAudioLoader extends TinyContentLoader {
   /**
-   * The uppercase tag name of the element this loader creates.
+   * Retrieves the uppercase tag name of the element this loader creates.
    * @returns {string} The literal string `'AUDIO'`.
    */
   static get tagName() {
@@ -38,6 +38,7 @@ class TinyAudioLoader extends TinyContentLoader {
   }
 
   /**
+   * Creates a new audio loader and validates the provided options.
    * @param {AudioLoaderOptions} [options] - The loader configuration.
    * @throws {TypeError} If `crossOrigin` is not a string or null.
    * @throws {TypeError} If `preload` is not a string.
@@ -62,9 +63,9 @@ class TinyAudioLoader extends TinyContentLoader {
   }
 
   /**
-   * The underlying `<audio>` element.
-   * @returns {HTMLAudioElement|null} The underlying `<audio>` element, or `null` before the load starts.
-   */
+  * The underlying `<audio>` element managed by the loader.
+  * @returns {HTMLAudioElement|null} The underlying `<audio>` element, or `null` before the load starts.
+  */
   get audio() {
     return this.media;
   }

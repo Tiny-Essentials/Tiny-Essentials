@@ -114,7 +114,7 @@ class TinyMediaCache {
 
   /**
    * The cleanup strategy applied when an entry reaches zero references.
-   * @returns {MediaCacheStrategy} The active cleanup strategy.
+   * @returns {MediaCacheStrategy} The active cleanup strategy used by the cache.
    */
   get strategy() {
     return this.#strategy;
@@ -274,6 +274,7 @@ class TinyMediaCache {
   }
 
   /**
+   * The number of entries currently stored in this cache instance.
    * @returns {number} The number of entries in this cache.
    */
   get size() {
@@ -292,13 +293,15 @@ class TinyMediaCache {
   }
 
   /**
-   * @returns {boolean} True after `destroy` has run.
+   * Indicates whether the cache instance has been destroyed.
+   * @returns {boolean} True if the cache was destroyed, false otherwise.
    */
   get destroyed() {
     return this.#destroyed;
   }
 
   /**
+   * Returns a snapshot of the cache's internal performance counters.
    * @returns {MediaCacheStats} A snapshot of the cache counters.
    */
   get stats() {
@@ -556,7 +559,7 @@ class TinyMediaCache {
   }
 
   /**
-   * Ensures the cache has not been destroyed.
+   * Ensures the cache has not been destroyed before performing an operation.
    * @returns {void}
    * @throws {Error} If the cache was destroyed.
    */

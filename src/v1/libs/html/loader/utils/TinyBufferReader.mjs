@@ -12,6 +12,7 @@
  */
 export class TinyNeedMoreData extends Error {
   /**
+   * Exception thrown when the current buffer does not contain enough bytes to fulfill a read request.
    * @param {string} [message] - The error message.
    */
   constructor(message = 'The buffer does not hold enough bytes to satisfy the read.') {
@@ -34,6 +35,7 @@ export default class TinyBufferReader {
   #limit;
 
   /**
+   * Initializes a new bounds-checked binary reader.
    * @param {Uint8Array} bytes - The backing buffer.
    * @param {number} [offset] - The first readable byte.
    * @param {number} [limit] - The byte after the last readable byte.
@@ -82,18 +84,21 @@ export default class TinyBufferReader {
   }
 
   /**
-   * @param {number} count - The number of bytes to test.
-   * @returns {boolean} True when at least `count` bytes are readable.
-   */
+  * Checks if the buffer contains at least the specified number of readable bytes.
+  * @param {number} count - The number of bytes to test.
+  * @returns {boolean} True when at least `count` bytes are readable.
+  */
   has(count) {
     return count >= 0 && this.#offset + count <= this.#limit;
   }
 
   /**
-   * @param {number} count - The number of bytes required.
-   * @returns {void}
-   * @throws {TinyNeedMoreData} If fewer than `count` bytes are readable.
-   */
+  * Validates that the buffer has enough bytes to satisfy a read.
+  * Throws {@link TinyNeedMoreData} if the requested count exceeds the remaining bytes.
+  * @param {number} count - The number of bytes required.
+  * @returns {void}
+  * @throws {TinyNeedMoreData} If fewer than `count` bytes are readable.
+  */
   #require(count) {
     if (!this.has(count)) {
       throw new TinyNeedMoreData();
@@ -101,10 +106,11 @@ export default class TinyBufferReader {
   }
 
   /**
-   * @param {number} position - The absolute position to move to.
-   * @returns {TinyBufferReader} The current instance for chaining.
-   * @throws {RangeError} If `position` is not a positive integer.
-   */
+  * Moves the cursor to an absolute position in the buffer.
+  * @param {number} position - The absolute position to move to.
+  * @returns {TinyBufferReader} The current instance for chaining.
+  * @throws {RangeError} If `position` is not a positive integer.
+  */
   seek(position) {
     if (!Number.isInteger(position) || position < 0) {
       throw new RangeError('The "position" argument must be a positive integer.');
@@ -114,23 +120,30 @@ export default class TinyBufferReader {
   }
 
   /**
-   * @param {number} count - The number of bytes to skip.
-   * @returns {TinyBufferReader} The current instance for chaining.
-   * @throws {TinyNeedMoreData} If fewer than `count` bytes are readable.
-   */
+  * Skips a specified number of bytes in the buffer.
+  * @param {number} count - The number of bytes to skip.
+  * @returns {TinyBufferReader} The current instance for chaining.
+  * @throws {TinyNeedMoreData} If fewer than `count` bytes are readable.
+  */
   skip(count) {
     this.#require(count);
     this.#offset += count;
     return this;
   }
 
-  /** @returns {number} The next unsigned 8-bit integer. */
+  /**
+   * Reads the next unsigned 8-bit integer.
+   * @returns {number} The next unsigned 8-bit integer.
+   */
   uint8() {
     this.#require(1);
     return this.#view.getUint8(this.#offset++);
   }
 
-  /** @returns {number} The next unsigned 16-bit big-endian integer. */
+  /**
+   * Reads the next unsigned 16-bit big-endian integer.
+   * @returns {number} The next unsigned 16-bit big-endian integer.
+   */
   uint16() {
     this.#require(2);
     const value = this.#view.getUint16(this.#offset);
@@ -138,7 +151,10 @@ export default class TinyBufferReader {
     return value;
   }
 
-  /** @returns {number} The next unsigned 16-bit little-endian integer. */
+  /**
+   * Reads the next unsigned 16-bit little-endian integer.
+   * @returns {number} The next unsigned 16-bit little-endian integer.
+   */
   uint16le() {
     this.#require(2);
     const value = this.#view.getUint16(this.#offset, true);
@@ -146,7 +162,10 @@ export default class TinyBufferReader {
     return value;
   }
 
-  /** @returns {number} The next unsigned 24-bit big-endian integer. */
+  /**
+   * Reads the next unsigned 24-bit big-endian integer.
+   * @returns {number} The next unsigned 24-bit big-endian integer.
+   */
   uint24() {
     this.#require(3);
     const value =
@@ -157,7 +176,10 @@ export default class TinyBufferReader {
     return value;
   }
 
-  /** @returns {number} The next unsigned 32-bit big-endian integer. */
+  /**
+   * Reads the next unsigned 32-bit big-endian integer.
+   * @returns {number} The next unsigned 32-bit big-endian integer.
+   */
   uint32() {
     this.#require(4);
     const value = this.#view.getUint32(this.#offset);
@@ -165,7 +187,10 @@ export default class TinyBufferReader {
     return value;
   }
 
-  /** @returns {number} The next unsigned 32-bit little-endian integer. */
+  /**
+   * Reads the next unsigned 32-bit little-endian integer.
+   * @returns {number} The next unsigned 32-bit little-endian integer.
+   */
   uint32le() {
     this.#require(4);
     const value = this.#view.getUint32(this.#offset, true);
@@ -173,7 +198,10 @@ export default class TinyBufferReader {
     return value;
   }
 
-  /** @returns {number} The next signed 32-bit little-endian integer. */
+  /**
+   * Reads the next signed 32-bit little-endian integer.
+   * @returns {number} The next signed 32-bit little-endian integer.
+   */
   int32le() {
     this.#require(4);
     const value = this.#view.getInt32(this.#offset, true);
@@ -193,9 +221,10 @@ export default class TinyBufferReader {
   }
 
   /**
-   * @param {number} length - The number of bytes to read.
-   * @returns {string} The decoded Latin-1 string.
-   */
+  * Reads a fixed-length string using Latin-1 encoding.
+  * @param {number} length - The number of bytes to read.
+  * @returns {string} The decoded Latin-1 string.
+  */
   ascii(length) {
     this.#require(length);
     let value = '';
@@ -207,9 +236,10 @@ export default class TinyBufferReader {
   }
 
   /**
-   * @param {number} length - The number of bytes to read.
-   * @returns {Uint8Array} A view over the requested bytes.
-   */
+  * Extracts a view over a specified range of bytes from the buffer.
+  * @param {number} length - The number of bytes to read.
+  * @returns {Uint8Array} A view over the requested bytes.
+  */
   bytes(length) {
     this.#require(length);
     const slice = this.#bytes.subarray(this.#offset, this.#offset + length);

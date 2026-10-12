@@ -6,7 +6,7 @@
 import { TinyNeedMoreData } from './TinyBufferReader.mjs';
 
 /**
- * A parsed ISO BMFF box header.
+ * Represents a parsed ISO BMFF box header.
  * @typedef {Object} IsoBox
  * @property {string} type - The 4-character box type.
  * @property {number} start - The offset of the first header byte.
@@ -45,11 +45,11 @@ const CONTAINERS = new Set([
 const FULL_BOX_CONTAINERS = new Set(['meta']);
 
 /**
- * Reads the header of the box that starts at the current offset.
- * @param {import('./TinyBufferReader.mjs').default} reader - The cursor.
- * @param {number} end - The offset after the last readable byte.
- * @returns {IsoBox} The parsed box header.
- * @throws {TinyNeedMoreData} If the header or the payload is truncated.
+ * Reads the header of the box starting at the current reader offset.
+ * @param {import('./TinyBufferReader.mjs').default} reader - The binary cursor used for reading.
+ * @param {number} end - The absolute offset marking the end of the readable buffer.
+ * @returns {IsoBox} The parsed box header containing metadata about the box.
+ * @throws {TinyNeedMoreData} If the buffer is truncated and cannot provide the full header or payload size.
  */
 export function readBox(reader, end) {
   const start = reader.offset;
@@ -76,11 +76,11 @@ export function readBox(reader, end) {
 }
 
 /**
- * Iterates over the sibling boxes in the `[start, end)` range.
- * @param {import('./TinyBufferReader.mjs').default} reader - The cursor.
- * @param {number} start - The offset of the first box.
- * @param {number} end - The offset after the last box.
- * @yields {IsoBox} Every complete box found in the range.
+ * A generator that iterates over all sibling boxes within the specified byte range.
+ * @param {import('./TinyBufferReader.mjs').default} reader - The binary cursor used for reading.
+ * @param {number} start - The absolute offset where the sequence of boxes begins.
+ * @param {number} end - The absolute offset marking the end of the range.
+ * @yields {IsoBox} Every complete ISO box found in the specified range.
  */
 export function* boxes(reader, start, end) {
   let cursor = start;
@@ -93,13 +93,13 @@ export function* boxes(reader, start, end) {
 }
 
 /**
- * Recursively searches for the first box whose type is in `types`.
- * @param {import('./TinyBufferReader.mjs').default} reader - The cursor.
- * @param {number} start - The offset of the first box.
- * @param {number} end - The offset after the last box.
- * @param {ReadonlySet<string>} types - The box types to match.
- * @param {number} [depth] - The current recursion depth.
- * @returns {IsoBox|null} The matching box, or null when it is not present.
+ * Recursively searches through the box tree for the first box that matches one of the specified types.
+ * @param {import('./TinyBufferReader.mjs').default} reader - The binary cursor used for reading.
+ * @param {number} start - The absolute offset where the search begins.
+ * @param {number} end - The absolute offset marking the end of the search range.
+ * @param {ReadonlySet<string>} types - A set of 4-character box types to match against.
+ * @param {number} [depth] - The current recursion depth, used to prevent infinite loops or stack overflows.
+ * @returns {IsoBox|null} The first matching box header found, or null if no match exists within the range.
  */
 export function findBox(reader, start, end, types, depth = 0) {
   if (depth > 8) {

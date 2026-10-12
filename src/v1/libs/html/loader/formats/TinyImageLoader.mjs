@@ -8,6 +8,7 @@ import TinyImageProbe from '../probe/TinyImageProbe.mjs';
 const EMPTY_GIF = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 
 /**
+ * A reference to the early decoder type used for extracting metadata from raw bytes.
  * @typedef {import('../TinyMediaLoader.mjs').MediaEarlyDecoder} MediaEarlyDecoder
  */
 
@@ -106,6 +107,7 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
+   * The intrinsic width of the image in pixels.
    * @returns {number} The intrinsic width in pixels.
    */
   get naturalWidth() {
@@ -113,6 +115,7 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
+   * The intrinsic height of the image in pixels.
    * @returns {number} The intrinsic height in pixels.
    */
   get naturalHeight() {
@@ -120,8 +123,9 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
-   * @returns {number} The width divided by the height, or 0 when unknown.
-   */
+  * The aspect ratio of the image (width / height).
+  * @returns {number} The width divided by the height, or 0 when unknown.
+  */
   get aspectRatio() {
     const height = this.naturalHeight;
     return height === 0 ? 0 : this.naturalWidth / height;

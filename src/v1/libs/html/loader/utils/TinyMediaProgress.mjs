@@ -41,6 +41,7 @@ class TinyMediaProgress {
   #rate = 0;
 
   /**
+   * Initializes a new progress tracker.
    * @param {number} [total] - The total number of bytes (0 when unknown).
    * @throws {RangeError} If `total` is not a positive number.
    */
@@ -60,6 +61,7 @@ class TinyMediaProgress {
   }
 
   /**
+   * Updates the total size of the media being loaded.
    * @param {number} value - The new total in bytes.
    * @throws {RangeError} If `value` is not a positive number.
    */
@@ -170,6 +172,7 @@ class TinyMediaProgress {
   }
 
   /**
+   * Returns a read-only snapshot of the current progress and derived metrics.
    * @returns {MediaProgressSnapshot} An immutable snapshot of the current state.
    */
   snapshot() {

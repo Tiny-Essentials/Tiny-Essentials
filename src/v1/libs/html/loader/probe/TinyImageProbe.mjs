@@ -10,19 +10,20 @@ import TinyBufferReader, { TinyNeedMoreData } from '../utils/TinyBufferReader.mj
 import { findBox } from '../utils/TinyIsoBox.mjs';
 
 /**
+ * Represents the intrinsic dimensions of an image, including the optional frame count for animated formats.
  * @typedef {Object} ImageProbeSize
  * @property {number} width - The display width in pixels.
  * @property {number} height - The display height in pixels.
- * @property {number} [frames] - The frames counter.
+ * @property {number} [frames] - The number of frames in the image, used for animated formats.
  */
 
 /**
- * A format descriptor.
+ * Describes an image format and how to identify and parse its dimensions.
  * @typedef {Object} ImageFormat
  * @property {string} name - The format identifier.
  * @property {string} mime - The canonical MIME type.
- * @property {(bytes: Uint8Array) => boolean} sniff - The signature test.
- * @property {(reader: TinyBufferReader) => ImageProbeSize | null} parse - The parser.
+ * @property {(bytes: Uint8Array) => boolean} sniff - A function that tests if the provided bytes match the format's signature.
+ * @property {(reader: TinyBufferReader) => ImageProbeSize | null} parse - A function that parses the container to extract image dimensions.
  */
 
 /**
@@ -38,23 +39,25 @@ const MAX_HEADER_BYTES = 64 * 1024;
 const JXL_RATIOS = Object.freeze([1, 1.2, 4 / 3, 1.5, 16 / 9, 1.25, 2]);
 
 /**
+ * Checks if a buffer starts with a specific byte signature at a given offset.
  * @param {Uint8Array} bytes - The buffer to test.
- * @param {readonly number[]} signature - The expected prefix.
- * @param {number} [offset] - The offset to test at.
- * @returns {boolean} True when the buffer starts with the signature.
+ * @param {readonly number[]} signature - The expected byte prefix.
+ * @param {number} [offset] - The offset at which to perform the test.
+ * @returns {boolean} True when the buffer starts with the signature at the specified offset.
  */
-function matches(bytes, signature, offset = 0) {
+ function matches(bytes, signature, offset = 0) {
   if (bytes.length < offset + signature.length) {
     return false;
   }
   return signature.every((byte, index) => bytes[offset + index] === byte);
 }
 
-/**
- * @param {TinyBufferReader} reader - The cursor.
- * @returns {ImageProbeSize|null} The dimensions.
- */
-function parsePng(reader) {
+ /**
+  * Parses a PNG image to extract its dimensions and frame count.
+  * @param {TinyBufferReader} reader - The binary cursor used for reading.
+  * @returns {ImageProbeSize|null} The extracted dimensions, or null if the PNG is malformed.
+  */
+ function parsePng(reader) {
   reader.seek(16);
   const width = reader.uint32();
   const height = reader.uint32();
@@ -64,44 +67,48 @@ function parsePng(reader) {
   return { width, height, frames: countApngFrames(reader.buffer) };
 }
 
-/**
- * @param {TinyBufferReader} reader - The cursor.
- * @returns {ImageProbeSize|null} The dimensions.
- */
-function parseGif(reader) {
+ /**
+  * Parses a GIF image to extract its dimensions.
+  * @param {TinyBufferReader} reader - The binary cursor used for reading.
+  * @returns {ImageProbeSize|null} The extracted dimensions, or null if the GIF is malformed.
+  */
+ function parseGif(reader) {
   reader.seek(6);
   const width = reader.uint16le();
   const height = reader.uint16le();
   return width > 0 && height > 0 ? { width, height } : null;
 }
 
-/**
- * @param {TinyBufferReader} reader - The cursor.
- * @returns {ImageProbeSize|null} The dimensions.
- */
-function parseBmp(reader) {
+ /**
+  * Parses a BMP image to extract its dimensions.
+  * @param {TinyBufferReader} reader - The binary cursor used for reading.
+  * @returns {ImageProbeSize|null} The extracted dimensions, or null if the BMP is malformed.
+  */
+ function parseBmp(reader) {
   reader.seek(18);
   const width = reader.int32le();
   const height = Math.abs(reader.int32le());
   return width > 0 && height > 0 ? { width, height } : null;
 }
 
-/**
- * @param {TinyBufferReader} reader - The cursor.
- * @returns {ImageProbeSize|null} The dimensions.
- */
-function parseIco(reader) {
+ /**
+  * Parses an ICO image to extract its dimensions.
+  * @param {TinyBufferReader} reader - The binary cursor used for reading.
+  * @returns {ImageProbeSize|null} The extracted dimensions.
+  */
+ function parseIco(reader) {
   reader.seek(6);
   const width = reader.uint8() || 256;
   const height = reader.uint8() || 256;
   return { width, height };
 }
 
-/**
- * @param {TinyBufferReader} reader - The cursor.
- * @returns {ImageProbeSize|null} The dimensions.
- */
-function parseJpeg(reader) {
+ /**
+  * Parses a JPEG image to extract its dimensions.
+  * @param {TinyBufferReader} reader - The binary cursor used for reading.
+  * @returns {ImageProbeSize|null} The extracted dimensions, or null if no SOF marker is found.
+  */
+ function parseJpeg(reader) {
   const end = reader.limit;
   reader.seek(2);
   while (reader.offset + 4 <= end) {
@@ -132,11 +139,12 @@ function parseJpeg(reader) {
   return null;
 }
 
-/**
- * @param {TinyBufferReader} reader - The cursor.
- * @returns {ImageProbeSize|null} The dimensions.
- */
-function parseWebp(reader) {
+ /**
+  * Parses a WebP image to extract its dimensions.
+  * @param {TinyBufferReader} reader - The binary cursor used for reading.
+  * @returns {ImageProbeSize|null} The extracted dimensions, or null if the format is unsupported.
+  */
+ function parseWebp(reader) {
   reader.seek(12);
   const tag = reader.ascii(4);
   if (tag === 'VP8 ') {
@@ -157,11 +165,12 @@ function parseWebp(reader) {
   return null;
 }
 
-/**
- * @param {TinyBufferReader} reader - The cursor.
- * @returns {ImageProbeSize|null} The dimensions.
- */
-function parseTiff(reader) {
+ /**
+  * Parses a TIFF image to extract its dimensions.
+  * @param {TinyBufferReader} reader - The binary cursor used for reading.
+  * @returns {ImageProbeSize|null} The extracted dimensions, or null if not found.
+  */
+ function parseTiff(reader) {
   reader.seek(0);
   const little = reader.uint16() === 0x4949;
   reader.seek(4);
@@ -192,11 +201,12 @@ function parseTiff(reader) {
   return width > 0 && height > 0 ? { width, height } : null;
 }
 
-/**
- * @param {TinyBufferReader} reader - The cursor.
- * @returns {ImageProbeSize|null} The dimensions.
- */
-function parseIsoBmff(reader) {
+ /**
+  * Parses an ISO BMFF image (e.g. AVIF, HEIC) to extract dimensions.
+  * @param {TinyBufferReader} reader - The binary cursor used for reading.
+  * @returns {ImageProbeSize|null} The extracted dimensions, or null if not found.
+  */
+ function parseIsoBmff(reader) {
   const end = reader.limit;
   const ispe = findBox(reader, 0, end, new Set(['ispe']));
   if (!ispe) {
@@ -208,11 +218,12 @@ function parseIsoBmff(reader) {
   return width > 0 && height > 0 ? { width, height } : null;
 }
 
-/**
- * @param {TinyBufferReader} reader - The cursor.
- * @returns {ImageProbeSize|null} The dimensions.
- */
-function parseSvg(reader) {
+ /**
+  * Parses an SVG image to extract dimensions from the `<svg>` tag attributes or `viewBox`.
+  * @param {TinyBufferReader} reader - The binary cursor used for reading.
+  * @returns {ImageProbeSize|null} The extracted dimensions, or null if not found.
+  */
+ function parseSvg(reader) {
   const length = Math.min(reader.limit, 8192);
   reader.seek(0);
   const text = new TextDecoder('utf-8').decode(reader.bytes(length));
@@ -250,11 +261,12 @@ function parseSvg(reader) {
   return null;
 }
 
-/**
- * @param {TinyBufferReader} reader - The cursor.
- * @returns {ImageProbeSize|null} The dimensions.
- */
-function parseJxl(reader) {
+ /**
+  * Parses a JPEG XL image to extract its dimensions.
+  * @param {TinyBufferReader} reader - The binary cursor used for reading.
+  * @returns {ImageProbeSize|null} The extracted dimensions, or null if not found.
+  */
+ function parseJxl(reader) {
   reader.seek(0);
   const b0 = reader.uint8();
   const b1 = reader.uint8();
@@ -308,22 +320,24 @@ function parseJxl(reader) {
   return { width: Math.round(height * JXL_RATIOS[ratio]), height };
 }
 
-/**
- * @param {TinyBufferReader} reader - The cursor.
- * @returns {ImageProbeSize|null} The dimensions.
- */
-function parseQoi(reader) {
+ /**
+  * Parses a QOI image to extract its dimensions.
+  * @param {TinyBufferReader} reader - The binary cursor used for reading.
+  * @returns {ImageProbeSize|null} The extracted dimensions, or null if malformed.
+  */
+ function parseQoi(reader) {
   reader.seek(4);
   const width = reader.uint32();
   const height = reader.uint32();
   return width > 0 && height > 0 ? { width, height } : null;
 }
 
-/**
- * @param {TinyBufferReader} reader - The cursor.
- * @returns {ImageProbeSize|null} The dimensions.
- */
-function parsePsd(reader) {
+ /**
+  * Parses a PSD image to extract its dimensions.
+  * @param {TinyBufferReader} reader - The binary cursor used for reading.
+  * @returns {ImageProbeSize|null} The extracted dimensions, or null if not found.
+  */
+ function parsePsd(reader) {
   reader.seek(14);
   const height = reader.uint32();
   const width = reader.uint32();

@@ -134,24 +134,29 @@ import TinyMediaCache from './utils/TinyMediaCache.mjs';
  */
 
 /**
+ * @typedef {'HEAD'|'GET'|'PROBE'|'DECODE'|'CACHE'|'LOADED_METADATA'|'DURATION_CHANGE'} MediaMetadataType
+ */
+
+/**
+ * Describes the events emitted by the {@link TinyMediaLoader}.
  * @typedef {Object} MediaLoaderEvents
- * @property {(payload: { src: string }) => void} loadstart
- * @property {(metadata: MediaMetadata) => void} loaded
- * @property {(payload: { src: string, state: string }) => void} loadend
- * @property {(payload: { src: string }) => void} abort
- * @property {(error: Error) => void} error
- * @property {(payload: { src: string, timeout: number }) => void} timeout
- * @property {(payload: import('./utils/TinyMediaProgress.mjs').MediaProgressSnapshot) => void} progress
- * @property {(metadata: MediaMetadata, type: 'HEAD'|'GET'|'PROBE'|'DECODE'|'CACHE'|'LOADED_METADATA'|'DURATION_CHANGE') => void} metadata
- * @property {(response: Response) => void} response
- * @property {(response: Response) => void} headResponse
- * @property {(payload: MediaSrcChangePayload) => void} srcchange
- * @property {(payload: MediaSrcTransitionPayload) => void} srctransition
- * @property {(entry: import('./utils/TinyMediaCache.mjs').MediaCacheEntry) => void} cachemiss
- * @property {(entry: import('./utils/TinyMediaCache.mjs').MediaCacheEntry) => void} cachehit
- * @property {(payload: { state: string, previous: string, src: string }) => void} statechange
- * @property {(payload: { chunk: Uint8Array, loaded: number, total: number }) => void} chunk
- * @property {() => void} destroy
+ * @property {(payload: { src: string }) => void} loadstart - Emitted when a media load process begins.
+ * @property {(metadata: MediaMetadata) => void} loaded - Emitted when the media has been fully loaded and decoded.
+ * @property {(payload: { src: string, state: string }) => void} loadend - Emitted when the loading process finishes, regardless of success or failure.
+ * @property {(payload: { src: string }) => void} abort - Emitted when the current load operation is cancelled.
+ * @property {(error: Error) => void} error - Emitted when an unrecoverable error occurs during loading.
+ * @property {(payload: { src: string, timeout: number }) => void} timeout - Emitted when the load operation exceeds the configured timeout.
+ * @property {(payload: import('./utils/TinyMediaProgress.mjs').MediaProgressSnapshot) => void} progress - Emitted periodically to provide download progress updates.
+ * @property {(metadata: MediaMetadata, type: MediaMetadataType) => void} metadata - Emitted whenever media metadata is partially or fully resolved.
+ * @property {(response: Response) => void} response - Emitted when the main HTTP response for the media resource is received.
+ * @property {(response: Response) => void} headResponse - Emitted when the HTTP HEAD response is received.
+ * @property {(payload: MediaSrcChangePayload) => void} srcchange - Emitted when the source URL of the loader is changed.
+ * @property {(payload: MediaSrcTransitionPayload) => void} srctransition - Emitted when the element's source swaps between a network URL and an internal object URL.
+ * @property {(entry: import('./utils/TinyMediaCache.mjs').MediaCacheEntry) => void} cachemiss - Emitted when the resource is not found in the cache.
+ * @property {(entry: import('./utils/TinyMediaCache.mjs').MediaCacheEntry) => void} cachehit - Emitted when the resource is successfully retrieved from the cache.
+ * @property {(payload: { state: string, previous: string, src: string }) => void} statechange - Emitted when the loader transitions from one state to another.
+ * @property {(payload: { chunk: Uint8Array, loaded: number, total: number }) => void} chunk - Emitted every time a binary data chunk is received during streaming.
+ * @property {() => void} destroy - Emitted when the loader is destroyed and its resources are released.
  */
 
 /** @type {new () => ICustomEventEmitter<MediaLoaderEvents>} */
@@ -320,10 +325,18 @@ class TinyMediaLoader extends TypedEmitter {
     }
   }
 
+  /**
+   * The HTTP response received from the media resource.
+   * @returns {Response|null} The response object, or null if no response has been received yet.
+   */
   get response() {
     return this.#response;
   }
 
+  /**
+   * The HTTP response received from the preliminary HEAD request.
+   * @returns {Response|null} The response object, or null if no HEAD request was performed or received.
+   */
   get headResponse() {
     return this.#headResponse;
   }
@@ -547,9 +560,12 @@ class TinyMediaLoader extends TypedEmitter {
   }
 
   /**
+   * Registers a decoder factory for a specific MIME type.
+   * This allows the loader to instantiate the correct decoder for different media formats.
    * @protected
-   * @param {string} mime
-   * @param {DecoderCreator} callback
+   * @param {string} mime - The MIME type (or prefix) that this decoder handles.
+   * @param {DecoderCreator} callback - The factory function used to create the decoder.
+   * @returns {void}
    */
   _insertDecoder(mime, callback) {
     this.#decoders.set(mime, callback);
@@ -585,7 +601,7 @@ class TinyMediaLoader extends TypedEmitter {
    * resolve a dimension never clobbers a value that was already known.
    * @protected
    * @param {Partial<MediaMetadata>} patch - The values to merge.
-   * @param {'HEAD'|'GET'|'PROBE'|'DECODE'|'CACHE'|'LOADED_METADATA'|'DURATION_CHANGE'} type - The action type.
+   * @param {MediaMetadataType} type - The action type.
    * @returns {void}
    * @throws {TypeError} If `patch` is not a plain object.
    */
@@ -1410,8 +1426,10 @@ class TinyMediaLoader extends TypedEmitter {
   }
 
   /**
-   * @param {Promise<*>} promise - The promise to guard.
-   * @returns {Promise<*>}
+   * Wraps a promise with a timeout. If the promise does not resolve within the
+   * configured timeout, the current load operation is aborted and the promise rejects.
+   * @param {Promise<*>} promise - The asynchronous operation to be guarded by the timeout.
+   * @returns {Promise<*>} A promise that resolves with the original result or rejects on timeout.
    */
   #withTimeout(promise) {
     if (this.#timeout <= 0) {
