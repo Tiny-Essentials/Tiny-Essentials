@@ -384,24 +384,35 @@ function renderMeta(entry) {
   const { loader, card } = entry;
   const target = $('[data-role="meta"]', card);
   const badge = $('[data-role="state"]', card);
+  
   if (!loader) {
     target.replaceChildren();
     badge.textContent = 'null';
     return;
   }
+
   const meta = loader.metadata;
   const element = loader.element;
+  
+  // Extrai as novas propriedades de animação caso existam no metadata
+  const hasAnim = meta.animation != null;
+  const frames = hasAnim ? meta.animation.frames : meta.frames || 0;
+  const duration = hasAnim ? meta.animation.duration / 1000 : meta.duration || 0;
+  const loopCount = hasAnim ? meta.animation.loopCount : '—';
+
   const rows = [
     ['size', `${formatBytes(meta.size)} (${meta.size} B)`],
     ['loadTime', `${Number(meta.loadTime).toFixed(1)} ms`],
     ['fromCache', String(meta.fromCache)],
     ['type', meta.type || '—'],
     ['dimensions', `${meta.width} × ${meta.height}`],
-    ['frames', String(meta.frames) || '0'],
-    ['duration', `${Number(meta.duration).toFixed(2)} s`],
+    ['frames', String(frames)],
+    ['duration', duration > 0 ? `${Number(duration).toFixed(2)} s` : 'NaN'],
+    ['loops', String(loopCount)],
     ['original-src', element?.getAttribute('original-src') ?? '—'],
     ['element.src', element?.getAttribute('src')?.slice(0, 42) ?? '—'],
   ];
+
   target.replaceChildren(
     ...rows.flatMap(([key, value]) => {
       const dt = document.createElement('dt');
@@ -412,6 +423,7 @@ function renderMeta(entry) {
       return [dt, dd];
     }),
   );
+
   badge.textContent = loader.state;
   card.dataset.status = loader.state;
 }
