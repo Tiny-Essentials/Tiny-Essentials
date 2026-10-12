@@ -515,6 +515,7 @@ class TinyImageLoader extends TinyMediaLoader {
         }
 
         if (!url) {
+          /** @type {Uint8Array<ArrayBufferLike>[]} */
           const outChunks = [];
           if (vp8x) outChunks.push(vp8x);
           if (anim) outChunks.push(anim);
@@ -559,6 +560,7 @@ class TinyImageLoader extends TinyMediaLoader {
     const preDataChunks = [];
     let iend = null;
     const frames = [];
+    /** @type {null|{ fctl: Uint8Array<ArrayBufferLike>; delay: number; dataChunks: ({ type: string, bytes: Uint8Array<ArrayBufferLike> })[] }} */
     let currentFrame = null;
     let seenIdatOrFctl = false;
 
@@ -647,6 +649,7 @@ class TinyImageLoader extends TinyMediaLoader {
           fctlView.setUint32(8, seq++);
           fctlView.setUint32(fctl.length - 4, this.#crc32(fctl.subarray(4, fctl.length - 4)));
 
+          /** @type {Uint8Array<ArrayBufferLike>[]} */
           const outChunks = [new Uint8Array(signature), ...preDataChunks, acTL, fctl];
 
           for (const chunk of frame.dataChunks) {
