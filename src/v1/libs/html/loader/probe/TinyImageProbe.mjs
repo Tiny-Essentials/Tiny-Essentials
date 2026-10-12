@@ -210,13 +210,16 @@ function parseSvg(reader) {
 }
 
 /**
- * @param {Uint8Array<ArrayBufferLike>} bytes
- * @param {number} offset
+ * Skips a GIF sub-block chain and returns the offset after its terminator.
+ * @param {Uint8Array} bytes - The full GIF stream.
+ * @param {number} offset - The first sub-block length byte.
+ * @returns {number} The offset after the terminator.
  */
 function skipGifSubBlocks(bytes, offset) {
   let cursor = offset;
   while (cursor < bytes.length) {
     const size = bytes[cursor];
+    if (size === undefined) break; // Protection against truncated/incomplete chunks
     cursor += 1;
     if (size === 0) return cursor;
     cursor += size;
@@ -239,14 +242,16 @@ function getGifAnimation(bytes) {
   let loopCount = 1;
   let hasLoop = false;
   let duration = 0;
+  let nextDelay = 100; // Browser default (100ms) if the frame doesn't provide a delay
 
   while (offset < bytes.length) {
     const block = bytes[offset];
-    if (block === 0x3b) break;
+    if (block === 0x3b) break; // Terminator (fim do GIF)
 
     if (block === 0x21) {
       const ext = bytes[offset + 1];
       if (ext === 0xff && bytes[offset + 2] === 11) {
+        // Application Extension (Loops)
         if (
           matches(
             bytes,
@@ -260,21 +265,41 @@ function getGifAnimation(bytes) {
             hasLoop = true;
           }
         }
-      } else if (ext === 0xf9) {
-        const delay = bytes[offset + 4] | (bytes[offset + 5] << 8);
-        duration += delay * 10;
+      } else if (ext === 0xf9 && bytes[offset + 2] === 4) {
+        // Graphic Control Extension (Delay)
+        let delay = bytes[offset + 4] | (bytes[offset + 5] << 8);
+
+        // Web clamping: Delays <= 1 (10ms) are forced to 10 (100ms)
+        if (delay <= 1) delay = 10;
+
+        nextDelay = delay * 10;
       }
       offset = skipGifSubBlocks(bytes, offset + 2);
     } else if (block === 0x2c) {
+      // Image Descriptor (Actual frame)
       frames += 1;
-      const localPacked = bytes[offset + 8];
-      offset += 11;
-      if (localPacked & 0x80) offset += 3 * (1 << ((localPacked & 0x07) + 1));
-      offset = skipGifSubBlocks(bytes, offset);
+      duration += nextDelay;
+      nextDelay = 100; // Reset for the next frame in case it doesn't have a GCE
+
+      // Read the packed field at the correct offset (+9)
+      const localPacked = bytes[offset + 9];
+
+      offset += 10; // Skip the 10 bytes of the image header
+
+      if (localPacked & 0x80) {
+        // Skip the Local Color Table (if it exists)
+        offset += 3 * (1 << ((localPacked & 0x07) + 1));
+      }
+
+      offset += 1; // Skip the 'LZW Minimum Code Size' byte
+      offset = skipGifSubBlocks(bytes, offset); // Skip the image pixels
     } else {
-      break;
+      break; // Unknown block, avoid infinite loops
     }
+
+    if (!offset || isNaN(offset)) break;
   }
+
   if (frames <= 1) return null;
   return { frames, loopCount: hasLoop ? loopCount : 1, duration };
 }

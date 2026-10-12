@@ -384,7 +384,7 @@ function renderMeta(entry) {
   const { loader, card } = entry;
   const target = $('[data-role="meta"]', card);
   const badge = $('[data-role="state"]', card);
-  
+
   if (!loader) {
     target.replaceChildren();
     badge.textContent = 'null';
@@ -393,7 +393,7 @@ function renderMeta(entry) {
 
   const meta = loader.metadata;
   const element = loader.element;
-  
+
   // Extrai as novas propriedades de animação caso existam no metadata
   const hasAnim = meta.animation != null;
   const frames = hasAnim ? meta.animation.frames : meta.frames || 0;
