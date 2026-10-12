@@ -5,6 +5,7 @@
  */
 
 import { EventEmitter } from 'events';
+/** @import { ICustomEventEmitter } from '../../../jsdoc/EventEmitter.mjs' */
 import TinyMediaProgress from './utils/TinyMediaProgress.mjs';
 import TinyMediaCache from './utils/TinyMediaCache.mjs';
 
@@ -133,13 +134,38 @@ import TinyMediaCache from './utils/TinyMediaCache.mjs';
  */
 
 /**
+ * @typedef {Object} MediaLoaderEvents
+ * @property {(payload: { src: string }) => void} loadstart
+ * @property {(metadata: MediaMetadata) => void} loaded
+ * @property {(payload: { src: string, state: string }) => void} loadend
+ * @property {(payload: { src: string }) => void} abort
+ * @property {(error: Error) => void} error
+ * @property {(payload: { src: string, timeout: number }) => void} timeout
+ * @property {(payload: import('./utils/TinyMediaProgress.mjs').MediaProgressSnapshot) => void} progress
+ * @property {(metadata: MediaMetadata, type: 'HEAD'|'GET'|'PROBE'|'DECODE'|'CACHE'|'LOADED_METADATA'|'DURATION_CHANGE') => void} metadata
+ * @property {(response: Response) => void} response
+ * @property {(response: Response) => void} headResponse
+ * @property {(payload: MediaSrcChangePayload) => void} srcchange
+ * @property {(payload: MediaSrcTransitionPayload) => void} srctransition
+ * @property {(entry: import('./utils/TinyMediaCache.mjs').MediaCacheEntry) => void} cachemiss
+ * @property {(entry: import('./utils/TinyMediaCache.mjs').MediaCacheEntry) => void} cachehit
+ * @property {(payload: { state: string, previous: string, src: string }) => void} statechange
+ * @property {(payload: { chunk: Uint8Array, loaded: number, total: number }) => void} chunk
+ * @property {() => void} destroy
+ */
+
+/** @type {new () => ICustomEventEmitter<MediaLoaderEvents>} */
+const TypedEmitter = /** @type {any} */ (EventEmitter);
+
+/**
  * Base class that orchestrates the full lifecycle of a media element.
  * It must be extended. Concrete subclasses implement `_createElement`,
  * `_startLoad`, `_getMetadataDetails`, `_abort` and `_cleanup`.
  * @abstract
  * @template {HTMLImageElement|HTMLVideoElement|HTMLAudioElement} HTMLMainElement
+ * @augments TypedEmitter
  */
-class TinyMediaLoader extends EventEmitter {
+class TinyMediaLoader extends TypedEmitter {
   /**
    * Immutable state machine values used by every media loader.
    */
@@ -597,7 +623,11 @@ class TinyMediaLoader extends EventEmitter {
    */
   _forwardEvents(element, events) {
     for (const name of events) {
-      this._on(element, name, (event) => this.emit(name, event));
+      this._on(element, name, (event) => {
+        /** @type {any} */
+        // @ts-ignore
+        this.emit(name, event);
+      });
     }
   }
 
@@ -733,7 +763,7 @@ class TinyMediaLoader extends EventEmitter {
     this.#closeDecoder();
     this._releaseFromCache();
     this.#decoders.clear();
-    this.emit('destroy', undefined);
+    this.emit('destroy');
     this.removeAllListeners();
     this.#element = null;
   }

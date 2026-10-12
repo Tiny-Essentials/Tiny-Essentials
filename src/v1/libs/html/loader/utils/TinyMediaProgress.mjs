@@ -17,6 +17,8 @@
  * @property {number} elapsed - The elapsed time in milliseconds.
  * @property {number} eta - The estimated time remaining in milliseconds.
  * @property {number} chunks - The number of chunks received so far.
+ * @property {number} [width] - The intrinsic width of the media.
+ * @property {number} [height] - The intrinsic height of the media.
  */
 
 /**
