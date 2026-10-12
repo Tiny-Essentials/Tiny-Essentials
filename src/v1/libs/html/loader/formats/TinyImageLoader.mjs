@@ -85,7 +85,16 @@ class TinyImageLoader extends TinyMediaLoader {
             this._emitMetadata(size, 'PROBE');
           }
         },
-        close: () => probe.close(),
+        close: () => {
+          // Quando o download/stream termina, chamamos o finalize()
+          // para coletar toda a metadata de animação acumulada.
+          const animationData = probe.finalize();
+          if (animationData) {
+            // Emite as informações avançadas (frames, loopCount, duration)
+            this._emitMetadata(animationData, 'PROBE_ANIMATION');
+          }
+          probe.close();
+        },
       };
     });
   }
@@ -123,9 +132,9 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
-  * The aspect ratio of the image (width / height).
-  * @returns {number} The width divided by the height, or 0 when unknown.
-  */
+   * The aspect ratio of the image (width / height).
+   * @returns {number} The width divided by the height, or 0 when unknown.
+   */
   get aspectRatio() {
     const height = this.naturalHeight;
     return height === 0 ? 0 : this.naturalWidth / height;

@@ -53,7 +53,7 @@ import TinyMediaCache from './utils/TinyMediaCache.mjs';
  * @property {boolean} fromCache - Whether the media was served from the cache.
  * @property {number} loadTime - The total load time in milliseconds.
  * @property {number} timestamp - The epoch timestamp when the load finished.
- * @property {number} frames - The number of frames (1 for still images, NaN when unknown).
+ * @property {import('./probe/TinyImageProbe.mjs').AnimationProbeData | null} animation - The number of frames (1 for still images, NaN when unknown).
  * @property {Record<string, string>} [httpHeaders] - All HTTP response headers captured during the fetch.
  */
 
@@ -134,7 +134,7 @@ import TinyMediaCache from './utils/TinyMediaCache.mjs';
  */
 
 /**
- * @typedef {'HEAD'|'GET'|'PROBE'|'DECODE'|'CACHE'|'LOADED_METADATA'|'DURATION_CHANGE'} MediaMetadataType
+ * @typedef {'HEAD'|'GET'|'PROBE'|'DECODE'|'CACHE'|'LOADED_METADATA'|'DURATION_CHANGE'|'PROBE_ANIMATION'} MediaMetadataType
  */
 
 /**
@@ -260,7 +260,7 @@ class TinyMediaLoader extends TypedEmitter {
     fromCache: false,
     loadTime: 0,
     timestamp: 0,
-    frames: NaN,
+    animation: null,
   };
 
   /**
@@ -1283,7 +1283,7 @@ class TinyMediaLoader extends TypedEmitter {
       fromCache: false,
       loadTime: 0,
       timestamp: 0,
-      frames: NaN,
+      animation: null,
       httpHeaders: {},
     };
   }
@@ -1419,7 +1419,7 @@ class TinyMediaLoader extends TypedEmitter {
       fromCache: this.#cacheHint || this._detectCache(),
       loadTime: this.#endTime - this.#startTime,
       timestamp: Date.now(),
-      frames: NaN,
+      animation: null,
       ...this._getMetadataDetails(),
       ...this.#partial,
     };
