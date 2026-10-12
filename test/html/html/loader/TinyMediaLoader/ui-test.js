@@ -201,6 +201,7 @@ function readConfig() {
     timeout: numberOf('cfg-timeout', 30000),
     crossOrigin: byId('cfg-crossorigin').value || null,
     preload: byId('cfg-preload').value,
+    animationControl: byId('cfg-animation').value,
     stream: isChecked('cfg-stream'),
     progressive: isChecked('cfg-progressive'),
     autoReload: isChecked('cfg-autoreload'),
@@ -242,7 +243,7 @@ function detectKindByExtension(src) {
  * o cabeçalho do servidor ou extraindo os Magic Numbers diretamente do arquivo.
  */
 async function detectKindByContent(url) {
-  // 1. Tenta descobrir pelo Content-Type via requisição HEAD (Padrão mais seguro)
+  // 1. Tenta descobrir pelo Content-Type via requisição HEAD
   try {
     const response = await fetch(getCleanUrl(url), { method: 'HEAD' });
     const contentType = response.headers.get('content-type');
@@ -252,10 +253,10 @@ async function detectKindByContent(url) {
       if (contentType.startsWith('audio/')) return 'audio';
     }
   } catch (e) {
-    // Falha silenciosa: O servidor pode não suportar HEAD ou ter CORS restrito.
+    // Falha silenciosa
   }
 
-  // 2. Fallback: Lê os primeiros 64 bytes e identifica a assinatura do arquivo (Magic Numbers)
+  // 2. Fallback: Magic Numbers
   try {
     const response = await fetch(url, {
       headers: { Range: 'bytes=0-64' },
@@ -264,7 +265,6 @@ async function detectKindByContent(url) {
     if (response.ok || response.status === 206) {
       const buffer = await response.arrayBuffer();
       const bytes = new Uint8Array(buffer);
-
       const check = (sig, offset = 0) => sig.every((b, i) => bytes[offset + i] === b);
 
       // Assinaturas de Imagem
@@ -275,7 +275,7 @@ async function detectKindByContent(url) {
       if (check([0x42, 0x4d])) return 'image'; // BMP
 
       // Assinaturas de Áudio puro
-      if (check([0x49, 0x44, 0x33]) || check([0xff, 0xfb])) return 'audio'; // MP3 (ID3 ou Header)
+      if (check([0x49, 0x44, 0x33]) || check([0xff, 0xfb])) return 'audio'; // MP3
       if (check([0x66, 0x4c, 0x61, 0x43])) return 'audio'; // FLAC
       if (check([0x52, 0x49, 0x46, 0x46]) && check([0x57, 0x41, 0x56, 0x45], 8)) return 'audio'; // WAV
 
@@ -290,17 +290,15 @@ async function detectKindByContent(url) {
       if (check([0x46, 0x4c, 0x56, 0x01])) return 'video'; // FLV
     }
   } catch (e) {
-    // Falha silenciosa: A rede falhou em baixar o chunk
+    // Falha silenciosa
   }
 
-  // 3. Último recurso absoluto: extensão da URL
+  // 3. Extensão da URL
   return detectKindByExtension(url);
 }
 
 /**
- * Indicates whether a source must bypass the throttled endpoint. The `/__slow`
- * route only serves files that live under the public directory, so external
- * origins, data URLs and blob URLs are used as is.
+ * Indicates whether a source must bypass the throttled endpoint.
  * @param {string} raw - The raw source URL.
  * @returns {boolean} True when the source must not be wrapped.
  */
@@ -309,9 +307,7 @@ function isExternal(raw) {
 }
 
 /**
- * Wraps a source in the throttled endpoint when the toggle is on. External
- * sources are returned untouched because the development server cannot proxy
- * them.
+ * Wraps a source in the throttled endpoint when the toggle is on.
  * @param {string} raw - The original source URL.
  * @returns {string} The URL the loader must fetch.
  */
@@ -369,6 +365,18 @@ function createCard(id, kind, src) {
       <button class="btn" data-role="reload">reload()</button>
       <button class="btn btn--danger" data-role="destroy">destroy()</button>
     </div>
+    ${
+      kind === 'image'
+        ? `
+        <div class="card__actions card__actions--anim">
+          <button class="btn btn--ghost" data-role="play" title="Play (Controlled mode only)">▶</button>
+          <button class="btn btn--ghost" data-role="pause" title="Pause (Controlled mode only)">⏸</button>
+          <button class="btn btn--ghost" data-role="freeze" title="Freeze frame">❄</button>
+          <button class="btn btn--ghost" data-role="unfreeze" title="Unfreeze">🔥</button>
+          <input type="number" class="card__rate" data-role="rate" value="1.0" step="0.25" min="0.1" title="Playback Rate (Controlled)" />
+        </div>`
+        : ''
+    }
     <ol class="timeline" data-role="timeline"></ol>
   `;
   card.title = src;
@@ -450,6 +458,7 @@ function pushTimeline(entry, label) {
  */
 function wire(entry) {
   const { loader, card, id } = entry;
+
   for (const name of CUSTOM_EVENTS) {
     loader.on(name, (payload) => {
       pushTimeline(entry, name);
@@ -476,16 +485,49 @@ function wire(entry) {
     if (isChecked('cfg-verbose'))
       log('info', `[#${id}] progress ${snapshot.percent.toFixed(1)}%`, snapshot);
   });
+
+  // Action Buttons Delegation
   card.addEventListener('click', (event) => {
     const button = event.target.closest('[data-role]');
     if (!button) return;
     const role = button.getAttribute('data-role');
+
+    // Core Actions
     if (role === 'remove') removeInstance(id);
     if (role === 'load') loadInstance(id);
     if (role === 'abort') abortInstance(id);
     if (role === 'reload') reloadInstance(id);
     if (role === 'destroy') destroyInstance(id);
+
+    // Animation Actions
+    if (role === 'play' && typeof loader.play === 'function') {
+      loader.play();
+      log('info', `[#${id}] play()`);
+    }
+    if (role === 'pause' && typeof loader.pause === 'function') {
+      loader.pause();
+      log('info', `[#${id}] pause()`);
+    }
+    if (role === 'freeze' && typeof loader.freeze === 'function') {
+      loader.freeze();
+      log('info', `[#${id}] freeze()`);
+    }
+    if (role === 'unfreeze' && typeof loader.unfreeze === 'function') {
+      loader.unfreeze();
+      log('info', `[#${id}] unfreeze()`);
+    }
   });
+
+  // Animation PlaybackRate Binding
+  const rateInput = card.querySelector('[data-role="rate"]');
+  if (rateInput) {
+    rateInput.addEventListener('change', (e) => {
+      if ('playbackRate' in loader) {
+        loader.playbackRate = Number(e.target.value);
+        log('info', `[#${id}] playbackRate set to`, loader.playbackRate);
+      }
+    });
+  }
 }
 
 /**
@@ -519,6 +561,7 @@ async function spawn(config) {
   };
   if (kind === 'image') {
     options.decoding = 'async';
+    options.animationControl = config.animationControl; // Paramêtro avançado de Animação
   } else {
     options.preload = config.preload;
     options.autoplay = config.autoplay;
@@ -701,7 +744,6 @@ $('#btn-progress-construct').addEventListener('click', () => {
   log('success', 'new TinyMediaProgress()', progress.snapshot());
   printProgress();
 });
-
 $$('[data-progress]').forEach((button) => {
   button.addEventListener('click', () => {
     const action = button.getAttribute('data-progress');

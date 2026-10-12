@@ -707,6 +707,47 @@ input::placeholder {
   display: none;
 }
 
+.card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.card__actions .btn {
+  flex: 1 1 auto;
+  padding: 5px 8px;
+  font-size: 11px;
+}
+
+.card__actions--anim {
+  background: var(--bg-app);
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border-soft);
+  align-items: center;
+}
+
+.card__rate {
+  width: 56px;
+  padding: 3px 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+
+.card__rate:focus {
+  border-color: var(--accent);
+}
+
+.card .kv {
+  grid-template-columns: 88px minmax(0, 1fr);
+  font-size: 11px;
+}
+
 /* ── Table ───────────────────────────────────────────────────── */
 
 .table-wrap {

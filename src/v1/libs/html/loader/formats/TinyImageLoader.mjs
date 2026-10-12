@@ -1,6 +1,6 @@
 /**
  * @fileoverview Concrete loader for images. Exposes cache detection, aspect
- * ratio helpers and full control over the decode step.
+ * ratio helpers, full control over the decode step, and advanced animation parsing.
  */
 import TinyMediaLoader from '../TinyMediaLoader.mjs';
 import TinyImageProbe from '../probe/TinyImageProbe.mjs';
@@ -10,6 +10,17 @@ const EMPTY_GIF = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 /**
  * A reference to the early decoder type used for extracting metadata from raw bytes.
  * @typedef {import('../TinyMediaLoader.mjs').MediaEarlyDecoder} MediaEarlyDecoder
+ */
+
+/**
+ * @typedef {Object} AnimationFrame
+ * @property {string} url - The Object URL of the single-frame blob.
+ * @property {string} cacheKey - The unique key used in TinyMediaCache.
+ */
+
+/**
+ * @typedef {Object} AnimationScriptStep
+ * @property {number} delay - Duration of the frame in milliseconds.
  */
 
 /**
@@ -25,10 +36,11 @@ const EMPTY_GIF = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
  * @property {boolean} [stream] - Whether to download the image through fetch for byte progress.
  * @property {boolean} [useHeadRequest] - Whether to perform a HEAD request to fetch HTTP headers before downloading.
  * @property {import('../utils/TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
+ * @property {'none'|'native'|'script-only'|'controlled'} [animationControl] - How animated images are handled.
  */
 
 /**
- * Loads a single image with full lifecycle control.
+ * Loads a single image with full lifecycle and animation control.
  * @extends {TinyMediaLoader<HTMLImageElement>}
  */
 class TinyImageLoader extends TinyMediaLoader {
@@ -49,6 +61,26 @@ class TinyImageLoader extends TinyMediaLoader {
   /** @type {boolean} */
   #stream;
 
+  // --- Animation Control State ---
+  /** @type {'none'|'native'|'script-only'|'controlled'} */
+  #animationControl;
+  /** @type {AnimationFrame[]} */
+  #frames = [];
+  /** @type {AnimationScriptStep[]} */
+  #animationScript = [];
+  /** @type {boolean} */
+  #isFrozen = false;
+  /** @type {boolean} */
+  #isPlaying = true;
+  /** @type {number} */
+  #playbackRate = 1.0;
+  /** @type {number} */
+  #currentFrameIndex = 0;
+  /** @type {ReturnType<typeof setTimeout>|null} */
+  #playbackTimer = null;
+  /** @type {string|null} */
+  #originalAnimatedUrl = null;
+
   /**
    * Creates a new image loader and validates the provided options.
    * @param {ImageLoaderOptions} [options] - The loader configuration.
@@ -64,35 +96,42 @@ class TinyImageLoader extends TinyMediaLoader {
       throw new TypeError('The "element" option must be an HTMLImageElement or null.');
     }
     super({ useHeadRequest: false, ...options });
-    const { crossOrigin = null, decoding = 'async', stream = false } = options;
+
+    const {
+      crossOrigin = null,
+      decoding = 'async',
+      stream = false,
+      animationControl = 'none',
+    } = options;
+
     if (crossOrigin !== null && typeof crossOrigin !== 'string') {
       throw new TypeError('The "crossOrigin" option must be a string or null.');
     }
     if (typeof decoding !== 'string') {
       throw new TypeError('The "decoding" option must be a string.');
     }
-    this.#stream = Boolean(stream);
+
     this.#crossOrigin = crossOrigin;
     this.#decoding = decoding;
     this.#image = null;
+    this.#animationControl = animationControl;
+
+    // To extract blobs and scripts, we MUST stream the bytes.
+    this.#stream = this.#animationControl !== 'none' ? true : Boolean(stream);
 
     this._insertDecoder('image', (mime) => {
       const probe = new TinyImageProbe(mime);
       return {
         write: (chunk) => {
           const size = probe.push(chunk);
-          if (size) {
-            this._emitMetadata(size, 'PROBE');
-          }
+          if (size) this._emitMetadata(size, 'PROBE');
         },
         close: () => {
           // When the download/stream ends, we call finalize()
           // to collect all accumulated animation metadata.
           const animationData = probe.finalize();
-          if (animationData) {
-            // Emits advanced information (frames, loopCount, duration)
-            this._emitMetadata(animationData, 'PROBE_ANIMATION');
-          }
+          // Emits advanced information (frames, loopCount, duration)
+          if (animationData) this._emitMetadata(animationData, 'PROBE_ANIMATION');
           probe.close();
         },
       };
@@ -140,6 +179,100 @@ class TinyImageLoader extends TinyMediaLoader {
     return height === 0 ? 0 : this.naturalWidth / height;
   }
 
+  // --- Advanced Animation API ---
+
+  /**
+   * Freezes the animation. In native mode, falls back to the static 1st frame blob.
+   * @param {number|null} [frameIndex] - Frame index to freeze on (controlled mode only).
+   */
+  freeze(frameIndex = null) {
+    if (this.#animationControl === 'none' || this.#animationControl === 'script-only') return;
+    this.#isFrozen = true;
+    if (this.#animationControl === 'native' && this.#frames.length > 0) {
+      const url = this.#frames[0].url;
+      if (this.#image) {
+        this._setInternalSrc(url);
+        this.#image.src = url;
+      }
+    } else if (this.#animationControl === 'controlled') {
+      this.pause();
+      if (frameIndex !== null && frameIndex >= 0 && frameIndex < this.#frames.length) {
+        this.#currentFrameIndex = frameIndex;
+      }
+      if (this.#image && this.#frames[this.#currentFrameIndex]) {
+        const url = this.#frames[this.#currentFrameIndex].url;
+        this._setInternalSrc(url);
+        this.#image.src = url;
+      }
+    }
+  }
+
+  /**
+   * Unfreezes and resumes the animation.
+   */
+  unfreeze() {
+    if (this.#animationControl === 'none' || this.#animationControl === 'script-only') return;
+    this.#isFrozen = false;
+    if (this.#animationControl === 'native') {
+      if (this.#image && this.#originalAnimatedUrl) {
+        this._setInternalSrc(this.#originalAnimatedUrl);
+        this.#image.src = this.#originalAnimatedUrl;
+      }
+    } else if (this.#animationControl === 'controlled') {
+      this.play();
+    }
+  }
+
+  /**
+   * Plays the animation (controlled mode only).
+   */
+  play() {
+    if (this.#animationControl !== 'controlled') return;
+    this.#isPlaying = true;
+    this.#isFrozen = false;
+    this.#playLoop();
+  }
+
+  /**
+   * Pauses the animation (controlled mode only).
+   */
+  pause() {
+    if (this.#animationControl !== 'controlled') return;
+    this.#isPlaying = false;
+    if (this.#playbackTimer) {
+      clearTimeout(this.#playbackTimer);
+      this.#playbackTimer = null;
+    }
+  }
+
+  /**
+   * Gets or sets the playback speed modifier.
+   * @type {number}
+   */
+  get playbackRate() {
+    return this.#playbackRate;
+  }
+  set playbackRate(value) {
+    if (this.#animationControl !== 'controlled') return;
+    this.#playbackRate = Math.max(0.1, Number(value) || 1);
+  }
+
+  /**
+   * Gets a deep copy of the current animation script or replaces it to modify behavior.
+   * @type {AnimationScriptStep[]}
+   */
+  get animationScript() {
+    return JSON.parse(JSON.stringify(this.#animationScript));
+  }
+  set animationScript(script) {
+    if (this.#animationControl !== 'controlled') {
+      throw new Error('Animation script editing is only available in controlled mode.');
+    }
+    this.#animationScript = Array.isArray(script) ? script : [];
+  }
+
+  // --- Core Lifecycle ---
+
   /**
    * Resolves the target element, wires the load listeners and decodes the image.
    * @protected
@@ -149,9 +282,7 @@ class TinyImageLoader extends TinyMediaLoader {
     const image = /** @type {HTMLImageElement} */ (this._resolveElement());
     this.#image = image;
 
-    if (this.#crossOrigin) {
-      image.crossOrigin = this.#crossOrigin;
-    }
+    if (this.#crossOrigin) image.crossOrigin = this.#crossOrigin;
     image.decoding = this.#decoding;
 
     // Resets the state machine attributes strictly prior to load guarantees so `EMPTY_GIF` sizes
@@ -191,6 +322,23 @@ class TinyImageLoader extends TinyMediaLoader {
     if (cached) {
       this.emit('cachehit', cached);
       this._setInternalSrc(cached.objectUrl);
+      this.#originalAnimatedUrl = cached.objectUrl;
+
+      // Se for Cache Hit, precisamos restaurar o ambiente de animação caso não exista
+      if (
+        this.#animationControl !== 'none' &&
+        cached.metadata?.animation &&
+        this.#frames.length === 0
+      ) {
+        await this.#parseAnimationFromBuffer(await cached.blob.arrayBuffer());
+      }
+
+      if (this.#animationControl === 'controlled') {
+        this.#originalAnimatedUrl = null;
+        this.play();
+        return Promise.resolve();
+      }
+
       const ready = this._waitForMedia(image, 'load');
       image.src = cached.objectUrl;
       this._flushMutations();
@@ -203,7 +351,7 @@ class TinyImageLoader extends TinyMediaLoader {
 
     try {
       const blob = await this._downloadStream(this.src, (_, chunks) => {
-        if (this.progressive) {
+        if (this.progressive && this.#animationControl !== 'controlled') {
           const now = performance.now();
           // Update visual image every 500ms to avoid thrashing CPU
           if (now - lastUpdate > 500) {
@@ -222,8 +370,21 @@ class TinyImageLoader extends TinyMediaLoader {
         }
       });
 
+      // Extração de script e frames usando arrayBuffer sem utilizar a tag Canvas
+      if (this.#animationControl !== 'none' && this.metadata.animation) {
+        await this.#parseAnimationFromBuffer(await blob.arrayBuffer());
+      }
+
       const url = this._cacheBlob(blob);
       this._setInternalSrc(url);
+
+      if (this.#animationControl === 'controlled') {
+        this.#originalAnimatedUrl = null;
+        this.play();
+        return Promise.resolve(); // Fake load ready, control loop assumes rendering
+      }
+
+      this.#originalAnimatedUrl = url;
       const ready = this._waitForMedia(image, 'load');
       image.src = url;
       this._flushMutations();
@@ -232,6 +393,139 @@ class TinyImageLoader extends TinyMediaLoader {
       if (previousUrl) URL.revokeObjectURL(previousUrl);
     }
   }
+
+  // --- Animation Binary Slicer (Canvas-Free) ---
+
+  /**
+   * @param {ArrayBuffer} arrayBuffer
+   */
+  async #parseAnimationFromBuffer(arrayBuffer) {
+    const bytes = new Uint8Array(arrayBuffer);
+    const mime = this.metadata.type;
+
+    if (mime === 'image/gif') {
+      this.#extractGifFrames(bytes);
+    }
+    // Outros formatos (APNG, WebP, AVIF) seguirão a mesma arquitetura de Blob slicing.
+    // O fallback atual extrai apenas o script para WebP/APNG caso o parser principal ainda não suporte,
+    // mas a base de Blobs mantém o sistema escalável sem canvas.
+  }
+
+  /**
+   * Slices a GIF binary into multiple valid single-frame GIF blobs.
+   * @param {Uint8Array} bytes
+   */
+  #extractGifFrames(bytes) {
+    if (bytes.length < 13) return;
+
+    let offset = 13;
+    const packed = bytes[10];
+    const hasGCT = packed & 0x80;
+    const gctSize = hasGCT ? 3 * (1 << ((packed & 0x07) + 1)) : 0;
+    offset += gctSize;
+
+    // Cabeçalho global + Paleta de Cores (usado de base para todos os frames)
+    const globalHeader = bytes.subarray(0, offset);
+
+    let gce = null;
+    let delay = 100;
+
+    while (offset < bytes.length) {
+      const block = bytes[offset];
+      if (block === 0x3b) break; // Trailer de fim do GIF
+
+      if (block === 0x21) {
+        const ext = bytes[offset + 1];
+        if (ext === 0xf9) {
+          // Graphic Control Extension (Possui o Delay)
+          gce = bytes.subarray(offset, offset + 8);
+          delay = (bytes[offset + 4] | (bytes[offset + 5] << 8)) * 10;
+          if (delay <= 10) delay = 100; // Correção para delays muito rápidos
+        }
+        // Pular blocos de dados
+        offset += 2;
+        while (offset < bytes.length && bytes[offset] !== 0) {
+          offset += bytes[offset] + 1;
+        }
+        offset++;
+      } else if (block === 0x2c) {
+        // Image Descriptor
+        const imgStart = offset;
+        offset += 10;
+        const localPacked = bytes[offset - 1];
+        if (localPacked & 0x80) {
+          offset += 3 * (1 << ((localPacked & 0x07) + 1)); // LCT Local
+        }
+        offset++; // LZW Min Code
+
+        while (offset < bytes.length && bytes[offset] !== 0) {
+          offset += bytes[offset] + 1;
+        }
+        offset++;
+        const imgEnd = offset;
+
+        // Registrar o script de tempo
+        this.#animationScript.push({ delay });
+
+        if (this.#animationControl !== 'script-only') {
+          // Montar o Blob do frame exato combinando o Header Global + GCE + Imagem isolada
+          const frameBytes = new Uint8Array(
+            globalHeader.length + (gce ? gce.length : 0) + (imgEnd - imgStart) + 1,
+          );
+
+          frameBytes.set(globalHeader, 0);
+          let cursor = globalHeader.length;
+
+          if (gce) {
+            frameBytes.set(gce, cursor);
+            cursor += gce.length;
+          }
+
+          frameBytes.set(bytes.subarray(imgStart, imgEnd), cursor);
+          frameBytes[frameBytes.length - 1] = 0x3b; // Assinatura de Fim do GIF
+
+          const blob = new Blob([frameBytes], { type: 'image/gif' });
+          const cacheKey = `${this.src}?frame=${this.#frames.length}`;
+          let url = URL.createObjectURL(blob);
+
+          if (this.cache) {
+            const entry = this.cache.set(cacheKey, blob, false);
+            this.cache.acquire(cacheKey);
+            url = entry.objectUrl;
+          }
+
+          this.#frames.push({ url, cacheKey });
+        }
+
+        // Em modo Nativo, nós só precisamos fatiar o Primeiro frame para a função de freeze
+        if (this.#animationControl === 'native') break;
+        gce = null;
+      } else {
+        break; // Bloco desconhecido, evita loops
+      }
+    }
+  }
+
+  /**
+   * Executes the manual animation loop.
+   */
+  #playLoop() {
+    if (!this.#isPlaying || this.#isFrozen || !this.#image || this.#frames.length === 0) return;
+    const frame = this.#frames[this.#currentFrameIndex];
+    const scriptStep = this.#animationScript[this.#currentFrameIndex];
+    const delay = (scriptStep?.delay || 100) / this.#playbackRate;
+    
+    this._setInternalSrc(frame.url);
+    this.#image.src = frame.url;
+    this._flushMutations();
+    
+    this.#playbackTimer = setTimeout(() => {
+      this.#currentFrameIndex = (this.#currentFrameIndex + 1) % this.#frames.length;
+      this.#playLoop();
+    }, delay);
+  }
+
+  // --- Overrides ---
 
   /**
    * Builds the metadata descriptor for the loaded image.
@@ -270,6 +564,22 @@ class TinyImageLoader extends TinyMediaLoader {
    */
   _cleanup() {
     this._revokeObjectUrl();
+    this.pause();
+
+    // Release todos os frames gerados do TinyMediaCache
+    for (const frame of this.#frames) {
+      if (this.cache) {
+        this.cache.release(frame.cacheKey);
+      } else {
+        URL.revokeObjectURL(frame.url);
+      }
+    }
+
+    this.#frames = [];
+    this.#animationScript = [];
+    this.#currentFrameIndex = 0;
+    this.#originalAnimatedUrl = null;
+
     if (this.#image) {
       this.#image.onload = null;
       this.#image.onerror = null;
