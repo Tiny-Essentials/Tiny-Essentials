@@ -40,6 +40,175 @@ const EMPTY_GIF = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
  */
 
 /**
+ * Reads the ISOBMFF boxes that live between two offsets.
+ * @param {Uint8Array} bytes - The full file buffer.
+ * @param {number} start - The offset of the first box.
+ * @param {number} end - The offset after the last box.
+ * @returns {Array<{ type: string, start: number, dataStart: number, dataEnd: number, end: number }>} The parsed box headers.
+ */
+function readIsoBoxes(bytes, start, end) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const result = [];
+  let offset = start;
+  while (offset + 8 <= end) {
+    let size = view.getUint32(offset);
+    const type = String.fromCharCode(
+      bytes[offset + 4],
+      bytes[offset + 5],
+      bytes[offset + 6],
+      bytes[offset + 7],
+    );
+    let headerSize = 8;
+    if (size === 1) {
+      if (offset + 16 > end) break;
+      size = view.getUint32(offset + 8) * 0x100000000 + view.getUint32(offset + 12);
+      headerSize = 16;
+    } else if (size === 0) {
+      size = end - offset;
+    }
+    if (size < headerSize || offset + size > end) break;
+    result.push({
+      type,
+      start: offset,
+      dataStart: offset + headerSize,
+      dataEnd: offset + size,
+      end: offset + size,
+    });
+    offset += size;
+  }
+  return result;
+}
+
+/**
+ * Concatenates a list of byte arrays into a single buffer.
+ * @param {Uint8Array<ArrayBuffer>[]} chunks - The chunks to join.
+ * @returns {Uint8Array<ArrayBuffer>} The concatenated bytes.
+ */
+function concatBytes(chunks) {
+  let length = 0;
+  for (const chunk of chunks) length += chunk.length;
+  const out = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return out;
+}
+
+/**
+ * Encodes an ASCII string as a byte array.
+ * @param {string} value - The ASCII string.
+ * @returns {Uint8Array<ArrayBuffer>} The encoded bytes.
+ */
+function asciiBytes(value) {
+  const out = new Uint8Array(value.length);
+  for (let i = 0; i < value.length; i += 1) out[i] = value.charCodeAt(i);
+  return out;
+}
+
+/**
+ * Encodes a big-endian unsigned 16-bit integer.
+ * @param {number} value - The value to encode.
+ * @returns {Uint8Array<ArrayBuffer>} The encoded bytes.
+ */
+function u16be(value) {
+  return new Uint8Array([(value >> 8) & 0xff, value & 0xff]);
+}
+
+/**
+ * Encodes a big-endian unsigned 32-bit integer.
+ * @param {number} value - The value to encode.
+ * @returns {Uint8Array<ArrayBuffer>} The encoded bytes.
+ */
+function u32be(value) {
+  return new Uint8Array([
+    (value >>> 24) & 0xff,
+    (value >>> 16) & 0xff,
+    (value >>> 8) & 0xff,
+    value & 0xff,
+  ]);
+}
+
+/**
+ * Serializes an ISOBMFF box from its type and payload chunks.
+ * @param {string} type - The 4-character box type.
+ * @param {...Uint8Array<ArrayBuffer>} chunks - The payload chunks.
+ * @returns {Uint8Array<ArrayBuffer>} The serialized box.
+ */
+function buildIsoBox(type, ...chunks) {
+  const payload = concatBytes(chunks);
+  const out = new Uint8Array(8 + payload.length);
+  out.set(u32be(out.length), 0);
+  out.set(asciiBytes(type), 4);
+  out.set(payload, 8);
+  return out;
+}
+
+/**
+ * Wraps a raw AV1 sample into a self-contained single-frame AVIF file.
+ * @param {Uint8Array<ArrayBuffer>} av1c - The raw `av1C` configuration box.
+ * @param {number} width - The frame width in pixels.
+ * @param {number} height - The frame height in pixels.
+ * @param {Uint8Array<ArrayBuffer>} frame - The raw AV1 sample payload.
+ * @returns {Uint8Array<ArrayBuffer>} A valid single-frame AVIF file.
+ */
+function buildAvifFrame(av1c, width, height, frame) {
+  const ftyp = buildIsoBox(
+    'ftyp',
+    asciiBytes('avif'),
+    u32be(0),
+    asciiBytes('avif'),
+    asciiBytes('mif1'),
+    asciiBytes('miaf'),
+  );
+  /** @param {number} dataOffset */
+  const buildMeta = (dataOffset) => {
+    const hdlr = buildIsoBox(
+      'hdlr',
+      u32be(0),
+      u32be(0),
+      asciiBytes('pict'),
+      u32be(0),
+      u32be(0),
+      u32be(0),
+      new Uint8Array([0]),
+    );
+    const pitm = buildIsoBox('pitm', u32be(0), u16be(1));
+    const iloc = buildIsoBox(
+      'iloc',
+      u32be(0),
+      new Uint8Array([0x44, 0x00]),
+      u16be(1),
+      u16be(1),
+      u16be(0),
+      u16be(1),
+      u32be(dataOffset),
+      u32be(frame.length),
+    );
+    const infe = buildIsoBox(
+      'infe',
+      u32be(0x02000000),
+      u16be(1),
+      u16be(0),
+      asciiBytes('av01'),
+      new Uint8Array([0]),
+    );
+    const iinf = buildIsoBox('iinf', u32be(0), u16be(1), infe);
+    const ispe = buildIsoBox('ispe', u32be(0), u32be(width), u32be(height));
+    const ipco = buildIsoBox('ipco', av1c, ispe);
+    const ipma = buildIsoBox('ipma', u32be(0), u32be(1), u16be(1), new Uint8Array([2, 0x81, 0x02]));
+    const iprp = buildIsoBox('iprp', ipco, ipma);
+    return buildIsoBox('meta', u32be(0), hdlr, pitm, iloc, iinf, iprp);
+  };
+  const placeholder = buildMeta(0);
+  const dataOffset = ftyp.length + placeholder.length + 8;
+  const meta = buildMeta(dataOffset);
+  const mdat = buildIsoBox('mdat', frame);
+  return concatBytes([ftyp, meta, mdat]);
+}
+
+/**
  * Loads a single image with full lifecycle and animation control.
  * @extends {TinyMediaLoader<HTMLImageElement>}
  */
@@ -435,23 +604,170 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
-   * Extracts animation metadata from an AVIF stream.
-   * @param {Uint8Array} bytes
+   * Slices an AVIF binary into multiple valid single-frame AVIF blobs.
+   * @param {Uint8Array} bytes - The full AVIF file.
+   * @returns {void}
    */
   #extractAvifFrames(bytes) {
-    const anim = this.metadata.animation;
-    if (anim && anim.frames > 1) {
-      // Calculate individual frame delays evenly from the total duration
-      const delay = Math.max(10, Math.round(anim.duration / anim.frames));
-      for (let i = 0; i < anim.frames; i++) {
-        this.#animationScript.push({ delay });
+    const top = readIsoBoxes(bytes, 0, bytes.length);
+    const moov = top.find((box) => box.type === 'moov');
+    if (!moov) return;
+
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const traks = readIsoBoxes(bytes, moov.dataStart, moov.dataEnd).filter(
+      (box) => box.type === 'trak',
+    );
+
+    /** @type {{ stbl: { dataStart: number, dataEnd: number }, timescale: number }|null} */
+    let track = null;
+    for (const trak of traks) {
+      const mdia = readIsoBoxes(bytes, trak.dataStart, trak.dataEnd).find((b) => b.type === 'mdia');
+      if (!mdia) continue;
+      const minf = readIsoBoxes(bytes, mdia.dataStart, mdia.dataEnd).find((b) => b.type === 'minf');
+      if (!minf) continue;
+      const stbl = readIsoBoxes(bytes, minf.dataStart, minf.dataEnd).find((b) => b.type === 'stbl');
+      if (!stbl) continue;
+      const mdhd = readIsoBoxes(bytes, mdia.dataStart, mdia.dataEnd).find((b) => b.type === 'mdhd');
+      let timescale = 1000;
+      if (mdhd) {
+        const version = bytes[mdhd.dataStart];
+        timescale =
+          version === 1 ? view.getUint32(mdhd.dataStart + 20) : view.getUint32(mdhd.dataStart + 12);
       }
+      track = { stbl, timescale };
+      break;
+    }
+    if (!track) return;
+
+    const children = readIsoBoxes(bytes, track.stbl.dataStart, track.stbl.dataEnd);
+    const stszBox = children.find((b) => b.type === 'stsz');
+    const stcoBox = children.find((b) => b.type === 'stco');
+    const co64Box = children.find((b) => b.type === 'co64');
+    const stscBox = children.find((b) => b.type === 'stsc');
+    const sttsBox = children.find((b) => b.type === 'stts');
+    const stsdBox = children.find((b) => b.type === 'stsd');
+    if (!stszBox || !stscBox || !stsdBox) return;
+
+    const sampleSizes = [];
+    {
+      const base = stszBox.dataStart + 4;
+      const uniform = view.getUint32(base);
+      const count = view.getUint32(base + 4);
+      for (let i = 0; i < count; i += 1) {
+        sampleSizes.push(uniform > 0 ? uniform : view.getUint32(base + 8 + i * 4));
+      }
+    }
+
+    const chunkOffsets = [];
+    if (stcoBox) {
+      const count = view.getUint32(stcoBox.dataStart + 4);
+      for (let i = 0; i < count; i += 1) {
+        chunkOffsets.push(view.getUint32(stcoBox.dataStart + 8 + i * 4));
+      }
+    } else if (co64Box) {
+      const count = view.getUint32(co64Box.dataStart + 4);
+      for (let i = 0; i < count; i += 1) {
+        const high = view.getUint32(co64Box.dataStart + 8 + i * 8);
+        const low = view.getUint32(co64Box.dataStart + 12 + i * 8);
+        chunkOffsets.push(high * 0x100000000 + low);
+      }
+    }
+
+    const stsc = [];
+    {
+      const count = view.getUint32(stscBox.dataStart + 4);
+      for (let i = 0; i < count; i += 1) {
+        const base = stscBox.dataStart + 8 + i * 12;
+        stsc.push({
+          firstChunk: view.getUint32(base),
+          samplesPerChunk: view.getUint32(base + 4),
+        });
+      }
+    }
+
+    const sampleDurations = [];
+    if (sttsBox) {
+      const count = view.getUint32(sttsBox.dataStart + 4);
+      for (let i = 0; i < count; i += 1) {
+        const base = sttsBox.dataStart + 8 + i * 8;
+        const entryCount = view.getUint32(base);
+        const delta = view.getUint32(base + 4);
+        for (let j = 0; j < entryCount; j += 1) sampleDurations.push(delta);
+      }
+    }
+
+    const sampleOffsets = [];
+    {
+      let sampleIndex = 0;
+      for (let i = 0; i < stsc.length; i += 1) {
+        const { firstChunk, samplesPerChunk } = stsc[i];
+        const lastChunk = i + 1 < stsc.length ? stsc[i + 1].firstChunk - 1 : chunkOffsets.length;
+        for (let chunk = firstChunk; chunk <= lastChunk; chunk += 1) {
+          let offset = chunkOffsets[chunk - 1] ?? 0;
+          for (let s = 0; s < samplesPerChunk; s += 1) {
+            sampleOffsets.push(offset);
+            offset += sampleSizes[sampleIndex] ?? 0;
+            sampleIndex += 1;
+          }
+        }
+      }
+    }
+
+    const entries = readIsoBoxes(bytes, stsdBox.dataStart + 8, stsdBox.dataEnd);
+    const sampleEntry = entries[0];
+    if (!sampleEntry) return;
+    const width = view.getUint16(sampleEntry.dataStart + 24);
+    const height = view.getUint16(sampleEntry.dataStart + 26);
+    const entryChildren = readIsoBoxes(bytes, sampleEntry.dataStart + 78, sampleEntry.dataEnd);
+    const av1cBox = entryChildren.find((b) => b.type === 'av1C');
+    if (!av1cBox) return;
+    const av1c = bytes.subarray(av1cBox.start, av1cBox.end);
+
+    const frameCount = Math.min(sampleSizes.length, sampleOffsets.length);
+    for (let i = 0; i < frameCount; i += 1) {
+      const size = sampleSizes[i];
+      const offset = sampleOffsets[i];
+      const duration = sampleDurations[i] ?? 0;
+      let delay = track.timescale > 0 ? Math.round((duration / track.timescale) * 1000) : 100;
+      if (delay <= 10) delay = 100;
+      this.#animationScript.push({ delay });
+
+      if (this.#animationControl !== 'script-only') {
+        const cacheKey = `${this.src}???frame=${this.#frames.length}`;
+        let url = null;
+
+        if (this.cache) {
+          const existing = this.cache.get(cacheKey);
+          if (existing) {
+            url = existing.objectUrl;
+            this.cache.acquire(cacheKey);
+          }
+        }
+
+        if (!url) {
+          const frameData = bytes.subarray(offset, offset + size);
+          /** @type {BlobPart} */
+          const file = buildAvifFrame(av1c, width, height, frameData);
+          const blob = new Blob([file], { type: 'image/avif' });
+
+          if (this.cache) {
+            const entry = this.cache.set(cacheKey, blob, false);
+            this.cache.acquire(cacheKey);
+            url = entry.objectUrl;
+          } else {
+            url = URL.createObjectURL(blob);
+          }
+        }
+        this.#frames.push({ url, cacheKey });
+      }
+
+      if (this.#animationControl === 'native') break;
     }
   }
 
   /**
    * Slices a WebP binary into multiple valid single-frame WebP blobs.
-   * @param {Uint8Array} bytes
+   * @param {Uint8Array<ArrayBuffer>} bytes
    */
   #extractWebpFrames(bytes) {
     if (bytes.length < 12) return;
@@ -515,7 +831,7 @@ class TinyImageLoader extends TinyMediaLoader {
         }
 
         if (!url) {
-          /** @type {Uint8Array<ArrayBufferLike>[]} */
+          /** @type {Uint8Array<ArrayBuffer>[]} */
           const outChunks = [];
           if (vp8x) outChunks.push(vp8x);
           if (anim) outChunks.push(anim);
