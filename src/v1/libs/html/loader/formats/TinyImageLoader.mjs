@@ -605,7 +605,7 @@ class TinyImageLoader extends TinyMediaLoader {
 
   /**
    * Slices an AVIF binary into multiple valid single-frame AVIF blobs.
-   * @param {Uint8Array} bytes - The full AVIF file.
+   * @param {Uint8Array<ArrayBuffer>} bytes - The full AVIF file.
    * @returns {void}
    */
   #extractAvifFrames(bytes) {
@@ -721,6 +721,7 @@ class TinyImageLoader extends TinyMediaLoader {
     const entryChildren = readIsoBoxes(bytes, sampleEntry.dataStart + 78, sampleEntry.dataEnd);
     const av1cBox = entryChildren.find((b) => b.type === 'av1C');
     if (!av1cBox) return;
+    /** @type {Uint8Array<ArrayBuffer>} */
     const av1c = bytes.subarray(av1cBox.start, av1cBox.end);
 
     const frameCount = Math.min(sampleSizes.length, sampleOffsets.length);
@@ -745,8 +746,8 @@ class TinyImageLoader extends TinyMediaLoader {
         }
 
         if (!url) {
+          /** @type {Uint8Array<ArrayBuffer>} */
           const frameData = bytes.subarray(offset, offset + size);
-          /** @type {BlobPart} */
           const file = buildAvifFrame(av1c, width, height, frameData);
           const blob = new Blob([file], { type: 'image/avif' });
 
@@ -866,7 +867,7 @@ class TinyImageLoader extends TinyMediaLoader {
 
   /**
    * Slices an APNG binary into multiple valid single-frame APNG blobs.
-   * @param {Uint8Array} bytes
+   * @param {Uint8Array<ArrayBuffer>} bytes
    */
   #extractApngFrames(bytes) {
     const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -876,7 +877,7 @@ class TinyImageLoader extends TinyMediaLoader {
     const preDataChunks = [];
     let iend = null;
     const frames = [];
-    /** @type {null|{ fctl: Uint8Array<ArrayBufferLike>; delay: number; dataChunks: ({ type: string, bytes: Uint8Array<ArrayBufferLike> })[] }} */
+    /** @type {null|{ fctl: Uint8Array<ArrayBuffer>; delay: number; dataChunks: ({ type: string; bytes: Uint8Array<ArrayBuffer> })[] }} */
     let currentFrame = null;
     let seenIdatOrFctl = false;
 
@@ -965,7 +966,7 @@ class TinyImageLoader extends TinyMediaLoader {
           fctlView.setUint32(8, seq++);
           fctlView.setUint32(fctl.length - 4, this.#crc32(fctl.subarray(4, fctl.length - 4)));
 
-          /** @type {Uint8Array<ArrayBufferLike>[]} */
+          /** @type {Uint8Array<ArrayBuffer>[]} */
           const outChunks = [new Uint8Array(signature), ...preDataChunks, acTL, fctl];
 
           for (const chunk of frame.dataChunks) {
@@ -1007,7 +1008,7 @@ class TinyImageLoader extends TinyMediaLoader {
 
   /**
    * Slices a GIF binary into multiple valid single-frame GIF blobs.
-   * @param {Uint8Array} bytes
+   * @param {Uint8Array<ArrayBuffer>} bytes
    */
   #extractGifFrames(bytes) {
     if (bytes.length < 13) return;
