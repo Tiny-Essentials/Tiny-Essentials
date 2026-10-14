@@ -318,7 +318,7 @@ class TinyMediaLoader extends TypedEmitter {
     }
     const {
       src,
-      timeout = 30000,
+      timeout = Infinity,
       element = null,
       autoReload = false,
       originalSrc = false,

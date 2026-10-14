@@ -198,7 +198,7 @@ function readConfig() {
   return {
     src: textOf('cfg-src'),
     kind: byId('cfg-kind').value,
-    timeout: numberOf('cfg-timeout', 30000),
+    timeout: numberOf('cfg-timeout', Infinity),
     crossOrigin: byId('cfg-crossorigin').value || null,
     preload: byId('cfg-preload').value,
     animationControl: byId('cfg-animation').value,

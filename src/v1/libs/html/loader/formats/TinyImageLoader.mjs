@@ -1140,11 +1140,12 @@ class TinyImageLoader extends TinyMediaLoader {
    */
   _getMetadataDetails() {
     const image = this.#image;
+    const animation = this.metadata.animation;
     return {
       type: image?.naturalWidth ? `image/${this.#getExtension()}` : 'image/*',
       width: image?.naturalWidth ?? 0,
       height: image?.naturalHeight ?? 0,
-      duration: NaN,
+      duration: animation ? animation.duration / 1000 : NaN,
       size: this._getResourceSize(),
     };
   }
