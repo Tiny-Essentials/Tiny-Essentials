@@ -57,7 +57,7 @@
 /**
  * Handles a broadcast event.
  * @template {string} Name
- * @template {any} Args
+ * @template {unknown[]} Args
  * @callback MediaMirrorSubscriber
  * @param {MediaMirrorEvent<Name, Args>} event - The published event.
  * @returns {void}
