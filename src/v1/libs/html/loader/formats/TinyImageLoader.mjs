@@ -450,14 +450,17 @@ class TinyImageLoader extends TinyMediaLoader {
    * @returns {Promise<void>} A promise that resolves once the image is decoded and ready.
    */
   async _startLoad() {
+    // Frames, script and playback cursor are scoped to a single load. Releasing
+    // them here guarantees that a reload never mixes the frames of two images
+    // and that the frame cache keys stay stable across loads.
+    this._releaseAnimationFrames();
+
     const image = /** @type {HTMLImageElement} */ (this._resolveElement());
     this.#image = image;
 
     if (this.#crossOrigin) image.crossOrigin = this.#crossOrigin;
     image.decoding = this.#decoding;
 
-    // Resets the state machine attributes strictly prior to load guarantees so `EMPTY_GIF` sizes
-    // from a previously aborted fetch never mislead our `ready` completion conditions.
     image.removeAttribute('src');
     this._flushMutations();
 
@@ -479,6 +482,17 @@ class TinyImageLoader extends TinyMediaLoader {
         // A decode failure is non-fatal: the image is still renderable.
       }
     }
+  }
+
+  /**
+   * Builds the cache key that identifies a single frame of the current source.
+   * The index is the position of the frame in the source animation, never the
+   * current length of the frame array, so the key stays stable across loads.
+   * @param {number} index - The zero-based frame index.
+   * @returns {string} The cache key of the frame.
+   */
+  #frameKey(index) {
+    return `${this.src}???frame=${index}`;
   }
 
   /**
@@ -735,7 +749,7 @@ class TinyImageLoader extends TinyMediaLoader {
       this.#animationScript.push({ delay });
 
       if (this.#animationControl !== 'script-only') {
-        const cacheKey = `${this.src}???frame=${this.#frames.length}`;
+        const cacheKey = this.#frameKey(i);
         let url = null;
 
         if (this.cache) {
@@ -821,7 +835,7 @@ class TinyImageLoader extends TinyMediaLoader {
       this.#animationScript.push({ delay });
 
       if (this.#animationControl !== 'script-only') {
-        const cacheKey = `${this.src}???frame=${this.#frames.length}`;
+        const cacheKey = this.#frameKey(i);
         let url = null;
 
         if (this.cache) {
@@ -939,7 +953,7 @@ class TinyImageLoader extends TinyMediaLoader {
       this.#animationScript.push({ delay });
 
       if (this.#animationControl !== 'script-only') {
-        const cacheKey = `${this.src}???frame=${this.#frames.length}`;
+        const cacheKey = this.#frameKey(i);
         let url = null;
 
         if (this.cache) {
@@ -1064,7 +1078,7 @@ class TinyImageLoader extends TinyMediaLoader {
         this.#animationScript.push({ delay });
 
         if (this.#animationControl !== 'script-only') {
-          const cacheKey = `${this.src}???frame=${this.#frames.length}`;
+          const cacheKey = this.#frameKey(this.#frames.length);
           let url = null;
 
           // 1. Tenta recuperar o frame existente da cache para evitar duplicatas
@@ -1114,10 +1128,16 @@ class TinyImageLoader extends TinyMediaLoader {
 
   /**
    * Executes the manual animation loop.
+   * @returns {void}
    */
   #playLoop() {
-    if (!this.#isPlaying || this.#isFrozen || !this.#image || this.#frames.length === 0) return;
+    if (!this.#isPlaying || this.#isFrozen || !this.#image || this.#frames.length === 0) {
+      return;
+    }
     const frame = this.#frames[this.#currentFrameIndex];
+    if (!frame) {
+      return;
+    }
     const scriptStep = this.#animationScript[this.#currentFrameIndex];
     const delay = (scriptStep?.delay || 100) / this.#playbackRate;
 
@@ -1165,11 +1185,18 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
-   * Releases all acquired animation frames from the cache or revokes their object URLs.
+   * Releases all acquired animation frames from the cache or revokes their
+   * object URLs. It also stops the playback loop, so a reload never leaves a
+   * timer pointing at a frame that no longer exists.
    * @protected
    * @returns {void}
    */
   _releaseAnimationFrames() {
+    if (this.#playbackTimer !== null) {
+      clearTimeout(this.#playbackTimer);
+      this.#playbackTimer = null;
+    }
+
     for (const frame of this.#frames) {
       if (this.cache) {
         this.cache.release(frame.cacheKey);
@@ -1181,6 +1208,7 @@ class TinyImageLoader extends TinyMediaLoader {
     this.#frames = [];
     this.#animationScript = [];
     this.#currentFrameIndex = 0;
+    this.#isFrozen = false;
   }
 
   /**

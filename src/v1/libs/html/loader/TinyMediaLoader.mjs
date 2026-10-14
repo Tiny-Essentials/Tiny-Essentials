@@ -998,7 +998,9 @@ class TinyMediaLoader extends TypedEmitter {
   /**
    * Stores a downloaded blob in the shared cache when one is configured and
    * returns the URL the element must render. When no cache is present the blob
-   * is exposed through a private object URL instead.
+   * is exposed through a private object URL instead. An entry that is already
+   * cached is reused, because replacing it would revoke the object URL that
+   * another loader may still be rendering.
    * @protected
    * @param {Blob} blob - The downloaded blob.
    * @returns {string} The URL the element must use as its source.
@@ -1010,6 +1012,11 @@ class TinyMediaLoader extends TypedEmitter {
     }
     this._setResourceSize(blob.size);
     if (this.#cache) {
+      const existing = this.#cache.get(this.#src);
+      if (existing) {
+        this.#cache.acquire(this.#src);
+        return existing.objectUrl;
+      }
       const entry = this.#cache.set(this.#src, blob, false, this.#partial);
       this.#cache.acquire(this.#src);
       this.emit('cachemiss', entry);
