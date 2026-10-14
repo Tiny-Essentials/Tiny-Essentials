@@ -35,6 +35,7 @@ const EMPTY_GIF = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
  * @property {boolean} [autoReload] - Whether an external `src` change triggers a reload.
  * @property {boolean} [stream] - Whether to download the image through fetch for byte progress.
  * @property {boolean} [useHeadRequest] - Whether to perform a HEAD request to fetch HTTP headers before downloading.
+ * @property {boolean} [mirror] - Whether concurrent loads of the same source share a single download (default true).
  * @property {import('../utils/TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
  * @property {'none'|'native'|'script-only'|'controlled'} [animationControl] - How animated images are handled.
  */
@@ -548,7 +549,7 @@ class TinyImageLoader extends TinyMediaLoader {
         await this.#parseAnimationFromBuffer(await blob.arrayBuffer());
       }
 
-      const url = this._cacheBlob(blob);
+      const url = this.mirrored ? this.#adoptSharedBlob(blob) : this._cacheBlob(blob);
       this._setInternalSrc(url);
 
       if (this.#animationControl === 'controlled') {
@@ -1211,6 +1212,18 @@ class TinyImageLoader extends TinyMediaLoader {
    */
   _createElement() {
     return document.createElement('img');
+  }
+
+  /**
+   * Resolves the renderable URL for a blob that was shared by a mirrored
+   * download. The leading loader already owns the shared cache entry, so the
+   * mirror only mints a private object URL over the very same in-memory blob.
+   * @param {Blob} blob - The blob produced by the shared download.
+   * @returns {string} The URL the element must render.
+   */
+  #adoptSharedBlob(blob) {
+    this._setResourceSize(blob.size);
+    return this._createObjectUrl(blob);
   }
 
   /**

@@ -8,6 +8,19 @@ import { EventEmitter } from 'events';
 /** @import { ICustomEventEmitter } from '../../../jsdoc/EventEmitter.mjs' */
 import TinyMediaProgress from './utils/TinyMediaProgress.mjs';
 import TinyMediaCache from './utils/TinyMediaCache.mjs';
+import TinyMediaMirror from './utils/TinyMediaMirror.mjs';
+
+/**
+ * @template {string} Name
+ * @template {unknown[]} Args
+ * @typedef {import('./utils/TinyMediaMirror.mjs').MediaMirrorEntry<Name, Args>} MediaMirrorEntry
+ */
+
+/**
+ * @template {string} Name
+ * @template {unknown[]} Args
+ * @typedef {import('./utils/TinyMediaMirror.mjs').MediaMirrorEvent<Name, Args>} MediaMirrorEvent
+ */
 
 /**
  * Describes the configuration object accepted by the {@link TinyMediaLoader} constructor.
@@ -22,6 +35,7 @@ import TinyMediaCache from './utils/TinyMediaCache.mjs';
  * @property {boolean} [earlyDecode] - Whether to decode image dimensions from the response headers using WebCodecs.
  * @property {boolean} [progressive] - Whether to render progressively during fetch (default true).
  * @property {boolean} [useHeadRequest] - Whether to perform a HEAD request to fetch HTTP headers before downloading.
+ * @property {boolean} [mirror] - Whether concurrent loads of the same source share a single download (default true).
  * @property {TinyMediaCache|null} [cache] - An optional shared memory cache.
  */
 
@@ -63,6 +77,16 @@ import TinyMediaCache from './utils/TinyMediaCache.mjs';
  * @property {Uint8Array} chunk - The binary chunk.
  * @property {number} loaded - The total bytes downloaded so far.
  * @property {number} total - The total bytes of the media (0 when unknown).
+ */
+
+/**
+ * Describes the payload emitted when a loader attaches to an in-flight download.
+ * @typedef {Object} MediaMirrorPayload
+ * @property {string} src - The source URL shared by both loaders.
+ * @property {string} key - The normalized registry key.
+ * @property {number} size - The size of the shared payload in bytes.
+ * @property {number} mirrors - The number of loaders attached to the download.
+ * @property {number} replayed - The number of historical events caught up on attach.
  */
 
 /**
@@ -134,7 +158,7 @@ import TinyMediaCache from './utils/TinyMediaCache.mjs';
  */
 
 /**
- * @typedef {'HEAD'|'GET'|'PROBE'|'DECODE'|'CACHE'|'LOADED_METADATA'|'DURATION_CHANGE'|'PROBE_ANIMATION'} MediaMetadataType
+ * @typedef {'HEAD'|'GET'|'PROBE'|'DECODE'|'CACHE'|'LOADED_METADATA'|'DURATION_CHANGE'|'PROBE_ANIMATION'|'MIRROR'} MediaMetadataType
  */
 
 /**
@@ -156,6 +180,7 @@ import TinyMediaCache from './utils/TinyMediaCache.mjs';
  * @property {(entry: import('./utils/TinyMediaCache.mjs').MediaCacheEntry) => void} cachehit - Emitted when the resource is successfully retrieved from the cache.
  * @property {(payload: { state: string, previous: string, src: string }) => void} statechange - Emitted when the loader transitions from one state to another.
  * @property {(payload: { chunk: Uint8Array, loaded: number, total: number }) => void} chunk - Emitted every time a binary data chunk is received during streaming.
+ * @property {(payload: MediaMirrorPayload) => void} mirror - Emitted when the download is shared with another loader.
  * @property {() => void} destroy - Emitted when the loader is destroyed and its resources are released.
  */
 
@@ -171,6 +196,14 @@ const TypedEmitter = /** @type {any} */ (EventEmitter);
  * @augments TypedEmitter
  */
 class TinyMediaLoader extends TypedEmitter {
+  /**
+   * The registry that deduplicates concurrent downloads.
+   * @returns {typeof TinyMediaMirror} The shared mirror registry.
+   */
+  static get TinyMediaMirror() {
+    return TinyMediaMirror;
+  }
+
   /**
    * Immutable state machine values used by every media loader.
    */
@@ -245,6 +278,14 @@ class TinyMediaLoader extends TypedEmitter {
   #headResponse = null;
   /** @type {Map<string, DecoderCreator>} */
   #decoders = new Map();
+  /** @type {boolean} */
+  #mirror = true;
+  /** @type {boolean} */
+  #mirrored = false;
+  /** @type {boolean} */
+  #replaying = false;
+  /** @type {((name: string, args: unknown[]) => void)|null} */
+  #publish = null;
 
   /** @type {Partial<MediaMetadata>} */
   #partial = {};
@@ -284,6 +325,7 @@ class TinyMediaLoader extends TypedEmitter {
       earlyDecode = true,
       progressive = true,
       useHeadRequest = false,
+      mirror = true,
     } = options;
 
     if (src !== undefined && typeof src !== 'string') {
@@ -304,6 +346,9 @@ class TinyMediaLoader extends TypedEmitter {
     if (typeof progressive !== 'boolean') {
       throw new TypeError('The "progressive" option must be a boolean.');
     }
+    if (typeof mirror !== 'boolean') {
+      throw new TypeError('The "mirror" option must be a boolean.');
+    }
 
     super();
     const expectedTag = /** @type {typeof TinyMediaLoader} */ (this.constructor).tagName;
@@ -319,10 +364,55 @@ class TinyMediaLoader extends TypedEmitter {
     this.#useHeadRequest = useHeadRequest;
     this.#earlyDecode = earlyDecode;
     this.#progressive = progressive;
+    this.#mirror = mirror;
     if (element) {
       this.#element = element;
       this.#startObserver();
     }
+  }
+
+  /**
+   * Events that are never broadcast to the mirror registry.
+   *
+   * - `mirror` would recurse forever.
+   * - `destroy` is scoped to a single instance and tears down the emitter.
+   * - `error` is excluded because a failed leader makes its mirrors fall back
+   *   to their own request, which owns the error path from that point on.
+   * @type {ReadonlySet<string|symbol>}
+   */
+  static #UNMIRRORED = new Set(['mirror', 'destroy', 'error', 'metadata']);
+
+  /**
+   * Emits an event and, when this loader leads a mirrored download, broadcasts
+   * it to every attached mirror. The local listeners always run first so a slow
+   * mirror can never delay the loader that owns the network request.
+   * @template {keyof MediaLoaderEvents} K
+   * @param {K} name - The event name.
+   * @param {Parameters<MediaLoaderEvents[K]>} args - The event arguments.
+   * @returns {boolean} True when the event had listeners.
+   */
+  emit(name, ...args) {
+    const result = super.emit(name, ...args);
+    if (this.#publish && !this.#replaying && !TinyMediaLoader.#UNMIRRORED.has(name)) {
+      this.#publish(name, args);
+    }
+    return result;
+  }
+
+  /**
+   * Whether concurrent loads of the same source share a single download.
+   * @returns {boolean} True when mirroring is enabled.
+   */
+  get mirror() {
+    return this.#mirror;
+  }
+
+  /**
+   * Whether the last download was served by another loader.
+   * @returns {boolean} True when the payload was shared by a mirrored download.
+   */
+  get mirrored() {
+    return this.#mirrored;
   }
 
   /**
@@ -489,7 +579,7 @@ class TinyMediaLoader extends TypedEmitter {
    * @returns {MediaMetadata} A shallow copy that is safe for the caller to mutate.
    */
   get metadata() {
-    return { ...this.#metadata };
+    return { ...this.#metadata, httpHeaders: { ...this.#metadata.httpHeaders } };
   }
 
   /**
@@ -614,6 +704,7 @@ class TinyMediaLoader extends TypedEmitter {
     );
     this.#partial = { ...this.#partial, ...clean };
     this.#metadata = { ...this.#metadata, ...clean };
+    this.#publish?.('metadata', [clean, type]);
     this.emit('metadata', this.metadata, type);
   }
 
@@ -928,17 +1019,57 @@ class TinyMediaLoader extends TypedEmitter {
   }
 
   /**
-   * Downloads a media resource through fetch.
+   * Downloads a media resource through fetch. When another loader is already
+   * downloading the same URL, the request is not repeated: the promise resolves
+   * with the very same {@link Blob} instance that the leading loader receives.
    * @protected
+   * @template {keyof MediaLoaderEvents} K
    * @param {string} url - The resource to download.
    * @param {(chunk: BlobPart, chunks: BlobPart[]) => void} [onChunk] - Optional chunk callback.
    * @param {number} [startByte=0] - The byte offset to start downloading from.
    * @param {AbortSignal|null} [customSignal=null] - Signal to abort only the fetch without aborting the loader.
    * @returns {Promise<Blob>} The fully downloaded blob.
    * @throws {TypeError} If `url` is not a string.
-   * @throws {Error} If the request fails or the body is not readable.
    */
   async _downloadStream(url, onChunk, startByte = 0, customSignal = null) {
+    if (typeof url !== 'string') {
+      throw new TypeError('The "url" argument must be a string.');
+    }
+    const key = this.#mirrorKey(url);
+    const shareable = this.#mirror && startByte === 0;
+    /** @type {MediaMirrorEntry<keyof MediaLoaderEvents, Parameters<MediaLoaderEvents[K]>>|null} */
+    // @ts-ignore
+    const shared = shareable ? TinyMediaMirror.attach(key) : null;
+    if (shared) {
+      return this.#mirrorStream(shared, url, onChunk, startByte, customSignal);
+    }
+    const entry = shareable ? TinyMediaMirror.open(key, url) : null;
+    this.#publish = entry ? (name, args) => TinyMediaMirror.publish(key, name, args) : null;
+    try {
+      const blob = await this.#download(url, onChunk, startByte, customSignal);
+      entry?.resolve(blob);
+      return blob;
+    } catch (error) {
+      entry?.reject(/** @type {Error} */ (error));
+      throw error;
+    } finally {
+      this.#publish = null;
+      if (entry) {
+        TinyMediaMirror.close(key);
+      }
+    }
+  }
+
+  /**
+   * Performs the actual network download.
+   * @param {string} url - The resource to download.
+   * @param {(chunk: BlobPart, chunks: BlobPart[]) => void} [onChunk] - Optional chunk callback.
+   * @param {number} [startByte=0] - The byte offset to start downloading from.
+   * @param {AbortSignal|null} [customSignal=null] - Signal to abort only the fetch without aborting the loader.
+   * @returns {Promise<Blob>} The fully downloaded blob.
+   * @throws {Error} If the request fails or the body is not readable.
+   */
+  async #download(url, onChunk, startByte = 0, customSignal = null) {
     if (typeof url !== 'string') {
       throw new TypeError('The "url" argument must be a string.');
     }
@@ -1072,6 +1203,140 @@ class TinyMediaLoader extends TypedEmitter {
     // But to simplify the cache, here we treat the blob like the new piece.
     // In production, you would concatenate the Blobs or use a File object.
     return new Blob(chunks, { type: type || 'application/octet-stream' });
+  }
+
+  /**
+   * Builds the registry key used to deduplicate concurrent downloads. It mirrors
+   * the normalization applied by the shared cache so both layers agree on what
+   * "the same resource" means.
+   * @param {string} url - The media URL.
+   * @returns {string} The normalized registry key.
+   */
+  #mirrorKey(url) {
+    if (!this.#cache?.ignoreSearch) {
+      return url;
+    }
+    const clean = url.split('#')[0];
+    const query = clean.indexOf('?');
+    return query === -1 ? clean : clean.slice(0, query);
+  }
+
+  /**
+   * Resolves a download that is already in flight on another loader. The full
+   * event history is replayed before the first live event arrives, so a mirror
+   * that attaches halfway through observes exactly the same sequence as a
+   * listener attached to the leader from the very first byte.
+   * @template {keyof MediaLoaderEvents} K
+   * @param {MediaMirrorEntry<keyof MediaLoaderEvents, Parameters<MediaLoaderEvents[K]>>} entry - The shared download.
+   * @param {string} url - The resource being downloaded.
+   * @param {((chunk: BlobPart, chunks: BlobPart[]) => void)|undefined} onChunk - The chunk callback.
+   * @param {number} startByte - The byte offset of the request.
+   * @param {AbortSignal|null} customSignal - The signal that aborts the request.
+   * @returns {Promise<Blob>} The blob downloaded by the leading loader.
+   */
+  async #mirrorStream(entry, url, onChunk, startByte, customSignal) {
+    /** @type {BlobPart[]} */
+    const chunks = [];
+    const progress = this._createProgress(0);
+    const replayed = TinyMediaMirror.history(entry.key).length;
+
+    const unsubscribe = TinyMediaMirror.subscribe(entry.key, (event) => {
+      this.#applyEvent(event, chunks, progress, onChunk);
+    });
+
+    let blob;
+    try {
+      blob = await entry.promise;
+    } catch {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+      return this.#download(url, onChunk, startByte, customSignal);
+    }
+    if (unsubscribe) {
+      unsubscribe();
+    }
+
+    this.#mirrored = true;
+    this._setResourceSize(blob.size);
+    if (blob.type) {
+      this._emitMetadata({ type: blob.type }, 'MIRROR');
+    }
+    await this.#probeBlob(blob);
+
+    this.emit('mirror', {
+      src: this.#src,
+      key: entry.key,
+      size: blob.size,
+      mirrors: entry.mirrors,
+      replayed,
+    });
+    return blob;
+  }
+
+  /**
+   * Applies a single mirrored event to this instance. Every event is applied in
+   * the exact order it was published, whether it comes from the historical
+   * catch-up or from the live stream. The event is type-erased because the
+   * mirror registry stores the name and the arguments as plain data.
+   * @param {MediaMirrorEvent<string, unknown[]>} event - The event to apply.
+   * @param {BlobPart[]} chunks - The accumulator that rebuilds the payload.
+   * @param {TinyMediaProgress} progress - The tracker advanced by every replayed chunk.
+   * @param {((chunk: BlobPart, chunks: BlobPart[]) => void)|undefined} onChunk - The chunk callback.
+   * @returns {void}
+   */
+  #applyEvent(event, chunks, progress, onChunk) {
+    if (event.name === 'metadata') {
+      const [patch, type] = /** @type {[Partial<MediaMetadata>, MediaMetadataType]} */ (event.args);
+      this._emitMetadata(patch, type);
+      return;
+    }
+    if (event.name === 'chunk') {
+      const [payload] = /** @type {[MediaChunkPayload]} */ (event.args);
+      const chunk = /** @type {BlobPart} */ (payload.chunk);
+      if (progress.total === 0 && payload.total > 0) {
+        progress.total = payload.total;
+      }
+      chunks.push(chunk);
+      progress.push(payload.chunk.byteLength);
+      if (onChunk) {
+        onChunk(chunk, chunks);
+      }
+    }
+    this.#replay(event.name, event.args);
+  }
+
+  /**
+   * Re-emits a mirrored event without broadcasting it again. `Reflect.apply` is
+   * used because the event name is only known at runtime: the generic `emit`
+   * signature cannot be recovered from a `string`, so the call is dispatched
+   * dynamically while `#replaying` keeps the event out of the mirror registry.
+   * @param {string} name - The event name.
+   * @param {unknown[]} args - The original event arguments.
+   * @returns {void}
+   */
+  #replay(name, args) {
+    this.#replaying = true;
+    try {
+      Reflect.apply(this.emit, this, [name, ...args]);
+    } finally {
+      this.#replaying = false;
+    }
+  }
+
+  /**
+   * Replays a shared blob through the early decoder so a mirrored download
+   * exposes exactly the same metadata as a local one.
+   * @param {Blob} blob - The shared payload.
+   * @returns {Promise<void>} Resolves once the probe consumed the header.
+   */
+  async #probeBlob(blob) {
+    this.#openDecoder(blob.type);
+    if (!this.#decoder) {
+      return;
+    }
+    this.#decoder.write(new Uint8Array(await blob.arrayBuffer()));
+    this.#closeDecoder();
   }
 
   /**
@@ -1299,6 +1564,9 @@ class TinyMediaLoader extends TypedEmitter {
     this.#internalSrc = null;
     this.#resourceSize = 0;
     this.#cacheHint = false;
+    this.#mirrored = false;
+    this.#replaying = false;
+    this.#publish = null;
     this.#partial = {};
     this.#startTime = performance.now();
     this.#endTime = 0;
