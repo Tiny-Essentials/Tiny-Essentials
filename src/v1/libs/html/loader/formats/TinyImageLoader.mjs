@@ -4,6 +4,7 @@
  */
 import TinyMediaLoader from '../TinyMediaLoader.mjs';
 import TinyImageProbe from '../probe/TinyImageProbe.mjs';
+import TinyMediaCache from '../utils/TinyMediaCache.mjs';
 
 const EMPTY_GIF = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 
@@ -250,6 +251,8 @@ class TinyImageLoader extends TinyMediaLoader {
   #playbackTimer = null;
   /** @type {string|null} */
   #originalAnimatedUrl = null;
+  /** @type {TinyMediaCache|null} */
+  #frameCache = null;
 
   /**
    * Creates a new image loader and validates the provided options.
@@ -266,6 +269,8 @@ class TinyImageLoader extends TinyMediaLoader {
       throw new TypeError('The "element" option must be an HTMLImageElement or null.');
     }
     super({ useHeadRequest: false, ...options });
+    if (!options.cache)
+      this.#frameCache = new TinyMediaCache({ strategy: TinyMediaCache.Strategy.MANUAL });
 
     const {
       crossOrigin = null,
@@ -493,6 +498,37 @@ class TinyImageLoader extends TinyMediaLoader {
    */
   #frameKey(index) {
     return `${this.src}???frame=${index}`;
+  }
+
+  /**
+   * Returns the URL of a cached frame, or null when the frame was never sliced.
+   * @param {number} index - The zero-based frame index.
+   * @returns {string|null} The cached object URL.
+   */
+  #getFrame(index) {
+    const cache = this.cache ?? this.#frameCache;
+    if (!cache) throw new Error('');
+    const entry = cache.get(this.#frameKey(index));
+    if (!entry) {
+      return null;
+    }
+    cache.acquire(this.#frameKey(index));
+    return entry.objectUrl;
+  }
+
+  /**
+   * Stores a sliced frame and returns its object URL.
+   * @param {number} index - The zero-based frame index.
+   * @param {Blob} blob - The single-frame blob.
+   * @returns {string} The object URL of the stored frame.
+   */
+  #setFrame(index, blob) {
+    const cache = this.cache ?? this.#frameCache;
+    if (!cache) throw new Error('');
+    const key = this.#frameKey(index);
+    const entry = cache.set(key, blob, false);
+    cache.acquire(key);
+    return entry.objectUrl;
   }
 
   /**
@@ -749,32 +785,15 @@ class TinyImageLoader extends TinyMediaLoader {
       this.#animationScript.push({ delay });
 
       if (this.#animationControl !== 'script-only') {
-        const cacheKey = this.#frameKey(i);
-        let url = null;
-
-        if (this.cache) {
-          const existing = this.cache.get(cacheKey);
-          if (existing) {
-            url = existing.objectUrl;
-            this.cache.acquire(cacheKey);
-          }
-        }
-
+        let url = this.#getFrame(i);
         if (!url) {
           /** @type {Uint8Array<ArrayBuffer>} */
           const frameData = bytes.subarray(offset, offset + size);
           const file = buildAvifFrame(av1c, width, height, frameData);
           const blob = new Blob([file], { type: 'image/avif' });
-
-          if (this.cache) {
-            const entry = this.cache.set(cacheKey, blob, false);
-            this.cache.acquire(cacheKey);
-            url = entry.objectUrl;
-          } else {
-            url = URL.createObjectURL(blob);
-          }
+          url = this.#setFrame(i, blob);
         }
-        this.#frames.push({ url, cacheKey });
+        this.#frames.push({ url, cacheKey: this.#frameKey(i) });
       }
 
       if (this.#animationControl === 'native') break;
@@ -835,17 +854,7 @@ class TinyImageLoader extends TinyMediaLoader {
       this.#animationScript.push({ delay });
 
       if (this.#animationControl !== 'script-only') {
-        const cacheKey = this.#frameKey(i);
-        let url = null;
-
-        if (this.cache) {
-          const existing = this.cache.get(cacheKey);
-          if (existing) {
-            url = existing.objectUrl;
-            this.cache.acquire(cacheKey);
-          }
-        }
-
+        let url = this.#getFrame(i);
         if (!url) {
           /** @type {Uint8Array<ArrayBuffer>[]} */
           const outChunks = [];
@@ -864,16 +873,9 @@ class TinyImageLoader extends TinyMediaLoader {
           riffHeader.set([0x57, 0x45, 0x42, 0x50], 8);
 
           const blob = new Blob([riffHeader, ...outChunks], { type: 'image/webp' });
-
-          if (this.cache) {
-            const entry = this.cache.set(cacheKey, blob, false);
-            this.cache.acquire(cacheKey);
-            url = entry.objectUrl;
-          } else {
-            url = URL.createObjectURL(blob);
-          }
+          url = this.#setFrame(i, blob);
         }
-        this.#frames.push({ url, cacheKey });
+        this.#frames.push({ url, cacheKey: this.#frameKey(i) });
       }
 
       if (this.#animationControl === 'native') break;
@@ -953,17 +955,7 @@ class TinyImageLoader extends TinyMediaLoader {
       this.#animationScript.push({ delay });
 
       if (this.#animationControl !== 'script-only') {
-        const cacheKey = this.#frameKey(i);
-        let url = null;
-
-        if (this.cache) {
-          const existing = this.cache.get(cacheKey);
-          if (existing) {
-            url = existing.objectUrl;
-            this.cache.acquire(cacheKey);
-          }
-        }
-
+        let url = this.#getFrame(i);
         if (!url) {
           let seq = 0;
 
@@ -1002,19 +994,16 @@ class TinyImageLoader extends TinyMediaLoader {
             }
           }
 
-          if (iend) outChunks.push(iend);
+          // A missing IEND means the source is truncated. Synthesize an empty
+          // one so the browser always receives a well-formed PNG stream.
+          outChunks.push(
+            iend ?? new Uint8Array([0, 0, 0, 0, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82]),
+          );
 
           const blob = new Blob(outChunks, { type: 'image/apng' });
-
-          if (this.cache) {
-            const entry = this.cache.set(cacheKey, blob, false);
-            this.cache.acquire(cacheKey);
-            url = entry.objectUrl;
-          } else {
-            url = URL.createObjectURL(blob);
-          }
+          url = this.#setFrame(i, blob);
         }
-        this.#frames.push({ url, cacheKey });
+        this.#frames.push({ url, cacheKey: this.#frameKey(i) });
       }
 
       if (this.#animationControl === 'native') break;
@@ -1078,19 +1067,9 @@ class TinyImageLoader extends TinyMediaLoader {
         this.#animationScript.push({ delay });
 
         if (this.#animationControl !== 'script-only') {
-          const cacheKey = this.#frameKey(this.#frames.length);
-          let url = null;
+          const index = this.#frames.length;
+          let url = this.#getFrame(index);
 
-          // 1. Tenta recuperar o frame existente da cache para evitar duplicatas
-          if (this.cache) {
-            const existing = this.cache.get(cacheKey);
-            if (existing) {
-              url = existing.objectUrl;
-              this.cache.acquire(cacheKey);
-            }
-          }
-
-          // 2. Se não existir na cache, cria o Blob e armazena
           if (!url) {
             const frameBytes = new Uint8Array(
               globalHeader.length + (gce ? gce.length : 0) + (imgEnd - imgStart) + 1,
@@ -1105,16 +1084,10 @@ class TinyImageLoader extends TinyMediaLoader {
             frameBytes[frameBytes.length - 1] = 0x3b;
 
             const blob = new Blob([frameBytes], { type: 'image/gif' });
-            if (this.cache) {
-              const entry = this.cache.set(cacheKey, blob, false);
-              this.cache.acquire(cacheKey);
-              url = entry.objectUrl;
-            } else {
-              url = URL.createObjectURL(blob);
-            }
+            url = this.#setFrame(index, blob);
           }
 
-          this.#frames.push({ url, cacheKey });
+          this.#frames.push({ url, cacheKey: this.#frameKey(index) });
         }
 
         // Em modo Nativo, nós só precisamos fatiar o Primeiro frame para a função de freeze
@@ -1198,8 +1171,9 @@ class TinyImageLoader extends TinyMediaLoader {
     }
 
     for (const frame of this.#frames) {
-      if (this.cache) {
-        this.cache.release(frame.cacheKey);
+      const cache = this.cache;
+      if (cache) {
+        cache.release(frame.cacheKey);
       } else {
         URL.revokeObjectURL(frame.url);
       }
@@ -1209,6 +1183,7 @@ class TinyImageLoader extends TinyMediaLoader {
     this.#animationScript = [];
     this.#currentFrameIndex = 0;
     this.#isFrozen = false;
+    this.#isPlaying = false;
   }
 
   /**
