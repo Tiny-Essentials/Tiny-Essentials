@@ -1,0 +1,12 @@
+{
+  "type": "animation",
+  "prompt": "Walking like Nyan Cat",
+  "width": 147,
+  "height": 147,
+  "frame_w": 147,
+  "frame_h": 147,
+  "frame_count": 16,
+  "fps": 8,
+  "preview": "preview.webp",
+  "spritesheet": "spritesheet.png"
+}
