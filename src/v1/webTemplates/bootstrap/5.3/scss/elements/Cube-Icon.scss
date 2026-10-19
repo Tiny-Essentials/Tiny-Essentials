@@ -1,0 +1,65 @@
+// =============================================================================
+// Cube Icon
+// Bootstrap 5.3 architecture: Sass modules, overridable maps, CSS variables.
+// =============================================================================
+
+@use 'sass:map';
+
+// Fallback so this partial also compiles outside a full Bootstrap build.
+// Bootstrap 5.3 already declares: $prefix: 'bs-' !default;
+$prefix: 'bs-' !default;
+
+// Size scale. Each key generates a modifier class: .cube-icon-sm, .cube-icon-lg...
+// The value is the box dimension (applied to both width and height).
+$cube-icon-sizes: (
+  xs: 1rem,
+  sm: 1.5rem,
+  md: 3rem,
+  lg: 4rem,
+  xl: 6rem,
+) !default;
+
+// Size applied by the base class. Must be a key of $cube-icon-sizes.
+$cube-icon-size: md !default;
+
+// Resolves a key from $cube-icon-sizes. Fails at compile time on typos.
+@function cube-icon-size-value($key) {
+  @if not map.has-key($cube-icon-sizes, $key) {
+    @error "Unknown cube icon size `#{$key}`. Available keys: #{map.keys($cube-icon-sizes)}.";
+  }
+
+  @return map.get($cube-icon-sizes, $key);
+}
+
+// Emits the custom property only; width/height are declared once in .cube-icon.
+@mixin cube-icon-apply-size($size) {
+  --#{$prefix}cube-icon-size: #{$size};
+}
+
+.cube-icon {
+  @include cube-icon-apply-size(cube-icon-size-value($cube-icon-size));
+
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--#{$prefix}cube-icon-size);
+  height: var(--#{$prefix}cube-icon-size);
+  color: inherit;
+  line-height: 1;
+  vertical-align: middle;
+
+  > svg,
+  > img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+// Generates .cube-icon-xs, .cube-icon-sm, .cube-icon-md, .cube-icon-lg, .cube-icon-xl
+@each $key, $value in $cube-icon-sizes {
+  .cube-icon-#{$key} {
+    @include cube-icon-apply-size($value);
+  }
+}
