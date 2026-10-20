@@ -1,0 +1,259 @@
+// =============================================================================
+// Form controls
+// =============================================================================
+
+// ------------------------------------------------------------------ shared --
+%field {
+  color: var(--ui-text);
+  background-color: rgb(var(--ui-input-rgb) / 0.72);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--bs-border-radius-sm);
+  box-shadow: none;
+  transition:
+    border-color var(--ui-duration) var(--ui-ease),
+    background-color var(--ui-duration) var(--ui-ease),
+    box-shadow var(--ui-duration) var(--ui-ease);
+
+  &::placeholder {
+    color: var(--ui-text-muted);
+    opacity: 0.65;
+  }
+
+  &:focus {
+    color: var(--ui-text);
+    background-color: rgb(var(--ui-input-rgb) / 1);
+    border-color: var(--ui-accent);
+    outline: none;
+    box-shadow: 0 0 0 3px rgb(var(--ui-accent-rgb) / 0.2);
+  }
+
+  &:disabled,
+  &[readonly] {
+    color: var(--ui-text-muted);
+    background-color: var(--ui-overlay-1);
+    border-color: var(--ui-border);
+    opacity: 0.7;
+  }
+
+  &::file-selector-button {
+    color: var(--ui-text);
+    background-color: var(--ui-overlay-2);
+  }
+}
+
+// ---------------------------------------------------------------- controls --
+.form-control,
+.form-select {
+  @extend %field;
+
+  font-size: 0.8125rem;
+
+  &-sm {
+    font-size: 0.75rem;
+  }
+
+  &-lg {
+    font-size: 0.9375rem;
+  }
+}
+
+.form-select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236b7688' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+
+.form-control-color {
+  width: 2.75rem;
+  padding: 0.25rem;
+}
+
+// ------------------------------------------------------------ input-group --
+.input-group-text {
+  color: var(--ui-text-muted);
+  background-color: var(--ui-overlay-1);
+  border-color: var(--ui-border);
+  border-radius: var(--bs-border-radius-sm);
+}
+
+.input-group {
+  > .form-control,
+  > .form-select,
+  > .input-group-text,
+  > .btn {
+    border-radius: var(--bs-border-radius-sm);
+  }
+
+  > :not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  > :not(:first-child) {
+    margin-left: -1px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}
+
+// ------------------------------------------------------------------ labels --
+.form-label,
+.col-form-label {
+  margin-bottom: 0.25rem;
+  font-size: 0.6875rem;
+  color: var(--ui-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.form-text {
+  font-size: 0.6875rem;
+  color: var(--ui-text-muted);
+}
+
+// ------------------------------------------------------------------ checks --
+.form-check-input {
+  background-color: rgb(var(--ui-input-rgb) / 0.72);
+  border-color: var(--ui-border-strong);
+
+  &:checked,
+  &:focus {
+    background-color: var(--ui-accent);
+    border-color: var(--ui-accent);
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgb(var(--ui-accent-rgb) / 0.2);
+  }
+
+  &:disabled {
+    background-color: var(--ui-overlay-1);
+    opacity: 0.5;
+  }
+}
+
+.form-check-label {
+  color: var(--ui-text);
+}
+
+.form-switch .form-check-input {
+  background-color: var(--ui-input);
+
+  &:checked {
+    background-color: var(--ui-accent);
+  }
+}
+
+// ------------------------------------------------------------------ range --
+.form-range {
+  width: 100%;
+  height: 1.25rem;
+  padding: 0;
+  background: transparent;
+  appearance: none;
+
+  &:focus {
+    outline: none;
+  }
+
+  &::-webkit-slider-runnable-track {
+    height: 4px;
+    background-color: var(--ui-input);
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px var(--ui-border);
+  }
+
+  &::-webkit-slider-thumb {
+    width: 14px;
+    height: 14px;
+    margin-top: -5px;
+    background-color: var(--ui-accent);
+    border: 2px solid var(--ui-surface);
+    border-radius: 50%;
+    transition: box-shadow var(--ui-duration) var(--ui-ease);
+    appearance: none;
+  }
+
+  &::-moz-range-track {
+    height: 4px;
+    background-color: var(--ui-input);
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px var(--ui-border);
+  }
+
+  &::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background-color: var(--ui-accent);
+    border: 2px solid var(--ui-surface);
+    border-radius: 50%;
+  }
+
+  &:focus-visible {
+    &::-webkit-slider-thumb {
+      box-shadow: 0 0 0 3px rgb(var(--ui-accent-rgb) / 0.28);
+    }
+
+    &::-moz-range-thumb {
+      box-shadow: 0 0 0 3px rgb(var(--ui-accent-rgb) / 0.28);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.45;
+  }
+}
+
+// -------------------------------------------------------------- validation --
+@each $state, $token in ('valid': 'success', 'invalid': 'error') {
+  .#{$state}-feedback {
+    font-size: 0.6875rem;
+    color: var(--ui-#{$token});
+  }
+
+  .form-control,
+  .form-select {
+    &.is-#{$state},
+    .was-validated &:#{$state} {
+      background-image: none;
+      border-color: var(--ui-#{$token});
+
+      &:focus {
+        box-shadow: 0 0 0 3px rgb(var(--ui-#{$token}-rgb) / 0.2);
+      }
+    }
+  }
+
+  .form-check-input.is-#{$state} {
+    background-color: var(--ui-#{$token});
+    border-color: var(--ui-#{$token});
+  }
+}
+
+// --------------------------------------------------------------- floating --
+.form-floating > .form-control,
+.form-floating > .form-select {
+  height: calc(3rem + 2px);
+}
+
+.form-floating > label {
+  color: var(--ui-text-muted);
+}
+
+// ------------------------------------------------------------------- file --
+.form-control::-webkit-file-upload-button {
+  color: var(--ui-text);
+  background-color: var(--ui-overlay-2);
+  border-color: var(--ui-border);
+}
+
+// ------------------------------------------------------------------ close --
+.btn-close {
+  filter: var(--ui-close-filter, none);
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgb(var(--ui-accent-rgb) / 0.2);
+  }
+}
+
+[data-bs-theme='dark'] .btn-close {
+  --ui-close-filter: invert(1) grayscale(1) brightness(1.6);
+}

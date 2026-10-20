@@ -1,0 +1,149 @@
+// =============================================================================
+// Buttons
+// Flat fill + color-mix states. Add a colour to $button-tones and every
+// variant (solid, outline, subtle) is generated.
+// =============================================================================
+
+$button-tones: (
+  'primary': 'accent',
+  'success': 'success',
+  'danger': 'error',
+  'warning': 'warn',
+  'info': 'info',
+);
+
+// -------------------------------------------------------------------- base --
+.btn {
+  --bs-btn-font-size: 0.8125rem;
+  --bs-btn-font-weight: 500;
+  --bs-btn-padding-y: 0.5rem;
+  --bs-btn-padding-x: 0.875rem;
+  --bs-btn-border-radius: var(--bs-border-radius-sm);
+  --bs-btn-disabled-opacity: 0.4;
+
+  display: inline-flex;
+  gap: 0.375rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  transition:
+    background-color var(--ui-duration) var(--ui-ease),
+    border-color var(--ui-duration) var(--ui-ease),
+    color var(--ui-duration) var(--ui-ease),
+    box-shadow var(--ui-duration) var(--ui-ease);
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-tone, var(--ui-accent));
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+
+  &:disabled,
+  &.disabled {
+    pointer-events: none;
+  }
+}
+
+// ------------------------------------------------------------------ tones --
+@each $name, $token in $button-tones {
+  // Solid.
+  .btn-#{$name} {
+    --btn-tone: var(--ui-#{$token});
+
+    color: var(--ui-on-#{$token});
+    background-color: var(--ui-#{$token});
+    border-color: transparent;
+
+    &:hover:not(:disabled):not(.disabled) {
+      background-color: color-mix(in srgb, var(--ui-#{$token}) 86%, var(--ui-btn-mix));
+      border-color: color-mix(in srgb, var(--ui-#{$token}) 60%, var(--ui-btn-mix));
+    }
+
+    &:active:not(:disabled):not(.disabled),
+    &.active {
+      background-color: color-mix(in srgb, var(--ui-#{$token}) 78%, var(--ui-btn-mix));
+      box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.18);
+    }
+  }
+
+  // Outline.
+  .btn-outline-#{$name} {
+    --btn-tone: var(--ui-#{$token});
+
+    color: var(--ui-#{$token});
+    background-color: transparent;
+    border-color: color-mix(in srgb, var(--ui-#{$token}) 40%, transparent);
+
+    &:hover:not(:disabled):not(.disabled) {
+      color: var(--ui-on-#{$token});
+      background-color: var(--ui-#{$token});
+      border-color: var(--ui-#{$token});
+    }
+
+    &:active:not(:disabled):not(.disabled),
+    &.active {
+      color: var(--ui-on-#{$token});
+      background-color: color-mix(in srgb, var(--ui-#{$token}) 78%, var(--ui-btn-mix));
+      border-color: transparent;
+    }
+  }
+
+  // Subtle (tinted background, no border).
+  .btn-subtle-#{$name} {
+    --btn-tone: var(--ui-#{$token});
+
+    color: var(--ui-#{$token});
+    background-color: rgb(var(--ui-#{$token}-rgb) / 0.12);
+    border-color: transparent;
+
+    &:hover:not(:disabled):not(.disabled) {
+      background-color: rgb(var(--ui-#{$token}-rgb) / 0.2);
+    }
+
+    &:active:not(:disabled):not(.disabled) {
+      background-color: rgb(var(--ui-#{$token}-rgb) / 0.28);
+    }
+  }
+}
+
+// ----------------------------------------------------------------- neutral --
+.btn-secondary {
+  --btn-tone: var(--ui-border-strong);
+
+  color: var(--ui-text);
+  background-color: var(--ui-overlay-2);
+  border-color: var(--ui-border);
+
+  &:hover:not(:disabled):not(.disabled) {
+    background-color: var(--ui-border);
+    border-color: var(--ui-border-strong);
+  }
+}
+
+.btn-ghost {
+  --btn-tone: var(--ui-border-strong);
+
+  color: var(--ui-text-muted);
+  background-color: transparent;
+  border-color: transparent;
+
+  &:hover:not(:disabled):not(:disabled) {
+    color: var(--ui-heading);
+    background-color: var(--ui-overlay-2);
+  }
+}
+
+// ------------------------------------------------------------------ groups --
+.btn-group > .btn {
+  border-radius: 0;
+}
+
+.btn-group > .btn:first-child {
+  border-top-left-radius: var(--bs-border-radius-sm);
+  border-bottom-left-radius: var(--bs-border-radius-sm);
+}
+
+.btn-group > .btn:last-child {
+  border-top-right-radius: var(--bs-border-radius-sm);
+  border-bottom-right-radius: var(--bs-border-radius-sm);
+}

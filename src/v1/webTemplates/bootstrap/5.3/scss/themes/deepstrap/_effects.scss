@@ -1,0 +1,82 @@
+// =============================================================================
+// Effect primitives
+// =============================================================================
+
+@use 'sass:map';
+
+// ---------------------------------------------------------------- elevation --
+/// Flat scale: one tight contact shadow, nothing else. Depth comes from the
+/// border, not from the shadow.
+$elevation: (
+  1: (
+    0 1px 1px rgb(var(--ui-shadow-rgb) / 0.16),
+  ),
+  2: (
+    0 1px 2px rgb(var(--ui-shadow-rgb) / 0.2),
+  ),
+  3: (
+    0 2px 6px rgb(var(--ui-shadow-rgb) / 0.24),
+  ),
+) !default;
+
+@mixin elevation($level: 2) {
+  @if not map.has-key($elevation, $level) {
+    @error 'Unknown elevation level: #{$level}';
+  }
+
+  box-shadow: map.get($elevation, $level);
+}
+
+// -------------------------------------------------------------------- glass --
+/// Translucent surface. Flat by default: the border carries the separation,
+/// the blur only prevents text collision with what scrolls behind.
+@mixin glass($token: 'surface', $alpha: 0.86, $blur: 16px) {
+  background: rgb(var(--ui-#{$token}-rgb) / #{$alpha});
+  backdrop-filter: blur($blur) saturate(var(--ui-glass-saturate));
+  -webkit-backdrop-filter: blur($blur) saturate(var(--ui-glass-saturate));
+
+  @supports not (backdrop-filter: blur(1px)) {
+    background: rgb(var(--ui-#{$token}-rgb) / 0.99);
+  }
+}
+
+// ------------------------------------------------------------------ surface --
+/// Flat elevated surface: solid-ish fill + 1px border. No shadow.
+@mixin surface($alpha: 0.86) {
+  background: rgb(var(--ui-surface-rgb) / #{$alpha});
+  border: 1px solid var(--ui-border);
+  border-radius: var(--bs-border-radius);
+}
+
+// ----------------------------------------------------------------- hairline --
+@mixin hairline-top($opacity: 1) {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / #{0.05 * $opacity});
+}
+
+@mixin bevel($radius: 10px) {
+  &::after {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    content: '';
+    border-radius: inherit;
+    box-shadow: inset 0 1px 0 var(--ui-hairline);
+  }
+}
+
+// -------------------------------------------------------------------- focus --
+@mixin focus-ring($color: 'accent', $width: 3px) {
+  outline: none;
+  box-shadow: 0 0 0 $width rgb(var(--ui-#{$color}-rgb) / 0.24);
+}
+
+// ------------------------------------------------------------------ motion ---
+@mixin transition($properties...) {
+  transition-duration: var(--ui-duration);
+  transition-timing-function: var(--ui-ease);
+  transition-property: $properties;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-duration: 1ms;
+  }
+}

@@ -14,6 +14,7 @@
       rel="stylesheet"
     />
     <link href="/src/v1/webTemplates/bootstrap/5.3/scss/elements/Cube-Icon.scss" rel="stylesheet" />
+    <script type="module" src="./js/theme-stylesheet-loader.js"></script>
   </head>
 
   <body
@@ -84,6 +85,42 @@
         </div>
       </div>
     </nav>
+
+    <!-- ==================================================================
+     DEV TOOLBAR — theme stylesheet loader
+     ================================================================== -->
+    <div class="border-bottom bg-body-tertiary">
+      <div class="container-xxl py-2 d-flex flex-wrap align-items-center gap-2">
+        <label
+          class="form-label mb-0 small text-uppercase fw-bold text-body-secondary"
+          for="pg-theme-select"
+        >
+          Theme
+        </label>
+
+        <select class="form-select form-select-sm w-auto" id="pg-theme-select" disabled>
+          <option value="">Loading…</option>
+        </select>
+
+        <button
+          class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
+          id="pg-theme-refresh"
+          type="button"
+          title="Reload the selected theme"
+          disabled
+        >
+          <i class="bi bi-arrow-clockwise"></i>
+          <span class="d-none d-sm-inline">Reload</span>
+        </button>
+
+        <span
+          class="small text-body-secondary ms-auto"
+          id="pg-theme-status"
+          role="status"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
 
     <!-- ==================================================================
          MOBILE NAV

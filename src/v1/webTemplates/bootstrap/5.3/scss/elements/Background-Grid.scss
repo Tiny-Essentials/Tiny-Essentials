@@ -1,0 +1,15 @@
+[data-bs-theme='light'] {
+  --pg-grid-line: rgba(20, 22, 40, 0.06);
+}
+
+[data-bs-theme='dark'] {
+  --pg-grid-line: rgba(255, 255, 255, 0.035);
+}
+
+body {
+  background-color: var(--pg-surface-alt);
+  background-image:
+    linear-gradient(var(--pg-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--pg-grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+}

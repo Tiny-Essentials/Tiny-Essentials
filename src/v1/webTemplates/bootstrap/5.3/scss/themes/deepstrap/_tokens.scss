@@ -1,0 +1,158 @@
+// =============================================================================
+// Design tokens
+// =============================================================================
+
+@use 'sass:color';
+@use 'sass:map';
+@use 'palette' as *;
+
+// ------------------------------------------------------------------ themes --
+$theme-dark: (
+  'canvas': palette('slate-950'),
+  'surface': palette('slate-900'),
+  'surface-raised': palette('slate-850'),
+  'input': palette('slate-800'),
+  'border': palette('slate-700'),
+  'border-strong': palette('slate-600'),
+  'text': palette('slate-200'),
+  'text-muted': palette('slate-400'),
+  'heading': palette('slate-050'),
+  'accent': palette('indigo-500'),
+  'accent-soft': palette('indigo-400'),
+  'success': palette('green-500'),
+  'error': palette('red-500'),
+  'warn': palette('amber-500'),
+  'info': palette('cyan-500'),
+) !default;
+
+$theme-light: (
+  'canvas': #f4f6fb,
+  'surface': #ffffff,
+  'surface-raised': #f7f9fd,
+  'input': #ffffff,
+  'border': #dde3ee,
+  'border-strong': #c3ccdd,
+  'text': #3a4459,
+  'text-muted': #6b7688,
+  'heading': #0d1220,
+  'accent': #3f5fe0,
+  'accent-soft': #5c7bf5,
+  'success': #0f8f5f,
+  'error': #cf2445,
+  'warn': #a56200,
+  'info': #0a7fa5,
+) !default;
+
+// Foreground colour that sits on top of each tone.
+$on-dark: (
+  'accent': #080b11,
+  'success': #04140d,
+  'error': #1a0308,
+  'warn': #1a1200,
+  'info': #04141a,
+) !default;
+
+$on-light: (
+  'accent': #ffffff,
+  'success': #ffffff,
+  'error': #ffffff,
+  'warn': #1a1200,
+  'info': #ffffff,
+) !default;
+
+// ------------------------------------------------------------------ helpers --
+/// @param {Color} $color - Source colour.
+/// @returns {String} Comma separated channels, for legacy `rgba()`.
+@function channels($color) {
+  @return #{color.channel($color, 'red', $space: rgb)},
+    #{color.channel($color, 'green', $space: rgb)}, #{color.channel($color, 'blue', $space: rgb)};
+}
+
+@mixin theme-properties($theme) {
+  @each $name, $value in $theme {
+    --ui-#{$name}: #{$value};
+    --ui-#{$name}-rgb: #{color.channel($value, 'red', $space: rgb)}
+      #{color.channel($value, 'green', $space: rgb)}
+      #{color.channel($value, 'blue', $space: rgb)};
+  }
+}
+
+/// Bridges the active theme into Bootstrap's own custom properties.
+///
+/// @param {Map} $theme - Resolved theme map.
+@mixin bootstrap-bridge($theme) {
+  --bs-body-bg: var(--ui-canvas);
+  --bs-body-bg-rgb: #{channels(map.get($theme, 'canvas'))};
+  --bs-body-color: var(--ui-text);
+  --bs-body-color-rgb: var(--ui-text-rgb);
+  --bs-emphasis-color: var(--ui-heading);
+  --bs-emphasis-color-rgb: var(--ui-heading-rgb);
+  --bs-secondary-color: var(--ui-text-muted);
+  --bs-secondary-bg: var(--ui-surface);
+  --bs-secondary-bg-rgb: #{channels(map.get($theme, 'surface'))};
+  --bs-tertiary-bg: var(--ui-surface-raised);
+  --bs-tertiary-bg-rgb: #{channels(map.get($theme, 'surface-raised'))};
+  --bs-border-color: var(--ui-border);
+  --bs-border-color-translucent: var(--ui-hairline);
+  --bs-heading-color: var(--ui-heading);
+  --bs-link-color: var(--ui-accent);
+  --bs-link-color-rgb: var(--ui-accent-rgb);
+  --bs-link-hover-color: var(--ui-accent-soft);
+  --bs-code-color: var(--ui-info);
+  --bs-highlight-bg: rgb(var(--ui-warn-rgb) / 0.24);
+}
+
+// ------------------------------------------------------------------ shared --
+:root {
+  --ui-glass-blur: 16px;
+  --ui-glass-saturate: 140%;
+  --ui-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ui-duration: 140ms;
+}
+
+// -------------------------------------------------------------------- dark --
+:root,
+[data-bs-theme='dark'] {
+  color-scheme: dark;
+
+  @include theme-properties($theme-dark);
+
+  @each $name, $value in $on-dark {
+    --ui-on-#{$name}: #{$value};
+  }
+
+  --ui-hairline: rgb(255 255 255 / 0.07);
+  --ui-hairline-strong: rgb(255 255 255 / 0.12);
+  --ui-grid-line: rgb(255 255 255 / 0.02);
+  --ui-overlay-1: rgb(255 255 255 / 0.02);
+  --ui-overlay-2: rgb(255 255 255 / 0.05);
+  --ui-shadow-rgb: 0 0 0;
+  --ui-btn-mix: #ffffff;
+  --ui-orb-opacity: 1;
+  --ui-orb-blur: 40px;
+
+  @include bootstrap-bridge($theme-dark);
+}
+
+// ------------------------------------------------------------------- light --
+[data-bs-theme='light'] {
+  color-scheme: light;
+
+  @include theme-properties($theme-light);
+
+  @each $name, $value in $on-light {
+    --ui-on-#{$name}: #{$value};
+  }
+
+  --ui-hairline: rgb(15 21 35 / 0.08);
+  --ui-hairline-strong: rgb(15 21 35 / 0.14);
+  --ui-grid-line: rgb(15 21 35 / 0.03);
+  --ui-overlay-1: rgb(15 21 35 / 0.02);
+  --ui-overlay-2: rgb(15 21 35 / 0.05);
+  --ui-shadow-rgb: 30 41 59;
+  --ui-btn-mix: #000000;
+  --ui-orb-opacity: 0.45;
+  --ui-orb-blur: 56px;
+
+  @include bootstrap-bridge($theme-light);
+}

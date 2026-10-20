@@ -1,0 +1,286 @@
+// =============================================================================
+// Bootstrap 5.3 component overrides
+// Requires: _effects.scss (mixins), _tokens.scss (custom properties).
+// Do not add .btn, .form-control or .form-select here — they live in
+// _buttons.scss and _forms.scss.
+// =============================================================================
+
+// ------------------------------------------------------------------ navbar --
+.navbar {
+  --bs-navbar-color: var(--ui-text-muted);
+  --bs-navbar-hover-color: var(--ui-heading);
+  --bs-navbar-active-color: var(--ui-heading);
+  --bs-navbar-brand-color: var(--ui-heading);
+  --bs-navbar-brand-hover-color: var(--ui-heading);
+  --bs-navbar-toggler-border-color: var(--ui-border);
+  --bs-navbar-padding-y: 0.75rem;
+
+  border-bottom: 1px solid var(--ui-border);
+  @include glass('surface', 0.9, 12px);
+
+  &--sticky {
+    position: sticky;
+    top: 0;
+    z-index: $zindex-sticky;
+  }
+
+  .nav-link {
+    position: relative;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    transition: color var(--ui-duration) var(--ui-ease);
+
+    &::after {
+      position: absolute;
+      bottom: -0.25rem;
+      left: 0;
+      width: 0;
+      height: 1px;
+      content: '';
+      background: var(--ui-accent);
+      transition: width var(--ui-duration) var(--ui-ease);
+    }
+
+    &:hover::after,
+    &.active::after {
+      width: 100%;
+    }
+  }
+}
+
+// -------------------------------------------------------------------- card --
+.card {
+  --bs-card-bg: transparent;
+  --bs-card-border-color: var(--ui-border);
+  --bs-card-color: var(--ui-text);
+  --bs-card-cap-bg: var(--ui-overlay-1);
+  --bs-card-cap-color: var(--ui-heading);
+  --bs-card-inner-border-color: var(--ui-hairline);
+
+  @include surface(0.86);
+}
+
+.card-header,
+.card-footer {
+  border-color: var(--ui-hairline);
+}
+
+// ---------------------------------------------------------------- dropdown --
+.dropdown-menu {
+  --bs-dropdown-bg: rgb(var(--ui-surface-rgb) / 0.98);
+  --bs-dropdown-border-color: var(--ui-border);
+  --bs-dropdown-link-color: var(--ui-text);
+  --bs-dropdown-link-hover-bg: var(--ui-overlay-2);
+  --bs-dropdown-link-hover-color: var(--ui-heading);
+  --bs-dropdown-link-active-bg: rgb(var(--ui-accent-rgb) / 0.16);
+  --bs-dropdown-link-active-color: var(--ui-heading);
+  --bs-dropdown-divider-bg: var(--ui-hairline);
+  --bs-dropdown-header-color: var(--ui-text-muted);
+
+  padding: 0.3125rem;
+  @include elevation(3);
+}
+
+.dropdown-item {
+  border-radius: calc(var(--bs-border-radius-sm) - 2px);
+}
+
+// ------------------------------------------------------------------- modal --
+.modal-content {
+  --bs-modal-bg: transparent;
+  --bs-modal-border-color: transparent;
+  --bs-modal-header-border-color: var(--ui-hairline);
+  --bs-modal-footer-border-color: var(--ui-hairline);
+
+  @include surface(0.98);
+}
+
+.modal-backdrop {
+  background-color: rgb(5 7 11 / 0.6);
+  backdrop-filter: blur(2px);
+}
+
+// --------------------------------------------------------------- offcanvas --
+.offcanvas {
+  --bs-offcanvas-bg: var(--ui-surface);
+  --bs-offcanvas-color: var(--ui-text);
+  --bs-offcanvas-border-color: var(--ui-border);
+}
+
+// -------------------------------------------------------------------- tabs --
+.nav-tabs {
+  --bs-nav-tabs-border-color: var(--ui-border);
+  --bs-nav-link-color: var(--ui-text-muted);
+  --bs-nav-link-hover-color: var(--ui-heading);
+  --bs-nav-link-active-color: var(--ui-heading);
+
+  .nav-link {
+    border: none;
+    border-bottom: 2px solid transparent;
+    transition:
+      color var(--ui-duration) var(--ui-ease),
+      border-color var(--ui-duration) var(--ui-ease);
+
+    &.active {
+      background: transparent;
+      border-bottom-color: var(--ui-accent);
+    }
+  }
+}
+
+.nav-pills {
+  --bs-nav-pills-link-active-bg: rgb(var(--ui-accent-rgb) / 0.16);
+  --bs-nav-pills-link-active-color: var(--ui-heading);
+
+  .nav-link {
+    border-radius: var(--bs-border-radius-sm);
+    transition: background var(--ui-duration) var(--ui-ease);
+  }
+}
+
+// ------------------------------------------------------------------- table --
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--ui-text);
+  --bs-table-border-color: var(--ui-border);
+  --bs-table-hover-bg: var(--ui-overlay-1);
+  --bs-table-hover-color: var(--ui-heading);
+  --bs-table-striped-bg: var(--ui-overlay-1);
+
+  thead th {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--ui-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
+
+// ------------------------------------------------------------------ alerts --
+@each $name, $token in ('success': 'success', 'danger': 'error', 'warning': 'warn', 'info': 'info') {
+  .alert-#{$name} {
+    --bs-alert-color: var(--ui-#{$token});
+    --bs-alert-bg: rgb(var(--ui-#{$token}-rgb) / 0.1);
+    --bs-alert-border-color: rgb(var(--ui-#{$token}-rgb) / 0.28);
+  }
+}
+
+// ------------------------------------------------------------------- toast --
+.toast {
+  --bs-toast-bg: rgb(var(--ui-surface-rgb) / 0.98);
+  --bs-toast-border-color: var(--ui-border);
+  --bs-toast-color: var(--ui-text);
+  --bs-toast-header-bg: var(--ui-overlay-1);
+  --bs-toast-header-color: var(--ui-heading);
+
+  @include elevation(3);
+}
+
+// --------------------------------------------------------------- accordion --
+.accordion {
+  --bs-accordion-bg: transparent;
+  --bs-accordion-color: var(--ui-text);
+  --bs-accordion-border-color: var(--ui-border);
+  --bs-accordion-btn-color: var(--ui-heading);
+  --bs-accordion-btn-bg: transparent;
+  --bs-accordion-active-bg: transparent;
+  --bs-accordion-active-color: var(--ui-heading);
+  --bs-accordion-btn-focus-box-shadow: 0 0 0 3px rgb(var(--ui-accent-rgb) / 0.2);
+  --bs-accordion-icon-filter: none;
+}
+
+// ---------------------------------------------------------------- overlays --
+.tooltip {
+  --bs-tooltip-bg: var(--ui-surface-raised);
+  --bs-tooltip-color: var(--ui-heading);
+}
+
+.popover {
+  --bs-popover-bg: var(--ui-surface);
+  --bs-popover-border-color: var(--ui-border);
+  --bs-popover-header-bg: var(--ui-overlay-1);
+  --bs-popover-header-color: var(--ui-heading);
+}
+
+// ---------------------------------------------------------------- progress --
+.progress {
+  --bs-progress-bg: var(--ui-input);
+  --bs-progress-bar-bg: var(--ui-accent);
+  --bs-progress-height: 6px;
+}
+
+// -------------------------------------------------------------- pagination --
+.pagination {
+  --bs-pagination-bg: transparent;
+  --bs-pagination-border-color: var(--ui-border);
+  --bs-pagination-color: var(--ui-text);
+  --bs-pagination-hover-bg: var(--ui-overlay-2);
+  --bs-pagination-hover-color: var(--ui-heading);
+  --bs-pagination-hover-border-color: var(--ui-border-strong);
+  --bs-pagination-active-bg: var(--ui-accent);
+  --bs-pagination-active-border-color: var(--ui-accent);
+  --bs-pagination-disabled-bg: transparent;
+  --bs-pagination-disabled-color: var(--ui-text-muted);
+}
+
+// -------------------------------------------------------------- breadcrumb --
+.breadcrumb {
+  --bs-breadcrumb-divider-color: var(--ui-text-muted);
+  --bs-breadcrumb-item-active-color: var(--ui-heading);
+}
+
+// -------------------------------------------------------------- list-group --
+.list-group {
+  --bs-list-group-bg: transparent;
+  --bs-list-group-color: var(--ui-text);
+  --bs-list-group-border-color: var(--ui-border);
+  --bs-list-group-action-hover-bg: var(--ui-overlay-1);
+  --bs-list-group-action-hover-color: var(--ui-heading);
+  --bs-list-group-active-bg: rgb(var(--ui-accent-rgb) / 0.16);
+  --bs-list-group-active-border-color: var(--ui-accent);
+  --bs-list-group-active-color: var(--ui-heading);
+}
+
+// ---------------------------------------------------------------- surfaces --
+.bg-body {
+  background-color: var(--ui-canvas) !important;
+}
+
+.bg-body-secondary {
+  background-color: var(--ui-surface) !important;
+}
+
+.bg-body-tertiary {
+  background-color: var(--ui-surface-raised) !important;
+}
+
+.bg-body-quaternary {
+  background-color: var(--ui-input) !important;
+}
+
+// -------------------------------------------------------------------- misc --
+hr {
+  color: var(--ui-border);
+  opacity: 1;
+}
+
+.placeholder {
+  background-color: var(--ui-border-strong);
+}
+
+::placeholder {
+  color: var(--ui-text-muted);
+  opacity: 0.65;
+}
+
+.text-muted {
+  color: var(--ui-text-muted) !important;
+}
+
+.border,
+.border-top,
+.border-bottom,
+.border-start,
+.border-end {
+  border-color: var(--ui-border) !important;
+}

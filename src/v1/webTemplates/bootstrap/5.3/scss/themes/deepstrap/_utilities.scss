@@ -1,0 +1,80 @@
+// =============================================================================
+// Atomic utilities
+// Requires _effects.scss to be imported first (mixins + $elevation).
+// =============================================================================
+
+// ------------------------------------------------------------------- glass --
+.glass {
+  @include glass('surface', 0.72, 20px);
+}
+
+.glass-subtle {
+  @include glass('surface', 0.5, 12px);
+}
+
+.glass-strong {
+  @include glass('surface', 0.92, 28px);
+}
+
+// --------------------------------------------------------------- elevation --
+@each $level, $shadow in $elevation {
+  .elevate-#{$level} {
+    box-shadow: $shadow;
+  }
+}
+
+// ---------------------------------------------------------------- hairline --
+.hairline {
+  border: 1px solid var(--ui-hairline);
+}
+
+.hairline-top {
+  box-shadow: inset 0 1px 0 var(--ui-hairline);
+}
+
+.hairline-bottom {
+  box-shadow: inset 0 -1px 0 var(--ui-hairline);
+}
+
+// ----------------------------------------------------------------- surface --
+.surface {
+  background: rgb(var(--ui-surface-rgb) / 0.72);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--bs-border-radius);
+}
+
+.surface-raised {
+  background: rgb(var(--ui-surface-raised-rgb) / 0.72);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--bs-border-radius);
+}
+
+// -------------------------------------------------------------------- text --
+.text-gradient {
+  color: transparent;
+  background: linear-gradient(135deg, var(--ui-accent-soft), var(--ui-info));
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+// ------------------------------------------------------------------- focus --
+.ring-accent {
+  box-shadow: 0 0 0 3px rgb(var(--ui-accent-rgb) / 0.22);
+}
+
+.glow-accent {
+  box-shadow: 0 8px 32px -12px rgb(var(--ui-accent-rgb) / 0.9);
+}
+
+// ------------------------------------------------------------------ motion --
+@media (prefers-reduced-motion: reduce) {
+  .glass,
+  .glass-subtle,
+  .glass-strong {
+    transition: none;
+  }
+}

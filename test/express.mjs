@@ -104,6 +104,13 @@ const errorsDir = path.join(__dirname, './errors');
 const projectRoot = path.join(__dirname, '../');
 
 /**
+ * Directory that contains the `bootstrap` package. Required because the theme
+ * uses bare specifiers such as `@import 'bootstrap/scss/functions'`.
+ * @type {string}
+ */
+const nodeModulesDir = path.join(projectRoot, 'node_modules');
+
+/**
  * Directories searched by the throttled endpoint, in order. The first match
  * wins, so `publicDir` keeps priority over `imgDir` when both contain a file
  * with the same name.
@@ -337,14 +344,16 @@ const mdLoader = async (filePath, fileName, req, res) => {
 /** @type {ReadFileUrl} */
 const readScss = async (filePath, fileName, req, res) => {
   try {
-    const result = sass.compile(filePath, {
+    const result = await sass.compileAsync(filePath, {
       style: 'expanded',
-      loadPaths: [path.dirname(filePath)],
+      loadPaths: [path.dirname(filePath), nodeModulesDir],
+      quietDeps: true,
+      silenceDeprecations: ['import', 'global-builtin', 'color-functions', 'mixed-decls'],
     });
-    res.send(result.css);
+    res.type('text/css').send(result.css);
   } catch (err) {
     console.error(err);
-    res.status(500).send(`SCSS compilation error:\n${err.message}`);
+    res.status(500).type('text/plain').send(`SCSS compilation error:\n${err.message}`);
   }
 };
 
