@@ -62,6 +62,17 @@ $on-light: (
   'text-muted': #ffffff,
 ) !default;
 
+// Bootstrap colour name -> design token suffix.
+// `light` and `dark` are absent on purpose: they are surfaces, not accents.
+$subtle-tokens: (
+  'primary': 'accent',
+  'secondary': 'text-muted',
+  'success': 'success',
+  'danger': 'error',
+  'warning': 'warn',
+  'info': 'info',
+) !default;
+
 // ------------------------------------------------------------------ helpers --
 /// @param {Color} $color - Source colour.
 /// @returns {String} Comma separated channels, for legacy `rgba()`.
@@ -110,6 +121,32 @@ $on-light: (
   --bs-link-hover-opacity: 1;
   --bs-code-color: var(--ui-info);
   --bs-highlight-bg: rgb(var(--ui-warn-rgb) / 0.24);
+  @include bootstrap-subtle-bridge();
+}
+
+/// Bridges the `-subtle` and `-emphasis` scales into the `--ui-*` tokens.
+///
+/// Bootstrap derives both scales from the light palette at build time. Because
+/// `$enable-dark-mode` is `false`, the `[data-bs-theme='dark']` overrides are
+/// never emitted, so `.bg-primary-subtle` would keep its near-white tint on a
+/// near-black canvas. Redefining the variables (not the classes) keeps the
+/// `!important` from the utilities API untouched.
+@mixin bootstrap-subtle-bridge() {
+  @each $name, $token in $subtle-tokens {
+    --bs-#{$name}-bg-subtle: rgb(var(--ui-#{$token}-rgb) / 0.12);
+    --bs-#{$name}-text-emphasis: var(--ui-#{$token});
+    --bs-#{$name}-border-subtle: rgb(var(--ui-#{$token}-rgb) / 0.32);
+  }
+
+  // `light` and `dark` are surfaces: a 12% tint of them is invisible, so they
+  // map to the surface scale instead of the accent scale.
+  --bs-light-bg-subtle: var(--ui-surface-raised);
+  --bs-light-text-emphasis: var(--ui-heading);
+  --bs-light-border-subtle: var(--ui-border);
+
+  --bs-dark-bg-subtle: var(--ui-canvas);
+  --bs-dark-text-emphasis: var(--ui-text);
+  --bs-dark-border-subtle: var(--ui-border-strong);
 }
 
 // ------------------------------------------------------------------ shared --

@@ -152,10 +152,6 @@ $button-tones: (
   background-color: transparent;
   border-color: color-mix(in srgb, var(--ui-#{$tone}) 40%, transparent);
 
-  @if $seam {
-    box-shadow: 0 0 0 1px rgb(var(--ui-shadow-rgb) / 0.18);
-  }
-
   &:hover:not(:disabled):not(.disabled) {
     color: var(--ui-on-#{$tone});
     background-color: var(--ui-#{$tone});
