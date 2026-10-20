@@ -98,16 +98,18 @@ $on-light: (
   --bs-link-color: var(--ui-accent);
   --bs-link-color-rgb: var(--ui-accent-rgb);
   --bs-link-hover-color: var(--ui-accent-soft);
+  --bs-link-hover-color-rgb: var(--ui-accent-soft-rgb);
+  --bs-link-opacity: 1;
+  --bs-link-hover-opacity: 1;
   --bs-code-color: var(--ui-info);
   --bs-highlight-bg: rgb(var(--ui-warn-rgb) / 0.24);
 }
 
 // ------------------------------------------------------------------ shared --
 :root {
-  --ui-glass-blur: 16px;
-  --ui-glass-saturate: 140%;
+  --ui-glass-saturate: 180%;
   --ui-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --ui-duration: 140ms;
+  --ui-duration: 160ms;
 }
 
 // -------------------------------------------------------------------- dark --
@@ -123,13 +125,15 @@ $on-light: (
 
   --ui-hairline: rgb(255 255 255 / 0.07);
   --ui-hairline-strong: rgb(255 255 255 / 0.12);
-  --ui-grid-line: rgb(255 255 255 / 0.02);
+  --ui-grid-line: rgb(255 255 255 / 0.022);
   --ui-overlay-1: rgb(255 255 255 / 0.02);
   --ui-overlay-2: rgb(255 255 255 / 0.05);
   --ui-shadow-rgb: 0 0 0;
   --ui-btn-mix: #ffffff;
   --ui-orb-opacity: 1;
-  --ui-orb-blur: 40px;
+  --ui-orb-blur: 48px;
+  --ui-mesh-1: 0.16;
+  --ui-mesh-2: 0.12;
 
   @include bootstrap-bridge($theme-dark);
 }
@@ -151,8 +155,10 @@ $on-light: (
   --ui-overlay-2: rgb(15 21 35 / 0.05);
   --ui-shadow-rgb: 30 41 59;
   --ui-btn-mix: #000000;
-  --ui-orb-opacity: 0.45;
-  --ui-orb-blur: 56px;
+  --ui-orb-opacity: 0.5;
+  --ui-orb-blur: 64px;
+  --ui-mesh-1: 0.1;
+  --ui-mesh-2: 0.08;
 
   @include bootstrap-bridge($theme-light);
 }

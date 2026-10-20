@@ -1,19 +1,19 @@
 // =============================================================================
 // Atomic utilities
-// Requires _effects.scss to be imported first (mixins + $elevation).
+// Requires: _effects.scss (mixins), _tokens.scss (custom properties).
 // =============================================================================
 
 // ------------------------------------------------------------------- glass --
 .glass {
-  @include glass('surface', 0.72, 20px);
+  @include glass('default', 'surface');
 }
 
 .glass-subtle {
-  @include glass('surface', 0.5, 12px);
+  @include glass('subtle', 'surface');
 }
 
 .glass-strong {
-  @include glass('surface', 0.92, 28px);
+  @include glass('strong', 'surface');
 }
 
 // --------------------------------------------------------------- elevation --

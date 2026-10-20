@@ -21,6 +21,7 @@
     data-bs-spy="scroll"
     data-bs-target="#pg-nav"
     data-bs-root-margin="0px 0px -70%"
+    data-bs-smooth-scroll="true"
     tabindex="0"
   >
     <!-- ==================================================================
@@ -78,6 +79,27 @@
             <li class="nav-item"><a class="nav-link" href="#colors">Colors</a></li>
             <li class="nav-item"><a class="nav-link" href="#forms">Forms</a></li>
             <li class="nav-item"><a class="nav-link" href="#overlays">Overlays</a></li>
+            <li class="nav-item"><a class="nav-link" href="#accordion">Accordion</a></li>
+            <li class="nav-item"><a class="nav-link" href="#carousel">Carousel</a></li>
+            <li class="nav-item"><a class="nav-link" href="#media">Media</a></li>
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Components
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#accordion">Accordion</a></li>
+                <li><a class="dropdown-item" href="#carousel">Carousel</a></li>
+                <li><a class="dropdown-item" href="#media">Media</a></li>
+                <li><hr class="dropdown-divider" /></li>
+                <li><a class="dropdown-item" href="#forms">Forms</a></li>
+              </ul>
+            </li>
             <li class="nav-item">
               <a class="btn btn-primary ms-lg-3" href="#overview">Get Started</a>
             </li>
@@ -403,6 +425,87 @@
                 </div>
               </div>
 
+              <!-- File input -->
+              <div class="col-md-6">
+                <label class="form-label" for="pg-file">File</label>
+                <input class="form-control" type="file" id="pg-file" />
+              </div>
+
+              <!-- Color picker -->
+              <div class="col-md-6">
+                <label class="form-label" for="pg-color">Color</label>
+                <input
+                  type="color"
+                  class="form-control form-control-color w-100"
+                  id="pg-color"
+                  value="#6c8cff"
+                />
+              </div>
+
+              <!-- Datalist -->
+              <div class="col-md-6">
+                <label class="form-label" for="pg-datalist">Datalist</label>
+                <input
+                  class="form-control"
+                  list="pg-datalist-options"
+                  id="pg-datalist"
+                  placeholder="Type a fruit"
+                />
+                <datalist id="pg-datalist-options">
+                  <option value="Apple"></option>
+                  <option value="Banana"></option>
+                  <option value="Cherry"></option>
+                  <option value="Dragonfruit"></option>
+                </datalist>
+              </div>
+
+              <!-- Floating select -->
+              <div class="col-md-6">
+                <div class="form-floating">
+                  <select class="form-select" id="pg-floating-select">
+                    <option selected>Choose an option</option>
+                    <option value="1">One</option>
+                    <option value="2">Two</option>
+                  </select>
+                  <label for="pg-floating-select">Floating select</label>
+                </div>
+              </div>
+
+              <!-- Floating textarea -->
+              <div class="col-12">
+                <div class="form-floating">
+                  <textarea
+                    class="form-control"
+                    placeholder="Leave a comment"
+                    id="pg-floating-textarea"
+                    style="height: 100px"
+                  ></textarea>
+                  <label for="pg-floating-textarea">Floating textarea</label>
+                </div>
+              </div>
+
+              <!-- Input group with icon -->
+              <div class="col-md-6">
+                <label class="form-label" for="pg-search">Search</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-search"></i></span>
+                  <input type="search" class="form-control" id="pg-search" placeholder="Search…" />
+                </div>
+              </div>
+
+              <!-- Input group with select -->
+              <div class="col-md-6">
+                <label class="form-label" for="pg-currency">Amount</label>
+                <div class="input-group">
+                  <select class="form-select" style="max-width: 6rem">
+                    <option>USD</option>
+                    <option>EUR</option>
+                    <option>BRL</option>
+                  </select>
+                  <input type="number" class="form-control" id="pg-currency" placeholder="0.00" />
+                </div>
+              </div>
+
               <div class="col-12 d-flex gap-2">
                 <button class="btn btn-primary" type="submit">Submit</button>
                 <button class="btn btn-outline-secondary" type="reset">Reset</button>
@@ -488,6 +591,220 @@
                     </p>
                   </div>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============================================================
+     ACCORDION
+     ============================================================ -->
+          <section id="accordion" class="py-5 border-bottom">
+            <h2 class="h3 fw-bold mb-1">Accordion</h2>
+            <p class="text-body-secondary mb-4">Collapsible panels with a single open item.</p>
+
+            <div class="accordion" id="pgAccordion">
+              <div class="accordion-item">
+                <h3 class="accordion-header">
+                  <button
+                    class="accordion-button"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#accOne"
+                    aria-expanded="true"
+                  >
+                    First panel
+                  </button>
+                </h3>
+                <div
+                  id="accOne"
+                  class="accordion-collapse collapse show"
+                  data-bs-parent="#pgAccordion"
+                >
+                  <div class="accordion-body">
+                    Content of the first panel. Only one panel is open at a time.
+                  </div>
+                </div>
+              </div>
+
+              <div class="accordion-item">
+                <h3 class="accordion-header">
+                  <button
+                    class="accordion-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#accTwo"
+                    aria-expanded="false"
+                  >
+                    Second panel
+                  </button>
+                </h3>
+                <div id="accTwo" class="accordion-collapse collapse" data-bs-parent="#pgAccordion">
+                  <div class="accordion-body">
+                    Content of the second panel. The <code>data-bs-parent</code> attribute keeps the
+                    group exclusive.
+                  </div>
+                </div>
+              </div>
+
+              <div class="accordion-item">
+                <h3 class="accordion-header">
+                  <button
+                    class="accordion-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#accThree"
+                    aria-expanded="false"
+                  >
+                    Third panel
+                  </button>
+                </h3>
+                <div
+                  id="accThree"
+                  class="accordion-collapse collapse"
+                  data-bs-parent="#pgAccordion"
+                >
+                  <div class="accordion-body">Content of the third panel.</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============================================================
+     CAROUSEL
+     ============================================================ -->
+          <section id="carousel" class="py-5 border-bottom">
+            <h2 class="h3 fw-bold mb-1">Carousel</h2>
+            <p class="text-body-secondary mb-4">Slides with indicators and controls.</p>
+
+            <div
+              id="pgCarousel"
+              class="carousel slide rounded-3 overflow-hidden border"
+              data-bs-ride="carousel"
+            >
+              <div class="carousel-indicators">
+                <button
+                  type="button"
+                  data-bs-target="#pgCarousel"
+                  data-bs-slide-to="0"
+                  class="active"
+                  aria-current="true"
+                  aria-label="Slide 1"
+                ></button>
+                <button
+                  type="button"
+                  data-bs-target="#pgCarousel"
+                  data-bs-slide-to="1"
+                  aria-label="Slide 2"
+                ></button>
+                <button
+                  type="button"
+                  data-bs-target="#pgCarousel"
+                  data-bs-slide-to="2"
+                  aria-label="Slide 3"
+                ></button>
+              </div>
+
+              <div class="carousel-inner">
+                <div class="carousel-item active">
+                  <div
+                    class="d-flex align-items-center justify-content-center bg-primary bg-opacity-25"
+                    style="height: 280px"
+                  >
+                    <span class="display-4 fw-bold text-primary">01</span>
+                  </div>
+                  <div class="carousel-caption d-none d-md-block">
+                    <h5>First slide</h5>
+                    <p>Gradient placeholders keep the demo free of external images.</p>
+                  </div>
+                </div>
+                <div class="carousel-item">
+                  <div
+                    class="d-flex align-items-center justify-content-center bg-success bg-opacity-25"
+                    style="height: 280px"
+                  >
+                    <span class="display-4 fw-bold text-success">02</span>
+                  </div>
+                  <div class="carousel-caption d-none d-md-block">
+                    <h5>Second slide</h5>
+                    <p>Use the arrows or the indicators to navigate.</p>
+                  </div>
+                </div>
+                <div class="carousel-item">
+                  <div
+                    class="d-flex align-items-center justify-content-center bg-info bg-opacity-25"
+                    style="height: 280px"
+                  >
+                    <span class="display-4 fw-bold text-info">03</span>
+                  </div>
+                  <div class="carousel-caption d-none d-md-block">
+                    <h5>Third slide</h5>
+                    <p>Autoplay is enabled through <code>data-bs-ride="carousel"</code>.</p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                class="carousel-control-prev"
+                type="button"
+                data-bs-target="#pgCarousel"
+                data-bs-slide="prev"
+              >
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+              </button>
+              <button
+                class="carousel-control-next"
+                type="button"
+                data-bs-target="#pgCarousel"
+                data-bs-slide="next"
+              >
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- ============================================================
+     MEDIA
+     ============================================================ -->
+          <section id="media" class="py-5 border-bottom">
+            <h2 class="h3 fw-bold mb-1">Media</h2>
+            <p class="text-body-secondary mb-4">Responsive images, thumbnails and figures.</p>
+
+            <div class="row g-3">
+              <div class="col-md-4">
+                <figure class="figure w-100">
+                  <div
+                    class="ratio ratio-4x3 bg-primary bg-opacity-10 border rounded-3 d-flex align-items-center justify-content-center"
+                  >
+                    <span class="text-primary fw-semibold">4:3</span>
+                  </div>
+                  <figcaption class="figure-caption">
+                    Figure with <code>ratio-4x3</code>.
+                  </figcaption>
+                </figure>
+              </div>
+
+              <div class="col-md-4">
+                <img
+                  src="https://picsum.photos/seed/pg-thumb/480/360"
+                  class="img-fluid rounded-3 border"
+                  alt="Placeholder"
+                />
+                <p class="small text-body-secondary mt-2 mb-0">
+                  <code>img-fluid</code> keeps the image inside its column.
+                </p>
+              </div>
+
+              <div class="col-md-4">
+                <img
+                  src="https://picsum.photos/seed/pg-thumb-2/480/360"
+                  class="img-thumbnail"
+                  alt="Thumbnail"
+                />
+                <p class="small text-body-secondary mt-2 mb-0">
+                  <code>img-thumbnail</code> adds the border and padding.
+                </p>
               </div>
             </div>
           </section>
@@ -752,6 +1069,31 @@
                 </div>
               </div>
             </div>
+
+            <!-- Stacks -->
+            <div class="mt-4">
+              <h3 class="h6 text-uppercase text-body-secondary mb-2">Stacks</h3>
+              <div class="hstack gap-2 mb-2">
+                <div class="p-2 bg-primary bg-opacity-10 rounded">hstack</div>
+                <div class="p-2 bg-primary bg-opacity-10 rounded">gap-2</div>
+                <div class="p-2 bg-primary bg-opacity-10 rounded">items</div>
+              </div>
+              <div class="vstack gap-2" style="max-width: 12rem">
+                <div class="p-2 bg-success bg-opacity-10 rounded">vstack</div>
+                <div class="p-2 bg-success bg-opacity-10 rounded">gap-2</div>
+                <div class="p-2 bg-success bg-opacity-10 rounded">items</div>
+              </div>
+            </div>
+
+            <!-- Close button -->
+            <div class="mt-4">
+              <h3 class="h6 text-uppercase text-body-secondary mb-2">Close button</h3>
+              <div class="d-flex align-items-center gap-3">
+                <button type="button" class="btn-close" aria-label="Close"></button>
+                <button type="button" class="btn-close" disabled aria-label="Close"></button>
+                <button type="button" class="btn-close bg-body" aria-label="Close"></button>
+              </div>
+            </div>
           </section>
         </main>
       </div>
@@ -980,6 +1322,9 @@
         document.querySelectorAll('[data-pg-set-theme]').forEach((button) => {
           button.addEventListener('click', () => applyTheme(button.dataset.pgSetTheme));
         });
+
+        // Scrollspy must be refreshed after the TOC links exist.
+        bootstrap.ScrollSpy.getOrCreateInstance(document.body).refresh();
       };
 
       /* ====================================================================

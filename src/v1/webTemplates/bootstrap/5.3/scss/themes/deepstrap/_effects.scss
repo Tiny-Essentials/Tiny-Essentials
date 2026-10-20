@@ -1,24 +1,30 @@
 // =============================================================================
 // Effect primitives
+// Glass is a spectrum: 3 named levels, each with a fallback.
 // =============================================================================
 
 @use 'sass:map';
 
 // ---------------------------------------------------------------- elevation --
-/// Flat scale: one tight contact shadow, nothing else. Depth comes from the
-/// border, not from the shadow.
+/// Two-layer shadow: contact + ambient. The colour comes from the theme so the
+/// light variant can use a slate shadow instead of pure black.
 $elevation: (
   1: (
-    0 1px 1px rgb(var(--ui-shadow-rgb) / 0.16),
+    0 1px 2px rgb(var(--ui-shadow-rgb) / 0.24),
   ),
   2: (
-    0 1px 2px rgb(var(--ui-shadow-rgb) / 0.2),
+    0 1px 2px rgb(var(--ui-shadow-rgb) / 0.24),
+    0 8px 24px -16px rgb(var(--ui-shadow-rgb) / 0.72),
   ),
   3: (
-    0 2px 6px rgb(var(--ui-shadow-rgb) / 0.24),
+    0 2px 4px rgb(var(--ui-shadow-rgb) / 0.28),
+    0 16px 48px -20px rgb(var(--ui-shadow-rgb) / 0.8),
   ),
 ) !default;
 
+/// Applies a step from the elevation scale.
+///
+/// @param {Number} $level - 1, 2 or 3.
 @mixin elevation($level: 2) {
   @if not map.has-key($elevation, $level) {
     @error 'Unknown elevation level: #{$level}';
@@ -28,39 +34,68 @@ $elevation: (
 }
 
 // -------------------------------------------------------------------- glass --
-/// Translucent surface. Flat by default: the border carries the separation,
-/// the blur only prevents text collision with what scrolls behind.
-@mixin glass($token: 'surface', $alpha: 0.86, $blur: 16px) {
+/// Frosted surface. Three levels, from barely-there to heavy.
+///
+/// @param {String} $level - `subtle`, `default` or `strong`.
+/// @param {String} $token - Token name, without the `--ui-` prefix.
+@mixin glass($level: 'default', $token: 'surface') {
+  $config: (
+    'subtle': (
+      alpha: 0.42,
+      blur: 12px,
+    ),
+    'default': (
+      alpha: 0.62,
+      blur: 20px,
+    ),
+    'strong': (
+      alpha: 0.78,
+      blur: 28px,
+    ),
+  );
+
+  @if not map.has-key($config, $level) {
+    @error 'Unknown glass level: #{$level}';
+  }
+
+  $alpha: map.get(map.get($config, $level), alpha);
+  $blur: map.get(map.get($config, $level), blur);
+
   background: rgb(var(--ui-#{$token}-rgb) / #{$alpha});
   backdrop-filter: blur($blur) saturate(var(--ui-glass-saturate));
   -webkit-backdrop-filter: blur($blur) saturate(var(--ui-glass-saturate));
 
   @supports not (backdrop-filter: blur(1px)) {
-    background: rgb(var(--ui-#{$token}-rgb) / 0.99);
+    background: rgb(var(--ui-#{$token}-rgb) / 0.98);
   }
 }
 
 // ------------------------------------------------------------------ surface --
-/// Flat elevated surface: solid-ish fill + 1px border. No shadow.
-@mixin surface($alpha: 0.86) {
+/// Opaque surface. Used by components that must not be transparent (modals,
+/// dropdowns) but still need the border and radius.
+///
+/// @param {Number} $alpha - Background opacity.
+@mixin surface($alpha: 0.98) {
   background: rgb(var(--ui-surface-rgb) / #{$alpha});
   border: 1px solid var(--ui-border);
   border-radius: var(--bs-border-radius);
 }
 
 // ----------------------------------------------------------------- hairline --
+/// 1px light line on the top edge. Fakes a lit bevel.
 @mixin hairline-top($opacity: 1) {
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / #{0.05 * $opacity});
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / #{0.06 * $opacity});
 }
 
-@mixin bevel($radius: 10px) {
+/// Full inner border, brighter at the top. Requires `position: relative`.
+@mixin bevel($radius: inherit) {
   &::after {
     position: absolute;
     inset: 0;
     pointer-events: none;
     content: '';
-    border-radius: inherit;
-    box-shadow: inset 0 1px 0 var(--ui-hairline);
+    border-radius: $radius;
+    box-shadow: inset 0 1px 0 var(--ui-hairline-strong);
   }
 }
 
@@ -70,7 +105,7 @@ $elevation: (
   box-shadow: 0 0 0 $width rgb(var(--ui-#{$color}-rgb) / 0.24);
 }
 
-// ------------------------------------------------------------------ motion ---
+// ------------------------------------------------------------------ motion --
 @mixin transition($properties...) {
   transition-duration: var(--ui-duration);
   transition-timing-function: var(--ui-ease);

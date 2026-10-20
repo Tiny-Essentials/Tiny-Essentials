@@ -15,8 +15,9 @@
   --bs-navbar-toggler-border-color: var(--ui-border);
   --bs-navbar-padding-y: 0.75rem;
 
-  border-bottom: 1px solid var(--ui-border);
-  @include glass('surface', 0.9, 12px);
+  border-bottom: 1px solid var(--ui-hairline);
+  @include glass('default', 'surface');
+  @include hairline-top();
 
   &--sticky {
     position: sticky;
@@ -157,7 +158,8 @@
 }
 
 // ------------------------------------------------------------------ alerts --
-@each $name, $token in ('success': 'success', 'danger': 'error', 'warning': 'warn', 'info': 'info') {
+@each $name, $token in ('success': 'success', 'danger': 'error', 'warning': 'warn', 'info': 'info')
+{
   .alert-#{$name} {
     --bs-alert-color: var(--ui-#{$token});
     --bs-alert-bg: rgb(var(--ui-#{$token}-rgb) / 0.1);
