@@ -50,6 +50,7 @@ $on-dark: (
   'error': #1a0308,
   'warn': #1a1200,
   'info': #04141a,
+  'text-muted': #ffffff,
 ) !default;
 
 $on-light: (
@@ -58,6 +59,7 @@ $on-light: (
   'error': #ffffff,
   'warn': #ffffff,
   'info': #ffffff,
+  'text-muted': #ffffff,
 ) !default;
 
 // ------------------------------------------------------------------ helpers --
@@ -68,12 +70,17 @@ $on-light: (
     #{color.channel($color, 'green', $space: rgb)}, #{color.channel($color, 'blue', $space: rgb)};
 }
 
+/// @param {Color} $color - Source colour.
+/// @returns {String} Space separated channels, for the `rgb(var(--x) / a)` syntax.
+@function triplet($color) {
+  @return #{color.channel($color, 'red', $space: rgb)}
+    #{color.channel($color, 'green', $space: rgb)} #{color.channel($color, 'blue', $space: rgb)};
+}
+
 @mixin theme-properties($theme) {
   @each $name, $value in $theme {
     --ui-#{$name}: #{$value};
-    --ui-#{$name}-rgb: #{color.channel($value, 'red', $space: rgb)}
-      #{color.channel($value, 'green', $space: rgb)}
-      #{color.channel($value, 'blue', $space: rgb)};
+    --ui-#{$name}-rgb: #{triplet($value)};
   }
 }
 
@@ -110,6 +117,15 @@ $on-light: (
   --ui-glass-saturate: 180%;
   --ui-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ui-duration: 160ms;
+
+  // Absolute neutrals. These are intentionally theme-independent: `.btn-light`
+  // must stay light and `.btn-dark` must stay dark in both themes.
+  --ui-neutral-light: #{palette('slate-050')};
+  --ui-neutral-light-rgb: #{triplet(palette('slate-050'))};
+  --ui-on-neutral-light: #{palette('slate-950')};
+  --ui-neutral-dark: #{palette('slate-900')};
+  --ui-neutral-dark-rgb: #{triplet(palette('slate-900'))};
+  --ui-on-neutral-dark: #{palette('slate-050')};
 }
 
 // -------------------------------------------------------------------- dark --

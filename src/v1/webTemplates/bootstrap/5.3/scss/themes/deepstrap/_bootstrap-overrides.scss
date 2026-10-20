@@ -406,10 +406,10 @@ $carousel-indicator-active: #6c8cff;
 // Normalises any inherited icon colour to pure white. Works regardless of the
 // SVG stroke baked into Bootstrap's data URI, so it survives version bumps.
 
-  .carousel-control-prev-icon,
-  .carousel-control-next-icon {
-    filter: brightness(1) !important;
-  }
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  filter: brightness(1) !important;
+}
 
 [data-bs-theme='light'] .carousel-caption {
   background: linear-gradient(

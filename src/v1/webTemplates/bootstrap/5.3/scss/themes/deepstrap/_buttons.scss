@@ -12,6 +12,40 @@ $button-tones: (
   'info': 'info',
 );
 
+// ------------------------------------------------------------------ mixins --
+/// Emits a single outline variant. Extracted so `.btn-outline-secondary` and
+/// the neutral variants share the exact same hover/active contract.
+///
+/// @param {String} $tone - Token suffix, without the `--ui-` prefix.
+@mixin outline-variant($tone) {
+  --btn-tone: var(--ui-#{$tone});
+  --btn-tone-rgb: var(--ui-#{$tone}-rgb);
+  --bs-btn-color: var(--ui-#{$tone});
+  --bs-btn-hover-color: var(--ui-on-#{$tone});
+  --bs-btn-active-color: var(--ui-on-#{$tone});
+  --bs-btn-disabled-color: var(--ui-#{$tone});
+
+  color: var(--ui-#{$tone});
+  background-color: transparent;
+  border-color: color-mix(in srgb, var(--ui-#{$tone}) 40%, transparent);
+
+  &:hover:not(:disabled):not(.disabled) {
+    color: var(--ui-on-#{$tone});
+    background-color: var(--ui-#{$tone});
+    border-color: var(--ui-#{$tone});
+    box-shadow:
+      0 0 0 1px rgb(var(--ui-#{$tone}-rgb) / 0.35),
+      0 0 20px -4px rgb(var(--ui-#{$tone}-rgb) / 0.55);
+  }
+
+  &:active:not(:disabled):not(.disabled),
+  &.active {
+    color: var(--ui-on-#{$tone});
+    background-color: color-mix(in srgb, var(--ui-#{$tone}) 78%, var(--ui-btn-mix));
+    border-color: transparent;
+  }
+}
+
 // -------------------------------------------------------------------- base --
 .btn {
   --bs-btn-font-size: 0.8125rem;
@@ -69,65 +103,84 @@ $button-tones: (
   }
 }
 
-// ------------------------------------------------------------------- tones --
-@each $name, $token in $button-tones {
-  // Solid.
-  .btn-#{$name} {
-    --btn-tone: var(--ui-#{$token});
-    --btn-tone-rgb: var(--ui-#{$token}-rgb);
-    --bs-btn-color: var(--ui-on-#{$token});
-    --bs-btn-hover-color: var(--ui-on-#{$token});
-    --bs-btn-active-color: var(--ui-on-#{$token});
-    --bs-btn-disabled-color: var(--ui-on-#{$token});
+// ------------------------------------------------------------------ mixins --
+/// Emits a solid variant.
+///
+/// @param {String} $tone - Token suffix, without the `--ui-` prefix.
+@mixin solid-variant($tone) {
+  --btn-tone: var(--ui-#{$tone});
+  --btn-tone-rgb: var(--ui-#{$tone}-rgb);
+  --bs-btn-color: var(--ui-on-#{$tone});
+  --bs-btn-hover-color: var(--ui-on-#{$tone});
+  --bs-btn-active-color: var(--ui-on-#{$tone});
+  --bs-btn-disabled-color: var(--ui-on-#{$tone});
 
-    color: var(--ui-on-#{$token});
-    background-color: var(--ui-#{$token});
-    border-color: transparent;
+  color: var(--ui-on-#{$tone});
+  background-color: var(--ui-#{$tone});
+  border-color: transparent;
 
-    &:hover:not(:disabled):not(.disabled) {
-      background-color: color-mix(in srgb, var(--ui-#{$token}) 86%, var(--ui-btn-mix));
-      border-color: color-mix(in srgb, var(--ui-#{$token}) 60%, var(--ui-btn-mix));
-      box-shadow:
-        0 0 0 1px rgb(var(--ui-#{$token}-rgb) / 0.35),
-        0 0 20px -4px rgb(var(--ui-#{$token}-rgb) / 0.55),
-        0 0 40px -8px rgb(var(--ui-#{$token}-rgb) / 0.35);
-    }
-
-    &:active:not(:disabled):not(.disabled),
-    &.active {
-      background-color: color-mix(in srgb, var(--ui-#{$token}) 78%, var(--ui-btn-mix));
-      box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.18);
-    }
+  &:hover:not(:disabled):not(.disabled) {
+    background-color: color-mix(in srgb, var(--ui-#{$tone}) 86%, var(--ui-btn-mix));
+    border-color: color-mix(in srgb, var(--ui-#{$tone}) 60%, var(--ui-btn-mix));
+    box-shadow:
+      0 0 0 1px rgb(var(--ui-#{$tone}-rgb) / 0.35),
+      0 0 20px -4px rgb(var(--ui-#{$tone}-rgb) / 0.55),
+      0 0 40px -8px rgb(var(--ui-#{$tone}-rgb) / 0.35);
   }
 
-  // Outline.
+  &:active:not(:disabled):not(.disabled),
+  &.active {
+    background-color: color-mix(in srgb, var(--ui-#{$tone}) 78%, var(--ui-btn-mix));
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.18);
+  }
+}
+
+/// Emits an outline variant.
+///
+/// @param {String} $tone - Token suffix, without the `--ui-` prefix.
+/// @param {Boolean} $seam - Draws a hairline ring so the button stays visible
+///   when the tone matches the page background.
+@mixin outline-variant($tone, $seam: false) {
+  --btn-tone: var(--ui-#{$tone});
+  --btn-tone-rgb: var(--ui-#{$tone}-rgb);
+  --bs-btn-color: var(--ui-#{$tone});
+  --bs-btn-hover-color: var(--ui-on-#{$tone});
+  --bs-btn-active-color: var(--ui-on-#{$tone});
+  --bs-btn-disabled-color: var(--ui-#{$tone});
+
+  color: var(--ui-#{$tone});
+  background-color: transparent;
+  border-color: color-mix(in srgb, var(--ui-#{$tone}) 40%, transparent);
+
+  @if $seam {
+    box-shadow: 0 0 0 1px rgb(var(--ui-shadow-rgb) / 0.18);
+  }
+
+  &:hover:not(:disabled):not(.disabled) {
+    color: var(--ui-on-#{$tone});
+    background-color: var(--ui-#{$tone});
+    border-color: var(--ui-#{$tone});
+    box-shadow:
+      0 0 0 1px rgb(var(--ui-#{$tone}-rgb) / 0.35),
+      0 0 20px -4px rgb(var(--ui-#{$tone}-rgb) / 0.55);
+  }
+
+  &:active:not(:disabled):not(.disabled),
+  &.active {
+    color: var(--ui-on-#{$tone});
+    background-color: color-mix(in srgb, var(--ui-#{$tone}) 78%, var(--ui-btn-mix));
+    border-color: transparent;
+  }
+}
+
+// ------------------------------------------------------------------- tones --
+@each $name, $token in $button-tones {
+  .btn-#{$name} {
+    @include solid-variant($token);
+  }
+
   .btn-outline-#{$name} {
-    --btn-tone: var(--ui-#{$token});
-    --btn-tone-rgb: var(--ui-#{$token}-rgb);
-    --bs-btn-color: var(--ui-#{$token});
-    --bs-btn-hover-color: var(--ui-on-#{$token});
-    --bs-btn-active-color: var(--ui-on-#{$token});
-    --bs-btn-disabled-color: var(--ui-#{$token});
-
-    color: var(--ui-#{$token});
-    background-color: transparent;
-    border-color: color-mix(in srgb, var(--ui-#{$token}) 40%, transparent);
-
-    &:hover:not(:disabled):not(.disabled) {
-      color: var(--ui-on-#{$token});
-      background-color: var(--ui-#{$token});
-      border-color: var(--ui-#{$token});
-      box-shadow:
-        0 0 0 1px rgb(var(--ui-#{$token}-rgb) / 0.35),
-        0 0 20px -4px rgb(var(--ui-#{$token}-rgb) / 0.55);
-    }
-
-    &:active:not(:disabled):not(.disabled),
-    &.active {
-      color: var(--ui-on-#{$token});
-      background-color: color-mix(in srgb, var(--ui-#{$token}) 78%, var(--ui-btn-mix));
-      border-color: transparent;
-    }
+    @include outline-variant($token);
   }
 
   // Subtle.
@@ -158,29 +211,7 @@ $button-tones: (
 
 // ----------------------------------------------------------------- neutral --
 .btn-outline-secondary {
-  --btn-tone: var(--ui-text-muted);
-  --btn-tone-rgb: var(--ui-text-muted-rgb);
-  --bs-btn-color: var(--ui-text);
-  --bs-btn-hover-color: var(--ui-heading);
-  --bs-btn-active-color: var(--ui-heading);
-  --bs-btn-disabled-color: var(--ui-text);
-
-  color: var(--ui-text);
-  background-color: transparent;
-  border-color: color-mix(in srgb, var(--ui-text) 28%, transparent);
-
-  &:hover:not(:disabled):not(.disabled) {
-    color: var(--ui-heading);
-    background-color: var(--ui-overlay-2);
-    border-color: color-mix(in srgb, var(--ui-text) 48%, transparent);
-    box-shadow: 0 0 20px -8px rgb(var(--ui-shadow-rgb) / 0.8);
-  }
-
-  &:active:not(:disabled):not(.disabled),
-  &.active {
-    background-color: var(--ui-overlay-2);
-    border-color: color-mix(in srgb, var(--ui-text) 56%, transparent);
-  }
+  @include outline-variant('text-muted');
 }
 
 .btn-secondary {
@@ -218,6 +249,26 @@ $button-tones: (
     background-color: var(--ui-overlay-2);
     box-shadow: none;
   }
+}
+
+// ------------------------------------------------------- absolute neutrals --
+// `.btn-light` and `.btn-dark` are absolute by contract: they do not follow
+// the theme. Visibility comes from a hairline seam, never from inverting the
+// fill, so the pair keeps the same meaning in both themes.
+.btn-light {
+  @include solid-variant('neutral-light');
+}
+
+.btn-dark {
+  @include solid-variant('neutral-dark');
+}
+
+.btn-outline-light {
+  @include outline-variant('neutral-light', $seam: true);
+}
+
+.btn-outline-dark {
+  @include outline-variant('neutral-dark', $seam: true);
 }
 
 // ------------------------------------------------------------------ groups --
