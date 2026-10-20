@@ -208,7 +208,6 @@
 .progress {
   --bs-progress-bg: var(--ui-input);
   --bs-progress-bar-bg: var(--ui-accent);
-  --bs-progress-height: 6px;
 }
 
 // -------------------------------------------------------------- pagination --
@@ -285,4 +284,167 @@ hr {
 .border-start,
 .border-end {
   border-color: var(--ui-border) !important;
+}
+
+// ------------------------------------------------------------------- badge --
+// Bootstrap's .text-bg-* uses !important on color and background, so we must
+// match that specificity to keep the tone system consistent with _buttons.scss.
+$badge-tones: (
+  'primary': 'accent',
+  'success': 'success',
+  'danger': 'error',
+  'warning': 'warn',
+  'info': 'info',
+);
+
+.badge {
+  --bs-badge-padding-y: 0.3125rem;
+  --bs-badge-padding-x: 0.5rem;
+  --bs-badge-font-size: 0.6875rem;
+  --bs-badge-font-weight: 500;
+
+  font-family: $font-family-monospace;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  border-radius: 999px;
+}
+
+@each $name, $token in $badge-tones {
+  .badge.text-bg-#{$name} {
+    color: var(--ui-#{$token}) !important;
+    background-color: rgb(var(--ui-#{$token}-rgb) / 0.12) !important;
+    border-color: rgb(var(--ui-#{$token}-rgb) / 0.32);
+  }
+}
+
+// ---------------------------------------------------------------- carousel --
+.carousel {
+  --bs-carousel-indicator-active-bg: var(--ui-heading);
+  --bs-carousel-caption-color: var(--ui-heading);
+  --bs-carousel-control-color: var(--ui-heading);
+}
+
+.carousel-caption {
+  padding: 1rem 1.25rem;
+  background: linear-gradient(180deg, transparent, rgb(var(--ui-shadow-rgb) / 0.72));
+  border-radius: var(--bs-border-radius);
+}
+
+.carousel-indicators [data-bs-target] {
+  width: 24px;
+  height: 3px;
+  background-color: var(--ui-text-muted);
+  border: 0;
+  border-radius: 999px;
+  opacity: 0.4;
+  transition:
+    opacity var(--ui-duration) var(--ui-ease),
+    background-color var(--ui-duration) var(--ui-ease);
+}
+
+.carousel-indicators .active {
+  background-color: var(--ui-accent);
+  opacity: 1;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+  width: 3rem;
+  opacity: 0.5;
+  transition: opacity var(--ui-duration) var(--ui-ease);
+
+  &:hover,
+  &:focus {
+    opacity: 1;
+  }
+}
+
+// --------------------------------------------------------------- spinners --
+.spinner-border,
+.spinner-grow {
+  color: var(--ui-accent);
+}
+
+.spinner-border-sm,
+.spinner-grow-sm {
+  --bs-spinner-width: 0.875rem;
+  --bs-spinner-height: 0.875rem;
+}
+
+// ----------------------------------------------------------- placeholders --
+// Overrides the minimal rule in _bootstrap-overrides.scss.
+.placeholder {
+  background-color: var(--ui-border-strong);
+  opacity: 0.5;
+}
+
+.placeholder-glow .placeholder {
+  animation: placeholder-glow 1.6s var(--ui-ease) infinite;
+}
+
+@keyframes placeholder-glow {
+  50% {
+    opacity: 0.2;
+  }
+}
+
+// ---------------------------------------------------------------- collapse --
+// Bootstrap animates height inline; we only need to align the easing.
+.collapsing {
+  transition: height 220ms var(--ui-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collapsing {
+    transition: none;
+  }
+}
+
+// -------------------------------------------------------------- scrollspy --
+// Bootstrap only toggles .active; the visual is ours.
+.nav-link.active[href^='#'],
+.list-group-item.active[href^='#'] {
+  color: var(--ui-heading);
+}
+
+// ----------------------------------------------------------- close button --
+// Extends the minimal rule in _forms.scss with hover + opacity tokens.
+.btn-close {
+  --bs-btn-close-color: var(--ui-text-muted);
+  --bs-btn-close-hover-color: var(--ui-heading);
+  --bs-btn-close-opacity: 0.6;
+  --bs-btn-close-hover-opacity: 1;
+  --bs-btn-close-focus-shadow: 0 0 0 3px rgb(var(--ui-accent-rgb) / 0.2);
+
+  transition:
+    opacity var(--ui-duration) var(--ui-ease),
+    filter var(--ui-duration) var(--ui-ease);
+
+  &:hover {
+    color: var(--ui-heading);
+  }
+}
+
+// --------------------------------------------------------------- accordion --
+// Icon + body. The base tokens live in _bootstrap-overrides.scss.
+.accordion {
+  --bs-accordion-btn-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236b7688' stroke-width='2' stroke-linecap='round'%3e%3cpath d='M4 6l4 4 4-4'/%3e%3c/svg%3e");
+  --bs-accordion-btn-active-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236c8cff' stroke-width='2' stroke-linecap='round'%3e%3cpath d='M4 6l4 4 4-4'/%3e%3c/svg%3e");
+
+  .accordion-button {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    transition:
+      background-color var(--ui-duration) var(--ui-ease),
+      color var(--ui-duration) var(--ui-ease);
+
+    &:not(.collapsed) {
+      box-shadow: inset 0 -1px 0 var(--ui-hairline);
+    }
+  }
+
+  .accordion-body {
+    font-size: 0.8125rem;
+    color: var(--ui-text);
+  }
 }

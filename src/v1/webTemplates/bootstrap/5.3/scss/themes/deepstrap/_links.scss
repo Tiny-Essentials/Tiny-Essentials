@@ -3,7 +3,18 @@
 // :where() keeps specificity at (0,0,1) so component classes always win.
 // =============================================================================
 
-a:not(:where(.btn, .nav-link, .dropdown-item, .page-link, .navbar-brand, .list-group-item, .accordion-button, .btn-close)) {
+a:not(
+  :where(
+    .btn,
+    .nav-link,
+    .dropdown-item,
+    .page-link,
+    .navbar-brand,
+    .list-group-item,
+    .accordion-button,
+    .btn-close
+  )
+) {
   color: var(--ui-accent);
   text-decoration: none;
   text-underline-offset: 0.2em;

@@ -145,6 +145,16 @@
     </div>
 
     <!-- ==================================================================
+         SCROLLSPY INDICATOR
+         ================================================================== -->
+    <div class="container-xxl pt-2">
+      <div class="d-flex align-items-center gap-2 small text-body-secondary">
+        <span class="text-uppercase fw-bold">Scrollspy:</span>
+        <span class="badge text-bg-primary" id="pg-scrollspy-status">—</span>
+      </div>
+    </div>
+
+    <!-- ==================================================================
          MOBILE NAV
          ================================================================== -->
     <div class="offcanvas offcanvas-start" tabindex="-1" id="pgMobileNav">
@@ -295,10 +305,14 @@
                 </div>
 
                 <div class="d-flex flex-wrap gap-2">
-                  <button class="btn btn-outline-primary">Outline</button>
-                  <button class="btn btn-outline-secondary">Outline</button>
-                  <button class="btn btn-outline-success">Outline</button>
-                  <button class="btn btn-outline-danger">Outline</button>
+                  <button class="btn btn-outline-primary">Primary</button>
+                  <button class="btn btn-outline-secondary">Secondary</button>
+                  <button class="btn btn-outline-success">Success</button>
+                  <button class="btn btn-outline-danger">Danger</button>
+                  <button class="btn btn-outline-warning">Warning</button>
+                  <button class="btn btn-outline-info">Warning</button>
+                  <button class="btn btn-outline-light">Light</button>
+                  <button class="btn btn-outline-dark">Dark</button>
                 </div>
 
                 <div class="d-flex flex-wrap align-items-center gap-2">
@@ -309,6 +323,24 @@
                   <button class="btn btn-primary" data-bs-toggle="button" aria-pressed="false">
                     Toggle me
                   </button>
+                </div>
+
+                <div class="btn-toolbar gap-2" role="toolbar" aria-label="Toolbar">
+                  <div class="btn-group me-2" role="group" aria-label="First group">
+                    <button class="btn btn-outline-secondary" type="button">1</button>
+                    <button class="btn btn-outline-secondary" type="button">2</button>
+                    <button class="btn btn-outline-secondary" type="button">3</button>
+                  </div>
+                  <div class="btn-group" role="group" aria-label="Second group">
+                    <button class="btn btn-outline-secondary" type="button">4</button>
+                    <button class="btn btn-outline-secondary" type="button">5</button>
+                  </div>
+                </div>
+
+                <div class="btn-group-vertical" role="group" aria-label="Vertical group">
+                  <button class="btn btn-outline-primary" type="button">Top</button>
+                  <button class="btn btn-outline-primary" type="button">Middle</button>
+                  <button class="btn btn-outline-primary" type="button">Bottom</button>
                 </div>
 
                 <div class="btn-group" role="group" aria-label="Alignment">
@@ -538,6 +570,44 @@
           </section>
 
           <!-- ============================================================
+               BADGES
+               ============================================================ -->
+          <section id="badges" class="py-5 border-bottom">
+            <h2 class="h3 fw-bold mb-1">Badges</h2>
+            <p class="text-body-secondary mb-4">
+              Inline counters. The theme maps <code>.badge.text-bg-*</code> to the
+              <code>--ui-*</code> tokens.
+            </p>
+
+            <div class="card border rounded-3">
+              <div class="card-body d-flex flex-column gap-3">
+                <div class="d-flex flex-wrap gap-2">
+                  <span class="badge text-bg-primary">Primary</span>
+                  <span class="badge text-bg-success">Success</span>
+                  <span class="badge text-bg-danger">Danger</span>
+                  <span class="badge text-bg-warning">Warning</span>
+                  <span class="badge text-bg-info">Info</span>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                  <span class="badge rounded-pill text-bg-primary">Pill</span>
+                  <span class="badge rounded-pill text-bg-success">Pill</span>
+                  <span class="badge rounded-pill text-bg-danger">Pill</span>
+                </div>
+
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                  <button class="btn btn-primary">
+                    Inbox <span class="badge text-bg-light ms-1">14</span>
+                  </button>
+                  <a href="#" class="text-decoration-none">
+                    Notifications <span class="badge text-bg-danger rounded-pill">9+</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============================================================
                CARDS
                ============================================================ -->
           <section id="cards" class="py-5 border-bottom">
@@ -664,6 +734,29 @@
                   data-bs-parent="#pgAccordion"
                 >
                   <div class="accordion-body">Content of the third panel.</div>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="h6 text-uppercase text-body-secondary mt-4 mb-2">Flush</h3>
+            <div class="accordion accordion-flush" id="pgAccordionFlush">
+              <div class="accordion-item">
+                <h3 class="accordion-header">
+                  <button
+                    class="accordion-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#accFlushOne"
+                  >
+                    Flush panel
+                  </button>
+                </h3>
+                <div
+                  id="accFlushOne"
+                  class="accordion-collapse collapse"
+                  data-bs-parent="#pgAccordionFlush"
+                >
+                  <div class="accordion-body">No outer border, no radius.</div>
                 </div>
               </div>
             </div>
@@ -885,30 +978,67 @@
                ============================================================ -->
           <section id="feedback" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">Feedback</h2>
-            <p class="text-body-secondary mb-4">Progress, spinners, badges and placeholders.</p>
+            <p class="text-body-secondary mb-4">Progress, spinners and placeholders.</p>
 
             <div class="card border rounded-3">
               <div class="card-body d-flex flex-column gap-4">
-                <div>
-                  <div class="progress mb-2" role="progressbar" aria-valuenow="65">
+                <!-- Progress -->
+                <div class="d-flex flex-column gap-2">
+                  <div class="progress" role="progressbar" aria-valuenow="65">
                     <div class="progress-bar" style="width: 65%">65%</div>
                   </div>
                   <div class="progress" style="height: 6px">
                     <div class="progress-bar bg-success" style="width: 40%"></div>
                   </div>
+                  <div class="progress" role="progressbar" aria-valu-now="50">
+                    <div class="progress-bar progress-bar-striped" style="width: 50%"></div>
+                  </div>
+                  <div class="progress" role="progressbar" aria-valu-now="75">
+                    <div
+                      class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                      style="width: 75%"
+                    ></div>
+                  </div>
+                  <div class="progress-stacked">
+                    <div class="progress" role="progressbar" style="width: 35%">
+                      <div class="progress-bar">35%</div>
+                    </div>
+                    <div class="progress" role="progressbar" style="width: 25%">
+                      <div class="progress-bar bg-success">25%</div>
+                    </div>
+                    <div class="progress" role="progressbar" style="width: 15%">
+                      <div class="progress-bar bg-danger">15%</div>
+                    </div>
+                  </div>
                 </div>
 
-                <div class="d-flex align-items-center gap-3">
-                  <span class="spinner-border text-primary" role="status"></span>
-                  <span class="spinner-grow text-success" role="status"></span>
-                  <span class="badge bg-primary">Badge</span>
-                  <span class="badge rounded-pill bg-secondary">Pill</span>
-                  <span class="badge bg-success">4</span>
+                <!-- Spinners -->
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                  <span class="spinner-border" role="status"></span>
+                  <span class="spinner-border spinner-border-sm" role="status"></span>
+                  <span class="spinner-grow" role="status"></span>
+                  <span class="spinner-grow spinner-grow-sm" role="status"></span>
+                  <span class="spinner-border text-success" role="status"></span>
+                  <span class="spinner-grow text-danger" role="status"></span>
                 </div>
 
+                <!-- Placeholders -->
                 <div class="placeholder-glow">
                   <span class="placeholder col-8 d-block mb-2"></span>
-                  <span class="placeholder col-5 d-block"></span>
+                  <span class="placeholder col-5 d-block mb-2"></span>
+                  <span class="placeholder col-10 d-block"></span>
+                </div>
+
+                <div class="placeholder-wave">
+                  <span class="placeholder col-6 d-block mb-2"></span>
+                  <span class="placeholder col-4 d-block"></span>
+                </div>
+
+                <div>
+                  <button class="btn btn-primary" type="button" disabled>
+                    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    Loading…
+                  </button>
                 </div>
               </div>
             </div>
@@ -1004,19 +1134,25 @@
                           <th scope="row">1</th>
                           <td>Ada Lovelace</td>
                           <td>Engineer</td>
-                          <td class="text-end"><span class="badge bg-success">Active</span></td>
+                          <td class="text-end">
+                            <span class="badge text-bg-success">Active</span>
+                          </td>
                         </tr>
                         <tr>
                           <th scope="row">2</th>
                           <td>Alan Turing</td>
                           <td>Researcher</td>
-                          <td class="text-end"><span class="badge bg-secondary">Away</span></td>
+                          <td class="text-end">
+                            <span class="badge text-bg-secondary">Away</span>
+                          </td>
                         </tr>
                         <tr>
                           <th scope="row">3</th>
                           <td>Grace Hopper</td>
                           <td>Admiral</td>
-                          <td class="text-end"><span class="badge bg-success">Active</span></td>
+                          <td class="text-end">
+                            <span class="badge text-bg-success">Active</span>
+                          </td>
                         </tr>
                       </tbody>
                     </table>
@@ -1024,20 +1160,39 @@
                 </div>
               </div>
 
-              <div class="col-lg-5">
-                <ul class="list-group h-100">
+              <div class="col-lg-5 d-flex flex-column gap-3">
+                <ul class="list-group">
                   <li class="list-group-item d-flex justify-content-between align-items-center">
                     Inbox
-                    <span class="badge bg-primary rounded-pill">14</span>
+                    <span class="badge text-bg-primary rounded-pill">14</span>
                   </li>
                   <li class="list-group-item d-flex justify-content-between align-items-center">
                     Drafts
-                    <span class="badge bg-secondary rounded-pill">3</span>
+                    <span class="badge text-bg-secondary rounded-pill">3</span>
                   </li>
                   <li class="list-group-item d-flex justify-content-between align-items-center">
                     Archive
-                    <span class="badge bg-secondary rounded-pill">0</span>
+                    <span class="badge text-bg-secondary rounded-pill">0</span>
                   </li>
+                </ul>
+
+                <div class="list-group">
+                  <a
+                    href="#"
+                    class="list-group-item list-group-item-action active"
+                    aria-current="true"
+                  >
+                    Active item
+                  </a>
+                  <a href="#" class="list-group-item list-group-item-action">Action item</a>
+                  <a href="#" class="list-group-item list-group-item-action disabled"
+                    >Disabled item</a
+                  >
+                </div>
+
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item">Flush item one</li>
+                  <li class="list-group-item">Flush item two</li>
                 </ul>
               </div>
             </div>
@@ -1325,6 +1480,15 @@
 
         // Scrollspy must be refreshed after the TOC links exist.
         bootstrap.ScrollSpy.getOrCreateInstance(document.body).refresh();
+
+        // Reflects the active scrollspy target so the demo is verifiable.
+        const spyStatus = document.getElementById('pg-scrollspy-status');
+        if (spyStatus) {
+          document.body.addEventListener('activate.bs.scrollspy', (event) => {
+            const target = event.target.querySelector('a.active');
+            spyStatus.textContent = target ? target.getAttribute('href') : '—';
+          });
+        }
       };
 
       /* ====================================================================

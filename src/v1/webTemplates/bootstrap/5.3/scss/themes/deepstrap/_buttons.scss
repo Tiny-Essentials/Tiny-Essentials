@@ -30,7 +30,7 @@ $button-tones: (
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 1px solid transparent;
+  border: 1px solid var(--bs-btn-border-color, transparent);
   transition:
     background-color var(--ui-duration) var(--ui-ease),
     border-color var(--ui-duration) var(--ui-ease),
@@ -75,6 +75,10 @@ $button-tones: (
   .btn-#{$name} {
     --btn-tone: var(--ui-#{$token});
     --btn-tone-rgb: var(--ui-#{$token}-rgb);
+    --bs-btn-color: var(--ui-on-#{$token});
+    --bs-btn-hover-color: var(--ui-on-#{$token});
+    --bs-btn-active-color: var(--ui-on-#{$token});
+    --bs-btn-disabled-color: var(--ui-on-#{$token});
 
     color: var(--ui-on-#{$token});
     background-color: var(--ui-#{$token});
@@ -100,6 +104,10 @@ $button-tones: (
   .btn-outline-#{$name} {
     --btn-tone: var(--ui-#{$token});
     --btn-tone-rgb: var(--ui-#{$token}-rgb);
+    --bs-btn-color: var(--ui-#{$token});
+    --bs-btn-hover-color: var(--ui-on-#{$token});
+    --bs-btn-active-color: var(--ui-on-#{$token});
+    --bs-btn-disabled-color: var(--ui-#{$token});
 
     color: var(--ui-#{$token});
     background-color: transparent;
@@ -126,6 +134,10 @@ $button-tones: (
   .btn-subtle-#{$name} {
     --btn-tone: var(--ui-#{$token});
     --btn-tone-rgb: var(--ui-#{$token}-rgb);
+    --bs-btn-color: var(--ui-#{$token});
+    --bs-btn-hover-color: var(--ui-#{$token});
+    --bs-btn-active-color: var(--ui-#{$token});
+    --bs-btn-disabled-color: var(--ui-#{$token});
 
     color: var(--ui-#{$token});
     background-color: rgb(var(--ui-#{$token}-rgb) / 0.12);
@@ -148,6 +160,10 @@ $button-tones: (
 .btn-outline-secondary {
   --btn-tone: var(--ui-text-muted);
   --btn-tone-rgb: var(--ui-text-muted-rgb);
+  --bs-btn-color: var(--ui-text);
+  --bs-btn-hover-color: var(--ui-heading);
+  --bs-btn-active-color: var(--ui-heading);
+  --bs-btn-disabled-color: var(--ui-text);
 
   color: var(--ui-text);
   background-color: transparent;
@@ -170,6 +186,10 @@ $button-tones: (
 .btn-secondary {
   --btn-tone: var(--ui-border-strong);
   --btn-tone-rgb: var(--ui-border-strong-rgb);
+  --bs-btn-color: var(--ui-text);
+  --bs-btn-hover-color: var(--ui-heading);
+  --bs-btn-active-color: var(--ui-heading);
+  --bs-btn-disabled-color: var(--ui-text);
 
   color: var(--ui-text);
   background-color: var(--ui-overlay-2);
@@ -184,6 +204,10 @@ $button-tones: (
 .btn-ghost {
   --btn-tone: var(--ui-border-strong);
   --btn-tone-rgb: var(--ui-border-strong-rgb);
+  --bs-btn-color: var(--ui-text-muted);
+  --bs-btn-hover-color: var(--ui-heading);
+  --bs-btn-active-color: var(--ui-heading);
+  --bs-btn-disabled-color: var(--ui-text-muted);
 
   color: var(--ui-text-muted);
   background-color: transparent;
