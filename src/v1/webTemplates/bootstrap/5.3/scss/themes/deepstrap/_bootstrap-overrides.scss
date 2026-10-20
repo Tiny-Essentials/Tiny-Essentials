@@ -205,9 +205,19 @@
 }
 
 // ---------------------------------------------------------------- progress --
-.progress {
-  --bs-progress-bg: var(--ui-input);
-  --bs-progress-bar-bg: var(--ui-accent);
+.progress,
+.progress-stacked {
+  --bs-progress-bg: color-mix(in srgb, var(--ui-border) 55%, transparent);
+}
+
+.progress-bar {
+  transition: width 240ms var(--ui-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-bar {
+    transition: none;
+  }
 }
 
 // -------------------------------------------------------------- pagination --
@@ -318,45 +328,119 @@ $badge-tones: (
 }
 
 // ---------------------------------------------------------------- carousel --
+// The carousel is a media surface: the scrim, the controls and the caption are
+// always light, regardless of the active theme. These values are intentionally
+// literal — do not replace with --ui-* tokens.
+$carousel-foreground: #fff;
+$carousel-indicator: rgb(255 255 255 / 0.45);
+$carousel-indicator-active: #6c8cff;
+
 .carousel {
-  --bs-carousel-indicator-active-bg: var(--ui-heading);
-  --bs-carousel-caption-color: var(--ui-heading);
-  --bs-carousel-control-color: var(--ui-heading);
+  --bs-carousel-caption-color: #{$carousel-foreground};
+  --bs-carousel-control-color: #{$carousel-foreground};
+
+  // Clips the caption scrim to the rounded corners.
+  overflow: hidden;
+  border-radius: var(--bs-border-radius);
 }
 
 .carousel-caption {
-  padding: 1rem 1.25rem;
-  background: linear-gradient(180deg, transparent, rgb(var(--ui-shadow-rgb) / 0.72));
-  border-radius: var(--bs-border-radius);
+  // Full-bleed scrim: reset Bootstrap's 15% side insets.
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 2.5rem 1.25rem 1rem;
+  margin: 0;
+  text-align: left;
+  background: linear-gradient(
+    180deg,
+    rgb(0 0 0 / 0) 0%,
+    rgb(0 0 0 / 0.55) 55%,
+    rgb(0 0 0 / 0.82) 100%
+  );
+  border-radius: 0;
+
+  // The scrim is always black, so `code` needs a light tone in both themes.
+  // color-mix keeps the hue tied to the brand info token instead of a magic hex.
+  --bs-code-color: color-mix(in srgb, var(--ui-info) 35%, #fff);
+
+  // Headings inside the caption must inherit the white, not --ui-heading.
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: inherit;
+  }
 }
 
 .carousel-indicators [data-bs-target] {
   width: 24px;
   height: 3px;
-  background-color: var(--ui-text-muted);
+  background-color: $carousel-indicator;
   border: 0;
   border-radius: 999px;
-  opacity: 0.4;
+  opacity: 1;
   transition:
     opacity var(--ui-duration) var(--ui-ease),
     background-color var(--ui-duration) var(--ui-ease);
 }
 
 .carousel-indicators .active {
-  background-color: var(--ui-accent);
-  opacity: 1;
+  background-color: $carousel-indicator-active;
 }
 
 .carousel-control-prev,
 .carousel-control-next {
   width: 3rem;
-  opacity: 0.5;
+  opacity: 0.6;
   transition: opacity var(--ui-duration) var(--ui-ease);
 
   &:hover,
   &:focus {
     opacity: 1;
   }
+}
+
+// Normalises any inherited icon colour to pure white. Works regardless of the
+// SVG stroke baked into Bootstrap's data URI, so it survives version bumps.
+
+  .carousel-control-prev-icon,
+  .carousel-control-next-icon {
+    filter: brightness(1) !important;
+  }
+
+[data-bs-theme='light'] .carousel-caption {
+  background: linear-gradient(
+    180deg,
+    rgb(var(--ui-shadow-rgb) / 0) 0%,
+    rgb(var(--ui-shadow-rgb) / 0.45) 55%,
+    rgb(var(--ui-shadow-rgb) / 0.72) 100%
+  );
+}
+
+[data-bs-theme='dark'] {
+  .carousel,
+  &.carousel {
+    .carousel-caption {
+      color: $carousel-foreground;
+    }
+  }
+}
+
+// Bootstrap's dark-mode layer ships:
+//   [data-bs-theme=dark] .carousel .carousel-indicators [data-bs-target] { background-color: #000 }
+// which is (0,4,0). We match that specificity and rely on source order
+// (this file is imported after bootstrap/scss/bootstrap).
+.carousel .carousel-indicators [data-bs-target],
+[data-bs-theme] .carousel .carousel-indicators [data-bs-target] {
+  background-color: $carousel-indicator;
+}
+
+.carousel .carousel-indicators .active,
+[data-bs-theme] .carousel .carousel-indicators .active {
+  background-color: $carousel-indicator-active;
 }
 
 // --------------------------------------------------------------- spinners --
