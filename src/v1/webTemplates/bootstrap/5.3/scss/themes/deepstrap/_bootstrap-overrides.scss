@@ -328,20 +328,48 @@ $badge-tones: (
 }
 
 // ---------------------------------------------------------------- carousel --
-// The carousel is a media surface: the scrim, the controls and the caption are
-// always light, regardless of the active theme. These values are intentionally
-// literal — do not replace with --ui-* tokens.
-$carousel-foreground: #fff;
-$carousel-indicator: rgb(255 255 255 / 0.45);
+// The carousel is a media surface. The scrim, the caption colour and the
+// control colour are driven by local variables so each theme can pick the
+// readable pair:
+//   dark  -> black scrim, white text, white controls
+//   light -> white scrim, regular text, dark controls
 $carousel-indicator-active: #6c8cff;
 
 .carousel {
-  --bs-carousel-caption-color: #{$carousel-foreground};
-  --bs-carousel-control-color: #{$carousel-foreground};
+  // Dark theme defaults.
+  --carousel-caption-color: #fff;
+  --carousel-scrim: linear-gradient(
+    180deg,
+    rgb(0 0 0 / 0) 0%,
+    rgb(0 0 0 / 0.55) 55%,
+    rgb(0 0 0 / 0.82) 100%
+  );
+  --carousel-code-color: color-mix(in srgb, var(--ui-info) 35%, #fff);
+  --carousel-control-filter: none;
+  --carousel-indicator-bg: rgb(255 255 255 / 0.45);
+  --carousel-indicator-active-bg: #{$carousel-indicator-active};
 
   // Clips the caption scrim to the rounded corners.
   overflow: hidden;
   border-radius: var(--bs-border-radius);
+}
+
+// Light theme: white scrim, regular text colours, inverted controls.
+[data-bs-theme='light'] .carousel {
+  --carousel-caption-color: var(--ui-text);
+  --carousel-scrim: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0) 0%,
+    rgb(255 255 255 / 0.78) 55%,
+    rgb(255 255 255 / 0.96) 100%
+  );
+  --carousel-code-color: color-mix(in srgb, var(--ui-info) 70%, #000);
+  --carousel-control-filter: invert(1);
+  --carousel-indicator-bg: rgb(15 21 35 / 0.28);
+}
+
+[data-bs-theme='dark'] .carousel {
+  --carousel-control-filter: invert(0) grayscale(100);
 }
 
 .carousel-caption {
@@ -352,33 +380,27 @@ $carousel-indicator-active: #6c8cff;
   padding: 2.5rem 1.25rem 1rem;
   margin: 0;
   text-align: left;
-  background: linear-gradient(
-    180deg,
-    rgb(0 0 0 / 0) 0%,
-    rgb(0 0 0 / 0.55) 55%,
-    rgb(0 0 0 / 0.82) 100%
-  );
+  background: var(--carousel-scrim);
   border-radius: 0;
 
-  // The scrim is always black, so `code` needs a light tone in both themes.
-  // color-mix keeps the hue tied to the brand info token instead of a magic hex.
-  --bs-code-color: color-mix(in srgb, var(--ui-info) 35%, #fff);
+  // The scrim is always a solid tone, so `code` needs a matching tone.
+  --bs-code-color: var(--carousel-code-color);
+}
 
-  // Headings inside the caption must inherit the white, not --ui-heading.
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    color: inherit;
+[data-bs-theme='dark'],
+[data-bs-theme='light'] {
+  .carousel,
+  &.carousel {
+    .carousel-caption {
+      color: var(--carousel-caption-color);
+    }
   }
 }
 
 .carousel-indicators [data-bs-target] {
   width: 24px;
   height: 3px;
-  background-color: $carousel-indicator;
+  background-color: var(--carousel-indicator-bg);
   border: 0;
   border-radius: 999px;
   opacity: 1;
@@ -388,7 +410,7 @@ $carousel-indicator-active: #6c8cff;
 }
 
 .carousel-indicators .active {
-  background-color: $carousel-indicator-active;
+  background-color: var(--carousel-indicator-active-bg);
 }
 
 .carousel-control-prev,
@@ -403,44 +425,26 @@ $carousel-indicator-active: #6c8cff;
   }
 }
 
-// Normalises any inherited icon colour to pure white. Works regardless of the
-// SVG stroke baked into Bootstrap's data URI, so it survives version bumps.
-
-.carousel-control-prev-icon,
-.carousel-control-next-icon {
-  filter: brightness(1) !important;
-}
-
-[data-bs-theme='light'] .carousel-caption {
-  background: linear-gradient(
-    180deg,
-    rgb(var(--ui-shadow-rgb) / 0) 0%,
-    rgb(var(--ui-shadow-rgb) / 0.45) 55%,
-    rgb(var(--ui-shadow-rgb) / 0.72) 100%
-  );
-}
-
-[data-bs-theme='dark'] {
-  .carousel,
-  &.carousel {
-    .carousel-caption {
-      color: $carousel-foreground;
+[data-bs-theme='dark'],
+[data-bs-theme='light'] {
+  .carousel {
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+      filter: var(--carousel-control-filter);
     }
   }
 }
 
-// Bootstrap's dark-mode layer ships:
-//   [data-bs-theme=dark] .carousel .carousel-indicators [data-bs-target] { background-color: #000 }
-// which is (0,4,0). We match that specificity and rely on source order
-// (this file is imported after bootstrap/scss/bootstrap).
+// Bootstrap's dark-mode layer ships a (0,4,0) rule for the indicators. Matching
+// that specificity keeps the variables above authoritative.
 .carousel .carousel-indicators [data-bs-target],
 [data-bs-theme] .carousel .carousel-indicators [data-bs-target] {
-  background-color: $carousel-indicator;
+  background-color: var(--carousel-indicator-bg);
 }
 
 .carousel .carousel-indicators .active,
 [data-bs-theme] .carousel .carousel-indicators .active {
-  background-color: $carousel-indicator-active;
+  background-color: var(--carousel-indicator-active-bg);
 }
 
 // --------------------------------------------------------------- spinners --
