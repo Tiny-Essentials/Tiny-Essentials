@@ -1048,363 +1048,8 @@
           </section>
 
           <!-- ============================================================
-               NAVIGATION
+               NAV
                ============================================================ -->
-          <section id="navigation" class="py-5 border-bottom">
-            <h2 class="h3 fw-bold mb-1">Navigation</h2>
-            <p class="text-body-secondary mb-4">Breadcrumbs, tabs, pills and pagination.</p>
-
-            <div class="card border rounded-3">
-              <div class="card-body d-flex flex-column gap-4">
-                <nav aria-label="breadcrumb">
-                  <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="#">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Library</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Data</li>
-                  </ol>
-                </nav>
-
-                <div>
-                  <ul class="nav nav-tabs" role="tablist">
-                    <li class="nav-item">
-                      <button
-                        class="nav-link active"
-                        data-bs-toggle="tab"
-                        data-bs-target="#tab-a"
-                        type="button"
-                      >
-                        Overview
-                      </button>
-                    </li>
-                    <li class="nav-item">
-                      <button
-                        class="nav-link"
-                        data-bs-toggle="tab"
-                        data-bs-target="#tab-b"
-                        type="button"
-                      >
-                        Details
-                      </button>
-                    </li>
-                  </ul>
-                  <div class="tab-content pt-3">
-                    <div class="tab-pane fade show active" id="tab-a">
-                      Content of the first tab panel.
-                    </div>
-                    <div class="tab-pane fade" id="tab-b">Content of the second tab panel.</div>
-                  </div>
-                </div>
-
-                <ul class="nav nav-pills gap-2">
-                  <li class="nav-item"><a class="nav-link active" href="#">Active</a></li>
-                  <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
-                  <li class="nav-item">
-                    <a class="nav-link disabled" href="#">Disabled</a>
-                  </li>
-                </ul>
-
-                <nav aria-label="Pagination example">
-                  <ul class="pagination mb-0">
-                    <li class="page-item disabled">
-                      <a class="page-link" href="#">Previous</a>
-                    </li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item"><a class="page-link" href="#">Next</a></li>
-                  </ul>
-                </nav>
-              </div>
-            </div>
-          </section>
-
-          <!-- ============================================================
-               FEEDBACK
-               ============================================================ -->
-          <section id="feedback" class="py-5 border-bottom">
-            <h2 class="h3 fw-bold mb-1">Feedback</h2>
-            <p class="text-body-secondary mb-4">Progress, spinners and placeholders.</p>
-
-            <div class="card border rounded-3">
-              <div class="card-body d-flex flex-column gap-4">
-                <!-- Progress -->
-                <div class="d-flex flex-column gap-2">
-                  <div class="progress" role="progressbar" aria-valuenow="65">
-                    <div class="progress-bar" style="width: 65%">65%</div>
-                  </div>
-                  <div class="progress" style="height: 6px">
-                    <div class="progress-bar bg-success" style="width: 40%"></div>
-                  </div>
-                  <div class="progress" role="progressbar" aria-valu-now="50">
-                    <div class="progress-bar progress-bar-striped" style="width: 50%"></div>
-                  </div>
-                  <div class="progress" role="progressbar" aria-valu-now="75">
-                    <div
-                      class="progress-bar progress-bar-striped progress-bar-animated bg-info"
-                      style="width: 75%"
-                    ></div>
-                  </div>
-                  <div class="progress-stacked">
-                    <div class="progress" role="progressbar" style="width: 15%">
-                      <div class="progress-bar">15%</div>
-                    </div>
-                    <div class="progress" role="progressbar" style="width: 15%">
-                      <div class="progress-bar bg-success">15%</div>
-                    </div>
-                    <div class="progress" role="progressbar" style="width: 15%">
-                      <div class="progress-bar bg-danger">15%</div>
-                    </div>
-                    <div class="progress" role="progressbar" style="width: 15%">
-                      <div class="progress-bar bg-warning">15%</div>
-                    </div>
-                    <div class="progress" role="progressbar" style="width: 15%">
-                      <div class="progress-bar bg-info">15%</div>
-                    </div>
-                    <div class="progress" role="progressbar" style="width: 15%">
-                      <div class="progress-bar bg-dark">15%</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Spinners -->
-                <div class="d-flex flex-wrap align-items-center gap-3">
-                  <span class="spinner-border" role="status"></span>
-                  <span class="spinner-border spinner-border-sm" role="status"></span>
-                  <span class="spinner-grow" role="status"></span>
-                  <span class="spinner-grow spinner-grow-sm" role="status"></span>
-                  <span class="spinner-border text-success" role="status"></span>
-                  <span class="spinner-grow text-danger" role="status"></span>
-                </div>
-
-                <!-- Placeholders -->
-                <div class="placeholder-glow">
-                  <span class="placeholder col-8 d-block mb-2"></span>
-                  <span class="placeholder col-5 d-block mb-2"></span>
-                  <span class="placeholder col-10 d-block"></span>
-                </div>
-
-                <div class="placeholder-wave">
-                  <span class="placeholder col-6 d-block mb-2"></span>
-                  <span class="placeholder col-4 d-block"></span>
-                </div>
-
-                <div>
-                  <button class="btn btn-primary" type="button" disabled>
-                    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
-                    Loading…
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- ============================================================
-               OVERLAYS
-               ============================================================ -->
-          <section id="overlays" class="py-5 border-bottom">
-            <h2 class="h3 fw-bold mb-1">Overlays</h2>
-            <p class="text-body-secondary mb-4">
-              Modal, offcanvas, dropdown, tooltip, popover and toast.
-            </p>
-
-            <div class="card border rounded-3">
-              <div class="card-body d-flex flex-wrap gap-2">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#pgModal">
-                  Modal
-                </button>
-                <button
-                  class="btn btn-secondary"
-                  data-bs-toggle="offcanvas"
-                  data-bs-target="#pgOffcanvas"
-                >
-                  Offcanvas
-                </button>
-                <div class="dropdown">
-                  <button class="btn btn-outline-secondary" data-bs-toggle="dropdown">
-                    Dropdown
-                  </button>
-                  <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="#">Action</a></li>
-                    <li><a class="dropdown-item" href="#">Another action</a></li>
-                    <li><hr class="dropdown-divider" /></li>
-                    <li><a class="dropdown-item" href="#">Something else</a></li>
-                  </ul>
-                </div>
-                <button
-                  class="btn btn-outline-secondary"
-                  data-bs-toggle="tooltip"
-                  data-bs-title="I am a tooltip"
-                >
-                  Tooltip
-                </button>
-                <button
-                  class="btn btn-outline-secondary"
-                  data-bs-toggle="popover"
-                  data-bs-title="Popover"
-                  data-bs-content="And here is the popover content."
-                >
-                  Popover
-                </button>
-                <button class="btn btn-outline-secondary" id="pg-toast-trigger">Toast</button>
-                <button
-                  class="btn btn-outline-secondary"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#pgCollapse"
-                >
-                  Collapse
-                </button>
-              </div>
-            </div>
-
-            <div class="collapse mt-3" id="pgCollapse">
-              <div class="card border rounded-3">
-                <div class="card-body small">Collapsed content revealed by the toggle above.</div>
-              </div>
-            </div>
-          </section>
-
-          <!-- ============================================================
-               DATA
-               ============================================================ -->
-          <section id="data" class="py-5 border-bottom">
-            <h2 class="h3 fw-bold mb-1">Data display</h2>
-            <p class="text-body-secondary mb-4">Tables and list groups.</p>
-
-            <div class="row g-3">
-              <div class="col-lg-7">
-                <div class="card border rounded-3 h-100">
-                  <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                      <thead>
-                        <tr>
-                          <th scope="col">#</th>
-                          <th scope="col">Name</th>
-                          <th scope="col">Role</th>
-                          <th scope="col" class="text-end">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <th scope="row">1</th>
-                          <td>Ada Lovelace</td>
-                          <td>Engineer</td>
-                          <td class="text-end">
-                            <span class="badge text-bg-success">Active</span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th scope="row">2</th>
-                          <td>Alan Turing</td>
-                          <td>Researcher</td>
-                          <td class="text-end">
-                            <span class="badge text-bg-secondary">Away</span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th scope="row">3</th>
-                          <td>Grace Hopper</td>
-                          <td>Admiral</td>
-                          <td class="text-end">
-                            <span class="badge text-bg-success">Active</span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-lg-5 d-flex flex-column gap-3">
-                <ul class="list-group">
-                  <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Inbox
-                    <span class="badge text-bg-primary rounded-pill">14</span>
-                  </li>
-                  <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Drafts
-                    <span class="badge text-bg-secondary rounded-pill">3</span>
-                  </li>
-                  <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Archive
-                    <span class="badge text-bg-secondary rounded-pill">0</span>
-                  </li>
-                </ul>
-
-                <div class="list-group">
-                  <a
-                    href="#"
-                    class="list-group-item list-group-item-action active"
-                    aria-current="true"
-                  >
-                    Active item
-                  </a>
-                  <a href="#" class="list-group-item list-group-item-action">Action item</a>
-                  <a href="#" class="list-group-item list-group-item-action disabled"
-                    >Disabled item</a
-                  >
-                </div>
-
-                <ul class="list-group list-group-flush">
-                  <li class="list-group-item">Flush item one</li>
-                  <li class="list-group-item">Flush item two</li>
-                </ul>
-              </div>
-            </div>
-          </section>
-
-          <!-- ============================================================
-               UTILITIES
-               ============================================================ -->
-          <section id="utilities" class="py-5">
-            <h2 class="h3 fw-bold mb-1">Utilities</h2>
-            <p class="text-body-secondary mb-4">Spacing, borders, shadows and flex helpers.</p>
-
-            <div class="row g-3">
-              <div class="col-md-4">
-                <div
-                  class="p-3 bg-primary bg-opacity-10 border border-primary rounded-3 text-center small"
-                >
-                  Padding + border
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="p-3 bg-success bg-opacity-10 rounded-pill text-center small">
-                  Rounded pill
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="p-3 bg-info bg-opacity-10 shadow-sm rounded-3 text-center small">
-                  Shadow sm
-                </div>
-              </div>
-            </div>
-
-            <!-- Stacks -->
-            <div class="mt-4">
-              <h3 class="h6 text-uppercase text-body-secondary mb-2">Stacks</h3>
-              <div class="hstack gap-2 mb-2">
-                <div class="p-2 bg-primary bg-opacity-10 rounded">hstack</div>
-                <div class="p-2 bg-primary bg-opacity-10 rounded">gap-2</div>
-                <div class="p-2 bg-primary bg-opacity-10 rounded">items</div>
-              </div>
-              <div class="vstack gap-2" style="max-width: 12rem">
-                <div class="p-2 bg-success bg-opacity-10 rounded">vstack</div>
-                <div class="p-2 bg-success bg-opacity-10 rounded">gap-2</div>
-                <div class="p-2 bg-success bg-opacity-10 rounded">items</div>
-              </div>
-            </div>
-
-            <!-- Close button -->
-            <div class="mt-4">
-              <h3 class="h6 text-uppercase text-body-secondary mb-2">Close button</h3>
-              <div class="d-flex align-items-center gap-3">
-                <button type="button" class="btn-close" aria-label="Close"></button>
-                <button type="button" class="btn-close" disabled aria-label="Close"></button>
-                <button type="button" class="btn-close bg-body" aria-label="Close"></button>
-              </div>
-            </div>
-          </section>
-
           <section id="navbar" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">Navbar</h2>
             <p class="text-body-secondary mb-4">
@@ -1540,6 +1185,209 @@
             </nav>
           </section>
 
+          <!-- ============================================================
+     NAVS & TABS
+     ============================================================ -->
+          <section id="navs" class="py-5 border-bottom">
+            <h2 class="h3 fw-bold mb-1">Navs &amp; Tabs</h2>
+            <p class="text-body-secondary mb-4">
+              Base nav, alinhamento, vertical, tabs, pills, underline, fill/justify e dropdowns.
+            </p>
+
+            <h3 class="h6 text-uppercase text-body-secondary mb-2">Breadcrumb</h3>
+            <nav aria-label="breadcrumb" class="mb-3">
+              <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="#">Home</a></li>
+                <li class="breadcrumb-item"><a href="#">Library</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Data</li>
+              </ol>
+            </nav>
+
+            <h3 class="h6 text-uppercase text-body-secondary mb-2">Base nav</h3>
+            <ul class="nav mb-3">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Active</a>
+              </li>
+              <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+              <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+              <li class="nav-item">
+                <a class="nav-link disabled" aria-disabled="true">Disabled</a>
+              </li>
+            </ul>
+
+            <h3 class="h6 text-uppercase text-body-secondary mb-2">Alignment</h3>
+            <ul class="nav justify-content-center mb-2">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Centered</a>
+              </li>
+              <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+              <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+            </ul>
+            <ul class="nav justify-content-end mb-3">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Right</a>
+              </li>
+              <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+              <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+            </ul>
+
+            <h3 class="h6 text-uppercase text-body-secondary mb-2">Vertical</h3>
+            <ul class="nav flex-column mb-3" style="max-width: 12rem">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Active</a>
+              </li>
+              <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+              <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+            </ul>
+
+            <h3 class="h6 text-uppercase text-body-secondary mb-2">Tabs / Pills / Underline</h3>
+            <ul class="nav nav-tabs mb-2">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Active</a>
+              </li>
+              <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+              <li class="nav-item">
+                <a class="nav-link disabled" aria-disabled="true">Disabled</a>
+              </li>
+            </ul>
+            <ul class="nav nav-pills mb-2">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Active</a>
+              </li>
+              <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+              <li class="nav-item">
+                <a class="nav-link disabled" aria-disabled="true">Disabled</a>
+              </li>
+            </ul>
+            <ul class="nav nav-underline mb-3">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Active</a>
+              </li>
+              <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+              <li class="nav-item">
+                <a class="nav-link disabled" aria-disabled="true">Disabled</a>
+              </li>
+            </ul>
+
+            <h3 class="h6 text-uppercase text-body-secondary mb-2">Fill / Justified</h3>
+            <ul class="nav nav-pills nav-fill mb-2">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Active</a>
+              </li>
+              <li class="nav-item"><a class="nav-link" href="#">Much longer nav link</a></li>
+              <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+            </ul>
+            <ul class="nav nav-pills nav-justified mb-3">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Active</a>
+              </li>
+              <li class="nav-item"><a class="nav-link" href="#">Much longer nav link</a></li>
+              <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+            </ul>
+
+            <h3 class="h6 text-uppercase text-body-secondary mb-2">Tabs com dropdown</h3>
+            <ul class="nav nav-tabs mb-3">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#">Active</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a
+                  class="nav-link dropdown-toggle"
+                  data-bs-toggle="dropdown"
+                  href="#"
+                  role="button"
+                  aria-expanded="false"
+                  >Dropdown</a
+                >
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#">Action</a></li>
+                  <li><a class="dropdown-item" href="#">Another action</a></li>
+                  <li><hr class="dropdown-divider" /></li>
+                  <li><a class="dropdown-item" href="#">Separated link</a></li>
+                </ul>
+              </li>
+              <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+            </ul>
+
+            <h3 class="h6 text-uppercase text-body-secondary mb-2">JavaScript behavior (tabs)</h3>
+            <ul class="nav nav-tabs mb-2" id="jsTab" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link active"
+                  id="js-home-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#js-home"
+                  type="button"
+                  role="tab"
+                  aria-controls="js-home"
+                  aria-selected="true"
+                >
+                  Home
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link"
+                  id="js-profile-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#js-profile"
+                  type="button"
+                  role="tab"
+                  aria-controls="js-profile"
+                  aria-selected="false"
+                >
+                  Profile
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link"
+                  id="js-contact-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#js-contact"
+                  type="button"
+                  role="tab"
+                  aria-controls="js-contact"
+                  aria-selected="false"
+                >
+                  Contact
+                </button>
+              </li>
+            </ul>
+            <div class="tab-content" id="jsTabContent">
+              <div
+                class="tab-pane fade show active"
+                id="js-home"
+                role="tabpanel"
+                aria-labelledby="js-home-tab"
+                tabindex="0"
+              >
+                Home tab content.
+              </div>
+              <div
+                class="tab-pane fade"
+                id="js-profile"
+                role="tabpanel"
+                aria-labelledby="js-profile-tab"
+                tabindex="0"
+              >
+                Profile tab content.
+              </div>
+              <div
+                class="tab-pane fade"
+                id="js-contact"
+                role="tabpanel"
+                aria-labelledby="js-contact-tab"
+                tabindex="0"
+              >
+                Contact tab content.
+              </div>
+            </div>
+          </section>
+
+          <!-- ============================================================
+               PAGINATION
+               ============================================================ -->
           <section id="pagination" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">Pagination</h2>
             <p class="text-body-secondary mb-4">
@@ -1609,6 +1457,9 @@
             </nav>
           </section>
 
+          <!-- ============================================================
+               SCROLLSPY
+               ============================================================ -->
           <section id="scrollspy" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">Scrollspy</h2>
             <p class="text-body-secondary mb-4">
@@ -1658,6 +1509,9 @@
             </div>
           </section>
 
+          <!-- ============================================================
+               OFFCANVAS
+               ============================================================ -->
           <section id="offcanvas" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">Offcanvas</h2>
             <p class="text-body-secondary mb-4">
@@ -1805,6 +1659,9 @@
             </div>
           </section>
 
+          <!-- ============================================================
+               MODALS
+               ============================================================ -->
           <section id="modals" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">Modals</h2>
             <p class="text-body-secondary mb-4">
@@ -2062,6 +1919,9 @@
             </div>
           </section>
 
+          <!-- ============================================================
+               TOASTS
+               ============================================================ -->
           <section id="toasts" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">Toasts</h2>
             <p class="text-body-secondary mb-4">
@@ -2071,6 +1931,7 @@
             <div class="d-flex flex-wrap gap-2 mb-3">
               <button class="btn btn-primary" id="toast-basic">Show toast</button>
               <button class="btn btn-secondary" id="toast-stack">Stack two</button>
+              <button class="btn btn-outline-secondary" id="pg-toast-trigger">Toast</button>
             </div>
 
             <div
@@ -2116,6 +1977,9 @@
             ></div>
           </section>
 
+          <!-- ============================================================
+               POPOVERS
+               ============================================================ -->
           <section id="tooltips-popovers" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">Tooltips &amp; Popovers</h2>
             <p class="text-body-secondary mb-4">
@@ -2230,6 +2094,9 @@
             </div>
           </section>
 
+          <!-- ============================================================
+               DROPDOWN
+               ============================================================ -->
           <section id="dropdowns" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">Dropdowns</h2>
             <p class="text-body-secondary mb-4">
@@ -2332,6 +2199,9 @@
             </div>
           </section>
 
+          <!-- ============================================================
+               LIST GROUP
+               ============================================================ -->
           <section id="list-group" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">List group</h2>
             <p class="text-body-secondary mb-4">
@@ -2419,6 +2289,9 @@
             </div>
           </section>
 
+          <!-- ============================================================
+               PROGRESS
+               ============================================================ -->
           <section id="progress" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">Progress</h2>
             <p class="text-body-secondary mb-4">
@@ -2566,8 +2439,81 @@
                 style="width: 75%"
               ></div>
             </div>
+
+            <div class="card-body d-flex flex-column gap-4 mt-3">
+              <!-- Progress -->
+              <div class="d-flex flex-column gap-2">
+                <div class="progress" role="progressbar" aria-valuenow="65">
+                  <div class="progress-bar" style="width: 65%">65%</div>
+                </div>
+                <div class="progress" style="height: 6px">
+                  <div class="progress-bar bg-success" style="width: 40%"></div>
+                </div>
+                <div class="progress" role="progressbar" aria-valu-now="50">
+                  <div class="progress-bar progress-bar-striped" style="width: 50%"></div>
+                </div>
+                <div class="progress" role="progressbar" aria-valu-now="75">
+                  <div
+                    class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                    style="width: 75%"
+                  ></div>
+                </div>
+                <div class="progress-stacked">
+                  <div class="progress" role="progressbar" style="width: 15%">
+                    <div class="progress-bar">15%</div>
+                  </div>
+                  <div class="progress" role="progressbar" style="width: 15%">
+                    <div class="progress-bar bg-success">15%</div>
+                  </div>
+                  <div class="progress" role="progressbar" style="width: 15%">
+                    <div class="progress-bar bg-danger">15%</div>
+                  </div>
+                  <div class="progress" role="progressbar" style="width: 15%">
+                    <div class="progress-bar bg-warning">15%</div>
+                  </div>
+                  <div class="progress" role="progressbar" style="width: 15%">
+                    <div class="progress-bar bg-info">15%</div>
+                  </div>
+                  <div class="progress" role="progressbar" style="width: 15%">
+                    <div class="progress-bar bg-dark">15%</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Spinners -->
+              <div class="d-flex flex-wrap align-items-center gap-3">
+                <span class="spinner-border" role="status"></span>
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+                <span class="spinner-grow" role="status"></span>
+                <span class="spinner-grow spinner-grow-sm" role="status"></span>
+                <span class="spinner-border text-success" role="status"></span>
+                <span class="spinner-grow text-danger" role="status"></span>
+              </div>
+
+              <!-- Placeholders -->
+              <div class="placeholder-glow">
+                <span class="placeholder col-8 d-block mb-2"></span>
+                <span class="placeholder col-5 d-block mb-2"></span>
+                <span class="placeholder col-10 d-block"></span>
+              </div>
+
+              <div class="placeholder-wave">
+                <span class="placeholder col-6 d-block mb-2"></span>
+                <span class="placeholder col-4 d-block"></span>
+              </div>
+
+              <div>
+                <button class="btn btn-primary" type="button" disabled>
+                  <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                  Loading…
+                </button>
+              </div>
+            </div>
           </section>
 
+          <!-- ============================================================
+               SPINNERS
+               ============================================================ -->
           <section id="spinners" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">Spinners</h2>
             <p class="text-body-secondary mb-4">Border, grow, colors, sizes and buttons.</p>
@@ -2602,6 +2548,9 @@
             </button>
           </section>
 
+          <!-- ============================================================
+               PLACEHOLDERS
+               ============================================================ -->
           <section id="placeholders" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">Placeholders</h2>
             <p class="text-body-secondary mb-4">Width, color, sizing and animation.</p>
@@ -2634,6 +2583,9 @@
             <p class="placeholder-wave"><span class="placeholder col-12"></span></p>
           </section>
 
+          <!-- ============================================================
+               CLOSE BOTTOM
+               ============================================================ -->
           <section id="close-button" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">Close button</h2>
             <p class="text-body-secondary mb-4">Default, disabled and dark variant.</p>
@@ -2646,6 +2598,9 @@
             </div>
           </section>
 
+          <!-- ============================================================
+               COLLAPSE
+               ============================================================ -->
           <section id="collapse" class="py-5 border-bottom">
             <h2 class="h3 fw-bold mb-1">Collapse</h2>
             <p class="text-body-secondary mb-4">Basic, horizontal and multiple toggles.</p>
@@ -2734,6 +2689,92 @@
                 <div class="collapse multi-collapse" id="multiCollapse2">
                   <div class="card card-body">Second collapse.</div>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============================================================
+               DATA
+               ============================================================ -->
+          <section id="data" class="py-5 border-bottom">
+            <h2 class="h3 fw-bold mb-1">Data display</h2>
+            <p class="text-body-secondary mb-4">Tables with hover and alignment.</p>
+
+            <div class="card border rounded-3">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th scope="col">#</th>
+                      <th scope="col">Name</th>
+                      <th scope="col">Role</th>
+                      <th scope="col" class="text-end">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">1</th>
+                      <td>Ada Lovelace</td>
+                      <td>Engineer</td>
+                      <td class="text-end"><span class="badge text-bg-success">Active</span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">2</th>
+                      <td>Alan Turing</td>
+                      <td>Researcher</td>
+                      <td class="text-end"><span class="badge text-bg-secondary">Away</span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">3</th>
+                      <td>Grace Hopper</td>
+                      <td>Admiral</td>
+                      <td class="text-end"><span class="badge text-bg-success">Active</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============================================================
+               UTILITIES
+               ============================================================ -->
+          <section id="utilities" class="py-5">
+            <h2 class="h3 fw-bold mb-1">Utilities</h2>
+            <p class="text-body-secondary mb-4">Spacing, borders, shadows and flex helpers.</p>
+
+            <div class="row g-3">
+              <div class="col-md-4">
+                <div
+                  class="p-3 bg-primary bg-opacity-10 border border-primary rounded-3 text-center small"
+                >
+                  Padding + border
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 bg-success bg-opacity-10 rounded-pill text-center small">
+                  Rounded pill
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 bg-info bg-opacity-10 shadow-sm rounded-3 text-center small">
+                  Shadow sm
+                </div>
+              </div>
+            </div>
+
+            <!-- Stacks -->
+            <div class="mt-4">
+              <h3 class="h6 text-uppercase text-body-secondary mb-2">Stacks</h3>
+              <div class="hstack gap-2 mb-2">
+                <div class="p-2 bg-primary bg-opacity-10 rounded">hstack</div>
+                <div class="p-2 bg-primary bg-opacity-10 rounded">gap-2</div>
+                <div class="p-2 bg-primary bg-opacity-10 rounded">items</div>
+              </div>
+              <div class="vstack gap-2" style="max-width: 12rem">
+                <div class="p-2 bg-success bg-opacity-10 rounded">vstack</div>
+                <div class="p-2 bg-success bg-opacity-10 rounded">gap-2</div>
+                <div class="p-2 bg-success bg-opacity-10 rounded">items</div>
               </div>
             </div>
           </section>
