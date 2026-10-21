@@ -350,7 +350,6 @@ $carousel-indicator-active: #6c8cff;
   --carousel-indicator-active-bg: #{$carousel-indicator-active};
 
   // Clips the caption scrim to the rounded corners.
-  overflow: hidden;
   border-radius: var(--bs-border-radius);
 }
 
