@@ -85,7 +85,8 @@
     "./css/TinyNotify.min.css": "./dist/v1/css/TinyNotify.min.css",
     "./css/TinyLoadingScreen.min.css": "./dist/v1/css/TinyLoadingScreen.min.css",
     "./webTemplates/bootstrap/5.3/scss/themes/deepstrap": "./dist/v1/webTemplates/bootstrap/5.3/scss/themes/deepstrap/index.scss",
-    "./webTemplates/bootstrap/5.3/scss/elements/Cube-Icon.scss": "./dist/v1/webTemplates/bootstrap/5.3/scss/elements/Cube-Icon.scss",
+    "./webTemplates/bootstrap/5.3/scss/components/icon/Cube-Icon.scss": "./dist/v1/webTemplates/bootstrap/5.3/scss/components/icon/Cube-Icon.scss",
+    "./webTemplates/bootstrap/5.3/scss/background/Grid.scss": "./dist/v1/webTemplates/bootstrap/5.3/scss/background/Grid.scss",
     "./webTemplates/bootstrap/5.3/scss/input/Placeholder-Colors-Fix.scss": "./dist/v1/webTemplates/bootstrap/5.3/scss/input/Placeholder-Colors-Fix.scss",
     "./webTemplates/bootstrap/5.3/scss/spacing/Spacing-Plus.scss": "./dist/v1/webTemplates/bootstrap/5.3/scss/spacing/Spacing-Plus.scss",
     ".": {
