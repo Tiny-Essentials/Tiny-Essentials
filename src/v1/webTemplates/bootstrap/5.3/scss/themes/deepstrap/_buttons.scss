@@ -12,6 +12,19 @@ $button-tones: (
   'info': 'info',
 );
 
+@use '../../components/buttons/Ghost.scss' with (
+  $tones: (
+    'primary': var(--ui-accent),
+    'secondary': var(--ui-text-muted),
+    'success': var(--ui-success),
+    'danger': var(--ui-error),
+    'warning': var(--ui-warn),
+    'info': var(--ui-info),
+    'light': var(--ui-neutral-light),
+    'dark': var(--ui-neutral-dark),
+  )
+);
+
 // ------------------------------------------------------------------ mixins --
 /// Emits a subtle variant. The border is opt-in via the `.border` utility,
 /// so the button blends into the surface by default.
