@@ -26,9 +26,6 @@ $button-tones: (
 );
 
 // ------------------------------------------------------------------ mixins --
-/// Emits a subtle variant. The border is opt-in via the `.border` utility,
-/// so the button blends into the surface by default.
-///
 /// @param {String} $tone - Token suffix, without the `--ui-` prefix.
 @mixin subtle-variant($tone) {
   --btn-tone: var(--ui-#{$tone});
@@ -42,6 +39,11 @@ $button-tones: (
   background-color: rgb(var(--ui-#{$tone}-rgb) / 0.12);
   border-color: transparent;
 
+  &.hover-border {
+    box-shadow:
+      0 0 0 1px rgb(var(--ui-#{$tone}-rgb) / 0.32);
+  }
+
   &:hover:not(:disabled):not(.disabled) {
     background-color: rgb(var(--ui-#{$tone}-rgb) / 0.2);
     box-shadow:
@@ -51,11 +53,6 @@ $button-tones: (
 
   &:active:not(:disabled):not(.disabled) {
     background-color: rgb(var(--ui-#{$tone}-rgb) / 0.28);
-  }
-
-  // Border is opt-in: only visible when `.border` is present.
-  &.border {
-    border-color: rgb(var(--ui-#{$tone}-rgb) / 0.32);
   }
 }
 
@@ -246,14 +243,6 @@ $button-tones: (
 
   &:hover:not(:disabled):not(.disabled) {
     background-color: var(--ui-border);
-  }
-
-  &.border {
-    border-color: var(--ui-border);
-
-    &:hover:not(:disabled):not(.disabled) {
-      border-color: var(--ui-border-strong);
-    }
   }
 }
 
