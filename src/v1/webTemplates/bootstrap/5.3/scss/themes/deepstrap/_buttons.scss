@@ -25,6 +25,22 @@ $button-tones: (
   )
 );
 
+// ------------------------------------------------------------------ helpers --
+/// Blends a theme tone into an opaque surface colour.
+///
+/// `color-mix(..., transparent)` returns a translucent colour. Two adjacent
+/// borders then composite into a darker 2px seam, and whatever sits behind the
+/// button bleeds through. Mixing into an opaque token keeps the result solid,
+/// so overlapping borders stay a single 1px line.
+///
+/// @param {String} $tone - Token suffix, without the `--ui-` prefix.
+/// @param {Number} $amount - Share of the tone in the mix.
+/// @param {String} $base - CSS colour the tone is blended into.
+/// @return {String} An opaque `color-mix()` value.
+@function solid-tint($tone, $amount: 40%, $base: var(--ui-canvas)) {
+  @return color-mix(in srgb, var(--ui-#{$tone}) #{$amount}, #{$base});
+}
+
 // ------------------------------------------------------------------ mixins --
 /// @param {String} $tone - Token suffix, without the `--ui-` prefix.
 @mixin subtle-variant($tone) {
@@ -34,6 +50,10 @@ $button-tones: (
   --bs-btn-hover-color: var(--ui-#{$tone});
   --bs-btn-active-color: var(--ui-#{$tone});
   --bs-btn-disabled-color: var(--ui-#{$tone});
+
+  // Group divider. Same rule as the outline variant: the tone is composited
+  // over the group surface, never over the button's own 12% tint.
+  --btn-group-border: color-mix(in srgb, var(--ui-#{$tone}) 40%, var(--btn-group-bg));
 
   color: var(--ui-#{$tone});
   background-color: rgb(var(--ui-#{$tone}-rgb) / 0.12);
@@ -113,6 +133,10 @@ $button-tones: (
   --bs-btn-active-color: var(--ui-on-#{$tone});
   --bs-btn-disabled-color: var(--ui-on-#{$tone});
 
+  // Group divider. Opaque: the ink mixed into the fill, so the 1px overlap
+  // between two buttons cannot double the alpha.
+  --btn-group-border: color-mix(in srgb, var(--ui-on-#{$tone}) 40%, var(--ui-#{$tone}));
+
   // Single source of truth for the filled area. The border reads from the
   // same variable, so a 1px seam can never show the layer behind the button.
   --btn-fill: var(--ui-#{$tone});
@@ -150,15 +174,19 @@ $button-tones: (
   --bs-btn-active-color: var(--ui-on-#{$tone});
   --bs-btn-disabled-color: var(--ui-#{$tone});
 
+  // Group divider. Opaque: the tone is pre-composited over the surface the
+  // group sits on, so two overlapping borders cannot double their alpha.
+  --btn-group-border: color-mix(in srgb, var(--ui-#{$tone}) 40%, var(--btn-group-bg));
+
   color: var(--ui-#{$tone});
   background-color: transparent;
-  border-color: color-mix(in srgb, var(--ui-#{$tone}) 40%, transparent);
+  border-color: solid-tint($tone, 40%, var(--btn-group-bg, var(--ui-canvas)));
 
   // A tone that matches the page background needs a stronger edge to stay
   // visible. The seam is a border colour bump, not a box-shadow, so it does
   // not collide with the hover glow below.
   @if $seam {
-    border-color: color-mix(in srgb, var(--ui-#{$tone}) 70%, transparent);
+    border-color: solid-tint($tone, 70%, var(--btn-group-bg, var(--ui-canvas)));
   }
 
   &:hover:not(:disabled):not(.disabled) {
@@ -271,11 +299,18 @@ $button-tones: (
 }
 
 // ------------------------------------------------------------------ groups --
-// The theme sets `border: 1px solid` on every `.btn`. Inside a group, two
-// adjacent borders stack into a 2px line. Negative margins do not fix this
-// when the border colour is semi-transparent (outline variants), because the
-// overlap is not pixel-perfect. Removing the top border is exact: the
-// previous button's bottom border becomes the divider.
+// Every button paints its own 1px border. Two neighbours would therefore draw
+// a 2px divider, so each button is pulled 1px over the previous one. The
+// overlap is only invisible while the border colour is opaque, which is why
+// `solid-tint()` exists: `color-mix(..., transparent)` would let the two
+// borders composite into a darker 2px seam.
+.btn-group,
+.btn-group-vertical {
+  // Surface the group sits on. Override it when the group is not on the page
+  // canvas, e.g. `.btn-group { --btn-group-bg: var(--ui-surface); }`.
+  --btn-group-bg: var(--ui-canvas);
+}
+
 .btn-group-vertical {
   > .btn {
     border-radius: 0;
@@ -312,6 +347,16 @@ $button-tones: (
   }
 
   > .btn + .btn {
-    border-left: 0;
+    margin-left: -1px;
   }
+}
+
+// The hovered, focused or pressed button owns the shared border.
+.btn-group > .btn:hover,
+.btn-group > .btn:focus-visible,
+.btn-group > .btn:active,
+.btn-group-vertical > .btn:hover,
+.btn-group-vertical > .btn:focus-visible,
+.btn-group-vertical > .btn:active {
+  z-index: 1;
 }
