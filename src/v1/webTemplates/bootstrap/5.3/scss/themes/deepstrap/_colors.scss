@@ -31,7 +31,7 @@ $palette: (
   'slate-400': #6b7688,
   'slate-200': #b6bfce,
   'slate-050': #e8ecf3,
-  
+
   // Neutral ramp, light end.
   'paper-000': #ffffff,
   'paper-050': #f7f9fd,
@@ -64,7 +64,7 @@ $palette: (
   'on-info': #04141a,
 
   // Cool dark used by the light theme so shadows do not read as grey.
-  'shadow-slate': #1e293b,
+  'shadow-slate': #1e293b
 ) !default;
 
 /// Returns a raw colour from the palette.

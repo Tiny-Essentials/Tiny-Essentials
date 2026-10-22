@@ -1,4 +1,4 @@
-import { access, readFile } from 'fs/promises';
+import { readFile, readdir, stat } from 'fs/promises';
 import { resolve } from 'path';
 
 /**
@@ -21,17 +21,47 @@ import { resolve } from 'path';
 /**
  * @typedef {Object} DefaultMessages
  * @property {string} header
- * @property {string}  divider
- * @property {string}  itemValid
- * @property {string}  itemInvalid
- * @property {string}  itemMissing
- * @property {string}  successHeader
- * @property {string}  failureHeader
- * @property {string}  errorLoad
- * @property {string}  noExports
- * @property {string}  errorNotFound
- * @property {string}  errorParse
- * @property {string}  errorUnexpected
+ * @property {string} divider
+ * @property {string} itemValid
+ * @property {string} itemInvalid
+ * @property {string} itemMissing
+ * @property {string} itemSkipped
+ * @property {string} itemPattern
+ * @property {string} itemInvalidTarget
+ * @property {string} successHeader
+ * @property {string} failureHeader
+ * @property {string} errorLoad
+ * @property {string} noExports
+ * @property {string} errorNotFound
+ * @property {string} errorParse
+ * @property {string} errorUnexpected
+ */
+
+/**
+ * @typedef {Object} LogContext
+ * @property {string} [projectName] - The project name injected automatically.
+ * @property {string} [path] - The dotted context path of the export.
+ * @property {string} [errorPath] - The raw target string from package.json.
+ * @property {string} [target] - The invalid target value.
+ * @property {string} [reason] - The machine-readable failure reason.
+ * @property {string} [pattern] - The wildcard pattern that matched.
+ * @property {string} [message] - A generic message payload.
+ * @property {number} [errorCount] - The number of failures found.
+ */
+
+/**
+ * The kind of target that was validated.
+ * @typedef {'file'|'pattern'|'null'|'invalid'} ExportTargetKind
+ */
+
+/**
+ * The validation result of a single export target.
+ * @typedef {Object} ExportTargetResult
+ * @property {string} path - The dotted context path (e.g. "exports -> . -> import").
+ * @property {boolean} valid - Whether the target resolves to an existing file.
+ * @property {ExportTargetKind} [kind] - The kind of target that was validated.
+ * @property {string} [errorPath] - The raw target string declared in package.json.
+ * @property {string} [reason] - A short machine-readable reason code for failures.
  */
 
 /**
@@ -45,6 +75,9 @@ const DEFAULT_MESSAGES = {
   itemValid: `  [✔] {path}`,
   itemInvalid: `  [✘] {path}`,
   itemMissing: `      Missing: {errorPath}`,
+  itemSkipped: `  [-] {path} (excluded by null target)`,
+  itemPattern: `  [✔] {path} (pattern: {pattern})`,
+  itemInvalidTarget: `      Invalid target: {target} ({reason})`,
   successHeader: `SUCCESS: All exports are correctly mapped.`,
   failureHeader: `FAILURE: {errorCount} export(s) are missing or invalid.`,
   errorLoad: `Error: package.json not loaded in the current directory.`,
@@ -108,9 +141,10 @@ class TinyPkgExportValidator {
     }
 
     // 3. Validate that all values are strings
+    const colorRecord = /** @type {Record<string, string>} */ (newColors);
+
     for (const key of originalKeys) {
-      // @ts-ignore
-      if (typeof newColors[key] !== 'string') {
+      if (typeof colorRecord[key] !== 'string') {
         throw new TypeError(`The value for key "${key}" must be a string.`);
       }
     }
@@ -130,7 +164,7 @@ class TinyPkgExportValidator {
   /** @type {string} */
   #rootDir;
 
-  /** @type {Array<{path: string, valid: boolean, errorPath?: string}>} */
+  /** @type {ExportTargetResult[]} */
   #results;
 
   /** @type {boolean} */
@@ -229,9 +263,10 @@ class TinyPkgExportValidator {
       }
 
       // Ensure all required keys from DefaultMessages are present and are strings
+      const messages = /** @type {Record<string, unknown>} */ (options.messages);
+
       for (const key of MESSAGE_KEYS) {
-        // @ts-ignore
-        if (typeof options.messages[key] !== 'string') {
+        if (typeof messages[key] !== 'string') {
           throw new TypeError(`The "options.messages.${key}" property must be a string.`);
         }
       }
@@ -240,8 +275,9 @@ class TinyPkgExportValidator {
 
   /**
    * Internal helper to apply template replacements.
+   *
    * @param {string} template - The message template string.
-   * @param {Object} context - Data for placeholders.
+   * @param {LogContext} context - Data for placeholders.
    * @returns {string} The processed string.
    * @throws {TypeError} If template is not a string or context is not an object.
    */
@@ -253,17 +289,21 @@ class TinyPkgExportValidator {
       throw new TypeError('The context must be a non-null object.');
     }
 
+    const values = /** @type {Record<string, unknown>} */ (context);
+
     return template.replace(/{(\w+)}/g, (match, key) => {
-      // @ts-ignore
-      return context[key] !== undefined ? context[key] : match;
+      const value = values[key];
+      return value !== undefined ? String(value) : match;
     });
   }
 
   /**
    * Internal helper to handle console output, coloring, and silent mode.
+   *
    * @param {'error'|'warning'|'success'|'info'|'dim'|'cyan'} type - The log type.
    * @param {string} templateKey - The key in the messages object.
-   * @param {Object} [context={}] - Data for the template.
+   * @param {LogContext} [context={}] - Data for the template.
+   * @returns {void}
    * @throws {TypeError} If arguments do not match required types or if type is invalid.
    */
   #log(type, templateKey, context = {}) {
@@ -283,9 +323,8 @@ class TinyPkgExportValidator {
       throw new TypeError('The context must be a non-null object.');
     }
 
-    const template =
-      // @ts-ignore
-      this.#messages[templateKey] || templateKey;
+    const messages = /** @type {Record<string, string>} */ (this.#messages);
+    const template = messages[templateKey] ?? templateKey;
     const message = this.#applyTemplate(template, { ...context, projectName: this.#projectName });
 
     switch (type) {
@@ -384,24 +423,30 @@ class TinyPkgExportValidator {
 
   /**
    * Executes the validation process.
-   * @returns {Promise<boolean>} Returns true if all paths are valid, false otherwise.
+   *
+   * @returns {Promise<boolean>} True if all paths are valid, false otherwise.
+   * @throws {TypeError} If the "exports" field mixes subpath keys with condition keys.
    */
   async validate() {
     if (!this.#started) {
       this.#log('error', 'errorLoad');
-      return true;
+      return false;
     }
 
     const exports = this.#packageData.exports;
 
-    if (!exports) {
+    if (exports === undefined || exports === null) {
       this.#log('warning', 'noExports');
       return true;
     }
 
     this.#results = [];
+
     try {
-      await this.#traverseExports(exports);
+      if (typeof exports === 'object' && !Array.isArray(exports)) {
+        this.#assertRootKeys(exports);
+      }
+      await this.#traverseExports(exports, 'exports', true);
     } catch (error) {
       if (error instanceof Error) {
         if (error instanceof SyntaxError) {
@@ -414,39 +459,264 @@ class TinyPkgExportValidator {
       }
       throw error;
     }
+
     return this.#report();
   }
 
   /**
-   * Recursively traverses the exports object.
+   * Ensures the root "exports" object does not mix subpath keys with condition keys.
    *
-   * @param {Record<string, any>|string} node - The current node of the exports object.
-   * @param {string} currentKey - The key (used for log tracking).
-   * @returns {Promise<void>}
-   * @throws {TypeError} If node is not a string or object, or if currentKey is not a string.
+   * @param {Record<string, unknown>} exportsObject - The root "exports" object.
+   * @returns {void}
+   * @throws {TypeError} If subpath keys and condition keys are mixed.
    */
-  async #traverseExports(node, currentKey = '') {
+  #assertRootKeys(exportsObject) {
+    const keys = Object.keys(exportsObject);
+    const subpathCount = keys.filter((key) => key.startsWith('.')).length;
+
+    if (subpathCount === 0 || subpathCount === keys.length) return;
+
+    throw new TypeError(
+      'The "exports" field cannot mix subpath keys ("./x") with condition keys ("import").',
+    );
+  }
+
+  /**
+   * Validates a single key of an exports object.
+   *
+   * @param {string} key - The object key to validate.
+   * @param {boolean} isRoot - Whether the key belongs to the root "exports" object.
+   * @returns {string|null} A reason code when invalid, or null when the key is valid.
+   */
+  #getKeyError(key, isRoot) {
+    if (key.length === 0) return 'EMPTY_KEY';
+
+    const isSubpath = key === '.' || key.startsWith('./');
+
+    if (isSubpath) {
+      if (!isRoot) return 'NESTED_SUBPATH_KEY';
+      return null;
+    }
+
+    if (key.startsWith('.')) return 'INVALID_SUBPATH_KEY';
+    if (key.includes(',') || key.includes('/') || key.includes('\\')) return 'INVALID_CONDITION';
+
+    return null;
+  }
+
+  /**
+   * Recursively traverses the exports tree.
+   *
+   * @param {unknown} node - The current node of the exports tree.
+   * @param {string} currentKey - The dotted context path used for reporting.
+   * @param {boolean} [isRoot=false] - Whether this node is the root "exports" value.
+   * @returns {Promise<void>}
+   * @throws {TypeError} If currentKey is not a string or node has an unsupported type.
+   */
+  async #traverseExports(node, currentKey, isRoot = false) {
     if (typeof currentKey !== 'string') {
       throw new TypeError('The "currentKey" argument must be a string.');
     }
 
+    // Rule: null is a valid target. It excludes a subpath from a broader pattern.
+    if (node === null) {
+      this.#results.push({ path: currentKey, valid: true, kind: 'null' });
+      return;
+    }
+
+    // Rule: a string is a direct file target.
     if (typeof node === 'string') {
-      // Base case: the value is a direct path
-      await this.#checkFileExists(node, currentKey);
-    } else if (typeof node === 'object' && node !== null) {
-      // Recursive case: the value is an object (e.g., { import: '...', require: '...' })
-      const keys = Object.keys(node);
-      for (const key of keys) {
-        const subKey = currentKey ? `${currentKey} -> ${key}` : key;
-        await this.#traverseExports(node[key], subKey);
+      await this.#checkTarget(node, currentKey);
+      return;
+    }
+
+    // Rule: an array is a fallback list of targets.
+    if (Array.isArray(node)) {
+      if (node.length === 0) {
+        this.#results.push({
+          path: currentKey,
+          valid: false,
+          kind: 'invalid',
+          reason: 'EMPTY_ARRAY',
+        });
+        return;
       }
-    } else {
-      throw new TypeError('The "node" argument must be a string or a non-null object.');
+
+      for (let index = 0; index < node.length; index += 1) {
+        await this.#traverseExports(node[index], `${currentKey}[${index}]`);
+      }
+      return;
+    }
+
+    // Rule: an object holds subpaths (root only) or conditions.
+    if (typeof node === 'object') {
+      const record = /** @type {Record<string, unknown>} */ (node);
+      const keys = Object.keys(record);
+
+      if (keys.length === 0) {
+        this.#results.push({
+          path: currentKey,
+          valid: false,
+          kind: 'invalid',
+          reason: 'EMPTY_OBJECT',
+        });
+        return;
+      }
+
+      for (const key of keys) {
+        const keyError = this.#getKeyError(key, isRoot);
+
+        if (keyError !== null) {
+          this.#results.push({
+            path: `${currentKey} -> ${key}`,
+            valid: false,
+            kind: 'invalid',
+            errorPath: key,
+            reason: keyError,
+          });
+          continue;
+        }
+
+        await this.#traverseExports(record[key], `${currentKey} -> ${key}`);
+      }
+      return;
+    }
+
+    throw new TypeError('The "node" argument must be a string, an array, or a non-null object.');
+  }
+
+  /**
+   * Validates a single string target and dispatches it to the correct checker.
+   *
+   * @param {string} target - The raw target string from package.json.
+   * @param {string} context - The dotted context path used for reporting.
+   * @returns {Promise<void>}
+   */
+  async #checkTarget(target, context) {
+    const targetError = this.#getTargetError(target);
+
+    if (targetError !== null) {
+      this.#results.push({
+        path: context,
+        valid: false,
+        kind: 'invalid',
+        errorPath: target,
+        reason: targetError,
+      });
+      return;
+    }
+
+    if (target.includes('*')) {
+      await this.#checkPatternTarget(target, context);
+      return;
+    }
+
+    await this.#checkFileExists(target, context);
+  }
+
+  /**
+   * Applies the path rules documented by Node.js for export targets.
+   *
+   * @param {string} target - The raw target string from package.json.
+   * @returns {string|null} A reason code when invalid, or null when the target is valid.
+   */
+  #getTargetError(target) {
+    if (target.length === 0) return 'EMPTY_TARGET';
+    if (target.includes('\\')) return 'INVALID_SEGMENT';
+    if (target.includes('?') || target.includes('#')) return 'INVALID_CHARACTER';
+    if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(target)) return 'URL_SCHEME_NOT_ALLOWED';
+    if (!target.startsWith('./')) return 'TARGET_NOT_RELATIVE';
+    if (target.includes('**')) return 'INVALID_PATTERN';
+
+    const segments = target.slice(2).split('/');
+
+    for (const segment of segments) {
+      const decoded = this.#safeDecode(segment).toLowerCase();
+
+      if (decoded.length === 0) return 'INVALID_SEGMENT';
+      if (decoded === '.' || decoded === '..' || decoded === 'node_modules') {
+        return 'INVALID_SEGMENT';
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Decodes a URI component without throwing on malformed input.
+   *
+   * @param {string} value - The value to decode.
+   * @returns {string} The decoded value, or the original value when decoding fails.
+   */
+  #safeDecode(value) {
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
     }
   }
 
   /**
-   * Checks for the existence of a file in the file system.
+   * Converts a subpath pattern into an anchored regular expression.
+   *
+   * @param {string} pattern - The file name pattern (e.g. "*.js").
+   * @returns {RegExp} The anchored regular expression.
+   */
+  #patternToRegExp(pattern) {
+    const source = pattern
+      .split('*')
+      .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('.*');
+
+    return new RegExp(`^${source}$`);
+  }
+
+  /**
+   * Expands a wildcard target against the file system.
+   *
+   * @param {string} target - The raw target containing at least one "*".
+   * @param {string} context - The dotted context path used for reporting.
+   * @returns {Promise<void>}
+   */
+  async #checkPatternTarget(target, context) {
+    const lastSlash = target.lastIndexOf('/');
+    const directory = lastSlash === 0 ? '.' : target.slice(0, lastSlash);
+    const filePattern = target.slice(lastSlash + 1);
+
+    // When the wildcard lives in a directory segment, fall back to the static prefix.
+    const staticDirectory = directory.includes('*')
+      ? directory.slice(0, directory.indexOf('*')).replace(/\/[^/]*$/, '') || '.'
+      : directory;
+
+    let entries;
+
+    try {
+      entries = await readdir(resolve(this.#rootDir, staticDirectory));
+    } catch {
+      this.#results.push({
+        path: context,
+        valid: false,
+        kind: 'invalid',
+        errorPath: target,
+        reason: 'DIRECTORY_NOT_FOUND',
+      });
+      return;
+    }
+
+    const matcher = this.#patternToRegExp(filePattern);
+    const hasMatch = entries.some((entry) => matcher.test(entry));
+
+    this.#results.push({
+      path: context,
+      valid: hasMatch,
+      kind: hasMatch ? 'pattern' : 'invalid',
+      errorPath: target,
+      reason: hasMatch ? undefined : 'PATTERN_NO_MATCH',
+    });
+  }
+
+  /**
+   * Checks for the existence of a regular file in the file system.
    *
    * @param {string} relativePath - The relative path defined in package.json.
    * @param {string} context - The key context for reporting purposes.
@@ -461,15 +731,31 @@ class TinyPkgExportValidator {
       throw new TypeError('The "context" argument must be a string.');
     }
 
-    // Remove potential wildcards (e.g., '*') for literal path validation
-    const cleanPath = relativePath.replace(/\*/g, '');
-    const absolutePath = resolve(this.#rootDir, cleanPath);
+    const absolutePath = resolve(this.#rootDir, relativePath);
 
     try {
-      await access(absolutePath);
-      this.#results.push({ path: context, valid: true });
+      const stats = await stat(absolutePath);
+
+      if (!stats.isFile()) {
+        this.#results.push({
+          path: context,
+          valid: false,
+          kind: 'invalid',
+          errorPath: relativePath,
+          reason: 'NOT_A_FILE',
+        });
+        return;
+      }
+
+      this.#results.push({ path: context, valid: true, kind: 'file' });
     } catch {
-      this.#results.push({ path: context, valid: false, errorPath: relativePath });
+      this.#results.push({
+        path: context,
+        valid: false,
+        kind: 'invalid',
+        errorPath: relativePath,
+        reason: 'FILE_NOT_FOUND',
+      });
     }
   }
 
@@ -484,13 +770,31 @@ class TinyPkgExportValidator {
     let errorCount = 0;
 
     for (const result of this.#results) {
-      if (result.valid) {
-        this.#log('success', 'itemValid', { path: result.path });
-      } else {
-        this.#log('error', 'itemInvalid', { path: result.path });
-        this.#log('dim', 'itemMissing', { errorPath: result.errorPath });
-        errorCount++;
+      if (result.kind === 'null') {
+        this.#log('dim', 'itemSkipped', { path: result.path });
+        continue;
       }
+
+      if (result.valid) {
+        this.#log('success', result.kind === 'pattern' ? 'itemPattern' : 'itemValid', {
+          path: result.path,
+          pattern: result.errorPath ?? '',
+        });
+        continue;
+      }
+
+      this.#log('error', 'itemInvalid', { path: result.path });
+
+      if (result.reason === 'FILE_NOT_FOUND') {
+        this.#log('dim', 'itemMissing', { errorPath: result.errorPath });
+      } else {
+        this.#log('dim', 'itemInvalidTarget', {
+          target: result.errorPath ?? result.path,
+          reason: result.reason ?? 'UNKNOWN',
+        });
+      }
+
+      errorCount++;
     }
 
     this.#log('cyan', 'divider');
@@ -498,10 +802,10 @@ class TinyPkgExportValidator {
     if (errorCount === 0) {
       this.#log('success', 'successHeader');
       return true;
-    } else {
-      this.#log('error', 'failureHeader', { errorCount });
-      return false;
     }
+
+    this.#log('error', 'failureHeader', { errorCount });
+    return false;
   }
 }
 
