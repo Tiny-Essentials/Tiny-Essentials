@@ -1,0 +1,239 @@
+// =============================================================================
+// Colour source of truth
+//
+// Every colour literal in the theme lives in this file. No other file may
+// declare a hex, an `rgb()` or an `hsl()` value.
+//
+// Layers, top to bottom:
+//   1. $palette     raw values, no meaning attached
+//   2. $theme-*     semantic roles, one map per theme
+//   3. $on-*        foreground that sits on top of each role
+//   4. $constants   theme independent values (scrim, icons)
+//
+// To re-skin the theme, override the maps before the theme is loaded:
+//   @use 'themes/deepstrap/colors' with ($palette: (...));
+// =============================================================================
+
+@use 'sass:color';
+@use 'sass:map';
+@use 'sass:string';
+
+// ---------------------------------------------------------------- 1. palette --
+/// Raw colours. Keys describe the hue, never the role.
+$palette: (
+  // Neutral ramp, dark end.
+  'slate-950': #0b0e14,
+  'slate-900': #10141d,
+  'slate-850': #151a25,
+  'slate-800': #1c2230,
+  'slate-700': #2a3243,
+  'slate-600': #3b4557,
+  'slate-400': #6b7688,
+  'slate-200': #b6bfce,
+  'slate-050': #e8ecf3,
+  
+  // Neutral ramp, light end.
+  'paper-000': #ffffff,
+  'paper-050': #f7f9fd,
+  'paper-100': #f4f6fb,
+  'paper-200': #dde3ee,
+  'paper-300': #c3ccdd,
+  'ink-000': #000000,
+  'ink-900': #0d1220,
+  'ink-700': #3a4459,
+
+  // Accents.
+  'indigo-700': #3f5fe0,
+  'indigo-600': #5c7bf5,
+  'indigo-500': #6c8cff,
+  'indigo-400': #8aa2ff,
+  'green-500': #3ddc97,
+  'green-700': #0f8f5f,
+  'red-500': #ff6b81,
+  'red-700': #cf2445,
+  'amber-500': #ffc46b,
+  'amber-700': #a56200,
+  'cyan-500': #5fd3f3,
+  'cyan-700': #0a7fa5,
+
+  // Foreground inks. Sit on top of a filled tone; never used as a background.
+  'on-accent': #080b11,
+  'on-success': #04140d,
+  'on-error': #1a0308,
+  'on-warn': #1a1200,
+  'on-info': #04141a,
+
+  // Cool dark used by the light theme so shadows do not read as grey.
+  'shadow-slate': #1e293b,
+) !default;
+
+/// Returns a raw colour from the palette.
+///
+/// @param {String} $key - Palette key, e.g. `slate-900`.
+/// @returns {Color} The raw colour value.
+@function palette($key) {
+  @if not map.has-key($palette, $key) {
+    @error 'Unknown palette key: #{$key}';
+  }
+
+  @return map.get($palette, $key);
+}
+
+// ---------------------------------------------------------------- 2. themes --
+$theme-dark: (
+  'canvas': palette('slate-950'),
+  'surface': palette('slate-900'),
+  'surface-raised': palette('slate-850'),
+  'input': palette('slate-800'),
+  'border': palette('slate-700'),
+  'border-strong': palette('slate-600'),
+  'text': palette('slate-200'),
+  'text-muted': palette('slate-400'),
+  'heading': palette('slate-050'),
+  'accent': palette('indigo-500'),
+  'accent-soft': palette('indigo-400'),
+  'success': palette('green-500'),
+  'error': palette('red-500'),
+  'warn': palette('amber-500'),
+  'info': palette('cyan-500'),
+) !default;
+
+$theme-light: (
+  'canvas': palette('paper-100'),
+  'surface': palette('paper-000'),
+  'surface-raised': palette('paper-050'),
+  'input': palette('paper-000'),
+  'border': palette('paper-200'),
+  'border-strong': palette('paper-300'),
+  'text': palette('ink-700'),
+  'text-muted': palette('slate-400'),
+  'heading': palette('ink-900'),
+  'accent': palette('indigo-700'),
+  'accent-soft': palette('indigo-600'),
+  'success': palette('green-700'),
+  'error': palette('red-700'),
+  'warn': palette('amber-700'),
+  'info': palette('cyan-700'),
+) !default;
+
+// ------------------------------------------------------------ 3. foreground --
+// Every value resolves through `palette()`, so overriding `$palette` is enough
+// to re-skin the foreground inks as well.
+$on-dark: (
+  'accent': palette('on-accent'),
+  'success': palette('on-success'),
+  'error': palette('on-error'),
+  'warn': palette('on-warn'),
+  'info': palette('on-info'),
+  'text-muted': palette('paper-000'),
+) !default;
+
+$on-light: (
+  'accent': palette('paper-000'),
+  'success': palette('paper-000'),
+  'error': palette('paper-000'),
+  'warn': palette('paper-000'),
+  'info': palette('paper-000'),
+  'text-muted': palette('paper-000'),
+) !default;
+
+// Bootstrap colour name -> design token suffix.
+// `light` and `dark` are absent on purpose: they are surfaces, not accents.
+$subtle-tokens: (
+  'primary': 'accent',
+  'secondary': 'text-muted',
+  'success': 'success',
+  'danger': 'error',
+  'warning': 'warn',
+  'info': 'info',
+) !default;
+
+// ------------------------------------------------------------- 4. constants --
+/// Theme independent colours. Anything that used to be a literal inside a
+/// component belongs here.
+$constants: (
+  // Backdrop behind modals.
+  'scrim': #05070b,
+  // Chevron inside `.form-select` and `.accordion-button`.
+  'control-icon': palette('slate-400'),
+  'control-icon-active': palette('indigo-500'),
+  // Active carousel indicator.
+  'carousel-indicator': palette('indigo-500')
+) !default;
+
+/// Shadow tints, one per theme. Kept out of `$constants` because the value
+/// changes with the theme, and out of `$theme-*` because a shadow is not a
+/// role a component should ever read directly.
+$shadow: (
+  'dark': palette('ink-000'),
+  'light': palette('shadow-slate'),
+) !default;
+
+/// Media scrims. A scrim is a gradient stacked on top of an image, so it needs
+/// both the base ink and the caption colour that stays readable on top of it.
+$scrims: (
+  'dark': (
+    'base': palette('ink-000'),
+    'caption': palette('paper-000'),
+    'indicator': palette('paper-000'),
+    'ink': palette('paper-000'),
+  ),
+  'light': (
+    'base': palette('paper-000'),
+    'caption': theme-color('text', 'light'),
+    'indicator': palette('slate-950'),
+    'ink': palette('ink-000'),
+  ),
+) !default;
+
+/// @param {String} $theme - `dark` or `light`.
+/// @param {String} $role - `base`, `caption`, `indicator` or `ink`.
+/// @returns {Color} The scrim colour.
+@function scrim($theme, $role) {
+  $map: map.get($scrims, $theme);
+
+  @if not map.has-key($map, $role) {
+    @error 'Unknown scrim role: #{$role}';
+  }
+
+  @return map.get($map, $role);
+}
+
+// --------------------------------------------------------------- accessors --
+/// @param {String} $name - Key in `$constants`.
+/// @returns {Color} The constant value.
+@function ui-color($name) {
+  @if not map.has-key($constants, $name) {
+    @error 'Unknown colour constant: #{$name}';
+  }
+
+  @return map.get($constants, $name);
+}
+
+/// @param {String} $role - Semantic role, e.g. `canvas`.
+/// @param {String} $theme - `dark` or `light`.
+/// @returns {Color} The role colour for the given theme.
+@function theme-color($role, $theme: 'dark') {
+  $map: if($theme == 'light', $theme-light, $theme-dark);
+
+  @if not map.has-key($map, $role) {
+    @error 'Unknown colour role: #{$role}';
+  }
+
+  @return map.get($map, $role);
+}
+
+/// @param {String} $name - Key in `$constants`.
+/// @param {Number} $alpha - Target alpha, 0 to 1.
+/// @returns {Color} The constant with a custom alpha.
+@function with-alpha($name, $alpha) {
+  @return color.change(ui-color($name), $alpha: $alpha);
+}
+
+/// URL-encoded hex, for inline SVG data URIs.
+///
+/// @param {String} $name - Key in `$constants`.
+/// @returns {String} `%23rrggbb`.
+@function svg-color($name) {
+  @return '%23' + string.slice('#{ui-color($name)}', 2);
+}

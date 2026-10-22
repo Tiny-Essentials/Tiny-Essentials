@@ -1,77 +1,13 @@
 // =============================================================================
 // Design tokens
+//
+// This file only *emits* custom properties. Every colour comes from
+// `_colors.scss`; do not add literals here.
 // =============================================================================
 
 @use 'sass:color';
 @use 'sass:map';
-@use 'palette' as *;
-
-// ------------------------------------------------------------------ themes --
-$theme-dark: (
-  'canvas': palette('slate-950'),
-  'surface': palette('slate-900'),
-  'surface-raised': palette('slate-850'),
-  'input': palette('slate-800'),
-  'border': palette('slate-700'),
-  'border-strong': palette('slate-600'),
-  'text': palette('slate-200'),
-  'text-muted': palette('slate-400'),
-  'heading': palette('slate-050'),
-  'accent': palette('indigo-500'),
-  'accent-soft': palette('indigo-400'),
-  'success': palette('green-500'),
-  'error': palette('red-500'),
-  'warn': palette('amber-500'),
-  'info': palette('cyan-500'),
-) !default;
-
-$theme-light: (
-  'canvas': #f4f6fb,
-  'surface': #ffffff,
-  'surface-raised': #f7f9fd,
-  'input': #ffffff,
-  'border': #dde3ee,
-  'border-strong': #c3ccdd,
-  'text': #3a4459,
-  'text-muted': #6b7688,
-  'heading': #0d1220,
-  'accent': #3f5fe0,
-  'accent-soft': #5c7bf5,
-  'success': #0f8f5f,
-  'error': #cf2445,
-  'warn': #a56200,
-  'info': #0a7fa5,
-) !default;
-
-// Foreground colour that sits on top of each tone.
-$on-dark: (
-  'accent': #080b11,
-  'success': #04140d,
-  'error': #1a0308,
-  'warn': #1a1200,
-  'info': #04141a,
-  'text-muted': #ffffff,
-) !default;
-
-$on-light: (
-  'accent': #ffffff,
-  'success': #ffffff,
-  'error': #ffffff,
-  'warn': #ffffff,
-  'info': #ffffff,
-  'text-muted': #ffffff,
-) !default;
-
-// Bootstrap colour name -> design token suffix.
-// `light` and `dark` are absent on purpose: they are surfaces, not accents.
-$subtle-tokens: (
-  'primary': 'accent',
-  'secondary': 'text-muted',
-  'success': 'success',
-  'danger': 'error',
-  'warning': 'warn',
-  'info': 'info',
-) !default;
+@use 'colors' as *;
 
 // ------------------------------------------------------------------ helpers --
 /// @param {Color} $color - Source colour.
@@ -82,7 +18,7 @@ $subtle-tokens: (
 }
 
 /// @param {Color} $color - Source colour.
-/// @returns {String} Space separated channels, for the `rgb(var(--x) / a)` syntax.
+/// @returns {String} Space separated channels, for `rgb(var(--x) / a)`.
 @function triplet($color) {
   @return #{color.channel($color, 'red', $space: rgb)}
     #{color.channel($color, 'green', $space: rgb)} #{color.channel($color, 'blue', $space: rgb)};
@@ -93,6 +29,31 @@ $subtle-tokens: (
     --ui-#{$name}: #{$value};
     --ui-#{$name}-rgb: #{triplet($value)};
   }
+}
+
+/// Hairlines and overlays are a fraction of the heading colour, so a theme that
+/// only changes `heading` gets matching borders for free.
+$alphas: (
+  'hairline': 0.07,
+  'hairline-strong': 0.12,
+  'grid-line': 0.022,
+  'overlay-1': 0.02,
+  'overlay-2': 0.05,
+) !default;
+
+/// @param {Map} $alphas - Name to alpha map.
+@mixin alpha-properties($alphas) {
+  @each $name, $alpha in $alphas {
+    --ui-#{$name}: rgb(var(--ui-heading-rgb) / #{$alpha});
+  }
+}
+
+/// @param {String} $theme - `dark` or `light`.
+@mixin scrim-properties($theme) {
+  --ui-scrim-base: #{triplet(scrim($theme, 'base'))};
+  --ui-scrim-caption: #{scrim($theme, 'caption')};
+  --ui-scrim-indicator: #{triplet(scrim($theme, 'indicator'))};
+  --ui-scrim-ink: #{scrim($theme, 'ink')};
 }
 
 /// Bridges the active theme into Bootstrap's own custom properties.
@@ -163,6 +124,9 @@ $subtle-tokens: (
   --ui-neutral-dark: #{palette('slate-900')};
   --ui-neutral-dark-rgb: #{triplet(palette('slate-900'))};
   --ui-on-neutral-dark: #{palette('slate-050')};
+  // Absolute black. Darkens a filled surface (pressed buttons) without
+  // following the theme, since the surface underneath is already a tone.
+  --ui-shade-rgb: #{triplet(palette('ink-000'))};
 }
 
 // -------------------------------------------------------------------- dark --
@@ -171,18 +135,14 @@ $subtle-tokens: (
   color-scheme: dark;
 
   @include theme-properties($theme-dark);
+  @include alpha-properties($alphas);
+  @include scrim-properties('dark');
 
   @each $name, $value in $on-dark {
     --ui-on-#{$name}: #{$value};
   }
 
-  --ui-hairline: rgb(255 255 255 / 0.07);
-  --ui-hairline-strong: rgb(255 255 255 / 0.12);
-  --ui-grid-line: rgb(255 255 255 / 0.022);
-  --ui-overlay-1: rgb(255 255 255 / 0.02);
-  --ui-overlay-2: rgb(255 255 255 / 0.05);
-  --ui-shadow-rgb: 0 0 0;
-  --ui-btn-mix: #ffffff;
+  --ui-shadow-rgb: #{triplet(map.get($shadow, 'dark'))};
   --ui-orb-opacity: 1;
   --ui-orb-blur: 48px;
   --ui-mesh-1: 0.16;
@@ -196,18 +156,14 @@ $subtle-tokens: (
   color-scheme: light;
 
   @include theme-properties($theme-light);
+  @include alpha-properties($alphas);
+  @include scrim-properties('light');
 
   @each $name, $value in $on-light {
     --ui-on-#{$name}: #{$value};
   }
 
-  --ui-hairline: rgb(15 21 35 / 0.08);
-  --ui-hairline-strong: rgb(15 21 35 / 0.14);
-  --ui-grid-line: rgb(15 21 35 / 0.03);
-  --ui-overlay-1: rgb(15 21 35 / 0.02);
-  --ui-overlay-2: rgb(15 21 35 / 0.05);
-  --ui-shadow-rgb: 30 41 59;
-  --ui-btn-mix: #000000;
+  --ui-shadow-rgb: #{triplet(map.get($shadow, 'light'))};
   --ui-orb-opacity: 0.5;
   --ui-orb-blur: 64px;
   --ui-mesh-1: 0.1;

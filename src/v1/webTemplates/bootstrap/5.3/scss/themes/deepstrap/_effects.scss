@@ -84,7 +84,7 @@ $elevation: (
 // ----------------------------------------------------------------- hairline --
 /// 1px light line on the top edge. Fakes a lit bevel.
 @mixin hairline-top($opacity: 1) {
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / #{0.06 * $opacity});
+  box-shadow: inset 0 1px 0 rgb(var(--ui-heading-rgb) / #{0.06 * $opacity});
 }
 
 /// Full inner border, brighter at the top. Requires `position: relative`.

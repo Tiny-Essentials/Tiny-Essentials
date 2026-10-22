@@ -4,7 +4,7 @@
 // =============================================================================
 
 @use 'sass:map';
-@use 'palette' as *;
+@use 'colors' as *;
 
 // ---------------------------------------------------------------- typography --
 $font-family-sans-serif:
@@ -18,26 +18,24 @@ $font-size-base: 0.875rem;
 $line-height-base: 1.5;
 
 // -------------------------------------------------------------- brand colors --
-$primary: palette('indigo-500');
-$success: palette('green-500');
-$danger: palette('red-500');
-$warning: palette('amber-500');
-$info: palette('cyan-500');
+$primary: theme-color('accent');
+$success: theme-color('success');
+$danger: theme-color('error');
+$warning: theme-color('warn');
+$info: theme-color('info');
 $dark: palette('slate-900');
 $light: palette('slate-050');
 
 // --------------------------------------------------------------------- body --
-// The palette IS the dark theme, so Bootstrap's dark-mode layer is disabled
-// to prevent it from overriding the tokens below.
 $enable-dark-mode: false;
-$body-bg: palette('slate-950');
-$body-color: palette('slate-200');
-$body-secondary-color: palette('slate-400');
-$body-emphasis-color: palette('slate-050');
-$body-tertiary-color: palette('slate-400');
-$border-color: palette('slate-700');
-$border-color-translucent: rgba(palette('slate-700'), 0.55);
-$code-color: palette('cyan-500');
+$body-bg: theme-color('canvas');
+$body-color: theme-color('text');
+$body-secondary-color: theme-color('text-muted');
+$body-emphasis-color: theme-color('heading');
+$body-tertiary-color: theme-color('text-muted');
+$border-color: theme-color('border');
+$border-color-translucent: rgba(theme-color('border'), 0.55);
+$code-color: theme-color('info');
 
 // ------------------------------------------------------------------ shapes ---
 $border-radius: 10px;
@@ -45,13 +43,13 @@ $border-radius-sm: 6px;
 $border-radius-lg: 14px;
 
 // ------------------------------------------------------------------ inputs ---
-$input-bg: palette('slate-800');
-$input-color: palette('slate-200');
-$input-border-color: palette('slate-700');
-$input-focus-bg: palette('slate-800');
-$input-focus-color: palette('slate-200');
-$input-focus-border-color: palette('indigo-500');
-$input-placeholder-color: palette('slate-400');
+$input-bg: theme-color('input');
+$input-color: theme-color('text');
+$input-border-color: theme-color('border');
+$input-focus-bg: theme-color('input');
+$input-focus-color: theme-color('text');
+$input-focus-border-color: theme-color('accent');
+$input-placeholder-color: theme-color('text-muted');
 
 // ----------------------------------------------------------------- buttons ---
 $btn-focus-width: 2px;
@@ -59,5 +57,5 @@ $btn-font-size: 0.8125rem;
 $btn-font-weight: 500;
 
 // --------------------------------------------------------------- focus ring --
-$focus-ring-color: rgba(palette('indigo-500'), 0.5);
+$focus-ring-color: rgba(theme-color('accent'), 0.5);
 $focus-ring-width: 2px;

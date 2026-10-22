@@ -5,6 +5,8 @@
 // _buttons.scss and _forms.scss.
 // =============================================================================
 
+@use 'colors' as *;
+
 // ------------------------------------------------------------------ navbar --
 .navbar {
   --bs-navbar-color: var(--ui-text-muted);
@@ -97,7 +99,7 @@
 }
 
 .modal-backdrop {
-  background-color: rgb(5 7 11 / 0.6);
+  background-color: #{with-alpha('scrim', 0.6)};
   backdrop-filter: blur(2px);
 }
 
@@ -333,21 +335,19 @@ $badge-tones: (
 // readable pair:
 //   dark  -> black scrim, white text, white controls
 //   light -> white scrim, regular text, dark controls
-$carousel-indicator-active: #6c8cff;
 
 .carousel {
-  // Dark theme defaults.
-  --carousel-caption-color: #fff;
+  --carousel-caption-color: var(--ui-scrim-caption);
   --carousel-scrim: linear-gradient(
     180deg,
-    rgb(0 0 0 / 0) 0%,
-    rgb(0 0 0 / 0.55) 55%,
-    rgb(0 0 0 / 0.82) 100%
+    rgb(var(--ui-scrim-base) / 0) 0%,
+    rgb(var(--ui-scrim-base) / 0.55) 55%,
+    rgb(var(--ui-scrim-base) / 0.82) 100%
   );
-  --carousel-code-color: color-mix(in srgb, var(--ui-info) 35%, #fff);
+  --carousel-code-color: color-mix(in srgb, var(--ui-info) 35%, var(--ui-scrim-ink));
   --carousel-control-filter: none;
-  --carousel-indicator-bg: rgb(255 255 255 / 0.45);
-  --carousel-indicator-active-bg: #{$carousel-indicator-active};
+  --carousel-indicator-bg: rgb(var(--ui-scrim-indicator) / 0.45);
+  --carousel-indicator-active-bg: #{ui-color('carousel-indicator')};
 
   // Clips the caption scrim to the rounded corners.
   border-radius: var(--bs-border-radius);
@@ -355,16 +355,9 @@ $carousel-indicator-active: #6c8cff;
 
 // Light theme: white scrim, regular text colours, inverted controls.
 [data-bs-theme='light'] .carousel {
-  --carousel-caption-color: var(--ui-text);
-  --carousel-scrim: linear-gradient(
-    180deg,
-    rgb(255 255 255 / 0) 0%,
-    rgb(255 255 255 / 0.78) 55%,
-    rgb(255 255 255 / 0.96) 100%
-  );
-  --carousel-code-color: color-mix(in srgb, var(--ui-info) 70%, #000);
+  --carousel-code-color: color-mix(in srgb, var(--ui-info) 70%, var(--ui-scrim-ink));
   --carousel-control-filter: invert(1);
-  --carousel-indicator-bg: rgb(15 21 35 / 0.28);
+  --carousel-indicator-bg: rgb(var(--ui-scrim-indicator) / 0.28);
 }
 
 [data-bs-theme='dark'] .carousel {
@@ -515,8 +508,8 @@ $carousel-indicator-active: #6c8cff;
 // --------------------------------------------------------------- accordion --
 // Icon + body. The base tokens live in _bootstrap-overrides.scss.
 .accordion {
-  --bs-accordion-btn-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236b7688' stroke-width='2' stroke-linecap='round'%3e%3cpath d='M4 6l4 4 4-4'/%3e%3c/svg%3e");
-  --bs-accordion-btn-active-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236c8cff' stroke-width='2' stroke-linecap='round'%3e%3cpath d='M4 6l4 4 4-4'/%3e%3c/svg%3e");
+  --bs-accordion-btn-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='#{svg-color('control-icon')}' stroke-width='2' stroke-linecap='round'%3e%3cpath d='M4 6l4 4 4-4'/%3e%3c/svg%3e");
+  --bs-accordion-btn-active-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='#{svg-color('control-icon-active')}' stroke-width='2' stroke-linecap='round'%3e%3cpath d='M4 6l4 4 4-4'/%3e%3c/svg%3e");
 
   .accordion-button {
     font-size: 0.8125rem;
