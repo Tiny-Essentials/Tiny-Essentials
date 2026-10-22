@@ -1,0 +1,90 @@
+// =============================================================================
+// Compact typography (opt-in)
+//
+// The theme ships with Bootstrap's default 16px type scale. This file restores
+// the denser 14px scale the theme used to ship with.
+//
+// Enable: add `@import 'typography-compact';` as the last line of _theme.scss.
+//
+// For pixel parity, also uncomment the two Sass variables in _variables.scss.
+// They are compile-time values, so they cannot be restored from here.
+// =============================================================================
+
+// ------------------------------------------------------------------- scale --
+// `$font-size-base: 0.875rem` multiplied by Bootstrap's own heading ratios.
+// Kept as a map so a future scale change is a one-line edit.
+$compact-headings: (
+  'h1': 2.1875rem,
+  'h2': 1.75rem,
+  'h3': 1.53125rem,
+  'h4': 1.3125rem,
+  'h5': 1.09375rem,
+  'h6': 0.875rem,
+) !default;
+
+@each $tag, $size in $compact-headings {
+  #{$tag},
+  .#{$tag} {
+    font-size: $size;
+  }
+}
+
+// -------------------------------------------------------------------- root --
+:root {
+  --bs-body-font-size: 0.875rem;
+}
+
+// -------------------------------------------------------------- components --
+.navbar .nav-link {
+  font-size: 0.8125rem;
+}
+
+.table thead th {
+  font-size: 0.6875rem;
+}
+
+.badge {
+  --bs-badge-font-size: 0.6875rem;
+}
+
+.accordion {
+  .accordion-button {
+    font-size: 0.8125rem;
+  }
+
+  .accordion-body {
+    font-size: 0.8125rem;
+  }
+}
+
+.btn {
+  --bs-btn-font-size: 0.8125rem;
+}
+
+.form-control,
+.form-select {
+  font-size: 0.8125rem;
+
+  &-sm {
+    font-size: 0.75rem;
+  }
+
+  &-lg {
+    font-size: 0.9375rem;
+  }
+}
+
+.form-label,
+.col-form-label {
+  font-size: 0.6875rem;
+}
+
+.form-text {
+  font-size: 0.6875rem;
+}
+
+@each $state in ('valid', 'invalid') {
+  .#{$state}-feedback {
+    font-size: 0.6875rem;
+  }
+}

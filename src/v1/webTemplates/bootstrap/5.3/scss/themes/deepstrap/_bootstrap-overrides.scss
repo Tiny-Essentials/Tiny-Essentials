@@ -29,7 +29,6 @@
 
   .nav-link {
     position: relative;
-    font-size: 0.8125rem;
     font-weight: 500;
     transition: color var(--ui-duration) var(--ui-ease);
 
@@ -151,7 +150,6 @@
   --bs-table-striped-bg: var(--ui-overlay-1);
 
   thead th {
-    font-size: 0.6875rem;
     font-weight: 600;
     color: var(--ui-text-muted);
     text-transform: uppercase;
@@ -312,7 +310,6 @@ $badge-tones: (
 .badge {
   --bs-badge-padding-y: 0.3125rem;
   --bs-badge-padding-x: 0.5rem;
-  --bs-badge-font-size: 0.6875rem;
   --bs-badge-font-weight: 500;
 
   font-family: $font-family-monospace;
@@ -511,7 +508,6 @@ $badge-tones: (
   --bs-accordion-btn-active-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='#{svg-color('control-icon-active')}' stroke-width='2' stroke-linecap='round'%3e%3cpath d='M4 6l4 4 4-4'/%3e%3c/svg%3e");
 
   .accordion-button {
-    font-size: 0.8125rem;
     font-weight: 500;
     transition:
       background-color var(--ui-duration) var(--ui-ease),
@@ -523,7 +519,6 @@ $badge-tones: (
   }
 
   .accordion-body {
-    font-size: 0.8125rem;
     color: var(--ui-text);
   }
 }

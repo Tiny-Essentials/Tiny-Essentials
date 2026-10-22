@@ -14,7 +14,6 @@ $font-family-sans-serif:
   'Segoe UI',
   sans-serif;
 $font-family-monospace: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas, monospace;
-$font-size-base: 0.875rem;
 $line-height-base: 1.5;
 
 // -------------------------------------------------------------- brand colors --
@@ -53,7 +52,6 @@ $input-placeholder-color: theme-color('text-muted');
 
 // ----------------------------------------------------------------- buttons ---
 $btn-focus-width: 2px;
-$btn-font-size: 0.8125rem;
 $btn-font-weight: 500;
 
 // --------------------------------------------------------------- focus ring --

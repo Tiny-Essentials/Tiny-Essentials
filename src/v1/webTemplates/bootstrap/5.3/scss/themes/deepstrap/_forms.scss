@@ -47,16 +47,6 @@
 .form-control,
 .form-select {
   @extend %field;
-
-  font-size: 0.8125rem;
-
-  &-sm {
-    font-size: 0.75rem;
-  }
-
-  &-lg {
-    font-size: 0.9375rem;
-  }
 }
 
 .form-select {
@@ -100,14 +90,12 @@
 .form-label,
 .col-form-label {
   margin-bottom: 0.25rem;
-  font-size: 0.6875rem;
   color: var(--ui-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .form-text {
-  font-size: 0.6875rem;
   color: var(--ui-text-muted);
 }
 
@@ -207,7 +195,6 @@
 // -------------------------------------------------------------- validation --
 @each $state, $token in ('valid': 'success', 'invalid': 'error') {
   .#{$state}-feedback {
-    font-size: 0.6875rem;
     color: var(--ui-#{$token});
   }
 
