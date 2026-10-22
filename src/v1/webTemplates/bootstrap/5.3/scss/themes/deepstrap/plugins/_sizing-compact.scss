@@ -1,0 +1,68 @@
+// =============================================================================
+// Compact sizing (opt-in)
+//
+// Spacing, dimensions and radii only. Colours, backgrounds, animations and
+// transitions stay in the base theme: they are identity, not density.
+//
+// Enable: add `@import 'plugins/sizing-compact';` to _theme.scss.
+// =============================================================================
+
+// ------------------------------------------------------------------ navbar --
+.navbar {
+  --bs-navbar-padding-y: 0.75rem;
+}
+
+// ------------------------------------------------------------------ button --
+.btn {
+  --bs-btn-padding-y: 0.5rem;
+  --bs-btn-padding-x: 0.875rem;
+}
+
+// ---------------------------------------------------------------- dropdown --
+.dropdown-menu {
+  padding: 0.3125rem;
+}
+
+// ------------------------------------------------------------------- badge --
+.badge {
+  --bs-badge-padding-y: 0.3125rem;
+  --bs-badge-padding-x: 0.5rem;
+}
+
+// ------------------------------------------------------------------- forms --
+.form-label,
+.col-form-label {
+  margin-bottom: 0.25rem;
+}
+
+.form-control-color {
+  width: 2.75rem;
+  padding: 0.25rem;
+}
+
+.form-floating > .form-control,
+.form-floating > .form-select {
+  height: calc(3rem + 2px);
+}
+
+// ---------------------------------------------------------------- carousel --
+.carousel-caption {
+  padding: 2.5rem 1.25rem 1rem;
+}
+
+.carousel-indicators [data-bs-target] {
+  width: 24px;
+  height: 3px;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+  width: 3rem;
+}
+
+// ----------------------------------------------------------------- spinner --
+.spinner-border-sm,
+.spinner-grow-sm {
+  --bs-spinner-width: 0.875rem;
+  --bs-spinner-height: 0.875rem;
+}

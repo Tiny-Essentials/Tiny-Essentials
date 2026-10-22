@@ -84,7 +84,8 @@ $button-tones: (
     box-shadow var(--ui-duration) var(--ui-ease);
 
   // Glow layer. Declared once; `.btn-lighting` decides whether it is painted.
-  &::after {
+  // `::before` (not `::after`) because `.dropdown-toggle` owns `::after`.
+  &::before {
     position: absolute;
     inset: 0;
     z-index: -1;
@@ -213,7 +214,7 @@ $button-tones: (
 // Opt-in. Every variant declares `--btn-glow`; this is the only rule that
 // paints it, so a variant never needs to know whether the glow is enabled.
 .btn-lighting {
-  &:hover:not(:disabled):not(.disabled)::after {
+  &:hover:not(:disabled):not(.disabled)::before {
     opacity: 1;
     box-shadow: var(--btn-glow);
   }
@@ -302,7 +303,7 @@ $button-tones: (
 
 // --------------------------------------------------------- reduced motion --
 @media (prefers-reduced-motion: reduce) {
-  .btn::after {
+  .btn::before {
     transition: none;
   }
 }

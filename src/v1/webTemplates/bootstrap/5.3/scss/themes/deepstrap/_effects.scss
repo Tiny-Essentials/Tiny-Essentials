@@ -34,11 +34,24 @@ $elevation: (
 }
 
 // -------------------------------------------------------------------- glass --
-/// Frosted surface. Three levels, from barely-there to heavy.
+/// Frosted surface.
+///
+/// The blur is painted on a `::before` layer, never on the element itself.
+/// `backdrop-filter` turns the element into a stacking context and a containing
+/// block for `position: fixed` / `position: absolute` descendants. Bootstrap's
+/// `.dropdown-menu` (`z-index: 1000`), `.offcanvas` and `.tooltip` all rely on
+/// escaping that box, so blurring the element directly traps them and breaks
+/// the paint order.
+///
+/// The element must be a positioning context (`relative`, `sticky` or `fixed`).
+/// `.navbar` already is; the `.glass*` utilities set it explicitly.
 ///
 /// @param {String} $level - `subtle`, `default` or `strong`.
 /// @param {String} $token - Token name, without the `--ui-` prefix.
-@mixin glass($level: 'default', $token: 'surface') {
+/// @param {Boolean} $layer - `true` paints the blur on `::before` (default).
+///   Pass `false` for leaf elements such as `.modal-backdrop`, where the extra
+///   layer is dead weight.
+@mixin glass($level: 'default', $token: 'surface', $layer: true) {
   $config: (
     'subtle': (
       alpha: 0.42,
@@ -61,12 +74,35 @@ $elevation: (
   $alpha: map.get(map.get($config, $level), alpha);
   $blur: map.get(map.get($config, $level), blur);
 
-  background: rgb(var(--ui-#{$token}-rgb) / #{$alpha});
-  backdrop-filter: blur($blur) saturate(var(--ui-glass-saturate));
-  -webkit-backdrop-filter: blur($blur) saturate(var(--ui-glass-saturate));
+  // Leaf element: no descendants to trap, paint in place.
+  @if not $layer {
+    background: rgb(var(--ui-#{$token}-rgb) / #{$alpha});
+    backdrop-filter: blur($blur) saturate(var(--ui-glass-saturate));
+    -webkit-backdrop-filter: blur($blur) saturate(var(--ui-glass-saturate));
 
-  @supports not (backdrop-filter: blur(1px)) {
-    background: rgb(var(--ui-#{$token}-rgb) / 0.98);
+    @supports not (backdrop-filter: blur(1px)) {
+      background: rgb(var(--ui-#{$token}-rgb) / 0.98);
+    }
+  }
+
+  // Container: paint the blur on a pseudo-element so the element itself stays
+  // out of the stacking context / containing block business.
+  background: transparent;
+
+  &::before {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    content: '';
+    background: rgb(var(--ui-#{$token}-rgb) / #{$alpha});
+    border-radius: inherit;
+    backdrop-filter: blur($blur) saturate(var(--ui-glass-saturate));
+    -webkit-backdrop-filter: blur($blur) saturate(var(--ui-glass-saturate));
+
+    @supports not (backdrop-filter: blur(1px)) {
+      background: rgb(var(--ui-#{$token}-rgb) / 0.98);
+    }
   }
 }
 

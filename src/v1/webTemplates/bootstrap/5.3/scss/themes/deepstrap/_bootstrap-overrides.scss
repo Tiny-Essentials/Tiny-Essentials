@@ -39,17 +39,10 @@
   --bs-navbar-brand-color: var(--ui-heading);
   --bs-navbar-brand-hover-color: var(--ui-heading);
   --bs-navbar-toggler-border-color: var(--ui-border);
-  --bs-navbar-padding-y: 0.75rem;
 
   border-bottom: 1px solid var(--ui-hairline);
   @include glass('default', 'surface');
   @include hairline-top();
-
-  &--sticky {
-    position: sticky;
-    top: 0;
-    z-index: $zindex-sticky;
-  }
 
   .nav-link {
     position: relative;
@@ -96,7 +89,6 @@
   --bs-dropdown-divider-bg: var(--ui-hairline);
   --bs-dropdown-header-color: var(--ui-text-muted);
 
-  padding: 0.3125rem;
   @include elevation(3);
 }
 
@@ -115,8 +107,19 @@
 }
 
 .modal-backdrop {
-  background-color: #{with-alpha('scrim', 0.6)};
-  backdrop-filter: blur(2px);
+  // Blur lives on the element; the scrim lives on the pseudo-element.
+  // Mixing both on the same node makes the browser sample the scrim colour
+  // inside the blur, which washes out the darkening and smears the page
+  // colours into the backdrop.
+  backdrop-filter: blur(4px) saturate(120%);
+  -webkit-backdrop-filter: blur(4px) saturate(120%);
+
+  &::before {
+    position: absolute;
+    inset: 0;
+    content: '';
+    background-color: rgb(var(--ui-scrim-base) / 0.72);
+  }
 }
 
 // --------------------------------------------------------------- offcanvas --
@@ -227,16 +230,6 @@
   --bs-progress-bg: color-mix(in srgb, var(--ui-border) 55%, transparent);
 }
 
-.progress-bar {
-  transition: width 240ms var(--ui-ease);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .progress-bar {
-    transition: none;
-  }
-}
-
 // -------------------------------------------------------------- pagination --
 .pagination {
   --bs-pagination-bg: transparent;
@@ -318,6 +311,7 @@ hr {
 // match that specificity to keep the tone system consistent with _buttons.scss.
 $badge-tones: (
   'primary': 'accent',
+  'secondary': 'text-muted',
   'success': 'success',
   'danger': 'error',
   'warning': 'warn',
@@ -325,8 +319,6 @@ $badge-tones: (
 );
 
 .badge {
-  --bs-badge-padding-y: 0.3125rem;
-  --bs-badge-padding-x: 0.5rem;
   --bs-badge-font-weight: 500;
 
   font-family: $font-family-monospace;
@@ -383,7 +375,6 @@ $badge-tones: (
   right: 0;
   bottom: 0;
   left: 0;
-  padding: 2.5rem 1.25rem 1rem;
   margin: 0;
   background: var(--carousel-scrim);
   border-radius: 0;
@@ -403,8 +394,6 @@ $badge-tones: (
 }
 
 .carousel-indicators [data-bs-target] {
-  width: 24px;
-  height: 3px;
   background-color: var(--carousel-indicator-bg);
   border: 0;
   border-radius: 999px;
@@ -420,7 +409,6 @@ $badge-tones: (
 
 .carousel-control-prev,
 .carousel-control-next {
-  width: 3rem;
   opacity: 0.6;
   transition: opacity var(--ui-duration) var(--ui-ease);
 
@@ -456,12 +444,6 @@ $badge-tones: (
 .spinner-border,
 .spinner-grow {
   color: var(--ui-accent);
-}
-
-.spinner-border-sm,
-.spinner-grow-sm {
-  --bs-spinner-width: 0.875rem;
-  --bs-spinner-height: 0.875rem;
 }
 
 // ----------------------------------------------------------- placeholders --
@@ -537,5 +519,22 @@ $badge-tones: (
 
   .accordion-body {
     color: var(--ui-text);
+  }
+}
+
+// ------------------------------------------------------------------ motion --
+// Durations are identity, not density: they ship with the base theme.
+.progress-bar {
+  transition: width 240ms var(--ui-ease);
+}
+
+.collapsing {
+  transition: height 220ms var(--ui-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-bar,
+  .collapsing {
+    transition: none;
   }
 }
