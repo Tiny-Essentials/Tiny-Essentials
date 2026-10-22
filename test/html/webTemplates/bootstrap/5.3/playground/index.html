@@ -26,6 +26,24 @@
       rel="stylesheet"
     />
     <script type="module" src="./js/theme-stylesheet-loader.js"></script>
+    <style>
+      :root {
+        /* Fallback. Replaced at runtime by the measured header height. */
+        --pg-topbar-height: 6.5rem;
+      }
+
+      html {
+        scroll-padding-top: calc(var(--pg-topbar-height) + 1rem);
+      }
+
+      /* Sidebar sticks below the header instead of behind it. */
+      #pg-sidebar-nav {
+        top: calc(var(--pg-topbar-height) + 1rem);
+        max-height: calc(100dvh - var(--pg-topbar-height) - 2rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+    </style>
   </head>
 
   <body
@@ -38,146 +56,145 @@
     <!-- ==================================================================
          NAVBAR
          ================================================================== -->
-    <nav class="navbar navbar-expand-lg sticky-top bg-body border-bottom">
-      <div class="container-xxl">
-        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#overview">
-          <i class="bi bi-bootstrap-fill text-primary"></i>
-          <span>Playground <span class="text-body-secondary fw-normal">5.3</span></span>
-        </a>
+    <div class="sticky-top" id="pg-topbar">
+      <nav class="navbar navbar-expand-lg bg-body border-bottom">
+        <div class="container-xxl">
+          <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#overview">
+            <i class="bi bi-bootstrap-fill text-primary"></i>
+            <span>Playground <span class="text-body-secondary fw-normal">5.3</span></span>
+          </a>
 
-        <div class="d-flex align-items-center gap-2 order-lg-3">
-          <div class="ms-lg-2 dropdown">
+          <div class="d-flex align-items-center gap-2 order-lg-3">
+            <div class="ms-lg-2 dropdown">
+              <button
+                class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+              >
+                <i class="bi bi-circle-half me-1"></i>
+                <span class="d-none d-sm-inline" data-pg-theme-label>Dark</span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                  <button class="dropdown-item" type="button" data-pg-set-theme="light">
+                    <i class="bi bi-sun me-2"></i>Light
+                  </button>
+                </li>
+                <li>
+                  <button class="dropdown-item" type="button" data-pg-set-theme="dark">
+                    <i class="bi bi-moon-stars me-2"></i>Dark
+                  </button>
+                </li>
+                <li>
+                  <button class="dropdown-item" type="button" data-pg-set-theme="auto">
+                    <i class="bi bi-display me-2"></i>System
+                  </button>
+                </li>
+              </ul>
+            </div>
+
             <button
-              class="btn btn-sm btn-outline-secondary dropdown-toggle"
+              class="btn btn-sm btn-primary d-lg-none"
               type="button"
-              data-bs-toggle="dropdown"
+              data-bs-toggle="offcanvas"
+              data-bs-target="#pgMobileNav"
+              aria-label="Open navigation"
             >
-              <i class="bi bi-circle-half me-1"></i>
-              <span class="d-none d-sm-inline" data-pg-theme-label>Dark</span>
+              <i class="bi bi-list"></i>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <button class="dropdown-item" type="button" data-pg-set-theme="light">
-                  <i class="bi bi-sun me-2"></i>Light
-                </button>
+          </div>
+
+          <div class="collapse navbar-collapse order-lg-2">
+            <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
+              <li class="nav-item"><a class="nav-link" href="#colors">Colors</a></li>
+              <li class="nav-item"><a class="nav-link" href="#forms">Forms</a></li>
+              <li class="nav-item"><a class="nav-link" href="#overlays">Overlays</a></li>
+              <li class="nav-item"><a class="nav-link" href="#accordion">Accordion</a></li>
+              <li class="nav-item"><a class="nav-link" href="#carousel">Carousel</a></li>
+              <li class="nav-item"><a class="nav-link" href="#media">Media</a></li>
+              <li class="nav-item dropdown">
+                <a
+                  class="nav-link dropdown-toggle"
+                  href="#"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Components
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#accordion">Accordion</a></li>
+                  <li><a class="dropdown-item" href="#carousel">Carousel</a></li>
+                  <li><a class="dropdown-item" href="#media">Media</a></li>
+                  <li><hr class="dropdown-divider" /></li>
+                  <li><a class="dropdown-item" href="#forms">Forms</a></li>
+                </ul>
               </li>
-              <li>
-                <button class="dropdown-item" type="button" data-pg-set-theme="dark">
-                  <i class="bi bi-moon-stars me-2"></i>Dark
-                </button>
-              </li>
-              <li>
-                <button class="dropdown-item" type="button" data-pg-set-theme="auto">
-                  <i class="bi bi-display me-2"></i>System
-                </button>
+              <li class="nav-item">
+                <a class="btn btn-primary ms-lg-3" href="#overview">Get Started</a>
               </li>
             </ul>
           </div>
-
-          <button
-            class="btn btn-sm btn-primary d-lg-none"
-            type="button"
-            data-bs-toggle="offcanvas"
-            data-bs-target="#pgMobileNav"
-            aria-label="Open navigation"
-          >
-            <i class="bi bi-list"></i>
-          </button>
         </div>
+      </nav>
 
-        <div class="collapse navbar-collapse order-lg-2">
-          <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
-            <li class="nav-item"><a class="nav-link" href="#colors">Colors</a></li>
-            <li class="nav-item"><a class="nav-link" href="#forms">Forms</a></li>
-            <li class="nav-item"><a class="nav-link" href="#overlays">Overlays</a></li>
-            <li class="nav-item"><a class="nav-link" href="#accordion">Accordion</a></li>
-            <li class="nav-item"><a class="nav-link" href="#carousel">Carousel</a></li>
-            <li class="nav-item"><a class="nav-link" href="#media">Media</a></li>
-            <li class="nav-item dropdown">
-              <a
-                class="nav-link dropdown-toggle"
-                href="#"
-                role="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                Components
-              </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#accordion">Accordion</a></li>
-                <li><a class="dropdown-item" href="#carousel">Carousel</a></li>
-                <li><a class="dropdown-item" href="#media">Media</a></li>
-                <li><hr class="dropdown-divider" /></li>
-                <li><a class="dropdown-item" href="#forms">Forms</a></li>
-              </ul>
-            </li>
-            <li class="nav-item">
-              <a class="btn btn-primary ms-lg-3" href="#overview">Get Started</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- ==================================================================
+      <!-- ==================================================================
      DEV TOOLBAR — theme stylesheet loader
      ================================================================== -->
-    <div class="border-bottom bg-body-tertiary">
-      <div class="container-xxl py-2 d-flex flex-wrap align-items-center gap-2">
-        <label
-          class="form-label mb-0 small text-uppercase fw-bold text-body-secondary"
-          for="pg-theme-select"
-        >
-          Theme
-        </label>
-
-        <select class="form-select form-select-sm w-auto" id="pg-theme-select" disabled>
-          <option value="">Loading…</option>
-        </select>
-
-        <button
-          class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
-          id="pg-theme-refresh"
-          type="button"
-          title="Reload the selected theme"
-          disabled
-        >
-          <i class="bi bi-arrow-clockwise"></i>
-          <span class="d-none d-sm-inline">Reload</span>
-        </button>
-
-        <div class="form-check form-switch mb-0 ms-2">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            role="switch"
-            id="pg-btn-lighting"
-            aria-describedby="pg-btn-lighting-help"
-          />
-          <label class="form-check-label small" for="pg-btn-lighting">
-            <code>btn-lighting</code>
+      <div class="border-bottom bg-body-tertiary">
+        <div class="container-xxl py-2 d-flex flex-wrap align-items-center gap-2">
+          <label
+            class="form-label mb-0 small text-uppercase fw-bold text-body-secondary"
+            for="pg-theme-select"
+          >
+            Theme
           </label>
-          <span class="visually-hidden" id="pg-btn-lighting-help">
-            Toggles the opt-in glow on every button in the page.
-          </span>
+
+          <select class="form-select form-select-sm w-auto" id="pg-theme-select" disabled>
+            <option value="">Loading…</option>
+          </select>
+
+          <button
+            class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
+            id="pg-theme-refresh"
+            type="button"
+            title="Reload the selected theme"
+            disabled
+          >
+            <i class="bi bi-arrow-clockwise"></i>
+            <span class="d-none d-sm-inline">Reload</span>
+          </button>
+
+          <div class="form-check form-switch mb-0 ms-2">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="pg-btn-lighting"
+              aria-describedby="pg-btn-lighting-help"
+            />
+            <label class="form-check-label small" for="pg-btn-lighting">
+              <code>btn-lighting</code>
+            </label>
+            <span class="visually-hidden" id="pg-btn-lighting-help">
+              Toggles the opt-in glow on every button in the page.
+            </span>
+          </div>
+
+          <span
+            class="small text-body-secondary ms-auto"
+            id="pg-theme-status"
+            role="status"
+            aria-live="polite"
+          ></span>
         </div>
-
-        <span
-          class="small text-body-secondary ms-auto"
-          id="pg-theme-status"
-          role="status"
-          aria-live="polite"
-        ></span>
-      </div>
-    </div>
-
-    <!-- ==================================================================
-         SCROLLSPY INDICATOR
-         ================================================================== -->
-    <div class="container-xxl pt-2">
-      <div class="d-flex align-items-center gap-2 small text-body-secondary">
-        <span class="text-uppercase fw-bold">Scrollspy:</span>
-        <span class="badge text-bg-primary" id="pg-scrollspy-status">—</span>
+        <!-- Scrollspy readout — lives inside the sticky header on purpose. -->
+        <div class="bg-body border-bottom">
+          <div class="container-xxl py-1 d-flex align-items-center gap-2 small text-body-secondary">
+            <span class="text-uppercase fw-bold">Scrollspy:</span>
+            <span class="badge text-bg-primary" id="pg-scrollspy-status">—</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -201,7 +218,7 @@
       <div class="row g-4">
         <!-- Sidebar -->
         <aside class="col-lg-3 d-none d-lg-block">
-          <nav class="position-sticky pt-4" style="top: 5rem">
+          <nav class="position-sticky pt-4" id="pg-sidebar-nav">
             <p class="text-uppercase small fw-bold text-body-secondary px-2 mb-2">Sections</p>
             <ul class="nav nav-pills flex-column gap-1 small" id="pg-nav" data-pg-toc></ul>
           </nav>
@@ -595,6 +612,7 @@
 
                 <div class="btn-group-vertical" role="group" aria-label="Vertical group">
                   <button class="btn btn-outline-primary" type="button">Top</button>
+                  <button class="btn btn-outline-primary" type="button">Middle</button>
                   <button class="btn btn-outline-primary" type="button">Middle</button>
                   <button class="btn btn-outline-primary" type="button">Bottom</button>
                 </div>
@@ -3318,17 +3336,42 @@
       };
 
       /* ====================================================================
+         TOPBAR METRICS
+         ==================================================================== */
+
+      /**
+       * Mirrors the sticky header height into the `--pg-topbar-height`
+       * custom property so CSS can offset sticky elements without
+       * duplicating magic numbers.
+       *
+       * @returns {void}
+       */
+      const initTopbarMetrics = () => {
+        const topbar = document.getElementById('pg-topbar');
+
+        if (!(topbar instanceof HTMLElement)) {
+          return;
+        }
+
+        const style = document.documentElement.style;
+
+        new ResizeObserver(([entry]) => {
+          const height = entry.borderBoxSize?.[0]?.blockSize ?? entry.contentRect.height;
+          style.setProperty('--pg-topbar-height', `${Math.ceil(height)}px`);
+        }).observe(topbar);
+      };
+
+      /* ====================================================================
          BOOTSTRAP
-         ==================================================================== */ document.addEventListener(
-        'DOMContentLoaded',
-        () => {
-          applyTheme(localStorage.getItem(THEME_KEY) ?? 'dark');
-          buildSwatches();
-          buildToc();
-          initWidgets();
-          initForm();
-        },
-      );
+         ==================================================================== */
+      document.addEventListener('DOMContentLoaded', () => {
+        applyTheme(localStorage.getItem(THEME_KEY) ?? 'dark');
+        initTopbarMetrics();
+        buildSwatches();
+        buildToc();
+        initWidgets();
+        initForm();
+      });
     </script>
   </body>
 </html>
