@@ -1,0 +1,39 @@
+@use 'sass:map';
+
+$defaults: (
+  'primary': var(--bs-primary-rgb),
+  'secondary': var(--bs-secondary-rgb),
+  'success': var(--bs-success-rgb),
+  'danger': var(--bs-danger-rgb),
+  'warning': var(--bs-warning-rgb),
+  'info': var(--bs-info-rgb),
+  'light': var(--bs-light-rgb),
+  'dark': var(--bs-dark-rgb),
+) !default;
+
+// Partial overrides are merged on top of `$defaults`, so passing
+// `$tones: ('primary': red)` keeps every other tone available.
+$tones: () !default;
+$tones: map.merge($defaults, $tones);
+
+@each $name, $color in $tones {
+  .sphere-pulse-#{$name} {
+    width: 9px;
+    height: 9px;
+    background: rgb($color);
+    border-radius: 50%;
+    padding: 0px 4px;
+    animation: tiny-bs-sphere-pulse 2.4s ease-in-out infinite;
+    display: inline-block;
+
+    &.shadow-pulse {
+      box-shadow: 0 0 0 4px rgba($color, 0.12);
+    }
+  }
+}
+
+@keyframes tiny-bs-sphere-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}

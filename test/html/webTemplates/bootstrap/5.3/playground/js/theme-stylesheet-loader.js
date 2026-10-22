@@ -35,7 +35,7 @@ class ThemeStylesheetLoader {
     {
       id: 'DeepStrap',
       label: 'BootDeep',
-      entry: '/src/v1/webTemplates/bootstrap/5.3/scss/themes/deepstrap/index.scss',
+      entry: '/src/v1/webTemplates/bootstrap/5.3/scss/themes/deepstrap/_theme.scss',
     },
   ]);
 
@@ -229,6 +229,10 @@ class ThemeStylesheetLoader {
 
     this.#status.className = `small ms-auto ${palette[state]}`;
     this.#status.textContent = message;
+
+    const sphere_pulse = document.createElement('span');
+    sphere_pulse.className = `sphere-pulse-${palette[state].substring(5)} shadow-pulse me-2`;
+    this.#status.prepend(sphere_pulse);
   }
 }
 

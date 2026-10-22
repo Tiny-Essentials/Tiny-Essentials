@@ -79,18 +79,8 @@
   "types": "./dist/v1/index.d.mts",
   "ethereum": "jasmindreasond.x",
   "exports": {
-    "./css/aiMarker.min.css": "./dist/v1/css/aiMarker.min.css",
-    "./css/TinyCookieConsent.min.css": "./dist/v1/css/TinyCookieConsent.min.css",
-    "./css/TinyDraggerExample.min.css": "./dist/v1/css/TinyDraggerExample.min.css",
-    "./css/TinyNotify.min.css": "./dist/v1/css/TinyNotify.min.css",
-    "./css/TinyLoadingScreen.min.css": "./dist/v1/css/TinyLoadingScreen.min.css",
-    "./webTemplates/bootstrap/5.3/scss/themes/deepstrap": "./dist/v1/webTemplates/bootstrap/5.3/scss/themes/deepstrap/index.scss",
-    "./webTemplates/bootstrap/5.3/scss/themes/deepstrap/plugins/background/*": "./dist/v1/webTemplates/bootstrap/5.3/scss/themes/deepstrap/plugins/background/*",
-    "./webTemplates/bootstrap/5.3/scss/components/icon/*": "./dist/v1/webTemplates/bootstrap/5.3/scss/components/icon/*",
-    "./webTemplates/bootstrap/5.3/scss/components/buttons/*": "./dist/v1/webTemplates/bootstrap/5.3/scss/components/buttons/*",
-    "./webTemplates/bootstrap/5.3/scss/background/*": "./dist/v1/webTemplates/bootstrap/5.3/scss/background/*",
-    "./webTemplates/bootstrap/5.3/scss/input/*": "./dist/v1/webTemplates/bootstrap/5.3/scss/input/*",
-    "./webTemplates/bootstrap/5.3/scss/spacing/*": "./dist/v1/webTemplates/bootstrap/5.3/scss/spacing/*",
+    "./css/*.css": "./dist/v1/css/*.css",
+    "./webTemplates/bootstrap/5.3/scss/*": "./dist/v1/webTemplates/bootstrap/5.3/scss/*",
     ".": {
       "require": "./dist/v1/index.cjs",
       "import": "./dist/v1/index.mjs"

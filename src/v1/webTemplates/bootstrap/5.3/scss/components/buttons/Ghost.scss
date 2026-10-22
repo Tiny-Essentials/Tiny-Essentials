@@ -14,14 +14,14 @@
 // Every tone is a plain CSS color or a `var(--token)`. The plugin never
 // resolves the value, so host projects can wire their own design tokens.
 $defaults: (
-  'primary': #6c8cff,
-  'secondary': #6b7688,
-  'success': #3ddc97,
-  'danger': #ff6b81,
-  'warning': #ffc46b,
-  'info': #5fd3f3,
-  'light': #e8ecf3,
-  'dark': #10141d,
+  'primary': rgb(var(--bs-primary-rgb)),
+  'secondary': rgb(var(--bs-secondary-rgb)),
+  'success': rgb(var(--bs-success-rgb)),
+  'danger': rgb(var(--bs-danger-rgb)),
+  'warning': rgb(var(--bs-warning-rgb)),
+  'info': rgb(var(--bs-info-rgb)),
+  'light': rgb(var(--bs-light-rgb)),
+  'dark': rgb(var(--bs-dark-rgb)),
 ) !default;
 
 // Partial overrides are merged on top of `$defaults`, so passing
