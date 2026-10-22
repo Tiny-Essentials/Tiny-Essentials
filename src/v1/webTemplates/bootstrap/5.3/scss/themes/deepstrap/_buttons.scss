@@ -30,7 +30,6 @@ $button-tones: (
 @mixin subtle-variant($tone) {
   --btn-tone: var(--ui-#{$tone});
   --btn-tone-rgb: var(--ui-#{$tone}-rgb);
-  --btn-border: transparent;
   --bs-btn-color: var(--ui-#{$tone});
   --bs-btn-hover-color: var(--ui-#{$tone});
   --bs-btn-active-color: var(--ui-#{$tone});
@@ -38,9 +37,10 @@ $button-tones: (
 
   color: var(--ui-#{$tone});
   background-color: rgb(var(--ui-#{$tone}-rgb) / 0.12);
+  border-color: transparent;
 
   &.hover-border {
-    --btn-border: rgb(var(--ui-#{$tone}-rgb) / 0.32);
+    box-shadow: 0 0 0 1px rgb(var(--ui-#{$tone}-rgb) / 0.32);
   }
 
   &:hover:not(:disabled):not(.disabled) {
@@ -63,7 +63,6 @@ $button-tones: (
   --btn-tone: var(--ui-accent);
   --btn-tone-rgb: var(--ui-accent-rgb);
   --btn-glow: none;
-  --btn-border: transparent;
 
   // Hover and press mix the tone toward `--btn-mix`. Light buttons override
   // all three, because mixing white with the (light) heading is a no-op.
@@ -77,7 +76,7 @@ $button-tones: (
   gap: 0.375rem;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--btn-border);
+  border: 1px solid var(--bs-btn-border-color, transparent);
   transition:
     background-color var(--ui-duration) var(--ui-ease),
     border-color var(--ui-duration) var(--ui-ease),
@@ -121,7 +120,6 @@ $button-tones: (
 @mixin solid-variant($tone) {
   --btn-tone: var(--ui-#{$tone});
   --btn-tone-rgb: var(--ui-#{$tone}-rgb);
-  --btn-border: transparent;
   --bs-btn-color: var(--ui-on-#{$tone});
   --bs-btn-hover-color: var(--ui-on-#{$tone});
   --bs-btn-active-color: var(--ui-on-#{$tone});
@@ -129,6 +127,7 @@ $button-tones: (
 
   color: var(--ui-on-#{$tone});
   background-color: var(--ui-#{$tone});
+  border-color: transparent;
 
   &:hover:not(:disabled):not(.disabled) {
     --btn-glow:
@@ -161,7 +160,6 @@ $button-tones: (
 @mixin outline-variant($tone, $seam: false) {
   --btn-tone: var(--ui-#{$tone});
   --btn-tone-rgb: var(--ui-#{$tone}-rgb);
-  --btn-border: color-mix(in srgb, var(--ui-#{$tone}) 40%, transparent);
   --bs-btn-color: var(--ui-#{$tone});
   --bs-btn-hover-color: var(--ui-on-#{$tone});
   --bs-btn-active-color: var(--ui-on-#{$tone});
@@ -169,33 +167,33 @@ $button-tones: (
 
   color: var(--ui-#{$tone});
   background-color: transparent;
+  border-color: color-mix(in srgb, var(--ui-#{$tone}) 40%, transparent);
 
   // A tone that matches the page background needs a stronger edge to stay
   // visible. The seam is a border colour bump, not a box-shadow, so it does
   // not collide with the hover glow below.
   @if $seam {
-    --btn-border: color-mix(in srgb, var(--ui-#{$tone}) 70%, transparent);
+    border-color: color-mix(in srgb, var(--ui-#{$tone}) 70%, transparent);
   }
 
   &:hover:not(:disabled):not(.disabled) {
     --btn-glow:
       0 0 0 1px rgb(var(--ui-#{$tone}-rgb) / 0.35), 0 0 20px -4px rgb(var(--ui-#{$tone}-rgb) / 0.55);
-    --btn-border: var(--ui-#{$tone});
 
     color: var(--ui-on-#{$tone});
     background-color: var(--ui-#{$tone});
+    border-color: var(--ui-#{$tone});
   }
 
   &:active:not(:disabled):not(.disabled),
   &.active {
-    --btn-border: transparent;
-
     color: var(--ui-on-#{$tone});
     background-color: color-mix(
       in srgb,
       var(--ui-#{$tone}) var(--btn-press-amount),
       var(--btn-mix)
     );
+    border-color: transparent;
   }
 }
 
