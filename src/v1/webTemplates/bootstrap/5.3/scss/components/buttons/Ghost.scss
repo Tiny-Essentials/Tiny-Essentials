@@ -1,0 +1,89 @@
+// =============================================================================
+// Bootstrap 5.3 — Ghost button plugin
+// =============================================================================
+// A borderless, low-emphasis button variant.
+//
+// Usage:
+//   <button class="btn btn-ghost">Neutral</button>
+//   <button class="btn btn-ghost-primary">Primary</button>
+// =============================================================================
+
+@use 'sass:map';
+
+// ------------------------------------------------------------------ config --
+// Every tone is a plain CSS color or a `var(--token)`. The plugin never
+// resolves the value, so host projects can wire their own design tokens.
+$defaults: (
+  'primary': #6c8cff,
+  'secondary': #6b7688,
+  'success': #3ddc97,
+  'danger': #ff6b81,
+  'warning': #ffc46b,
+  'info': #5fd3f3,
+  'light': #e8ecf3,
+  'dark': #10141d,
+) !default;
+
+// Partial overrides are merged on top of `$defaults`, so passing
+// `$tones: ('primary': red)` keeps every other tone available.
+$tones: () !default;
+$tones: map.merge($defaults, $tones);
+
+$hover-alpha: 12% !default;
+$active-alpha: 20% !default;
+$focus-alpha: 30% !default;
+$disabled-opacity: 0.4 !default;
+
+// ------------------------------------------------------------------ mixin ---
+/// Emits the CSS variables for a single ghost tone.
+///
+/// @param {Color|String} $color - Any CSS color, or `currentColor`.
+@mixin ghost-variant($color) {
+  --bs-btn-color: #{$color};
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: transparent;
+  --bs-btn-hover-color: #{$color};
+  --bs-btn-hover-bg: color-mix(in srgb, #{$color} #{$hover-alpha}, transparent);
+  --bs-btn-hover-border-color: transparent;
+  --bs-btn-active-color: #{$color};
+  --bs-btn-active-bg: color-mix(in srgb, #{$color} #{$active-alpha}, transparent);
+  --bs-btn-active-border-color: transparent;
+  --bs-btn-disabled-color: #{$color};
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: transparent;
+}
+
+// ------------------------------------------------------------------ base ----
+// `--bs-btn-border-width: 0` removes the border from the layout entirely, so
+// the disabled state cannot inherit a 1px line from Bootstrap's defaults.
+.btn-ghost,
+[class*='btn-ghost-'] {
+  --bs-btn-border-width: 0;
+  --bs-btn-border-color: transparent;
+  --bs-btn-hover-border-color: transparent;
+  --bs-btn-active-border-color: transparent;
+  --bs-btn-disabled-border-color: transparent;
+
+  &:focus-visible {
+    box-shadow: 0 0 0 0.25rem color-mix(in srgb, currentColor #{$focus-alpha}, transparent);
+  }
+
+  // Hard reset: no border, no ring, no shadow. Only the opacity changes.
+  &:disabled,
+  &.disabled {
+    border: 0;
+    box-shadow: none;
+    opacity: $disabled-opacity;
+  }
+}
+
+// ------------------------------------------------------------------ tones ---
+.btn-ghost {
+  @include ghost-variant(currentColor);
+}
+
+@each $name, $color in $tones {
+  .btn-ghost-#{$name} {
+    @include ghost-variant($color);
+  }
+}

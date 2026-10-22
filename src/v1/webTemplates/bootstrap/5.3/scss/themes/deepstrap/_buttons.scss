@@ -215,26 +215,6 @@ $button-tones: (
   @include outline-variant('neutral-dark', $seam: true);
 }
 
-// ----------------------------------------------------------------- ghost --
-.btn-ghost {
-  --btn-tone: var(--ui-border-strong);
-  --btn-tone-rgb: var(--ui-border-strong-rgb);
-  --bs-btn-color: var(--ui-text-muted);
-  --bs-btn-hover-color: var(--ui-heading);
-  --bs-btn-active-color: var(--ui-heading);
-  --bs-btn-disabled-color: var(--ui-text-muted);
-
-  color: var(--ui-text-muted);
-  background-color: transparent;
-  border-color: transparent;
-
-  &:hover:not(:disabled):not(.disabled) {
-    color: var(--ui-heading);
-    background-color: var(--ui-overlay-2);
-    box-shadow: none;
-  }
-}
-
 // ------------------------------------------------------- subtle neutrals --
 // `.btn-subtle-secondary` is the neutral counterpart of the tonal subtle
 // buttons. It uses the surface scale instead of the accent scale, so it
