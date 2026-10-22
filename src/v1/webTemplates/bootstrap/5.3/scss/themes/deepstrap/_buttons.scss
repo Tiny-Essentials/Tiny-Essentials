@@ -130,7 +130,6 @@ $button-tones: (
 
   &:hover:not(:disabled):not(.disabled) {
     background-color: color-mix(in srgb, var(--ui-#{$tone}) 86%, var(--ui-btn-mix));
-    border-color: color-mix(in srgb, var(--ui-#{$tone}) 60%, var(--ui-btn-mix));
     box-shadow:
       0 0 0 1px rgb(var(--ui-#{$tone}-rgb) / 0.35),
       0 0 20px -4px rgb(var(--ui-#{$tone}-rgb) / 0.55),
@@ -230,20 +229,7 @@ $button-tones: (
 // buttons. It uses the surface scale instead of the accent scale, so it
 // stays readable on both themes.
 .btn-subtle-secondary {
-  --btn-tone: var(--ui-border-strong);
-  --btn-tone-rgb: var(--ui-border-strong-rgb);
-  --bs-btn-color: var(--ui-text);
-  --bs-btn-hover-color: var(--ui-heading);
-  --bs-btn-active-color: var(--ui-heading);
-  --bs-btn-disabled-color: var(--ui-text);
-
-  color: var(--ui-text);
-  background-color: var(--ui-overlay-2);
-  border-color: transparent;
-
-  &:hover:not(:disabled):not(.disabled) {
-    background-color: var(--ui-border);
-  }
+  @include subtle-variant('text-muted');
 }
 
 .btn-subtle-light {
