@@ -7,6 +7,30 @@
 
 @use 'colors' as *;
 
+// --------------------------------------------------------------- nav line --
+/// Animated underline shared by every nav item.
+///
+/// @param {String} $pseudo - Pseudo-element that draws the line.
+///   `.dropdown-toggle` must use `before`, because Bootstrap owns its `after`
+///   (the caret).
+@mixin nav-underline($pseudo: 'after') {
+  &::#{$pseudo} {
+    position: absolute;
+    bottom: -0.25rem;
+    left: 0;
+    width: 0;
+    height: 1px;
+    content: '';
+    background: var(--ui-accent);
+    transition: width var(--ui-duration) var(--ui-ease);
+  }
+
+  &:hover::#{$pseudo},
+  &.active::#{$pseudo} {
+    width: 100%;
+  }
+}
+
 // ------------------------------------------------------------------ navbar --
 .navbar {
   --bs-navbar-color: var(--ui-text-muted);
@@ -32,20 +56,13 @@
     font-weight: 500;
     transition: color var(--ui-duration) var(--ui-ease);
 
-    &::after {
-      position: absolute;
-      bottom: -0.25rem;
-      left: 0;
-      width: 0;
-      height: 1px;
-      content: '';
-      background: var(--ui-accent);
-      transition: width var(--ui-duration) var(--ui-ease);
+    // The caret lives in `::after`, so the line moves to `::before`.
+    &:not(.dropdown-toggle) {
+      @include nav-underline('after');
     }
 
-    &:hover::after,
-    &.active::after {
-      width: 100%;
+    &.dropdown-toggle {
+      @include nav-underline('before');
     }
   }
 }
