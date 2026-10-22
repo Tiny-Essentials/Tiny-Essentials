@@ -146,6 +146,22 @@
           <span class="d-none d-sm-inline">Reload</span>
         </button>
 
+        <div class="form-check form-switch mb-0 ms-2">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            role="switch"
+            id="pg-btn-lighting"
+            aria-describedby="pg-btn-lighting-help"
+          />
+          <label class="form-check-label small" for="pg-btn-lighting">
+            <code>btn-lighting</code>
+          </label>
+          <span class="visually-hidden" id="pg-btn-lighting-help">
+            Toggles the opt-in glow on every button in the page.
+          </span>
+        </div>
+
         <span
           class="small text-body-secondary ms-auto"
           id="pg-theme-status"
@@ -371,39 +387,13 @@
                   <button class="btn btn-ghost-dark" disabled>Dark</button>
                 </div>
 
-                <h4 class="fw-bold mb-1">Subtle with Border</h4>
-                <div class="d-flex flex-wrap gap-2">
-                  <button class="btn btn-subtle-primary hover-border">Primary</button>
-                  <button class="btn btn-subtle-secondary hover-border">Secondary</button>
-                  <button class="btn btn-subtle-success hover-border">Success</button>
-                  <button class="btn btn-subtle-danger hover-border">Danger</button>
-                  <button class="btn btn-subtle-warning hover-border">Warning</button>
-                  <button class="btn btn-subtle-info hover-border">Info</button>
-                  <button class="btn btn-subtle-light hover-border">Light</button>
-                  <button class="btn btn-subtle-dark hover-border">Dark</button>
-                </div>
-                <div class="d-flex flex-wrap gap-2">
-                  <button class="btn btn-subtle-primary hover-border disabled">Primary</button>
-                  <button class="btn btn-subtle-secondary hover-border disabled">Secondary</button>
-                  <button class="btn btn-subtle-success hover-border disabled">Success</button>
-                  <button class="btn btn-subtle-danger hover-border disabled">Danger</button>
-                  <button class="btn btn-subtle-warning hover-border disabled">Warning</button>
-                  <button class="btn btn-subtle-info hover-border disabled">Info</button>
-                  <button class="btn btn-subtle-light hover-border disabled">Light</button>
-                  <button class="btn btn-subtle-dark hover-border disabled">Dark</button>
-                </div>
-                <div class="d-flex flex-wrap gap-2">
-                  <button class="btn btn-subtle-primary hover-border" disabled>Primary</button>
-                  <button class="btn btn-subtle-secondary hover-border" disabled>Secondary</button>
-                  <button class="btn btn-subtle-success hover-border" disabled>Success</button>
-                  <button class="btn btn-subtle-danger hover-border" disabled>Danger</button>
-                  <button class="btn btn-subtle-warning hover-border" disabled>Warning</button>
-                  <button class="btn btn-subtle-info hover-border" disabled>Info</button>
-                  <button class="btn btn-subtle-light hover-border" disabled>Light</button>
-                  <button class="btn btn-subtle-dark hover-border" disabled>Dark</button>
-                </div>
-
                 <h4 class="fw-bold mb-1">Subtle</h4>
+                <p class="small text-body-secondary mb-0">
+                  Every tone, every state. <code>--btn-tone</code> drives text, background and
+                  border.
+                </p>
+
+                <h5 class="h6 text-uppercase text-body-secondary mt-3 mb-2">Default</h5>
                 <div class="d-flex flex-wrap gap-2">
                   <button class="btn btn-subtle-primary">Primary</button>
                   <button class="btn btn-subtle-secondary">Secondary</button>
@@ -414,16 +404,32 @@
                   <button class="btn btn-subtle-light">Light</button>
                   <button class="btn btn-subtle-dark">Dark</button>
                 </div>
+
+                <h5 class="h6 text-uppercase text-body-secondary mt-3 mb-2">With border</h5>
                 <div class="d-flex flex-wrap gap-2">
-                  <button class="btn btn-subtle-primary disabled">Primary</button>
-                  <button class="btn btn-subtle-secondary disabled">Secondary</button>
-                  <button class="btn btn-subtle-success disabled">Success</button>
-                  <button class="btn btn-subtle-danger disabled">Danger</button>
-                  <button class="btn btn-subtle-warning disabled">Warning</button>
-                  <button class="btn btn-subtle-info disabled">Info</button>
-                  <button class="btn btn-subtle-light disabled">Light</button>
-                  <button class="btn btn-subtle-dark disabled">Dark</button>
+                  <button class="btn btn-subtle-primary hover-border">Primary</button>
+                  <button class="btn btn-subtle-secondary hover-border">Secondary</button>
+                  <button class="btn btn-subtle-success hover-border">Success</button>
+                  <button class="btn btn-subtle-danger hover-border">Danger</button>
+                  <button class="btn btn-subtle-warning hover-border">Warning</button>
+                  <button class="btn btn-subtle-info hover-border">Info</button>
+                  <button class="btn btn-subtle-light hover-border">Light</button>
+                  <button class="btn btn-subtle-dark hover-border">Dark</button>
                 </div>
+
+                <h5 class="h6 text-uppercase text-body-secondary mt-3 mb-2">Active</h5>
+                <div class="d-flex flex-wrap gap-2">
+                  <button class="btn btn-subtle-primary active">Primary</button>
+                  <button class="btn btn-subtle-secondary active">Secondary</button>
+                  <button class="btn btn-subtle-success active">Success</button>
+                  <button class="btn btn-subtle-danger active">Danger</button>
+                  <button class="btn btn-subtle-warning active">Warning</button>
+                  <button class="btn btn-subtle-info active">Info</button>
+                  <button class="btn btn-subtle-light active">Light</button>
+                  <button class="btn btn-subtle-dark active">Dark</button>
+                </div>
+
+                <h5 class="h6 text-uppercase text-body-secondary mt-3 mb-2">Disabled</h5>
                 <div class="d-flex flex-wrap gap-2">
                   <button class="btn btn-subtle-primary" disabled>Primary</button>
                   <button class="btn btn-subtle-secondary" disabled>Secondary</button>
@@ -433,6 +439,64 @@
                   <button class="btn btn-subtle-info" disabled>Info</button>
                   <button class="btn btn-subtle-light" disabled>Light</button>
                   <button class="btn btn-subtle-dark" disabled>Dark</button>
+                </div>
+
+                <h5 class="h6 text-uppercase text-body-secondary mt-3 mb-2">Sizes</h5>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                  <button class="btn btn-subtle-primary btn-sm">Small</button>
+                  <button class="btn btn-subtle-primary">Default</button>
+                  <button class="btn btn-subtle-primary btn-lg">Large</button>
+                </div>
+
+                <h5 class="h6 text-uppercase text-body-secondary mt-3 mb-2">Icon and badge</h5>
+                <div class="d-flex flex-wrap gap-2">
+                  <button class="btn btn-subtle-primary">
+                    <i class="bi bi-download me-1"></i>Download
+                  </button>
+                  <button class="btn btn-subtle-success">
+                    <i class="bi bi-check-lg me-1"></i>Save
+                  </button>
+                  <button class="btn btn-subtle-danger">
+                    <i class="bi bi-trash me-1"></i>Delete
+                  </button>
+                  <button class="btn btn-subtle-primary">
+                    Inbox <span class="badge text-bg-primary ms-1">14</span>
+                  </button>
+                </div>
+
+                <h5 class="h6 text-uppercase text-body-secondary mt-3 mb-2">Group</h5>
+                <div class="btn-group" role="group" aria-label="Subtle group">
+                  <button class="btn btn-subtle-primary">Left</button>
+                  <button class="btn btn-subtle-primary">Middle</button>
+                  <button class="btn btn-subtle-primary">Right</button>
+                </div>
+
+                <h5 class="h6 text-uppercase text-body-secondary mt-3 mb-2">On surfaces</h5>
+                <div class="d-flex flex-column gap-2">
+                  <div class="p-3 rounded-3 bg-body">
+                    <div class="d-flex flex-wrap gap-2">
+                      <button class="btn btn-subtle-primary">Primary</button>
+                      <button class="btn btn-subtle-success">Success</button>
+                      <button class="btn btn-subtle-danger">Danger</button>
+                      <button class="btn btn-subtle-info">Info</button>
+                    </div>
+                  </div>
+                  <div class="p-3 rounded-3 bg-body-secondary">
+                    <div class="d-flex flex-wrap gap-2">
+                      <button class="btn btn-subtle-primary">Primary</button>
+                      <button class="btn btn-subtle-success">Success</button>
+                      <button class="btn btn-subtle-danger">Danger</button>
+                      <button class="btn btn-subtle-info">Info</button>
+                    </div>
+                  </div>
+                  <div class="p-3 rounded-3 bg-body-tertiary">
+                    <div class="d-flex flex-wrap gap-2">
+                      <button class="btn btn-subtle-primary">Primary</button>
+                      <button class="btn btn-subtle-success">Success</button>
+                      <button class="btn btn-subtle-danger">Danger</button>
+                      <button class="btn btn-subtle-info">Info</button>
+                    </div>
+                  </div>
                 </div>
 
                 <h4 class="fw-bold mb-1">Outline</h4>

@@ -240,6 +240,68 @@ const select = document.getElementById('pg-theme-select');
 const button = document.getElementById('pg-theme-refresh');
 const status = document.getElementById('pg-theme-status');
 
+/**
+ * Toggles the opt-in `btn-lighting` class on every button in the page.
+ *
+ * The class is applied imperatively instead of through a parent selector, so a
+ * MutationObserver keeps dynamically created buttons (toasts, dropdowns) in
+ * sync with the current state.
+ *
+ * @returns {void}
+ */
+const initButtonLighting = () => {
+  const toggle = document.getElementById('pg-btn-lighting');
+
+  if (!(toggle instanceof HTMLInputElement)) {
+    return;
+  }
+
+  const STORAGE_KEY = 'pg-btn-lighting';
+
+  /**
+   * @param {ParentNode} root
+   * @param {boolean} enabled
+   * @returns {void}
+   */
+  const paint = (root, enabled) => {
+    root.querySelectorAll('.btn').forEach((button) => {
+      button.classList.toggle('btn-lighting', enabled);
+    });
+  };
+
+  let enabled = localStorage.getItem(STORAGE_KEY) === 'true';
+  toggle.checked = enabled;
+  paint(document, enabled);
+
+  new MutationObserver((records) => {
+    if (!enabled) {
+      return;
+    }
+
+    records.forEach((record) => {
+      record.addedNodes.forEach((node) => {
+        if (!(node instanceof HTMLElement)) {
+          return;
+        }
+
+        if (node.classList.contains('btn')) {
+          node.classList.add('btn-lighting');
+        }
+
+        paint(node, true);
+      });
+    });
+  }).observe(document.body, { childList: true, subtree: true });
+
+  toggle.addEventListener('change', () => {
+    enabled = toggle.checked;
+    localStorage.setItem(STORAGE_KEY, String(enabled));
+    paint(document, enabled);
+  });
+};
+
+initButtonLighting();
+
 if (select instanceof HTMLSelectElement && button instanceof HTMLButtonElement && status) {
   new ThemeStylesheetLoader({ select, button, status }).mount();
 }
