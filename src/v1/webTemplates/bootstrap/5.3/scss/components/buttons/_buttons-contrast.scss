@@ -1,29 +1,35 @@
 // =============================================================================
 // Contrast buttons
 //
-// `.btn-contrast` and `.btn-contrast-inverse` are not new variants: they are
-// aliases for `.btn-light` / `.btn-dark`, swapped by theme. They must stay a
-// perfect mirror of those two classes, so they use `@extend` instead of
-// re-declaring the mixin. If `.btn-light` or `.btn-dark` changes, these follow
-// automatically.
+// `.btn-{family}contrast` and `.btn-{family}contrast-inverse` are not new
+// variants: they are aliases for the `light` and `dark` tones of their own
+// family, swapped by theme. They must stay a perfect mirror of those classes,
+// so they use `@extend` instead of re-declaring the mixin.
 //
-// Requires: _buttons.scss (import order matters — `@extend` needs the target).
+// Requires: _buttons.scss and Ghost.scss (import order matters — `@extend`
+// needs the target selector to already exist).
 // =============================================================================
 
-// Contrasts with the page: light on dark, dark on light.
-.btn-contrast {
-  @extend .btn-light;
-}
+/// Family prefix, mapped to the class prefix it generates.
+/// `''` is the solid family: `.btn-light` / `.btn-dark`.
+$contrast-families: ('', 'outline-', 'subtle-', 'ghost-');
 
-[data-bs-theme='light'] .btn-contrast {
-  @extend .btn-dark;
-}
+@each $family in $contrast-families {
+  // Contrasts with the page: light on dark, dark on light.
+  .btn-#{$family}contrast {
+    @extend .btn-#{$family}light;
+  }
 
-// Matches the page: dark on dark, light on light.
-.btn-contrast-inverse {
-  @extend .btn-dark;
-}
+  [data-bs-theme='light'] .btn-#{$family}contrast {
+    @extend .btn-#{$family}dark;
+  }
 
-[data-bs-theme='light'] .btn-contrast-inverse {
-  @extend .btn-light;
+  // Matches the page: dark on dark, light on light.
+  .btn-#{$family}contrast-inverse {
+    @extend .btn-#{$family}dark;
+  }
+
+  [data-bs-theme='light'] .btn-#{$family}contrast-inverse {
+    @extend .btn-#{$family}light;
+  }
 }
