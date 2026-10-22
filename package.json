@@ -85,11 +85,12 @@
     "./css/TinyNotify.min.css": "./dist/v1/css/TinyNotify.min.css",
     "./css/TinyLoadingScreen.min.css": "./dist/v1/css/TinyLoadingScreen.min.css",
     "./webTemplates/bootstrap/5.3/scss/themes/deepstrap": "./dist/v1/webTemplates/bootstrap/5.3/scss/themes/deepstrap/index.scss",
-    "./webTemplates/bootstrap/5.3/scss/components/icon/Cube-Icon.scss": "./dist/v1/webTemplates/bootstrap/5.3/scss/components/icon/Cube-Icon.scss",
-    "./webTemplates/bootstrap/5.3/scss/components/buttons/Ghost.scss": "./dist/v1/webTemplates/bootstrap/5.3/scss/components/buttons/Ghost.scss",
-    "./webTemplates/bootstrap/5.3/scss/background/Grid.scss": "./dist/v1/webTemplates/bootstrap/5.3/scss/background/Grid.scss",
-    "./webTemplates/bootstrap/5.3/scss/input/Placeholder-Colors-Fix.scss": "./dist/v1/webTemplates/bootstrap/5.3/scss/input/Placeholder-Colors-Fix.scss",
-    "./webTemplates/bootstrap/5.3/scss/spacing/Spacing-Plus.scss": "./dist/v1/webTemplates/bootstrap/5.3/scss/spacing/Spacing-Plus.scss",
+    "./webTemplates/bootstrap/5.3/scss/themes/deepstrap/plugins/background/*": "./dist/v1/webTemplates/bootstrap/5.3/scss/themes/deepstrap/plugins/background/*",
+    "./webTemplates/bootstrap/5.3/scss/components/icon/*": "./dist/v1/webTemplates/bootstrap/5.3/scss/components/icon/*",
+    "./webTemplates/bootstrap/5.3/scss/components/buttons/*": "./dist/v1/webTemplates/bootstrap/5.3/scss/components/buttons/*",
+    "./webTemplates/bootstrap/5.3/scss/background/*": "./dist/v1/webTemplates/bootstrap/5.3/scss/background/*",
+    "./webTemplates/bootstrap/5.3/scss/input/*": "./dist/v1/webTemplates/bootstrap/5.3/scss/input/*",
+    "./webTemplates/bootstrap/5.3/scss/spacing/*": "./dist/v1/webTemplates/bootstrap/5.3/scss/spacing/*",
     ".": {
       "require": "./dist/v1/index.cjs",
       "import": "./dist/v1/index.mjs"

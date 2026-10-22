@@ -1,0 +1,31 @@
+::selection {
+  color: var(--ui-heading);
+  background: rgb(var(--ui-accent-rgb) / 0.32);
+}
+
+// Global scrollbar.
+* {
+  scrollbar-color: var(--ui-border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--ui-border-strong);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--ui-text-muted);
+  background-clip: padding-box;
+}

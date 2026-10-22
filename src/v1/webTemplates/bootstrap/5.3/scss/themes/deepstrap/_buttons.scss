@@ -40,8 +40,7 @@ $button-tones: (
   border-color: transparent;
 
   &.hover-border {
-    box-shadow:
-      0 0 0 1px rgb(var(--ui-#{$tone}-rgb) / 0.32);
+    box-shadow: 0 0 0 1px rgb(var(--ui-#{$tone}-rgb) / 0.32);
   }
 
   &:hover:not(:disabled):not(.disabled) {

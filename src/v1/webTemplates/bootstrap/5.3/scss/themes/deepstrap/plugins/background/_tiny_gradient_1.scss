@@ -1,0 +1,116 @@
+// =============================================================================
+// Optional Page background
+// Three layers: mesh gradient, technical grid, ambient orbs.
+//
+// Opt-in. Enable it in your entry point:
+//
+//   @import 'tiny-essentials/webTemplates/bootstrap/5.3/scss/themes/deepstrap/plugins/background/tiny_gradient_1';
+//   @include tiny-gb1-plugin();
+//
+// Then add the class to <body>:
+//
+//   <body class="ui-background">
+//
+// Custom selector:
+//
+//   @include tiny-gb1-plugin(('selector': '.my-background'));
+//
+// Custom colors: override the `--ui-bg-*` tokens below.
+// =============================================================================
+
+@use 'sass:map';
+
+$background-config: (
+  'selector': 'body',
+  'grid-size': 48px,
+  'grid-mask': 'radial-gradient(ellipse 100% 70% at 50% 0%, #000 30%, transparent 78%)',
+) !default;
+
+@mixin tiny-gb1-plugin($config: $background-config) {
+  $selector: map.get($config, 'selector');
+  $grid-size: map.get($config, 'grid-size');
+  $grid-mask: map.get($config, 'grid-mask');
+
+  #{$selector} {
+    position: relative;
+    min-height: 100vh;
+    background-color: var(--ui-bg-canvas);
+    background-image:
+      radial-gradient(
+        70rem 50rem at 8% -14%,
+        rgb(var(--ui-bg-mesh-1) / var(--ui-bg-mesh-1-alpha)),
+        transparent 60%
+      ),
+      radial-gradient(
+        60rem 44rem at 96% -4%,
+        rgb(var(--ui-bg-mesh-2) / var(--ui-bg-mesh-2-alpha)),
+        transparent 62%
+      ),
+      radial-gradient(
+        50rem 40rem at 50% 120%,
+        rgb(var(--ui-bg-mesh-3) / var(--ui-bg-mesh-3-alpha)),
+        transparent 70%
+      );
+    background-attachment: fixed;
+  }
+
+  #{$selector}::before {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    content: '';
+    background-image:
+      linear-gradient(var(--ui-bg-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--ui-bg-grid) 1px, transparent 1px);
+    background-size: $grid-size $grid-size;
+    mask-image: #{$grid-mask};
+  }
+
+  #{$selector}::after {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    content: '';
+    background:
+      radial-gradient(
+        28rem 28rem at 12% 8%,
+        rgb(var(--ui-bg-orb-1) / var(--ui-bg-orb-1-alpha)),
+        transparent 70%
+      ),
+      radial-gradient(
+        24rem 24rem at 88% 22%,
+        rgb(var(--ui-bg-orb-2) / var(--ui-bg-orb-2-alpha)),
+        transparent 70%
+      );
+    filter: blur(var(--ui-orb-blur));
+    opacity: var(--ui-orb-opacity);
+    transition: opacity var(--ui-duration) var(--ui-ease);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Default color tokens.
+// Override these in :root or in a scoped selector to recolor the background.
+// ---------------------------------------------------------------------------
+:root {
+  --ui-bg-canvas: var(--ui-canvas);
+
+  --ui-bg-mesh-1: var(--ui-accent-rgb);
+  --ui-bg-mesh-1-alpha: var(--ui-mesh-1);
+
+  --ui-bg-mesh-2: var(--ui-info-rgb);
+  --ui-bg-mesh-2-alpha: var(--ui-mesh-2);
+
+  --ui-bg-mesh-3: var(--ui-accent-rgb);
+  --ui-bg-mesh-3-alpha: 0.06;
+
+  --ui-bg-grid: var(--ui-grid-line);
+
+  --ui-bg-orb-1: var(--ui-accent-rgb);
+  --ui-bg-orb-1-alpha: 0.18;
+
+  --ui-bg-orb-2: var(--ui-info-rgb);
+  --ui-bg-orb-2-alpha: 0.14;
+}
