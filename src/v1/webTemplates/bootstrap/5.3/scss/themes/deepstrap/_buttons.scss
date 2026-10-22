@@ -125,30 +125,27 @@ $button-tones: (
   --bs-btn-active-color: var(--ui-on-#{$tone});
   --bs-btn-disabled-color: var(--ui-on-#{$tone});
 
+  // Single source of truth for the filled area. The border reads from the
+  // same variable, so a 1px seam can never show the layer behind the button.
+  --btn-fill: var(--ui-#{$tone});
+
   color: var(--ui-on-#{$tone});
-  background-color: var(--ui-#{$tone});
-  border-color: transparent;
+  background-color: var(--btn-fill);
+  border-color: transparent !important;
 
   &:hover:not(:disabled):not(.disabled) {
+    // No 1px ring: on a filled button it sits flush against the fill and
+    // reads as a seam. The soft layers are the whole effect here.
     --btn-glow:
-      0 0 0 1px rgb(var(--ui-#{$tone}-rgb) / 0.35),
       0 0 20px -4px rgb(var(--ui-#{$tone}-rgb) / 0.55),
       0 0 40px -8px rgb(var(--ui-#{$tone}-rgb) / 0.35);
 
-    background-color: color-mix(
-      in srgb,
-      var(--ui-#{$tone}) var(--btn-hover-amount),
-      var(--btn-mix)
-    );
+    --btn-fill: color-mix(in srgb, var(--ui-#{$tone}) var(--btn-hover-amount), var(--btn-mix));
   }
 
   &:active:not(:disabled):not(.disabled),
   &.active {
-    background-color: color-mix(
-      in srgb,
-      var(--ui-#{$tone}) var(--btn-press-amount),
-      var(--btn-mix)
-    );
+    --btn-fill: color-mix(in srgb, var(--ui-#{$tone}) var(--btn-press-amount), var(--btn-mix));
   }
 }
 
