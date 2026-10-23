@@ -143,10 +143,6 @@ $alphas: (
   }
 
   --ui-shadow-rgb: #{triplet(map.get($shadow, 'dark'))};
-  --ui-orb-opacity: 1;
-  --ui-orb-blur: 48px;
-  --ui-mesh-1: 0.16;
-  --ui-mesh-2: 0.12;
 
   @include bootstrap-bridge($theme-dark);
 }
@@ -164,10 +160,6 @@ $alphas: (
   }
 
   --ui-shadow-rgb: #{triplet(map.get($shadow, 'light'))};
-  --ui-orb-opacity: 0.5;
-  --ui-orb-blur: 64px;
-  --ui-mesh-1: 0.1;
-  --ui-mesh-2: 0.08;
 
   @include bootstrap-bridge($theme-light);
 }
