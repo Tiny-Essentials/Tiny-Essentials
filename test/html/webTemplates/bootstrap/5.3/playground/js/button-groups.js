@@ -112,6 +112,22 @@ const LAYOUT_CLASS = Object.freeze({
 /** @type {readonly string[]} */
 const DEFAULT_LABELS = Object.freeze(['Left', 'Left 2', 'Middle', 'Right 2', 'Right']);
 
+/**
+ * @typedef {Object} IconBadgeItem
+ * @property {string} tone Tone used by the button and by the badge.
+ * @property {string} label Visible label of the button.
+ * @property {string} icon Bootstrap Icons class, without the `bi` prefix.
+ * @property {string} [badge] Badge text. When set, the icon is not rendered.
+ */
+
+/** @type {readonly IconBadgeItem[]} */
+const ICON_BADGE_ITEMS = Object.freeze([
+  { tone: 'primary', label: 'Download', icon: 'bi-download' },
+  { tone: 'success', label: 'Save', icon: 'bi-check-lg' },
+  { tone: 'danger', label: 'Delete', icon: 'bi-trash' },
+  { tone: 'primary', label: 'Inbox', icon: 'bi-inbox', badge: '14' },
+]);
+
 /** @type {string} */
 const FAMILY_STORAGE_KEY = 'pg-btn-family';
 
@@ -389,6 +405,74 @@ const createToggle = (family, state) => {
 };
 
 /**
+ * Creates a single button that carries an icon or a badge.
+ *
+ * `createButton` writes `textContent`, so it cannot host child nodes. This
+ * helper delegates the class/state resolution to `createButton` and then
+ * replaces the text node with the icon + label pair or the label + badge pair.
+ *
+ * @param {ButtonFamily} family
+ * @param {AppState} state
+ * @param {IconBadgeItem} item
+ * @returns {HTMLButtonElement | HTMLAnchorElement}
+ * @throws {TypeError} When `item.label` is not a non-empty string.
+ * @throws {TypeError} When `item.icon` is not a non-empty string.
+ */
+const createIconBadgeButton = (family, state, item) => {
+  if (typeof item.label !== 'string' || item.label.trim() === '') {
+    throw new TypeError('item.label must be a non-empty string');
+  }
+
+  if (typeof item.icon !== 'string' || item.icon.trim() === '') {
+    throw new TypeError('item.icon must be a non-empty string');
+  }
+
+  const element = createButton({
+    tag: state.tag,
+    toneClass: family.toneClass(item.tone),
+    label: '',
+    state: 'default',
+    size: '',
+    hoverBorder: state.hoverBorder,
+  });
+
+  if (item.badge) {
+    const badge = document.createElement('span');
+    badge.className = `badge text-bg-${item.tone} ms-1`;
+    badge.textContent = item.badge;
+
+    element.append(`${item.label} `, badge);
+
+    return element;
+  }
+
+  const icon = document.createElement('i');
+  icon.className = `bi ${item.icon} me-1`;
+  icon.setAttribute('aria-hidden', 'true');
+
+  element.append(icon, document.createTextNode(item.label));
+
+  return element;
+};
+
+/**
+ * Builds the "Icon and badge" row for a single family.
+ * @param {ButtonFamily} family
+ * @param {AppState} state
+ * @returns {HTMLDivElement}
+ */
+const createIconBadgeRow = (family, state) => {
+  const row = document.createElement('div');
+  row.className = 'd-flex flex-wrap gap-2';
+
+  ICON_BADGE_ITEMS.forEach((item) => {
+    row.appendChild(createIconBadgeButton(family, state, item));
+  });
+
+  return row;
+};
+
+/**
  * Renders every group variation of a single button family.
  * @param {ButtonFamily} family
  * @param {AppState} state
@@ -509,6 +593,9 @@ const renderFamily = (family, state) => {
   toggles.className = 'd-flex flex-wrap gap-2';
   toggles.appendChild(createToggle(family, state));
   section.appendChild(toggles);
+
+  section.appendChild(createHeading('Icon and badge'));
+  section.appendChild(createIconBadgeRow(family, state));
 
   section.appendChild(createHeading('Vertical'));
   const vertical = document.createElement('div');

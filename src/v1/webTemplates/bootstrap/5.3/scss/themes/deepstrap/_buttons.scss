@@ -92,7 +92,6 @@ $button-tones: (
 
 // -------------------------------------------------------------------- base --
 .btn {
-  --bs-btn-font-weight: 500;
   --bs-btn-border-radius: var(--bs-border-radius-sm);
   --bs-btn-disabled-opacity: 0.4;
   --btn-tone: var(--ui-accent);
@@ -105,7 +104,6 @@ $button-tones: (
   --btn-hover-amount: 76%;
   --btn-press-amount: 68%;
 
-  position: relative;
   isolation: isolate;
   display: inline-flex;
   gap: 0.375rem;
@@ -325,7 +323,6 @@ $button-tones: (
   --btn-group-bg: var(--ui-canvas);
 
   > .btn {
-    position: relative;
     border-width: 1px;
     border-style: solid;
   }

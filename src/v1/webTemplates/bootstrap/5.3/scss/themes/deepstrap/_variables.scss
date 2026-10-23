@@ -7,13 +7,6 @@
 @use 'colors' as *;
 
 // ---------------------------------------------------------------- typography --
-$font-family-sans-serif:
-  'Inter',
-  -apple-system,
-  BlinkMacSystemFont,
-  'Segoe UI',
-  sans-serif;
-$font-family-monospace: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas, monospace;
 $line-height-base: 1.5;
 
 // -------------------------------------------------------------- brand colors --
@@ -52,7 +45,6 @@ $input-placeholder-color: theme-color('text-muted');
 
 // ----------------------------------------------------------------- buttons ---
 $btn-focus-width: 2px;
-$btn-font-weight: 500;
 
 // --------------------------------------------------------------- focus ring --
 $focus-ring-color: rgba(theme-color('accent'), 0.5);
