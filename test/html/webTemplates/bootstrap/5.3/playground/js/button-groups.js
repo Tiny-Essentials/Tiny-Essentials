@@ -160,7 +160,7 @@ const FAMILIES = Object.freeze([
  */
 const createHeading = (text) => {
   const heading = document.createElement('h5');
-  heading.className = 'h6 text-uppercase text-body-secondary mt-3 mb-2';
+  heading.className = 'h6 text-body-secondary mt-3 mb-2';
   heading.textContent = text;
 
   return heading;
@@ -574,7 +574,7 @@ const createPicker = (state, callbacks) => {
   familyWrapper.className = 'd-flex align-items-center gap-2';
 
   const familyLabel = document.createElement('label');
-  familyLabel.className = 'form-label mb-0 small text-uppercase fw-bold text-body-secondary';
+  familyLabel.className = 'form-label mb-0 small fw-bold text-body-secondary';
   familyLabel.htmlFor = 'pg-btn-family';
   familyLabel.textContent = 'Button family';
 
