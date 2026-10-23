@@ -115,11 +115,6 @@ $button-tones: (
   --btn-hover-amount: 76%;
   --btn-press-amount: 68%;
 
-  isolation: isolate;
-  display: inline-flex;
-  gap: 0.375rem;
-  align-items: center;
-  justify-content: center;
   border: 1px solid var(--bs-btn-border-color, transparent);
   transition:
     background-color var(--ui-duration) var(--ui-ease),
