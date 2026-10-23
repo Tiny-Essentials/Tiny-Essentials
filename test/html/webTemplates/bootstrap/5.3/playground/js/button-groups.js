@@ -2,9 +2,9 @@
  * @file Button group matrix for the Bootstrap 5.3 playground.
  *
  * Renders every button family (normal, ghost, subtle, outline) against every
- * tone, state, size and structure. Two controls limit the output: a select
- * picks the family and a switch toggles the opt-in `hover-border` modifier
- * on every rendered button.
+ * tone, state, size and structure. Three controls limit the output: a select
+ * picks the family, a switch toggles the opt-in `hover-border` modifier and a
+ * second switch swaps every `<button>` for an `<a role="button">`.
  */
 
 /**
@@ -31,6 +31,10 @@
  */
 
 /**
+ * @typedef {'button' | 'anchor'} ButtonTag
+ */
+
+/**
  * @typedef {Object} GroupConfig
  * @property {string} toneClass Class applied to every button of the group.
  * @property {ButtonState} [state] State applied to every button of the group.
@@ -43,15 +47,35 @@
  */
 
 /**
+ * @typedef {Object} ButtonConfig
+ * @property {ButtonTag} tag Element used to render the button.
+ * @property {string} toneClass Class applied to the button.
+ * @property {string} label Visible label.
+ * @property {ButtonState} state State applied to the button.
+ * @property {string} size Optional Bootstrap size class.
+ * @property {boolean} hoverBorder Whether the `hover-border` modifier is on.
+ */
+
+/**
  * @typedef {Object} AppState
  * @property {string} family Currently selected family id, or `all`.
  * @property {boolean} hoverBorder Whether the `hover-border` modifier is on.
+ * @property {ButtonTag} tag Element used to render every button.
  */
 
 /**
  * @typedef {Object} PickerCallbacks
  * @property {(familyId: string) => void} onFamilyChange
  * @property {(enabled: boolean) => void} onHoverBorderChange
+ * @property {(tag: ButtonTag) => void} onTagChange
+ */
+
+/**
+ * @typedef {Object} SwitchConfig
+ * @property {string} id Input id, also used by the label.
+ * @property {string} label Inner HTML of the label.
+ * @property {boolean} checked Initial state.
+ * @property {(checked: boolean) => void} onChange Change handler.
  */
 
 /**
@@ -93,6 +117,9 @@ const FAMILY_STORAGE_KEY = 'pg-btn-family';
 
 /** @type {string} */
 const HOVER_STORAGE_KEY = 'pg-btn-hover-border';
+
+/** @type {string} */
+const TAG_STORAGE_KEY = 'pg-btn-tag';
 
 /** @type {string} */
 const ALL_FAMILIES = 'all';
@@ -141,37 +168,94 @@ const createHeading = (text) => {
 
 /**
  * Applies a visual state to a single button.
- * @param {HTMLButtonElement} button
+ *
+ * `<a>` elements have no `disabled` attribute, so `disabled-attribute` degrades
+ * to the `.disabled` class plus `aria-disabled` and `tabindex="-1"`.
+ *
+ * @param {HTMLButtonElement | HTMLAnchorElement} element
  * @param {ButtonState} state
  * @returns {void}
  * @throws {RangeError} When `state` is not a known button state.
  */
-const applyState = (button, state) => {
+const applyState = (element, state) => {
   if (!STATES.includes(state)) {
     throw new RangeError(`Unknown button state: ${state}`);
   }
 
+  if (state === 'default') {
+    return;
+  }
+
   if (state === 'active') {
-    button.classList.add('active');
-    button.setAttribute('aria-pressed', 'true');
+    element.classList.add('active');
+    element.setAttribute('aria-pressed', 'true');
+    return;
   }
 
-  if (state === 'disabled-attribute') {
-    button.disabled = true;
+  const isAnchor = element instanceof HTMLAnchorElement;
+
+  if (state === 'disabled-attribute' && !isAnchor) {
+    /** @type {HTMLButtonElement} */ (element).disabled = true;
+    return;
   }
 
-  if (state === 'disabled-class') {
-    button.classList.add('disabled');
-    button.setAttribute('aria-disabled', 'true');
+  element.classList.add('disabled');
+  element.setAttribute('aria-disabled', 'true');
+
+  if (isAnchor) {
+    element.setAttribute('tabindex', '-1');
+
+    if (state === 'disabled-attribute') {
+      element.title = 'disabled is not valid on <a>; fell back to .disabled';
+    }
   }
+};
+
+/**
+ * Creates a single button, either a `<button>` or an `<a role="button">`.
+ * @param {ButtonConfig} config
+ * @returns {HTMLButtonElement | HTMLAnchorElement}
+ * @throws {TypeError} When `toneClass` is not a non-empty string.
+ * @throws {RangeError} When `state` is not a known button state.
+ */
+const createButton = ({ tag, toneClass, label, state, size, hoverBorder }) => {
+  if (typeof toneClass !== 'string' || toneClass.trim() === '') {
+    throw new TypeError('toneClass must be a non-empty string');
+  }
+
+  if (!STATES.includes(state)) {
+    throw new RangeError(`Unknown button state: ${state}`);
+  }
+
+  const className = ['btn', toneClass, size, hoverBorder ? 'hover-border' : '']
+    .filter(Boolean)
+    .join(' ');
+
+  let element;
+
+  if (tag === 'anchor') {
+    const anchor = document.createElement('a');
+    anchor.href = '#';
+    anchor.setAttribute('role', 'button');
+    element = anchor;
+  } else {
+    const button = document.createElement('button');
+    button.type = 'button';
+    element = button;
+  }
+
+  element.className = className;
+  element.textContent = label;
+  applyState(element, state);
+
+  return element;
 };
 
 /**
  * Creates a single button group.
  * @param {GroupConfig} config
  * @returns {HTMLDivElement}
- * @throws {TypeError} When `toneClass` is not a non-empty string.
- * @throws {RangeError} When `layout` or `state` is not a known value.
+ * @throws {RangeError} When `layout` is not a known layout.
  */
 const createGroup = ({
   toneClass,
@@ -182,17 +266,10 @@ const createGroup = ({
   size = '',
   labels = DEFAULT_LABELS,
   ariaLabel = 'Button group',
+  tag = 'button',
 }) => {
-  if (typeof toneClass !== 'string' || toneClass.trim() === '') {
-    throw new TypeError('toneClass must be a non-empty string');
-  }
-
   if (!LAYOUTS.includes(layout)) {
     throw new RangeError(`Unknown layout: ${layout}`);
-  }
-
-  if (!STATES.includes(state)) {
-    throw new RangeError(`Unknown button state: ${state}`);
   }
 
   const group = document.createElement('div');
@@ -201,16 +278,16 @@ const createGroup = ({
   group.setAttribute('aria-label', ariaLabel);
 
   labels.forEach((label, index) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = ['btn', toneClass, size, hoverBorder ? 'hover-border' : '']
-      .filter(Boolean)
-      .join(' ');
-    button.textContent = label;
-
-    applyState(button, buttonStates?.[index] ?? state);
-
-    group.appendChild(button);
+    group.appendChild(
+      createButton({
+        tag,
+        toneClass,
+        label,
+        state: buttonStates?.[index] ?? state,
+        size,
+        hoverBorder,
+      }),
+    );
   });
 
   return group;
@@ -219,10 +296,10 @@ const createGroup = ({
 /**
  * Builds a `btn-toolbar` that mixes two groups of the same family.
  * @param {ButtonFamily} family
- * @param {boolean} hoverBorder
+ * @param {AppState} state
  * @returns {HTMLDivElement}
  */
-const createToolbar = (family, hoverBorder) => {
+const createToolbar = (family, state) => {
   const toolbar = document.createElement('div');
   toolbar.className = 'btn-toolbar gap-2';
   toolbar.setAttribute('role', 'toolbar');
@@ -236,7 +313,8 @@ const createToolbar = (family, hoverBorder) => {
       createGroup({
         toneClass: family.toneClass(tone),
         labels,
-        hoverBorder,
+        hoverBorder: state.hoverBorder,
+        tag: state.tag,
         ariaLabel: `${family.title} ${tone} toolbar group`,
       }),
     );
@@ -247,11 +325,15 @@ const createToolbar = (family, hoverBorder) => {
 
 /**
  * Builds a radio group that uses the `btn-check` pattern.
+ *
+ * The `btn-check` pattern requires a `<label>`, so this block ignores
+ * `state.tag` on purpose.
+ *
  * @param {ButtonFamily} family
- * @param {boolean} hoverBorder
+ * @param {AppState} state
  * @returns {HTMLDivElement}
  */
-const createRadioGroup = (family, hoverBorder) => {
+const createRadioGroup = (family, state) => {
   const wrapper = document.createElement('div');
   wrapper.className = 'btn-group';
   wrapper.setAttribute('role', 'group');
@@ -272,7 +354,7 @@ const createRadioGroup = (family, hoverBorder) => {
     input.checked = index === 0;
 
     const labelElement = document.createElement('label');
-    labelElement.className = ['btn', toneClass, hoverBorder ? 'hover-border' : '']
+    labelElement.className = ['btn', toneClass, state.hoverBorder ? 'hover-border' : '']
       .filter(Boolean)
       .join(' ');
     labelElement.htmlFor = id;
@@ -287,29 +369,32 @@ const createRadioGroup = (family, hoverBorder) => {
 /**
  * Builds the `data-bs-toggle="button"` toggle for a family.
  * @param {ButtonFamily} family
- * @param {boolean} hoverBorder
- * @returns {HTMLButtonElement}
+ * @param {AppState} state
+ * @returns {HTMLButtonElement | HTMLAnchorElement}
  */
-const createToggle = (family, hoverBorder) => {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = ['btn', family.toneClass('primary'), hoverBorder ? 'hover-border' : '']
-    .filter(Boolean)
-    .join(' ');
-  button.dataset.bsToggle = 'button';
-  button.setAttribute('aria-pressed', 'false');
-  button.textContent = 'Toggle me';
+const createToggle = (family, state) => {
+  const element = createButton({
+    tag: state.tag,
+    toneClass: family.toneClass('primary'),
+    label: 'Toggle me',
+    state: 'default',
+    size: '',
+    hoverBorder: state.hoverBorder,
+  });
 
-  return button;
+  element.dataset.bsToggle = 'button';
+  element.setAttribute('aria-pressed', 'false');
+
+  return element;
 };
 
 /**
  * Renders every group variation of a single button family.
  * @param {ButtonFamily} family
- * @param {boolean} hoverBorder
+ * @param {AppState} state
  * @returns {HTMLElement}
  */
-const renderFamily = (family, hoverBorder) => {
+const renderFamily = (family, state) => {
   const section = document.createElement('section');
   section.className = 'd-flex flex-column gap-2';
   section.id = `pg-btn-group-${family.id}`;
@@ -331,7 +416,8 @@ const renderFamily = (family, hoverBorder) => {
     tones.appendChild(
       createGroup({
         toneClass: family.toneClass(tone),
-        hoverBorder,
+        hoverBorder: state.hoverBorder,
+        tag: state.tag,
         ariaLabel: `${family.title} ${tone} group`,
       }),
     );
@@ -346,7 +432,8 @@ const renderFamily = (family, hoverBorder) => {
       extras.appendChild(
         createGroup({
           toneClass: extra.className,
-          hoverBorder,
+          hoverBorder: state.hoverBorder,
+          tag: state.tag,
           ariaLabel: `${extra.label} group`,
         }),
       );
@@ -357,13 +444,14 @@ const renderFamily = (family, hoverBorder) => {
   section.appendChild(createHeading('States'));
   const states = document.createElement('div');
   states.className = 'd-flex flex-wrap gap-2';
-  STATES.forEach((state) => {
+  STATES.forEach((item) => {
     states.appendChild(
       createGroup({
         toneClass: family.toneClass('primary'),
-        state,
-        hoverBorder,
-        ariaLabel: `${family.title} ${state} group`,
+        state: item,
+        hoverBorder: state.hoverBorder,
+        tag: state.tag,
+        ariaLabel: `${family.title} ${item} group`,
       }),
     );
   });
@@ -387,7 +475,8 @@ const renderFamily = (family, hoverBorder) => {
           toneClass: family.toneClass(tone),
           labels: ['Enabled', 'Disabled', 'Enabled'],
           buttonStates: ['default', disabledState, 'default'],
-          hoverBorder,
+          hoverBorder: state.hoverBorder,
+          tag: state.tag,
           ariaLabel: `${family.title} ${tone} individual disabled group`,
         }),
       );
@@ -407,7 +496,8 @@ const renderFamily = (family, hoverBorder) => {
       createGroup({
         toneClass: family.toneClass('primary'),
         size,
-        hoverBorder,
+        hoverBorder: state.hoverBorder,
+        tag: state.tag,
         ariaLabel: `${family.title} ${size || 'default'} group`,
       }),
     );
@@ -417,7 +507,7 @@ const renderFamily = (family, hoverBorder) => {
   section.appendChild(createHeading('Toggle'));
   const toggles = document.createElement('div');
   toggles.className = 'd-flex flex-wrap gap-2';
-  toggles.appendChild(createToggle(family, hoverBorder));
+  toggles.appendChild(createToggle(family, state));
   section.appendChild(toggles);
 
   section.appendChild(createHeading('Vertical'));
@@ -427,23 +517,51 @@ const renderFamily = (family, hoverBorder) => {
     createGroup({
       toneClass: family.toneClass('primary'),
       layout: 'vertical',
-      hoverBorder,
+      hoverBorder: state.hoverBorder,
+      tag: state.tag,
       ariaLabel: `${family.title} vertical group`,
     }),
   );
   section.appendChild(vertical);
 
   section.appendChild(createHeading('Toolbar'));
-  section.appendChild(createToolbar(family, hoverBorder));
+  section.appendChild(createToolbar(family, state));
 
-  section.appendChild(createHeading('Radio (btn-check)'));
-  section.appendChild(createRadioGroup(family, hoverBorder));
+  section.appendChild(createHeading('Radio (btn-check — always <label>)'));
+  section.appendChild(createRadioGroup(family, state));
 
   return section;
 };
 
 /**
- * Builds the family picker and the `hover-border` switch.
+ * Builds a single switch.
+ * @param {SwitchConfig} config
+ * @returns {HTMLDivElement}
+ */
+const createSwitch = ({ id, label, checked, onChange }) => {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'form-check form-switch mb-0';
+
+  const input = document.createElement('input');
+  input.className = 'form-check-input';
+  input.type = 'checkbox';
+  input.role = 'switch';
+  input.id = id;
+  input.checked = checked;
+  input.addEventListener('change', () => onChange(input.checked));
+
+  const labelElement = document.createElement('label');
+  labelElement.className = 'form-check-label small';
+  labelElement.htmlFor = id;
+  labelElement.innerHTML = label;
+
+  wrapper.append(input, labelElement);
+
+  return wrapper;
+};
+
+/**
+ * Builds the family picker and the global switches.
  * @param {AppState} state
  * @param {PickerCallbacks} callbacks
  * @returns {HTMLDivElement}
@@ -470,24 +588,21 @@ const createPicker = (state, callbacks) => {
 
   familyWrapper.append(familyLabel, select);
 
-  const hoverWrapper = document.createElement('div');
-  hoverWrapper.className = 'form-check form-switch mb-0';
-
-  const hoverInput = document.createElement('input');
-  hoverInput.className = 'form-check-input';
-  hoverInput.type = 'checkbox';
-  hoverInput.role = 'switch';
-  hoverInput.id = 'pg-btn-hover-border';
-  hoverInput.checked = state.hoverBorder;
-  hoverInput.addEventListener('change', () => callbacks.onHoverBorderChange(hoverInput.checked));
-
-  const hoverLabel = document.createElement('label');
-  hoverLabel.className = 'form-check-label small';
-  hoverLabel.htmlFor = 'pg-btn-hover-border';
-  hoverLabel.innerHTML = '<code>hover-border</code>';
-
-  hoverWrapper.append(hoverInput, hoverLabel);
-  wrapper.append(familyWrapper, hoverWrapper);
+  wrapper.append(
+    familyWrapper,
+    createSwitch({
+      id: 'pg-btn-hover-border',
+      label: '<code>hover-border</code>',
+      checked: state.hoverBorder,
+      onChange: callbacks.onHoverBorderChange,
+    }),
+    createSwitch({
+      id: 'pg-btn-tag',
+      label: 'Render as <code>&lt;a&gt;</code>',
+      checked: state.tag === 'anchor',
+      onChange: (checked) => callbacks.onTagChange(checked ? 'anchor' : 'button'),
+    }),
+  );
 
   return wrapper;
 };
@@ -498,11 +613,14 @@ const createPicker = (state, callbacks) => {
  * @param {AppState} state
  * @returns {void}
  */
-const render = (container, { family, hoverBorder }) => {
-  const families = family === ALL_FAMILIES ? FAMILIES : FAMILIES.filter((f) => f.id === family);
+const render = (container, state) => {
+  const families =
+    state.family === ALL_FAMILIES
+      ? FAMILIES
+      : FAMILIES.filter((family) => family.id === state.family);
 
   const fragment = document.createDocumentFragment();
-  families.forEach((item) => fragment.appendChild(renderFamily(item, hoverBorder)));
+  families.forEach((family) => fragment.appendChild(renderFamily(family, state)));
   container.replaceChildren(fragment);
 };
 
@@ -521,11 +639,13 @@ export const mountButtonGroups = (mountId = 'pg-button-groups') => {
 
   const known = [ALL_FAMILIES, ...FAMILIES.map((family) => family.id)];
   const storedFamily = localStorage.getItem(FAMILY_STORAGE_KEY);
+  const storedTag = localStorage.getItem(TAG_STORAGE_KEY);
 
   /** @type {AppState} */
   const state = {
     family: known.includes(storedFamily) ? storedFamily : ALL_FAMILIES,
     hoverBorder: localStorage.getItem(HOVER_STORAGE_KEY) === 'true',
+    tag: storedTag === 'anchor' ? 'anchor' : 'button',
   };
 
   const results = document.createElement('div');
@@ -540,6 +660,11 @@ export const mountButtonGroups = (mountId = 'pg-button-groups') => {
     onHoverBorderChange: (enabled) => {
       state.hoverBorder = enabled;
       localStorage.setItem(HOVER_STORAGE_KEY, String(enabled));
+      render(results, state);
+    },
+    onTagChange: (tag) => {
+      state.tag = tag;
+      localStorage.setItem(TAG_STORAGE_KEY, tag);
       render(results, state);
     },
   });
