@@ -60,7 +60,15 @@ $button-tones: (
   border-color: transparent;
 
   &.hover-border {
-    box-shadow: 0 0 0 1px rgb(var(--ui-#{$tone}-rgb) / 0.32);
+    // Painted on the border, not on a box-shadow. A shadow is drawn outside the
+    // border box, so inside a `.btn-group` it overlaps the neighbour and the
+    // two semi-transparent edges composite into a 2px seam. The border is
+    // already 1px and transparent, so this costs no layout.
+    //
+    // 40% is the pre-composited equivalent of the old `rgb(tone / 0.32)` over
+    // the button's own `rgb(tone / 0.12)` background:
+    //   0.32 + 0.12 * (1 - 0.32) = 0.4016
+    border-color: solid-tint($tone, 40%, var(--btn-group-bg, var(--ui-canvas)));
   }
 
   &:hover:not(:disabled):not(.disabled) {
