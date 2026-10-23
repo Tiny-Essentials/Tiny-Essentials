@@ -16,7 +16,7 @@
 @mixin nav-underline($pseudo: 'after') {
   &::#{$pseudo} {
     position: absolute;
-    bottom: -0.25rem;
+    bottom: 0rem;
     left: 0;
     width: 0;
     height: 1px;

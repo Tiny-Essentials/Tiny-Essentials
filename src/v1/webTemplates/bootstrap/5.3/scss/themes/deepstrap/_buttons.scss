@@ -51,6 +51,13 @@ $button-tones: (
   --bs-btn-active-color: var(--ui-#{$tone});
   --bs-btn-disabled-color: var(--ui-#{$tone});
 
+  // Single source of truth for the outline. Bootstrap re-declares
+  // `border-color` on `:hover` and `:active` with a (0,2,0) selector, which
+  // outranks `.btn-subtle-*` and drops the border to `transparent` while the
+  // pointer is down. Every state below re-reads this variable instead of
+  // re-declaring the property, so the box keeps the same width everywhere.
+  --btn-border: transparent;
+
   // Group divider. Same rule as the outline variant: the tone is composited
   // over the group surface, never over the button's own 12% tint.
   --btn-group-border: color-mix(in srgb, var(--ui-#{$tone}) 40%, var(--btn-group-bg));
@@ -62,9 +69,7 @@ $button-tones: (
   // collapses borders with a negative margin, so a state that changes the
   // border width (or adds one where there was none) shifts the seam by 1px and
   // the active button paints a second frame on top of its neighbour.
-  border-width: 1px;
-  border-style: solid;
-  border-color: transparent;
+  border: 1px solid var(--btn-border);
 
   &.hover-border {
     // Painted on the border, not on a box-shadow: a shadow is drawn outside the
@@ -74,7 +79,14 @@ $button-tones: (
     // 40% is the pre-composited equivalent of the old `rgb(tone / 0.32)` over
     // the button's own `rgb(tone / 0.12)` background:
     //   0.32 + 0.12 * (1 - 0.32) = 0.4016
-    border-color: solid-tint($tone, 40%, var(--btn-group-bg, var(--ui-canvas)));
+    --btn-border: #{solid-tint($tone, 40%, var(--btn-group-bg, var(--ui-canvas)))};
+  }
+
+  // Re-asserted per state: see the note on `--btn-border`.
+  &:hover:not(:disabled):not(.disabled),
+  &:active:not(:disabled):not(.disabled),
+  &.active {
+    border-color: var(--btn-border);
   }
 
   &:hover:not(:disabled):not(.disabled) {
@@ -114,6 +126,16 @@ $button-tones: (
     border-color var(--ui-duration) var(--ui-ease),
     color var(--ui-duration) var(--ui-ease),
     box-shadow var(--ui-duration) var(--ui-ease);
+
+  .badge {
+    color: inherit !important;
+    background-color: color-mix(in srgb, currentColor 14%, transparent) !important;
+    border-color: color-mix(in srgb, currentColor 32%, transparent) !important;
+    transition:
+      color var(--ui-duration) var(--ui-ease),
+      background-color var(--ui-duration) var(--ui-ease),
+      border-color var(--ui-duration) var(--ui-ease);
+  }
 
   // Press feedback is colour-only. The shorter duration makes the press feel
   // immediate; the release keeps the base 160ms.
@@ -309,12 +331,6 @@ $button-tones: (
   @include subtle-variant('neutral-dark');
 }
 
-// ------------------------------------------------------------------ groups --
-// Every button paints its own 1px border. Two neighbours would draw a 2px
-// divider, so each button is pulled 1px over the previous one. This is only
-// invisible while the border colour is opaque and the width never changes,
-// which is why `solid-tint()` exists and why every state declares
-// `border-width: 1px`.
 .btn-group,
 .btn-group-vertical {
   // Surface the group sits on. Override it when the group is not on the page
@@ -325,26 +341,4 @@ $button-tones: (
     border-width: 1px;
     border-style: solid;
   }
-}
-
-.btn-group > .btn + .btn {
-  margin-left: -1px;
-}
-
-.btn-group-vertical > .btn + .btn {
-  margin-top: -1px;
-}
-
-// The hovered, focused or pressed button owns the shared border. The selector
-// list must stay in sync with every state that changes `border-color`, or the
-// active button renders underneath its neighbour and the seam doubles.
-.btn-group > .btn:hover,
-.btn-group > .btn:focus-visible,
-.btn-group > .btn:active,
-.btn-group > .btn.active,
-.btn-group-vertical > .btn:hover,
-.btn-group-vertical > .btn:focus-visible,
-.btn-group-vertical > .btn:active,
-.btn-group-vertical > .btn.active {
-  z-index: 1;
 }
