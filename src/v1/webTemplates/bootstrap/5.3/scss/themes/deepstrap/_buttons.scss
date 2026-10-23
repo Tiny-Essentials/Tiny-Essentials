@@ -59,11 +59,18 @@ $button-tones: (
   background-color: rgb(var(--ui-#{$tone}-rgb) / 0.12);
   border-color: transparent;
 
+  // The border is declared once, with the same width in every state. The group
+  // collapses borders with a negative margin, so a state that changes the
+  // border width (or adds one where there was none) shifts the seam by 1px and
+  // the active button paints a second frame on top of its neighbour.
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+
   &.hover-border {
-    // Painted on the border, not on a box-shadow. A shadow is drawn outside the
-    // border box, so inside a `.btn-group` it overlaps the neighbour and the
-    // two semi-transparent edges composite into a 2px seam. The border is
-    // already 1px and transparent, so this costs no layout.
+    // Painted on the border, not on a box-shadow: a shadow is drawn outside the
+    // border box and is not clipped by the neighbour, so inside a group it
+    // composites into a 2px seam.
     //
     // 40% is the pre-composited equivalent of the old `rgb(tone / 0.32)` over
     // the button's own `rgb(tone / 0.12)` background:
@@ -120,7 +127,6 @@ $button-tones: (
   &:focus-visible {
     outline: 2px solid var(--btn-tone);
     outline-offset: 2px;
-    box-shadow: none;
   }
 
   &:disabled,
@@ -307,64 +313,42 @@ $button-tones: (
 }
 
 // ------------------------------------------------------------------ groups --
-// Every button paints its own 1px border. Two neighbours would therefore draw
-// a 2px divider, so each button is pulled 1px over the previous one. The
-// overlap is only invisible while the border colour is opaque, which is why
-// `solid-tint()` exists: `color-mix(..., transparent)` would let the two
-// borders composite into a darker 2px seam.
+// Every button paints its own 1px border. Two neighbours would draw a 2px
+// divider, so each button is pulled 1px over the previous one. This is only
+// invisible while the border colour is opaque and the width never changes,
+// which is why `solid-tint()` exists and why every state declares
+// `border-width: 1px`.
 .btn-group,
 .btn-group-vertical {
   // Surface the group sits on. Override it when the group is not on the page
   // canvas, e.g. `.btn-group { --btn-group-bg: var(--ui-surface); }`.
   --btn-group-bg: var(--ui-canvas);
-}
 
-.btn-group-vertical {
   > .btn {
-    border-radius: 0;
-  }
-
-  > .btn:first-of-type {
-    border-top-left-radius: var(--bs-border-radius-sm);
-    border-top-right-radius: var(--bs-border-radius-sm);
-  }
-
-  > .btn:last-of-type {
-    border-bottom-right-radius: var(--bs-border-radius-sm);
-    border-bottom-left-radius: var(--bs-border-radius-sm);
-  }
-
-  > .btn + .btn {
-    border-top: 0;
+    position: relative;
+    border-width: 1px;
+    border-style: solid;
   }
 }
 
-.btn-group {
-  > .btn {
-    border-radius: 0;
-  }
-
-  > .btn:first-of-type {
-    border-top-left-radius: var(--bs-border-radius-sm);
-    border-bottom-left-radius: var(--bs-border-radius-sm);
-  }
-
-  > .btn:last-of-type {
-    border-top-right-radius: var(--bs-border-radius-sm);
-    border-bottom-right-radius: var(--bs-border-radius-sm);
-  }
-
-  > .btn + .btn {
-    margin-left: -1px;
-  }
+.btn-group > .btn + .btn {
+  margin-left: -1px;
 }
 
-// The hovered, focused or pressed button owns the shared border.
+.btn-group-vertical > .btn + .btn {
+  margin-top: -1px;
+}
+
+// The hovered, focused or pressed button owns the shared border. The selector
+// list must stay in sync with every state that changes `border-color`, or the
+// active button renders underneath its neighbour and the seam doubles.
 .btn-group > .btn:hover,
 .btn-group > .btn:focus-visible,
 .btn-group > .btn:active,
+.btn-group > .btn.active,
 .btn-group-vertical > .btn:hover,
 .btn-group-vertical > .btn:focus-visible,
-.btn-group-vertical > .btn:active {
+.btn-group-vertical > .btn:active,
+.btn-group-vertical > .btn.active {
   z-index: 1;
 }

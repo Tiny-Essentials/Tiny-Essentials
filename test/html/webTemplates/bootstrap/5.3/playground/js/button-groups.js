@@ -110,7 +110,7 @@ const LAYOUT_CLASS = Object.freeze({
 });
 
 /** @type {readonly string[]} */
-const DEFAULT_LABELS = Object.freeze(['Left', 'Middle', 'Right']);
+const DEFAULT_LABELS = Object.freeze(['Left', 'Left 2', 'Middle', 'Right 2', 'Right']);
 
 /** @type {string} */
 const FAMILY_STORAGE_KEY = 'pg-btn-family';
