@@ -2,8 +2,9 @@
  * @file Button group matrix for the Bootstrap 5.3 playground.
  *
  * Renders every button family (normal, ghost, subtle, outline) against every
- * tone, state, size and structure. A select limits the output to a single
- * family so a specific variant can be inspected in isolation.
+ * tone, state, size and structure. Two controls limit the output: a select
+ * picks the family and a switch toggles the opt-in `hover-border` modifier
+ * on every rendered button.
  */
 
 /**
@@ -26,7 +27,7 @@
  */
 
 /**
- * @typedef {'group' | 'vertical' | 'plain'} GroupLayout
+ * @typedef {'group' | 'vertical'} GroupLayout
  */
 
 /**
@@ -39,6 +40,18 @@
  * @property {'' | 'btn-sm' | 'btn-lg'} [size] Optional Bootstrap size class.
  * @property {readonly string[]} [labels] Visible labels, one per button.
  * @property {string} [ariaLabel] Accessible name of the group.
+ */
+
+/**
+ * @typedef {Object} AppState
+ * @property {string} family Currently selected family id, or `all`.
+ * @property {boolean} hoverBorder Whether the `hover-border` modifier is on.
+ */
+
+/**
+ * @typedef {Object} PickerCallbacks
+ * @property {(familyId: string) => void} onFamilyChange
+ * @property {(enabled: boolean) => void} onHoverBorderChange
  */
 
 /**
@@ -64,20 +77,22 @@ const TONES = Object.freeze([
 const STATES = Object.freeze(['default', 'active', 'disabled-attribute', 'disabled-class']);
 
 /** @type {readonly GroupLayout[]} */
-const LAYOUTS = Object.freeze(['group', 'vertical', 'plain']);
+const LAYOUTS = Object.freeze(['group', 'vertical']);
 
 /** @type {Readonly<Record<GroupLayout, string>>} */
 const LAYOUT_CLASS = Object.freeze({
   group: 'btn-group',
   vertical: 'btn-group-vertical',
-  plain: 'd-inline-flex flex-wrap gap-2',
 });
 
 /** @type {readonly string[]} */
 const DEFAULT_LABELS = Object.freeze(['Left', 'Middle', 'Right']);
 
 /** @type {string} */
-const STORAGE_KEY = 'pg-btn-family';
+const FAMILY_STORAGE_KEY = 'pg-btn-family';
+
+/** @type {string} */
+const HOVER_STORAGE_KEY = 'pg-btn-hover-border';
 
 /** @type {string} */
 const ALL_FAMILIES = 'all';
@@ -204,9 +219,10 @@ const createGroup = ({
 /**
  * Builds a `btn-toolbar` that mixes two groups of the same family.
  * @param {ButtonFamily} family
+ * @param {boolean} hoverBorder
  * @returns {HTMLDivElement}
  */
-const createToolbar = (family) => {
+const createToolbar = (family, hoverBorder) => {
   const toolbar = document.createElement('div');
   toolbar.className = 'btn-toolbar gap-2';
   toolbar.setAttribute('role', 'toolbar');
@@ -220,6 +236,7 @@ const createToolbar = (family) => {
       createGroup({
         toneClass: family.toneClass(tone),
         labels,
+        hoverBorder,
         ariaLabel: `${family.title} ${tone} toolbar group`,
       }),
     );
@@ -231,9 +248,10 @@ const createToolbar = (family) => {
 /**
  * Builds a radio group that uses the `btn-check` pattern.
  * @param {ButtonFamily} family
+ * @param {boolean} hoverBorder
  * @returns {HTMLDivElement}
  */
-const createRadioGroup = (family) => {
+const createRadioGroup = (family, hoverBorder) => {
   const wrapper = document.createElement('div');
   wrapper.className = 'btn-group';
   wrapper.setAttribute('role', 'group');
@@ -254,7 +272,9 @@ const createRadioGroup = (family) => {
     input.checked = index === 0;
 
     const labelElement = document.createElement('label');
-    labelElement.className = `btn ${toneClass}`;
+    labelElement.className = ['btn', toneClass, hoverBorder ? 'hover-border' : '']
+      .filter(Boolean)
+      .join(' ');
     labelElement.htmlFor = id;
     labelElement.textContent = label;
 
@@ -267,12 +287,15 @@ const createRadioGroup = (family) => {
 /**
  * Builds the `data-bs-toggle="button"` toggle for a family.
  * @param {ButtonFamily} family
+ * @param {boolean} hoverBorder
  * @returns {HTMLButtonElement}
  */
-const createToggle = (family) => {
+const createToggle = (family, hoverBorder) => {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = `btn ${family.toneClass('primary')}`;
+  button.className = ['btn', family.toneClass('primary'), hoverBorder ? 'hover-border' : '']
+    .filter(Boolean)
+    .join(' ');
   button.dataset.bsToggle = 'button';
   button.setAttribute('aria-pressed', 'false');
   button.textContent = 'Toggle me';
@@ -283,9 +306,10 @@ const createToggle = (family) => {
 /**
  * Renders every group variation of a single button family.
  * @param {ButtonFamily} family
+ * @param {boolean} hoverBorder
  * @returns {HTMLElement}
  */
-const renderFamily = (family) => {
+const renderFamily = (family, hoverBorder) => {
   const section = document.createElement('section');
   section.className = 'd-flex flex-column gap-2';
   section.id = `pg-btn-group-${family.id}`;
@@ -307,6 +331,7 @@ const renderFamily = (family) => {
     tones.appendChild(
       createGroup({
         toneClass: family.toneClass(tone),
+        hoverBorder,
         ariaLabel: `${family.title} ${tone} group`,
       }),
     );
@@ -319,7 +344,11 @@ const renderFamily = (family) => {
     extras.className = 'd-flex flex-wrap gap-2';
     family.extras.forEach((extra) => {
       extras.appendChild(
-        createGroup({ toneClass: extra.className, ariaLabel: `${extra.label} group` }),
+        createGroup({
+          toneClass: extra.className,
+          hoverBorder,
+          ariaLabel: `${extra.label} group`,
+        }),
       );
     });
     section.appendChild(extras);
@@ -333,6 +362,7 @@ const renderFamily = (family) => {
       createGroup({
         toneClass: family.toneClass('primary'),
         state,
+        hoverBorder,
         ariaLabel: `${family.title} ${state} group`,
       }),
     );
@@ -357,6 +387,7 @@ const renderFamily = (family) => {
           toneClass: family.toneClass(tone),
           labels: ['Enabled', 'Disabled', 'Enabled'],
           buttonStates: ['default', disabledState, 'default'],
+          hoverBorder,
           ariaLabel: `${family.title} ${tone} individual disabled group`,
         }),
       );
@@ -376,6 +407,7 @@ const renderFamily = (family) => {
       createGroup({
         toneClass: family.toneClass('primary'),
         size,
+        hoverBorder,
         ariaLabel: `${family.title} ${size || 'default'} group`,
       }),
     );
@@ -385,39 +417,8 @@ const renderFamily = (family) => {
   section.appendChild(createHeading('Toggle'));
   const toggles = document.createElement('div');
   toggles.className = 'd-flex flex-wrap gap-2';
-  toggles.appendChild(createToggle(family));
+  toggles.appendChild(createToggle(family, hoverBorder));
   section.appendChild(toggles);
-
-  section.appendChild(createHeading('Hover border'));
-  const hoverBorders = document.createElement('div');
-  hoverBorders.className = 'd-flex flex-wrap gap-2';
-  TONES.forEach((tone) => {
-    hoverBorders.appendChild(
-      createGroup({
-        toneClass: family.toneClass(tone),
-        labels: [tone],
-        hoverBorder: true,
-        layout: 'plain',
-        ariaLabel: `${family.title} ${tone} hover border`,
-      }),
-    );
-  });
-  section.appendChild(hoverBorders);
-
-  section.appendChild(createHeading('Hover border + state'));
-  const hoverBorderStates = document.createElement('div');
-  hoverBorderStates.className = 'd-flex flex-wrap gap-2';
-  STATES.forEach((state) => {
-    hoverBorderStates.appendChild(
-      createGroup({
-        toneClass: family.toneClass('primary'),
-        hoverBorder: true,
-        state,
-        ariaLabel: `${family.title} hover border ${state}`,
-      }),
-    );
-  });
-  section.appendChild(hoverBorderStates);
 
   section.appendChild(createHeading('Vertical'));
   const vertical = document.createElement('div');
@@ -426,46 +427,67 @@ const renderFamily = (family) => {
     createGroup({
       toneClass: family.toneClass('primary'),
       layout: 'vertical',
+      hoverBorder,
       ariaLabel: `${family.title} vertical group`,
     }),
   );
   section.appendChild(vertical);
 
   section.appendChild(createHeading('Toolbar'));
-  section.appendChild(createToolbar(family));
+  section.appendChild(createToolbar(family, hoverBorder));
 
   section.appendChild(createHeading('Radio (btn-check)'));
-  section.appendChild(createRadioGroup(family));
+  section.appendChild(createRadioGroup(family, hoverBorder));
 
   return section;
 };
 
 /**
- * Builds the family picker.
- * @param {string} selectedId Currently selected family id, or `all`.
- * @param {(familyId: string) => void} onChange Called with the new family id.
+ * Builds the family picker and the `hover-border` switch.
+ * @param {AppState} state
+ * @param {PickerCallbacks} callbacks
  * @returns {HTMLDivElement}
  */
-const createFamilyPicker = (selectedId, onChange) => {
+const createPicker = (state, callbacks) => {
   const wrapper = document.createElement('div');
-  wrapper.className = 'd-flex flex-wrap align-items-center gap-2';
+  wrapper.className = 'd-flex flex-wrap align-items-center gap-3';
 
-  const label = document.createElement('label');
-  label.className = 'form-label mb-0 small text-uppercase fw-bold text-body-secondary';
-  label.htmlFor = 'pg-btn-family';
-  label.textContent = 'Button family';
+  const familyWrapper = document.createElement('div');
+  familyWrapper.className = 'd-flex align-items-center gap-2';
+
+  const familyLabel = document.createElement('label');
+  familyLabel.className = 'form-label mb-0 small text-uppercase fw-bold text-body-secondary';
+  familyLabel.htmlFor = 'pg-btn-family';
+  familyLabel.textContent = 'Button family';
 
   const select = document.createElement('select');
   select.className = 'form-select form-select-sm w-auto';
   select.id = 'pg-btn-family';
-
   select.appendChild(new Option('All families', ALL_FAMILIES));
   FAMILIES.forEach((family) => select.appendChild(new Option(family.title, family.id)));
-  select.value = selectedId;
+  select.value = state.family;
+  select.addEventListener('change', () => callbacks.onFamilyChange(select.value));
 
-  select.addEventListener('change', () => onChange(select.value));
+  familyWrapper.append(familyLabel, select);
 
-  wrapper.append(label, select);
+  const hoverWrapper = document.createElement('div');
+  hoverWrapper.className = 'form-check form-switch mb-0';
+
+  const hoverInput = document.createElement('input');
+  hoverInput.className = 'form-check-input';
+  hoverInput.type = 'checkbox';
+  hoverInput.role = 'switch';
+  hoverInput.id = 'pg-btn-hover-border';
+  hoverInput.checked = state.hoverBorder;
+  hoverInput.addEventListener('change', () => callbacks.onHoverBorderChange(hoverInput.checked));
+
+  const hoverLabel = document.createElement('label');
+  hoverLabel.className = 'form-check-label small';
+  hoverLabel.htmlFor = 'pg-btn-hover-border';
+  hoverLabel.innerHTML = '<code>hover-border</code>';
+
+  hoverWrapper.append(hoverInput, hoverLabel);
+  wrapper.append(familyWrapper, hoverWrapper);
 
   return wrapper;
 };
@@ -473,15 +495,14 @@ const createFamilyPicker = (selectedId, onChange) => {
 /**
  * Renders the requested families into the container.
  * @param {HTMLElement} container
- * @param {string} familyId Family id, or `all`.
+ * @param {AppState} state
  * @returns {void}
  */
-const render = (container, familyId) => {
-  const families =
-    familyId === ALL_FAMILIES ? FAMILIES : FAMILIES.filter((family) => family.id === familyId);
+const render = (container, { family, hoverBorder }) => {
+  const families = family === ALL_FAMILIES ? FAMILIES : FAMILIES.filter((f) => f.id === family);
 
   const fragment = document.createDocumentFragment();
-  families.forEach((family) => fragment.appendChild(renderFamily(family)));
+  families.forEach((item) => fragment.appendChild(renderFamily(item, hoverBorder)));
   container.replaceChildren(fragment);
 };
 
@@ -499,18 +520,31 @@ export const mountButtonGroups = (mountId = 'pg-button-groups') => {
   }
 
   const known = [ALL_FAMILIES, ...FAMILIES.map((family) => family.id)];
-  const stored = localStorage.getItem(STORAGE_KEY);
-  const initial = known.includes(stored) ? stored : ALL_FAMILIES;
+  const storedFamily = localStorage.getItem(FAMILY_STORAGE_KEY);
+
+  /** @type {AppState} */
+  const state = {
+    family: known.includes(storedFamily) ? storedFamily : ALL_FAMILIES,
+    hoverBorder: localStorage.getItem(HOVER_STORAGE_KEY) === 'true',
+  };
 
   const results = document.createElement('div');
   results.className = 'd-flex flex-column gap-5';
 
-  const picker = createFamilyPicker(initial, (familyId) => {
-    localStorage.setItem(STORAGE_KEY, familyId);
-    render(results, familyId);
+  const picker = createPicker(state, {
+    onFamilyChange: (familyId) => {
+      state.family = familyId;
+      localStorage.setItem(FAMILY_STORAGE_KEY, familyId);
+      render(results, state);
+    },
+    onHoverBorderChange: (enabled) => {
+      state.hoverBorder = enabled;
+      localStorage.setItem(HOVER_STORAGE_KEY, String(enabled));
+      render(results, state);
+    },
   });
 
-  render(results, initial);
+  render(results, state);
   mount.replaceChildren(picker, results);
 };
 
