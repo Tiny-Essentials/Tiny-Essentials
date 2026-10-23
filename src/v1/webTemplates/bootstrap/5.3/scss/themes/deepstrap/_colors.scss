@@ -14,7 +14,6 @@
 //   @use 'themes/deepstrap/colors' with ($palette: (...));
 // =============================================================================
 
-@use 'sass:color';
 @use 'sass:map';
 @use 'sass:string';
 
@@ -221,13 +220,6 @@ $scrims: (
   }
 
   @return map.get($map, $role);
-}
-
-/// @param {String} $name - Key in `$constants`.
-/// @param {Number} $alpha - Target alpha, 0 to 1.
-/// @returns {Color} The constant with a custom alpha.
-@function with-alpha($name, $alpha) {
-  @return color.change(ui-color($name), $alpha: $alpha);
 }
 
 /// URL-encoded hex, for inline SVG data URIs.

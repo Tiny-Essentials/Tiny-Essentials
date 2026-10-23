@@ -57,7 +57,6 @@ $button-tones: (
 
   color: var(--ui-#{$tone});
   background-color: rgb(var(--ui-#{$tone}-rgb) / 0.12);
-  border-color: transparent;
 
   // The border is declared once, with the same width in every state. The group
   // collapses borders with a negative margin, so a state that changes the

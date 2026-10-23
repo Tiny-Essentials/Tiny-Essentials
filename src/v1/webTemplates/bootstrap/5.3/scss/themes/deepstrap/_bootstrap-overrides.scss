@@ -280,10 +280,6 @@ hr {
   opacity: 1;
 }
 
-.placeholder {
-  background-color: var(--ui-border-strong);
-}
-
 ::placeholder {
   color: var(--ui-text-muted);
   opacity: 0.65;
@@ -455,18 +451,6 @@ $badge-tones: (
 @keyframes placeholder-glow {
   50% {
     opacity: 0.2;
-  }
-}
-
-// ---------------------------------------------------------------- collapse --
-// Bootstrap animates height inline; we only need to align the easing.
-.collapsing {
-  transition: height 220ms var(--ui-ease);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .collapsing {
-    transition: none;
   }
 }
 
