@@ -95,6 +95,7 @@ const TONES = Object.freeze([
   'dark',
   'contrast',
   'contrast-inverse',
+  'pink',
 ]);
 
 /** @type {readonly ButtonState[]} */
@@ -125,6 +126,7 @@ const ICON_BADGE_ITEMS = Object.freeze([
   { tone: 'primary', label: 'Download', icon: 'bi-download' },
   { tone: 'success', label: 'Save', icon: 'bi-check-lg' },
   { tone: 'danger', label: 'Delete', icon: 'bi-trash' },
+  { tone: 'pink', label: 'Pink', icon: 'bi-flower2' },
   { tone: 'primary', label: 'Inbox', icon: 'bi-inbox', badge: '14' },
 ]);
 

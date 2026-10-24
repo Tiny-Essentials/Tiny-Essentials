@@ -1,24 +1,180 @@
+// =============================================================================
+// Pink plugin
+//
+// Self-contained: tokens, Bootstrap bridge, buttons, utilities, badges,
+// alerts and form validation for the `pink` family.
+//
+// Import after `buttons` in `_theme.scss`. No `@use` on purpose: the theme
+// uses legacy `@import`, so the variant mixins are already global.
+// =============================================================================
+
+// ------------------------------------------------------------------ tokens --
+// `--ui-*-rgb` is space-separated: the mixins compose it as
+// `rgb(var(--ui-pink-rgb) / 0.12)`.
+// `--bs-pink-rgb` is comma-separated: Bootstrap composes it as
+// `rgba(var(--bs-pink-rgb), 1)`.
 :root,
 [data-bs-theme='dark'] {
   --ui-pink: #ff5c9e;
   --ui-pink-rgb: 255 92 158;
   --ui-on-pink: #1a0410;
+
+  --bs-pink: #ff5c9e;
+  --bs-pink-rgb: 255, 92, 158;
+  --bs-pink-text-emphasis: #ff9ec4;
+  --bs-pink-bg-subtle: #2a0f1c;
+  --bs-pink-border-subtle: #5c2340;
 }
 
 [data-bs-theme='light'] {
   --ui-pink: #c2185b;
   --ui-pink-rgb: 194 24 91;
   --ui-on-pink: #ffffff;
+
+  --bs-pink: #c2185b;
+  --bs-pink-rgb: 194, 24, 91;
+  --bs-pink-text-emphasis: #8a0f40;
+  --bs-pink-bg-subtle: #fce4ec;
+  --bs-pink-border-subtle: #f4a6c2;
 }
 
+// ----------------------------------------------------------------- buttons --
+// `solid-variant` paints `background-color` and `color` directly. The
+// `--bs-btn-*` block below is what Bootstrap's own components read when they
+// need to repaint the button outside of the base state (checked, disabled,
+// inside a group, etc.).
 .btn-pink {
   @include solid-variant('pink');
+
+  --bs-btn-bg: var(--ui-pink);
+  --bs-btn-border-color: var(--ui-pink);
+  --bs-btn-hover-bg: color-mix(in srgb, var(--ui-pink) var(--btn-hover-amount), var(--btn-mix));
+  --bs-btn-hover-border-color: var(--bs-btn-hover-bg);
+  --bs-btn-active-bg: color-mix(in srgb, var(--ui-pink) var(--btn-press-amount), var(--btn-mix));
+  --bs-btn-active-border-color: var(--bs-btn-active-bg);
+  --bs-btn-disabled-bg: var(--ui-pink);
+  --bs-btn-disabled-border-color: var(--ui-pink);
+  --bs-btn-focus-shadow-rgb: var(--ui-pink-rgb);
 }
 
 .btn-outline-pink {
   @include outline-variant('pink');
+
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: var(--ui-pink);
+  --bs-btn-hover-bg: var(--ui-pink);
+  --bs-btn-hover-border-color: var(--ui-pink);
+  --bs-btn-active-bg: var(--ui-pink);
+  --bs-btn-active-border-color: var(--ui-pink);
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: var(--ui-pink);
+  --bs-btn-focus-shadow-rgb: var(--ui-pink-rgb);
 }
 
 .btn-subtle-pink {
   @include subtle-variant('pink');
+
+  --bs-btn-bg: rgb(var(--ui-pink-rgb) / 0.12);
+  --bs-btn-border-color: transparent;
+  --bs-btn-hover-bg: rgb(var(--ui-pink-rgb) / 0.2);
+  --bs-btn-hover-border-color: transparent;
+  --bs-btn-active-bg: rgb(var(--ui-pink-rgb) / 0.28);
+  --bs-btn-active-border-color: transparent;
+  --bs-btn-disabled-bg: rgb(var(--ui-pink-rgb) / 0.12);
+  --bs-btn-disabled-border-color: transparent;
+  --bs-btn-focus-shadow-rgb: var(--ui-pink-rgb);
+}
+
+// --------------------------------------------------------------- utilities --
+.text-pink {
+  color: rgba(var(--bs-pink-rgb), var(--bs-text-opacity, 1)) !important;
+}
+
+.bg-pink {
+  background-color: rgba(var(--bs-pink-rgb), var(--bs-bg-opacity, 1)) !important;
+}
+
+.border-pink {
+  border-color: rgba(var(--bs-pink-rgb), var(--bs-border-opacity, 1)) !important;
+}
+
+.text-bg-pink {
+  color: var(--ui-on-pink) !important;
+  background-color: rgba(var(--bs-pink-rgb), var(--bs-bg-opacity, 1)) !important;
+}
+
+.bg-pink-subtle {
+  background-color: var(--bs-pink-bg-subtle) !important;
+}
+
+.text-pink-emphasis {
+  color: var(--bs-pink-text-emphasis) !important;
+}
+
+.border-pink-subtle {
+  border-color: var(--bs-pink-border-subtle) !important;
+}
+
+// ------------------------------------------------------------------ badges --
+.badge.text-bg-pink {
+  color: var(--ui-pink) !important;
+  background-color: rgb(var(--ui-pink-rgb) / 0.12) !important;
+  border-color: rgb(var(--ui-pink-rgb) / 0.32);
+}
+
+// ------------------------------------------------------------------ alerts --
+.alert-pink {
+  --bs-alert-color: var(--ui-pink);
+  --bs-alert-bg: rgb(var(--ui-pink-rgb) / 0.1);
+  --bs-alert-border-color: rgb(var(--ui-pink-rgb) / 0.28);
+}
+
+// -------------------------------------------------------------- list group --
+.list-group-item-pink {
+  --bs-list-group-color: var(--ui-pink);
+  --bs-list-group-bg: rgb(var(--ui-pink-rgb) / 0.08);
+  --bs-list-group-border-color: rgb(var(--ui-pink-rgb) / 0.24);
+}
+
+// ------------------------------------------------------------------- links --
+.link-pink {
+  color: var(--ui-pink);
+
+  &:hover,
+  &:focus {
+    color: color-mix(in srgb, var(--ui-pink) 80%, var(--ui-heading));
+  }
+}
+
+// ---------------------------------------------------------------- progress --
+.progress-bar-pink {
+  --bs-progress-bar-bg: var(--ui-pink);
+}
+
+// ------------------------------------------------------------------ tables --
+.table-pink {
+  --bs-table-color: var(--ui-pink);
+  --bs-table-bg: rgb(var(--ui-pink-rgb) / 0.08);
+  --bs-table-border-color: rgb(var(--ui-pink-rgb) / 0.24);
+  --bs-table-striped-bg: rgb(var(--ui-pink-rgb) / 0.12);
+  --bs-table-hover-bg: rgb(var(--ui-pink-rgb) / 0.16);
+}
+
+// -------------------------------------------------------- form validation --
+.was-validated .form-control:valid,
+.form-control.is-valid {
+  &.form-control-pink {
+    border-color: var(--ui-pink);
+  }
+}
+
+.form-check-input-pink {
+  &:checked {
+    background-color: var(--ui-pink);
+    border-color: var(--ui-pink);
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgb(var(--ui-pink-rgb) / 0.2);
+  }
 }
