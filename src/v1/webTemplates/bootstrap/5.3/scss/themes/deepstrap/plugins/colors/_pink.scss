@@ -185,3 +185,19 @@
     box-shadow: 0 0 0 3px rgb(var(--ui-pink-rgb) / 0.2);
   }
 }
+
+// ------------------------------------------------------------------ ghost --
+.btn-ghost-pink {
+  --bs-btn-color: var(--ui-pink);
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: transparent;
+  --bs-btn-hover-color: var(--ui-pink);
+  --bs-btn-hover-bg: color-mix(in srgb, var(--ui-pink) 12%, transparent);
+  --bs-btn-hover-border-color: transparent;
+  --bs-btn-active-color: var(--ui-pink);
+  --bs-btn-active-bg: color-mix(in srgb, var(--ui-pink) 20%, transparent);
+  --bs-btn-active-border-color: transparent;
+  --bs-btn-disabled-color: var(--ui-pink);
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: transparent;
+}
