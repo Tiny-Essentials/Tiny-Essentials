@@ -194,6 +194,23 @@ $ghost-tones: (
   --bs-btn-active-color: var(--ui-on-#{$tone});
   --bs-btn-disabled-color: var(--ui-on-#{$tone});
 
+  // Bootstrap bridge. `.btn:hover` and `.btn:active` repaint
+  // `background-color` from these variables at (0,2,0), the same specificity
+  // as `.btn-<tone>:hover`. Without them, the winner depends on bundle order.
+  --bs-btn-bg: var(--ui-#{$tone});
+  --bs-btn-border-color: var(--ui-#{$tone});
+  --bs-btn-hover-bg: color-mix(in srgb, var(--ui-#{$tone}) var(--btn-hover-amount), var(--btn-mix));
+  --bs-btn-hover-border-color: var(--bs-btn-hover-bg);
+  --bs-btn-active-bg: color-mix(
+    in srgb,
+    var(--ui-#{$tone}) var(--btn-press-amount),
+    var(--btn-mix)
+  );
+  --bs-btn-active-border-color: var(--bs-btn-active-bg);
+  --bs-btn-disabled-bg: var(--ui-#{$tone});
+  --bs-btn-disabled-border-color: var(--ui-#{$tone});
+  --bs-btn-focus-shadow-rgb: var(--ui-#{$tone}-rgb);
+
   // Group divider. Opaque: the ink mixed into the fill, so the 1px overlap
   // between two buttons cannot double the alpha.
   --btn-group-border: color-mix(in srgb, var(--ui-on-#{$tone}) 40%, var(--ui-#{$tone}));
@@ -234,6 +251,21 @@ $ghost-tones: (
   --bs-btn-hover-color: var(--ui-on-#{$tone});
   --bs-btn-active-color: var(--ui-on-#{$tone});
   --bs-btn-disabled-color: var(--ui-#{$tone});
+
+  // Bootstrap bridge. Same reason as `solid-variant`.
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: var(--ui-#{$tone});
+  --bs-btn-hover-bg: var(--ui-#{$tone});
+  --bs-btn-hover-border-color: var(--ui-#{$tone});
+  --bs-btn-active-bg: color-mix(
+    in srgb,
+    var(--ui-#{$tone}) var(--btn-press-amount),
+    var(--btn-mix)
+  );
+  --bs-btn-active-border-color: var(--bs-btn-active-bg);
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: var(--ui-#{$tone});
+  --bs-btn-focus-shadow-rgb: var(--ui-#{$tone}-rgb);
 
   // Group divider. Opaque: the tone is pre-composited over the surface the
   // group sits on, so two overlapping borders cannot double their alpha.

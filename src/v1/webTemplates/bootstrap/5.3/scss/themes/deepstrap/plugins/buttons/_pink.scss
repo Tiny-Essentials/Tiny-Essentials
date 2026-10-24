@@ -36,50 +36,16 @@
 }
 
 // ----------------------------------------------------------------- buttons --
-// `solid-variant` / `outline-variant` / `subtle-variant` paint
-// `background-color` and `color` directly. The `--bs-btn-*` block is what
-// Bootstrap's own components read when they repaint the button outside of the
-// base state (checked, disabled, inside a group).
 .btn-pink {
   @include solid-variant('pink');
-
-  --bs-btn-bg: var(--ui-pink);
-  --bs-btn-border-color: var(--ui-pink);
-  --bs-btn-hover-bg: color-mix(in srgb, var(--ui-pink) var(--btn-hover-amount), var(--btn-mix));
-  --bs-btn-hover-border-color: var(--bs-btn-hover-bg);
-  --bs-btn-active-bg: color-mix(in srgb, var(--ui-pink) var(--btn-press-amount), var(--btn-mix));
-  --bs-btn-active-border-color: var(--bs-btn-active-bg);
-  --bs-btn-disabled-bg: var(--ui-pink);
-  --bs-btn-disabled-border-color: var(--ui-pink);
-  --bs-btn-focus-shadow-rgb: var(--ui-pink-rgb);
 }
 
 .btn-outline-pink {
   @include outline-variant('pink');
-
-  --bs-btn-bg: transparent;
-  --bs-btn-border-color: var(--ui-pink);
-  --bs-btn-hover-bg: var(--ui-pink);
-  --bs-btn-hover-border-color: var(--ui-pink);
-  --bs-btn-active-bg: var(--ui-pink);
-  --bs-btn-active-border-color: var(--ui-pink);
-  --bs-btn-disabled-bg: transparent;
-  --bs-btn-disabled-border-color: var(--ui-pink);
-  --bs-btn-focus-shadow-rgb: var(--ui-pink-rgb);
 }
 
 .btn-subtle-pink {
   @include subtle-variant('pink');
-
-  --bs-btn-bg: rgb(var(--ui-pink-rgb) / 0.12);
-  --bs-btn-border-color: transparent;
-  --bs-btn-hover-bg: rgb(var(--ui-pink-rgb) / 0.2);
-  --bs-btn-hover-border-color: transparent;
-  --bs-btn-active-bg: rgb(var(--ui-pink-rgb) / 0.28);
-  --bs-btn-active-border-color: transparent;
-  --bs-btn-disabled-bg: rgb(var(--ui-pink-rgb) / 0.12);
-  --bs-btn-disabled-border-color: transparent;
-  --bs-btn-focus-shadow-rgb: var(--ui-pink-rgb);
 }
 
 // --------------------------------------------------------------- btn-group --
