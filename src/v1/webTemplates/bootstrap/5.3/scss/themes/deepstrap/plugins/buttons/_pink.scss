@@ -1,11 +1,8 @@
 // =============================================================================
 // Pink plugin
 //
-// Self-contained: tokens, Bootstrap bridge, buttons, utilities, badges,
-// alerts and form validation for the `pink` family.
-//
-// Import after `buttons` in `_theme.scss`. No `@use` on purpose: the theme
-// uses legacy `@import`, so the variant mixins are already global.
+// Self-contained: tokens, buttons, group states, badges, alerts, utilities.
+// Import after `buttons` in `_theme.scss`.
 // =============================================================================
 
 // ------------------------------------------------------------------ tokens --
@@ -39,10 +36,10 @@
 }
 
 // ----------------------------------------------------------------- buttons --
-// `solid-variant` paints `background-color` and `color` directly. The
-// `--bs-btn-*` block below is what Bootstrap's own components read when they
-// need to repaint the button outside of the base state (checked, disabled,
-// inside a group, etc.).
+// `solid-variant` / `outline-variant` / `subtle-variant` paint
+// `background-color` and `color` directly. The `--bs-btn-*` block is what
+// Bootstrap's own components read when they repaint the button outside of the
+// base state (checked, disabled, inside a group).
 .btn-pink {
   @include solid-variant('pink');
 
@@ -85,6 +82,48 @@
   --bs-btn-focus-shadow-rgb: var(--ui-pink-rgb);
 }
 
+// --------------------------------------------------------------- btn-group --
+// Bootstrap collapses the seam with `margin-left: -1px`, so two neighbours
+// share the same 1px line. Without an explicit paint order, a hovered button
+// covers the active one. Mirrors the rule in `_buttons.scss` so the plugin
+// stays self-contained.
+.btn-group > .btn-pink,
+.btn-group > .btn-outline-pink,
+.btn-group > .btn-subtle-pink,
+.btn-group-vertical > .btn-pink,
+.btn-group-vertical > .btn-outline-pink,
+.btn-group-vertical > .btn-subtle-pink {
+  position: relative;
+}
+
+.btn-group > .btn-pink:hover:not(:disabled):not(.disabled),
+.btn-group > .btn-outline-pink:hover:not(:disabled):not(.disabled),
+.btn-group > .btn-subtle-pink:hover:not(:disabled):not(.disabled),
+.btn-group-vertical > .btn-pink:hover:not(:disabled):not(.disabled),
+.btn-group-vertical > .btn-outline-pink:hover:not(:disabled):not(.disabled),
+.btn-group-vertical > .btn-subtle-pink:hover:not(:disabled):not(.disabled) {
+  z-index: 1;
+}
+
+.btn-group > .btn-pink.active,
+.btn-group > .btn-pink:active:not(:disabled):not(.disabled),
+.btn-group > .btn-outline-pink.active,
+.btn-group > .btn-outline-pink:active:not(:disabled):not(.disabled),
+.btn-group > .btn-subtle-pink.active,
+.btn-group > .btn-subtle-pink:active:not(:disabled):not(.disabled),
+.btn-check:checked + .btn-pink,
+.btn-check:checked + .btn-outline-pink,
+.btn-check:checked + .btn-subtle-pink {
+  z-index: 2;
+}
+
+// `--btn-fill` is the source of truth for the solid fill. Bootstrap's
+// `.btn-check:checked + .btn` repaints `background-color` from
+// `--bs-btn-active-bg`, so keep both in sync.
+.btn-check:checked + .btn-pink {
+  --btn-fill: color-mix(in srgb, var(--ui-pink) var(--btn-press-amount), var(--btn-mix));
+}
+
 // --------------------------------------------------------------- utilities --
 .text-pink {
   color: rgba(var(--bs-pink-rgb), var(--bs-text-opacity, 1)) !important;
@@ -116,10 +155,19 @@
 }
 
 // ------------------------------------------------------------------ badges --
+// Standalone badge. The `.btn &` override below restores the theme's
+// "inherit from button" behaviour, which the rule above would otherwise
+// clobber (same specificity, plugin loads last).
 .badge.text-bg-pink {
   color: var(--ui-pink) !important;
   background-color: rgb(var(--ui-pink-rgb) / 0.12) !important;
   border-color: rgb(var(--ui-pink-rgb) / 0.32);
+}
+
+.btn .badge.text-bg-pink {
+  color: inherit !important;
+  background-color: color-mix(in srgb, currentColor 14%, transparent) !important;
+  border-color: color-mix(in srgb, currentColor 32%, transparent) !important;
 }
 
 // ------------------------------------------------------------------ alerts --
@@ -161,13 +209,6 @@
 }
 
 // -------------------------------------------------------- form validation --
-.was-validated .form-control:valid,
-.form-control.is-valid {
-  &.form-control-pink {
-    border-color: var(--ui-pink);
-  }
-}
-
 .form-check-input-pink {
   &:checked {
     background-color: var(--ui-pink);
