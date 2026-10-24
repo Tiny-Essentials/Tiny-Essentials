@@ -209,11 +209,20 @@ $scrims: (
   @return map.get($constants, $name);
 }
 
+$_themes: (
+  'dark': $theme-dark,
+  'light': $theme-light,
+);
+
 /// @param {String} $role - Semantic role, e.g. `canvas`.
 /// @param {String} $theme - `dark` or `light`.
 /// @returns {Color} The role colour for the given theme.
 @function theme-color($role, $theme: 'dark') {
-  $map: if($theme == 'light', $theme-light, $theme-dark);
+  @if not map.has-key($_themes, $theme) {
+    @error 'Unknown theme: #{$theme}';
+  }
+
+  $map: map.get($_themes, $theme);
 
   @if not map.has-key($map, $role) {
     @error 'Unknown colour role: #{$role}';

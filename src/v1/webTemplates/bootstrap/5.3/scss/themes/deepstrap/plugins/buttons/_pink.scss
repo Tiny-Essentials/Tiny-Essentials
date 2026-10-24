@@ -1,0 +1,24 @@
+:root,
+[data-bs-theme='dark'] {
+  --ui-pink: #ff5c9e;
+  --ui-pink-rgb: 255 92 158;
+  --ui-on-pink: #1a0410;
+}
+
+[data-bs-theme='light'] {
+  --ui-pink: #c2185b;
+  --ui-pink-rgb: 194 24 91;
+  --ui-on-pink: #ffffff;
+}
+
+.btn-pink {
+  @include solid-variant('pink');
+}
+
+.btn-outline-pink {
+  @include outline-variant('pink');
+}
+
+.btn-subtle-pink {
+  @include subtle-variant('pink');
+}

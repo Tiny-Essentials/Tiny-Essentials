@@ -348,7 +348,6 @@ const readScss = async (filePath, fileName, req, res) => {
       style: 'expanded',
       loadPaths: [path.dirname(filePath), nodeModulesDir],
       quietDeps: true,
-      silenceDeprecations: ['import', 'global-builtin', 'color-functions', 'mixed-decls'],
     });
     res.type('text/css').send(result.css);
   } catch (err) {
