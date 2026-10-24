@@ -10,6 +10,7 @@ $line-height-base: 1.5;
 
 // -------------------------------------------------------------- brand colors --
 $primary: theme-color('accent');
+$secondary: theme-color('text-muted');
 $success: theme-color('success');
 $danger: theme-color('error');
 $warning: theme-color('warn');
@@ -48,3 +49,20 @@ $btn-focus-width: 2px;
 // --------------------------------------------------------------- focus ring --
 $focus-ring-color: rgba(theme-color('accent'), 0.5);
 $focus-ring-width: 2px;
+
+$colors: (
+  'blue': palette('indigo-500'),
+  'indigo': palette('indigo-500'),
+  'purple': palette('indigo-700'),
+  'pink': palette('red-500'),
+  'red': palette('red-500'),
+  'orange': palette('amber-500'),
+  'yellow': palette('amber-500'),
+  'green': palette('green-500'),
+  'teal': palette('cyan-500'),
+  'cyan': palette('cyan-500'),
+  'black': palette('ink-000'),
+  'white': palette('paper-000'),
+  'gray': palette('slate-400'),
+  'gray-dark': palette('slate-600'),
+);

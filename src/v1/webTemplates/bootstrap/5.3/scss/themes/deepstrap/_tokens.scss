@@ -83,6 +83,20 @@ $alphas: (
   --bs-code-color: var(--ui-info);
   --bs-highlight-bg: rgb(var(--ui-warn-rgb) / 0.24);
   @include bootstrap-subtle-bridge();
+
+  // Bridge the theme colors so .text-primary, .bg-primary, .border-primary
+  // follow the active theme instead of the build-time value.
+  @each $name, $token in $subtle-tokens {
+    --bs-#{$name}: var(--ui-#{$token});
+    --bs-#{$name}-rgb: #{channels(map.get($theme, $token))};
+  }
+
+  // `light` and `dark` are not in $subtle-tokens on purpose (they are
+  // surfaces, not accents), so bridge them explicitly.
+  --bs-light: var(--ui-neutral-light);
+  --bs-light-rgb: var(--ui-neutral-light-rgb);
+  --bs-dark: var(--ui-neutral-dark);
+  --bs-dark-rgb: var(--ui-neutral-dark-rgb);
 }
 
 /// Bridges the `-subtle` and `-emphasis` scales into the `--ui-*` tokens.
