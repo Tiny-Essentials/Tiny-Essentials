@@ -1,31 +1,110 @@
 // =============================================================================
 // Buttons
-// Flat fill + lamp glow on hover. Add a colour to $button-tones and every
-// variant (solid, outline, subtle) is generated.
+// Flat fill + lamp glow on hover.
+//
+// To add a new button family, add an entry to `$button-families`:
+//
+//   'my-tone': (tone: 'my-token'),
+//
+// The solid, outline and subtle variants are generated automatically.
 // =============================================================================
 
-$button-tones: (
-  'primary': 'accent',
-  'success': 'success',
-  'danger': 'error',
-  'warning': 'warn',
-  'info': 'info',
+@use 'sass:list';
+@use 'sass:map';
+
+// =============================================================================
+// 1. Configuration
+// =============================================================================
+
+/// Defaults merged into every `$button-families` entry.
+///
+/// @type Map
+/// @prop {String|null} mix      - Overrides `--btn-mix`.
+/// @prop {String|null} hover    - Overrides `--btn-hover-amount`.
+/// @prop {String|null} press    - Overrides `--btn-press-amount`.
+/// @prop {Boolean}     seam     - Draws a stronger outline edge.
+/// @prop {List}        variants - Which variants to emit.
+$button-defaults: (
+  'mix': null,
+  'hover': null,
+  'press': null,
+  'seam': false,
+  'variants': (
+    'solid',
+    'outline',
+    'subtle',
+  ),
+);
+
+/// Every button family. One entry generates up to three classes:
+///
+///   .btn-<name>          solid
+///   .btn-outline-<name>  outline
+///   .btn-subtle-<name>   subtle
+///
+/// @type Map
+$button-families: (
+  'primary': (
+    tone: 'accent',
+  ),
+  'secondary': (
+    tone: 'text-muted',
+  ),
+  'success': (
+    tone: 'success',
+  ),
+  'danger': (
+    tone: 'error',
+  ),
+  'warning': (
+    tone: 'warn',
+  ),
+  'info': (
+    tone: 'info',
+  ),
+  'light': (
+    tone: 'neutral-light',
+    mix: 'rgb(var(--ui-shade-rgb))',
+    hover: '92%',
+    press: '82%',
+    seam: true,
+  ),
+  'dark': (
+    tone: 'neutral-dark',
+    mix: 'var(--ui-neutral-light)',
+    hover: '82%',
+    press: '72%',
+    seam: true,
+  ),
+);
+
+/// Ghost module configuration. Must mirror `$button-families`.
+$ghost-tones: (
+  'primary': var(--ui-accent),
+  'secondary': var(--ui-text-muted),
+  'success': var(--ui-success),
+  'danger': var(--ui-error),
+  'warning': var(--ui-warn),
+  'info': var(--ui-info),
+  'light': var(--ui-neutral-light),
+  'dark': var(--ui-neutral-dark),
 );
 
 @use '../../components/buttons/_buttons-ghost.scss' with (
-  $tones: (
-    'primary': var(--ui-accent),
-    'secondary': var(--ui-text-muted),
-    'success': var(--ui-success),
-    'danger': var(--ui-error),
-    'warning': var(--ui-warn),
-    'info': var(--ui-info),
-    'light': var(--ui-neutral-light),
-    'dark': var(--ui-neutral-dark),
-  )
+  $tones: $ghost-tones
 );
 
-// ------------------------------------------------------------------ helpers --
+// Fail loud during development if a family is missing from the ghost map.
+@each $name, $config in $button-families {
+  @if not map.has-key($ghost-tones, $name) {
+    @warn 'Button family `#{$name}` is missing from `$ghost-tones`.';
+  }
+}
+
+// =============================================================================
+// 2. Primitives
+// =============================================================================
+
 /// Blends a theme tone into an opaque surface colour.
 ///
 /// `color-mix(..., transparent)` returns a translucent colour. Two adjacent
@@ -41,7 +120,10 @@ $button-tones: (
   @return color-mix(in srgb, var(--ui-#{$tone}) #{$amount}, #{$base});
 }
 
-// ------------------------------------------------------------------ mixins --
+// =============================================================================
+// 3. Variant mixins
+// =============================================================================
+
 /// @param {String} $tone - Token suffix, without the `--ui-` prefix.
 @mixin subtle-variant($tone) {
   --btn-tone: var(--ui-#{$tone});
@@ -101,55 +183,6 @@ $button-tones: (
   }
 }
 
-// -------------------------------------------------------------------- base --
-.btn {
-  --bs-btn-border-radius: var(--bs-border-radius-sm);
-  --bs-btn-disabled-opacity: 0.4;
-  --btn-tone: var(--ui-accent);
-  --btn-tone-rgb: var(--ui-accent-rgb);
-  --btn-glow: none;
-
-  // Hover and press mix the tone toward `--btn-mix`. Light buttons override
-  // all three, because mixing white with the (light) heading is a no-op.
-  --btn-mix: var(--ui-heading);
-  --btn-hover-amount: 76%;
-  --btn-press-amount: 68%;
-
-  border: 1px solid var(--bs-btn-border-color, transparent);
-  transition:
-    background-color var(--ui-duration) var(--ui-ease),
-    border-color var(--ui-duration) var(--ui-ease),
-    color var(--ui-duration) var(--ui-ease),
-    box-shadow var(--ui-duration) var(--ui-ease);
-
-  .badge {
-    color: inherit !important;
-    background-color: color-mix(in srgb, currentColor 14%, transparent) !important;
-    border-color: color-mix(in srgb, currentColor 32%, transparent) !important;
-    transition:
-      color var(--ui-duration) var(--ui-ease),
-      background-color var(--ui-duration) var(--ui-ease),
-      border-color var(--ui-duration) var(--ui-ease);
-  }
-
-  // Press feedback is colour-only. The shorter duration makes the press feel
-  // immediate; the release keeps the base 160ms.
-  &:active:not(:disabled):not(.disabled) {
-    transition-duration: 60ms;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--btn-tone);
-    outline-offset: 2px;
-  }
-
-  &:disabled,
-  &.disabled {
-    pointer-events: none;
-  }
-}
-
-// ------------------------------------------------------------------ mixins --
 /// Emits a solid variant.
 ///
 /// @param {String} $tone - Token suffix, without the `--ui-` prefix.
@@ -238,92 +271,128 @@ $button-tones: (
   }
 }
 
-// ------------------------------------------------------------------- tones --
-@each $name, $token in $button-tones {
-  .btn-#{$name} {
-    @include solid-variant($token);
+// =============================================================================
+// 4. Base
+// =============================================================================
+
+.btn {
+  --bs-btn-border-radius: var(--bs-border-radius-sm);
+  --bs-btn-disabled-opacity: 0.4;
+  --btn-tone: var(--ui-accent);
+  --btn-tone-rgb: var(--ui-accent-rgb);
+  --btn-glow: none;
+
+  // Hover and press mix the tone toward `--btn-mix`. Light buttons override
+  // all three, because mixing white with the (light) heading is a no-op.
+  --btn-mix: var(--ui-heading);
+  --btn-hover-amount: 76%;
+  --btn-press-amount: 68%;
+
+  border: 1px solid var(--bs-btn-border-color, transparent);
+  transition:
+    background-color var(--ui-duration) var(--ui-ease),
+    border-color var(--ui-duration) var(--ui-ease),
+    color var(--ui-duration) var(--ui-ease),
+    box-shadow var(--ui-duration) var(--ui-ease);
+
+  .badge {
+    color: inherit !important;
+    background-color: color-mix(in srgb, currentColor 14%, transparent) !important;
+    border-color: color-mix(in srgb, currentColor 32%, transparent) !important;
+    transition:
+      color var(--ui-duration) var(--ui-ease),
+      background-color var(--ui-duration) var(--ui-ease),
+      border-color var(--ui-duration) var(--ui-ease);
   }
 
-  .btn-outline-#{$name} {
-    @include outline-variant($token);
+  // Press feedback is colour-only. The shorter duration makes the press feel
+  // immediate; the release keeps the base 160ms.
+  &:active:not(:disabled):not(.disabled) {
+    transition-duration: 60ms;
   }
 
-  .btn-subtle-#{$name} {
-    @include subtle-variant($token);
+  &:focus-visible {
+    outline: 2px solid var(--btn-tone);
+    outline-offset: 2px;
+  }
+
+  &:disabled,
+  &.disabled {
+    pointer-events: none;
   }
 }
 
-// ------------------------------------------------------------------ glow --
+// =============================================================================
+// 5. Generator
+// =============================================================================
+
+/// Emits the `--btn-*` overrides for a single family.
+///
+/// @param {Map} $config - Merged `$button-families` entry.
+@mixin button-overrides($config) {
+  $mix: map.get($config, 'mix');
+  $hover: map.get($config, 'hover');
+  $press: map.get($config, 'press');
+
+  @if $mix != null {
+    --btn-mix: #{$mix};
+  }
+
+  @if $hover != null {
+    --btn-hover-amount: #{$hover};
+  }
+
+  @if $press != null {
+    --btn-press-amount: #{$press};
+  }
+}
+
+/// Emits the variants for a single family.
+///
+/// @param {String} $name - Class suffix, e.g. `primary`.
+/// @param {Map} $config - Entry from `$button-families`.
+@mixin button-family($name, $config) {
+  $config: map.merge($button-defaults, $config);
+  $tone: map.get($config, 'tone');
+  $seam: map.get($config, 'seam');
+  $variants: map.get($config, 'variants');
+
+  @if list.index($variants, 'solid') {
+    .btn-#{$name} {
+      @include solid-variant($tone);
+      @include button-overrides($config);
+    }
+  }
+
+  @if list.index($variants, 'outline') {
+    .btn-outline-#{$name} {
+      @include outline-variant($tone, $seam: $seam);
+      @include button-overrides($config);
+    }
+  }
+
+  @if list.index($variants, 'subtle') {
+    .btn-subtle-#{$name} {
+      @include subtle-variant($tone);
+      @include button-overrides($config);
+    }
+  }
+}
+
+@each $name, $config in $button-families {
+  @include button-family($name, $config);
+}
+
+// =============================================================================
+// 6. Utilities
+// =============================================================================
+
 // Opt-in. Every variant declares `--btn-glow`; this is the only rule that
 // paints it, so a variant never needs to know whether the glow is enabled.
 .btn-lighting {
   &:hover:not(:disabled):not(.disabled) {
     box-shadow: var(--btn-glow);
   }
-}
-
-// ----------------------------------------------------------------- neutral --
-.btn-outline-secondary {
-  @include outline-variant('text-muted');
-}
-
-.btn-secondary {
-  @include solid-variant('text-muted');
-}
-
-.btn-light {
-  @include solid-variant('neutral-light');
-}
-
-.btn-dark {
-  @include solid-variant('neutral-dark');
-}
-
-.btn-outline-light {
-  @include outline-variant('neutral-light', $seam: true);
-}
-
-.btn-outline-dark {
-  @include outline-variant('neutral-dark', $seam: true);
-}
-
-// `--ui-heading` matches the button fill at one end of the scale, so the
-// default mix is a no-op: `neutral-light` on the dark theme, `neutral-dark`
-// on the light one. These buttons mix toward the opposite pole instead.
-.btn-light,
-.btn-outline-light {
-  --btn-mix: rgb(var(--ui-shade-rgb));
-  --btn-press-amount: 82%;
-}
-
-.btn-light {
-  --btn-hover-amount: 92%;
-}
-
-.btn-dark,
-.btn-outline-dark {
-  --btn-mix: var(--ui-neutral-light);
-  --btn-press-amount: 72%;
-}
-
-.btn-dark {
-  --btn-hover-amount: 82%;
-}
-
-// ------------------------------------------------------- subtle neutrals --
-// `.btn-subtle-secondary` is the neutral counterpart of the tonal subtle
-// buttons. It uses the surface scale instead of the accent scale, so it
-// stays readable on both themes.
-.btn-subtle-secondary {
-  @include subtle-variant('text-muted');
-}
-
-.btn-subtle-light {
-  @include subtle-variant('neutral-light');
-}
-
-.btn-subtle-dark {
-  @include subtle-variant('neutral-dark');
 }
 
 .btn-group,
