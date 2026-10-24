@@ -402,7 +402,24 @@ $ghost-tones: (
   --btn-group-bg: var(--ui-canvas);
 
   > .btn {
+    position: relative;
     border-width: 1px;
     border-style: solid;
+  }
+
+  // Paint order: active > hover > default. Without this, a hovered button
+  // paints its border over the active one because both occupy the same 1px
+  // line (Bootstrap collapses the seam with `margin-left: -1px`).
+  > .btn:hover:not(:disabled):not(.disabled),
+  > .btn:focus-visible:not(:disabled):not(.disabled) {
+    z-index: 1;
+  }
+
+  // The active button must always win the paint order, otherwise a hovered
+  // neighbour covers its border.
+  > .btn.active,
+  > .btn:active:not(:disabled):not(.disabled),
+  > .btn-check:checked + .btn {
+    z-index: 2;
   }
 }
