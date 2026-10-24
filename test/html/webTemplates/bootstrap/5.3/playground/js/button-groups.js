@@ -2,10 +2,13 @@
  * @file Button group matrix for the Bootstrap 5.3 playground.
  *
  * Renders every button family (normal, ghost, subtle, outline) against every
- * tone, state, size and structure. Three controls limit the output: a select
- * picks the family, a switch toggles the opt-in `hover-border` modifier and a
- * second switch swaps every `<button>` for an `<a role="button">`.
+ * tone, state, size and structure. Four controls limit the output: a family
+ * select, a tone multi-select (all tones on by default) and two switches that
+ * toggle the `hover-border` modifier and swap every `<button>` for an
+ * `<a role="button">`.
  */
+
+/* -------------------------------------------------------------------- types */
 
 /**
  * @typedef {Object} ButtonExtra
@@ -22,17 +25,9 @@
  * @property {readonly ButtonExtra[]} [extras] Tone-less variants that only exist in this family.
  */
 
-/**
- * @typedef {'default' | 'active' | 'disabled-attribute' | 'disabled-class'} ButtonState
- */
-
-/**
- * @typedef {'group' | 'vertical'} GroupLayout
- */
-
-/**
- * @typedef {'button' | 'anchor'} ButtonTag
- */
+/** @typedef {'default' | 'active' | 'disabled-attribute' | 'disabled-class'} ButtonState */
+/** @typedef {'group' | 'vertical'} GroupLayout */
+/** @typedef {'button' | 'anchor'} ButtonTag */
 
 /**
  * @typedef {Object} GroupConfig
@@ -44,6 +39,7 @@
  * @property {'' | 'btn-sm' | 'btn-lg'} [size] Optional Bootstrap size class.
  * @property {readonly string[]} [labels] Visible labels, one per button.
  * @property {string} [ariaLabel] Accessible name of the group.
+ * @property {ButtonTag} [tag] Element used to render every button.
  */
 
 /**
@@ -59,13 +55,25 @@
 /**
  * @typedef {Object} AppState
  * @property {string} family Currently selected family id, or `all`.
+ * @property {readonly string[]} tones Tones rendered by every environment.
  * @property {boolean} hoverBorder Whether the `hover-border` modifier is on.
  * @property {ButtonTag} tag Element used to render every button.
  */
 
 /**
+ * @typedef {Object} ToneRowOptions
+ * @property {ButtonState} [groupState] State applied to every button of every group.
+ * @property {readonly ButtonState[]} [buttonStates] Per-button state override, by index.
+ * @property {readonly string[]} [labels] Visible labels, one per button.
+ * @property {'' | 'btn-sm' | 'btn-lg'} [size] Optional Bootstrap size class.
+ * @property {string} [ariaLabel] Prefix of the accessible name of each group.
+ * @property {GroupLayout} [layout] Wrapper used by every group.
+ */
+
+/**
  * @typedef {Object} PickerCallbacks
  * @property {(familyId: string) => void} onFamilyChange
+ * @property {(tones: readonly string[]) => void} onTonesChange
  * @property {(enabled: boolean) => void} onHoverBorderChange
  * @property {(tag: ButtonTag) => void} onTagChange
  */
@@ -77,6 +85,16 @@
  * @property {boolean} checked Initial state.
  * @property {(checked: boolean) => void} onChange Change handler.
  */
+
+/**
+ * @typedef {Object} IconBadgeItem
+ * @property {string} tone Tone used by the button and by the badge.
+ * @property {string} label Visible label of the button.
+ * @property {string} icon Bootstrap Icons class, without the `bi` prefix.
+ * @property {string} [badge] Badge text. When set, the icon is not rendered.
+ */
+
+/* ---------------------------------------------------------------- constants */
 
 /**
  * Tones rendered for every family. `contrast` and `contrast-inverse` are tones,
@@ -110,37 +128,35 @@ const LAYOUT_CLASS = Object.freeze({
   vertical: 'btn-group-vertical',
 });
 
+/** @type {readonly { size: '' | 'btn-sm' | 'btn-lg', label: string }[]} */
+const SIZES = Object.freeze([
+  { size: 'btn-sm', label: 'Small' },
+  { size: '', label: 'Default' },
+  { size: 'btn-lg', label: 'Large' },
+]);
+
 /** @type {readonly string[]} */
 const DEFAULT_LABELS = Object.freeze(['Left', 'Left 2', 'Middle', 'Right 2', 'Right']);
 
-/**
- * @typedef {Object} IconBadgeItem
- * @property {string} tone Tone used by the button and by the badge.
- * @property {string} label Visible label of the button.
- * @property {string} icon Bootstrap Icons class, without the `bi` prefix.
- * @property {string} [badge] Badge text. When set, the icon is not rendered.
- */
-
-/** @type {readonly IconBadgeItem[]} */
-const ICON_BADGE_ITEMS = Object.freeze([
-  { tone: 'primary', label: 'Download', icon: 'bi-download' },
-  { tone: 'success', label: 'Save', icon: 'bi-check-lg' },
-  { tone: 'danger', label: 'Delete', icon: 'bi-trash' },
-  { tone: 'pink', label: 'Pink', icon: 'bi-flower2' },
-  { tone: 'primary', label: 'Inbox', icon: 'bi-inbox', badge: '14' },
+/** @type {readonly string[]} */
+const ICON_POOL = Object.freeze([
+  'bi-download',
+  'bi-check-lg',
+  'bi-trash',
+  'bi-flower2',
+  'bi-inbox',
 ]);
 
 /** @type {string} */
-const FAMILY_STORAGE_KEY = 'pg-btn-family';
-
-/** @type {string} */
-const HOVER_STORAGE_KEY = 'pg-btn-hover-border';
-
-/** @type {string} */
-const TAG_STORAGE_KEY = 'pg-btn-tag';
-
-/** @type {string} */
 const ALL_FAMILIES = 'all';
+
+/** @type {Readonly<Record<string, string>>} */
+const STORAGE = Object.freeze({
+  family: 'pg-btn-family',
+  tones: 'pg-btn-tones',
+  hoverBorder: 'pg-btn-hover-border',
+  tag: 'pg-btn-tag',
+});
 
 /** @type {readonly ButtonFamily[]} */
 const FAMILIES = Object.freeze([
@@ -171,18 +187,47 @@ const FAMILIES = Object.freeze([
   },
 ]);
 
+/* ------------------------------------------------------------------ helpers */
+
+/**
+ * Creates an element, applies a class list and appends the children.
+ * @template {keyof HTMLElementTagNameMap} T
+ * @param {T} tag Tag name.
+ * @param {string} [className] Class list. Omitted when empty.
+ * @param {...(Node | string)} children Child nodes or text.
+ * @returns {HTMLElementTagNameMap[T]}
+ */
+const el = (tag, className = '', ...children) => {
+  const node = document.createElement(tag);
+
+  if (className) {
+    node.className = className;
+  }
+
+  node.append(...children);
+
+  return node;
+};
+
+/**
+ * Creates a `<button type="button">`.
+ * @param {string} text Visible label.
+ * @param {string} className Class list.
+ * @returns {HTMLButtonElement}
+ */
+const button = (text, className) => {
+  const node = el('button', className, text);
+  node.type = 'button';
+
+  return node;
+};
+
 /**
  * Creates a small uppercase heading used to separate the demo blocks.
  * @param {string} text
  * @returns {HTMLHeadingElement}
  */
-const createHeading = (text) => {
-  const heading = document.createElement('h5');
-  heading.className = 'h6 text-body-secondary mt-3 mb-2';
-  heading.textContent = text;
-
-  return heading;
-};
+const createHeading = (text) => el('h5', 'h6 text-body-secondary mt-3 mb-2', text);
 
 /**
  * Applies a visual state to a single button.
@@ -245,24 +290,18 @@ const createButton = ({ tag, toneClass, label, state, size, hoverBorder }) => {
     throw new RangeError(`Unknown button state: ${state}`);
   }
 
-  const className = ['btn', toneClass, size, hoverBorder ? 'hover-border' : '']
-    .filter(Boolean)
-    .join(' ');
-
-  let element;
+  const element =
+    tag === 'anchor'
+      ? Object.assign(el('a'), { href: '#' })
+      : Object.assign(el('button'), { type: 'button' });
 
   if (tag === 'anchor') {
-    const anchor = document.createElement('a');
-    anchor.href = '#';
-    anchor.setAttribute('role', 'button');
-    element = anchor;
-  } else {
-    const button = document.createElement('button');
-    button.type = 'button';
-    element = button;
+    element.setAttribute('role', 'button');
   }
 
-  element.className = className;
+  element.className = ['btn', toneClass, size, hoverBorder ? 'hover-border' : '']
+    .filter(Boolean)
+    .join(' ');
   element.textContent = label;
   applyState(element, state);
 
@@ -290,8 +329,7 @@ const createGroup = ({
     throw new RangeError(`Unknown layout: ${layout}`);
   }
 
-  const group = document.createElement('div');
-  group.className = LAYOUT_CLASS[layout];
+  const group = el('div', LAYOUT_CLASS[layout]);
   group.setAttribute('role', 'group');
   group.setAttribute('aria-label', ariaLabel);
 
@@ -312,37 +350,120 @@ const createGroup = ({
 };
 
 /**
- * Builds a `btn-toolbar` that mixes two groups of the same family.
+ * Renders one button group per active tone inside a single flex row.
+ *
+ * Every visual environment of the matrix goes through this helper, so a tone
+ * enabled in the picker is automatically covered by all of them.
+ *
+ * @param {ButtonFamily} family Family whose `toneClass` resolves the class name.
+ * @param {AppState} state Global application state.
+ * @param {ToneRowOptions} [options] Per-row overrides.
+ * @returns {HTMLDivElement} Row containing one group per active tone.
+ * @throws {TypeError} When `family.toneClass` is not a function.
+ * @throws {RangeError} When `groupState` or `layout` is unknown.
+ */
+const createToneRow = (family, state, options = {}) => {
+  if (typeof family?.toneClass !== 'function') {
+    throw new TypeError('family.toneClass must be a function');
+  }
+
+  const {
+    groupState = 'default',
+    buttonStates,
+    labels,
+    size = '',
+    ariaLabel = family.title,
+    layout = 'group',
+  } = options;
+
+  if (!STATES.includes(groupState)) {
+    throw new RangeError(`Unknown button state: ${groupState}`);
+  }
+
+  if (!LAYOUTS.includes(layout)) {
+    throw new RangeError(`Unknown layout: ${layout}`);
+  }
+
+  return el(
+    'div',
+    'd-flex flex-wrap gap-2',
+    ...state.tones.map((tone) =>
+      createGroup({
+        toneClass: family.toneClass(tone),
+        state: groupState,
+        buttonStates,
+        labels,
+        size,
+        layout,
+        hoverBorder: state.hoverBorder,
+        tag: state.tag,
+        ariaLabel: `${ariaLabel} ${tone} group`,
+      }),
+    ),
+  );
+};
+
+/**
+ * Renders one row where only the middle button carries the disabled state.
+ * @param {ButtonFamily} family
+ * @param {AppState} state
+ * @param {ButtonState} disabledState
+ * @returns {HTMLDivElement}
+ */
+const createIndividualDisabled = (family, state, disabledState) =>
+  el(
+    'div',
+    'd-flex flex-wrap gap-2',
+    ...state.tones.map((tone) =>
+      createGroup({
+        toneClass: family.toneClass(tone),
+        labels: ['Enabled', 'Disabled', 'Enabled'],
+        buttonStates: ['default', disabledState, 'default'],
+        hoverBorder: state.hoverBorder,
+        tag: state.tag,
+        ariaLabel: `${family.title} ${tone} individual disabled group`,
+      }),
+    ),
+  );
+
+/**
+ * Builds one `btn-toolbar` per tone, each mixing two groups of the family.
  * @param {ButtonFamily} family
  * @param {AppState} state
  * @returns {HTMLDivElement}
  */
-const createToolbar = (family, state) => {
-  const toolbar = document.createElement('div');
-  toolbar.className = 'btn-toolbar gap-2';
-  toolbar.setAttribute('role', 'toolbar');
-  toolbar.setAttribute('aria-label', `${family.title} toolbar`);
+const createToolbar = (family, state) =>
+  el(
+    'div',
+    'd-flex flex-column gap-2',
+    ...state.tones.map((tone, index) => {
+      const nextTone = state.tones[(index + 1) % state.tones.length];
 
-  [
-    { tone: 'primary', labels: ['1', '2', '3'] },
-    { tone: 'secondary', labels: ['4', '5'] },
-  ].forEach(({ tone, labels }) => {
-    toolbar.appendChild(
-      createGroup({
-        toneClass: family.toneClass(tone),
-        labels,
-        hoverBorder: state.hoverBorder,
-        tag: state.tag,
-        ariaLabel: `${family.title} ${tone} toolbar group`,
-      }),
-    );
-  });
+      const toolbar = el('div', 'btn-toolbar gap-2');
+      toolbar.setAttribute('role', 'toolbar');
+      toolbar.setAttribute('aria-label', `${family.title} ${tone} toolbar`);
 
-  return toolbar;
-};
+      [
+        { tone, labels: ['1', '2', '3'] },
+        { tone: nextTone, labels: ['4', '5'] },
+      ].forEach(({ tone: currentTone, labels }) => {
+        toolbar.appendChild(
+          createGroup({
+            toneClass: family.toneClass(currentTone),
+            labels,
+            hoverBorder: state.hoverBorder,
+            tag: state.tag,
+            ariaLabel: `${family.title} ${currentTone} toolbar group`,
+          }),
+        );
+      });
+
+      return toolbar;
+    }),
+  );
 
 /**
- * Builds a radio group that uses the `btn-check` pattern.
+ * Builds one `btn-check` radio group per tone.
  *
  * The `btn-check` pattern requires a `<label>`, so this block ignores
  * `state.tag` on purpose.
@@ -351,60 +472,68 @@ const createToolbar = (family, state) => {
  * @param {AppState} state
  * @returns {HTMLDivElement}
  */
-const createRadioGroup = (family, state) => {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'btn-group';
-  wrapper.setAttribute('role', 'group');
-  wrapper.setAttribute('aria-label', `${family.title} radio group`);
+const createRadioGroup = (family, state) =>
+  el(
+    'div',
+    'd-flex flex-wrap gap-2',
+    ...state.tones.map((tone) => {
+      const name = `pg-btn-group-${family.id}-${tone}-radio`;
+      const toneClass = family.toneClass(tone);
 
-  const name = `pg-btn-group-${family.id}-radio`;
-  const toneClass = family.toneClass('primary');
+      const wrapper = el('div', 'btn-group');
+      wrapper.setAttribute('role', 'group');
+      wrapper.setAttribute('aria-label', `${family.title} ${tone} radio group`);
 
-  ['Left', 'Left 2', 'Center', 'Right 2', 'Right'].forEach((label, index) => {
-    const id = `${name}-${index}`;
+      DEFAULT_LABELS.forEach((label, index) => {
+        const id = `${name}-${index}`;
 
-    const input = document.createElement('input');
-    input.type = 'radio';
-    input.className = 'btn-check';
-    input.name = name;
-    input.id = id;
-    input.autocomplete = 'off';
-    input.checked = index === 0;
+        const input = el('input', 'btn-check');
+        input.type = 'radio';
+        input.name = name;
+        input.id = id;
+        input.autocomplete = 'off';
+        input.checked = index === 0;
 
-    const labelElement = document.createElement('label');
-    labelElement.className = ['btn', toneClass, state.hoverBorder ? 'hover-border' : '']
-      .filter(Boolean)
-      .join(' ');
-    labelElement.htmlFor = id;
-    labelElement.textContent = label;
+        const labelElement = el(
+          'label',
+          ['btn', toneClass, state.hoverBorder ? 'hover-border' : ''].filter(Boolean).join(' '),
+          label,
+        );
+        labelElement.htmlFor = id;
 
-    wrapper.append(input, labelElement);
-  });
+        wrapper.append(input, labelElement);
+      });
 
-  return wrapper;
-};
+      return wrapper;
+    }),
+  );
 
 /**
- * Builds the `data-bs-toggle="button"` toggle for a family.
+ * Builds one `data-bs-toggle="button"` toggle per tone.
  * @param {ButtonFamily} family
  * @param {AppState} state
- * @returns {HTMLButtonElement | HTMLAnchorElement}
+ * @returns {HTMLDivElement}
  */
-const createToggle = (family, state) => {
-  const element = createButton({
-    tag: state.tag,
-    toneClass: family.toneClass('primary'),
-    label: 'Toggle me',
-    state: 'default',
-    size: '',
-    hoverBorder: state.hoverBorder,
-  });
+const createToggleRow = (family, state) =>
+  el(
+    'div',
+    'd-flex flex-wrap gap-2',
+    ...state.tones.map((tone) => {
+      const element = createButton({
+        tag: state.tag,
+        toneClass: family.toneClass(tone),
+        label: `Toggle ${tone}`,
+        state: 'default',
+        size: '',
+        hoverBorder: state.hoverBorder,
+      });
 
-  element.dataset.bsToggle = 'button';
-  element.setAttribute('aria-pressed', 'false');
+      element.dataset.bsToggle = 'button';
+      element.setAttribute('aria-pressed', 'false');
 
-  return element;
-};
+      return element;
+    }),
+  );
 
 /**
  * Creates a single button that carries an icon or a badge.
@@ -439,39 +568,47 @@ const createIconBadgeButton = (family, state, item) => {
   });
 
   if (item.badge) {
-    const badge = document.createElement('span');
-    badge.className = `badge text-bg-${item.tone} ms-1`;
-    badge.textContent = item.badge;
-
-    element.append(`${item.label} `, badge);
+    element.append(`${item.label} `, el('span', `badge text-bg-${item.tone} ms-1`, item.badge));
 
     return element;
   }
 
-  const icon = document.createElement('i');
-  icon.className = `bi ${item.icon} me-1`;
+  const icon = el('i', `bi ${item.icon} me-1`);
   icon.setAttribute('aria-hidden', 'true');
-
   element.append(icon, document.createTextNode(item.label));
 
   return element;
 };
 
 /**
- * Builds the "Icon and badge" row for a single family.
+ * Builds the "Icon and badge" rows for a single family.
+ *
+ * Two rows are produced: the first renders an icon per tone, the second
+ * renders a label plus a badge per tone.
+ *
  * @param {ButtonFamily} family
  * @param {AppState} state
  * @returns {HTMLDivElement}
  */
 const createIconBadgeRow = (family, state) => {
-  const row = document.createElement('div');
-  row.className = 'd-flex flex-wrap gap-2';
+  const iconRow = el('div', 'd-flex flex-wrap gap-2');
+  const badgeRow = el('div', 'd-flex flex-wrap gap-2');
 
-  ICON_BADGE_ITEMS.forEach((item) => {
-    row.appendChild(createIconBadgeButton(family, state, item));
+  state.tones.forEach((tone, index) => {
+    const icon = ICON_POOL[index % ICON_POOL.length];
+
+    iconRow.appendChild(createIconBadgeButton(family, state, { tone, label: tone, icon }));
+    badgeRow.appendChild(
+      createIconBadgeButton(family, state, {
+        tone,
+        label: tone,
+        icon,
+        badge: String(index + 1),
+      }),
+    );
   });
 
-  return row;
+  return el('div', 'd-flex flex-column gap-2', iconRow, badgeRow);
 };
 
 /**
@@ -481,146 +618,75 @@ const createIconBadgeRow = (family, state) => {
  * @returns {HTMLElement}
  */
 const renderFamily = (family, state) => {
-  const section = document.createElement('section');
-  section.className = 'd-flex flex-column gap-2';
+  const section = el('section', 'd-flex flex-column gap-2');
   section.id = `pg-btn-group-${family.id}`;
 
-  const title = document.createElement('h4');
-  title.className = 'fw-bold mb-0';
-  title.textContent = family.title;
-
-  const description = document.createElement('p');
-  description.className = 'small text-body-secondary mb-0';
-  description.textContent = family.description;
-
+  const title = el('h4', 'fw-bold mb-0', family.title);
+  const description = el('p', 'small text-body-secondary mb-0', family.description);
   section.append(title, description);
 
-  section.appendChild(createHeading('Tones'));
-  const tones = document.createElement('div');
-  tones.className = 'd-flex flex-wrap gap-2';
-  TONES.forEach((tone) => {
-    tones.appendChild(
-      createGroup({
-        toneClass: family.toneClass(tone),
-        hoverBorder: state.hoverBorder,
-        tag: state.tag,
-        ariaLabel: `${family.title} ${tone} group`,
-      }),
-    );
-  });
-  section.appendChild(tones);
+  /** @param {string} heading @param {...Node} nodes */
+  const block = (heading, ...nodes) => section.append(createHeading(heading), ...nodes);
+
+  block('Tones', createToneRow(family, state, { ariaLabel: `${family.title} tone` }));
 
   if (family.extras?.length) {
-    section.appendChild(createHeading('Tone-less'));
-    const extras = document.createElement('div');
-    extras.className = 'd-flex flex-wrap gap-2';
-    family.extras.forEach((extra) => {
-      extras.appendChild(
-        createGroup({
-          toneClass: extra.className,
-          hoverBorder: state.hoverBorder,
-          tag: state.tag,
-          ariaLabel: `${extra.label} group`,
-        }),
-      );
-    });
-    section.appendChild(extras);
+    block(
+      'Tone-less',
+      el(
+        'div',
+        'd-flex flex-wrap gap-2',
+        ...family.extras.map((extra) =>
+          createGroup({
+            toneClass: extra.className,
+            hoverBorder: state.hoverBorder,
+            tag: state.tag,
+            ariaLabel: `${extra.label} group`,
+          }),
+        ),
+      ),
+    );
   }
 
-  section.appendChild(createHeading('States'));
-  const states = document.createElement('div');
-  states.className = 'd-flex flex-wrap gap-2';
   STATES.forEach((item) => {
-    states.appendChild(
-      createGroup({
-        toneClass: family.toneClass('primary'),
-        state: item,
-        hoverBorder: state.hoverBorder,
-        tag: state.tag,
-        ariaLabel: `${family.title} ${item} group`,
+    block(
+      `State: ${item}`,
+      createToneRow(family, state, {
+        groupState: item,
+        ariaLabel: `${family.title} ${item}`,
       }),
     );
   });
-  section.appendChild(states);
 
-  /**
-   * Renders one row where only the middle button carries the disabled state.
-   * @param {string} heading
-   * @param {ButtonState} disabledState
-   * @returns {void}
-   */
-  const appendIndividualDisabled = (heading, disabledState) => {
-    section.appendChild(createHeading(heading));
+  block(
+    'Individual disabled (attribute)',
+    createIndividualDisabled(family, state, 'disabled-attribute'),
+  );
+  block('Individual disabled (class)', createIndividualDisabled(family, state, 'disabled-class'));
 
-    const row = document.createElement('div');
-    row.className = 'd-flex flex-wrap gap-2';
-
-    TONES.forEach((tone) => {
-      row.appendChild(
-        createGroup({
-          toneClass: family.toneClass(tone),
-          labels: ['Enabled', 'Disabled', 'Enabled'],
-          buttonStates: ['default', disabledState, 'default'],
-          hoverBorder: state.hoverBorder,
-          tag: state.tag,
-          ariaLabel: `${family.title} ${tone} individual disabled group`,
-        }),
-      );
-    });
-
-    section.appendChild(row);
-  };
-
-  appendIndividualDisabled('Individual disabled (attribute)', 'disabled-attribute');
-  appendIndividualDisabled('Individual disabled (class)', 'disabled-class');
-
-  section.appendChild(createHeading('Sizes'));
-  const sizes = document.createElement('div');
-  sizes.className = 'd-flex flex-wrap align-items-center gap-2';
-  ['btn-sm', '', 'btn-lg'].forEach((size) => {
-    sizes.appendChild(
-      createGroup({
-        toneClass: family.toneClass('primary'),
-        size,
-        hoverBorder: state.hoverBorder,
-        tag: state.tag,
-        ariaLabel: `${family.title} ${size || 'default'} group`,
-      }),
+  SIZES.forEach(({ size, label }) => {
+    block(
+      `Size: ${label}`,
+      createToneRow(family, state, { size, ariaLabel: `${family.title} ${label}` }),
     );
   });
-  section.appendChild(sizes);
 
-  section.appendChild(createHeading('Toggle'));
-  const toggles = document.createElement('div');
-  toggles.className = 'd-flex flex-wrap gap-2';
-  toggles.appendChild(createToggle(family, state));
-  section.appendChild(toggles);
-
-  section.appendChild(createHeading('Icon and badge'));
-  section.appendChild(createIconBadgeRow(family, state));
-
-  section.appendChild(createHeading('Vertical'));
-  const vertical = document.createElement('div');
-  vertical.className = 'd-flex flex-wrap gap-3';
-  vertical.appendChild(
-    createGroup({
-      toneClass: family.toneClass('primary'),
+  block('Toggle', createToggleRow(family, state));
+  block('Icon and badge', createIconBadgeRow(family, state));
+  block(
+    'Vertical',
+    createToneRow(family, state, {
       layout: 'vertical',
-      hoverBorder: state.hoverBorder,
-      tag: state.tag,
-      ariaLabel: `${family.title} vertical group`,
+      ariaLabel: `${family.title} vertical`,
     }),
   );
-  section.appendChild(vertical);
-
-  section.appendChild(createHeading('Toolbar'));
-  section.appendChild(createToolbar(family, state));
-
-  section.appendChild(createHeading('Radio (btn-check — always <label>)'));
-  section.appendChild(createRadioGroup(family, state));
+  block('Toolbar', createToolbar(family, state));
+  block('Radio (btn-check — always <label>)', createRadioGroup(family, state));
 
   return section;
 };
+
+/* ------------------------------------------------------------------- picker */
 
 /**
  * Builds a single switch.
@@ -628,57 +694,114 @@ const renderFamily = (family, state) => {
  * @returns {HTMLDivElement}
  */
 const createSwitch = ({ id, label, checked, onChange }) => {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'form-check form-switch mb-0';
-
-  const input = document.createElement('input');
-  input.className = 'form-check-input';
+  const input = el('input', 'form-check-input');
   input.type = 'checkbox';
   input.role = 'switch';
   input.id = id;
   input.checked = checked;
   input.addEventListener('change', () => onChange(input.checked));
 
-  const labelElement = document.createElement('label');
-  labelElement.className = 'form-check-label small';
+  const labelElement = el('label', 'form-check-label small');
   labelElement.htmlFor = id;
   labelElement.innerHTML = label;
 
-  wrapper.append(input, labelElement);
-
-  return wrapper;
+  return el('div', 'form-check form-switch mb-0', input, labelElement);
 };
 
 /**
- * Builds the family picker and the global switches.
+ * Builds the tone multi-select. All tones start selected, which keeps the
+ * matrix identical to the previous full render.
+ *
+ * @param {AppState} state
+ * @param {(tones: readonly string[]) => void} onChange
+ * @returns {HTMLDivElement}
+ */
+const createTonePicker = (state, onChange) => {
+  const selected = new Set(state.tones);
+
+  const toggle = button('', 'btn btn-sm btn-outline-secondary dropdown-toggle');
+  toggle.dataset.bsToggle = 'dropdown';
+  toggle.dataset.bsAutoClose = 'outside';
+
+  const syncLabel = () => {
+    toggle.textContent = `Tones (${selected.size}/${TONES.length})`;
+    toggle.classList.toggle('text-warning', selected.size !== TONES.length);
+  };
+
+  const commit = () => {
+    syncLabel();
+    onChange(TONES.filter((tone) => selected.has(tone)));
+  };
+
+  const items = TONES.map((tone) => {
+    const input = el('input', 'form-check-input');
+    input.type = 'checkbox';
+    input.id = `pg-btn-tone-${tone}`;
+    input.checked = selected.has(tone);
+    input.addEventListener('change', () => {
+      if (input.checked) {
+        selected.add(tone);
+      } else {
+        selected.delete(tone);
+      }
+
+      commit();
+    });
+
+    const label = el('label', 'form-check-label small text-capitalize', tone);
+    label.htmlFor = input.id;
+
+    return el('div', 'form-check', input, label);
+  });
+
+  const setAll = (checked) => {
+    TONES.forEach((tone) => (checked ? selected.add(tone) : selected.delete(tone)));
+    items.forEach((item) => {
+      /** @type {HTMLInputElement} */ (item.querySelector('input')).checked = checked;
+    });
+    commit();
+  };
+
+  const all = button('All', 'btn btn-sm btn-outline-secondary flex-fill');
+  all.addEventListener('click', () => setAll(true));
+
+  const none = button('None', 'btn btn-sm btn-outline-secondary flex-fill');
+  none.addEventListener('click', () => setAll(false));
+
+  const menu = el('div', 'dropdown-menu p-2', el('div', 'd-flex gap-1 mb-2', all, none), ...items);
+  menu.style.minWidth = '12rem';
+  menu.style.maxHeight = '16rem';
+  menu.style.overflowY = 'auto';
+
+  syncLabel();
+
+  return el('div', 'dropdown', toggle, menu);
+};
+
+/**
+ * Builds the family picker, the tone picker and the global switches.
  * @param {AppState} state
  * @param {PickerCallbacks} callbacks
  * @returns {HTMLDivElement}
  */
 const createPicker = (state, callbacks) => {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'd-flex flex-wrap align-items-center gap-3';
+  const label = el('label', 'form-label mb-0 small fw-bold text-body-secondary', 'Button family');
+  label.htmlFor = 'pg-btn-family';
 
-  const familyWrapper = document.createElement('div');
-  familyWrapper.className = 'd-flex align-items-center gap-2';
-
-  const familyLabel = document.createElement('label');
-  familyLabel.className = 'form-label mb-0 small fw-bold text-body-secondary';
-  familyLabel.htmlFor = 'pg-btn-family';
-  familyLabel.textContent = 'Button family';
-
-  const select = document.createElement('select');
-  select.className = 'form-select form-select-sm w-auto';
+  const select = el('select', 'form-select form-select-sm w-auto');
   select.id = 'pg-btn-family';
-  select.appendChild(new Option('All families', ALL_FAMILIES));
-  FAMILIES.forEach((family) => select.appendChild(new Option(family.title, family.id)));
+  select.append(
+    new Option('All families', ALL_FAMILIES),
+    ...FAMILIES.map((family) => new Option(family.title, family.id)),
+  );
   select.value = state.family;
   select.addEventListener('change', () => callbacks.onFamilyChange(select.value));
 
-  familyWrapper.append(familyLabel, select);
-
-  wrapper.append(
-    familyWrapper,
+  return el(
+    'div',
+    'd-flex flex-wrap align-items-center gap-3',
+    el('div', 'd-flex align-items-center gap-2', label, select),
+    createTonePicker(state, callbacks.onTonesChange),
     createSwitch({
       id: 'pg-btn-hover-border',
       label: '<code>hover-border</code>',
@@ -692,9 +815,9 @@ const createPicker = (state, callbacks) => {
       onChange: (checked) => callbacks.onTagChange(checked ? 'anchor' : 'button'),
     }),
   );
-
-  return wrapper;
 };
+
+/* ------------------------------------------------------------------- render */
 
 /**
  * Renders the requested families into the container.
@@ -703,14 +826,52 @@ const createPicker = (state, callbacks) => {
  * @returns {void}
  */
 const render = (container, state) => {
+  if (state.tones.length === 0) {
+    container.replaceChildren(
+      el('p', 'alert alert-warning mb-0', 'Select at least one tone to render the matrix.'),
+    );
+
+    return;
+  }
+
   const families =
     state.family === ALL_FAMILIES
       ? FAMILIES
       : FAMILIES.filter((family) => family.id === state.family);
 
-  const fragment = document.createDocumentFragment();
-  families.forEach((family) => fragment.appendChild(renderFamily(family, state)));
-  container.replaceChildren(fragment);
+  container.replaceChildren(...families.map((family) => renderFamily(family, state)));
+};
+
+/**
+ * Reads the persisted tones, falling back to every tone.
+ * @returns {readonly string[]}
+ */
+const readTones = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE.tones) ?? 'null');
+
+    return Array.isArray(parsed) ? TONES.filter((tone) => parsed.includes(tone)) : [...TONES];
+  } catch {
+    return [...TONES];
+  }
+};
+
+/**
+ * Reads the persisted state.
+ * @returns {AppState}
+ */
+const loadState = () => {
+  const family = localStorage.getItem(STORAGE.family);
+  const tag = localStorage.getItem(STORAGE.tag);
+
+  return {
+    family: [ALL_FAMILIES, ...FAMILIES.map((item) => item.id)].includes(family)
+      ? family
+      : ALL_FAMILIES,
+    tones: readTones(),
+    hoverBorder: localStorage.getItem(STORAGE.hoverBorder) === 'true',
+    tag: tag === 'anchor' ? 'anchor' : 'button',
+  };
 };
 
 /**
@@ -726,36 +887,28 @@ export const mountButtonGroups = (mountId = 'pg-button-groups') => {
     throw new Error(`Mount point #${mountId} was not found`);
   }
 
-  const known = [ALL_FAMILIES, ...FAMILIES.map((family) => family.id)];
-  const storedFamily = localStorage.getItem(FAMILY_STORAGE_KEY);
-  const storedTag = localStorage.getItem(TAG_STORAGE_KEY);
+  const state = loadState();
+  const results = el('div', 'd-flex flex-column gap-5');
 
-  /** @type {AppState} */
-  const state = {
-    family: known.includes(storedFamily) ? storedFamily : ALL_FAMILIES,
-    hoverBorder: localStorage.getItem(HOVER_STORAGE_KEY) === 'true',
-    tag: storedTag === 'anchor' ? 'anchor' : 'button',
+  /**
+   * Applies a partial state, persists it and repaints the matrix.
+   * @param {Partial<AppState>} patch
+   * @returns {void}
+   */
+  const update = (patch) => {
+    Object.assign(state, patch);
+    localStorage.setItem(STORAGE.family, state.family);
+    localStorage.setItem(STORAGE.tones, JSON.stringify(state.tones));
+    localStorage.setItem(STORAGE.hoverBorder, String(state.hoverBorder));
+    localStorage.setItem(STORAGE.tag, state.tag);
+    render(results, state);
   };
 
-  const results = document.createElement('div');
-  results.className = 'd-flex flex-column gap-5';
-
   const picker = createPicker(state, {
-    onFamilyChange: (familyId) => {
-      state.family = familyId;
-      localStorage.setItem(FAMILY_STORAGE_KEY, familyId);
-      render(results, state);
-    },
-    onHoverBorderChange: (enabled) => {
-      state.hoverBorder = enabled;
-      localStorage.setItem(HOVER_STORAGE_KEY, String(enabled));
-      render(results, state);
-    },
-    onTagChange: (tag) => {
-      state.tag = tag;
-      localStorage.setItem(TAG_STORAGE_KEY, tag);
-      render(results, state);
-    },
+    onFamilyChange: (family) => update({ family }),
+    onTonesChange: (tones) => update({ tones }),
+    onHoverBorderChange: (hoverBorder) => update({ hoverBorder }),
+    onTagChange: (tag) => update({ tag }),
   });
 
   render(results, state);
