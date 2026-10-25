@@ -96,7 +96,18 @@
 }
 
 .bg-pink {
+  color: var(--ui-on-pink);
   background-color: rgba(var(--bs-pink-rgb), var(--bs-bg-opacity, 1)) !important;
+}
+
+.list-group-item-pink {
+  --bs-list-group-color: var(--ui-pink);
+  --bs-list-group-bg: rgb(var(--ui-pink-rgb) / 0.08);
+  --bs-list-group-border-color: rgb(var(--ui-pink-rgb) / 0.24);
+  --bs-list-group-action-hover-bg: rgb(var(--ui-pink-rgb) / 0.14);
+  --bs-list-group-action-hover-color: var(--ui-heading);
+  --bs-list-group-action-active-bg: rgb(var(--ui-pink-rgb) / 0.2);
+  --bs-list-group-action-active-color: var(--ui-heading);
 }
 
 .border-pink {

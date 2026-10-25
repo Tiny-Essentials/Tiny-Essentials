@@ -5,6 +5,7 @@
 // _buttons.scss and _forms.scss.
 // =============================================================================
 
+@use 'sass:map';
 @use 'colors' as *;
 
 // --------------------------------------------------------------- nav line --
@@ -135,15 +136,24 @@
   --bs-nav-link-active-color: var(--ui-heading);
 
   .nav-link {
-    border: none;
-    border-bottom: 2px solid transparent;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-radius: var(--bs-border-radius-sm) var(--bs-border-radius-sm) 0 0;
     transition:
       color var(--ui-duration) var(--ui-ease),
+      background-color var(--ui-duration) var(--ui-ease),
       border-color var(--ui-duration) var(--ui-ease);
 
+    &:hover {
+      border-color: transparent;
+    }
+
     &.active {
-      background: transparent;
-      border-bottom-color: var(--ui-accent);
+      color: var(--bs-nav-link-active-color);
+      background: var(--ui-surface);
+      border-color: var(--ui-border);
+      border-bottom-color: var(--ui-surface);
+      margin-bottom: -1px;
     }
   }
 }
@@ -187,7 +197,6 @@
   --bs-toast-bg: rgb(var(--ui-surface-rgb) / 0.98);
   --bs-toast-border-color: var(--ui-border);
   --bs-toast-color: var(--ui-text);
-  --bs-toast-header-bg: var(--ui-overlay-1);
   --bs-toast-header-color: var(--ui-heading);
 
   @include elevation(3);
@@ -315,7 +324,6 @@ $badge-tones: (
 
   letter-spacing: 0.02em;
   border: 1px solid transparent;
-  border-radius: 999px;
 }
 
 @each $name, $token in $badge-tones {
@@ -514,5 +522,47 @@ $badge-tones: (
   .progress-bar,
   .collapsing {
     transition: none;
+  }
+}
+
+// =============================================================================
+// Color bridge
+//
+// Bootstrap resolve `$theme-colors` em build time. As utilities abaixo leem
+// `--bs-{tone}-rgb`, que o `bootstrap-bridge()` reemite por tema. Sem isso,
+// `.text-primary`, `.bg-primary` e `.border-primary` ficam presos no valor
+// do tema escuro.
+// =============================================================================
+
+$tone-foregrounds: map.merge(
+  $subtle-tokens,
+  (
+    'light': 'neutral-light',
+    'dark': 'neutral-dark',
+  )
+);
+
+// `.text-bg-*` do Bootstrap usa `color: #fff !important`. Em tom claro
+// (`warning`, `pink`) o texto some. Em `light`/`dark` ele nem checa o
+// contraste. Reemite com o par correto.
+@each $name, $token in $tone-foregrounds {
+  .text-bg-#{$name} {
+    color: var(--ui-on-#{$token}) !important;
+    background-color: rgba(var(--bs-#{$name}-rgb), var(--bs-bg-opacity, 1)) !important;
+  }
+}
+
+// `.bg-*` só pinta o fundo. Emparelha com o foreground para o texto
+// continuar legível.
+@each $name, $token in $tone-foregrounds {
+  .bg-#{$name} {
+    color: var(--ui-on-#{$token});
+  }
+}
+
+// `.border-*` lê `--bs-{tone}-rgb`, que agora é por tema.
+@each $name, $token in $tone-foregrounds {
+  .border-#{$name} {
+    border-color: rgba(var(--bs-#{$name}-rgb), var(--bs-border-opacity, 1)) !important;
   }
 }

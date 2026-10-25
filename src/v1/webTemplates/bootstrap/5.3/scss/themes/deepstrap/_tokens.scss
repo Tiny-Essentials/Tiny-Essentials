@@ -82,7 +82,6 @@ $alphas: (
   --bs-link-hover-opacity: 1;
   --bs-code-color: var(--ui-info);
   --bs-highlight-bg: rgb(var(--ui-warn-rgb) / 0.24);
-  @include bootstrap-subtle-bridge();
 
   // Bridge the theme colors so .text-primary, .bg-primary, .border-primary
   // follow the active theme instead of the build-time value.
@@ -93,10 +92,12 @@ $alphas: (
 
   // `light` and `dark` are not in $subtle-tokens on purpose (they are
   // surfaces, not accents), so bridge them explicitly.
-  --bs-light: var(--ui-neutral-light);
-  --bs-light-rgb: var(--ui-neutral-light-rgb);
-  --bs-dark: var(--ui-neutral-dark);
-  --bs-dark-rgb: var(--ui-neutral-dark-rgb);
+  --bs-light: #{palette('slate-050')};
+  --bs-light-rgb: #{channels(palette('slate-050'))};
+  --bs-dark: #{palette('slate-900')};
+  --bs-dark-rgb: #{channels(palette('slate-900'))};
+
+  @include bootstrap-subtle-bridge();
 }
 
 /// Bridges the `-subtle` and `-emphasis` scales into the `--ui-*` tokens.
@@ -122,6 +123,18 @@ $alphas: (
   --bs-dark-bg-subtle: var(--ui-canvas);
   --bs-dark-text-emphasis: var(--ui-text);
   --bs-dark-border-subtle: var(--ui-border-strong);
+}
+
+@each $name, $token in $subtle-tokens {
+  .list-group-item-#{$name} {
+    --bs-list-group-color: var(--ui-#{$token});
+    --bs-list-group-bg: rgb(var(--ui-#{$token}-rgb) / 0.08);
+    --bs-list-group-border-color: rgb(var(--ui-#{$token}-rgb) / 0.24);
+    --bs-list-group-action-hover-bg: rgb(var(--ui-#{$token}-rgb) / 0.14);
+    --bs-list-group-action-hover-color: var(--ui-heading);
+    --bs-list-group-action-active-bg: rgb(var(--ui-#{$token}-rgb) / 0.2);
+    --bs-list-group-action-active-color: var(--ui-heading);
+  }
 }
 
 // ------------------------------------------------------------------ shared --
