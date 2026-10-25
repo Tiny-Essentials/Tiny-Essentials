@@ -193,7 +193,5 @@
 }
 
 .list-group-item.list-group-item-pink.active {
-  color: var(--ui-on-pink);
-  background-color: var(--ui-pink);
-  border-color: var(--ui-pink);
+  @include tone-list-group-active('pink');
 }

@@ -107,6 +107,9 @@ $alphas: (
   .list-group-item-#{$name} {
     @include tone-list-group($token);
   }
+  .list-group-item-#{$name}.active {
+    @include tone-list-group-active($token);
+  }
 }
 
 // ------------------------------------------------------------------ shared --

@@ -26,6 +26,12 @@
   --bs-list-group-disabled-bg: rgb(var(--ui-#{$tone}-rgb) / 0.06);
 }
 
+/// @param {String} $tone - Token suffix, without the `--ui-` prefix.
+@mixin tone-list-group-active($tone) {
+  color: var(--ui-on-#{$tone});
+  background-color: var(--ui-#{$tone});
+}
+
 /// Emits the full Bootstrap 5.3 table variable set for a tone.
 /// @param {String} $tone - Token suffix, without the `--ui-` prefix.
 @mixin tone-table($tone) {
