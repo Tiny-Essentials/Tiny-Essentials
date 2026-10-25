@@ -141,7 +141,13 @@
   border-color: rgb(var(--ui-pink-rgb) / 0.32);
 }
 
-.btn .badge.text-bg-pink {
+.badge.badge-floating.text-bg-pink {
+  color: var(--ui-on-pink) !important;
+  background-color: var(--ui-pink) !important;
+  border-color: transparent;
+}
+
+.btn .badge.text-bg-pink:not(.badge-floating) {
   color: inherit !important;
   background-color: color-mix(in srgb, currentColor 14%, transparent) !important;
   border-color: color-mix(in srgb, currentColor 32%, transparent) !important;

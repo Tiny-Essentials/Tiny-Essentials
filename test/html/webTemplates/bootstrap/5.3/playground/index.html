@@ -66,7 +66,7 @@
       }
 
       /* The section filter toggles the `hidden` attribute, which must win over the
-   display used by the layout of each section. */
+      display used by the layout of each section. */
       main section[hidden] {
         display: none !important;
       }
@@ -208,9 +208,7 @@
           <label class="form-label mb-0 small fw-bold text-body-secondary" for="pg-section-select">
             Section
           </label>
-          <select class="form-select form-select-sm w-auto" id="pg-section-select" disabled>
-            <option value="all">All sections</option>
-          </select>
+          <div id="pg-section-filter"></div>
 
           <span
             class="small text-body-secondary ms-auto"
@@ -513,15 +511,6 @@
               <code>localStorage</code>.
             </p>
             <div id="pg-alert-matrix"></div>
-          </section>
-
-          <!-- ============================================================
-     BADGES MATRIX
-     ============================================================ -->
-          <section id="badges-matrix" class="py-5 border-bottom">
-            <h2 class="fw-bold mb-1">Badges — colour matrix</h2>
-            <p class="text-body-secondary mb-4">Solid, pill, subtle and inside a button.</p>
-            <div id="pg-badge-matrix"></div>
           </section>
 
           <!-- ============================================================

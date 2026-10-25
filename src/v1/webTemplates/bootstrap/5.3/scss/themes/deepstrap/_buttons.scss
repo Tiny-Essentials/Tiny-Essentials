@@ -328,13 +328,18 @@ $ghost-tones: (
     box-shadow var(--ui-duration) var(--ui-ease);
 
   .badge {
-    color: inherit !important;
-    background-color: color-mix(in srgb, currentColor 14%, transparent) !important;
-    border-color: color-mix(in srgb, currentColor 32%, transparent) !important;
     transition:
       color var(--ui-duration) var(--ui-ease),
       background-color var(--ui-duration) var(--ui-ease),
       border-color var(--ui-duration) var(--ui-ease);
+
+    // A floating counter keeps its own tone: it must stay readable over the
+    // button fill, so it opts out of the inherit dance.
+    &:not(.badge-floating) {
+      color: inherit !important;
+      background-color: color-mix(in srgb, currentColor 14%, transparent) !important;
+      border-color: color-mix(in srgb, currentColor 32%, transparent) !important;
+    }
   }
 
   // Press feedback is colour-only. The shorter duration makes the press feel

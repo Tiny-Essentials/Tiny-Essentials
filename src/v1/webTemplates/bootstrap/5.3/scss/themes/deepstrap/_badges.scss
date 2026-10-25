@@ -1,0 +1,170 @@
+// =============================================================================
+// Badges
+//
+// One registry, three outputs:
+//   1. `.badge.text-bg-{tone}`  soft badge (12% wash)
+//   2. `.badge-floating`        solid badge, opaque (counters over media)
+//   3. `.bg-{tone}`             re-points the text tokens so nested content
+//                               stays readable on the filled surface
+//
+// Adding a tone to `$badge-tones` is enough to get all three.
+// =============================================================================
+
+@use 'sass:map';
+@use 'sass:meta';
+
+// ---------------------------------------------------------------- registry --
+/// Tone registry.
+///
+/// The name is intentionally not `$badge-tones`: `_theme.scss` uses `@import`,
+/// so every partial shares one global scope. A generic name collides with the
+/// flat map in `_bootstrap-overrides.scss` and `!default` silently keeps the
+/// wrong value.
+///
+/// `token` is the `--ui-*` suffix that holds the colour.
+/// `on` is the `--ui-on-*` suffix that holds the readable foreground.
+///
+/// `secondary` points at `neutral-light` on purpose: `--ui-on-text-muted` is
+/// white, which only reaches 3.4:1 on the muted grey. The badge is 11px.
+///
+/// @type Map
+$badge-tone-map: (
+  'primary': (
+    token: 'accent',
+    on: 'accent',
+  ),
+  'secondary': (
+    token: 'text-muted',
+    on: 'neutral-light',
+  ),
+  'success': (
+    token: 'success',
+    on: 'success',
+  ),
+  'danger': (
+    token: 'error',
+    on: 'error',
+  ),
+  'warning': (
+    token: 'warn',
+    on: 'warn',
+  ),
+  'info': (
+    token: 'info',
+    on: 'info',
+  ),
+  'light': (
+    token: 'neutral-light',
+    on: 'neutral-light',
+  ),
+  'dark': (
+    token: 'neutral-dark',
+    on: 'neutral-dark',
+  ),
+  'white': (
+    token: 'neutral-light',
+    on: 'neutral-light',
+  ),
+  'black': (
+    token: 'neutral-dark',
+    on: 'neutral-dark',
+  ),
+);
+
+// Fails at build time with the offending key, instead of a `map.get` trace
+// three files later.
+@each $name, $config in $badge-tone-map {
+  @if meta.type-of($config) != 'map' {
+    @error 'Badge tone `#{$name}` must be a map with `token` and `on`, got `#{meta.type-of($config)}`.';
+  }
+
+  @each $key in ('token', 'on') {
+    @if not map.has-key($config, $key) {
+      @error 'Badge tone `#{$name}` is missing the `#{$key}` key.';
+    }
+  }
+}
+
+// ------------------------------------------------------------------ mixins --
+/// Re-points every text token a component may read to the readable
+/// foreground of the current tone.
+///
+/// Components must read `--bs-*` (or `--tone-ink`) instead of hard-coding
+/// `--ui-heading`, otherwise they keep the page ink on a filled surface.
+///
+/// @param {String} $on - `--ui-on-*` suffix, without the prefix.
+@mixin tone-ink($on) {
+  --tone-ink: var(--ui-on-#{$on});
+  --tone-ink-soft: color-mix(in srgb, var(--ui-on-#{$on}) 78%, transparent);
+
+  --bs-body-color: var(--tone-ink);
+  --bs-emphasis-color: var(--tone-ink);
+  --bs-heading-color: var(--tone-ink);
+  --bs-secondary-color: var(--tone-ink-soft);
+  --bs-tertiary-color: var(--tone-ink-soft);
+  --bs-card-color: var(--tone-ink);
+  --bs-card-cap-color: var(--tone-ink);
+  --bs-list-group-color: var(--tone-ink);
+  --bs-border-color: color-mix(in srgb, var(--tone-ink) 28%, transparent);
+
+  color: var(--tone-ink) !important;
+}
+
+// -------------------------------------------------------------------- base --
+.badge {
+  --bs-badge-font-size: 0.6875rem;
+  --bs-badge-font-weight: 500;
+
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+}
+
+// ------------------------------------------------------------------- tones --
+@each $name, $config in $badge-tone-map {
+  $token: map.get($config, 'token');
+  $on: map.get($config, 'on');
+
+  .badge.text-bg-#{$name} {
+    color: var(--ui-#{$token}) !important;
+    background-color: rgb(var(--ui-#{$token}-rgb) / 0.12) !important;
+    border-color: rgb(var(--ui-#{$token}-rgb) / 0.32);
+  }
+
+  .badge.badge-floating.text-bg-#{$name} {
+    color: var(--ui-on-#{$on}) !important;
+    background-color: var(--ui-#{$token}) !important;
+    border-color: transparent;
+  }
+}
+
+@each $name, $config in $badge-tone-map {
+  $on: map.get($config, 'on');
+
+  .bg-#{$name},
+  .text-bg-#{$name} {
+    @include tone-ink($on);
+  }
+}
+
+// --------------------------------------------------------- surface pairing --
+// Re-pointing the tokens (instead of the properties) keeps nested
+// `.card-title`, `.text-muted`, `hr` and friends readable without a single
+// `!important` on the descendants.
+@each $name, $config in $badge-tone-map {
+  $on: map.get($config, 'on');
+
+  .bg-#{$name},
+  .text-bg-#{$name} {
+    @include tone-ink($on);
+  }
+}
+
+// `.text-bg-*` is generated from `$theme-colors`, which has no `white` or
+// `black`. Emit the missing pair so the modifiers stay uniform.
+.text-bg-white {
+  background-color: var(--ui-neutral-light) !important;
+}
+
+.text-bg-black {
+  background-color: var(--ui-neutral-dark) !important;
+}

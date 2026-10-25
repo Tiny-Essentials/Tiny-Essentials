@@ -1,16 +1,54 @@
 /**
  * @file Badge colour matrix for the Bootstrap 5.3 playground.
+ *
+ * Bootstrap ships two ways of colouring a badge:
+ *
+ * - `text-bg-{tone}` sets the background **and** a contrasting foreground.
+ * - `bg-{tone}` sets only the background, so the text keeps the inherited
+ *   colour. That is the family where contrast bugs show up.
+ *
+ * Both are rendered, plus a `compare` family that puts them side by side.
  */
 
 import { createMatrix, el } from '../color-matrix.js';
+
+/**
+ * Resolves the two class lists a badge can use for a single tone.
+ *
+ * @param {string} tone Theme colour name.
+ * @returns {{ text: string, background: string }} Class list of each variant.
+ * @throws {TypeError} When `tone` is not a non-empty string.
+ */
+const badgeClasses = (tone) => {
+  if (typeof tone !== 'string' || tone.trim() === '') {
+    throw new TypeError('tone must be a non-empty string');
+  }
+
+  return {
+    text: `badge text-bg-${tone}`,
+    background: `badge bg-${tone}`,
+  };
+};
 
 /** @type {readonly import('../color-matrix.js').MatrixFamily[]} */
 const FAMILIES = Object.freeze([
   {
     id: 'solid',
-    title: 'Solid',
-    description: 'badge text-bg-{tone}',
-    toneClass: (tone) => `badge text-bg-${tone}`,
+    title: 'Solid (text-bg)',
+    description: 'badge text-bg-{tone} — background plus a contrasting foreground.',
+    toneClass: (tone) => badgeClasses(tone).text,
+  },
+  {
+    id: 'background',
+    title: 'Background only (bg)',
+    description: 'badge bg-{tone} — background only, the text keeps the inherited colour.',
+    toneClass: (tone) => badgeClasses(tone).background,
+  },
+  {
+    id: 'compare',
+    title: 'text-bg vs bg',
+    description: 'Both variants side by side, so the contrast difference is visible.',
+    toneClass: () => '',
   },
   {
     id: 'pill',
@@ -44,6 +82,16 @@ const FAMILIES = Object.freeze([
  * @returns {HTMLElement}
  */
 const createBadge = (family, tone) => {
+  if (family.id === 'compare') {
+    const text = el('span', badgeClasses(tone).text, tone);
+    text.title = `text-bg-${tone}`;
+
+    const background = el('span', badgeClasses(tone).background, tone);
+    background.title = `bg-${tone}`;
+
+    return el('span', 'd-inline-flex align-items-center gap-1', text, background);
+  }
+
   const badge = el('span', family.toneClass(tone), tone);
 
   if (family.id === 'in-button') {

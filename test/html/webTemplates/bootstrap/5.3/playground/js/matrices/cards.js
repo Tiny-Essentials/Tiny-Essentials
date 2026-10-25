@@ -28,12 +28,20 @@ const FAMILIES = Object.freeze([
     id: 'header',
     title: 'Header & footer',
     description: 'card with card-header and card-footer',
+    toneAgnostic: true,
     toneClass: () => 'card',
   },
   {
     id: 'list',
     title: 'List group',
     description: 'card with list-group list-group-flush',
+    toneAgnostic: true,
+    toneClass: () => 'card',
+  },
+  {
+    id: 'colored-header',
+    title: 'Colored header',
+    description: 'card with a bg-{tone} card-header',
     toneClass: () => 'card',
   },
   {
@@ -47,12 +55,6 @@ const FAMILIES = Object.freeze([
     title: 'Border',
     description: 'card border-2 border-{tone}',
     toneClass: (tone) => `card border-2 border-${tone}`,
-  },
-  {
-    id: 'header',
-    title: 'Colored header',
-    description: 'card with a bg-{tone} card-header',
-    toneClass: () => 'card',
   },
   {
     id: 'horizontal',
@@ -97,12 +99,27 @@ const createCard = (family, tone, index) => {
 
   if (family.id === 'header') {
     card.append(
-      el('div', 'card-header text-capitalize', tone),
+      el('div', 'card-header', 'Header'),
       el(
         'div',
         'card-body',
         el('h5', 'card-title', 'Header & footer'),
-        el('p', 'card-text', `Card with ${tone} header.`),
+        el('p', 'card-text mb-0', 'Card with a header and a footer.'),
+      ),
+      el('div', 'card-footer text-body-secondary', '2 days ago'),
+    );
+
+    return card;
+  }
+
+  if (family.id === 'colored-header') {
+    card.append(
+      el('div', `card-header text-capitalize bg-${tone}`, tone),
+      el(
+        'div',
+        'card-body',
+        el('h5', 'card-title', 'Colored header'),
+        el('p', 'card-text mb-0', `Header uses bg-${tone}.`),
       ),
       el('div', 'card-footer text-body-secondary', '2 days ago'),
     );
@@ -169,13 +186,16 @@ const renderFamily = (family, state) => {
   const section = el('section', 'd-flex flex-column gap-2');
   section.id = `pg-card-${family.id}`;
 
+  // Tone-agnostic families have no colour to iterate over, so a single card is enough.
+  const tones = family.toneAgnostic ? state.tones.slice(0, 1) : state.tones;
+
   section.append(
     el('h4', 'fw-bold mb-0', family.title),
     el('p', 'small text-body-secondary mb-0', family.description),
     el(
       'div',
       'row g-3',
-      ...state.tones.map((tone, index) => {
+      ...tones.map((tone, index) => {
         const column = el('div', 'col-md-4');
         column.append(createCard(family, tone, index));
 

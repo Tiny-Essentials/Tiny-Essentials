@@ -25,6 +25,7 @@
  * @property {string} title Heading text.
  * @property {string} description Short explanation rendered under the heading.
  * @property {(tone: string) => string} toneClass Resolves the tone class of the family.
+ * @property {boolean} [toneAgnostic] When true, the family ignores the tone list and renders once.
  * @property {readonly MatrixExtra[]} [extras] Tone-less variants that only exist in this family.
  */
 

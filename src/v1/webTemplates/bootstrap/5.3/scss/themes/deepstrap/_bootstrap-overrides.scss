@@ -64,9 +64,11 @@
 .card {
   --bs-card-bg: transparent;
   --bs-card-border-color: var(--ui-border);
-  --bs-card-color: var(--ui-text);
+  // `--tone-ink` is set by `.bg-*` / `.text-bg-*`. The fallback keeps the
+  // default card untouched.
+  --bs-card-color: var(--tone-ink, var(--ui-text));
   --bs-card-cap-bg: var(--ui-overlay-1);
-  --bs-card-cap-color: var(--ui-heading);
+  --bs-card-cap-color: var(--tone-ink, var(--ui-heading));
   --bs-card-inner-border-color: var(--ui-hairline);
 
   @include surface(0.86);
@@ -306,34 +308,6 @@ hr {
   border-color: var(--ui-border) !important;
 }
 
-// ------------------------------------------------------------------- badge --
-// Bootstrap's .text-bg-* uses !important on color and background, so we must
-// match that specificity to keep the tone system consistent with _buttons.scss.
-$badge-tones: (
-  'primary': 'accent',
-  'secondary': 'text-muted',
-  'success': 'success',
-  'danger': 'error',
-  'warning': 'warn',
-  'info': 'info',
-);
-
-.badge {
-  --bs-badge-font-size: 0.6875rem;
-  --bs-badge-font-weight: 500;
-
-  letter-spacing: 0.02em;
-  border: 1px solid transparent;
-}
-
-@each $name, $token in $badge-tones {
-  .badge.text-bg-#{$name} {
-    color: var(--ui-#{$token}) !important;
-    background-color: rgb(var(--ui-#{$token}-rgb) / 0.12) !important;
-    border-color: rgb(var(--ui-#{$token}-rgb) / 0.32);
-  }
-}
-
 // ---------------------------------------------------------------- carousel --
 // The carousel is a media surface. The scrim, the caption colour and the
 // control colour are driven by local variables so each theme can pick the
@@ -542,25 +516,6 @@ $tone-foregrounds: map.merge(
   )
 );
 
-// `.text-bg-*` do Bootstrap usa `color: #fff !important`. Em tom claro
-// (`warning`, `pink`) o texto some. Em `light`/`dark` ele nem checa o
-// contraste. Reemite com o par correto.
-@each $name, $token in $tone-foregrounds {
-  .text-bg-#{$name} {
-    color: var(--ui-on-#{$token}) !important;
-    background-color: rgba(var(--bs-#{$name}-rgb), var(--bs-bg-opacity, 1)) !important;
-  }
-}
-
-// `.bg-*` só pinta o fundo. Emparelha com o foreground para o texto
-// continuar legível.
-@each $name, $token in $tone-foregrounds {
-  .bg-#{$name} {
-    color: var(--ui-on-#{$token});
-  }
-}
-
-// `.border-*` lê `--bs-{tone}-rgb`, que agora é por tema.
 @each $name, $token in $tone-foregrounds {
   .border-#{$name} {
     border-color: rgba(var(--bs-#{$name}-rgb), var(--bs-border-opacity, 1)) !important;

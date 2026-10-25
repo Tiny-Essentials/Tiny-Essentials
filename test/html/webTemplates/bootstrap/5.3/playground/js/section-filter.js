@@ -1,33 +1,33 @@
 /**
  * @file Section filter for the Bootstrap 5.3 playground.
  *
- * Wraps every `<section id>` of the page in a single-select filter, so one test
- * environment can be isolated without losing the "show everything" default.
- *
- * The filter never rebuilds the DOM: it only toggles the `hidden` attribute, so
- * every matrix keeps its state (picker, scroll position, localStorage) when it
- * comes back.
+ * Every `<section id>` inside the container becomes one checkbox. The filter
+ * toggles the `hidden` attribute, so a section keeps its state (pickers, scroll
+ * position, localStorage) when it comes back.
  */
+
+import { button, el } from './color-matrix.js';
 
 /* -------------------------------------------------------------------- types */
 
 /**
  * @typedef {Object} SectionEntry
- * @property {string} id Section id, also used as the `<option>` value.
+ * @property {string} id Section id, also used as the checkbox id suffix.
  * @property {string} label Visible label, taken from the first heading.
  * @property {HTMLElement} element Section element.
  */
 
 /**
  * @typedef {Object} SectionFilterElements
- * @property {HTMLSelectElement} select Select that drives the filter.
- * @property {HTMLElement} container Element that owns every section.
+ * @property {HTMLElement} mount Element that receives the dropdown.
+ * @property {HTMLElement} container Element that owns the sections.
  */
 
 /**
  * @typedef {Object} SectionFilterOptions
  * @property {string} [storageKey] localStorage key used to persist the selection.
- * @property {string} [allLabel] Label of the "show everything" option.
+ * @property {string} [label] Accessible label of the dropdown.
+ * @property {string} [emptyMessage] Message rendered when nothing is selected.
  */
 
 /**
@@ -38,19 +38,16 @@
 /* ---------------------------------------------------------------- constants */
 
 /** @type {string} */
-const ALL_VALUE = 'all';
-
-/** @type {string} */
 const CHANGE_EVENT = 'pg:sectionchange';
 
 /* -------------------------------------------------------------------- class */
 
 /**
- * Single-select filter over the sections of a container.
+ * Multi-select filter over the sections of a container.
  */
 class SectionFilter {
-  /** @type {HTMLSelectElement} */
-  #select;
+  /** @type {HTMLElement} */
+  #mount;
 
   /** @type {HTMLElement} */
   #container;
@@ -59,39 +56,63 @@ class SectionFilter {
   #storageKey;
 
   /** @type {string} */
-  #allLabel;
+  #label;
+
+  /** @type {string} */
+  #emptyMessage;
 
   /** @type {SectionEntry[]} */
   #sections = [];
+
+  /** @type {Set<string>} */
+  #selected = new Set();
+
+  /** @type {Map<string, HTMLInputElement>} */
+  #inputs = new Map();
+
+  /** @type {HTMLButtonElement | null} */
+  #toggle = null;
+
+  /** @type {HTMLElement | null} */
+  #empty = null;
 
   /**
    * @param {SectionFilterElements} elements
    * @param {SectionFilterOptions} [options]
    * @throws {TypeError} When an element or an option has an unexpected type.
    */
-  constructor({ select, container }, options = {}) {
-    if (!(select instanceof HTMLSelectElement)) {
-      throw new TypeError('select must be an HTMLSelectElement');
+  constructor({ mount, container }, options = {}) {
+    if (!(mount instanceof HTMLElement)) {
+      throw new TypeError('mount must be an HTMLElement');
     }
 
     if (!(container instanceof HTMLElement)) {
       throw new TypeError('container must be an HTMLElement');
     }
 
-    const { storageKey = 'pg-section', allLabel = 'All sections' } = options;
+    const {
+      storageKey = 'pg-section',
+      label = 'Sections',
+      emptyMessage = 'Select at least one section to render the page.',
+    } = options;
 
     if (typeof storageKey !== 'string' || storageKey.trim() === '') {
       throw new TypeError('storageKey must be a non-empty string');
     }
 
-    if (typeof allLabel !== 'string' || allLabel.trim() === '') {
-      throw new TypeError('allLabel must be a non-empty string');
+    if (typeof label !== 'string' || label.trim() === '') {
+      throw new TypeError('label must be a non-empty string');
     }
 
-    this.#select = select;
+    if (typeof emptyMessage !== 'string' || emptyMessage.trim() === '') {
+      throw new TypeError('emptyMessage must be a non-empty string');
+    }
+
+    this.#mount = mount;
     this.#container = container;
     this.#storageKey = storageKey;
-    this.#allLabel = allLabel;
+    this.#label = label;
+    this.#emptyMessage = emptyMessage;
   }
 
   /**
@@ -103,34 +124,24 @@ class SectionFilter {
   }
 
   /**
-   * Currently selected section id, or `all`.
-   * @returns {string}
+   * Ids of the sections that are currently visible.
+   * @returns {string[]}
    */
-  get current() {
-    return this.#select.value;
+  get selected() {
+    return this.#sections.filter((section) => this.#selected.has(section.id)).map((item) => item.id);
   }
 
   /**
-   * Fills the select and applies the persisted selection.
+   * Builds the dropdown and applies the persisted selection.
    * @returns {void}
    */
   mount() {
     this.#sections = this.#collect();
-
-    this.#select.replaceChildren(
-      new Option(this.#allLabel, ALL_VALUE),
-      ...this.#sections.map((section) => new Option(section.label, section.id)),
-    );
-
-    this.#select.disabled = false;
-    this.#select.addEventListener('change', () => {
-      this.#apply(this.#select.value, { persist: true });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    this.#selected = this.#read();
+    this.#render();
+    this.#apply({ persist: false });
 
     window.addEventListener('hashchange', () => this.#syncFromHash());
-
-    this.#apply(this.#read(), { persist: false });
   }
 
   /**
@@ -155,7 +166,7 @@ class SectionFilter {
       }
 
       seen.add(element.id);
-      entries.push({ id: element.id, label: this.#label(element), element });
+      entries.push({ id: element.id, label: this.#labelOf(element), element });
     });
 
     return entries;
@@ -166,7 +177,7 @@ class SectionFilter {
    * @param {HTMLElement} element
    * @returns {string}
    */
-  #label(element) {
+  #labelOf(element) {
     const heading = element.querySelector('h1, h2');
     const text = (heading?.textContent ?? '').replace(/\s+/g, ' ').trim();
 
@@ -174,61 +185,177 @@ class SectionFilter {
   }
 
   /**
-   * Reads the persisted selection.
-   * @returns {string}
+   * Builds the dropdown markup.
+   * @returns {void}
+   */
+  #render() {
+    const toggle = button('', 'btn btn-sm btn-outline-secondary dropdown-toggle');
+    toggle.dataset.bsToggle = 'dropdown';
+    toggle.dataset.bsAutoClose = 'outside';
+    toggle.setAttribute('aria-expanded', 'false');
+
+    const all = button('Select all', 'btn btn-sm btn-outline-secondary flex-fill');
+    all.addEventListener('click', () => this.#setAll(true));
+
+    const none = button('Clear', 'btn btn-sm btn-outline-secondary flex-fill');
+    none.addEventListener('click', () => this.#setAll(false));
+
+    const menu = el('div', 'dropdown-menu p-2');
+    menu.style.minWidth = '18rem';
+    menu.style.maxHeight = '22rem';
+    menu.style.overflowY = 'auto';
+    menu.append(el('div', 'd-flex gap-1 mb-2', all, none), ...this.#createItems());
+
+    this.#toggle = toggle;
+    this.#mount.replaceChildren(el('div', 'dropdown', toggle, menu));
+
+    this.#empty = el('p', 'alert alert-warning', this.#emptyMessage);
+    this.#empty.hidden = true;
+    this.#container.prepend(this.#empty);
+  }
+
+  /**
+   * Builds one checkbox per section.
+   * @returns {HTMLDivElement[]}
+   */
+  #createItems() {
+    return this.#sections.map((section) => {
+      const input = el('input', 'form-check-input');
+      input.type = 'checkbox';
+      input.id = `pg-section-${section.id}`;
+      input.checked = this.#selected.has(section.id);
+      input.addEventListener('change', () => {
+        if (input.checked) {
+          this.#selected.add(section.id);
+        } else {
+          this.#selected.delete(section.id);
+        }
+
+        this.#apply({ persist: true });
+      });
+      this.#inputs.set(section.id, input);
+
+      const label = el('label', 'form-check-label small', section.label);
+      label.htmlFor = input.id;
+
+      return el('div', 'form-check', input, label);
+    });
+  }
+
+  /**
+   * Selects or clears every section.
+   * @param {boolean} checked
+   * @returns {void}
+   */
+  #setAll(checked) {
+    this.#sections.forEach((section) => {
+      if (checked) {
+        this.#selected.add(section.id);
+      } else {
+        this.#selected.delete(section.id);
+      }
+    });
+
+    this.#inputs.forEach((input, id) => {
+      input.checked = this.#selected.has(id);
+    });
+
+    this.#apply({ persist: true });
+  }
+
+  /**
+   * Reads the persisted selection, falling back to every section.
+   * @returns {Set<string>}
    */
   #read() {
+    const fallback = new Set(this.#sections.map((section) => section.id));
+
     try {
-      return localStorage.getItem(this.#storageKey) ?? ALL_VALUE;
+      const raw = localStorage.getItem(this.#storageKey);
+
+      if (raw === null) {
+        return fallback;
+      }
+
+      const parsed = JSON.parse(raw);
+
+      if (!Array.isArray(parsed)) {
+        return fallback;
+      }
+
+      return new Set(
+        this.#sections.filter((section) => parsed.includes(section.id)).map((item) => item.id),
+      );
     } catch {
-      return ALL_VALUE;
+      return fallback;
     }
   }
 
   /**
-   * Shows the requested section and hides the others.
-   * @param {string} value Section id, or `all`.
+   * Persists the current selection.
+   * @returns {void}
+   */
+  #write() {
+    try {
+      localStorage.setItem(this.#storageKey, JSON.stringify(this.selected));
+    } catch {
+      /* Storage can be disabled; the filter still works for this session. */
+    }
+  }
+
+  /**
+   * Applies the current selection to the DOM.
    * @param {ApplyOptions} [options]
    * @returns {void}
    */
-  #apply(value, { persist = false } = {}) {
-    const target = this.#sections.some((section) => section.id === value) ? value : ALL_VALUE;
+  #apply({ persist = false } = {}) {
+    const total = this.#sections.length;
+    const selected = this.selected.length;
 
     this.#sections.forEach((section) => {
-      section.element.hidden = target !== ALL_VALUE && section.id !== target;
+      section.element.hidden = !this.#selected.has(section.id);
     });
 
-    this.#select.value = target;
-
-    if (persist) {
-      try {
-        localStorage.setItem(this.#storageKey, target);
-      } catch {
-        /* Storage can be disabled; the filter still works for this session. */
-      }
+    if (this.#empty) {
+      this.#empty.hidden = selected > 0;
     }
 
-    document.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { section: target } }));
+    if (this.#toggle) {
+      this.#toggle.textContent = `${this.#label} (${selected}/${total})`;
+      this.#toggle.classList.toggle('text-warning', selected !== total);
+    }
+
+    if (persist) {
+      this.#write();
+    }
+
+    document.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { sections: this.selected } }));
   }
 
   /**
-   * Keeps the filter in sync with the table of contents.
-   *
-   * Clicking a TOC link while a single section is isolated switches the filter
-   * to the requested section instead of scrolling to a hidden element.
-   *
+   * Reveals the section referenced by the hash when it is currently hidden.
    * @returns {void}
    */
   #syncFromHash() {
     const id = window.location.hash.replace('#', '');
 
-    if (id === '' || this.#select.value === ALL_VALUE) {
+    if (id === '' || this.#selected.has(id)) {
       return;
     }
 
-    if (this.#sections.some((section) => section.id === id)) {
-      this.#apply(id, { persist: true });
+    if (!this.#sections.some((section) => section.id === id)) {
+      return;
     }
+
+    this.#selected.add(id);
+
+    const input = this.#inputs.get(id);
+
+    if (input) {
+      input.checked = true;
+    }
+
+    this.#apply({ persist: true });
   }
 }
 
@@ -240,28 +367,28 @@ class SectionFilter {
  * Returns `null` (instead of throwing) when the markup is missing, so the page
  * keeps working if the toolbar is removed.
  *
- * @param {string} [selectId] Id of the `<select>`.
+ * @param {string} [mountId] Id of the element that receives the dropdown.
  * @param {string} [containerSelector] Selector of the element that owns the sections.
  * @returns {SectionFilter | null} The mounted filter, or `null`.
  * @throws {TypeError} When an argument is not a non-empty string.
  */
-export const mountSectionFilter = (selectId = 'pg-section-select', containerSelector = 'main') => {
-  if (typeof selectId !== 'string' || selectId.trim() === '') {
-    throw new TypeError('selectId must be a non-empty string');
+export const mountSectionFilter = (mountId = 'pg-section-filter', containerSelector = 'main') => {
+  if (typeof mountId !== 'string' || mountId.trim() === '') {
+    throw new TypeError('mountId must be a non-empty string');
   }
 
   if (typeof containerSelector !== 'string' || containerSelector.trim() === '') {
     throw new TypeError('containerSelector must be a non-empty string');
   }
 
-  const select = document.getElementById(selectId);
+  const mount = document.getElementById(mountId);
   const container = document.querySelector(containerSelector);
 
-  if (!(select instanceof HTMLSelectElement) || !(container instanceof HTMLElement)) {
+  if (!(mount instanceof HTMLElement) || !(container instanceof HTMLElement)) {
     return null;
   }
 
-  const filter = new SectionFilter({ select, container });
+  const filter = new SectionFilter({ mount, container });
   filter.mount();
 
   return filter;
