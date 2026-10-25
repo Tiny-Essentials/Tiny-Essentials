@@ -1,9 +1,13 @@
 /**
  * @file Section filter for the Bootstrap 5.3 playground.
  *
- * Every `<section id>` inside the container becomes one checkbox. The filter
- * toggles the `hidden` attribute, so a section keeps its state (pickers, scroll
- * position, localStorage) when it comes back.
+ * Renders one checkbox per `<section id>` and toggles the `hidden` attribute
+ * instead of rebuilding the DOM, so every matrix keeps its state (picker,
+ * scroll position, localStorage) when it comes back.
+ *
+ * The filter never touches Bootstrap. It only dispatches `pg:sectionchange`
+ * on `document`; the page listens to that event to rebuild the table of
+ * contents and to call `ScrollSpy.refresh()`.
  */
 
 import { button, el } from './color-matrix.js';
@@ -47,7 +51,7 @@ const CHANGE_EVENT = 'pg:sectionchange';
  */
 class SectionFilter {
   /** @type {HTMLElement} */
-  #mount;
+  #mountPoint;
 
   /** @type {HTMLElement} */
   #container;
@@ -108,7 +112,7 @@ class SectionFilter {
       throw new TypeError('emptyMessage must be a non-empty string');
     }
 
-    this.#mount = mount;
+    this.#mountPoint = mount;
     this.#container = container;
     this.#storageKey = storageKey;
     this.#label = label;
@@ -128,7 +132,9 @@ class SectionFilter {
    * @returns {string[]}
    */
   get selected() {
-    return this.#sections.filter((section) => this.#selected.has(section.id)).map((item) => item.id);
+    return this.#sections
+      .filter((section) => this.#selected.has(section.id))
+      .map((item) => item.id);
   }
 
   /**
@@ -140,8 +146,6 @@ class SectionFilter {
     this.#selected = this.#read();
     this.#render();
     this.#apply({ persist: false });
-
-    window.addEventListener('hashchange', () => this.#syncFromHash());
   }
 
   /**
@@ -207,11 +211,12 @@ class SectionFilter {
     menu.append(el('div', 'd-flex gap-1 mb-2', all, none), ...this.#createItems());
 
     this.#toggle = toggle;
-    this.#mount.replaceChildren(el('div', 'dropdown', toggle, menu));
+    this.#mountPoint.replaceChildren(el('div', 'dropdown', toggle, menu));
 
-    this.#empty = el('p', 'alert alert-warning', this.#emptyMessage);
-    this.#empty.hidden = true;
-    this.#container.prepend(this.#empty);
+    const empty = el('p', 'alert alert-warning', this.#emptyMessage);
+    empty.hidden = true;
+    this.#empty = empty;
+    this.#container.prepend(empty);
   }
 
   /**
@@ -330,32 +335,6 @@ class SectionFilter {
     }
 
     document.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { sections: this.selected } }));
-  }
-
-  /**
-   * Reveals the section referenced by the hash when it is currently hidden.
-   * @returns {void}
-   */
-  #syncFromHash() {
-    const id = window.location.hash.replace('#', '');
-
-    if (id === '' || this.#selected.has(id)) {
-      return;
-    }
-
-    if (!this.#sections.some((section) => section.id === id)) {
-      return;
-    }
-
-    this.#selected.add(id);
-
-    const input = this.#inputs.get(id);
-
-    if (input) {
-      input.checked = true;
-    }
-
-    this.#apply({ persist: true });
   }
 }
 

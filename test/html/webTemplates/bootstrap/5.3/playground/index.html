@@ -2576,27 +2576,46 @@
          ==================================================================== */
 
       /**
-       * Builds every table of contents from the page sections.
+       * Rebuilds every table of contents from the sections that are currently
+       * visible. Idempotent: safe to call on every filter change.
        * @returns {void}
        */
       const buildToc = () => {
-        const sections = document.querySelectorAll('main section[id]');
-        const lists = document.querySelectorAll('[data-pg-toc]');
+        const sections = Array.from(document.querySelectorAll('main section[id]')).filter(
+          (section) => !section.hidden,
+        );
 
-        lists.forEach((list) => {
-          sections.forEach((section) => {
+        document.querySelectorAll('[data-pg-toc]').forEach((list) => {
+          const items = sections.flatMap((section) => {
             const title = section.querySelector('h2, h1');
-
-            if (!title) {
-              return;
-            }
+            if (!title) return [];
 
             const item = document.createElement('li');
             item.className = 'nav-item';
-            item.innerHTML = `<a class="nav-link" href="#${section.id}">${title.textContent.trim()}</a>`;
-            list.appendChild(item);
+
+            const link = document.createElement('a');
+            link.className = 'nav-link';
+            link.href = `#${section.id}`;
+            link.textContent = title.textContent.trim();
+
+            item.append(link);
+            return [item];
           });
+
+          list.replaceChildren(...items);
         });
+      };
+
+      /**
+       * Recomputes the ScrollSpy offsets after the layout changed.
+       * @returns {void}
+       */
+      const refreshScrollSpy = () => {
+        if (document.querySelectorAll('#pg-nav a[href^="#"]').length === 0) {
+          return;
+        }
+
+        bootstrap.ScrollSpy.getOrCreateInstance(document.body).refresh();
       };
 
       /* ====================================================================
@@ -2735,10 +2754,16 @@
          ==================================================================== */
       document.addEventListener('DOMContentLoaded', () => {
         applyTheme(localStorage.getItem(THEME_KEY) ?? 'dark');
+        refreshScrollSpy();
         initTopbarMetrics();
         buildToc();
         initWidgets();
         initForm();
+
+        document.addEventListener('pg:sectionchange', () => {
+          buildToc();
+          refreshScrollSpy();
+        });
       });
     </script>
   </body>
