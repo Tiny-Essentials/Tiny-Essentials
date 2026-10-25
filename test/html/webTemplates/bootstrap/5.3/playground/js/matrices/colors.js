@@ -32,8 +32,7 @@ const FAMILIES = Object.freeze([
     id: 'subtle',
     title: 'Subtle',
     description: 'bg-{tone}-subtle text-{tone}-emphasis border-{tone}-subtle',
-    toneClass: (tone) =>
-      `bg-${tone}-subtle text-${tone}-emphasis border border-${tone}-subtle`,
+    toneClass: (tone) => `bg-${tone}-subtle text-${tone}-emphasis border border-${tone}-subtle`,
   },
   {
     id: 'gradient',
@@ -94,11 +93,7 @@ const createSwatch = (family, tone) => {
       `bg-${tone}-subtle text-${tone}-emphasis px-2 py-1 small fw-semibold text-capitalize`,
       tone,
     ),
-    el(
-      'div',
-      'card-body p-2 small text-body-secondary',
-      el('code', '', `${family.id}-${tone}`),
-    ),
+    el('div', 'card-body p-2 small text-body-secondary', el('code', '', `${family.id}-${tone}`)),
   );
 
   column.append(card);
@@ -121,7 +116,7 @@ const createTokenCard = (tone) => {
   TOKEN_SUFFIXES.forEach((suffix) => {
     const name = `--bs-${tone}${suffix}`;
     const row = el('tr');
-    const head = el('th', 'text-nowrap fw-normal', el('code', '', name)));
+    const head = el('th', 'text-nowrap fw-normal', el('code', '', name));
     const value = el('td', 'text-break');
     const code = el('code', '', '—');
     code.dataset.pgToken = name;
@@ -133,10 +128,7 @@ const createTokenCard = (tone) => {
   table.append(tbody);
   body.append(table);
 
-  card.append(
-    el('div', 'card-header py-1 small fw-semibold text-capitalize', tone),
-    body,
-  );
+  card.append(el('div', 'card-header py-1 small fw-semibold text-capitalize', tone), body);
   column.append(card);
 
   return column;

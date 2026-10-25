@@ -26,7 +26,8 @@
       rel="stylesheet"
     />
     <script type="module" src="./js/theme-stylesheet-loader.js"></script>
-    <script type="module" src="./js/button-groups.js"></script>
+    <script type="module" src="./js/section-filter.js"></script>
+    <script type="module" src="./js/matrices/button-groups.js"></script>
     <script type="module" src="./js/matrices/alerts.js"></script>
     <script type="module" src="./js/matrices/badges.js"></script>
     <script type="module" src="./js/matrices/utilities.js"></script>
@@ -62,6 +63,12 @@
         max-height: calc(100dvh - var(--pg-topbar-height) - 2rem);
         overflow-y: auto;
         overscroll-behavior: contain;
+      }
+
+      /* The section filter toggles the `hidden` attribute, which must win over the
+   display used by the layout of each section. */
+      main section[hidden] {
+        display: none !important;
       }
     </style>
   </head>
@@ -197,6 +204,13 @@
               Toggles the opt-in glow on every button in the page.
             </span>
           </div>
+
+          <label class="form-label mb-0 small fw-bold text-body-secondary" for="pg-section-select">
+            Section
+          </label>
+          <select class="form-select form-select-sm w-auto" id="pg-section-select" disabled>
+            <option value="all">All sections</option>
+          </select>
 
           <span
             class="small text-body-secondary ms-auto"
