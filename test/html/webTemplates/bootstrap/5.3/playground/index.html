@@ -45,6 +45,7 @@
     <script type="module" src="./js/matrices/navbars.js"></script>
     <script type="module" src="./js/matrices/placeholders.js"></script>
     <script type="module" src="./js/matrices/tables.js"></script>
+    <script type="module" src="./js/matrices/colors.js"></script>
     <style>
       :root {
         /* Fallback. Replaced at runtime by the measured header height. */
@@ -313,9 +314,10 @@
             <h2 class="fw-bold mb-1">Colors</h2>
             <p class="text-body-secondary mb-4">
               Each theme color exposes a solid, a <code>-subtle</code> background and an
-              <code>-emphasis</code> foreground token.
+              <code>-emphasis</code> foreground token. The last family prints the value resolved by
+              <code>getComputedStyle()</code> for every <code>--bs-{tone}*</code> variable.
             </p>
-            <div class="row g-3" id="pg-swatches"></div>
+            <div id="pg-color-matrix"></div>
           </section>
 
           <!-- ============================================================
@@ -2731,7 +2733,6 @@
       document.addEventListener('DOMContentLoaded', () => {
         applyTheme(localStorage.getItem(THEME_KEY) ?? 'dark');
         initTopbarMetrics();
-        buildSwatches();
         buildToc();
         initWidgets();
         initForm();
