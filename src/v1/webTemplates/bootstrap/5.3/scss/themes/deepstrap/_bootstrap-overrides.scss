@@ -147,13 +147,8 @@
 }
 
 // ------------------------------------------------------------------ alerts --
-@each $name, $token in ('success': 'success', 'danger': 'error', 'warning': 'warn', 'info': 'info')
-{
-  .alert-#{$name} {
-    --bs-alert-color: var(--ui-#{$token});
-    --bs-alert-bg: rgb(var(--ui-#{$token}-rgb) / 0.1);
-    --bs-alert-border-color: rgb(var(--ui-#{$token}-rgb) / 0.28);
-  }
+@each $name, $token in $subtle-tokens {
+  @include tone-alert($name, $token);
 }
 
 // ------------------------------------------------------------------- toast --
@@ -373,10 +368,6 @@ hr {
 .placeholder {
   background-color: var(--ui-border-strong);
   opacity: 0.5;
-}
-
-.placeholder-glow .placeholder {
-  animation: placeholder-glow 1.6s var(--ui-ease) infinite;
 }
 
 @keyframes placeholder-glow {

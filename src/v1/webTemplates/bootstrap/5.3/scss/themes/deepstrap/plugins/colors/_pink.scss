@@ -5,193 +5,40 @@
 // Import after `buttons` in `_theme.scss`.
 // =============================================================================
 
+@use 'sass:map';
+
 // ------------------------------------------------------------------ tokens --
-// `--ui-*-rgb` is space-separated: the mixins compose it as
-// `rgb(var(--ui-pink-rgb) / 0.12)`.
-// `--bs-pink-rgb` is comma-separated: Bootstrap composes it as
-// `rgba(var(--bs-pink-rgb), 1)`.
+$pink-tokens: (
+  'dark': (
+    'base': #ff5c9e,
+    'on': #1a0410,
+    'emphasis': #ff9ec4,
+    'subtle-bg': #2a0f1c,
+    'subtle-border': #5c2340,
+  ),
+  'light': (
+    'base': #c2185b,
+    'on': #ffffff,
+    'emphasis': #8a0f40,
+    'subtle-bg': #fce4ec,
+    'subtle-border': #f4a6c2,
+  ),
+);
+
 :root,
 [data-bs-theme='dark'] {
-  --ui-pink: #ff5c9e;
-  --ui-pink-rgb: 255 92 158;
-  --ui-on-pink: #1a0410;
-
-  --bs-pink: #ff5c9e;
-  --bs-pink-rgb: 255, 92, 158;
-  --bs-pink-text-emphasis: #ff9ec4;
-  --bs-pink-bg-subtle: #2a0f1c;
-  --bs-pink-border-subtle: #5c2340;
+  @include tone-tokens('pink', map.get($pink-tokens, 'dark'));
 }
 
 [data-bs-theme='light'] {
-  --ui-pink: #c2185b;
-  --ui-pink-rgb: 194 24 91;
-  --ui-on-pink: #ffffff;
-
-  --bs-pink: #c2185b;
-  --bs-pink-rgb: 194, 24, 91;
-  --bs-pink-text-emphasis: #8a0f40;
-  --bs-pink-bg-subtle: #fce4ec;
-  --bs-pink-border-subtle: #f4a6c2;
+  @include tone-tokens('pink', map.get($pink-tokens, 'light'));
 }
 
-// ----------------------------------------------------------------- buttons --
-.btn-pink {
-  @include solid-variant('pink');
-}
-
-.btn-outline-pink {
-  @include outline-variant('pink');
-}
-
-.btn-subtle-pink {
-  @include subtle-variant('pink');
-}
-
-// --------------------------------------------------------------- btn-group --
-.btn-group > .btn-pink,
-.btn-group > .btn-outline-pink,
-.btn-group > .btn-subtle-pink,
-.btn-group-vertical > .btn-pink,
-.btn-group-vertical > .btn-outline-pink,
-.btn-group-vertical > .btn-subtle-pink {
-  position: relative;
-}
-
-.btn-group > .btn-pink:hover:not(:disabled):not(.disabled),
-.btn-group > .btn-outline-pink:hover:not(:disabled):not(.disabled),
-.btn-group > .btn-subtle-pink:hover:not(:disabled):not(.disabled),
-.btn-group-vertical > .btn-pink:hover:not(:disabled):not(.disabled),
-.btn-group-vertical > .btn-outline-pink:hover:not(:disabled):not(.disabled),
-.btn-group-vertical > .btn-subtle-pink:hover:not(:disabled):not(.disabled) {
-  z-index: 1;
-}
-
-.btn-group > .btn-pink.active,
-.btn-group > .btn-pink:active:not(:disabled):not(.disabled),
-.btn-group > .btn-outline-pink.active,
-.btn-group > .btn-outline-pink:active:not(:disabled):not(.disabled),
-.btn-group > .btn-subtle-pink.active,
-.btn-group > .btn-subtle-pink:active:not(:disabled):not(.disabled),
-.btn-check:checked + .btn-pink,
-.btn-check:checked + .btn-outline-pink,
-.btn-check:checked + .btn-subtle-pink {
-  z-index: 2;
-}
-
-.btn-check:checked + .btn-pink {
-  --btn-fill: color-mix(in srgb, var(--ui-pink) var(--btn-press-amount), var(--btn-mix));
-}
-
-// --------------------------------------------------------------- utilities --
-.text-pink {
-  color: rgba(var(--bs-pink-rgb), var(--bs-text-opacity, 1)) !important;
-}
-
-.bg-pink {
-  background-color: rgba(var(--bs-pink-rgb), var(--bs-bg-opacity, 1)) !important;
-}
-
-.border-pink {
-  border-color: rgba(var(--bs-pink-rgb), var(--bs-border-opacity, 1)) !important;
-}
-
-.text-bg-pink {
-  color: var(--ui-on-pink) !important;
-  background-color: rgba(var(--bs-pink-rgb), var(--bs-bg-opacity, 1)) !important;
-}
-
-.bg-pink-subtle {
-  background-color: var(--bs-pink-bg-subtle) !important;
-}
-
-.text-pink-emphasis {
-  color: var(--bs-pink-text-emphasis) !important;
-}
-
-.border-pink-subtle {
-  border-color: var(--bs-pink-border-subtle) !important;
-}
-
-// ------------------------------------------------------------------ badges --
-.badge.text-bg-pink {
-  color: var(--ui-pink) !important;
-  background-color: rgb(var(--ui-pink-rgb) / 0.12) !important;
-  border-color: rgb(var(--ui-pink-rgb) / 0.32);
-}
-
-.badge.badge-floating.text-bg-pink {
-  color: var(--ui-on-pink) !important;
-  background-color: var(--ui-pink) !important;
-  border-color: transparent;
-}
-
-.btn .badge.text-bg-pink:not(.badge-floating) {
-  color: inherit !important;
-  background-color: color-mix(in srgb, currentColor 14%, transparent) !important;
-  border-color: color-mix(in srgb, currentColor 32%, transparent) !important;
-}
-
-// ------------------------------------------------------------------ alerts --
-.alert-pink {
-  --bs-alert-color: var(--ui-pink);
-  --bs-alert-bg: rgb(var(--ui-pink-rgb) / 0.1);
-  --bs-alert-border-color: rgb(var(--ui-pink-rgb) / 0.28);
-}
-
-// ------------------------------------------------------------------- links --
-.link-pink {
-  color: var(--ui-pink);
-
-  &:hover,
-  &:focus {
-    color: color-mix(in srgb, var(--ui-pink) 80%, var(--ui-heading));
-  }
-}
-
-// ---------------------------------------------------------------- progress --
-.progress-bar-pink {
-  --bs-progress-bar-bg: var(--ui-pink);
-}
-
-// ------------------------------------------------------------------ tables --
-.table-pink {
-  @include tone-table('pink');
-}
-
-// -------------------------------------------------------- form validation --
-.form-check-input-pink {
-  &:checked {
-    background-color: var(--ui-pink);
-    border-color: var(--ui-pink);
-  }
-
-  &:focus {
-    box-shadow: 0 0 0 3px rgb(var(--ui-pink-rgb) / 0.2);
-  }
-}
-
-// ------------------------------------------------------------------ ghost --
-.btn-ghost-pink {
-  --bs-btn-color: var(--ui-pink);
-  --bs-btn-bg: transparent;
-  --bs-btn-border-color: transparent;
-  --bs-btn-hover-color: var(--ui-pink);
-  --bs-btn-hover-bg: color-mix(in srgb, var(--ui-pink) 12%, transparent);
-  --bs-btn-hover-border-color: transparent;
-  --bs-btn-active-color: var(--ui-pink);
-  --bs-btn-active-bg: color-mix(in srgb, var(--ui-pink) 20%, transparent);
-  --bs-btn-active-border-color: transparent;
-  --bs-btn-disabled-color: var(--ui-pink);
-  --bs-btn-disabled-bg: transparent;
-  --bs-btn-disabled-border-color: transparent;
-}
-
-// -------------------------------------------------------------- list group --
-.list-group-item.list-group-item-pink {
-  @include tone-list-group('pink');
-}
-
-.list-group-item.list-group-item-pink.active {
-  @include tone-list-group-active('pink');
-}
+// ------------------------------------------------------------------ plugin --
+@include tone-plugin(
+  'pink',
+  (
+    'token': 'pink',
+    'on': 'pink',
+  )
+);

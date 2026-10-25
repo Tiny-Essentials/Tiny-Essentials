@@ -59,28 +59,6 @@ $badge-tone-map: (
   }
 }
 
-// ------------------------------------------------------------------ mixins --
-/// Re-points every text token a component may read to the readable
-/// foreground of the current tone.
-///
-/// Components must read `--bs-*` (or `--tone-ink`) instead of hard-coding
-/// `--ui-heading`, otherwise they keep the page ink on a filled surface.
-///
-/// @param {String} $on - `--ui-on-*` suffix, without the prefix.
-@mixin tone-ink($on) {
-  --tone-ink: var(--ui-on-#{$on});
-  --tone-ink-soft: color-mix(in srgb, var(--ui-on-#{$on}) 78%, transparent);
-
-  --bs-body-color: var(--tone-ink);
-  --bs-emphasis-color: var(--tone-ink);
-  --bs-heading-color: var(--tone-ink);
-  --bs-secondary-color: var(--tone-ink-soft);
-  --bs-tertiary-color: var(--tone-ink-soft);
-  --bs-card-color: var(--tone-ink);
-  --bs-card-cap-color: var(--tone-ink);
-  --bs-list-group-color: var(--tone-ink);
-  --bs-border-color: color-mix(in srgb, var(--tone-ink) 28%, transparent);
-}
 
 // -------------------------------------------------------------------- base --
 .badge {
@@ -93,41 +71,18 @@ $badge-tone-map: (
 
 // ------------------------------------------------------------------- tones --
 @each $name, $config in $badge-tone-map {
-  $token: map.get($config, 'token');
-  $on: map.get($config, 'on');
-
-  .badge.text-bg-#{$name} {
-    color: var(--ui-#{$token}) !important;
-    background-color: rgb(var(--ui-#{$token}-rgb) / 0.12) !important;
-    border-color: rgb(var(--ui-#{$token}-rgb) / 0.32);
-  }
-
-  .badge.badge-floating.text-bg-#{$name} {
-    color: var(--ui-on-#{$on}) !important;
-    background-color: var(--ui-#{$token}) !important;
-    border-color: transparent;
-  }
-}
-
-@each $name, $config in $badge-tone-map {
-  $on: map.get($config, 'on');
-
-  .bg-#{$name},
-  .text-bg-#{$name} {
-    @include tone-ink($on);
-  }
-  .text-bg-#{$name} {
-    color: var(--tone-ink) !important;
-  }
+  @include tone-badge($name, map.get($config, 'token'), map.get($config, 'on'));
 }
 
 // --------------------------------------------------------- surface pairing --
 @each $name, $config in $badge-tone-map {
-  $on: map.get($config, 'on');
-
   .bg-#{$name},
   .text-bg-#{$name} {
-    @include tone-ink($on);
+    @include tone-ink(map.get($config, 'on'));
+  }
+
+  .text-bg-#{$name} {
+    color: var(--tone-ink) !important;
   }
 }
 

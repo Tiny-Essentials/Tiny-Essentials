@@ -3,7 +3,49 @@
 //
 // Shared emitters for the per-tone plugin partials. Every mixin takes the
 // `--ui-*` token suffix (e.g. `pink`) and assumes the `-rgb` companion exists.
+//
+// Two layers live here:
+//
+//   1. Property emitters — `tone-ink`, `tone-list-group`, `tone-table`.
+//      They only declare custom properties and must be called from a selector
+//      the caller owns.
+//   2. Class emitters — `tone-badge`, `tone-alert`, `tone-utilities`, ...
+//      They own their selector and are safe to call at the root.
+//
+// `tone-plugin` wires every class emitter for a single tone.
+//
+// Depends on `triplet()` and `channels()` from `_tokens.scss`. Both are only
+// resolved when a mixin is *called*, so the import order in `_theme.scss`
+// (mixins first, `tokens` later, plugins last) is safe.
 // =============================================================================
+
+@use 'sass:map';
+
+// =============================================================================
+// 1. Property emitters
+// =============================================================================
+
+/// Re-points every text token a component may read to the readable
+/// foreground of the current tone.
+///
+/// Components must read `--bs-*` (or `--tone-ink`) instead of hard-coding
+/// `--ui-heading`, otherwise they keep the page ink on a filled surface.
+///
+/// @param {String} $on - `--ui-on-*` suffix, without the prefix.
+@mixin tone-ink($on) {
+  --tone-ink: var(--ui-on-#{$on});
+  --tone-ink-soft: color-mix(in srgb, var(--ui-on-#{$on}) 78%, transparent);
+
+  --bs-body-color: var(--tone-ink);
+  --bs-emphasis-color: var(--tone-ink);
+  --bs-heading-color: var(--tone-ink);
+  --bs-secondary-color: var(--tone-ink-soft);
+  --bs-tertiary-color: var(--tone-ink-soft);
+  --bs-card-color: var(--tone-ink);
+  --bs-card-cap-color: var(--tone-ink);
+  --bs-list-group-color: var(--tone-ink);
+  --bs-border-color: color-mix(in srgb, var(--tone-ink) 28%, transparent);
+}
 
 /// Emits the full Bootstrap 5.3 list-group variable set for a tone.
 /// @param {String} $tone - Token suffix, without the `--ui-` prefix.
@@ -73,4 +115,258 @@
   &.active::#{$pseudo} {
     width: 100%;
   }
+}
+
+// =============================================================================
+// 2. Class emitters
+// =============================================================================
+
+/// Emits the `--ui-*` / `--bs-*` custom properties for a single tone.
+///
+/// @param {String} $name - Tone name, used as the class suffix.
+/// @param {Map} $tokens - `base`, `on`, `emphasis`, `subtle-bg`, `subtle-border`.
+@mixin tone-tokens($name, $tokens) {
+  @each $key in ('base', 'on', 'emphasis', 'subtle-bg', 'subtle-border') {
+    @if not map.has-key($tokens, $key) {
+      @error 'Tone `#{$name}` is missing the `#{$key}` token.';
+    }
+  }
+
+  $base: map.get($tokens, 'base');
+
+  --ui-#{$name}: #{$base};
+  --ui-#{$name}-rgb: #{triplet($base)};
+  --ui-on-#{$name}: #{map.get($tokens, 'on')};
+
+  --bs-#{$name}: #{$base};
+  --bs-#{$name}-rgb: #{channels($base)};
+  --bs-#{$name}-text-emphasis: #{map.get($tokens, 'emphasis')};
+  --bs-#{$name}-bg-subtle: #{map.get($tokens, 'subtle-bg')};
+  --bs-#{$name}-border-subtle: #{map.get($tokens, 'subtle-border')};
+}
+
+/// Emits the three button variants for a tone.
+///
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+@mixin tone-buttons($name, $tone: $name) {
+  .btn-#{$name} {
+    @include solid-variant($tone);
+  }
+
+  .btn-outline-#{$name} {
+    @include outline-variant($tone);
+  }
+
+  .btn-subtle-#{$name} {
+    @include subtle-variant($tone);
+  }
+}
+
+/// Keeps a hovered/active tone button above its siblings inside a group.
+///
+/// @param {String} $name - Class suffix, e.g. `pink`.
+@mixin tone-button-group($name) {
+  @each $prefix in ('btn', 'btn-outline', 'btn-subtle') {
+    .btn-group > .#{$prefix}-#{$name},
+    .btn-group-vertical > .#{$prefix}-#{$name} {
+      position: relative;
+    }
+
+    .btn-group > .#{$prefix}-#{$name}:hover:not(:disabled):not(.disabled),
+    .btn-group-vertical > .#{$prefix}-#{$name}:hover:not(:disabled):not(.disabled) {
+      z-index: 1;
+    }
+
+    .btn-group > .#{$prefix}-#{$name}.active,
+    .btn-group > .#{$prefix}-#{$name}:active:not(:disabled):not(.disabled),
+    .btn-group-vertical > .#{$prefix}-#{$name}.active,
+    .btn-group-vertical > .#{$prefix}-#{$name}:active:not(:disabled):not(.disabled) {
+      z-index: 2;
+    }
+  }
+
+  .btn-check:checked + .btn-#{$name} {
+    --btn-fill: color-mix(in srgb, var(--ui-#{$name}) var(--btn-press-amount), var(--btn-mix));
+  }
+
+  .btn-check:checked + .btn-outline-#{$name},
+  .btn-check:checked + .btn-subtle-#{$name} {
+    z-index: 2;
+  }
+}
+
+/// Emits the soft and floating badge skins for one tone.
+///
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+/// @param {String} $on - Token suffix for `--ui-on-*`.
+@mixin tone-badge($name, $tone: $name, $on: $tone) {
+  .badge.text-bg-#{$name} {
+    color: var(--ui-#{$tone}) !important;
+    background-color: rgb(var(--ui-#{$tone}-rgb) / 0.12) !important;
+    border-color: rgb(var(--ui-#{$tone}-rgb) / 0.32);
+  }
+
+  .badge.badge-floating.text-bg-#{$name} {
+    color: var(--ui-on-#{$on}) !important;
+    background-color: var(--ui-#{$tone}) !important;
+    border-color: transparent;
+  }
+
+  .btn .badge.text-bg-#{$name}:not(.badge-floating) {
+    color: inherit !important;
+    background-color: color-mix(in srgb, currentColor 14%, transparent) !important;
+    border-color: color-mix(in srgb, currentColor 32%, transparent) !important;
+  }
+}
+
+/// Emits the `.text-*`, `.bg-*`, `.border-*` and `.text-bg-*` helpers.
+///
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+/// @param {String} $on - Token suffix for `--ui-on-*`.
+@mixin tone-utilities($name, $tone: $name, $on: $tone) {
+  .text-#{$name} {
+    color: rgba(var(--bs-#{$name}-rgb), var(--bs-text-opacity, 1)) !important;
+  }
+
+  .bg-#{$name} {
+    background-color: rgba(var(--bs-#{$name}-rgb), var(--bs-bg-opacity, 1)) !important;
+  }
+
+  .border-#{$name} {
+    border-color: rgba(var(--bs-#{$name}-rgb), var(--bs-border-opacity, 1)) !important;
+  }
+
+  .text-bg-#{$name} {
+    color: var(--ui-on-#{$on}) !important;
+    background-color: rgba(var(--bs-#{$name}-rgb), var(--bs-bg-opacity, 1)) !important;
+  }
+
+  .bg-#{$name}-subtle {
+    background-color: var(--bs-#{$name}-bg-subtle) !important;
+  }
+
+  .text-#{$name}-emphasis {
+    color: var(--bs-#{$name}-text-emphasis) !important;
+  }
+
+  .border-#{$name}-subtle {
+    border-color: var(--bs-#{$name}-border-subtle) !important;
+  }
+}
+
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+@mixin tone-alert($name, $tone: $name) {
+  .alert-#{$name} {
+    --bs-alert-color: var(--ui-#{$tone});
+    --bs-alert-bg: rgb(var(--ui-#{$tone}-rgb) / 0.1);
+    --bs-alert-border-color: rgb(var(--ui-#{$tone}-rgb) / 0.28);
+  }
+}
+
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+@mixin tone-link($name, $tone: $name) {
+  .link-#{$name} {
+    color: var(--ui-#{$tone});
+
+    &:hover,
+    &:focus {
+      color: color-mix(in srgb, var(--ui-#{$tone}) 80%, var(--ui-heading));
+    }
+  }
+}
+
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+@mixin tone-progress($name, $tone: $name) {
+  .progress-bar-#{$name} {
+    --bs-progress-bar-bg: var(--ui-#{$tone});
+  }
+}
+
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+@mixin tone-form-check($name, $tone: $name) {
+  .form-check-input-#{$name} {
+    &:checked {
+      background-color: var(--ui-#{$tone});
+      border-color: var(--ui-#{$tone});
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgb(var(--ui-#{$tone}-rgb) / 0.2);
+    }
+  }
+}
+
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+@mixin tone-ghost-button($name, $tone: $name) {
+  .btn-ghost-#{$name} {
+    --bs-btn-color: var(--ui-#{$tone});
+    --bs-btn-bg: transparent;
+    --bs-btn-border-color: transparent;
+    --bs-btn-hover-color: var(--ui-#{$tone});
+    --bs-btn-hover-bg: color-mix(in srgb, var(--ui-#{$tone}) 12%, transparent);
+    --bs-btn-hover-border-color: transparent;
+    --bs-btn-active-color: var(--ui-#{$tone});
+    --bs-btn-active-bg: color-mix(in srgb, var(--ui-#{$tone}) 20%, transparent);
+    --bs-btn-active-border-color: transparent;
+    --bs-btn-disabled-color: var(--ui-#{$tone});
+    --bs-btn-disabled-bg: transparent;
+    --bs-btn-disabled-border-color: transparent;
+  }
+}
+
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+@mixin tone-table-class($name, $tone: $name) {
+  .table-#{$name} {
+    @include tone-table($tone);
+  }
+}
+
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+@mixin tone-list-group-class($name, $tone: $name) {
+  .list-group-item.list-group-item-#{$name} {
+    @include tone-list-group($tone);
+  }
+
+  .list-group-item.list-group-item-#{$name}.active {
+    @include tone-list-group-active($tone);
+  }
+}
+
+// =============================================================================
+// 3. Orchestrator
+// =============================================================================
+
+/// Emits every class emitter for a single tone.
+///
+/// @param {String} $name - Tone name, used as the class suffix.
+/// @param {Map} $config - `token` (required) and `on` (defaults to `$name`).
+@mixin tone-plugin($name, $config) {
+  @if not map.has-key($config, 'token') {
+    @error 'Tone `#{$name}` is missing the `token` key.';
+  }
+
+  $token: map.get($config, 'token');
+  $on: if(map.has-key($config, 'on'), map.get($config, 'on'), $token);
+
+  @include tone-buttons($name, $token);
+  @include tone-button-group($name);
+  @include tone-utilities($name, $token, $on);
+  @include tone-badge($name, $token, $on);
+  @include tone-alert($name, $token);
+  @include tone-link($name, $token);
+  @include tone-progress($name, $token);
+  @include tone-form-check($name, $token);
+  @include tone-ghost-button($name, $token);
+  @include tone-table-class($name, $token);
+  @include tone-list-group-class($name, $token);
 }
