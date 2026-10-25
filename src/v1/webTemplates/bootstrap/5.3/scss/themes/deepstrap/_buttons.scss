@@ -1,14 +1,3 @@
-// =============================================================================
-// Buttons
-// Flat fill + lamp glow on hover.
-//
-// To add a new button family, add an entry to `$button-families`:
-//
-//   'my-tone': (tone: 'my-token'),
-//
-// The solid, outline and subtle variants are generated automatically.
-// =============================================================================
-
 @use 'sass:list';
 @use 'sass:map';
 
@@ -106,12 +95,6 @@ $ghost-tones: (
 // =============================================================================
 
 /// Blends a theme tone into an opaque surface colour.
-///
-/// `color-mix(..., transparent)` returns a translucent colour. Two adjacent
-/// borders then composite into a darker 2px seam, and whatever sits behind the
-/// button bleeds through. Mixing into an opaque token keeps the result solid,
-/// so overlapping borders stay a single 1px line.
-///
 /// @param {String} $tone - Token suffix, without the `--ui-` prefix.
 /// @param {Number} $amount - Share of the tone in the mix.
 /// @param {String} $base - CSS colour the tone is blended into.
@@ -133,38 +116,19 @@ $ghost-tones: (
   --bs-btn-active-color: var(--ui-#{$tone});
   --bs-btn-disabled-color: var(--ui-#{$tone});
 
-  // Single source of truth for the outline. Bootstrap re-declares
-  // `border-color` on `:hover` and `:active` with a (0,2,0) selector, which
-  // outranks `.btn-subtle-*` and drops the border to `transparent` while the
-  // pointer is down. Every state below re-reads this variable instead of
-  // re-declaring the property, so the box keeps the same width everywhere.
   --btn-border: transparent;
 
-  // Group divider. Same rule as the outline variant: the tone is composited
-  // over the group surface, never over the button's own 12% tint.
   --btn-group-border: color-mix(in srgb, var(--ui-#{$tone}) 40%, var(--btn-group-bg));
 
   color: var(--ui-#{$tone});
   background-color: rgb(var(--ui-#{$tone}-rgb) / 0.12);
 
-  // The border is declared once, with the same width in every state. The group
-  // collapses borders with a negative margin, so a state that changes the
-  // border width (or adds one where there was none) shifts the seam by 1px and
-  // the active button paints a second frame on top of its neighbour.
   border: 1px solid var(--btn-border);
 
   &.hover-border {
-    // Painted on the border, not on a box-shadow: a shadow is drawn outside the
-    // border box and is not clipped by the neighbour, so inside a group it
-    // composites into a 2px seam.
-    //
-    // 40% is the pre-composited equivalent of the old `rgb(tone / 0.32)` over
-    // the button's own `rgb(tone / 0.12)` background:
-    //   0.32 + 0.12 * (1 - 0.32) = 0.4016
     --btn-border: #{solid-tint($tone, 40%, var(--btn-group-bg, var(--ui-canvas)))};
   }
 
-  // Re-asserted per state: see the note on `--btn-border`.
   &:hover:not(:disabled):not(.disabled),
   &:active:not(:disabled):not(.disabled),
   &.active {
@@ -194,9 +158,6 @@ $ghost-tones: (
   --bs-btn-active-color: var(--ui-on-#{$tone});
   --bs-btn-disabled-color: var(--ui-on-#{$tone});
 
-  // Bootstrap bridge. `.btn:hover` and `.btn:active` repaint
-  // `background-color` from these variables at (0,2,0), the same specificity
-  // as `.btn-<tone>:hover`. Without them, the winner depends on bundle order.
   --bs-btn-bg: var(--ui-#{$tone});
   --bs-btn-border-color: var(--ui-#{$tone});
   --bs-btn-hover-bg: color-mix(in srgb, var(--ui-#{$tone}) var(--btn-hover-amount), var(--btn-mix));
@@ -211,12 +172,8 @@ $ghost-tones: (
   --bs-btn-disabled-border-color: var(--ui-#{$tone});
   --bs-btn-focus-shadow-rgb: var(--ui-#{$tone}-rgb);
 
-  // Group divider. Opaque: the ink mixed into the fill, so the 1px overlap
-  // between two buttons cannot double the alpha.
   --btn-group-border: color-mix(in srgb, var(--ui-on-#{$tone}) 40%, var(--ui-#{$tone}));
 
-  // Single source of truth for the filled area. The border reads from the
-  // same variable, so a 1px seam can never show the layer behind the button.
   --btn-fill: var(--ui-#{$tone});
 
   color: var(--ui-on-#{$tone});
@@ -224,8 +181,6 @@ $ghost-tones: (
   border-color: transparent !important;
 
   &:hover:not(:disabled):not(.disabled) {
-    // No 1px ring: on a filled button it sits flush against the fill and
-    // reads as a seam. The soft layers are the whole effect here.
     --btn-glow:
       0 0 20px -4px rgb(var(--ui-#{$tone}-rgb) / 0.55),
       0 0 40px -8px rgb(var(--ui-#{$tone}-rgb) / 0.35);
@@ -252,7 +207,6 @@ $ghost-tones: (
   --bs-btn-active-color: var(--ui-on-#{$tone});
   --bs-btn-disabled-color: var(--ui-#{$tone});
 
-  // Bootstrap bridge. Same reason as `solid-variant`.
   --bs-btn-bg: transparent;
   --bs-btn-border-color: var(--ui-#{$tone});
   --bs-btn-hover-bg: var(--ui-#{$tone});
@@ -267,17 +221,12 @@ $ghost-tones: (
   --bs-btn-disabled-border-color: var(--ui-#{$tone});
   --bs-btn-focus-shadow-rgb: var(--ui-#{$tone}-rgb);
 
-  // Group divider. Opaque: the tone is pre-composited over the surface the
-  // group sits on, so two overlapping borders cannot double their alpha.
   --btn-group-border: color-mix(in srgb, var(--ui-#{$tone}) 40%, var(--btn-group-bg));
 
   color: var(--ui-#{$tone});
   background-color: transparent;
   border-color: solid-tint($tone, 40%, var(--btn-group-bg, var(--ui-canvas)));
 
-  // A tone that matches the page background needs a stronger edge to stay
-  // visible. The seam is a border colour bump, not a box-shadow, so it does
-  // not collide with the hover glow below.
   @if $seam {
     border-color: solid-tint($tone, 70%, var(--btn-group-bg, var(--ui-canvas)));
   }
@@ -314,8 +263,6 @@ $ghost-tones: (
   --btn-tone-rgb: var(--ui-accent-rgb);
   --btn-glow: none;
 
-  // Hover and press mix the tone toward `--btn-mix`. Light buttons override
-  // all three, because mixing white with the (light) heading is a no-op.
   --btn-mix: var(--ui-heading);
   --btn-hover-amount: 76%;
   --btn-press-amount: 68%;
@@ -332,18 +279,8 @@ $ghost-tones: (
       color var(--ui-duration) var(--ui-ease),
       background-color var(--ui-duration) var(--ui-ease),
       border-color var(--ui-duration) var(--ui-ease);
-
-    // A floating counter keeps its own tone: it must stay readable over the
-    // button fill, so it opts out of the inherit dance.
-    &:not(.badge-floating) {
-      color: inherit !important;
-      background-color: color-mix(in srgb, currentColor 14%, transparent) !important;
-      border-color: color-mix(in srgb, currentColor 32%, transparent) !important;
-    }
   }
 
-  // Press feedback is colour-only. The shorter duration makes the press feel
-  // immediate; the release keeps the base 160ms.
   &:active:not(:disabled):not(.disabled) {
     transition-duration: 60ms;
   }
@@ -424,8 +361,6 @@ $ghost-tones: (
 // 6. Utilities
 // =============================================================================
 
-// Opt-in. Every variant declares `--btn-glow`; this is the only rule that
-// paints it, so a variant never needs to know whether the glow is enabled.
 .btn-lighting {
   &:hover:not(:disabled):not(.disabled) {
     box-shadow: var(--btn-glow);
@@ -434,8 +369,6 @@ $ghost-tones: (
 
 .btn-group,
 .btn-group-vertical {
-  // Surface the group sits on. Override it when the group is not on the page
-  // canvas, e.g. `.btn-group { --btn-group-bg: var(--ui-surface); }`.
   --btn-group-bg: var(--ui-canvas);
 
   > .btn {
@@ -444,16 +377,11 @@ $ghost-tones: (
     border-style: solid;
   }
 
-  // Paint order: active > hover > default. Without this, a hovered button
-  // paints its border over the active one because both occupy the same 1px
-  // line (Bootstrap collapses the seam with `margin-left: -1px`).
   > .btn:hover:not(:disabled):not(.disabled),
   > .btn:focus-visible:not(:disabled):not(.disabled) {
     z-index: 1;
   }
 
-  // The active button must always win the paint order, otherwise a hovered
-  // neighbour covers its border.
   > .btn.active,
   > .btn:active:not(:disabled):not(.disabled),
   > .btn-check:checked + .btn {

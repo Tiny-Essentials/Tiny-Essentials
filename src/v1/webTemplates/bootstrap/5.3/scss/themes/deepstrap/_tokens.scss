@@ -1,10 +1,3 @@
-// =============================================================================
-// Design tokens
-//
-// This file only *emits* custom properties. Every colour comes from
-// `_colors.scss`; do not add literals here.
-// =============================================================================
-
 @use 'sass:color';
 @use 'sass:map';
 @use 'colors' as *;
@@ -31,8 +24,6 @@
   }
 }
 
-/// Hairlines and overlays are a fraction of the heading colour, so a theme that
-/// only changes `heading` gets matching borders for free.
 $alphas: (
   'hairline': 0.07,
   'hairline-strong': 0.12,
@@ -83,15 +74,11 @@ $alphas: (
   --bs-code-color: var(--ui-info);
   --bs-highlight-bg: rgb(var(--ui-warn-rgb) / 0.24);
 
-  // Bridge the theme colors so .text-primary, .bg-primary, .border-primary
-  // follow the active theme instead of the build-time value.
   @each $name, $token in $subtle-tokens {
     --bs-#{$name}: var(--ui-#{$token});
     --bs-#{$name}-rgb: #{channels(map.get($theme, $token))};
   }
 
-  // `light` and `dark` are not in $subtle-tokens on purpose (they are
-  // surfaces, not accents), so bridge them explicitly.
   --bs-light: #{palette('slate-050')};
   --bs-light-rgb: #{channels(palette('slate-050'))};
   --bs-dark: #{palette('slate-900')};
@@ -100,13 +87,6 @@ $alphas: (
   @include bootstrap-subtle-bridge();
 }
 
-/// Bridges the `-subtle` and `-emphasis` scales into the `--ui-*` tokens.
-///
-/// Bootstrap derives both scales from the light palette at build time. Because
-/// `$enable-dark-mode` is `false`, the `[data-bs-theme='dark']` overrides are
-/// never emitted, so `.bg-primary-subtle` would keep its near-white tint on a
-/// near-black canvas. Redefining the variables (not the classes) keeps the
-/// `!important` from the utilities API untouched.
 @mixin bootstrap-subtle-bridge() {
   @each $name, $token in $subtle-tokens {
     --bs-#{$name}-bg-subtle: rgb(var(--ui-#{$token}-rgb) / 0.12);
@@ -114,8 +94,6 @@ $alphas: (
     --bs-#{$name}-border-subtle: rgb(var(--ui-#{$token}-rgb) / 0.32);
   }
 
-  // `light` and `dark` are surfaces: a 12% tint of them is invisible, so they
-  // map to the surface scale instead of the accent scale.
   --bs-light-bg-subtle: var(--ui-surface-raised);
   --bs-light-text-emphasis: var(--ui-heading);
   --bs-light-border-subtle: var(--ui-border);
@@ -127,13 +105,7 @@ $alphas: (
 
 @each $name, $token in $subtle-tokens {
   .list-group-item-#{$name} {
-    --bs-list-group-color: var(--ui-#{$token});
-    --bs-list-group-bg: rgb(var(--ui-#{$token}-rgb) / 0.08);
-    --bs-list-group-border-color: rgb(var(--ui-#{$token}-rgb) / 0.24);
-    --bs-list-group-action-hover-bg: rgb(var(--ui-#{$token}-rgb) / 0.14);
-    --bs-list-group-action-hover-color: var(--ui-heading);
-    --bs-list-group-action-active-bg: rgb(var(--ui-#{$token}-rgb) / 0.2);
-    --bs-list-group-action-active-color: var(--ui-heading);
+    @include tone-list-group($token);
   }
 }
 
@@ -143,16 +115,12 @@ $alphas: (
   --ui-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ui-duration: 160ms;
 
-  // Absolute neutrals. These are intentionally theme-independent: `.btn-light`
-  // must stay light and `.btn-dark` must stay dark in both themes.
   --ui-neutral-light: #{palette('slate-050')};
   --ui-neutral-light-rgb: #{triplet(palette('slate-050'))};
   --ui-on-neutral-light: #{palette('slate-950')};
   --ui-neutral-dark: #{palette('slate-900')};
   --ui-neutral-dark-rgb: #{triplet(palette('slate-900'))};
   --ui-on-neutral-dark: #{palette('slate-050')};
-  // Absolute black. Darkens a filled surface (pressed buttons) without
-  // following the theme, since the surface underneath is already a tone.
   --ui-shade-rgb: #{triplet(palette('ink-000'))};
 }
 

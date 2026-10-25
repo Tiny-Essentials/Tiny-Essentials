@@ -1,19 +1,3 @@
-// =============================================================================
-// Colour source of truth
-//
-// Every colour literal in the theme lives in this file. No other file may
-// declare a hex, an `rgb()` or an `hsl()` value.
-//
-// Layers, top to bottom:
-//   1. $palette     raw values, no meaning attached
-//   2. $theme-*     semantic roles, one map per theme
-//   3. $on-*        foreground that sits on top of each role
-//   4. $constants   theme independent values (scrim, icons)
-//
-// To re-skin the theme, override the maps before the theme is loaded:
-//   @use 'themes/deepstrap/colors' with ($palette: (...));
-// =============================================================================
-
 @use 'sass:map';
 @use 'sass:string';
 
@@ -116,8 +100,6 @@ $theme-light: (
 ) !default;
 
 // ------------------------------------------------------------ 3. foreground --
-// Every value resolves through `palette()`, so overriding `$palette` is enough
-// to re-skin the foreground inks as well.
 $on-dark: (
   'accent': palette('on-accent'),
   'success': palette('on-success'),
@@ -136,8 +118,6 @@ $on-light: (
   'text-muted': palette('paper-000'),
 ) !default;
 
-// Bootstrap colour name -> design token suffix.
-// `light` and `dark` are absent on purpose: they are surfaces, not accents.
 $subtle-tokens: (
   'primary': 'accent',
   'secondary': 'text-muted',
@@ -148,8 +128,6 @@ $subtle-tokens: (
 ) !default;
 
 // ------------------------------------------------------------- 4. constants --
-/// Theme independent colours. Anything that used to be a literal inside a
-/// component belongs here.
 $constants: (
   // Backdrop behind modals.
   'scrim': #05070b,
@@ -160,16 +138,11 @@ $constants: (
   'carousel-indicator': palette('indigo-500')
 ) !default;
 
-/// Shadow tints, one per theme. Kept out of `$constants` because the value
-/// changes with the theme, and out of `$theme-*` because a shadow is not a
-/// role a component should ever read directly.
 $shadow: (
   'dark': palette('ink-000'),
   'light': palette('shadow-slate'),
 ) !default;
 
-/// Media scrims. A scrim is a gradient stacked on top of an image, so it needs
-/// both the base ink and the caption colour that stays readable on top of it.
 $scrims: (
   'dark': (
     'base': palette('ink-000'),

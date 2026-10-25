@@ -1,36 +1,5 @@
-// =============================================================================
-// Bootstrap 5.3 component overrides
-// Requires: _effects.scss (mixins), _tokens.scss (custom properties).
-// Do not add .btn, .form-control or .form-select here — they live in
-// _buttons.scss and _forms.scss.
-// =============================================================================
-
 @use 'sass:map';
 @use 'colors' as *;
-
-// --------------------------------------------------------------- nav line --
-/// Animated underline shared by every nav item.
-///
-/// @param {String} $pseudo - Pseudo-element that draws the line.
-///   `.dropdown-toggle` must use `before`, because Bootstrap owns its `after`
-///   (the caret).
-@mixin nav-underline($pseudo: 'after') {
-  &::#{$pseudo} {
-    position: absolute;
-    bottom: 0rem;
-    left: 0;
-    width: 0;
-    height: 1px;
-    content: '';
-    background: var(--ui-accent);
-    transition: width var(--ui-duration) var(--ui-ease);
-  }
-
-  &:hover::#{$pseudo},
-  &.active::#{$pseudo} {
-    width: 100%;
-  }
-}
 
 // ------------------------------------------------------------------ navbar --
 .navbar {
@@ -49,7 +18,6 @@
     position: relative;
     transition: color var(--ui-duration) var(--ui-ease);
 
-    // The caret lives in `::after`, so the line moves to `::before`.
     &:not(.dropdown-toggle) {
       @include nav-underline('after');
     }
@@ -64,8 +32,6 @@
 .card {
   --bs-card-bg: transparent;
   --bs-card-border-color: var(--ui-border);
-  // `--tone-ink` is set by `.bg-*` / `.text-bg-*`. The fallback keeps the
-  // default card untouched.
   --bs-card-color: var(--tone-ink, var(--ui-text));
   --bs-card-cap-bg: var(--ui-overlay-1);
   --bs-card-cap-color: var(--tone-ink, var(--ui-heading));
@@ -109,10 +75,6 @@
 }
 
 .modal-backdrop {
-  // Blur lives on the element; the scrim lives on the pseudo-element.
-  // Mixing both on the same node makes the browser sample the scrim colour
-  // inside the blur, which washes out the darkening and smears the page
-  // colours into the backdrop.
   backdrop-filter: blur(4px) saturate(120%);
   -webkit-backdrop-filter: blur(4px) saturate(120%);
 
@@ -309,12 +271,6 @@ hr {
 }
 
 // ---------------------------------------------------------------- carousel --
-// The carousel is a media surface. The scrim, the caption colour and the
-// control colour are driven by local variables so each theme can pick the
-// readable pair:
-//   dark  -> black scrim, white text, white controls
-//   light -> white scrim, regular text, dark controls
-
 .carousel {
   --carousel-caption-color: var(--ui-scrim-caption);
   --carousel-scrim: linear-gradient(
@@ -328,11 +284,9 @@ hr {
   --carousel-indicator-bg: rgb(var(--ui-scrim-indicator) / 0.45);
   --carousel-indicator-active-bg: #{ui-color('carousel-indicator')};
 
-  // Clips the caption scrim to the rounded corners.
   border-radius: var(--bs-border-radius);
 }
 
-// Light theme: white scrim, regular text colours, inverted controls.
 [data-bs-theme='light'] .carousel {
   --carousel-code-color: color-mix(in srgb, var(--ui-info) 70%, var(--ui-scrim-ink));
   --carousel-control-filter: invert(1);
@@ -344,7 +298,6 @@ hr {
 }
 
 .carousel-caption {
-  // Full-bleed scrim: reset Bootstrap's 15% side insets.
   right: 0;
   bottom: 0;
   left: 0;
@@ -352,7 +305,6 @@ hr {
   background: var(--carousel-scrim);
   border-radius: 0;
 
-  // The scrim is always a solid tone, so `code` needs a matching tone.
   --bs-code-color: var(--carousel-code-color);
 }
 
@@ -401,8 +353,6 @@ hr {
   }
 }
 
-// Bootstrap's dark-mode layer ships a (0,4,0) rule for the indicators. Matching
-// that specificity keeps the variables above authoritative.
 .carousel .carousel-indicators [data-bs-target],
 [data-bs-theme] .carousel .carousel-indicators [data-bs-target] {
   background-color: var(--carousel-indicator-bg);
@@ -420,7 +370,6 @@ hr {
 }
 
 // ----------------------------------------------------------- placeholders --
-// Overrides the minimal rule in _bootstrap-overrides.scss.
 .placeholder {
   background-color: var(--ui-border-strong);
   opacity: 0.5;
@@ -437,14 +386,12 @@ hr {
 }
 
 // -------------------------------------------------------------- scrollspy --
-// Bootstrap only toggles .active; the visual is ours.
 .nav-link.active[href^='#'],
 .list-group-item.active[href^='#'] {
   color: var(--ui-heading);
 }
 
 // ----------------------------------------------------------- close button --
-// Extends the minimal rule in _forms.scss with hover + opacity tokens.
 .btn-close {
   --bs-btn-close-color: var(--ui-text-muted);
   --bs-btn-close-hover-color: var(--ui-heading);
@@ -462,7 +409,6 @@ hr {
 }
 
 // --------------------------------------------------------------- accordion --
-// Icon + body. The base tokens live in _bootstrap-overrides.scss.
 .accordion {
   --bs-accordion-btn-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='#{svg-color('control-icon')}' stroke-width='2' stroke-linecap='round'%3e%3cpath d='M4 6l4 4 4-4'/%3e%3c/svg%3e");
   --bs-accordion-btn-active-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='#{svg-color('control-icon-active')}' stroke-width='2' stroke-linecap='round'%3e%3cpath d='M4 6l4 4 4-4'/%3e%3c/svg%3e");
@@ -483,7 +429,6 @@ hr {
 }
 
 // ------------------------------------------------------------------ motion --
-// Durations are identity, not density: they ship with the base theme.
 .progress-bar {
   transition: width 240ms var(--ui-ease);
 }
@@ -498,15 +443,6 @@ hr {
     transition: none;
   }
 }
-
-// =============================================================================
-// Color bridge
-//
-// Bootstrap resolve `$theme-colors` em build time. As utilities abaixo leem
-// `--bs-{tone}-rgb`, que o `bootstrap-bridge()` reemite por tema. Sem isso,
-// `.text-primary`, `.bg-primary` e `.border-primary` ficam presos no valor
-// do tema escuro.
-// =============================================================================
 
 $tone-foregrounds: map.merge(
   $subtle-tokens,

@@ -2,6 +2,7 @@
 // Entry point — order matters, do not reorder.
 // =============================================================================
 
+@import './plugins/tone-mixins';
 @import 'bootstrap/scss/functions';
 @import 'variables';
 @import 'bootstrap/scss/bootstrap';
@@ -15,3 +16,5 @@
 @import 'links';
 @import 'utilities';
 @import 'badges';
+
+@import './plugins/colors/pink';

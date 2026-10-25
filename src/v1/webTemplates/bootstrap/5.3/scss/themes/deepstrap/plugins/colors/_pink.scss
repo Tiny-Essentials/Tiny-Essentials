@@ -49,10 +49,6 @@
 }
 
 // --------------------------------------------------------------- btn-group --
-// Bootstrap collapses the seam with `margin-left: -1px`, so two neighbours
-// share the same 1px line. Without an explicit paint order, a hovered button
-// covers the active one. Mirrors the rule in `_buttons.scss` so the plugin
-// stays self-contained.
 .btn-group > .btn-pink,
 .btn-group > .btn-outline-pink,
 .btn-group > .btn-subtle-pink,
@@ -83,9 +79,6 @@
   z-index: 2;
 }
 
-// `--btn-fill` is the source of truth for the solid fill. Bootstrap's
-// `.btn-check:checked + .btn` repaints `background-color` from
-// `--bs-btn-active-bg`, so keep both in sync.
 .btn-check:checked + .btn-pink {
   --btn-fill: color-mix(in srgb, var(--ui-pink) var(--btn-press-amount), var(--btn-mix));
 }
@@ -96,18 +89,7 @@
 }
 
 .bg-pink {
-  color: var(--ui-on-pink);
   background-color: rgba(var(--bs-pink-rgb), var(--bs-bg-opacity, 1)) !important;
-}
-
-.list-group-item-pink {
-  --bs-list-group-color: var(--ui-pink);
-  --bs-list-group-bg: rgb(var(--ui-pink-rgb) / 0.08);
-  --bs-list-group-border-color: rgb(var(--ui-pink-rgb) / 0.24);
-  --bs-list-group-action-hover-bg: rgb(var(--ui-pink-rgb) / 0.14);
-  --bs-list-group-action-hover-color: var(--ui-heading);
-  --bs-list-group-action-active-bg: rgb(var(--ui-pink-rgb) / 0.2);
-  --bs-list-group-action-active-color: var(--ui-heading);
 }
 
 .border-pink {
@@ -132,9 +114,6 @@
 }
 
 // ------------------------------------------------------------------ badges --
-// Standalone badge. The `.btn &` override below restores the theme's
-// "inherit from button" behaviour, which the rule above would otherwise
-// clobber (same specificity, plugin loads last).
 .badge.text-bg-pink {
   color: var(--ui-pink) !important;
   background-color: rgb(var(--ui-pink-rgb) / 0.12) !important;
@@ -160,13 +139,6 @@
   --bs-alert-border-color: rgb(var(--ui-pink-rgb) / 0.28);
 }
 
-// -------------------------------------------------------------- list group --
-.list-group-item-pink {
-  --bs-list-group-color: var(--ui-pink);
-  --bs-list-group-bg: rgb(var(--ui-pink-rgb) / 0.08);
-  --bs-list-group-border-color: rgb(var(--ui-pink-rgb) / 0.24);
-}
-
 // ------------------------------------------------------------------- links --
 .link-pink {
   color: var(--ui-pink);
@@ -184,11 +156,7 @@
 
 // ------------------------------------------------------------------ tables --
 .table-pink {
-  --bs-table-color: var(--ui-pink);
-  --bs-table-bg: rgb(var(--ui-pink-rgb) / 0.08);
-  --bs-table-border-color: rgb(var(--ui-pink-rgb) / 0.24);
-  --bs-table-striped-bg: rgb(var(--ui-pink-rgb) / 0.12);
-  --bs-table-hover-bg: rgb(var(--ui-pink-rgb) / 0.16);
+  @include tone-table('pink');
 }
 
 // -------------------------------------------------------- form validation --
@@ -217,4 +185,15 @@
   --bs-btn-disabled-color: var(--ui-pink);
   --bs-btn-disabled-bg: transparent;
   --bs-btn-disabled-border-color: transparent;
+}
+
+// -------------------------------------------------------------- list group --
+.list-group-item.list-group-item-pink {
+  @include tone-list-group('pink');
+}
+
+.list-group-item.list-group-item-pink.active {
+  color: var(--ui-on-pink);
+  background-color: var(--ui-pink);
+  border-color: var(--ui-pink);
 }

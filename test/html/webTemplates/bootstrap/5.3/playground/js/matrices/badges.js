@@ -66,7 +66,7 @@ const FAMILIES = Object.freeze([
     id: 'in-button',
     title: 'Inside a button',
     description: 'Badge positioned inside a .btn',
-    toneClass: (tone) => `badge text-bg-${tone}`,
+    toneClass: (tone) => `badge bg-${tone}`,
   },
   {
     id: 'link',

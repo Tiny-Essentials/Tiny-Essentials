@@ -1,32 +1,8 @@
-// =============================================================================
-// Badges
-//
-// One registry, three outputs:
-//   1. `.badge.text-bg-{tone}`  soft badge (12% wash)
-//   2. `.badge-floating`        solid badge, opaque (counters over media)
-//   3. `.bg-{tone}`             re-points the text tokens so nested content
-//                               stays readable on the filled surface
-//
-// Adding a tone to `$badge-tones` is enough to get all three.
-// =============================================================================
-
 @use 'sass:map';
 @use 'sass:meta';
 
 // ---------------------------------------------------------------- registry --
 /// Tone registry.
-///
-/// The name is intentionally not `$badge-tones`: `_theme.scss` uses `@import`,
-/// so every partial shares one global scope. A generic name collides with the
-/// flat map in `_bootstrap-overrides.scss` and `!default` silently keeps the
-/// wrong value.
-///
-/// `token` is the `--ui-*` suffix that holds the colour.
-/// `on` is the `--ui-on-*` suffix that holds the readable foreground.
-///
-/// `secondary` points at `neutral-light` on purpose: `--ui-on-text-muted` is
-/// white, which only reaches 3.4:1 on the muted grey. The badge is 11px.
-///
 /// @type Map
 $badge-tone-map: (
   'primary': (
@@ -71,8 +47,6 @@ $badge-tone-map: (
   ),
 );
 
-// Fails at build time with the offending key, instead of a `map.get` trace
-// three files later.
 @each $name, $config in $badge-tone-map {
   @if meta.type-of($config) != 'map' {
     @error 'Badge tone `#{$name}` must be a map with `token` and `on`, got `#{meta.type-of($config)}`.';
@@ -106,8 +80,6 @@ $badge-tone-map: (
   --bs-card-cap-color: var(--tone-ink);
   --bs-list-group-color: var(--tone-ink);
   --bs-border-color: color-mix(in srgb, var(--tone-ink) 28%, transparent);
-
-  color: var(--tone-ink) !important;
 }
 
 // -------------------------------------------------------------------- base --
@@ -144,12 +116,12 @@ $badge-tone-map: (
   .text-bg-#{$name} {
     @include tone-ink($on);
   }
+  .text-bg-#{$name} {
+    color: var(--tone-ink) !important;
+  }
 }
 
 // --------------------------------------------------------- surface pairing --
-// Re-pointing the tokens (instead of the properties) keeps nested
-// `.card-title`, `.text-muted`, `hr` and friends readable without a single
-// `!important` on the descendants.
 @each $name, $config in $badge-tone-map {
   $on: map.get($config, 'on');
 
@@ -159,8 +131,6 @@ $badge-tone-map: (
   }
 }
 
-// `.text-bg-*` is generated from `$theme-colors`, which has no `white` or
-// `black`. Emit the missing pair so the modifiers stay uniform.
 .text-bg-white {
   background-color: var(--ui-neutral-light) !important;
 }
