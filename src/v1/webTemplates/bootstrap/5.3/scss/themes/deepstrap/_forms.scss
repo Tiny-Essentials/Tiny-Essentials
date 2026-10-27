@@ -4,6 +4,13 @@
 
 @use 'colors' as *;
 
+// ------------------------------------------------------------- tone hooks --
+:where(.form-select, .form-check, .form-range) {
+  --form-tone: var(--ui-accent);
+  --form-tone-rgb: var(--ui-accent-rgb);
+  --form-tone-on: var(--ui-on-accent);
+}
+
 // ------------------------------------------------------------------ shared --
 %field {
   color: var(--ui-text);
@@ -24,9 +31,9 @@
   &:focus {
     color: var(--ui-text);
     background-color: rgb(var(--ui-input-rgb) / 1);
-    border-color: var(--ui-accent);
+    border-color: var(--form-tone);
     outline: none;
-    box-shadow: 0 0 0 3px rgb(var(--ui-accent-rgb) / 0.2);
+    box-shadow: 0 0 0 3px rgb(var(--form-tone-rgb) / 0.2);
   }
 
   &:disabled,
@@ -94,20 +101,33 @@
 // ------------------------------------------------------------------ checks --
 .form-check-input {
   background-color: rgb(var(--ui-input-rgb) / 0.72);
-  border-color: var(--ui-border-strong);
+  border-color: color-mix(in srgb, var(--form-tone) 45%, transparent);
+  transition:
+    background-color var(--ui-duration) var(--ui-ease),
+    border-color var(--ui-duration) var(--ui-ease),
+    box-shadow var(--ui-duration) var(--ui-ease);
+
+  // Unchecked + hover: previews the tone before the click.
+  &:hover:not(:disabled):not(:checked):not(:indeterminate) {
+    background-color: rgb(var(--form-tone-rgb) / 0.1);
+    border-color: color-mix(in srgb, var(--form-tone) 75%, transparent);
+  }
 
   &:checked,
-  &:focus {
-    background-color: var(--ui-accent);
-    border-color: var(--ui-accent);
+  &:indeterminate {
+    color: var(--form-tone-on);
+    background-color: var(--form-tone);
+    border-color: var(--form-tone);
   }
 
   &:focus {
-    box-shadow: 0 0 0 3px rgb(var(--ui-accent-rgb) / 0.2);
+    border-color: var(--form-tone);
+    box-shadow: 0 0 0 3px rgb(var(--form-tone-rgb) / 0.2);
   }
 
   &:disabled {
     background-color: var(--ui-overlay-1);
+    border-color: var(--ui-border);
     opacity: 0.5;
   }
 }
@@ -117,10 +137,37 @@
 }
 
 .form-switch .form-check-input {
+  --bs-form-check-bg-image: radial-gradient(circle, var(--form-tone) 0 42%, transparent 43%);
+
   background-color: var(--ui-input);
+  background-image: var(--bs-form-check-bg-image);
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 1em 1em;
+  border-color: color-mix(in srgb, var(--form-tone) 45%, transparent);
+  transition:
+    background-color var(--ui-duration) var(--ui-ease),
+    border-color var(--ui-duration) var(--ui-ease);
 
   &:checked {
-    background-color: var(--ui-accent);
+    --bs-form-check-bg-image: radial-gradient(circle, var(--form-tone-on) 0 42%, transparent 43%);
+
+    background-color: var(--form-tone);
+    background-position: right center;
+    border-color: var(--form-tone);
+  }
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--form-tone) 75%, transparent);
+  }
+
+  &:active:not(:disabled) {
+    border-color: var(--form-tone);
+  }
+
+  &:focus {
+    border-color: var(--form-tone);
+    box-shadow: 0 0 0 3px rgb(var(--form-tone-rgb) / 0.2);
   }
 }
 
@@ -129,6 +176,7 @@
   width: 100%;
   height: 1.25rem;
   padding: 0;
+  accent-color: var(--form-tone);
   background: transparent;
   appearance: none;
 
@@ -147,7 +195,7 @@
     width: 14px;
     height: 14px;
     margin-top: -5px;
-    background-color: var(--ui-accent);
+    background-color: var(--form-tone);
     border: 2px solid var(--ui-surface);
     border-radius: 50%;
     transition: box-shadow var(--ui-duration) var(--ui-ease);
@@ -156,7 +204,7 @@
 
   &::-moz-range-track {
     height: 4px;
-    background-color: var(--ui-input);
+    background-color: var(--form-tone);
     border-radius: 999px;
     box-shadow: inset 0 0 0 1px var(--ui-border);
   }
@@ -170,12 +218,9 @@
   }
 
   &:focus-visible {
-    &::-webkit-slider-thumb {
-      box-shadow: 0 0 0 3px rgb(var(--ui-accent-rgb) / 0.28);
-    }
-
+    &::-webkit-slider-thumb,
     &::-moz-range-thumb {
-      box-shadow: 0 0 0 3px rgb(var(--ui-accent-rgb) / 0.28);
+      box-shadow: 0 0 0 3px rgb(var(--form-tone-rgb) / 0.28);
     }
   }
 
@@ -185,11 +230,21 @@
 }
 
 // -------------------------------------------------------------- validation --
+:root,
+[data-bs-theme='dark'],
+[data-bs-theme='light'] {
+  --bs-form-valid-color: var(--ui-success);
+  --bs-form-valid-border-color: var(--ui-success);
+  --bs-form-invalid-color: var(--ui-error);
+  --bs-form-invalid-border-color: var(--ui-error);
+}
+
 @each $state, $token in ('valid': 'success', 'invalid': 'error') {
   .#{$state}-feedback {
     color: var(--ui-#{$token});
   }
 
+  // Text inputs and selects.
   .form-control,
   .form-select {
     &.is-#{$state},
@@ -198,14 +253,38 @@
       border-color: var(--ui-#{$token});
 
       &:focus {
+        border-color: var(--ui-#{$token});
         box-shadow: 0 0 0 3px rgb(var(--ui-#{$token}-rgb) / 0.2);
       }
     }
   }
 
-  .form-check-input.is-#{$state} {
-    background-color: var(--ui-#{$token});
-    border-color: var(--ui-#{$token});
+  // Checkboxes, radios and switches.
+  .form-check-input {
+    &.is-#{$state},
+    .was-validated &:#{$state} {
+      --form-tone: var(--ui-#{$token});
+      --form-tone-rgb: var(--ui-#{$token}-rgb);
+      --form-tone-on: var(--ui-on-#{$token});
+
+      border-color: color-mix(in srgb, var(--form-tone) 45%, transparent);
+
+      &:hover:not(:disabled):not(:checked) {
+        background-color: rgb(var(--form-tone-rgb) / 0.1);
+        border-color: color-mix(in srgb, var(--form-tone) 75%, transparent);
+      }
+
+      &:checked,
+      &:indeterminate {
+        background-color: var(--form-tone);
+        border-color: var(--form-tone);
+      }
+
+      &:focus {
+        border-color: var(--form-tone);
+        box-shadow: 0 0 0 3px rgb(var(--form-tone-rgb) / 0.2);
+      }
+    }
   }
 }
 

@@ -295,21 +295,6 @@
 
 /// @param {String} $name - Class suffix, e.g. `pink`.
 /// @param {String} $tone - Token suffix for `--ui-*`.
-@mixin tone-form-check($name, $tone: $name) {
-  .form-check-input-#{$name} {
-    &:checked {
-      background-color: var(--ui-#{$tone});
-      border-color: var(--ui-#{$tone});
-    }
-
-    &:focus {
-      box-shadow: 0 0 0 3px rgb(var(--ui-#{$tone}-rgb) / 0.2);
-    }
-  }
-}
-
-/// @param {String} $name - Class suffix, e.g. `pink`.
-/// @param {String} $tone - Token suffix for `--ui-*`.
 @mixin tone-ghost-button($name, $tone: $name) {
   .btn-ghost-#{$name} {
     --bs-btn-color: var(--ui-#{$tone});
@@ -401,7 +386,6 @@
   @include tone-alert($name, $token);
   @include tone-link($name, $token);
   @include tone-progress($name, $token);
-  @include tone-form-check($name, $token);
   @include tone-ghost-button($name, $token);
   @include tone-table-class($name, $token);
   @include tone-list-group-class($name, $token);

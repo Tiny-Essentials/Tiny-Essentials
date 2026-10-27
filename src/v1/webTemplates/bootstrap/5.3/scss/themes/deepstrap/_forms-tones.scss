@@ -1,0 +1,69 @@
+@use 'sass:map';
+@use 'sass:meta';
+@use 'colors' as *;
+
+/// @type Map
+$form-tone-map: (
+  'primary': (
+    'tone': 'accent',
+    'on': 'accent',
+    'base': palette('indigo-500'),
+  ),
+  'secondary': (
+    'tone': 'text-muted',
+    'on': 'text-muted',
+    'base': palette('slate-400'),
+  ),
+  'success': (
+    'tone': 'success',
+    'on': 'success',
+    'base': palette('green-500'),
+  ),
+  'danger': (
+    'tone': 'error',
+    'on': 'error',
+    'base': palette('red-500'),
+  ),
+  'warning': (
+    'tone': 'warn',
+    'on': 'warn',
+    'base': palette('amber-500'),
+  ),
+  'info': (
+    'tone': 'info',
+    'on': 'info',
+    'base': palette('cyan-500'),
+  ),
+  'light': (
+    'tone': 'neutral-light',
+    'on': 'neutral-light',
+    'base': palette('slate-050'),
+  ),
+  'dark': (
+    'tone': 'neutral-dark',
+    'on': 'neutral-dark',
+    'base': palette('slate-900'),
+  ),
+);
+
+@each $name, $config in $form-tone-map {
+  @if meta.type-of($config) != 'map' {
+    @error 'Form tone `#{$name}` must be a map, got `#{meta.type-of($config)}`.';
+  }
+
+  @each $key in ('tone', 'on') {
+    @if not map.has-key($config, $key) {
+      @error 'Form tone `#{$name}` is missing the `#{$key}` key.';
+    }
+  }
+
+  $mark: null;
+
+  @if map.has-key($config, 'mark') {
+    $mark: map.get($config, 'mark');
+  } @else if map.has-key($config, 'base') {
+    $mark: form-mark-contrast(map.get($config, 'base'));
+  }
+
+  @include form-tone-plugin($name, map.get($config, 'tone'), map.get($config, 'on'), $mark);
+}

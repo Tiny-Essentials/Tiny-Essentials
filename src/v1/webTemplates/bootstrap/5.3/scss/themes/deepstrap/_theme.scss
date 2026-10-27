@@ -3,6 +3,7 @@
 // =============================================================================
 
 @import './plugins/tone-mixins';
+@import './plugins/form-tone-mixins';
 @import 'bootstrap/scss/functions';
 @import 'variables';
 @import 'bootstrap/scss/bootstrap';
@@ -13,6 +14,7 @@
 @import 'bootstrap-overrides';
 @import 'buttons';
 @import 'forms';
+@import 'forms-tones';
 @import 'links';
 @import 'utilities';
 @import 'badges';

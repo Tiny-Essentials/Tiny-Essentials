@@ -1,0 +1,112 @@
+// =============================================================================
+// Form tone mixins
+// =============================================================================
+
+@use 'sass:string';
+@use 'sass:map';
+@use 'sass:color';
+@use 'sass:meta';
+
+/// Picks black or white for a mark drawn on top of `$background`.
+///
+/// Uses the WCAG relative luminance coefficients, so the result matches the
+/// perceived brightness instead of the naive channel average.
+///
+/// @param {Color} $background - Colour the mark is painted on.
+/// @return {Color} `#000000` or `#ffffff`.
+@function form-mark-contrast($background) {
+  @if meta.type-of($background) != 'color' {
+    @error 'Expected a colour, got `#{meta.type-of($background)}`.';
+  }
+
+  $luminance: color.channel($background, 'red', $space: rgb) * 0.2126 +
+    color.channel($background, 'green', $space: rgb) * 0.7152 +
+    color.channel($background, 'blue', $space: rgb) * 0.0722;
+
+  @return if($luminance > 140, #000000, #ffffff);
+}
+
+/// Builds the `background-image` used by a checked checkbox.
+///
+/// Accepts a colour or a hex string, so it can be fed either by a palette
+/// entry or by `form-mark-contrast()`.
+///
+/// @param {Color|String} $color - Hex colour, with or without the leading `#`.
+/// @return {String} A `url()` with the URL-encoded SVG.
+@function form-mark-url($color) {
+  $value: #{$color};
+
+  @if string.slice($value, 1, 1) != '#' {
+    @error 'Expected a hex colour, got `#{$color}`.';
+  }
+
+  $hex: string.slice($value, 2);
+
+  @if string.length($hex) != 6 {
+    @error 'Expected a 6-digit hex colour, got `#{$color}`.';
+  }
+
+  @return url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23#{$hex}' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+}
+
+/// Re-points the three `--form-*` properties to a tone.
+///
+/// @param {String} $tone - Token suffix, without the `--ui-` prefix.
+/// @param {String} $on - Token suffix for `--ui-on-*`.
+@mixin form-tone-properties($tone, $on: $tone) {
+  --form-tone: var(--ui-#{$tone});
+  --form-tone-rgb: var(--ui-#{$tone}-rgb);
+  --form-tone-on: var(--ui-on-#{$on});
+}
+
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+/// @param {String} $on - Token suffix for `--ui-on-*`.
+@mixin form-select-tone($name, $tone: $name, $on: $tone) {
+  .form-select-#{$name} {
+    @include form-tone-properties($tone, $on);
+  }
+}
+
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+/// @param {String} $on - Token suffix for `--ui-on-*`.
+/// @param {String|null} $mark - Hex colour of the checkmark. `null` keeps the
+///   Bootstrap default (white).
+@mixin form-check-tone($name, $tone: $name, $on: $tone, $mark: null) {
+  .form-check-#{$name},
+  .form-check-input-#{$name} {
+    @include form-tone-properties($tone, $on);
+  }
+
+  @if $mark != null {
+    // 0,4,0 and 0,3,0 — both beat Bootstrap's 0,3,0 `.form-check-input:checked[type='checkbox']`
+    // without `!important`, as long as this file is imported after Bootstrap.
+    .form-check-#{$name} .form-check-input:checked[type='checkbox'],
+    .form-check-input-#{$name}:checked[type='checkbox'] {
+      background-image: form-mark-url($mark);
+    }
+  }
+}
+
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+/// @param {String} $on - Token suffix for `--ui-on-*`.
+@mixin form-range-tone($name, $tone: $name, $on: $tone) {
+  .form-range-#{$name} {
+    @include form-tone-properties($tone, $on);
+  }
+}
+
+/// Emits every form control variant for a single tone.
+///
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+/// @param {String} $on - Token suffix for `--ui-on-*`.
+/// @param {String|null} $mark - Hex colour of the checkmark. `null` keeps the
+///   Bootstrap default (white).
+@mixin form-tone-plugin($name, $tone: $name, $on: $tone, $mark: null) {
+  @include form-select-tone($name, $tone, $on);
+  @include form-check-tone($name, $tone, $on, $mark);
+  @include form-range-tone($name, $tone, $on);
+}
