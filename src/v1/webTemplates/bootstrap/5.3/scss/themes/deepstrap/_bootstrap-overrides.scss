@@ -143,14 +143,20 @@
 // ------------------------------------------------------------------- table --
 .table {
   --bs-table-bg: transparent;
-  --bs-table-color: var(--ui-text);
+  --bs-table-color: var(--ui-heading);
   --bs-table-border-color: var(--ui-border);
-  --bs-table-hover-bg: var(--ui-overlay-1);
+
+  --bs-table-striped-color: var(--ui-heading);
+  --bs-table-striped-bg: rgb(var(--ui-heading-rgb) / 0.05);
+
+  --bs-table-active-color: var(--ui-heading);
+  --bs-table-active-bg: rgb(var(--ui-heading-rgb) / 0.1);
+
   --bs-table-hover-color: var(--ui-heading);
-  --bs-table-striped-bg: var(--ui-overlay-1);
+  --bs-table-hover-bg: rgb(var(--ui-heading-rgb) / 0.075);
 
   thead th {
-    color: var(--ui-text-muted);
+    color: var(--bs-table-color);
   }
 }
 

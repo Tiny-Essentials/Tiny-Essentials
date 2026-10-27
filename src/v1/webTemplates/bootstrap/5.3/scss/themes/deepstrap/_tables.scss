@@ -1,0 +1,25 @@
+// =============================================================================
+// Table variants
+//
+// Three sources, one mixin each:
+//
+//   1. Semantic tones  → `--ui-*` tokens, theme-aware.
+//   2. Custom tones    → `--ui-*` tokens, theme-aware.
+//   3. BS 5.3 palette → raw colors, static (matches upstream).
+// =============================================================================
+
+@use 'sass:map';
+@use 'colors' as *;
+
+// 1. Semantic tones (primary, secondary, success, danger, warning, info).
+@each $name, $token in $subtle-tokens {
+  @include tone-table-class($name, $token);
+}
+
+// 2. Custom tones.
+@include tone-table-class('pink', 'pink');
+
+// 3. Bootstrap 5.3 palette.
+@each $name, $color in $colors {
+  @include tone-table-from-color($name, $color);
+}

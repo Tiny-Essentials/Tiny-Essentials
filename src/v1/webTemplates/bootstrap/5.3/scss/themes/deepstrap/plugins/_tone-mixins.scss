@@ -77,17 +77,17 @@
 /// @param {String} $tone - Token suffix, without the `--ui-` prefix.
 @mixin tone-table($tone) {
   --bs-table-color: var(--ui-#{$tone});
-  --bs-table-bg: rgb(var(--ui-#{$tone}-rgb) / 0.08);
-  --bs-table-border-color: rgb(var(--ui-#{$tone}-rgb) / 0.24);
+  --bs-table-bg: color-mix(in srgb, var(--ui-#{$tone}) 12%, var(--ui-canvas));
+  --bs-table-border-color: color-mix(in srgb, var(--ui-#{$tone}) 32%, var(--ui-canvas));
 
   --bs-table-striped-color: var(--ui-#{$tone});
-  --bs-table-striped-bg: rgb(var(--ui-#{$tone}-rgb) / 0.12);
+  --bs-table-striped-bg: color-mix(in srgb, var(--ui-#{$tone}) 18%, var(--ui-canvas));
 
   --bs-table-active-color: var(--ui-#{$tone});
-  --bs-table-active-bg: rgb(var(--ui-#{$tone}-rgb) / 0.18);
+  --bs-table-active-bg: color-mix(in srgb, var(--ui-#{$tone}) 24%, var(--ui-canvas));
 
   --bs-table-hover-color: var(--ui-#{$tone});
-  --bs-table-hover-bg: rgb(var(--ui-#{$tone}-rgb) / 0.16);
+  --bs-table-hover-bg: color-mix(in srgb, var(--ui-#{$tone}) 20%, var(--ui-canvas));
 
   color: var(--bs-table-color);
   border-color: var(--bs-table-border-color);
@@ -331,6 +331,36 @@
 @mixin tone-table-class($name, $tone: $name) {
   .table-#{$name} {
     @include tone-table($tone);
+  }
+}
+
+/// Emits a `.table-{name}` variant from a raw Sass color.
+/// @param {String} $name - Class suffix, e.g. `blue`.
+/// @param {Color} $base - Solid background color.
+@mixin tone-table-from-color($name, $base) {
+  $ink: color-contrast($base);
+  $bg: mix($base, $body-bg, 12%);
+  $border: mix($base, $body-bg, 32%);
+  $striped: mix($base, $body-bg, 18%);
+  $active: mix($base, $body-bg, 24%);
+  $hover: mix($base, $body-bg, 20%);
+
+  .table-#{$name} {
+    --bs-table-color: #{$ink};
+    --bs-table-bg: #{$bg};
+    --bs-table-border-color: #{$border};
+
+    --bs-table-striped-color: #{$ink};
+    --bs-table-striped-bg: #{$striped};
+
+    --bs-table-active-color: #{$ink};
+    --bs-table-active-bg: #{$active};
+
+    --bs-table-hover-color: #{$ink};
+    --bs-table-hover-bg: #{$hover};
+
+    color: var(--bs-table-color);
+    border-color: var(--bs-table-border-color);
   }
 }
 
