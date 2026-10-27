@@ -28,13 +28,12 @@
 /// Re-points every text token a component may read to the readable
 /// foreground of the current tone.
 ///
-/// Components must read `--bs-*` (or `--tone-ink`) instead of hard-coding
-/// `--ui-heading`, otherwise they keep the page ink on a filled surface.
-///
 /// @param {String} $on - `--ui-on-*` suffix, without the prefix.
 @mixin tone-ink($on) {
   --tone-ink: var(--ui-on-#{$on});
   --tone-ink-soft: color-mix(in srgb, var(--ui-on-#{$on}) 78%, transparent);
+
+  color: var(--tone-ink);
 
   --bs-body-color: var(--tone-ink);
   --bs-emphasis-color: var(--tone-ink);
