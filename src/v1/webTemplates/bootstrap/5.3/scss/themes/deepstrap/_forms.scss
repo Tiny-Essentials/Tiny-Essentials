@@ -137,23 +137,23 @@
 }
 
 .form-switch .form-check-input {
-  --bs-form-check-bg-image: radial-gradient(circle, var(--form-tone) 0 42%, transparent 43%);
+  --form-switch-size: 1em;
+  --form-switch-inset: 0.15em;
 
   background-color: var(--ui-input);
-  background-image: var(--bs-form-check-bg-image);
+  background-image: radial-gradient(circle, var(--form-tone) 0 42%, transparent 43%);
   background-repeat: no-repeat;
-  background-position: left center;
-  background-size: 1em 1em;
+  background-position: left var(--form-switch-inset) center;
+  background-size: var(--form-switch-size) var(--form-switch-size);
   border-color: color-mix(in srgb, var(--form-tone) 45%, transparent);
   transition:
     background-color var(--ui-duration) var(--ui-ease),
     border-color var(--ui-duration) var(--ui-ease);
 
   &:checked {
-    --bs-form-check-bg-image: radial-gradient(circle, var(--form-tone-on) 0 42%, transparent 43%);
-
     background-color: var(--form-tone);
-    background-position: right center;
+    background-image: radial-gradient(circle, var(--form-tone-on) 0 42%, transparent 43%);
+    background-position: right var(--form-switch-inset) center;
     border-color: var(--form-tone);
   }
 

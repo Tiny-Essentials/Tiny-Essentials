@@ -42,3 +42,6 @@ $pink-tokens: (
     'on': 'pink',
   )
 );
+
+// Form controls: select, checkbox, switch and range.
+@include form-tone-plugin('pink', 'pink', 'pink', form-mark-contrast(#ff5c9e));

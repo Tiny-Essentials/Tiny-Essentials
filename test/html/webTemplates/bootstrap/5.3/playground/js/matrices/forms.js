@@ -114,7 +114,6 @@ const createCheck = (tone, familyId) => {
   const input = el('input', 'form-check-input');
   input.type = type;
   input.id = id;
-  input.checked = true;
 
   if (type === 'radio') {
     input.name = `${id}-group`;

@@ -80,11 +80,11 @@
   }
 
   @if $mark != null {
-    // 0,4,0 and 0,3,0 — both beat Bootstrap's 0,3,0 `.form-check-input:checked[type='checkbox']`
-    // without `!important`, as long as this file is imported after Bootstrap.
-    .form-check-#{$name} .form-check-input:checked[type='checkbox'],
-    .form-check-input-#{$name}:checked[type='checkbox'] {
-      background-image: form-mark-url($mark);
+    $mark-url: form-mark-url($mark);
+
+    .form-check-#{$name}:not(.form-switch) .form-check-input:checked[type='checkbox'],
+    .form-check-input-#{$name}:checked[type='checkbox']:not(.form-switch .form-check-input) {
+      background-image: $mark-url;
     }
   }
 }
