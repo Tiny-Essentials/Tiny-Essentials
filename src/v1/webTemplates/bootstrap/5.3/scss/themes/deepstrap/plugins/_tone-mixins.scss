@@ -33,7 +33,7 @@
   --tone-ink: var(--ui-on-#{$on});
   --tone-ink-soft: color-mix(in srgb, var(--ui-on-#{$on}) 78%, transparent);
 
-  color: var(--tone-ink);
+  color: color-mix(in srgb, var(--tone-ink) calc(var(--bs-bg-opacity, 1) * 100%), var(--ui-text));
 
   --bs-body-color: var(--tone-ink);
   --bs-emphasis-color: var(--tone-ink);
