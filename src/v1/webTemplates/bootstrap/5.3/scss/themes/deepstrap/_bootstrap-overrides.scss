@@ -154,9 +154,10 @@
 
   --bs-table-hover-color: var(--ui-heading);
   --bs-table-hover-bg: rgb(var(--ui-heading-rgb) / 0.075);
+  --bs-table-header-color: var(--ui-table-header-ink);
 
   thead th {
-    color: var(--bs-table-color);
+    color: var(--bs-table-header-color);
   }
 }
 

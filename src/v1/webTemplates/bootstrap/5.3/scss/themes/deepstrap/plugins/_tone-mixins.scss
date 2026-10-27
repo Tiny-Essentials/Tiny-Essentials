@@ -77,6 +77,7 @@
 /// @param {String} $tone - Token suffix, without the `--ui-` prefix.
 @mixin tone-table($tone) {
   --bs-table-color: var(--ui-#{$tone});
+  --bs-table-header-color: var(--ui-#{$tone});
   --bs-table-bg: color-mix(in srgb, var(--ui-#{$tone}) 12%, var(--ui-canvas));
   --bs-table-border-color: color-mix(in srgb, var(--ui-#{$tone}) 32%, var(--ui-canvas));
 
@@ -347,6 +348,7 @@
 
   .table-#{$name} {
     --bs-table-color: #{$ink};
+    --bs-table-header-color: #{$ink};
     --bs-table-bg: #{$bg};
     --bs-table-border-color: #{$border};
 

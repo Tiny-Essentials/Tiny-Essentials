@@ -113,6 +113,7 @@ $alphas: (
   --ui-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ui-duration: 160ms;
 
+  --ui-table-header-ink: var(--bs-table-color);
   --ui-neutral-light: #{palette('slate-050')};
   --ui-neutral-light-rgb: #{triplet(palette('slate-050'))};
   --ui-warn-bright: #{palette('amber-500')};
