@@ -227,6 +227,11 @@
 /// @param {String} $tone - Token suffix for `--ui-*`.
 /// @param {String} $on - Token suffix for `--ui-on-*`.
 @mixin tone-utilities($name, $tone: $name, $on: $tone) {
+  .bg-#{$name},
+  .text-bg-#{$name} {
+    @include tone-ink($on);
+  }
+
   .text-#{$name} {
     color: rgba(var(--bs-#{$name}-rgb), var(--bs-text-opacity, 1)) !important;
   }
@@ -240,7 +245,7 @@
   }
 
   .text-bg-#{$name} {
-    color: var(--ui-on-#{$on}) !important;
+    color: var(--tone-ink) !important;
     background-color: rgba(var(--bs-#{$name}-rgb), var(--bs-bg-opacity, 1)) !important;
   }
 

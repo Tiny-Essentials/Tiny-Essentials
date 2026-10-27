@@ -115,6 +115,7 @@ $alphas: (
 
   --ui-neutral-light: #{palette('slate-050')};
   --ui-neutral-light-rgb: #{triplet(palette('slate-050'))};
+  --ui-warn-bright: #{palette('amber-500')};
   --ui-on-neutral-light: #{palette('slate-950')};
   --ui-neutral-dark: #{palette('slate-900')};
   --ui-neutral-dark-rgb: #{triplet(palette('slate-900'))};

@@ -30,3 +30,18 @@ a:not(
     border-radius: 2px;
   }
 }
+
+.alert a:not(.btn),
+.alert .alert-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color var(--ui-duration) var(--ui-ease);
+
+  &:hover,
+  &:focus-visible {
+    color: inherit;
+    text-decoration-color: currentColor;
+  }
+}

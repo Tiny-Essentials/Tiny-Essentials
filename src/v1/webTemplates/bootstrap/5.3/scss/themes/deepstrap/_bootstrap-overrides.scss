@@ -3,11 +3,11 @@
 
 // ------------------------------------------------------------------ navbar --
 .navbar {
-  --bs-navbar-color: var(--ui-text-muted);
-  --bs-navbar-hover-color: var(--ui-heading);
-  --bs-navbar-active-color: var(--ui-heading);
-  --bs-navbar-brand-color: var(--ui-heading);
-  --bs-navbar-brand-hover-color: var(--ui-heading);
+  --bs-navbar-color: var(--tone-ink-soft, var(--ui-text-muted));
+  --bs-navbar-hover-color: var(--tone-ink, var(--ui-heading));
+  --bs-navbar-active-color: var(--tone-ink, var(--ui-heading));
+  --bs-navbar-brand-color: var(--tone-ink, var(--ui-heading));
+  --bs-navbar-brand-hover-color: var(--tone-ink, var(--ui-heading));
   --bs-navbar-toggler-border-color: var(--ui-border);
 
   border-bottom: 1px solid var(--ui-hairline);
@@ -25,6 +25,14 @@
     &.dropdown-toggle {
       @include nav-underline('before');
     }
+  }
+
+  &.bg-warning {
+    background-color: var(--ui-warn-bright) !important;
+  }
+
+  .text-warning {
+    color: var(--ui-warn-bright) !important;
   }
 }
 
@@ -362,6 +370,11 @@ hr {
 .spinner-border,
 .spinner-grow {
   color: var(--ui-accent);
+}
+
+.btn .spinner-border,
+.btn .spinner-grow {
+  color: inherit;
 }
 
 // ----------------------------------------------------------- placeholders --
