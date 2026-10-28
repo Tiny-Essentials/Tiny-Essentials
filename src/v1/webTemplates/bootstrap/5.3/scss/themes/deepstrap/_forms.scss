@@ -23,6 +23,10 @@
     background-color var(--ui-duration) var(--ui-ease),
     box-shadow var(--ui-duration) var(--ui-ease);
 
+  &:hover:not(:disabled):not(:focus):not([readonly]) {
+    border-color: var(--ui-border-strong);
+  }
+
   &::placeholder {
     color: var(--ui-text-muted);
     opacity: 0.65;

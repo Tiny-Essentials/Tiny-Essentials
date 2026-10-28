@@ -98,6 +98,125 @@
   }
 }
 
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+/// @param {String} $on - Token suffix for `--ui-on-*`.
+@mixin form-control-tone($name, $tone: $name, $on: $tone) {
+  .form-control-#{$name} {
+    @include form-tone-properties($tone, $on);
+
+    border-color: color-mix(in srgb, var(--form-tone) 45%, transparent);
+
+    &:hover:not(:disabled):not(:focus) {
+      border-color: color-mix(in srgb, var(--form-tone) 65%, transparent);
+    }
+  }
+}
+
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+/// @param {String} $on - Token suffix for `--ui-on-*`.
+@mixin form-control-color-tone($name, $tone: $name, $on: $tone) {
+  .form-control-color-#{$name} {
+    @include form-tone-properties($tone, $on);
+
+    border-color: color-mix(in srgb, var(--form-tone) 45%, transparent);
+
+    &::-webkit-color-swatch-wrapper {
+      border-radius: inherit;
+    }
+
+    &::-webkit-color-swatch {
+      border: 0;
+      border-radius: calc(var(--bs-border-radius-sm) - 2px);
+    }
+
+    &:hover:not(:disabled):not(:focus) {
+      border-color: color-mix(in srgb, var(--form-tone) 65%, transparent);
+    }
+  }
+}
+
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+/// @param {String} $on - Token suffix for `--ui-on-*`.
+@mixin form-file-tone($name, $tone: $name, $on: $tone) {
+  .form-file-#{$name} {
+    @include form-tone-properties($tone, $on);
+
+    border-color: color-mix(in srgb, var(--form-tone) 45%, transparent);
+
+    &::file-selector-button {
+      color: var(--form-tone);
+      background-color: rgb(var(--form-tone-rgb) / 0.12);
+      border-inline-end: 1px solid color-mix(in srgb, var(--form-tone) 45%, transparent);
+      transition: background-color var(--ui-duration) var(--ui-ease);
+    }
+
+    &:hover:not(:disabled)::file-selector-button {
+      background-color: rgb(var(--form-tone-rgb) / 0.2);
+    }
+
+    &:focus {
+      border-color: var(--form-tone);
+      box-shadow: 0 0 0 3px rgb(var(--form-tone-rgb) / 0.2);
+    }
+  }
+}
+
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+/// @param {String} $on - Token suffix for `--ui-on-*`.
+@mixin form-input-group-tone($name, $tone: $name, $on: $tone) {
+  .input-group-#{$name} {
+    @include form-tone-properties($tone, $on);
+
+    > .input-group-text {
+      color: var(--form-tone);
+      background-color: rgb(var(--form-tone-rgb) / 0.12);
+      border-color: color-mix(in srgb, var(--form-tone) 45%, transparent);
+    }
+
+    > .form-control,
+    > .form-select {
+      border-color: color-mix(in srgb, var(--form-tone) 45%, transparent);
+
+      &:focus {
+        border-color: var(--form-tone);
+        box-shadow: 0 0 0 3px rgb(var(--form-tone-rgb) / 0.2);
+      }
+    }
+  }
+}
+
+/// @param {String} $name - Class suffix, e.g. `pink`.
+/// @param {String} $tone - Token suffix for `--ui-*`.
+/// @param {String} $on - Token suffix for `--ui-on-*`.
+@mixin form-floating-tone($name, $tone: $name, $on: $tone) {
+  .form-floating-#{$name} {
+    @include form-tone-properties($tone, $on);
+
+    > .form-control,
+    > .form-select {
+      border-color: color-mix(in srgb, var(--form-tone) 45%, transparent);
+
+      &:focus {
+        border-color: var(--form-tone);
+        box-shadow: 0 0 0 3px rgb(var(--form-tone-rgb) / 0.2);
+      }
+    }
+
+    > label {
+      color: color-mix(in srgb, var(--form-tone) 70%, var(--ui-text-muted));
+    }
+
+    > .form-control:focus ~ label,
+    > .form-select:focus ~ label {
+      color: var(--form-tone);
+    }
+  }
+}
+
 /// Emits every form control variant for a single tone.
 ///
 /// @param {String} $name - Class suffix, e.g. `pink`.
@@ -106,7 +225,12 @@
 /// @param {String|null} $mark - Hex colour of the checkmark. `null` keeps the
 ///   Bootstrap default (white).
 @mixin form-tone-plugin($name, $tone: $name, $on: $tone, $mark: null) {
+  @include form-control-tone($name, $tone, $on);
+  @include form-control-color-tone($name, $tone, $on);
+  @include form-file-tone($name, $tone, $on);
   @include form-select-tone($name, $tone, $on);
   @include form-check-tone($name, $tone, $on, $mark);
   @include form-range-tone($name, $tone, $on);
+  @include form-input-group-tone($name, $tone, $on);
+  @include form-floating-tone($name, $tone, $on);
 }

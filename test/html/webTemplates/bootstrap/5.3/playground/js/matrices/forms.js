@@ -48,6 +48,12 @@ const nextId = (prefix) => {
 /** @type {readonly import('../color-matrix.js').MatrixFamily[]} */
 const FAMILIES = Object.freeze([
   {
+    id: 'control',
+    title: 'Text',
+    description: 'form-control form-control-{tone}',
+    toneClass: (tone) => `form-control form-control-${tone}`,
+  },
+  {
     id: 'select',
     title: 'Select',
     description: 'form-select form-select-{tone}',
@@ -76,6 +82,30 @@ const FAMILIES = Object.freeze([
     title: 'Range',
     description: 'form-range form-range-{tone}',
     toneClass: (tone) => `form-range form-range-${tone}`,
+  },
+  {
+    id: 'file',
+    title: 'File',
+    description: 'form-control form-file-{tone}',
+    toneClass: (tone) => `form-control form-file-${tone}`,
+  },
+  {
+    id: 'color',
+    title: 'Color',
+    description: 'form-control form-control-color form-control-color-{tone}',
+    toneClass: (tone) => `form-control form-control-color form-control-color-${tone}`,
+  },
+  {
+    id: 'input-group',
+    title: 'Input group',
+    description: 'input-group input-group-{tone}',
+    toneClass: (tone) => `input-group input-group-${tone}`,
+  },
+  {
+    id: 'floating',
+    title: 'Floating label',
+    description: 'form-floating form-floating-{tone}',
+    toneClass: (tone) => `form-floating form-floating-${tone}`,
   },
   {
     id: 'validation',
@@ -185,6 +215,121 @@ const createValidation = (tone) => {
 };
 
 /**
+ * @param {string} tone
+ * @returns {HTMLDivElement}
+ */
+const createControl = (tone) => {
+  const id = nextId(`control-${tone}`);
+
+  const input = el('input', `form-control form-control-${tone}`);
+  input.type = 'text';
+  input.id = id;
+  input.placeholder = 'name@example.com';
+
+  const label = el('label', 'form-label small text-capitalize mb-0', tone);
+  label.htmlFor = id;
+
+  return el('div', 'd-flex flex-column gap-1', label, input);
+};
+
+/**
+ * @param {string} tone
+ * @returns {HTMLDivElement}
+ */
+const createFile = (tone) => {
+  const id = nextId(`file-${tone}`);
+
+  const input = el('input', `form-control form-file-${tone}`);
+  input.type = 'file';
+  input.id = id;
+
+  const label = el('label', 'form-label small text-capitalize mb-0', tone);
+  label.htmlFor = id;
+
+  return el('div', 'd-flex flex-column gap-1', label, input);
+};
+
+/**
+ * @param {string} tone
+ * @returns {HTMLDivElement}
+ */
+const createColor = (tone) => {
+  const id = nextId(`color-${tone}`);
+
+  const input = el('input', `form-control form-control-color form-control-color-${tone}`);
+  input.type = 'color';
+  input.id = id;
+  input.value = '#6c8cff';
+
+  const label = el('label', 'form-label small text-capitalize mb-0', tone);
+  label.htmlFor = id;
+
+  return el('div', 'd-flex flex-column gap-1', label, input);
+};
+
+/**
+ * @param {string} tone
+ * @returns {HTMLDivElement}
+ */
+const createInputGroup = (tone) => {
+  const id = nextId(`input-group-${tone}`);
+
+  const input = el('input', 'form-control');
+  input.type = 'text';
+  input.id = id;
+  input.placeholder = tone;
+
+  const group = el(
+    'div',
+    `input-group input-group-${tone}`,
+    el('span', 'input-group-text', '@'),
+    input,
+  );
+
+  const label = el('label', 'form-label small text-capitalize mb-0', tone);
+  label.htmlFor = id;
+
+  return el('div', 'd-flex flex-column gap-1', label, group);
+};
+
+/**
+ * @param {string} tone
+ * @returns {HTMLDivElement}
+ */
+const createFloating = (tone) => {
+  const id = nextId(`floating-${tone}`);
+
+  const input = el('input', 'form-control');
+  input.type = 'text';
+  input.id = id;
+  input.placeholder = tone;
+
+  const label = el('label', '', tone);
+  label.htmlFor = id;
+
+  return el('div', `form-floating form-floating-${tone}`, input, label);
+};
+
+/**
+ * One renderer per family. Keeps `renderFamily` linear as the matrix grows.
+ *
+ * @type {Readonly<Record<string, (tone: string) => HTMLElement>>}
+ */
+const RENDERERS = Object.freeze({
+  control: createControl,
+  select: createSelect,
+  checkbox: (tone) => createCheck(tone, 'checkbox'),
+  switch: (tone) => createCheck(tone, 'switch'),
+  radio: (tone) => createCheck(tone, 'radio'),
+  range: createRange,
+  file: createFile,
+  color: createColor,
+  'input-group': createInputGroup,
+  floating: createFloating,
+  validation: createValidation,
+});
+
+/**
  * @param {import('../color-matrix.js').MatrixFamily} family
  * @param {import('../color-matrix.js').MatrixState} state
  * @returns {HTMLElement}
@@ -195,6 +340,11 @@ const renderFamily = (family, state) => {
 
   const tones = state.tones.filter((tone) => SUPPORTED.has(tone));
   const row = el('div', 'd-flex flex-wrap align-items-start gap-4');
+  const render = RENDERERS[family.id];
+
+  if (!render) {
+    throw new RangeError(`Unknown form family: ${family.id}`);
+  }
 
   if (tones.length === 0) {
     row.append(
@@ -206,24 +356,7 @@ const renderFamily = (family, state) => {
     );
   }
 
-  tones.forEach((tone) => {
-    if (family.id === 'select') {
-      row.append(createSelect(tone));
-      return;
-    }
-
-    if (family.id === 'range') {
-      row.append(createRange(tone));
-      return;
-    }
-
-    if (family.id === 'validation') {
-      row.append(createValidation(tone));
-      return;
-    }
-
-    row.append(createCheck(tone, /** @type {'checkbox' | 'switch' | 'radio'} */ (family.id)));
-  });
+  tones.forEach((tone) => row.append(render(tone)));
 
   section.append(
     el('h4', 'fw-bold mb-0', family.title),
