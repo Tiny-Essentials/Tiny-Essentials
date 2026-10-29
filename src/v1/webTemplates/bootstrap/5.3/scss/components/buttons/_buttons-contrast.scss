@@ -1,35 +1,153 @@
 // =============================================================================
-// Contrast buttons
+// Contrast aliases
 //
-// `.btn-{family}contrast` and `.btn-{family}contrast-inverse` are not new
-// variants: they are aliases for the `light` and `dark` tones of their own
-// family, swapped by theme. They must stay a perfect mirror of those classes,
-// so they use `@extend` instead of re-declaring the mixin.
+// `.X-contrast` and `.X-contrast-inverse` are not new variants: they are
+// aliases for the `light` and `dark` tones of their own component, swapped by
+// theme. They must stay a perfect mirror of those classes, so they use
+// `@extend` instead of re-declaring the mixin.
 //
-// Requires: _buttons.scss and Ghost.scss (import order matters — `@extend`
-// needs the target selector to already exist).
+// Requires: every component below must be imported before this file.
+// `@extend` needs the target selector to already exist.
 // =============================================================================
 
-/// Family prefix, mapped to the class prefix it generates.
-/// `''` is the solid family: `.btn-light` / `.btn-dark`.
-$contrast-families: ('', 'outline-', 'subtle-', 'ghost-');
+// ------------------------------------------------------------------ buttons --
+$contrast-button-families: ('', 'outline-', 'subtle-', 'ghost-');
 
-@each $family in $contrast-families {
-  // Contrasts with the page: light on dark, dark on light.
+@each $family in $contrast-button-families {
   .btn-#{$family}contrast {
-    @extend .btn-#{$family}light;
+    @extend .btn-#{$family}light !optional;
   }
 
   [data-bs-theme='light'] .btn-#{$family}contrast {
-    @extend .btn-#{$family}dark;
+    @extend .btn-#{$family}dark !optional;
   }
 
-  // Matches the page: dark on dark, light on light.
   .btn-#{$family}contrast-inverse {
-    @extend .btn-#{$family}dark;
+    @extend .btn-#{$family}dark !optional;
   }
 
   [data-bs-theme='light'] .btn-#{$family}contrast-inverse {
-    @extend .btn-#{$family}light;
+    @extend .btn-#{$family}light !optional;
+  }
+}
+
+// ------------------------------------------------------------------- alerts --
+.alert-contrast {
+  @extend .alert-light !optional;
+}
+
+[data-bs-theme='light'] .alert-contrast {
+  @extend .alert-dark !optional;
+}
+
+.alert-contrast-inverse {
+  @extend .alert-dark !optional;
+}
+
+[data-bs-theme='light'] .alert-contrast-inverse {
+  @extend .alert-light !optional;
+}
+
+// -------------------------------------------------------------------- links --
+.link-contrast {
+  @extend .link-light !optional;
+}
+
+[data-bs-theme='light'] .link-contrast {
+  @extend .link-dark !optional;
+}
+
+.link-contrast-inverse {
+  @extend .link-dark !optional;
+}
+
+[data-bs-theme='light'] .link-contrast-inverse {
+  @extend .link-light !optional;
+}
+
+// ------------------------------------------------------------------- tables --
+.table-contrast {
+  @extend .table-light !optional;
+}
+
+[data-bs-theme='light'] .table-contrast {
+  @extend .table-dark !optional;
+}
+
+.table-contrast-inverse {
+  @extend .table-dark !optional;
+}
+
+[data-bs-theme='light'] .table-contrast-inverse {
+  @extend .table-light !optional;
+}
+
+// -------------------------------------------------------------- list groups --
+.list-group-item-contrast {
+  @extend .list-group-item-light !optional;
+}
+
+[data-bs-theme='light'] .list-group-item-contrast {
+  @extend .list-group-item-dark !optional;
+}
+
+.list-group-item-contrast-inverse {
+  @extend .list-group-item-dark !optional;
+}
+
+[data-bs-theme='light'] .list-group-item-contrast-inverse {
+  @extend .list-group-item-light !optional;
+}
+
+// -------------------------------------------------------------------- badges --
+.badge.text-bg-contrast {
+  @extend .text-bg-light !optional;
+}
+
+[data-bs-theme='light'] .badge.text-bg-contrast {
+  @extend .text-bg-dark !optional;
+}
+
+.badge.text-bg-contrast-inverse {
+  @extend .text-bg-dark !optional;
+}
+
+[data-bs-theme='light'] .badge.text-bg-contrast-inverse {
+  @extend .text-bg-light !optional;
+}
+
+// --------------------------------------------------------------- form checks --
+.form-check-input-contrast {
+  @extend .form-check-input-light !optional;
+}
+
+[data-bs-theme='light'] .form-check-input-contrast {
+  @extend .form-check-input-dark !optional;
+}
+
+.form-check-input-contrast-inverse {
+  @extend .form-check-input-dark !optional;
+}
+
+[data-bs-theme='light'] .form-check-input-contrast-inverse {
+  @extend .form-check-input-light !optional;
+}
+
+// ----------------------------------------------------------------- utilities --
+@each $prefix in ('text', 'bg', 'border', 'text-bg') {
+  .#{$prefix}-contrast {
+    @extend .#{$prefix}-light !optional;
+  }
+
+  [data-bs-theme='light'] .#{$prefix}-contrast {
+    @extend .#{$prefix}-dark !optional;
+  }
+
+  .#{$prefix}-contrast-inverse {
+    @extend .#{$prefix}-dark !optional;
+  }
+
+  [data-bs-theme='light'] .#{$prefix}-contrast-inverse {
+    @extend .#{$prefix}-light !optional;
   }
 }

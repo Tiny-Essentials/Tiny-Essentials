@@ -30,12 +30,12 @@ class ThemeStylesheetLoader {
     {
       id: 'website',
       label: 'Website',
-      entry: '/src/v1/webTemplates/bootstrap/5.3/scss/background/_background-grid.scss',
+      entry: '/webTemplates/bootstrap/5.3/playground/scss/Background-Grid.scss',
     },
     {
       id: 'DeepStrap',
       label: 'BootDeep',
-      entry: '/src/v1/webTemplates/bootstrap/5.3/scss/themes/deepstrap/_theme.scss',
+      entry: '/webTemplates/bootstrap/5.3/playground/scss/Deepstrap.scss',
     },
   ]);
 

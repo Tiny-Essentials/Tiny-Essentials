@@ -168,21 +168,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(
-  express.static(publicDir, {
-    etag: false,
-    lastModified: false,
-    maxAge: 0,
-    cacheControl: false,
-    setHeaders: (res) => {
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      res.setHeader('Surrogate-Control', 'no-store');
-    },
-  }),
-);
-
 function disableCache(res) {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -356,6 +341,86 @@ const readScss = async (filePath, fileName, req, res) => {
     res.status(500).type('text/plain').send(`SCSS compilation error:\n${err.message}`);
   }
 };
+
+/**
+ * Renderers applied to files served from disk, keyed by file extension.
+ * Any request whose path ends with one of these extensions is rendered
+ * instead of being streamed as a raw file.
+ * @type {Map<string, ReadFileUrl>}
+ */
+const renderers = new Map([
+  ['.scss', readScss],
+  ['.md', mdLoader],
+]);
+
+/**
+ * Directories scanned by the on-the-fly renderer, in priority order.
+ * @type {string[]}
+ */
+const renderRoots = [publicDir, imgDir, errorsDir];
+
+/**
+ * Resolves a URL path to an existing file inside one of the render roots.
+ * @param {string} urlPath - Raw pathname taken from the request.
+ * @returns {string|null} Absolute path of the first match, or null when none exists.
+ */
+function resolveRenderTarget(urlPath) {
+  /** @type {string} */
+  let decoded;
+  try {
+    decoded = decodeURIComponent(urlPath);
+  } catch {
+    return null;
+  }
+
+  const relative = decoded.replace(/^[/\\]+/, '');
+  if (relative === '') return null;
+
+  for (const root of renderRoots) {
+    const candidate = path.resolve(root, relative);
+    if (!candidate.startsWith(root + path.sep)) continue;
+    try {
+      if (fs.statSync(candidate).isFile()) return candidate;
+    } catch {
+      // Not in this root: try the next one.
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Renders `.scss` and `.md` files on the fly, no matter which folder they
+ * live in. Must be registered before `express.static` so the raw file never
+ * reaches the browser.
+ */
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+
+  const renderer = renderers.get(path.extname(req.path).toLowerCase());
+  if (!renderer) return next();
+
+  const filePath = resolveRenderTarget(req.path);
+  if (!filePath) return next();
+
+  disableCache(res);
+  Promise.resolve(renderer(filePath, path.relative(projectRoot, filePath), req, res)).catch(next);
+});
+
+app.use(
+  express.static(publicDir, {
+    etag: false,
+    lastModified: false,
+    maxAge: 0,
+    cacheControl: false,
+    setHeaders: (res) => {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('Surrogate-Control', 'no-store');
+    },
+  }),
+);
 
 // Custom middleware for .mjs
 const sources = ['src', 'dist'];
