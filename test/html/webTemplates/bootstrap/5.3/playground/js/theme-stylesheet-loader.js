@@ -41,6 +41,9 @@ class ThemeStylesheetLoader {
 
   static STORAGE_KEY = 'pg-theme-entry';
 
+  /** @type {string} */
+  static ANCHOR_ID = 'bootstrap-icons';
+
   /** @type {HTMLSelectElement} */
   #select;
 
@@ -153,6 +156,11 @@ class ThemeStylesheetLoader {
 
   /**
    * Injects the stylesheet and removes the previous one once the new one loads.
+   *
+   * The new `<link>` is inserted immediately before the element referenced by
+   * `ThemeStylesheetLoader.ANCHOR_ID`, so the theme keeps a lower cascade
+   * priority than the icon font stylesheet.
+   *
    * @param {ThemeEntry} theme
    * @param {ApplyOptions} options
    * @returns {Promise<void>}
@@ -178,7 +186,7 @@ class ThemeStylesheetLoader {
         link.addEventListener('error', () => reject(new Error(`Cannot load ${url.pathname}`)), {
           once: true,
         });
-        document.head.appendChild(link);
+        this.#insert(link);
       });
     } catch (error) {
       link.remove();
@@ -202,6 +210,26 @@ class ThemeStylesheetLoader {
     });
 
     this.#setStatus('ready', `Loaded ${theme.label}`);
+  }
+
+  /**
+   * Inserts the stylesheet before the icon font stylesheet.
+   *
+   * Falls back to the end of `<head>` when the anchor element is not present,
+   * so the loader never breaks on pages without the icon font.
+   *
+   * @param {HTMLLinkElement} link Stylesheet element that is about to load.
+   * @returns {void>
+   */
+  #insert(link) {
+    const anchor = document.getElementById(ThemeStylesheetLoader.ANCHOR_ID);
+
+    if (anchor?.parentNode) {
+      anchor.parentNode.insertBefore(link, anchor);
+      return;
+    }
+
+    document.head.appendChild(link);
   }
 
   /**
