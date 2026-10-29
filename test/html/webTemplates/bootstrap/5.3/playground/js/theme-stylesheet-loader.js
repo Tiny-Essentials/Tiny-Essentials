@@ -2,7 +2,7 @@
  * @typedef {Object} ThemeEntry
  * @property {string} id    Unique identifier used as the option value.
  * @property {string} label Human readable label shown inside the select.
- * @property {string} href  Stylesheet URL. The server compiles SCSS on request.
+ * @property {string} entry Stylesheet URL. The server compiles SCSS on request.
  */
 
 /**
