@@ -133,7 +133,7 @@ $contrast-button-families: ('', 'outline-', 'subtle-', 'ghost-');
   @extend .form-check-input-light !optional;
 }
 
-// ----------------------------------------------------------------- utilities --
+// ------------------------------------------------------------------- base --
 @each $prefix in ('text', 'bg', 'border', 'text-bg') {
   .#{$prefix}-contrast {
     @extend .#{$prefix}-light !optional;
@@ -147,7 +147,62 @@ $contrast-button-families: ('', 'outline-', 'subtle-', 'ghost-');
     @extend .#{$prefix}-dark !optional;
   }
 
-  [data-bs-theme='light'] .#{$prefix}-contrast-inverse {
+  [data-bts-theme='light'] .#{$prefix}-contrast-inverse {
     @extend .#{$prefix}-light !optional;
   }
+}
+
+// ----------------------------------------------------------------- subtle --
+@each $prefix in ('bg', 'border') {
+  .#{$prefix}-contrast-subtle {
+    @extend .#{$prefix}-light-subtle !optional;
+  }
+
+  [data-bs-theme='light'] .#{$prefix}-contrast-subtle {
+    @extend .#{$prefix}-dark-subtle !optional;
+  }
+
+  .#{$prefix}-contrast-inverse-subtle {
+    @extend .#{$prefix}-dark-subtle !optional;
+  }
+
+  [data-bs-theme='light'] .#{$prefix}-contrast-inverse-subtle {
+    @extend .#{$prefix}-light-subtle !optional;
+  }
+}
+
+// --------------------------------------------------------------- emphasis --
+.text-contrast-emphasis {
+  @extend .text-light-emphasis !optional;
+}
+
+[data-bs-theme='light'] .text-contrast-emphasis {
+  @extend .text-dark-emphasis !optional;
+}
+
+.text-contrast-inverse-emphasis {
+  @extend .text-dark-emphasis !optional;
+}
+
+[data-bs-theme='light'] .text-contrast-inverse-emphasis {
+  @extend .text-light-emphasis !optional;
+}
+
+// `_bootstrap-overrides.scss` redefines `.border-*` after Bootstrap, so
+// `@extend .border-light` would only copy the last declaration. Declare the
+// contrast alias directly to stay independent of the import order.
+.border-contrast {
+  border-color: rgba(var(--bs-light-rgb), var(--bs-border-opacity, 1)) !important;
+}
+
+[data-bs-theme='light'] .border-contrast {
+  border-color: rgba(var(--bs-dark-rgb), var(--bs-border-opacity, 1)) !important;
+}
+
+.border-contrast-inverse {
+  border-color: rgba(var(--bs-dark-rgb), var(--bs-border-opacity, 1)) !important;
+}
+
+[data-bs-theme='light'] .border-contrast-inverse {
+  border-color: rgba(var(--bs-light-rgb), var(--bs-border-opacity, 1)) !important;
 }
