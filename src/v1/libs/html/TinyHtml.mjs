@@ -5614,7 +5614,7 @@ class TinyHtml {
   /**
    * Toggles a class name on the element with an optional force boolean.
    * @param {string} token - The class name to toggle.
-   * @param {boolean} force - If true, adds the class; if false, removes it.
+   * @param {boolean} [force] - If true, adds the class; if false, removes it.
    * @returns {boolean} Whether the class is present after the toggle.
    * @throws {TypeError} If token is not a string or force is not a boolean.
    */
