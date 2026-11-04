@@ -497,7 +497,7 @@ class TinyImageLoader extends TinyMediaLoader {
    * @returns {string} The cache key of the frame.
    */
   #frameKey(index) {
-    return `${this.src}???frame=${index}`;
+    return `${this.src}:::frame=${index}`;
   }
 
   /**
@@ -507,7 +507,7 @@ class TinyImageLoader extends TinyMediaLoader {
    */
   #getFrame(index) {
     const cache = this.cache ?? this.#frameCache;
-    if (!cache) throw new Error('');
+    if (!cache) throw new Error('No cache is available to store animation frames.');
     const entry = cache.get(this.#frameKey(index));
     if (!entry) {
       return null;
@@ -524,7 +524,7 @@ class TinyImageLoader extends TinyMediaLoader {
    */
   #setFrame(index, blob) {
     const cache = this.cache ?? this.#frameCache;
-    if (!cache) throw new Error('');
+    if (!cache) throw new Error('No cache is available to store animation frames.');
     const key = this.#frameKey(index);
     const entry = cache.set(key, blob, false);
     cache.acquire(key);
