@@ -33,6 +33,7 @@
  * @property {number} lastAccess - The epoch timestamp of the last access.
  * @property {number} expiresAt - The epoch timestamp when the entry expires (0 = never).
  * @property {boolean} pinned - Whether the entry is protected from eviction.
+ * @property {string|null} parent - The key of the entry that owns this one, or null.
  * @property {Record<string, any>} metadata - The probe metadata captured with the blob.
  */
 
@@ -44,6 +45,7 @@
  * @property {number} hits - The number of successful lookups.
  * @property {number} misses - The number of failed lookups.
  * @property {number} evictions - The number of evicted entries.
+ * @property {number} links - The number of entries that currently own at least one child.
  * @property {number} instances - The number of live cache instances.
  * @property {number} blobs - The number of blobs in the shared registry.
  */
@@ -77,6 +79,8 @@ class TinyMediaCache {
 
   /** @type {Map<string, MediaCacheEntry>} */
   #entries = new Map();
+  /** @type {Map<string, Set<string>>} */
+  #children = new Map();
   /** @type {number} */
   #maxItems;
   /** @type {number} */
@@ -282,6 +286,14 @@ class TinyMediaCache {
   }
 
   /**
+   * The number of children's currently stored in this cache instance.
+   * @returns {number} The number of children's in this cache.
+   */
+  get links() {
+    return this.#children.size;
+  }
+
+  /**
    * @returns {number} The total size in bytes held by this cache.
    */
   get bytes() {
@@ -316,6 +328,7 @@ class TinyMediaCache {
       hits: this.#hits,
       misses: this.#misses,
       evictions: this.#evictions,
+      links: this.#children.size,
       instances: TinyMediaCache.#instances.size,
       blobs: TinyMediaCache.#blobs.size,
     };
@@ -335,17 +348,22 @@ class TinyMediaCache {
    * @param {Blob} blob - The blob to cache.
    * @param {boolean} [pinned] - Whether the entry is protected from eviction.
    * @param {Record<string, any>} [metadata] - The probe metadata captured with the blob.
+   * @param {string|null} [parent] - The key of the entry that owns this one.
    * @returns {MediaCacheEntry} The stored entry.
    * @throws {TypeError} If `blob` is not a Blob.
+   * @throws {TypeError} If `parent` is neither a string nor null.
    * @throws {Error} If the cache was destroyed.
    */
-  set(url, blob, pinned = false, metadata = {}) {
+  set(url, blob, pinned = false, metadata = {}, parent = null) {
     this.#assertAlive();
     if (!(blob instanceof Blob)) {
       throw new TypeError('The "blob" argument must be a Blob.');
     }
+    if (parent !== null && typeof parent !== 'string') {
+      throw new TypeError('The "parent" argument must be a string or null.');
+    }
     const key = this.#key(url);
-    this.delete(key);
+    this.#discard(key, false);
     const record = TinyMediaCache.#acquire(key, blob);
     const now = Date.now();
     /** @type {MediaCacheEntry} */
@@ -361,9 +379,13 @@ class TinyMediaCache {
       lastAccess: now,
       expiresAt: this.#ttl > 0 ? now + this.#ttl : 0,
       pinned: Boolean(pinned),
+      parent,
       metadata: { ...metadata },
     };
     this.#entries.set(key, entry);
+    if (parent !== null) {
+      this.#link(parent, key);
+    }
     this.#enforceLimit();
     return entry;
   }
@@ -437,19 +459,71 @@ class TinyMediaCache {
   }
 
   /**
-   * Removes an entry and releases its share of the shared registry.
+   * Removes an entry and releases its share of the shared registry. When the
+   * entry is the last child of a parent, the parent is removed as well.
    * @param {string} url - The media URL.
    * @returns {boolean} True when an entry was removed.
    */
   delete(url) {
-    const key = this.#key(url);
+    return this.#discard(this.#key(url), true);
+  }
+
+  /**
+   * The keys of the entries owned by the given key.
+   * @param {string} url - The media URL of the owner.
+   * @returns {string[]} The normalized keys of the children, in insertion order.
+   */
+  children(url) {
+    return Array.from(this.#children.get(this.#key(url)) ?? []);
+  }
+
+  /**
+   * Removes an entry, releases its share of the shared registry and, when it
+   * was the last child, removes the parent that owns it.
+   * @param {string} key - The normalized cache key.
+   * @param {boolean} cascade - Whether removing the last child also removes the parent.
+   * @returns {boolean} True when an entry was removed.
+   */
+  #discard(key, cascade) {
     const entry = this.#entries.get(key);
     if (!entry) {
       return false;
     }
     this.#entries.delete(key);
     TinyMediaCache.#release(key);
+    this.#children.delete(key);
+    if (entry.parent === null) {
+      return true;
+    }
+    const siblings = this.#children.get(entry.parent);
+    if (!siblings) {
+      return true;
+    }
+    siblings.delete(key);
+    if (siblings.size > 0) {
+      return true;
+    }
+    this.#children.delete(entry.parent);
+    const owner = this.#entries.get(entry.parent);
+    if (cascade && owner && owner.refs === 0) {
+      this.#discard(entry.parent, true);
+    }
     return true;
+  }
+
+  /**
+   * Registers a child entry under the entry that owns it.
+   * @param {string} parent - The normalized key of the owner.
+   * @param {string} child - The normalized key of the child.
+   * @returns {void}
+   */
+  #link(parent, child) {
+    let children = this.#children.get(parent);
+    if (!children) {
+      children = new Set();
+      this.#children.set(parent, children);
+    }
+    children.add(child);
   }
 
   /**
@@ -473,11 +547,15 @@ class TinyMediaCache {
    */
   prune() {
     this.#assertAlive();
-    let removed = 0;
+    const expired = [];
     for (const [key, entry] of this.#entries) {
       if (this.#isExpired(entry)) {
-        this.#entries.delete(key);
-        TinyMediaCache.#release(key);
+        expired.push(key);
+      }
+    }
+    let removed = 0;
+    for (const key of expired) {
+      if (this.#discard(key, true)) {
         removed += 1;
       }
     }
@@ -494,6 +572,7 @@ class TinyMediaCache {
       this.#entries.delete(key);
       TinyMediaCache.#release(key);
     }
+    this.#children.clear();
   }
 
   /**
@@ -523,7 +602,7 @@ class TinyMediaCache {
       return;
     }
     const candidates = Array.from(this.#entries.values())
-      .filter((entry) => !entry.pinned && entry.refs === 0)
+      .filter((entry) => !entry.pinned && entry.refs === 0 && !this.#children.has(entry.key))
       .sort((a, b) => a.lastAccess - b.lastAccess);
 
     let currentBytes = this.bytes;

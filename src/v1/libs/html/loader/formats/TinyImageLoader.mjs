@@ -526,7 +526,7 @@ class TinyImageLoader extends TinyMediaLoader {
     const cache = this.cache ?? this.#frameCache;
     if (!cache) throw new Error('No cache is available to store animation frames.');
     const key = this.#frameKey(index);
-    const entry = cache.set(key, blob, false);
+    const entry = cache.set(key, blob, false, {}, this.src);
     cache.acquire(key);
     return entry.objectUrl;
   }

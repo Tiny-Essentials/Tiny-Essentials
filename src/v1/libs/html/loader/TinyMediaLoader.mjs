@@ -1015,10 +1015,12 @@ class TinyMediaLoader extends TypedEmitter {
       const existing = this.#cache.get(this.#src);
       if (existing) {
         this.#cache.acquire(this.#src);
+        this.#cacheAcquired = true;
         return existing.objectUrl;
       }
       const entry = this.#cache.set(this.#src, blob, false, this.#partial);
       this.#cache.acquire(this.#src);
+      this.#cacheAcquired = true;
       this.emit('cachemiss', entry);
       return entry.objectUrl;
     }

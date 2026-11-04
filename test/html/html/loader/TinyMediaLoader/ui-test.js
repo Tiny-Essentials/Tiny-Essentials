@@ -748,21 +748,31 @@ function renderCacheStats() {
  */
 function renderCache() {
   const registry = TinyMediaCache.registry;
+  const parents = new Map(
+    (sharedCache && !sharedCache.destroyed ? sharedCache.entries() : []).map((entry) => [
+      entry.key,
+      entry.parent,
+    ]),
+  );
   cacheSummaryEl.textContent = `${registry.length} blobs · ${formatBytes(TinyMediaCache.bytes)}`;
   cacheRowsEl.replaceChildren(
     ...registry.map((record) => {
       const row = document.createElement('tr');
       const key = document.createElement('td');
-      key.textContent = record.key.length > 48 ? `…${record.key.slice(-46)}` : record.key;
+      key.textContent = record.key.length > 40 ? `…${record.key.slice(-38)}` : record.key;
       key.title = record.key;
       const size = document.createElement('td');
       size.textContent = formatBytes(record.size);
       const refs = document.createElement('td');
       refs.textContent = String(record.refs);
+      const parent = document.createElement('td');
+      const owner = parents.get(record.key) ?? null;
+      parent.textContent = owner === null ? '—' : owner.slice(-18);
+      parent.title = owner ?? '';
       const url = document.createElement('td');
       url.textContent = record.objectUrl.slice(0, 24);
       url.title = record.objectUrl;
-      row.append(key, size, refs, url);
+      row.append(key, size, refs, parent, url);
       return row;
     }),
   );
