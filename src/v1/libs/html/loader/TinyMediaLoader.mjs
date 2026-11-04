@@ -286,6 +286,10 @@ class TinyMediaLoader extends TypedEmitter {
   #replaying = false;
   /** @type {((name: string, args: unknown[]) => void)|null} */
   #publish = null;
+  /** @type {typeof fetch} */
+  #fetch = globalThis.fetch.bind(globalThis);
+  /** @type {RequestInit} */
+  #requestInit = {};
 
   /** @type {Partial<MediaMetadata>} */
   #partial = {};
@@ -656,6 +660,38 @@ class TinyMediaLoader extends TypedEmitter {
       throw new Error('Signal does not exist.');
     }
     return this.#controller;
+  }
+
+  /**
+   * The fetch implementation used to download the media.
+   * Subclasses may override it to inject a custom transport.
+   * @returns {typeof fetch} The fetch implementation.
+   */
+  get _fetch() {
+    return globalThis.fetch.bind(globalThis);
+  }
+
+  /**
+   * @param {typeof fetch} fetch - The fetch implementation.
+   */
+  set _fetch(fetch) {
+    this.#fetch = fetch;
+  }
+
+  /**
+   * Extra options forwarded to the fetch implementation.
+   * Subclasses may override it to send headers, credentials or a body.
+   * @returns {RequestInit} The fetch options.
+   */
+  get _requestInit() {
+    return this.#requestInit;
+  }
+
+  /**
+   * @param {RequestInit} params - The fetch options.
+   */
+  set _requestInit(params) {
+    this.#requestInit = params;
   }
 
   /**
@@ -1147,7 +1183,8 @@ class TinyMediaLoader extends TypedEmitter {
     // 1. Optional: HEAD Fetch before GET to capture metadata quickly
     if (this.#useHeadRequest && startByte === 0) {
       try {
-        const headResponse = await fetch(url, {
+        const headResponse = await this.#fetch(url, {
+          ...this.#requestInit,
           method: 'HEAD',
           signal: customSignal || this.signal.signal,
         });
@@ -1185,7 +1222,8 @@ class TinyMediaLoader extends TypedEmitter {
     }
 
     // 2. Fetch real (GET)
-    const response = await fetch(url, {
+    const response = await this.#fetch(url, {
+      ...this.#requestInit,
       signal: customSignal || this.signal.signal,
       headers: headers,
     });
