@@ -1325,8 +1325,6 @@ class TinyImageLoader extends TinyMediaLoader {
   _cleanup() {
     this._revokeObjectUrl();
     this.pause();
-
-    // Utiliza o método auxiliar para limpar a cache de frames
     this._releaseAnimationFrames();
 
     this.#originalAnimatedUrl = null;

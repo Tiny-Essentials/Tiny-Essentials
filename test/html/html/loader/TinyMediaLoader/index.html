@@ -201,12 +201,42 @@
             <span class="badge badge--muted" id="cache-summary">—</span>
           </header>
           <div class="panel__body">
+            <div class="grid grid--4">
+              <div class="field">
+                <label for="cache-strategy">strategy</label>
+                <select id="cache-strategy">
+                  <option value="manual" selected>manual</option>
+                  <option value="auto">auto</option>
+                  <option value="ttl">ttl</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="cache-ttl">ttl (ms)</label>
+                <input type="number" id="cache-ttl" value="0" min="0" step="1000" />
+              </div>
+              <div class="field">
+                <label for="cache-max-items">maxItems</label>
+                <input type="number" id="cache-max-items" value="50" min="1" step="1" />
+              </div>
+              <div class="field">
+                <label for="cache-max-bytes">maxBytes (0 = ∞)</label>
+                <input type="number" id="cache-max-bytes" value="0" min="0" step="1048576" />
+              </div>
+            </div>
+
             <div class="btn-row">
+              <button type="button" class="btn btn--primary" id="btn-cache-apply">
+                Apply (rebuild)
+              </button>
+              <button type="button" class="btn" id="btn-cache-prune">prune()</button>
               <button type="button" class="btn" id="btn-cache-refresh">Refresh</button>
               <label class="switch"
                 ><input type="checkbox" id="cache-live" checked /><span>live (500 ms)</span></label
               >
             </div>
+
+            <p class="hint" id="cache-stats">—</p>
+
             <div class="table-wrap">
               <table class="table">
                 <thead>

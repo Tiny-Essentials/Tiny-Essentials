@@ -125,6 +125,8 @@ const LOADER_CLASSES = {
   audio: TinyAudioLoader,
 };
 
+window.LOADER_CLASSES = LOADER_CLASSES;
+
 /**
  * Events emitted by the loader itself (not forwarded from the DOM).
  * Keep this list in sync with the `this.emit(...)` calls in TinyMediaLoader.
@@ -179,12 +181,38 @@ const DOM_EVENTS = [
 let sharedCache = null;
 
 /**
+ * Describes the cache configuration read from the inspector form.
+ * @typedef {Object} CacheInspectorConfig
+ * @property {'auto'|'manual'|'ttl'} strategy - The cleanup strategy applied at zero references.
+ * @property {number} ttl - The entry lifetime in milliseconds (0 = never expires).
+ * @property {number} maxItems - The maximum number of entries.
+ * @property {number} maxBytes - The maximum size in bytes.
+ */
+
+/**
+ * Reads the cache configuration from the inspector form.
+ * @returns {CacheInspectorConfig} The parsed options, ready for the constructor.
+ */
+function readCacheConfig() {
+  const strategy = /** @type {'auto'|'manual'|'ttl'} */ (byId('cache-strategy').value);
+  const ttl = Math.max(0, numberOf('cache-ttl', 0));
+  const maxItems = numberOf('cache-max-items', 0);
+  const maxBytes = numberOf('cache-max-bytes', 0);
+  return {
+    strategy,
+    ttl: strategy === 'ttl' ? ttl : 0,
+    maxItems: maxItems > 0 ? maxItems : Infinity,
+    maxBytes: maxBytes > 0 ? maxBytes : Infinity,
+  };
+}
+
+/**
  * Returns the shared cache, creating it on first use.
  * @returns {TinyMediaCache} The shared cache instance.
  */
 function ensureCache() {
   if (!sharedCache || sharedCache.destroyed) {
-    sharedCache = new TinyMediaCache({ maxItems: 50, ttl: 0, strategy: 'manual' });
+    sharedCache = new TinyMediaCache(readCacheConfig());
     log('info', 'TinyMediaCache created', sharedCache.stats);
   }
   return sharedCache;
@@ -570,6 +598,7 @@ async function spawn(config) {
     options.controls = config.controls;
   }
   const loader = new LoaderClass(options);
+  window.fileList.push(loader);
   const entry = { id, kind, card, loader, startedAt: 0 };
   instances.set(id, entry);
   wire(entry);
@@ -579,6 +608,8 @@ async function spawn(config) {
   log('success', `[#${id}] ${LoaderClass.name} created`, options);
   return entry;
 }
+
+window.fileList = [];
 
 /**
  * Loads one instance and mounts it on success.
@@ -693,6 +724,23 @@ function updateLabCount() {
 
 const cacheRowsEl = $('#cache-rows');
 const cacheSummaryEl = $('#cache-summary');
+const cacheStatsEl = $('#cache-stats');
+
+/**
+ * Renders the live counters of the shared cache instance.
+ * @returns {void}
+ */
+function renderCacheStats() {
+  if (!sharedCache || sharedCache.destroyed) {
+    cacheStatsEl.textContent = 'no live cache instance';
+    return;
+  }
+  const { size, refs, hits, misses, evictions } = sharedCache.stats;
+  cacheStatsEl.textContent =
+    `strategy=${sharedCache.strategy} · ttl=${sharedCache.ttl}ms · ` +
+    `entries=${size} · refs=${refs} · hits=${hits} · misses=${misses} · ` +
+    `evictions=${evictions}`;
+}
 
 /**
  * Rebuilds the cache table from the shared registry.
@@ -718,12 +766,51 @@ function renderCache() {
       return row;
     }),
   );
+  renderCacheStats();
+}
+
+/**
+ * Rebuilds the shared cache with the configuration currently in the inspector.
+ * The previous instance is destroyed, which revokes every object URL it owns.
+ * @returns {void}
+ */
+function applyCacheConfig() {
+  const options = readCacheConfig();
+  const previous = sharedCache;
+  const released = previous && !previous.destroyed ? previous.size : 0;
+  sharedCache = new TinyMediaCache(options);
+  if (previous && !previous.destroyed) {
+    previous.destroy();
+  }
+  if (released > 0) {
+    log('warn', `Cache rebuilt: ${released} entr(ies) released, object URLs revoked`);
+  }
+  log('success', 'TinyMediaCache rebuilt', options);
+  renderCache();
+}
+
+/**
+ * Forces the shared cache to drop every expired entry.
+ * @returns {void}
+ */
+function pruneCache() {
+  if (!sharedCache || sharedCache.destroyed) {
+    log('warn', 'prune() ignored: no live cache instance');
+    return;
+  }
+  const before = sharedCache.size;
+  const removed = sharedCache.prune();
+  log(removed > 0 ? 'warn' : 'info', `prune() removed ${removed} of ${before} entr(ies)`);
+  renderCache();
 }
 
 setInterval(() => {
   if (isChecked('cache-live')) renderCache();
 }, 500);
+
 $('#btn-cache-refresh').addEventListener('click', renderCache);
+$('#btn-cache-apply').addEventListener('click', applyCacheConfig);
+$('#btn-cache-prune').addEventListener('click', pruneCache);
 
 /* ══════════════════════════════════════════════════════════════════
    PROGRESS PANEL
