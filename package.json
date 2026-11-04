@@ -82,6 +82,7 @@
     "./css/*.css": "./dist/v1/css/*.css",
     "./webTemplates/bootstrap/5.3/scss/*": "./dist/v1/webTemplates/bootstrap/5.3/scss/*",
     ".": {
+      "types": "./dist/v1/index.d.mts",
       "require": "./dist/v1/index.cjs",
       "import": "./dist/v1/index.mjs"
     },
