@@ -892,20 +892,47 @@ class TinyImageLoader extends TinyMediaLoader {
   }
 
   /**
-   * Slices an APNG binary into multiple valid single-frame APNG blobs.
-   * @param {Uint8Array<ArrayBuffer>} bytes
+   * Slices an APNG binary into multiple valid single-frame SVG blobs.
+   *
+   * APNG frames are deltas: a frame may cover only the sub-rectangle that
+   * changed, and `blend_op` / `dispose_op` decide how the frame interacts with
+   * the accumulated canvas. The SVG produced for frame `i` therefore replays
+   * every draw and every erase that happened up to `i`, which reproduces the
+   * exact pixels of the original APNG without a canvas element.
+   *
+   * @param {Uint8Array<ArrayBuffer>} bytes - The full APNG file.
+   * @returns {void}
    */
   #extractApngFrames(bytes) {
-    const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    const IEND_BYTES = new Uint8Array([
+      0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+    ]);
     if (bytes.length < 8) return;
 
-    let offset = 8;
+    /**
+     * @typedef {Object} ApngFrame
+     * @property {number} delay - Frame duration in milliseconds.
+     * @property {{ type: string, bytes: Uint8Array<ArrayBuffer> }[]} dataChunks - IDAT/fdAT chunks.
+     * @property {number} width - Frame width in pixels.
+     * @property {number} height - Frame height in pixels.
+     * @property {number} x - Frame X offset inside the canvas.
+     * @property {number} y - Frame Y offset inside the canvas.
+     * @property {number} disposeOp - 0 = NONE, 1 = BACKGROUND, 2 = PREVIOUS.
+     * @property {number} blendOp - 0 = SOURCE, 1 = OVER.
+     */
+
+    /** @type {ApngFrame[]} */
+    const frames = [];
+    /** @type {Uint8Array<ArrayBuffer>[]} */
     const preDataChunks = [];
     let iend = null;
-    const frames = [];
-    /** @type {null|{ fctl: Uint8Array<ArrayBuffer>; delay: number; dataChunks: ({ type: string; bytes: Uint8Array<ArrayBuffer> })[] }} */
-    let currentFrame = null;
+    let fullWidth = 0;
+    let fullHeight = 0;
+    let offset = 8;
     let seenIdatOrFctl = false;
+    /** @type {ApngFrame|null} */
+    let currentFrame = null;
 
     while (offset + 8 <= bytes.length) {
       const view = new DataView(bytes.buffer, bytes.byteOffset + offset, 8);
@@ -917,48 +944,172 @@ class TinyImageLoader extends TinyMediaLoader {
         bytes[offset + 7],
       );
       const chunkEnd = offset + 12 + size;
-
       if (chunkEnd > bytes.length) break;
-
       const chunkBytes = bytes.subarray(offset, chunkEnd);
 
-      if (type === 'acTL') {
-        // Skip original global animation controller
+      if (type === 'IHDR') {
+        const ihdrView = new DataView(
+          chunkBytes.buffer,
+          chunkBytes.byteOffset,
+          chunkBytes.byteLength,
+        );
+        fullWidth = ihdrView.getUint32(8);
+        fullHeight = ihdrView.getUint32(12);
+        preDataChunks.push(chunkBytes);
+      } else if (type === 'acTL') {
+        // The original animation controller is replaced by the frame script.
       } else if (type === 'fcTL') {
         seenIdatOrFctl = true;
         if (currentFrame) frames.push(currentFrame);
-        const fcTLView = new DataView(bytes.buffer, bytes.byteOffset + offset + 8, 26);
-        const delayNum = fcTLView.getUint16(20);
-        const delayDen = fcTLView.getUint16(22) || 100;
-        const delay = delayDen === 0 ? 100 : Math.round((delayNum / delayDen) * 1000);
-        currentFrame = { fctl: chunkBytes, dataChunks: [], delay };
+        currentFrame = null;
+        if (size >= 26) {
+          const fcTLView = new DataView(bytes.buffer, bytes.byteOffset + offset + 8, 26);
+          const delayNum = fcTLView.getUint16(20);
+          const delayDen = fcTLView.getUint16(22) || 100;
+          currentFrame = {
+            delay: delayDen === 0 ? 100 : Math.round((delayNum / delayDen) * 1000),
+            dataChunks: [],
+            width: fcTLView.getUint32(4),
+            height: fcTLView.getUint32(8),
+            x: fcTLView.getUint32(12),
+            y: fcTLView.getUint32(16),
+            disposeOp: fcTLView.getUint8(24),
+            blendOp: fcTLView.getUint8(25),
+          };
+        }
       } else if (type === 'IDAT') {
         seenIdatOrFctl = true;
-        if (currentFrame) {
-          currentFrame.dataChunks.push({ type: 'IDAT', bytes: chunkBytes });
-        }
+        if (currentFrame) currentFrame.dataChunks.push({ type: 'IDAT', bytes: chunkBytes });
       } else if (type === 'fdAT') {
         seenIdatOrFctl = true;
-        if (currentFrame) {
-          currentFrame.dataChunks.push({ type: 'fdAT', bytes: chunkBytes });
-        }
+        if (currentFrame) currentFrame.dataChunks.push({ type: 'fdAT', bytes: chunkBytes });
       } else if (type === 'IEND') {
         iend = chunkBytes;
         break;
-      } else {
-        if (!seenIdatOrFctl) {
-          preDataChunks.push(chunkBytes);
-        }
+      } else if (!seenIdatOrFctl) {
+        preDataChunks.push(chunkBytes);
       }
-
       offset = chunkEnd;
     }
 
     if (currentFrame) frames.push(currentFrame);
     if (frames.length === 0) return;
 
-    for (let i = 0; i < frames.length; i++) {
+    /**
+     * Builds the base64 PNG of a single APNG frame.
+     * @param {ApngFrame} frame - The frame to encode.
+     * @returns {string} The base64-encoded PNG.
+     */
+    const buildFramePng = (frame) => {
+      const patchedPreData = preDataChunks.map((chunk) => {
+        const chunkType = String.fromCharCode(chunk[4], chunk[5], chunk[6], chunk[7]);
+        if (chunkType !== 'IHDR') return chunk;
+        const newIhdr = new Uint8Array(chunk);
+        const view = new DataView(newIhdr.buffer, newIhdr.byteOffset, newIhdr.byteLength);
+        view.setUint32(8, frame.width);
+        view.setUint32(12, frame.height);
+        view.setUint32(newIhdr.length - 4, this.#crc32(newIhdr.subarray(4, newIhdr.length - 4)));
+        return newIhdr;
+      });
+
+      const outChunks = [new Uint8Array(PNG_SIGNATURE), ...patchedPreData];
+
+      for (const chunk of frame.dataChunks) {
+        if (chunk.type === 'IDAT') {
+          outChunks.push(chunk.bytes);
+        } else if (chunk.type === 'fdAT') {
+          const idatChunk = new Uint8Array(chunk.bytes.length - 4);
+          const idatView = new DataView(idatChunk.buffer);
+          idatView.setUint32(0, chunk.bytes.length - 16);
+          idatChunk.set([0x49, 0x44, 0x41, 0x54], 4);
+          idatChunk.set(chunk.bytes.subarray(12, chunk.bytes.length - 4), 8);
+          idatView.setUint32(
+            idatChunk.length - 4,
+            this.#crc32(idatChunk.subarray(4, idatChunk.length - 4)),
+          );
+          outChunks.push(idatChunk);
+        }
+      }
+
+      outChunks.push(iend ?? IEND_BYTES);
+
+      let totalSize = 0;
+      for (const c of outChunks) totalSize += c.length;
+      const pngBuffer = new Uint8Array(totalSize);
+      let bufOffset = 0;
+      for (const c of outChunks) {
+        pngBuffer.set(c, bufOffset);
+        bufOffset += c.length;
+      }
+
+      let binary = '';
+      for (let j = 0; j < pngBuffer.length; j += 1) {
+        binary += String.fromCharCode(pngBuffer[j]);
+      }
+      return btoa(binary);
+    };
+
+    /** @type {Map<number, string>} */
+    const pngCache = new Map();
+    /**
+     * Returns the base64 PNG of a frame, encoding it only once.
+     * @param {number} index - The zero-based frame index.
+     * @returns {string} The base64-encoded PNG.
+     */
+    const getFramePng = (index) => {
+      let png = pngCache.get(index);
+      if (png === undefined) {
+        png = buildFramePng(frames[index]);
+        pngCache.set(index, png);
+      }
+      return png;
+    };
+
+    const canvasWidth = fullWidth || 1;
+    const canvasHeight = fullHeight || 1;
+    /** @type {string[]} */
+    const defs = [];
+    let maskSeq = 0;
+
+    /**
+     * Wraps `content` so the given rectangle becomes fully transparent.
+     * @param {string} content - The SVG markup to erase from.
+     * @param {number} x - Rectangle X offset.
+     * @param {number} y - Rectangle Y offset.
+     * @param {number} width - Rectangle width.
+     * @param {number} height - Rectangle height.
+     * @returns {string} The masked SVG markup.
+     */
+    const eraseRect = (content, x, y, width, height) => {
+      if (content === '') return '';
+      if (width >= canvasWidth && height >= canvasHeight) return '';
+      if (width <= 0 || height <= 0) return content;
+      const id = `apng-mask-${maskSeq}`;
+      maskSeq += 1;
+      defs.push(
+        `<mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="${canvasWidth}" height="${canvasHeight}">` +
+          `<rect x="0" y="0" width="${canvasWidth}" height="${canvasHeight}" fill="#fff"/>` +
+          `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="#000"/>` +
+          `</mask>`,
+      );
+      return `<g mask="url(#${id})">${content}</g>`;
+    };
+
+    let state = '';
+
+    for (let i = 0; i < frames.length; i += 1) {
       const frame = frames[i];
+      const stateBefore = state;
+      const imageTag =
+        `<image href="data:image/png;base64,${getFramePng(i)}"` +
+        ` x="${frame.x}" y="${frame.y}" width="${frame.width}" height="${frame.height}"/>`;
+
+      // blend_op: 0 = SOURCE (replace the rect), 1 = OVER (alpha composite).
+      const drawn =
+        frame.blendOp === 0
+          ? eraseRect(state, frame.x, frame.y, frame.width, frame.height) + imageTag
+          : state + imageTag;
+
       let delay = frame.delay;
       if (delay <= 10) delay = 100;
       this.#animationScript.push({ delay });
@@ -966,53 +1117,24 @@ class TinyImageLoader extends TinyMediaLoader {
       if (this.#animationControl !== 'script-only') {
         let url = this.#getFrame(i);
         if (!url) {
-          let seq = 0;
-
-          // Force a new 1-frame animation controller for this chunk
-          const acTL = new Uint8Array(20);
-          const acTLView = new DataView(acTL.buffer);
-          acTLView.setUint32(0, 8);
-          acTL.set([0x61, 0x63, 0x54, 0x4c], 4);
-          acTLView.setUint32(8, 1);
-          acTLView.setUint32(12, 0);
-          acTLView.setUint32(16, this.#crc32(acTL.subarray(4, 16)));
-
-          const fctl = new Uint8Array(frame.fctl);
-          const fctlView = new DataView(fctl.buffer);
-          fctlView.setUint32(8, seq++);
-          fctlView.setUint32(fctl.length - 4, this.#crc32(fctl.subarray(4, fctl.length - 4)));
-
-          /** @type {Uint8Array<ArrayBuffer>[]} */
-          const outChunks = [new Uint8Array(signature), ...preDataChunks, acTL, fctl];
-
-          for (const chunk of frame.dataChunks) {
-            if (chunk.type === 'IDAT') {
-              outChunks.push(chunk.bytes);
-            } else if (chunk.type === 'fdAT') {
-              // Convert fdAT to standard IDAT by removing sequence number
-              const idatChunk = new Uint8Array(chunk.bytes.length - 4);
-              const idatView = new DataView(idatChunk.buffer);
-              idatView.setUint32(0, chunk.bytes.length - 16);
-              idatChunk.set([0x49, 0x44, 0x41, 0x54], 4);
-              idatChunk.set(chunk.bytes.subarray(12, chunk.bytes.length - 4), 8);
-              idatView.setUint32(
-                idatChunk.length - 4,
-                this.#crc32(idatChunk.subarray(4, idatChunk.length - 4)),
-              );
-              outChunks.push(idatChunk);
-            }
-          }
-
-          // A missing IEND means the source is truncated. Synthesize an empty
-          // one so the browser always receives a well-formed PNG stream.
-          outChunks.push(
-            iend ?? new Uint8Array([0, 0, 0, 0, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82]),
-          );
-
-          const blob = new Blob(outChunks, { type: 'image/png' });
-          url = this.#setFrame(i, blob);
+          const svg =
+            `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasWidth}" height="${canvasHeight}"` +
+            ` viewBox="0 0 ${canvasWidth} ${canvasHeight}">` +
+            (defs.length > 0 ? `<defs>${defs.join('')}</defs>` : '') +
+            drawn +
+            `</svg>`;
+          url = this.#setFrame(i, new Blob([svg], { type: 'image/svg+xml' }));
         }
         this.#frames.push({ url, cacheKey: this.#frameKey(i) });
+      }
+
+      // dispose_op: 0 = NONE, 1 = BACKGROUND (erase), 2 = PREVIOUS (rollback).
+      if (frame.disposeOp === 1) {
+        state = eraseRect(drawn, frame.x, frame.y, frame.width, frame.height);
+      } else if (frame.disposeOp === 2) {
+        state = stateBefore;
+      } else {
+        state = drawn;
       }
 
       if (this.#animationControl === 'native') break;
