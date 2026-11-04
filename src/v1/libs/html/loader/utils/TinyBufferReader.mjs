@@ -87,8 +87,12 @@ export default class TinyBufferReader {
    * Checks if the buffer contains at least the specified number of readable bytes.
    * @param {number} count - The number of bytes to test.
    * @returns {boolean} True when at least `count` bytes are readable.
+   * @throws {TypeError} If `count` is not an integer.
    */
   has(count) {
+    if (!Number.isInteger(count)) {
+      throw new TypeError('The "count" argument must be an integer.');
+    }
     return count >= 0 && this.#offset + count <= this.#limit;
   }
 
@@ -97,9 +101,17 @@ export default class TinyBufferReader {
    * Throws {@link TinyNeedMoreData} if the requested count exceeds the remaining bytes.
    * @param {number} count - The number of bytes required.
    * @returns {void}
+   * @throws {TypeError} If `count` is not an integer.
+   * @throws {RangeError} If `count` is negative.
    * @throws {TinyNeedMoreData} If fewer than `count` bytes are readable.
    */
   #require(count) {
+    if (!Number.isInteger(count)) {
+      throw new TypeError('The "count" argument must be an integer.');
+    }
+    if (count < 0) {
+      throw new RangeError('The "count" argument must be a non-negative integer.');
+    }
     if (!this.has(count)) {
       throw new TinyNeedMoreData();
     }
@@ -126,6 +138,9 @@ export default class TinyBufferReader {
    * @throws {TinyNeedMoreData} If fewer than `count` bytes are readable.
    */
   skip(count) {
+    if (!Number.isInteger(count) || count < 0) {
+      throw new RangeError('The "count" argument must be a non-negative integer.');
+    }
     this.#require(count);
     this.#offset += count;
     return this;
@@ -226,6 +241,9 @@ export default class TinyBufferReader {
    * @returns {string} The decoded Latin-1 string.
    */
   ascii(length) {
+    if (!Number.isInteger(length) || length < 0) {
+      throw new RangeError('The "length" argument must be a non-negative integer.');
+    }
     this.#require(length);
     let value = '';
     for (let i = 0; i < length; i += 1) {
@@ -241,6 +259,9 @@ export default class TinyBufferReader {
    * @returns {Uint8Array} A view over the requested bytes.
    */
   bytes(length) {
+    if (!Number.isInteger(length) || length < 0) {
+      throw new RangeError('The "length" argument must be a non-negative integer.');
+    }
     this.#require(length);
     const slice = this.#bytes.subarray(this.#offset, this.#offset + length);
     this.#offset += length;

@@ -359,6 +359,15 @@ class TinyMediaLoader extends TypedEmitter {
     this.#timeout = timeout;
     this.#autoReload = Boolean(autoReload);
     this.#originalSrc = originalSrc;
+
+    if (
+      options.cache !== undefined &&
+      options.cache !== null &&
+      !(options.cache instanceof TinyMediaCache)
+    ) {
+      throw new TypeError('The "cache" option must be a TinyMediaCache or null.');
+    }
+
     this.#cache = options.cache ?? null;
     this.#resetLoadState();
     this.#useHeadRequest = useHeadRequest;
@@ -658,6 +667,12 @@ class TinyMediaLoader extends TypedEmitter {
    * @returns {void}
    */
   _insertDecoder(mime, callback) {
+    if (typeof mime !== 'string' || mime.length === 0) {
+      throw new TypeError('The "mime" argument must be a non-empty string.');
+    }
+    if (typeof callback !== 'function') {
+      throw new TypeError('The "callback" argument must be a function.');
+    }
     this.#decoders.set(mime, callback);
   }
 
@@ -666,8 +681,16 @@ class TinyMediaLoader extends TypedEmitter {
    * @protected
    * @param {number} [total] - The total number of bytes (0 when unknown).
    * @returns {TinyMediaProgress} The freshly created and already started progress tracker.
+   * @throws {TypeError} If `total` is not a finite number.
+   * @throws {RangeError} If `total` is negative.
    */
   _createProgress(total = 0) {
+    if (typeof total !== 'number' || !Number.isFinite(total)) {
+      throw new TypeError('The "total" argument must be a finite number.');
+    }
+    if (total < 0) {
+      throw new RangeError('The "total" argument must be a non-negative number.');
+    }
     this.#progress = new TinyMediaProgress(total).start();
     return this.#progress;
   }
@@ -699,6 +722,9 @@ class TinyMediaLoader extends TypedEmitter {
     if (patch === null || typeof patch !== 'object') {
       throw new TypeError('The "patch" argument must be an object.');
     }
+    if (typeof type !== 'string' || type.length === 0) {
+      throw new TypeError('The "type" argument must be a non-empty string.');
+    }
     const clean = /** @type {Partial<MediaMetadata>} */ (
       Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined))
     );
@@ -715,8 +741,18 @@ class TinyMediaLoader extends TypedEmitter {
    * @param {string} type - The DOM event name.
    * @param {EventListener} handler - The listener to register.
    * @returns {void}
+   * @throws {TypeError} If any argument has an invalid type.
    */
   _on(element, type, handler) {
+    if (!(element instanceof HTMLElement)) {
+      throw new TypeError('The "element" argument must be an HTMLElement.');
+    }
+    if (typeof type !== 'string' || type.length === 0) {
+      throw new TypeError('The "type" argument must be a non-empty string.');
+    }
+    if (typeof handler !== 'function') {
+      throw new TypeError('The "handler" argument must be a function.');
+    }
     element.addEventListener(type, handler);
     this.#detachers.push(() => element.removeEventListener(type, handler));
   }
@@ -727,9 +763,16 @@ class TinyMediaLoader extends TypedEmitter {
    * @param {HTMLMainElement} element - The source element.
    * @param {string[]} events - The DOM event names to forward.
    * @returns {void}
+   * @throws {TypeError} If `events` is not an array of non-empty strings.
    */
   _forwardEvents(element, events) {
+    if (!Array.isArray(events)) {
+      throw new TypeError('The "events" argument must be an array of strings.');
+    }
     for (const name of events) {
+      if (typeof name !== 'string' || name.length === 0) {
+        throw new TypeError('Every entry of "events" must be a non-empty string.');
+      }
       this._on(element, name, (event) => {
         /** @type {any} */
         // @ts-ignore
@@ -894,8 +937,12 @@ class TinyMediaLoader extends TypedEmitter {
    * @protected
    * @param {HTMLMainElement} element - The element to expose through `element`.
    * @returns {void}
+   * @throws {TypeError} If `element` is not an HTMLElement.
    */
   _setElement(element) {
+    if (!(element instanceof HTMLElement)) {
+      throw new TypeError('The "element" argument must be an HTMLElement.');
+    }
     this.#element = element;
     this.#startObserver();
   }
@@ -905,8 +952,12 @@ class TinyMediaLoader extends TypedEmitter {
    * @protected
    * @param {boolean} value - The cache hint.
    * @returns {void}
+   * @throws {TypeError} If `value` is not a boolean.
    */
   _setCacheHint(value) {
+    if (typeof value !== 'boolean') {
+      throw new TypeError('The "value" argument must be a boolean.');
+    }
     this.#cacheHint = Boolean(value);
   }
 
@@ -1043,6 +1094,12 @@ class TinyMediaLoader extends TypedEmitter {
   async _downloadStream(url, onChunk, startByte = 0, customSignal = null) {
     if (typeof url !== 'string') {
       throw new TypeError('The "url" argument must be a string.');
+    }
+    if (!Number.isInteger(startByte) || startByte < 0) {
+      throw new RangeError('The "startByte" argument must be a non-negative integer.');
+    }
+    if (onChunk !== undefined && typeof onChunk !== 'function') {
+      throw new TypeError('The "onChunk" argument must be a function or undefined.');
     }
     const key = this.#mirrorKey(url);
     const shareable = this.#mirror && startByte === 0;

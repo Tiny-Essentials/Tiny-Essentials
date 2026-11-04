@@ -261,6 +261,9 @@ class TinyImageLoader extends TinyMediaLoader {
    * @throws {TypeError} If `decoding` is not a string.
    */
   constructor(options = {}) {
+    if (options === null || typeof options !== 'object') {
+      throw new TypeError('The "options" argument must be an object.');
+    }
     if (
       options.element !== null &&
       options.element !== undefined &&
@@ -272,6 +275,10 @@ class TinyImageLoader extends TinyMediaLoader {
     if (!options.cache)
       this.#frameCache = new TinyMediaCache({ strategy: TinyMediaCache.Strategy.MANUAL });
 
+    const ANIMATION_MODES = ['none', 'native', 'script-only', 'controlled'];
+    const DECODING_MODES = ['sync', 'async', 'auto'];
+    const CROSS_ORIGIN = [null, 'anonymous', 'use-credentials'];
+
     const {
       crossOrigin = null,
       decoding = 'async',
@@ -279,11 +286,18 @@ class TinyImageLoader extends TinyMediaLoader {
       animationControl = 'none',
     } = options;
 
-    if (crossOrigin !== null && typeof crossOrigin !== 'string') {
-      throw new TypeError('The "crossOrigin" option must be a string or null.');
+    if (!ANIMATION_MODES.includes(animationControl)) {
+      throw new RangeError(
+        `The "animationControl" option must be one of: ${ANIMATION_MODES.join(', ')}.`,
+      );
     }
-    if (typeof decoding !== 'string') {
-      throw new TypeError('The "decoding" option must be a string.');
+    if (!DECODING_MODES.includes(decoding)) {
+      throw new RangeError(`The "decoding" option must be one of: ${DECODING_MODES.join(', ')}.`);
+    }
+    if (!CROSS_ORIGIN.includes(crossOrigin)) {
+      throw new RangeError(
+        'The "crossOrigin" option must be "anonymous", "use-credentials" or null.',
+      );
     }
 
     this.#crossOrigin = crossOrigin;
@@ -361,6 +375,9 @@ class TinyImageLoader extends TinyMediaLoader {
    * @param {number|null} [frameIndex] - Frame index to freeze on (controlled mode only).
    */
   freeze(frameIndex = null) {
+    if (frameIndex !== null && (!Number.isInteger(frameIndex) || frameIndex < 0)) {
+      throw new RangeError('The "frameIndex" argument must be a non-negative integer or null.');
+    }
     if (this.#animationControl === 'none' || this.#animationControl === 'script-only') return;
     this.#isFrozen = true;
     if (this.#animationControl === 'native' && this.#frames.length > 0) {
@@ -440,9 +457,18 @@ class TinyImageLoader extends TinyMediaLoader {
   get animationScript() {
     return JSON.parse(JSON.stringify(this.#animationScript));
   }
+  /**
+   * Replaces the animation script.
+   * @param {AnimationScriptStep[]} script - The new script.
+   * @throws {TypeError} If `script` is not an array of `{ delay: number }`.
+   * @throws {Error} If the loader is not in controlled mode.
+   */
   set animationScript(script) {
     if (this.#animationControl !== 'controlled') {
       throw new Error('Animation script editing is only available in controlled mode.');
+    }
+    if (!Array.isArray(script)) {
+      throw new TypeError('The "script" value must be an array.');
     }
     this.#animationScript = Array.isArray(script) ? script : [];
   }
@@ -495,8 +521,12 @@ class TinyImageLoader extends TinyMediaLoader {
    * current length of the frame array, so the key stays stable across loads.
    * @param {number} index - The zero-based frame index.
    * @returns {string} The cache key of the frame.
+   * @throws {RangeError} If `index` is not a non-negative integer.
    */
   #frameKey(index) {
+    if (!Number.isInteger(index) || index < 0) {
+      throw new RangeError('The "index" argument must be a non-negative integer.');
+    }
     return `${this.src}:::frame=${index}`;
   }
 
@@ -504,8 +534,13 @@ class TinyImageLoader extends TinyMediaLoader {
    * Returns the URL of a cached frame, or null when the frame was never sliced.
    * @param {number} index - The zero-based frame index.
    * @returns {string|null} The cached object URL.
+   * @throws {RangeError} If `index` is not a non-negative integer.
+   * @throws {Error} If no cache is available.
    */
   #getFrame(index) {
+    if (!Number.isInteger(index) || index < 0) {
+      throw new RangeError('The "index" argument must be a non-negative integer.');
+    }
     const cache = this.cache ?? this.#frameCache;
     if (!cache) throw new Error('No cache is available to store animation frames.');
     const entry = cache.get(this.#frameKey(index));
@@ -521,8 +556,16 @@ class TinyImageLoader extends TinyMediaLoader {
    * @param {number} index - The zero-based frame index.
    * @param {Blob} blob - The single-frame blob.
    * @returns {string} The object URL of the stored frame.
+   * @throws {RangeError} If `index` is not a non-negative integer.
+   * @throws {TypeError} If `blob` is not a Blob.
    */
   #setFrame(index, blob) {
+    if (!Number.isInteger(index) || index < 0) {
+      throw new RangeError('The "index" argument must be a non-negative integer.');
+    }
+    if (!(blob instanceof Blob)) {
+      throw new TypeError('The "blob" argument must be a Blob.');
+    }
     const cache = this.cache ?? this.#frameCache;
     if (!cache) throw new Error('No cache is available to store animation frames.');
     const key = this.#frameKey(index);
@@ -536,9 +579,13 @@ class TinyImageLoader extends TinyMediaLoader {
    * Updates the image source progressively during the stream.
    * @param {HTMLImageElement} image - The target image element.
    * @returns {Promise<Promise<void>>} A promise resolving to the final ready event load listener.
+   * @throws {TypeError} If `image` is not an HTMLImageElement.
    * @throws {Error} If the network request fails.
    */
   async #streamInto(image) {
+    if (!(image instanceof HTMLImageElement)) {
+      throw new TypeError('The "image" argument must be an HTMLImageElement.');
+    }
     const cached = this._acquireFromCache();
     if (cached) {
       this.emit('cachehit', cached);
@@ -621,9 +668,15 @@ class TinyImageLoader extends TinyMediaLoader {
   // --- Animation Binary Slicer (Canvas-Free) ---
 
   /**
-   * @param {ArrayBuffer} arrayBuffer
+   * Slices the animation frames out of a fully downloaded buffer.
+   * @param {ArrayBuffer} arrayBuffer - The full file bytes.
+   * @returns {Promise<void>} Resolves once the frames are sliced.
+   * @throws {TypeError} If `arrayBuffer` is not an ArrayBuffer.
    */
   async #parseAnimationFromBuffer(arrayBuffer) {
+    if (!(arrayBuffer instanceof ArrayBuffer)) {
+      throw new TypeError('The "arrayBuffer" argument must be an ArrayBuffer.');
+    }
     const bytes = new Uint8Array(arrayBuffer);
     if (bytes.length < 12) return;
 
@@ -649,10 +702,14 @@ class TinyImageLoader extends TinyMediaLoader {
 
   /**
    * Calculates the CRC-32 checksum for a given byte array.
-   * @param {Uint8Array} bytes
-   * @returns {number}
+   * @param {Uint8Array} bytes - The bytes to checksum.
+   * @returns {number} The unsigned 32-bit checksum.
+   * @throws {TypeError} If `bytes` is not a Uint8Array.
    */
   #crc32(bytes) {
+    if (!(bytes instanceof Uint8Array)) {
+      throw new TypeError('The "bytes" argument must be a Uint8Array.');
+    }
     let c = 0xffffffff;
     for (let i = 0; i < bytes.length; i++) {
       c ^= bytes[i];
@@ -667,8 +724,12 @@ class TinyImageLoader extends TinyMediaLoader {
    * Slices an AVIF binary into multiple valid single-frame AVIF blobs.
    * @param {Uint8Array<ArrayBuffer>} bytes - The full AVIF file.
    * @returns {void}
+   * @throws {TypeError} If `bytes` is not a Uint8Array.
    */
   #extractAvifFrames(bytes) {
+    if (!(bytes instanceof Uint8Array)) {
+      throw new TypeError('The "bytes" argument must be a Uint8Array.');
+    }
     const top = readIsoBoxes(bytes, 0, bytes.length);
     const moov = top.find((box) => box.type === 'moov');
     if (!moov) return;
@@ -811,9 +872,14 @@ class TinyImageLoader extends TinyMediaLoader {
 
   /**
    * Slices a WebP binary into multiple valid single-frame WebP blobs.
-   * @param {Uint8Array<ArrayBuffer>} bytes
+   * @param {Uint8Array<ArrayBuffer>} bytes - The full WebP file.
+   * @returns {void}
+   * @throws {TypeError} If `bytes` is not a Uint8Array.
    */
   #extractWebpFrames(bytes) {
+    if (!(bytes instanceof Uint8Array)) {
+      throw new TypeError('The "bytes" argument must be a Uint8Array.');
+    }
     if (bytes.length < 12) return;
     let offset = 12;
 
@@ -902,8 +968,12 @@ class TinyImageLoader extends TinyMediaLoader {
    *
    * @param {Uint8Array<ArrayBuffer>} bytes - The full APNG file.
    * @returns {void}
+   * @throws {TypeError} If `bytes` is not a Uint8Array.
    */
   #extractApngFrames(bytes) {
+    if (!(bytes instanceof Uint8Array)) {
+      throw new TypeError('The "bytes" argument must be a Uint8Array.');
+    }
     const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
     const IEND_BYTES = new Uint8Array([
       0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
@@ -1143,9 +1213,14 @@ class TinyImageLoader extends TinyMediaLoader {
 
   /**
    * Slices a GIF binary into multiple valid single-frame GIF blobs.
-   * @param {Uint8Array<ArrayBuffer>} bytes
+   * @param {Uint8Array<ArrayBuffer>} bytes - The full GIF file.
+   * @returns {void}
+   * @throws {TypeError} If `bytes` is not a Uint8Array.
    */
   #extractGifFrames(bytes) {
+    if (!(bytes instanceof Uint8Array)) {
+      throw new TypeError('The "bytes" argument must be a Uint8Array.');
+    }
     if (bytes.length < 13) return;
 
     let offset = 13;
@@ -1353,8 +1428,12 @@ class TinyImageLoader extends TinyMediaLoader {
    * mirror only mints a private object URL over the very same in-memory blob.
    * @param {Blob} blob - The blob produced by the shared download.
    * @returns {string} The URL the element must render.
+   * @throws {TypeError} If `blob` is not a Blob.
    */
   #adoptSharedBlob(blob) {
+    if (!(blob instanceof Blob)) {
+      throw new TypeError('The "blob" argument must be a Blob.');
+    }
     this._setResourceSize(blob.size);
     return this._createObjectUrl(blob);
   }

@@ -58,6 +58,17 @@
  */
 
 /**
+ * Checks whether a value is a plain object (not an array, not a class instance).
+ * @param {unknown} value - The value to test.
+ * @returns {boolean} True when the value is a plain object.
+ */
+function isPlainObject(value) {
+  if (value === null || typeof value !== 'object') return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+/**
  * Memory cache shared by every media loader.
  */
 class TinyMediaCache {
@@ -167,8 +178,8 @@ class TinyMediaCache {
    * @throws {RangeError} If `sweepInterval` is not a positive number.
    */
   constructor(options = {}) {
-    if (options === null || typeof options !== 'object') {
-      throw new TypeError('The "options" argument must be an object.');
+    if (!isPlainObject(options)) {
+      throw new TypeError('The "options" argument must be a plain object.');
     }
     const {
       maxItems = Infinity,
@@ -180,6 +191,9 @@ class TinyMediaCache {
     } = options;
     if (typeof maxItems !== 'number' || Number.isNaN(maxItems) || maxItems < 1) {
       throw new RangeError('The "maxItems" option must be a positive number.');
+    }
+    if (maxItems !== Infinity && !Number.isInteger(maxItems)) {
+      throw new RangeError('The "maxItems" option must be an integer or Infinity.');
     }
     if (typeof maxBytes !== 'number' || Number.isNaN(maxBytes) || maxBytes < 0) {
       throw new RangeError('The "maxBytes" option must be a positive number.');
@@ -339,7 +353,11 @@ class TinyMediaCache {
    * @returns {MediaCacheEntry[]} A shallow copy of the entries.
    */
   entries() {
-    return Array.from(this.#entries.values(), (entry) => ({ ...entry }));
+    this.#assertAlive();
+    return Array.from(this.#entries.values(), (entry) => ({
+      ...entry,
+      metadata: { ...entry.metadata },
+    }));
   }
 
   /**
@@ -358,6 +376,12 @@ class TinyMediaCache {
     this.#assertAlive();
     if (!(blob instanceof Blob)) {
       throw new TypeError('The "blob" argument must be a Blob.');
+    }
+    if (typeof pinned !== 'boolean') {
+      throw new TypeError('The "pinned" argument must be a boolean.');
+    }
+    if (!isPlainObject(metadata)) {
+      throw new TypeError('The "metadata" argument must be a plain object.');
     }
     if (parent !== null && typeof parent !== 'string') {
       throw new TypeError('The "parent" argument must be a string or null.');
@@ -465,6 +489,7 @@ class TinyMediaCache {
    * @returns {boolean} True when an entry was removed.
    */
   delete(url) {
+    this.#assertAlive();
     return this.#discard(this.#key(url), true);
   }
 
@@ -483,8 +508,15 @@ class TinyMediaCache {
    * @param {string} key - The normalized cache key.
    * @param {boolean} cascade - Whether removing the last child also removes the parent.
    * @returns {boolean} True when an entry was removed.
+   * @throws {TypeError} If `key` is not a string or `cascade` is not a boolean.
    */
   #discard(key, cascade) {
+    if (typeof key !== 'string') {
+      throw new TypeError('The "key" argument must be a string.');
+    }
+    if (typeof cascade !== 'boolean') {
+      throw new TypeError('The "cascade" argument must be a boolean.');
+    }
     const entry = this.#entries.get(key);
     if (!entry) {
       return false;
@@ -516,8 +548,15 @@ class TinyMediaCache {
    * @param {string} parent - The normalized key of the owner.
    * @param {string} child - The normalized key of the child.
    * @returns {void}
+   * @throws {TypeError} If `parent` or `child` is not a string.
    */
   #link(parent, child) {
+    if (typeof parent !== 'string') {
+      throw new TypeError('The "parent" argument must be a string.');
+    }
+    if (typeof child !== 'string') {
+      throw new TypeError('The "child" argument must be a string.');
+    }
     let children = this.#children.get(parent);
     if (!children) {
       children = new Set();
@@ -533,11 +572,15 @@ class TinyMediaCache {
    * @returns {boolean} True when the entry exists.
    */
   pin(url, value = true) {
+    this.#assertAlive();
+    if (typeof value !== 'boolean') {
+      throw new TypeError('The "value" argument must be a boolean.');
+    }
     const entry = this.#entries.get(this.#key(url));
     if (!entry) {
       return false;
     }
-    entry.pinned = Boolean(value);
+    entry.pinned = value;
     return true;
   }
 
@@ -623,8 +666,12 @@ class TinyMediaCache {
    * Checks whether an entry has passed its expiration time.
    * @param {MediaCacheEntry} entry - The entry to test.
    * @returns {boolean} True when the entry has expired.
+   * @throws {TypeError} If `entry` is not an object.
    */
   #isExpired(entry) {
+    if (entry === null || typeof entry !== 'object') {
+      throw new TypeError('The "entry" argument must be a MediaCacheEntry.');
+    }
     return entry.expiresAt > 0 && Date.now() >= entry.expiresAt;
   }
 
@@ -654,10 +701,14 @@ class TinyMediaCache {
    * @param {boolean} ignoreSearch - Whether the query string is ignored.
    * @returns {string} The normalized cache key.
    * @throws {TypeError} If `url` is not a string.
+   * @throws {TypeError} If `ignoreSearch` is not a boolean.
    */
   static #normalize(url, ignoreSearch) {
     if (typeof url !== 'string') {
       throw new TypeError('The "url" argument must be a string.');
+    }
+    if (typeof ignoreSearch !== 'boolean') {
+      throw new TypeError('The "ignoreSearch" argument must be a boolean.');
     }
     if (!ignoreSearch) {
       return url;
@@ -672,8 +723,15 @@ class TinyMediaCache {
    * @param {string} key - The normalized cache key.
    * @param {Blob} blob - The blob to register.
    * @returns {MediaCacheRecord} The shared registry record.
+   * @throws {TypeError} If `key` is not a string or `blob` is not a Blob.
    */
   static #acquire(key, blob) {
+    if (typeof key !== 'string') {
+      throw new TypeError('The "key" argument must be a string.');
+    }
+    if (!(blob instanceof Blob)) {
+      throw new TypeError('The "blob" argument must be a Blob.');
+    }
     const existing = TinyMediaCache.#blobs.get(key);
     if (existing) {
       existing.refs += 1;
@@ -693,8 +751,12 @@ class TinyMediaCache {
    * Releases a reference in the shared registry and revokes the object URL when unused.
    * @param {string} key - The normalized cache key.
    * @returns {void}
+   * @throws {TypeError} If `key` is not a string.
    */
   static #release(key) {
+    if (typeof key !== 'string') {
+      throw new TypeError('The "key" argument must be a string.');
+    }
     const record = TinyMediaCache.#blobs.get(key);
     if (!record) {
       return;
