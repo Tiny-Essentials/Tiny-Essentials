@@ -625,15 +625,24 @@ class TinyImageLoader extends TinyMediaLoader {
    */
   async #parseAnimationFromBuffer(arrayBuffer) {
     const bytes = new Uint8Array(arrayBuffer);
-    const mime = this.metadata.type;
+    if (bytes.length < 12) return;
 
-    if (mime === 'image/gif') {
+    if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) {
       this.#extractGifFrames(bytes);
-    } else if (mime === 'image/webp') {
+    } else if (
+      bytes[0] === 0x52 &&
+      bytes[1] === 0x49 &&
+      bytes[2] === 0x46 &&
+      bytes[3] === 0x46 &&
+      bytes[8] === 0x57 &&
+      bytes[9] === 0x45 &&
+      bytes[10] === 0x42 &&
+      bytes[11] === 0x50
+    ) {
       this.#extractWebpFrames(bytes);
-    } else if (mime === 'image/png' || mime === 'image/apng') {
+    } else if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
       this.#extractApngFrames(bytes);
-    } else if (mime === 'image/avif') {
+    } else if (bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70) {
       this.#extractAvifFrames(bytes);
     }
   }
@@ -1000,7 +1009,7 @@ class TinyImageLoader extends TinyMediaLoader {
             iend ?? new Uint8Array([0, 0, 0, 0, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82]),
           );
 
-          const blob = new Blob(outChunks, { type: 'image/apng' });
+          const blob = new Blob(outChunks, { type: 'image/png' });
           url = this.#setFrame(i, blob);
         }
         this.#frames.push({ url, cacheKey: this.#frameKey(i) });
@@ -1171,7 +1180,7 @@ class TinyImageLoader extends TinyMediaLoader {
     }
 
     for (const frame of this.#frames) {
-      const cache = this.cache;
+      const cache = this.cache ?? this.#frameCache;
       if (cache) {
         cache.release(frame.cacheKey);
       } else {
