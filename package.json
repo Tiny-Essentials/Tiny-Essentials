@@ -86,754 +86,942 @@
       "import": "./dist/v1/index.mjs"
     },
     "./webTemplates/bootstrap/5.3/html/BootstrapDialogs": {
+      "types": "./dist/v1/webTemplates/bootstrap/5.3/html/BootstrapDialogs.d.mts",
       "require": "./dist/v1/webTemplates/bootstrap/5.3/html/BootstrapDialogs.cjs",
       "import": "./dist/v1/webTemplates/bootstrap/5.3/html/BootstrapDialogs.mjs"
     },
     "./webTemplates/vite/7.3/plugins/TinyVitePwaPlugin": {
+      "types": "./dist/v1/webTemplates/vite/7.3/plugins/TinyVitePwaPlugin.d.mts",
       "require": "./dist/v1/webTemplates/vite/7.3/plugins/TinyVitePwaPlugin.cjs",
       "import": "./dist/v1/webTemplates/vite/7.3/plugins/TinyVitePwaPlugin.mjs"
     },
     "./webTemplates/vite/7.3/plugins/githubUtils": {
+      "types": "./dist/v1/webTemplates/vite/7.3/plugins/githubUtils.d.mts",
       "require": "./dist/v1/webTemplates/vite/7.3/plugins/githubUtils.cjs",
       "import": "./dist/v1/webTemplates/vite/7.3/plugins/githubUtils.mjs"
     },
     "./webTemplates/media/MediaValidator/v1/Node": {
+      "types": "./dist/v1/webTemplates/media/MediaValidator/v1/Node/index.d.mts",
       "require": "./dist/v1/webTemplates/media/MediaValidator/v1/Node/index.cjs",
       "import": "./dist/v1/webTemplates/media/MediaValidator/v1/Node/index.mjs"
     },
     "./webTemplates/media/MediaValidator/v1/Browser": {
+      "types": "./dist/v1/webTemplates/media/MediaValidator/v1/Browser/index.d.mts",
       "require": "./dist/v1/webTemplates/media/MediaValidator/v1/Browser/index.cjs",
       "import": "./dist/v1/webTemplates/media/MediaValidator/v1/Browser/index.mjs"
     },
     "./webTemplates/multiformats/14.0/IPFSHasher": {
+      "types": "./dist/v1/webTemplates/multiformats/14.0/IPFSHasher/index.d.mts",
       "require": "./dist/v1/webTemplates/multiformats/14.0/IPFSHasher/index.cjs",
       "import": "./dist/v1/webTemplates/multiformats/14.0/IPFSHasher/index.mjs"
     },
     "./webTemplates/ag-psd/31.0/ProcessSolidFilters": {
+      "types": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Node.d.mts",
       "require": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Node.cjs",
       "import": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Node.mjs"
     },
     "./webTemplates/ag-psd/31.0/ProcessSolidFilters/Template": {
+      "types": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Template.d.mts",
       "require": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Template.cjs",
       "import": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Template.mjs"
     },
     "./webTemplates/ag-psd/31.0/ProcessSolidFilters/Browser": {
+      "types": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Browser.d.mts",
       "require": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Browser.cjs",
       "import": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/Browser.mjs"
     },
     "./webTemplates/ag-psd/31.0/ProcessSolidFilters/FileInput": {
+      "types": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/FileInput.d.mts",
       "require": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/FileInput.cjs",
       "import": "./dist/v1/webTemplates/ag-psd/31.0/ProcessSolidFilters/FileInput.mjs"
     },
     "./jsdoc/EventEmitter": {
+      "types": "./dist/v1/jsdoc/EventEmitter.d.mts",
       "require": "./dist/v1/jsdoc/EventEmitter.cjs",
       "import": "./dist/v1/jsdoc/EventEmitter.mjs"
     },
     "./regexp": {
+      "types": "./dist/v1/regexp/index.d.mts",
       "require": "./dist/v1/regexp/index.cjs",
       "import": "./dist/v1/regexp/index.mjs"
     },
     "./regexp/SegmentExtractor": {
+      "types": "./dist/v1/regexp/SegmentExtractor.d.mts",
       "require": "./dist/v1/regexp/SegmentExtractor.cjs",
       "import": "./dist/v1/regexp/SegmentExtractor.mjs"
     },
     "./regexp/UrlDetector": {
+      "types": "./dist/v1/regexp/UrlDetector.d.mts",
       "require": "./dist/v1/regexp/UrlDetector.cjs",
       "import": "./dist/v1/regexp/UrlDetector.mjs"
     },
     "./regexp/Ipv4": {
+      "types": "./dist/v1/regexp/Ipv4.d.mts",
       "require": "./dist/v1/regexp/Ipv4.cjs",
       "import": "./dist/v1/regexp/Ipv4.mjs"
     },
     "./regexp/Ipv6": {
+      "types": "./dist/v1/regexp/Ipv6.d.mts",
       "require": "./dist/v1/regexp/Ipv6.cjs",
       "import": "./dist/v1/regexp/Ipv6.mjs"
     },
     "./regexp/Email": {
+      "types": "./dist/v1/regexp/Email.d.mts",
       "require": "./dist/v1/regexp/Email.cjs",
       "import": "./dist/v1/regexp/Email.mjs"
     },
     "./regexp/Glob": {
+      "types": "./dist/v1/regexp/Glob.d.mts",
       "require": "./dist/v1/regexp/Glob.cjs",
       "import": "./dist/v1/regexp/Glob.mjs"
     },
     "./regexp/Username": {
+      "types": "./dist/v1/regexp/Username/index.d.mts",
       "require": "./dist/v1/regexp/Username/index.cjs",
       "import": "./dist/v1/regexp/Username/index.mjs"
     },
     "./regexp/Username/templates/MatrixProtocol": {
+      "types": "./dist/v1/regexp/Username/templates/MatrixProtocol.d.mts",
       "require": "./dist/v1/regexp/Username/templates/MatrixProtocol.cjs",
       "import": "./dist/v1/regexp/Username/templates/MatrixProtocol.mjs"
     },
     "./regexp/Username/templates/BlueSky": {
+      "types": "./dist/v1/regexp/Username/templates/BlueSky.d.mts",
       "require": "./dist/v1/regexp/Username/templates/BlueSky.cjs",
       "import": "./dist/v1/regexp/Username/templates/BlueSky.mjs"
     },
     "./regexp/Username/templates/Discord": {
+      "types": "./dist/v1/regexp/Username/templates/Discord.d.mts",
       "require": "./dist/v1/regexp/Username/templates/Discord.cjs",
       "import": "./dist/v1/regexp/Username/templates/Discord.mjs"
     },
     "./regexp/Username/templates/deprecated/Discord": {
+      "types": "./dist/v1/regexp/Username/templates/deprecated/Discord.d.mts",
       "require": "./dist/v1/regexp/Username/templates/deprecated/Discord.cjs",
       "import": "./dist/v1/regexp/Username/templates/deprecated/Discord.mjs"
     },
     "./basics": {
+      "types": "./dist/v1/basics/index.d.mts",
       "require": "./dist/v1/basics/index.cjs",
       "import": "./dist/v1/basics/index.mjs"
     },
     "./basics/crypto": {
+      "types": "./dist/v1/basics/crypto.d.mts",
       "require": "./dist/v1/basics/crypto.cjs",
       "import": "./dist/v1/basics/crypto.mjs"
     },
     "./basics/mediaContent": {
+      "types": "./dist/v1/basics/mediaContent.d.mts",
       "require": "./dist/v1/basics/mediaContent.cjs",
       "import": "./dist/v1/basics/mediaContent.mjs"
     },
     "./basics/array": {
+      "types": "./dist/v1/basics/array.d.mts",
       "require": "./dist/v1/basics/array.cjs",
       "import": "./dist/v1/basics/array.mjs"
     },
     "./basics/clock": {
+      "types": "./dist/v1/basics/clock.d.mts",
       "require": "./dist/v1/basics/clock.cjs",
       "import": "./dist/v1/basics/clock.mjs"
     },
     "./basics/collision": {
+      "types": "./dist/v1/basics/collision.d.mts",
       "require": "./dist/v1/basics/collision.cjs",
       "import": "./dist/v1/basics/collision.mjs"
     },
     "./basics/fullScreen": {
+      "types": "./dist/v1/basics/fullScreen.d.mts",
       "require": "./dist/v1/basics/fullScreen.cjs",
       "import": "./dist/v1/basics/fullScreen.mjs"
     },
     "./basics/html": {
+      "types": "./dist/v1/basics/html.d.mts",
       "require": "./dist/v1/basics/html.cjs",
       "import": "./dist/v1/basics/html.mjs"
     },
     "./basics/deprecated/html": {
+      "types": "./dist/v1/basics/deprecated/html.d.mts",
       "require": "./dist/v1/basics/deprecated/html.cjs",
       "import": "./dist/v1/basics/deprecated/html.mjs"
     },
     "./basics/objChecker": {
+      "types": "./dist/v1/basics/objChecker.d.mts",
       "require": "./dist/v1/basics/objChecker.cjs",
       "import": "./dist/v1/basics/objChecker.mjs"
     },
     "./basics/objFilter": {
+      "types": "./dist/v1/basics/objFilter.d.mts",
       "require": "./dist/v1/basics/objFilter.cjs",
       "import": "./dist/v1/basics/objFilter.mjs"
     },
     "./basics/extendObjType/Buffer": {
+      "types": "./dist/v1/basics/extendObjType/Buffer.d.mts",
       "require": "./dist/v1/basics/extendObjType/Buffer.cjs",
       "import": "./dist/v1/basics/extendObjType/Buffer.mjs"
     },
     "./basics/simpleMath": {
+      "types": "./dist/v1/basics/simpleMath.d.mts",
       "require": "./dist/v1/basics/simpleMath.cjs",
       "import": "./dist/v1/basics/simpleMath.mjs"
     },
     "./basics/text": {
+      "types": "./dist/v1/basics/text.d.mts",
       "require": "./dist/v1/basics/text.cjs",
       "import": "./dist/v1/basics/text.mjs"
     },
     "./basics/promiseUtils": {
+      "types": "./dist/v1/basics/promiseUtils.d.mts",
       "require": "./dist/v1/basics/promiseUtils.cjs",
       "import": "./dist/v1/basics/promiseUtils.mjs"
     },
     "./basics/browserDetector": {
+      "types": "./dist/v1/basics/browserDetector.d.mts",
       "require": "./dist/v1/basics/browserDetector.cjs",
       "import": "./dist/v1/basics/browserDetector.mjs"
     },
     "./basics/jsonFilter": {
+      "types": "./dist/v1/basics/jsonFilter.d.mts",
       "require": "./dist/v1/basics/jsonFilter.cjs",
       "import": "./dist/v1/basics/jsonFilter.mjs"
     },
     "./fileManager": {
+      "types": "./dist/v1/fileManager/index.d.mts",
       "require": "./dist/v1/fileManager/index.cjs",
       "import": "./dist/v1/fileManager/index.mjs"
     },
     "./fileManager/async": {
+      "types": "./dist/v1/fileManager/asyncFuncs.d.mts",
       "require": "./dist/v1/fileManager/asyncFuncs.cjs",
       "import": "./dist/v1/fileManager/asyncFuncs.mjs"
     },
     "./fileManager/normal": {
+      "types": "./dist/v1/fileManager/normalFuncs.d.mts",
       "require": "./dist/v1/fileManager/normalFuncs.cjs",
       "import": "./dist/v1/fileManager/normalFuncs.mjs"
     },
     "./libs/fs/TinyFSCore": {
+      "types": "./dist/v1/libs/fs/index.d.mts",
       "require": "./dist/v1/libs/fs/index.cjs",
       "import": "./dist/v1/libs/fs/index.mjs"
     },
     "./libs/fs/path": {
+      "types": "./dist/v1/libs/fs/path.d.mts",
       "require": "./dist/v1/libs/fs/path.cjs",
       "import": "./dist/v1/libs/fs/path.mjs"
     },
     "./libs/fs/constants": {
+      "types": "./dist/v1/libs/fs/constants.d.mts",
       "require": "./dist/v1/libs/fs/constants.cjs",
       "import": "./dist/v1/libs/fs/constants.mjs"
     },
     "./libs/fs/encoding": {
+      "types": "./dist/v1/libs/fs/encoding.d.mts",
       "require": "./dist/v1/libs/fs/encoding.cjs",
       "import": "./dist/v1/libs/fs/encoding.mjs"
     },
     "./libs/fs/error": {
+      "types": "./dist/v1/libs/fs/error.d.mts",
       "require": "./dist/v1/libs/fs/error.cjs",
       "import": "./dist/v1/libs/fs/error.mjs"
     },
     "./libs/fs/handle": {
+      "types": "./dist/v1/libs/fs/handle.d.mts",
       "require": "./dist/v1/libs/fs/handle.cjs",
       "import": "./dist/v1/libs/fs/handle.mjs"
     },
     "./libs/fs/stats": {
+      "types": "./dist/v1/libs/fs/stats.d.mts",
       "require": "./dist/v1/libs/fs/stats.cjs",
       "import": "./dist/v1/libs/fs/stats.mjs"
     },
     "./libs/fs/plugins/OPFS": {
+      "types": "./dist/v1/libs/fs/plugins/OPFS/index.d.mts",
       "require": "./dist/v1/libs/fs/plugins/OPFS/index.cjs",
       "import": "./dist/v1/libs/fs/plugins/OPFS/index.mjs"
     },
     "./libs/fs/plugins/OPFS/StorageBucket": {
+      "types": "./dist/v1/libs/fs/plugins/OPFS/StorageBucket.d.mts",
       "require": "./dist/v1/libs/fs/plugins/OPFS/StorageBucket.cjs",
       "import": "./dist/v1/libs/fs/plugins/OPFS/StorageBucket.mjs"
     },
     "./libs/utils/tools": {
+      "types": "./dist/v1/libs/utils/tools.d.mts",
       "require": "./dist/v1/libs/utils/tools.cjs",
       "import": "./dist/v1/libs/utils/tools.mjs"
     },
     "./libs/color/ColorSafeStringify": {
+      "types": "./dist/v1/libs/color/ColorSafeStringify.d.mts",
       "require": "./dist/v1/libs/color/ColorSafeStringify.cjs",
       "import": "./dist/v1/libs/color/ColorSafeStringify.mjs"
     },
     "./libs/media/TinyMediaPlayer": {
+      "types": "./dist/v1/libs/media/TinyMediaPlayer.d.mts",
       "require": "./dist/v1/libs/media/TinyMediaPlayer.cjs",
       "import": "./dist/v1/libs/media/TinyMediaPlayer.mjs"
     },
     "./libs/media/TinyMediaPlayer/Base": {
+      "types": "./dist/v1/libs/media/TinyMediaPlayer/index.d.mts",
       "require": "./dist/v1/libs/media/TinyMediaPlayer/index.cjs",
       "import": "./dist/v1/libs/media/TinyMediaPlayer/index.mjs"
     },
     "./libs/media/TinyMediaPlayer/Youtube": {
+      "types": "./dist/v1/libs/media/TinyMediaPlayer/Youtube.d.mts",
       "require": "./dist/v1/libs/media/TinyMediaPlayer/Youtube.cjs",
       "import": "./dist/v1/libs/media/TinyMediaPlayer/Youtube.mjs"
     },
     "./libs/media/TinyMediaPlayer/SoundCloud": {
+      "types": "./dist/v1/libs/media/TinyMediaPlayer/SoundCloud.d.mts",
       "require": "./dist/v1/libs/media/TinyMediaPlayer/SoundCloud.cjs",
       "import": "./dist/v1/libs/media/TinyMediaPlayer/SoundCloud.mjs"
     },
     "./libs/media/TinyMediaPlayer/HtmlAudio": {
+      "types": "./dist/v1/libs/media/TinyMediaPlayer/HtmlAudio.d.mts",
       "require": "./dist/v1/libs/media/TinyMediaPlayer/HtmlAudio.cjs",
       "import": "./dist/v1/libs/media/TinyMediaPlayer/HtmlAudio.mjs"
     },
     "./libs/media/TinyMediaPlayer/HtmlVideo": {
+      "types": "./dist/v1/libs/media/TinyMediaPlayer/HtmlVideo.d.mts",
       "require": "./dist/v1/libs/media/TinyMediaPlayer/HtmlVideo.cjs",
       "import": "./dist/v1/libs/media/TinyMediaPlayer/HtmlVideo.mjs"
     },
     "./libs/media/TinyMediaPlayer/Mock": {
+      "types": "./dist/v1/libs/media/TinyMediaPlayer/Mock.d.mts",
       "require": "./dist/v1/libs/media/TinyMediaPlayer/Mock.cjs",
       "import": "./dist/v1/libs/media/TinyMediaPlayer/Mock.mjs"
     },
     "./libs/media/TinyMediaPlayer/docs/YouTubePlayer": {
+      "types": "./dist/v1/libs/media/TinyMediaPlayer/docs/YouTubePlayer.d.mts",
       "require": "./dist/v1/libs/media/TinyMediaPlayer/docs/YouTubePlayer.cjs",
       "import": "./dist/v1/libs/media/TinyMediaPlayer/docs/YouTubePlayer.mjs"
     },
     "./libs/media/TinyMediaPlayer/docs/SoundCloudWidget": {
+      "types": "./dist/v1/libs/media/TinyMediaPlayer/docs/SoundCloudWidget.d.mts",
       "require": "./dist/v1/libs/media/TinyMediaPlayer/docs/SoundCloudWidget.cjs",
       "import": "./dist/v1/libs/media/TinyMediaPlayer/docs/SoundCloudWidget.mjs"
     },
     "./libs/media/TinyRadioFm": {
+      "types": "./dist/v1/libs/media/TinyRadioFm.d.mts",
       "require": "./dist/v1/libs/media/TinyRadioFm.cjs",
       "import": "./dist/v1/libs/media/TinyRadioFm.mjs"
     },
     "./libs/plugin/TinyVersion": {
+      "types": "./dist/v1/libs/plugin/TinyVersion.d.mts",
       "require": "./dist/v1/libs/plugin/TinyVersion.cjs",
       "import": "./dist/v1/libs/plugin/TinyVersion.mjs"
     },
     "./libs/plugin/TinyPlugin": {
+      "types": "./dist/v1/libs/plugin/TinyPlugin.d.mts",
       "require": "./dist/v1/libs/plugin/TinyPlugin.cjs",
       "import": "./dist/v1/libs/plugin/TinyPlugin.mjs"
     },
     "./libs/tools/TinyDebugger": {
+      "types": "./dist/v1/libs/tools/TinyDebugger.d.mts",
       "require": "./dist/v1/libs/tools/TinyDebugger.cjs",
       "import": "./dist/v1/libs/tools/TinyDebugger.mjs"
     },
     "./libs/tools/TinyUriParser": {
+      "types": "./dist/v1/libs/tools/TinyUriParser.d.mts",
       "require": "./dist/v1/libs/tools/TinyUriParser.cjs",
       "import": "./dist/v1/libs/tools/TinyUriParser.mjs"
     },
     "./libs/tools/TinyUriParser/MatrixProtocol": {
+      "types": "./dist/v1/libs/tools/TinyUriParser/MatrixProtocol.d.mts",
       "require": "./dist/v1/libs/tools/TinyUriParser/MatrixProtocol.cjs",
       "import": "./dist/v1/libs/tools/TinyUriParser/MatrixProtocol.mjs"
     },
     "./libs/tools/TinyUriParser/Discord": {
+      "types": "./dist/v1/libs/tools/TinyUriParser/Discord.d.mts",
       "require": "./dist/v1/libs/tools/TinyUriParser/Discord.cjs",
       "import": "./dist/v1/libs/tools/TinyUriParser/Discord.mjs"
     },
     "./libs/tools/TinyUriParser/BlueSky": {
+      "types": "./dist/v1/libs/tools/TinyUriParser/BlueSky.d.mts",
       "require": "./dist/v1/libs/tools/TinyUriParser/BlueSky.cjs",
       "import": "./dist/v1/libs/tools/TinyUriParser/BlueSky.mjs"
     },
     "./libs/tools/TinyBrowserMonitor": {
+      "types": "./dist/v1/libs/tools/TinyBrowserMonitor.d.mts",
       "require": "./dist/v1/libs/tools/TinyBrowserMonitor.cjs",
       "import": "./dist/v1/libs/tools/TinyBrowserMonitor.mjs"
     },
     "./libs/utils/TinyCloner": {
+      "types": "./dist/v1/libs/utils/TinyCloner.d.mts",
       "require": "./dist/v1/libs/utils/TinyCloner.cjs",
       "import": "./dist/v1/libs/utils/TinyCloner.mjs"
     },
     "./libs/utils/UltraRandomMsgGen": {
+      "types": "./dist/v1/libs/utils/UltraRandomMsgGen.d.mts",
       "require": "./dist/v1/libs/utils/UltraRandomMsgGen.cjs",
       "import": "./dist/v1/libs/utils/UltraRandomMsgGen.mjs"
     },
     "./libs/utils/TinyThrottledApi": {
+      "types": "./dist/v1/libs/utils/TinyThrottledApi.d.mts",
       "require": "./dist/v1/libs/utils/TinyThrottledApi.cjs",
       "import": "./dist/v1/libs/utils/TinyThrottledApi.mjs"
     },
     "./libs/html/upload/TinyUploadClicker": {
+      "types": "./dist/v1/libs/html/upload/TinyUploadClicker.d.mts",
       "require": "./dist/v1/libs/html/upload/TinyUploadClicker.cjs",
       "import": "./dist/v1/libs/html/upload/TinyUploadClicker.mjs"
     },
     "./libs/html/notification/TinyToastNotify": {
+      "types": "./dist/v1/libs/html/notification/TinyToastNotify.d.mts",
       "require": "./dist/v1/libs/html/notification/TinyToastNotify.cjs",
       "import": "./dist/v1/libs/html/notification/TinyToastNotify.mjs"
     },
     "./libs/math/TinyTimeout": {
+      "types": "./dist/v1/libs/math/TinyTimeout.d.mts",
       "require": "./dist/v1/libs/math/TinyTimeout.cjs",
       "import": "./dist/v1/libs/math/TinyTimeout.mjs"
     },
     "./libs/text/TinyTextRangeEditor": {
+      "types": "./dist/v1/libs/text/TinyTextRangeEditor.d.mts",
       "require": "./dist/v1/libs/text/TinyTextRangeEditor.cjs",
       "import": "./dist/v1/libs/text/TinyTextRangeEditor.mjs"
     },
     "./libs/text/TinyTextarea": {
+      "types": "./dist/v1/libs/text/TinyTextarea.d.mts",
       "require": "./dist/v1/libs/text/TinyTextarea.cjs",
       "import": "./dist/v1/libs/text/TinyTextarea.mjs"
     },
     "./libs/html/scroll/TinySmartScroller": {
+      "types": "./dist/v1/libs/html/scroll/TinySmartScroller.d.mts",
       "require": "./dist/v1/libs/html/scroll/TinySmartScroller.cjs",
       "import": "./dist/v1/libs/html/scroll/TinySmartScroller.mjs"
     },
     "./libs/math/TinySimpleDice": {
+      "types": "./dist/v1/libs/math/TinySimpleDice.d.mts",
       "require": "./dist/v1/libs/math/TinySimpleDice.cjs",
       "import": "./dist/v1/libs/math/TinySimpleDice.mjs"
     },
     "./libs/math/TinyRateLimiter": {
+      "types": "./dist/v1/libs/math/TinyRateLimiter.d.mts",
       "require": "./dist/v1/libs/math/TinyRateLimiter.cjs",
       "import": "./dist/v1/libs/math/TinyRateLimiter.mjs"
     },
     "./libs/utils/TinyPromiseQueue": {
+      "types": "./dist/v1/libs/utils/TinyPromiseQueue.d.mts",
       "require": "./dist/v1/libs/utils/TinyPromiseQueue.cjs",
       "import": "./dist/v1/libs/utils/TinyPromiseQueue.mjs"
     },
     "./libs/tools/TinyHtmlTagRegexBuilder": {
+      "types": "./dist/v1/libs/tools/TinyHtmlTagRegexBuilder.d.mts",
       "require": "./dist/v1/libs/tools/TinyHtmlTagRegexBuilder.cjs",
       "import": "./dist/v1/libs/tools/TinyHtmlTagRegexBuilder.mjs"
     },
     "./libs/tools/TinyPasswordValidator": {
+      "types": "./dist/v1/libs/tools/TinyPasswordValidator.d.mts",
       "require": "./dist/v1/libs/tools/TinyPasswordValidator.cjs",
       "import": "./dist/v1/libs/tools/TinyPasswordValidator.mjs"
     },
     "./libs/html/notification/TinyNotifyCenter": {
+      "types": "./dist/v1/libs/html/notification/TinyNotifyCenter.d.mts",
       "require": "./dist/v1/libs/html/notification/TinyNotifyCenter.cjs",
       "import": "./dist/v1/libs/html/notification/TinyNotifyCenter.mjs"
     },
     "./libs/html/notification/TinyNotifications": {
+      "types": "./dist/v1/libs/html/notification/TinyNotifications.d.mts",
       "require": "./dist/v1/libs/html/notification/TinyNotifications.cjs",
       "import": "./dist/v1/libs/html/notification/TinyNotifications.mjs"
     },
     "./libs/html/events/TinyNewWinEvents": {
+      "types": "./dist/v1/libs/html/events/TinyNewWinEvents.d.mts",
       "require": "./dist/v1/libs/html/events/TinyNewWinEvents.cjs",
       "import": "./dist/v1/libs/html/events/TinyNewWinEvents.mjs"
     },
     "./libs/game/TinyNeedBar": {
+      "types": "./dist/v1/libs/game/TinyNeedBar.d.mts",
       "require": "./dist/v1/libs/game/TinyNeedBar.cjs",
       "import": "./dist/v1/libs/game/TinyNeedBar.mjs"
     },
     "./libs/storage/TinyLocalStorage": {
+      "types": "./dist/v1/libs/storage/TinyLocalStorage.d.mts",
       "require": "./dist/v1/libs/storage/TinyLocalStorage.cjs",
       "import": "./dist/v1/libs/storage/TinyLocalStorage.mjs"
     },
     "./libs/storage/TinyMapCache": {
+      "types": "./dist/v1/libs/storage/TinyMapCache.d.mts",
       "require": "./dist/v1/libs/storage/TinyMapCache.cjs",
       "import": "./dist/v1/libs/storage/TinyMapCache.mjs"
     },
     "./libs/storage/TinySetMapDatabase": {
+      "types": "./dist/v1/libs/storage/TinySetMapDatabase.d.mts",
       "require": "./dist/v1/libs/storage/TinySetMapDatabase.cjs",
       "import": "./dist/v1/libs/storage/TinySetMapDatabase.mjs"
     },
     "./libs/html/templates/TinyLoadingScreen": {
+      "types": "./dist/v1/libs/html/templates/TinyLoadingScreen.d.mts",
       "require": "./dist/v1/libs/html/templates/TinyLoadingScreen.cjs",
       "import": "./dist/v1/libs/html/templates/TinyLoadingScreen.mjs"
     },
     "./libs/sw/service/TinyServiceWorkerEngine": {
+      "types": "./dist/v1/libs/sw/service/TinyServiceWorkerEngine.d.mts",
       "require": "./dist/v1/libs/sw/service/TinyServiceWorkerEngine.cjs",
       "import": "./dist/v1/libs/sw/service/TinyServiceWorkerEngine.mjs"
     },
     "./libs/sw/service/plugins/GlobCachePlugin": {
+      "types": "./dist/v1/libs/sw/service/plugins/GlobCachePlugin.d.mts",
       "require": "./dist/v1/libs/sw/service/plugins/GlobCachePlugin.cjs",
       "import": "./dist/v1/libs/sw/service/plugins/GlobCachePlugin.mjs"
     },
     "./libs/sw/service/plugins/TabManager": {
+      "types": "./dist/v1/libs/sw/service/plugins/TabManager.d.mts",
       "require": "./dist/v1/libs/sw/service/plugins/TabManager.cjs",
       "import": "./dist/v1/libs/sw/service/plugins/TabManager.mjs"
     },
     "./libs/sw/service/plugins/Ping": {
+      "types": "./dist/v1/libs/sw/service/plugins/Ping.d.mts",
       "require": "./dist/v1/libs/sw/service/plugins/Ping.cjs",
       "import": "./dist/v1/libs/sw/service/plugins/Ping.mjs"
     },
     "./libs/sw/service/plugins/ViteFileDetector": {
+      "types": "./dist/v1/libs/sw/service/plugins/ViteFileDetector.d.mts",
       "require": "./dist/v1/libs/sw/service/plugins/ViteFileDetector.cjs",
       "import": "./dist/v1/libs/sw/service/plugins/ViteFileDetector.mjs"
     },
     "./libs/sw/service/plugins/GlobBypassPlugin": {
+      "types": "./dist/v1/libs/sw/service/plugins/GlobBypassPlugin.d.mts",
       "require": "./dist/v1/libs/sw/service/plugins/GlobBypassPlugin.cjs",
       "import": "./dist/v1/libs/sw/service/plugins/GlobBypassPlugin.mjs"
     },
     "./libs/sw/service/shared/TinyPushPayload": {
+      "types": "./dist/v1/libs/sw/service/shared/TinyPushPayload.d.mts",
       "require": "./dist/v1/libs/sw/service/shared/TinyPushPayload.cjs",
       "import": "./dist/v1/libs/sw/service/shared/TinyPushPayload.mjs"
     },
     "./libs/sw/service/TinyPushRouter": {
+      "types": "./dist/v1/libs/sw/service/TinyPushRouter.d.mts",
       "require": "./dist/v1/libs/sw/service/TinyPushRouter.cjs",
       "import": "./dist/v1/libs/sw/service/TinyPushRouter.mjs"
     },
     "./libs/sw/browser/TinyPushManager": {
+      "types": "./dist/v1/libs/sw/browser/TinyPushManager.d.mts",
       "require": "./dist/v1/libs/sw/browser/TinyPushManager.cjs",
       "import": "./dist/v1/libs/sw/browser/TinyPushManager.mjs"
     },
     "./libs/sw/browser/TinyNotificationAdapter": {
+      "types": "./dist/v1/libs/sw/browser/TinyNotificationAdapter.d.mts",
       "require": "./dist/v1/libs/sw/browser/TinyNotificationAdapter.cjs",
       "import": "./dist/v1/libs/sw/browser/TinyNotificationAdapter.mjs"
     },
     "./libs/sw/browser/plugins/TabManager": {
+      "types": "./dist/v1/libs/sw/browser/plugins/TabManager.d.mts",
       "require": "./dist/v1/libs/sw/browser/plugins/TabManager.cjs",
       "import": "./dist/v1/libs/sw/browser/plugins/TabManager.mjs"
     },
     "./libs/sw/browser/TinyServiceWorker": {
+      "types": "./dist/v1/libs/sw/browser/TinyServiceWorker.d.mts",
       "require": "./dist/v1/libs/sw/browser/TinyServiceWorker.cjs",
       "import": "./dist/v1/libs/sw/browser/TinyServiceWorker.mjs"
     },
     "./libs/worker/engine/TinyWebWorkerEngine": {
+      "types": "./dist/v1/libs/worker/engine/TinyWebWorkerEngine.d.mts",
       "require": "./dist/v1/libs/worker/engine/TinyWebWorkerEngine.cjs",
       "import": "./dist/v1/libs/worker/engine/TinyWebWorkerEngine.mjs"
     },
     "./libs/worker/browser/TinyWebWorker": {
+      "types": "./dist/v1/libs/worker/browser/TinyWebWorker.d.mts",
       "require": "./dist/v1/libs/worker/browser/TinyWebWorker.cjs",
       "import": "./dist/v1/libs/worker/browser/TinyWebWorker.mjs"
     },
     "./libs/router/TinyRouter": {
+      "types": "./dist/v1/libs/router/TinyRouter.d.mts",
       "require": "./dist/v1/libs/router/TinyRouter.cjs",
       "import": "./dist/v1/libs/router/TinyRouter.mjs"
     },
     "./libs/color/TinyColorValidator": {
+      "types": "./dist/v1/libs/color/TinyColorValidator.d.mts",
       "require": "./dist/v1/libs/color/TinyColorValidator.cjs",
       "import": "./dist/v1/libs/color/TinyColorValidator.mjs"
     },
     "./libs/game/TinyInventoryTrader": {
+      "types": "./dist/v1/libs/game/TinyInventoryTrader.d.mts",
       "require": "./dist/v1/libs/game/TinyInventoryTrader.cjs",
       "import": "./dist/v1/libs/game/TinyInventoryTrader.mjs"
     },
     "./libs/game/TinyInventory": {
+      "types": "./dist/v1/libs/game/TinyInventory.d.mts",
       "require": "./dist/v1/libs/game/TinyInventory.cjs",
       "import": "./dist/v1/libs/game/TinyInventory.mjs"
     },
     "./libs/html/events/TinyIframeEvents": {
+      "types": "./dist/v1/libs/html/events/TinyIframeEvents.d.mts",
       "require": "./dist/v1/libs/html/events/TinyIframeEvents.cjs",
       "import": "./dist/v1/libs/html/events/TinyIframeEvents.mjs"
     },
     "./libs/text/TinyI18": {
+      "types": "./dist/v1/libs/text/TinyI18/Node.d.mts",
       "require": "./dist/v1/libs/text/TinyI18/Node.cjs",
       "import": "./dist/v1/libs/text/TinyI18/Node.mjs"
     },
     "./libs/text/TinyI18/Browser": {
+      "types": "./dist/v1/libs/text/TinyI18/Browser.d.mts",
       "require": "./dist/v1/libs/text/TinyI18/Browser.cjs",
       "import": "./dist/v1/libs/text/TinyI18/Browser.mjs"
     },
     "./libs/text/TinyI18/Browser-NON-DOM": {
+      "types": "./dist/v1/libs/text/TinyI18/Browser-NON-DOM.d.mts",
       "require": "./dist/v1/libs/text/TinyI18/Browser-NON-DOM.cjs",
       "import": "./dist/v1/libs/text/TinyI18/Browser-NON-DOM.mjs"
     },
     "./libs/html/TinyHtml": {
+      "types": "./dist/v1/libs/html/TinyHtml.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml.cjs",
       "import": "./dist/v1/libs/html/TinyHtml.mjs"
     },
     "./libs/game/TinyLevelUp": {
+      "types": "./dist/v1/libs/game/TinyLevelUp.d.mts",
       "require": "./dist/v1/libs/game/TinyLevelUp.cjs",
       "import": "./dist/v1/libs/game/TinyLevelUp.mjs"
     },
     "./libs/game/TinyGamepad": {
+      "types": "./dist/v1/libs/game/TinyGamepad.d.mts",
       "require": "./dist/v1/libs/game/TinyGamepad.cjs",
       "import": "./dist/v1/libs/game/TinyGamepad.mjs"
     },
     "./libs/html/TinyElementObserver": {
+      "types": "./dist/v1/libs/html/TinyElementObserver.d.mts",
       "require": "./dist/v1/libs/html/TinyElementObserver.cjs",
       "import": "./dist/v1/libs/html/TinyElementObserver.mjs"
     },
     "./libs/html/drag/TinyDragger": {
+      "types": "./dist/v1/libs/html/drag/TinyDragger.d.mts",
       "require": "./dist/v1/libs/html/drag/TinyDragger.cjs",
       "import": "./dist/v1/libs/html/drag/TinyDragger.mjs"
     },
     "./libs/text/TinyTextDiffer": {
+      "types": "./dist/v1/libs/text/TinyTextDiffer.d.mts",
       "require": "./dist/v1/libs/text/TinyTextDiffer.cjs",
       "import": "./dist/v1/libs/text/TinyTextDiffer.mjs"
     },
     "./libs/array/TinyArrayComparator": {
+      "types": "./dist/v1/libs/array/TinyArrayComparator.d.mts",
       "require": "./dist/v1/libs/array/TinyArrayComparator.cjs",
       "import": "./dist/v1/libs/array/TinyArrayComparator.mjs"
     },
     "./libs/html/drag/TinyDragDropDetector": {
+      "types": "./dist/v1/libs/html/drag/TinyDragDropDetector.d.mts",
       "require": "./dist/v1/libs/html/drag/TinyDragDropDetector.cjs",
       "import": "./dist/v1/libs/html/drag/TinyDragDropDetector.mjs"
     },
     "./libs/html/TinyDomReadyManager": {
+      "types": "./dist/v1/libs/html/TinyDomReadyManager.d.mts",
       "require": "./dist/v1/libs/html/TinyDomReadyManager.cjs",
       "import": "./dist/v1/libs/html/TinyDomReadyManager.mjs"
     },
     "./libs/game/TinyDayNightCycle": {
+      "types": "./dist/v1/libs/game/TinyDayNightCycle.d.mts",
       "require": "./dist/v1/libs/game/TinyDayNightCycle.cjs",
       "import": "./dist/v1/libs/game/TinyDayNightCycle.mjs"
     },
     "./libs/html/templates/TinyCookieConsent": {
+      "types": "./dist/v1/libs/html/templates/TinyCookieConsent.d.mts",
       "require": "./dist/v1/libs/html/templates/TinyCookieConsent.cjs",
       "import": "./dist/v1/libs/html/templates/TinyCookieConsent.mjs"
     },
     "./libs/color/TinyColorConverter": {
+      "types": "./dist/v1/libs/color/TinyColorConverter.d.mts",
       "require": "./dist/v1/libs/color/TinyColorConverter.cjs",
       "import": "./dist/v1/libs/color/TinyColorConverter.mjs"
     },
     "./libs/text/TinyClipboard": {
+      "types": "./dist/v1/libs/text/TinyClipboard.d.mts",
       "require": "./dist/v1/libs/text/TinyClipboard.cjs",
       "import": "./dist/v1/libs/text/TinyClipboard.mjs"
     },
     "./libs/array/TinyArrayPaginator": {
+      "types": "./dist/v1/libs/array/TinyArrayPaginator.d.mts",
       "require": "./dist/v1/libs/array/TinyArrayPaginator.cjs",
       "import": "./dist/v1/libs/array/TinyArrayPaginator.mjs"
     },
     "./libs/html/scroll/TinyAfterScrollWatcher": {
+      "types": "./dist/v1/libs/html/scroll/TinyAfterScrollWatcher.d.mts",
       "require": "./dist/v1/libs/html/scroll/TinyAfterScrollWatcher.cjs",
       "import": "./dist/v1/libs/html/scroll/TinyAfterScrollWatcher.mjs"
     },
     "./libs/html/templates/TinyAnalogClock": {
+      "types": "./dist/v1/libs/html/templates/TinyAnalogClock.d.mts",
       "require": "./dist/v1/libs/html/templates/TinyAnalogClock.cjs",
       "import": "./dist/v1/libs/html/templates/TinyAnalogClock.mjs"
     },
     "./libs/math/TinyAdvancedRaffle": {
+      "types": "./dist/v1/libs/math/TinyAdvancedRaffle.d.mts",
       "require": "./dist/v1/libs/math/TinyAdvancedRaffle.cjs",
       "import": "./dist/v1/libs/math/TinyAdvancedRaffle.mjs"
     },
     "./libs/tools/TinyClassManager/TinyPluginInliner": {
+      "types": "./dist/v1/libs/tools/TinyClassManager/TinyPluginInliner.d.mts",
       "require": "./dist/v1/libs/tools/TinyClassManager/TinyPluginInliner.cjs",
       "import": "./dist/v1/libs/tools/TinyClassManager/TinyPluginInliner.mjs"
     },
     "./libs/tools/TinyClassManager": {
+      "types": "./dist/v1/libs/tools/TinyClassManager.d.mts",
       "require": "./dist/v1/libs/tools/TinyClassManager.cjs",
       "import": "./dist/v1/libs/tools/TinyClassManager.mjs"
     },
     "./libs/tools/TinyPkgExportValidator": {
+      "types": "./dist/v1/libs/tools/TinyPkgExportValidator.d.mts",
       "require": "./dist/v1/libs/tools/TinyPkgExportValidator.cjs",
       "import": "./dist/v1/libs/tools/TinyPkgExportValidator.mjs"
     },
     "./libs/tools/TinyHttpResponseRegistry": {
+      "types": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Node.d.mts",
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Node.cjs",
       "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Node.mjs"
     },
     "./libs/tools/TinyHttpResponseRegistry/Browser": {
+      "types": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Browser.d.mts",
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Browser.cjs",
       "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Browser.mjs"
     },
     "./libs/tools/TinyHttpResponseRegistry/Browser-NON-DOM": {
+      "types": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Browser-NON-DOM.d.mts",
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Browser-NON-DOM.cjs",
       "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/Browser-NON-DOM.mjs"
     },
     "./libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes": {
+      "types": "./dist/v1/libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes/index.d.mts",
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes/index.cjs",
       "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes/index.mjs"
     },
     "./libs/tools/TinyHttpResponseRegistry/RequestCodes": {
+      "types": "./dist/v1/libs/tools/TinyHttpResponseRegistry/RequestCodes.d.mts",
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/RequestCodes.cjs",
       "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/RequestCodes.mjs"
     },
     "./libs/tools/TinyHttpResponseRegistry/EmptyRequestCodes": {
+      "types": "./dist/v1/libs/tools/TinyHttpResponseRegistry/EmptyRequestCodes.d.mts",
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/EmptyRequestCodes.cjs",
       "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/EmptyRequestCodes.mjs"
     },
     "./libs/tools/TinyHttpResponseRegistry/JsDoc": {
+      "types": "./dist/v1/libs/tools/TinyHttpResponseRegistry/JsDoc.d.mts",
       "require": "./dist/v1/libs/tools/TinyHttpResponseRegistry/JsDoc.cjs",
       "import": "./dist/v1/libs/tools/TinyHttpResponseRegistry/JsDoc.mjs"
     },
     "./libs/math/TinyMamdaniInferenceSystem": {
+      "types": "./dist/v1/libs/math/TinyMamdaniInferenceSystem.d.mts",
       "require": "./dist/v1/libs/math/TinyMamdaniInferenceSystem.cjs",
       "import": "./dist/v1/libs/math/TinyMamdaniInferenceSystem.mjs"
     },
     "./libs/html/TinyHtmlElems": {
+      "types": "./dist/v1/libs/html/TinyHtml/index.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/index.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/index.mjs"
     },
     "./libs/html/TinyHtmlElems/Anchor": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlAnchor.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlAnchor.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlAnchor.mjs"
     },
     "./libs/html/TinyHtmlElems/Button": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlButton.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlButton.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlButton.mjs"
     },
     "./libs/html/TinyHtmlElems/Canvas": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlCanvas.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlCanvas.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlCanvas.mjs"
     },
     "./libs/html/TinyHtmlElems/Datalist": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlDatalist.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlDatalist.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlDatalist.mjs"
     },
     "./libs/html/TinyHtmlElems/Form": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlForm.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlForm.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlForm.mjs"
     },
     "./libs/html/TinyHtmlElems/Embed": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlEmbed.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlEmbed.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlEmbed.mjs"
     },
     "./libs/html/TinyHtmlElems/Icon": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlIcon.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlIcon.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlIcon.mjs"
     },
     "./libs/html/TinyHtmlElems/Iframe": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlIframe.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlIframe.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlIframe.mjs"
     },
     "./libs/html/TinyHtmlElems/Image": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlImage.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlImage.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlImage.mjs"
     },
     "./libs/html/TinyHtmlElems/Link": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlLink.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlLink.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlLink.mjs"
     },
     "./libs/html/TinyHtmlElems/Script": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlScript.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlScript.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlScript.mjs"
     },
     "./libs/html/TinyHtmlElems/Select": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlSelect.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlSelect.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlSelect.mjs"
     },
     "./libs/html/TinyHtmlElems/Style": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlStyle.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlStyle.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlStyle.mjs"
     },
     "./libs/html/TinyHtmlElems/Template": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlTemplate.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlTemplate.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlTemplate.mjs"
     },
     "./libs/html/TinyHtmlElems/Textarea": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlTextarea.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlTextarea.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlTextarea.mjs"
     },
     "./libs/html/TinyHtmlElems/Media": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlMedia.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlMedia.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlMedia.mjs"
     },
     "./libs/html/TinyHtmlElems/Media/Audio": {
+      "types": "./dist/v1/libs/html/TinyHtml/media/TinyHtmlAudio.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/media/TinyHtmlAudio.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/media/TinyHtmlAudio.mjs"
     },
     "./libs/html/TinyHtmlElems/Media/Object": {
+      "types": "./dist/v1/libs/html/TinyHtml/media/TinyHtmlObject.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/media/TinyHtmlObject.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/media/TinyHtmlObject.mjs"
     },
     "./libs/html/TinyHtmlElems/Media/Source": {
+      "types": "./dist/v1/libs/html/TinyHtml/media/TinyHtmlSource.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/media/TinyHtmlSource.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/media/TinyHtmlSource.mjs"
     },
     "./libs/html/TinyHtmlElems/Media/Video": {
+      "types": "./dist/v1/libs/html/TinyHtml/media/TinyHtmlVideo.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/media/TinyHtmlVideo.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/media/TinyHtmlVideo.mjs"
     },
     "./libs/html/TinyHtmlElems/Input": {
+      "types": "./dist/v1/libs/html/TinyHtml/TinyHtmlInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/TinyHtmlInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/TinyHtmlInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Color": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/TinyHtmlColorInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/TinyHtmlColorInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/TinyHtmlColorInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/File": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/TinyHtmlFileInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/TinyHtmlFileInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/TinyHtmlFileInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Hidden": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/TinyHtmlHiddenInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/TinyHtmlHiddenInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/TinyHtmlHiddenInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Image": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/TinyHtmlImageInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/TinyHtmlImageInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/TinyHtmlImageInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Button": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/button/TinyHtmlButtonInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/button/TinyHtmlButtonInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/button/TinyHtmlButtonInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Reset": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/button/TinyHtmlResetInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/button/TinyHtmlResetInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/button/TinyHtmlResetInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Submit": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/button/TinyHtmlSubmitInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/button/TinyHtmlSubmitInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/button/TinyHtmlSubmitInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Checkbox": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/check/TinyHtmlCheckboxInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/check/TinyHtmlCheckboxInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/check/TinyHtmlCheckboxInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Radio": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/check/TinyHtmlRadioInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/check/TinyHtmlRadioInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/check/TinyHtmlRadioInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Date": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlDateInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlDateInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlDateInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/DateTime": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlDateTimeInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlDateTimeInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlDateTimeInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Month": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlMonthInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlMonthInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlMonthInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Time": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlTimeInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlTimeInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlTimeInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Week": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlWeekInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlWeekInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/date/TinyHtmlWeekInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Number": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/number/TinyHtmlNumberInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/number/TinyHtmlNumberInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/number/TinyHtmlNumberInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Range": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/number/TinyHtmlRangeInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/number/TinyHtmlRangeInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/number/TinyHtmlRangeInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Email": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlEmailInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlEmailInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlEmailInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Password": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlPasswordInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlPasswordInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlPasswordInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Search": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlSearchInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlSearchInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlSearchInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Tel": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlTelInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlTelInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlTelInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Text": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlTextInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlTextInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlTextInput.mjs"
     },
     "./libs/html/TinyHtmlElems/Input/Url": {
+      "types": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlUrlInput.d.mts",
       "require": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlUrlInput.cjs",
       "import": "./dist/v1/libs/html/TinyHtml/input/text/TinyHtmlUrlInput.mjs"
     }
