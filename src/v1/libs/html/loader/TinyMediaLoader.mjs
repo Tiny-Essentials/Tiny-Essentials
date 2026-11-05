@@ -162,14 +162,17 @@ import TinyMediaMirror from './utils/TinyMediaMirror.mjs';
  */
 
 /**
- * Describes the events emitted by the {@link TinyMediaLoader}.
+ * Describes every event emitted by {@link TinyMediaLoader}.
+ *
+ * The keys are the event names, and the values are the listener signatures.
+ * This is the shape expected by `ICustomEventEmitter<MediaLoaderEvents>`.
  * @typedef {Object} MediaLoaderEvents
  * @property {(payload: { src: string }) => void} loadstart - Emitted when a media load process begins.
  * @property {(metadata: MediaMetadata) => void} loaded - Emitted when the media has been fully loaded and decoded.
  * @property {(payload: { src: string, state: string }) => void} loadend - Emitted when the loading process finishes, regardless of success or failure.
  * @property {(payload: { src: string }) => void} abort - Emitted when the current load operation is cancelled.
  * @property {(error: Error) => void} error - Emitted when an unrecoverable error occurs during loading.
- * @property {(payload: { src: string, timeout: number }) => void} timeout - Emitted when the load operation exceeds the configured timeout.
+ * @property {(payload: MediaTimeoutPayload) => void} timeout - Emitted when the load operation exceeds the configured timeout.
  * @property {(payload: import('./utils/TinyMediaProgress.mjs').MediaProgressSnapshot) => void} progress - Emitted periodically to provide download progress updates.
  * @property {(metadata: MediaMetadata, type: MediaMetadataType) => void} metadata - Emitted whenever media metadata is partially or fully resolved.
  * @property {(response: Response) => void} response - Emitted when the main HTTP response for the media resource is received.
@@ -178,8 +181,8 @@ import TinyMediaMirror from './utils/TinyMediaMirror.mjs';
  * @property {(payload: MediaSrcTransitionPayload) => void} srctransition - Emitted when the element's source swaps between a network URL and an internal object URL.
  * @property {(entry: import('./utils/TinyMediaCache.mjs').MediaCacheEntry) => void} cachemiss - Emitted when the resource is not found in the cache.
  * @property {(entry: import('./utils/TinyMediaCache.mjs').MediaCacheEntry) => void} cachehit - Emitted when the resource is successfully retrieved from the cache.
- * @property {(payload: { state: string, previous: string, src: string }) => void} statechange - Emitted when the loader transitions from one state to another.
- * @property {(payload: { chunk: Uint8Array, loaded: number, total: number }) => void} chunk - Emitted every time a binary data chunk is received during streaming.
+ * @property {(payload: MediaStateChangePayload) => void} statechange - Emitted when the loader transitions from one state to another.
+ * @property {(payload: MediaChunkPayload) => void} chunk - Emitted every time a binary data chunk is received during streaming.
  * @property {(payload: MediaMirrorPayload) => void} mirror - Emitted when the download is shared with another loader.
  * @property {() => void} destroy - Emitted when the loader is destroyed and its resources are released.
  */
