@@ -55,7 +55,19 @@ Inherits every [`TinyMediaLoader`](./TinyMediaLoader.md) option, plus:
 | `none` | The browser renders the image as-is. No frame extraction. |
 | `native` | Frames are extracted, but the browser still plays the animation. `freeze()` falls back to the first frame. |
 | `script-only` | Frames are extracted and available, but the loader never touches playback. |
-| `controlled` | The loader owns a frame clock. Use `play`, `pause`, `freeze`, `unfreeze` and `playbackRate`. |
+| `controlled` | The loader owns a frame clock. Use `play`, `pause`, `freeze`, `unfreeze` and `playbackRate`. **Stable on `WebP`, 95% on `PNG` (APNG), unstable on other formats — see the compatibility status below.** |
+
+### ⚠️ Compatibility status (`controlled` mode)
+
+Frame extraction and the manual frame clock are **not equally stable across every container**. Check the table below before relying on `controlled` in production:
+
+| Format | Status | Notes |
+| :--- | :--- | :--- |
+| `WebP` | ✅ Stable | Fully working. This is the recommended format. |
+| `PNG` (APNG) | 🟡 95% | Works in almost every case. Rare edge cases may show a wrong frame delay or drop a frame. |
+| `GIF` / `AVIF` | ⚠️ Unstable | Frame extraction may fail, desynchronize or return incomplete data depending on the encoder. |
+
+**Recommendation:** if you need `controlled` mode, convert the asset to `WebP` first. If you cannot convert it, use `animationControl: 'native'` instead — it is 100% tested and stable on every animated format listed above.
 
 ---
 
