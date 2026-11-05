@@ -25,6 +25,11 @@ import TinyMediaLoader from '../TinyMediaLoader.mjs';
  */
 
 /**
+ * The signature of the function returned by {@link TinyFetchLoader#exportFetch}.
+ * @typedef {(input: string|URL|Request, init?: RequestInit) => Promise<Response>} TinyFetch
+ */
+
+/**
  * Loads an arbitrary file through the native `fetch` API.
  *
  * The class does not create a DOM element. It reuses the state machine,
@@ -42,6 +47,8 @@ class TinyFetchLoader extends TinyMediaLoader {
   #blob = null;
   /** @type {Blob|ArrayBuffer|string|unknown|null} */
   #data = null;
+  /** @type {FetchLoaderOptions} */
+  #options;
 
   /**
    * @param {FetchLoaderOptions} [options] - The loader configuration.
@@ -74,8 +81,10 @@ class TinyFetchLoader extends TinyMediaLoader {
     }
 
     this._fetch = fetcher;
+    this._requestInit = init;
     this.#init = init;
     this.#responseType = responseType;
+    this.#options = { ...options, fetch: fetcher, init: { ...init }, responseType };
   }
 
   /**
@@ -108,6 +117,25 @@ class TinyFetchLoader extends TinyMediaLoader {
    */
   get init() {
     return { ...this.#init };
+  }
+
+  /**
+   * Creates a new loader with the same configuration.
+   *
+   * The clone is fully independent: it has its own state machine, its own
+   * abort controller and its own `blob`/`data` slots. The shared `cache` and
+   * the custom `fetch` implementation are reused by reference, which is what
+   * makes {@link TinyFetchLoader#exportFetch} cheap.
+   * @param {FetchLoaderOptions} [overrides] - Values that override the cloned configuration.
+   * @returns {TinyFetchLoader} A new, independent loader.
+   * @throws {TypeError} If `overrides` is not a plain object.
+   */
+  clone(overrides = {}) {
+    if (overrides === null || typeof overrides !== 'object' || Array.isArray(overrides)) {
+      throw new TypeError('The "overrides" argument must be a plain object.');
+    }
+    const init = { ...this.#options.init, ...(overrides.init ?? {}) };
+    return new TinyFetchLoader({ ...this.#options, ...overrides, init });
   }
 
   /**
