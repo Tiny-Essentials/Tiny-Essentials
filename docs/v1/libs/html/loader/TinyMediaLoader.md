@@ -57,6 +57,9 @@ Every option is optional.
 | `useHeadRequest` | `boolean` | `false` | Performs a `HEAD` request to read the headers before downloading. |
 | `mirror` | `boolean` | `true` | Shares a single download between loaders that request the same URL. |
 | `cache` | `TinyMediaCache \| null` | `null` | A shared memory cache. |
+| `body` | `BodyInit \| undefined` | `undefined` | The request body forwarded to the transport. Ignored by `GET`/`HEAD`, which the Fetch spec forbids from carrying a body. |
+
+> **Note:** `body` is only sent when the request is not a `GET`/`HEAD` (for example when a subclass sets `_requestInit.method` to `'POST'`). When `_requestInit.body` is already set, it takes precedence over the `body` option.
 
 ---
 
@@ -92,6 +95,9 @@ Every option is optional.
 | `mirror` | `boolean` | Whether download mirroring is enabled. |
 | `mirrored` | `boolean` | `true` when the payload was shared by another loader. |
 | `signal` | `AbortSignal` | The signal of the current request. |
+| `body` | `BodyInit \| undefined` | The request body forwarded to the transport (settable). |
+| `pending` | `boolean` | `true` while another loader is downloading the same source (mirror registry). |
+| `cached` | `boolean` | `true` when the current source is already available in the shared cache. |
 
 ### Metrics
 
@@ -142,6 +148,31 @@ loader.mount(document.querySelector('#stage'));
 
 Aborts the request, releases the cache entry, detaches every listener and revokes the object URLs. The instance cannot be reused afterwards.
 
+### `isCached(src = this.src)`
+
+Checks whether a URL already has a live payload in the shared cache, without acquiring a reference and without touching the network. The lookup is strictly read-only: it never increments `hits`/`misses`, never revives an expired entry and never creates an object URL.
+
+```js
+if (loader.isCached('https://cdn/a.png')) {
+  console.log('no network request needed');
+}
+```
+
+* **Returns:** `boolean` — `true` when the cache holds a live entry.
+* **Throws:** `TypeError` when `src` is not a string; `Error` when the cache was destroyed.
+
+### `peekCache(src = this.src)`
+
+Reads the cache entry of a URL without acquiring a reference, so it can be inspected (size, type, metadata) before deciding to load it.
+
+```js
+const entry = loader.peekCache('https://cdn/a.png');
+if (entry) console.log(entry.size, entry.type, entry.metadata);
+```
+
+* **Returns:** `MediaCacheEntry | null` — the cached entry, or `null`.
+* **Throws:** `TypeError` when `src` is not a string; `Error` when the cache was destroyed.
+
 ---
 
 ## 📡 Events
@@ -185,6 +216,31 @@ type MediaMetadata = {
   animation: AnimationProbeData | null;
   httpHeaders?: Record<string, string>;
 };
+```
+
+---
+
+## 📤 Request body
+
+The `body` option forwards a payload to the transport, which is required by endpoints that only accept `POST`, `PUT` or `PATCH` requests. It is ignored by `GET` and `HEAD`, because the Fetch specification forbids those methods from carrying a body.
+
+```js
+const loader = new TinyFetchLoader({
+  src: 'https://api.example.com/render',
+  init: { method: 'POST', headers: { 'Content-Type': 'application/json' } },
+  body: JSON.stringify({ width: 800, height: 450 }),
+  responseType: 'blob',
+});
+
+await loader.load();
+```
+
+* When `init.body` is already set, it takes precedence over the `body` option.
+* The value is exposed through the `body` getter/setter, so it can be replaced between loads:
+
+```js
+loader.body = JSON.stringify({ width: 1920, height: 1080 });
+await loader.reload();
 ```
 
 ---

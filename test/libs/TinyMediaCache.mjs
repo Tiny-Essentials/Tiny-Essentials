@@ -168,6 +168,25 @@ const testMediaCache = async () => {
   // -------------------------------------------------------------------
   // Pinning
   // -------------------------------------------------------------------
+  // -------------------------------------------------------------------
+  // peek (read-only probe)
+  // -------------------------------------------------------------------
+  section('TinyMediaCache - peek', '👀');
+  const peeked = new TinyMediaCache();
+  peeked.set('https://cdn/peek.png', blob('peek'), false, { width: 7 });
+  const before = peeked.stats;
+  const hit = peeked.peek('https://cdn/peek.png');
+  t.equal(hit.url, 'https://cdn/peek.png', 'peek() returns the entry');
+  t.equal(hit.metadata.width, 7, 'peek() exposes the metadata');
+  t.equal(hit.refs, 0, 'peek() does not acquire a reference');
+  t.equal(peeked.peek('https://cdn/missing.png'), null, 'peek() is null for unknown URLs');
+  const after = peeked.stats;
+  t.equal(after.hits, before.hits, 'peek() does not change the hit counter');
+  t.equal(after.misses, before.misses, 'peek() does not change the miss counter');
+  t.throws(() => peeked.peek(5), 'peek() validates the url');
+  peeked.destroy();
+  t.throws(() => peeked.peek('https://cdn/peek.png'), 'peek() throws after destroy');
+
   section('TinyMediaCache - pinning', '📌');
   const pinned = new TinyMediaCache({ maxItems: 1 });
   pinned.set('https://cdn/keep.png', blob('keep'));

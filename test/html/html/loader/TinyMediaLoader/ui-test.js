@@ -236,6 +236,7 @@ function readConfig() {
     preload: byId('cfg-preload').value,
     animationControl: byId('cfg-animation').value,
     responseType: byId('cfg-responsetype').value,
+    body: textOf('cfg-body'),
     stream: isChecked('cfg-stream'),
     progressive: isChecked('cfg-progressive'),
     useHeadRequest: isChecked('cfg-head'),
@@ -449,6 +450,8 @@ function renderMeta(entry) {
     ['size', `${formatBytes(meta.size)} (${meta.size} B)`],
     ['loadTime', `${Number(meta.loadTime).toFixed(1)} ms`],
     ['fromCache', String(meta.fromCache)],
+    ['cached', String(loader.cached ?? false)],
+    ['pending', String(loader.pending ?? false)],
     ['mirrored', String(loader.mirrored ?? false)],
     ['type', meta.type || '—'],
     ['dimensions', `${meta.width} × ${meta.height}`],
@@ -598,6 +601,7 @@ async function spawn(config) {
     progressive: config.progressive,
     useHeadRequest: config.useHeadRequest,
     mirror: config.mirror,
+    body: config.body ? config.body : undefined,
     cache: config.useCache ? ensureCache() : null,
   };
   if (kind === 'image') {

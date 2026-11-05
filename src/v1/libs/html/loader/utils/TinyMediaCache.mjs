@@ -566,6 +566,27 @@ class TinyMediaCache {
   }
 
   /**
+   * Reads an entry without changing its reference count and without touching
+   * the hit/miss counters. Expired entries are reported as missing but are not
+   * removed, so a read-only probe never mutates the cache.
+   * @param {string} url - The media URL.
+   * @returns {MediaCacheEntry|null} The live entry, or null when absent or expired.
+   * @throws {TypeError} If `url` is not a string.
+   * @throws {Error} If the cache was destroyed.
+   */
+  peek(url) {
+    this.#assertAlive();
+    if (typeof url !== 'string') {
+      throw new TypeError('The "url" argument must be a string.');
+    }
+    const entry = this.#entries.get(this.#key(url));
+    if (!entry || this.#isExpired(entry)) {
+      return null;
+    }
+    return entry;
+  }
+
+  /**
    * Pins an entry so the limit enforcement skips it.
    * @param {string} url - The media URL.
    * @param {boolean} [value] - The new pinned state.

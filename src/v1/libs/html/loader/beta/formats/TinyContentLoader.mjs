@@ -21,6 +21,7 @@ import TinyMediaProbe from '../probe/TinyMediaProbe.mjs';
  * @property {boolean} [autoReload] - Whether an external `src` change triggers a reload.
  * @property {boolean} [stream] - Whether to download the media through fetch for byte progress.
  * @property {boolean} [useHeadRequest] - Whether to perform a HEAD request to fetch HTTP headers before downloading.
+ * @property {BodyInit} [body] - The request body forwarded to the transport (ignored by `GET`/`HEAD`).
  * @property {import('../../utils/TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.
  */
 

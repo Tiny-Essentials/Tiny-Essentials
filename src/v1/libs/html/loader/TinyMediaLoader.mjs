@@ -37,6 +37,7 @@ import TinyMediaMirror from './utils/TinyMediaMirror.mjs';
  * @property {boolean} [useHeadRequest] - Whether to perform a HEAD request to fetch HTTP headers before downloading.
  * @property {boolean} [mirror] - Whether concurrent loads of the same source share a single download (default true).
  * @property {TinyMediaCache|null} [cache] - An optional shared memory cache.
+ * @property {BodyInit} [body] - The request body forwarded to the transport.
  */
 
 /**
@@ -293,6 +294,8 @@ class TinyMediaLoader extends TypedEmitter {
   #fetch = globalThis.fetch.bind(globalThis);
   /** @type {RequestInit} */
   #requestInit = {};
+  /** @type {BodyInit|undefined} */
+  #body = undefined;
 
   /** @type {Partial<MediaMetadata>} */
   #partial = {};
@@ -333,6 +336,7 @@ class TinyMediaLoader extends TypedEmitter {
       progressive = true,
       useHeadRequest = false,
       mirror = true,
+      body,
     } = options;
 
     if (src !== undefined && typeof src !== 'string') {
@@ -383,6 +387,7 @@ class TinyMediaLoader extends TypedEmitter {
     this.#useHeadRequest = useHeadRequest;
     this.#earlyDecode = earlyDecode;
     this.#progressive = progressive;
+    this.#body = body;
     this.#mirror = mirror;
     if (element) {
       this.#element = element;
@@ -669,6 +674,30 @@ class TinyMediaLoader extends TypedEmitter {
   }
 
   /**
+   * The request body forwarded to the transport. It is ignored by `GET` and
+   * `HEAD`, which the Fetch specification forbids from carrying a body.
+   * @returns {BodyInit|undefined}
+   */
+  get body() {
+    return this.#body;
+  }
+
+  /**
+   * @param {BodyInit|undefined} value - The request body.
+   */
+  set body(value) {
+    this.#body = value;
+  }
+
+  /**
+   * Whether another loader is already downloading the current source.
+   * @returns {boolean} True when a mirrored download is in flight.
+   */
+  get pending() {
+    return TinyMediaMirror.has(this.#mirrorKey(this.#src));
+  }
+
+  /**
    * The fetch implementation used to download the media.
    * Subclasses may override it to inject a custom transport.
    * @returns {typeof globalThis.fetch} The fetch implementation.
@@ -703,6 +732,54 @@ class TinyMediaLoader extends TypedEmitter {
    */
   set _requestInit(params) {
     this.#requestInit = params;
+  }
+
+  /**
+   * Checks whether a URL already has a live payload held by the shared memory
+   * cache, without acquiring a reference and without touching the network.
+   *
+   * The lookup is strictly read-only: it never increments the `hits`/`misses`
+   * counters, never revives an expired entry and never creates an object URL.
+   * Use it to decide *whether* to call {@link TinyMediaLoader#load}, never as a
+   * replacement for it.
+   * @param {string} [src] - The URL to test. Defaults to the current source.
+   * @returns {boolean} True when the cache holds a live entry for the URL.
+   * @throws {TypeError} If `src` is not a string.
+   * @throws {Error} If the underlying cache was destroyed.
+   */
+  isCached(src = this.#src) {
+    if (typeof src !== 'string') {
+      throw new TypeError('The "src" argument must be a string.');
+    }
+    if (!this.#cache) {
+      return false;
+    }
+    return this.#cache.has(src);
+  }
+
+  /**
+   * Whether the current source is already available in the shared memory cache.
+   * @returns {boolean} True when the current source can load without a network request.
+   */
+  get cached() {
+    return this.isCached();
+  }
+
+  /**
+   * Reads the cache entry of a URL without acquiring a reference.
+   * @param {string} [src] - The URL to inspect. Defaults to the current source.
+   * @returns {import('./utils/TinyMediaCache.mjs').MediaCacheEntry|null} The cached entry, or null.
+   * @throws {TypeError} If `src` is not a string.
+   * @throws {Error} If the underlying cache was destroyed.
+   */
+  peekCache(src = this.#src) {
+    if (typeof src !== 'string') {
+      throw new TypeError('The "src" argument must be a string.');
+    }
+    if (!this.#cache) {
+      return null;
+    }
+    return this.#cache.peek(src);
   }
 
   /**
@@ -1186,13 +1263,16 @@ class TinyMediaLoader extends TypedEmitter {
     if (typeof url !== 'string') {
       throw new TypeError('The "url" argument must be a string.');
     }
+    const method = this.#requestInit.method?.toUpperCase();
+    const canRange = method === 'GET';
+    const canHead = this.#useHeadRequest && method === 'GET' && startByte === 0;
 
     let type = '';
     let actualTotal = 0;
     let headSuccess = false;
 
     // 1. Optional: HEAD Fetch before GET to capture metadata quickly
-    if (this.#useHeadRequest && startByte === 0) {
+    if (canHead) {
       try {
         const headResponse = await this.#fetch(url, {
           ...this.#requestInit,
@@ -1227,17 +1307,23 @@ class TinyMediaLoader extends TypedEmitter {
       }
     }
 
-    const headers = new Headers();
-    if (startByte > 0) {
+    const headers = new Headers(this.#requestInit.headers);
+    if (canRange && startByte > 0) {
       headers.set('Range', `bytes=${startByte}-`);
     }
 
-    // 2. Fetch real (GET)
-    const response = await this.#fetch(url, {
+    // 2. Fetch real
+    /** @type {RequestInit} */
+    const init = {
       ...this.#requestInit,
       signal: customSignal || this.signal.signal,
-      headers: headers,
-    });
+      headers,
+    };
+    if (!init.body && this.#body !== undefined) {
+      init.body = this.#body;
+    }
+
+    const response = await this.#fetch(url, init);
 
     this.#response = response;
     this.emit('response', response);
@@ -1246,7 +1332,9 @@ class TinyMediaLoader extends TypedEmitter {
       if (response.status === 416) throw new Error('Requested range not satisfiable.');
       throw new Error(`Failed to fetch media: ${response.status} ${response.statusText}`);
     }
-    if (!response.body) throw new Error('The response body is not readable.');
+    if (!response.body) {
+      return new Blob([], { type: type || 'application/octet-stream' });
+    }
 
     const getType = response.headers.get('content-type') || type;
     const total = Number(response.headers.get('content-length') || 0);

@@ -19,6 +19,7 @@ import TinyMediaLoader from '../TinyMediaLoader.mjs';
  * @property {FetchResponseType} [responseType] - The response body type (default `'blob'`).
  * @property {number} [timeout] - Maximum time in milliseconds before the load is aborted.
  * @property {boolean} [useHeadRequest] - Whether to perform a HEAD request before downloading.
+ * @property {BodyInit} [body] - The request body forwarded to the transport (ignored by `GET`/`HEAD`).
  * @property {boolean} [progressive] - Whether to emit progress events (default `true`).
  * @property {boolean} [mirror] - Whether concurrent loads of the same source share a single download (default `true`).
  * @property {import('../utils/TinyMediaCache.mjs').default|null} [cache] - An optional shared memory cache.

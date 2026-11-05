@@ -209,6 +209,48 @@ const testMediaLoader = async () => {
   await blobLoader.load();
   f.ok(blobLoader.data instanceof Blob, 'Defaults to a Blob payload');
 
+  section('TinyFetchLoader - request body', '📤');
+  const bodyStub = stubFetch('ok');
+  const bodyLoader = new TinyFetchLoader({
+    src: 'https://example.com/submit',
+    timeout: 0,
+    init: { method: 'POST' },
+    body: 'hello=world',
+    fetch: bodyStub.fetch,
+  });
+  f.equal(bodyLoader.body, 'hello=world', 'Exposes the configured body');
+  await bodyLoader.load();
+  f.equal(bodyStub.calls.length, 1, 'Sends a single request with a body');
+  f.equal(bodyStub.calls[0].init.body, 'hello=world', 'Forwards the body to fetch');
+
+  const initBodyStub = stubFetch('ok');
+  const initBodyLoader = new TinyFetchLoader({
+    src: 'https://example.com/submit',
+    timeout: 0,
+    init: { method: 'POST', body: 'from-init' },
+    body: 'from-option',
+    fetch: initBodyStub.fetch,
+  });
+  await initBodyLoader.load();
+  f.equal(
+    initBodyStub.calls[0].init.body,
+    'from-init',
+    'init.body takes precedence over the body option',
+  );
+
+  const noBodyStub = stubFetch('ok');
+  const noBodyLoader = new TinyFetchLoader({
+    src: 'https://example.com/plain',
+    timeout: 0,
+    fetch: noBodyStub.fetch,
+  });
+  f.equal(noBodyLoader.body, undefined, 'Defaults the body to undefined');
+  await noBodyLoader.load();
+  f.equal(noBodyStub.calls[0].init.body, undefined, 'Omits the body when it is not set');
+
+  bodyLoader.body = 'replaced';
+  f.equal(bodyLoader.body, 'replaced', 'Allows replacing the body between loads');
+
   section('TinyFetchLoader - clone & exportFetch', '🧷');
   const clone = textLoader.clone({ responseType: 'text' });
   f.ok(clone instanceof TinyFetchLoader, 'clone() returns a new loader');
@@ -268,6 +310,46 @@ const testMediaLoader = async () => {
   f.equal(cached.cache, cache, 'Exposes the shared cache');
   cached.destroy();
   cache.destroy();
+
+  section('TinyFetchLoader - cache probes', '🔍');
+  const probeCache = new TinyMediaCache();
+  const probeSrc = 'https://example.com/probe.txt';
+  const probe = new TinyFetchLoader({
+    src: probeSrc,
+    responseType: 'text',
+    timeout: 0,
+    cache: probeCache,
+    fetch: stubFetch('probe body').fetch,
+  });
+
+  f.equal(probe.isCached(), false, 'isCached() is false before the load');
+  f.equal(probe.cached, false, 'cached is false before the load');
+  f.equal(probe.peekCache(), null, 'peekCache() is null before the load');
+  f.equal(probe.pending, false, 'pending is false when nothing is in flight');
+
+  await probe.load();
+
+  f.equal(probe.isCached(), true, 'isCached() is true after the load');
+  f.equal(probe.isCached(probeSrc), true, 'isCached() accepts an explicit src');
+  f.equal(probe.isCached('https://example.com/none.txt'), false, 'isCached() is false for others');
+  f.equal(probe.cached, true, 'cached mirrors isCached()');
+  f.throws(() => probe.isCached(5), 'isCached() validates the src');
+
+  const peekedEntry = probe.peekCache();
+  f.ok(peekedEntry !== null, 'peekCache() returns the entry');
+  f.equal(peekedEntry.size, 10, 'peekCache() exposes the entry size');
+  f.equal(probe.peekCache(probeSrc), peekedEntry, 'peekCache() accepts an explicit src');
+  f.equal(probe.peekCache('https://example.com/none.txt'), null, 'peekCache() is null for others');
+  f.throws(() => probe.peekCache(5), 'peekCache() validates the src');
+
+  const bare = new TinyFetchLoader({ src: probeSrc, timeout: 0, fetch: stubFetch('x').fetch });
+  f.equal(bare.isCached(), false, 'isCached() is false without a cache');
+  f.equal(bare.cached, false, 'cached is false without a cache');
+  f.equal(bare.peekCache(), null, 'peekCache() is null without a cache');
+  bare.destroy();
+
+  probe.destroy();
+  probeCache.destroy();
 
   console.log(`\n${color('gray', 'Media loader test-suite finished.')}`);
 

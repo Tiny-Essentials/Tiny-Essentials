@@ -45,6 +45,9 @@ Inherits every [`TinyMediaLoader`](./TinyMediaLoader.md) option, plus:
 | `init` | `RequestInit` | `{}` | Options forwarded to `fetch` (method, headers, body, credentials, mode, cache, redirect, referrer, referrerPolicy, integrity, keepalive). |
 | `fetch` | `typeof fetch` | `globalThis.fetch` | A custom fetch implementation. |
 | `responseType` | `'blob' \| 'arraybuffer' \| 'text' \| 'json'` | `'blob'` | How the payload is parsed. |
+| `body` | `BodyInit \| undefined` | `undefined` | The request body forwarded to the transport. Ignored by `GET`/`HEAD`; `init.body` wins when both are set. |
+
+> **Note:** `body` is inherited from [`TinyMediaLoader`](./TinyMediaLoader.md#-request-body) and is only sent when the request method is not `GET`/`HEAD`.
 
 ---
 

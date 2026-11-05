@@ -75,6 +75,20 @@ cache.set('https://cdn/a.png', blob, true, { width: 100 }, null);
 
 Reads an entry without changing its reference count.
 
+### `peek(url)`
+
+Reads an entry without changing its reference count **and** without touching the `hits`/`misses` counters. Expired entries are reported as missing but are not removed, so a read-only probe never mutates the cache.
+
+```js
+const entry = cache.peek('https://cdn/a.png');
+if (entry) console.log(entry.size, entry.type);
+```
+
+* **Returns:** `MediaCacheEntry | null` — the live entry, or `null` when absent or expired.
+* **Throws:** `TypeError` when `url` is not a string; `Error` when the cache was destroyed.
+
+> Use `peek()` to decide *whether* to load a resource. Never use it as a replacement for `get()`/`acquire()`, which are the methods that keep the reference count correct.
+
 ### `acquire(url)` / `release(url)`
 
 Increments / decrements the reference count. When the count reaches zero the configured strategy is applied.
