@@ -668,7 +668,7 @@ class TinyMediaLoader extends TypedEmitter {
    * @returns {typeof fetch} The fetch implementation.
    */
   get _fetch() {
-    return globalThis.fetch.bind(globalThis);
+    return this.#fetch;
   }
 
   /**
