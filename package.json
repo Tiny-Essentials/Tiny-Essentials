@@ -746,6 +746,46 @@
       "require": "./dist/v1/libs/html/templates/TinyAnalogClock.cjs",
       "import": "./dist/v1/libs/html/templates/TinyAnalogClock.mjs"
     },
+    "./libs/html/loader/TinyMediaLoader": {
+      "types": "./dist/v1/libs/html/loader/TinyMediaLoader.d.mts",
+      "require": "./dist/v1/libs/html/loader/TinyMediaLoader.cjs",
+      "import": "./dist/v1/libs/html/loader/TinyMediaLoader.mjs"
+    },
+    "./libs/html/loader/utils/TinyBufferReader": {
+      "types": "./dist/v1/libs/html/loader/utils/TinyBufferReader.d.mts",
+      "require": "./dist/v1/libs/html/loader/utils/TinyBufferReader.cjs",
+      "import": "./dist/v1/libs/html/loader/utils/TinyBufferReader.mjs"
+    },
+    "./libs/html/loader/utils/TinyIsoBox": {
+      "types": "./dist/v1/libs/html/loader/utils/TinyIsoBox.d.mts",
+      "require": "./dist/v1/libs/html/loader/utils/TinyIsoBox.cjs",
+      "import": "./dist/v1/libs/html/loader/utils/TinyIsoBox.mjs"
+    },
+    "./libs/html/loader/utils/TinyMediaCache": {
+      "types": "./dist/v1/libs/html/loader/utils/TinyMediaCache.d.mts",
+      "require": "./dist/v1/libs/html/loader/utils/TinyMediaCache.cjs",
+      "import": "./dist/v1/libs/html/loader/utils/TinyMediaCache.mjs"
+    },
+    "./libs/html/loader/utils/TinyMediaMirror": {
+      "types": "./dist/v1/libs/html/loader/utils/TinyMediaMirror.d.mts",
+      "require": "./dist/v1/libs/html/loader/utils/TinyMediaMirror.cjs",
+      "import": "./dist/v1/libs/html/loader/utils/TinyMediaMirror.mjs"
+    },
+    "./libs/html/loader/utils/TinyMediaProgress": {
+      "types": "./dist/v1/libs/html/loader/utils/TinyMediaProgress.d.mts",
+      "require": "./dist/v1/libs/html/loader/utils/TinyMediaProgress.cjs",
+      "import": "./dist/v1/libs/html/loader/utils/TinyMediaProgress.mjs"
+    },
+    "./libs/html/loader/probe/TinyImageProbe": {
+      "types": "./dist/v1/libs/html/loader/probe/TinyImageProbe.d.mts",
+      "require": "./dist/v1/libs/html/loader/probe/TinyImageProbe.cjs",
+      "import": "./dist/v1/libs/html/loader/probe/TinyImageProbe.mjs"
+    },
+    "./libs/html/loader/formats/TinyFetchLoader": {
+      "types": "./dist/v1/libs/html/loader/formats/TinyFetchLoader.d.mts",
+      "require": "./dist/v1/libs/html/loader/formats/TinyFetchLoader.cjs",
+      "import": "./dist/v1/libs/html/loader/formats/TinyFetchLoader.mjs"
+    },
     "./libs/math/TinyAdvancedRaffle": {
       "types": "./dist/v1/libs/math/TinyAdvancedRaffle.d.mts",
       "require": "./dist/v1/libs/math/TinyAdvancedRaffle.cjs",
