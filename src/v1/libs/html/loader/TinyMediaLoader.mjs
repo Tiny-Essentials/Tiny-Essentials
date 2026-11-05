@@ -671,17 +671,22 @@ class TinyMediaLoader extends TypedEmitter {
   /**
    * The fetch implementation used to download the media.
    * Subclasses may override it to inject a custom transport.
-   * @returns {typeof fetch} The fetch implementation.
+   * @returns {typeof globalThis.fetch} The fetch implementation.
    */
   get _fetch() {
     return this.#fetch;
   }
 
   /**
-   * @param {typeof fetch} fetch - The fetch implementation.
+   * Replaces the fetch implementation used to download the media.
+   * @param {typeof globalThis.fetch} implementation - The fetch implementation.
+   * @throws {TypeError} If `implementation` is not a function.
    */
-  set _fetch(fetch) {
-    this.#fetch = fetch;
+  set _fetch(implementation) {
+    if (typeof implementation !== 'function') {
+      throw new TypeError('The "fetch" value must be a function.');
+    }
+    this.#fetch = implementation;
   }
 
   /**
