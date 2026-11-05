@@ -6,10 +6,12 @@
  */
 
 import TinyImageLoader from '/src/v1/libs/html/loader/formats/TinyImageLoader.mjs';
+import TinyFetchLoader from '/src/v1/libs/html/loader/formats/TinyFetchLoader.mjs';
 import TinyVideoLoader from '/src/v1/libs/html/loader/beta/formats/TinyVideoLoader.mjs';
 import TinyAudioLoader from '/src/v1/libs/html/loader/beta/formats/TinyAudioLoader.mjs';
 import TinyMediaCache from '/src/v1/libs/html/loader/utils/TinyMediaCache.mjs';
 import TinyMediaProgress from '/src/v1/libs/html/loader/utils/TinyMediaProgress.mjs';
+import TinyMediaMirror from '/src/v1/libs/html/loader/utils/TinyMediaMirror.mjs';
 
 /* ══════════════════════════════════════════════════════════════════
    DOM HELPERS
@@ -65,6 +67,7 @@ function describe(value, depth = 0) {
   if (value instanceof Blob)
     return `Blob(${value.type || 'application/octet-stream'}, ${formatBytes(value.size)})`;
   if (value instanceof HTMLElement) return `<${value.tagName.toLowerCase()}>`;
+  if (value instanceof Response) return `Response(${value.status} ${value.statusText})`;
   if (depth > 3) return '…';
   if (Array.isArray(value)) return `[${value.map((item) => describe(item, depth + 1)).join(', ')}]`;
   if (type === 'object') {
@@ -123,6 +126,7 @@ const LOADER_CLASSES = {
   image: TinyImageLoader,
   video: TinyVideoLoader,
   audio: TinyAudioLoader,
+  fetch: TinyFetchLoader,
 };
 
 window.LOADER_CLASSES = LOADER_CLASSES;
@@ -145,6 +149,7 @@ const CUSTOM_EVENTS = [
   'srctransition',
   'cachehit',
   'cachemiss',
+  'mirror',
   'destroy',
 ];
 
@@ -230,8 +235,11 @@ function readConfig() {
     crossOrigin: byId('cfg-crossorigin').value || null,
     preload: byId('cfg-preload').value,
     animationControl: byId('cfg-animation').value,
+    responseType: byId('cfg-responsetype').value,
     stream: isChecked('cfg-stream'),
     progressive: isChecked('cfg-progressive'),
+    useHeadRequest: isChecked('cfg-head'),
+    mirror: isChecked('cfg-mirror'),
     autoReload: isChecked('cfg-autoreload'),
     autoplay: isChecked('cfg-autoplay'),
     loop: isChecked('cfg-loop'),
@@ -432,19 +440,22 @@ function renderMeta(entry) {
 
   // Extrai as novas propriedades de animação caso existam no metadata
   const hasAnim = meta.animation != null;
-  const frames = hasAnim ? meta.animation.frames : meta.frames || 0;
+  const frames = hasAnim ? meta.animation.frames : 0;
   const duration = hasAnim ? meta.animation.duration / 1000 : meta.duration || 0;
   const loopCount = hasAnim ? meta.animation.loopCount : '—';
+  const headerCount = meta.httpHeaders ? Object.keys(meta.httpHeaders).length : 0;
 
   const rows = [
     ['size', `${formatBytes(meta.size)} (${meta.size} B)`],
     ['loadTime', `${Number(meta.loadTime).toFixed(1)} ms`],
     ['fromCache', String(meta.fromCache)],
+    ['mirrored', String(loader.mirrored ?? false)],
     ['type', meta.type || '—'],
     ['dimensions', `${meta.width} × ${meta.height}`],
     ['frames', String(frames)],
     ['duration', duration > 0 ? `${Number(duration).toFixed(2)} s` : 'NaN'],
     ['loops', String(loopCount)],
+    ['headers', headerCount > 0 ? `${headerCount} header(s)` : '—'],
     ['original-src', element?.getAttribute('original-src') ?? '—'],
     ['element.src', element?.getAttribute('src')?.slice(0, 42) ?? '—'],
   ];
@@ -585,11 +596,15 @@ async function spawn(config) {
     autoReload: config.autoReload,
     stream: config.stream,
     progressive: config.progressive,
+    useHeadRequest: config.useHeadRequest,
+    mirror: config.mirror,
     cache: config.useCache ? ensureCache() : null,
   };
   if (kind === 'image') {
     options.decoding = 'async';
     options.animationControl = config.animationControl; // Paramêtro avançado de Animação
+  } else if (kind === 'fetch') {
+    options.responseType = config.responseType;
   } else {
     options.preload = config.preload;
     options.autoplay = config.autoplay;
@@ -623,7 +638,7 @@ async function loadInstance(id) {
   pushTimeline(entry, 'load() called');
   try {
     const loadPromise = entry.loader.load();
-    if (readConfig().autoMount) {
+    if (readConfig().autoMount && entry.kind !== 'fetch') {
       const stage = $('[data-role="stage"]', entry.card);
       stage.replaceChildren();
       entry.loader.mount(stage);
@@ -715,7 +730,8 @@ function updateLabCount() {
     `#${cold.id} → #${warm.id} · ` +
     `size Δ ${sizeDelta >= 0 ? '+' : ''}${sizeDelta} B · ` +
     `loadTime Δ ${timeDelta >= 0 ? '+' : ''}${timeDelta.toFixed(1)} ms · ` +
-    `fromCache ${cold.loader.metadata.fromCache} → ${warm.loader.metadata.fromCache}`;
+    `fromCache ${cold.loader.metadata.fromCache} → ${warm.loader.metadata.fromCache} · ` +
+    `mirrored ${cold.loader.mirrored} → ${warm.loader.mirrored}`;
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -735,11 +751,11 @@ function renderCacheStats() {
     cacheStatsEl.textContent = 'no live cache instance';
     return;
   }
-  const { size, refs, hits, misses, evictions } = sharedCache.stats;
+  const { size, bytes, refs, hits, misses, evictions, links } = sharedCache.stats;
   cacheStatsEl.textContent =
     `strategy=${sharedCache.strategy} · ttl=${sharedCache.ttl}ms · ` +
-    `entries=${size} · refs=${refs} · hits=${hits} · misses=${misses} · ` +
-    `evictions=${evictions}`;
+    `entries=${size} · bytes=${formatBytes(bytes)} · refs=${refs} · links=${links} · ` +
+    `hits=${hits} · misses=${misses} · evictions=${evictions}`;
 }
 
 /**
@@ -814,8 +830,42 @@ function pruneCache() {
   renderCache();
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   MIRROR REGISTRY
+   ══════════════════════════════════════════════════════════════════ */
+
+const mirrorRowsEl = $('#mirror-rows');
+const mirrorSummaryEl = $('#mirror-summary');
+
+/**
+ * Renders the in-flight download registry.
+ * @returns {void}
+ */
+function renderMirror() {
+  const entries = TinyMediaMirror.entries();
+  const { pending, mirrors } = TinyMediaMirror.stats;
+  mirrorSummaryEl.textContent = `${pending} pending · ${mirrors} mirror(s)`;
+  mirrorRowsEl.replaceChildren(
+    ...entries.map((record) => {
+      const row = document.createElement('tr');
+      const key = document.createElement('td');
+      key.textContent = record.key.length > 44 ? `…${record.key.slice(-42)}` : record.key;
+      key.title = record.key;
+      const count = document.createElement('td');
+      count.textContent = String(record.mirrors);
+      const settled = document.createElement('td');
+      settled.textContent = String(record.settled);
+      const age = document.createElement('td');
+      age.textContent = `${((Date.now() - record.startedAt) / 1000).toFixed(1)} s`;
+      row.append(key, count, settled, age);
+      return row;
+    }),
+  );
+}
+
 setInterval(() => {
   if (isChecked('cache-live')) renderCache();
+  renderMirror();
 }, 500);
 
 $('#btn-cache-refresh').addEventListener('click', renderCache);
@@ -885,6 +935,23 @@ $('#btn-spawn-pair').addEventListener('click', async () => {
   updateLabCount();
 });
 
+$('#btn-spawn-race').addEventListener('click', async () => {
+  const config = readConfig();
+  const resolved = buildSrc(config.src);
+
+  // Both loaders start before either finishes, so the second one attaches to the
+  // in-flight download through TinyMediaMirror instead of opening a new socket.
+  const [first, second] = await Promise.all([
+    spawn({ ...config, src: resolved }),
+    spawn({ ...config, src: resolved }),
+  ]);
+  if (!first || !second) return;
+
+  await Promise.all([loadInstance(first.id), loadInstance(second.id)]);
+  renderMirror();
+  updateLabCount();
+});
+
 $('#btn-load-all').addEventListener('click', () => {
   for (const id of instances.keys()) loadInstance(id);
 });
@@ -939,7 +1006,9 @@ window.addEventListener('unhandledrejection', (event) => {
 byId('cfg-src').value = '/temp/test.mp4';
 updateSlowPreview();
 renderCache();
+renderMirror();
 log('success', 'Harness ready', {
   TinyMediaCache: typeof TinyMediaCache,
   TinyMediaProgress: typeof TinyMediaProgress,
+  TinyMediaMirror: typeof TinyMediaMirror,
 });

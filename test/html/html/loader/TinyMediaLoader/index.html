@@ -56,6 +56,9 @@
                   <optgroup label="Audio">
                     <option value="/temp/test.mp3">audio · test.mp3</option>
                   </optgroup>
+                  <optgroup label="JSON (TinyFetchLoader)">
+                    <option value="/package.json">package.json</option>
+                  </optgroup>
                   <optgroup label="External (throttle bypassed)">
                     <option value="https://picsum.photos/seed/tiny/800/450">picsum 800×450</option>
                     <option
@@ -82,6 +85,7 @@
                   <option value="image">image</option>
                   <option value="video">video</option>
                   <option value="audio">audio</option>
+                  <option value="fetch">fetch</option>
                 </select>
               </div>
               <div class="field">
@@ -120,6 +124,15 @@
                   <option value="none">none</option>
                 </select>
               </div>
+              <div class="field">
+                <label for="cfg-responsetype">responseType (fetch)</label>
+                <select id="cfg-responsetype">
+                  <option value="blob" selected>blob</option>
+                  <option value="arraybuffer">arraybuffer</option>
+                  <option value="text">text</option>
+                  <option value="json">json</option>
+                </select>
+              </div>
             </div>
 
             <div class="toggles">
@@ -130,6 +143,16 @@
                 ><input type="checkbox" id="cfg-progressive" checked /><span
                   >progressive</span
                 ></label
+              >
+              <label
+                class="switch"
+                title="Send a HEAD request before the GET to read the headers early"
+                ><input type="checkbox" id="cfg-head" /><span>useHeadRequest</span></label
+              >
+              <label
+                class="switch"
+                title="Share a single download between loaders that request the same URL"
+                ><input type="checkbox" id="cfg-mirror" checked /><span>mirror</span></label
               >
               <label class="switch"
                 ><input type="checkbox" id="cfg-autoreload" checked /><span>autoReload</span></label
@@ -176,6 +199,14 @@
             <div class="btn-row">
               <button type="button" class="btn btn--primary" id="btn-spawn">Spawn</button>
               <button type="button" class="btn" id="btn-spawn-pair">Spawn ×2 (cold + warm)</button>
+              <button
+                type="button"
+                class="btn"
+                id="btn-spawn-race"
+                title="Spawn two loaders at the same time to exercise TinyMediaMirror"
+              >
+                Spawn ×2 (race / mirror)
+              </button>
               <button type="button" class="btn" id="btn-load-all">load() all</button>
               <button type="button" class="btn btn--danger" id="btn-abort-all">abort() all</button>
             </div>
@@ -244,10 +275,38 @@
                     <th>key</th>
                     <th>size</th>
                     <th>refs</th>
+                    <th>parent</th>
                     <th>objectUrl</th>
                   </tr>
                 </thead>
                 <tbody id="cache-rows"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════════════ MIRROR REGISTRY ══════════════════ -->
+        <section class="panel">
+          <header class="panel__head">
+            <h2>Mirror registry</h2>
+            <span class="badge badge--muted" id="mirror-summary">—</span>
+          </header>
+          <div class="panel__body">
+            <p class="hint">
+              Concurrent loads of the same URL share a single download. Use
+              <strong>Spawn ×2 (race / mirror)</strong> to populate this table.
+            </p>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>key</th>
+                    <th>mirrors</th>
+                    <th>settled</th>
+                    <th>age</th>
+                  </tr>
+                </thead>
+                <tbody id="mirror-rows"></tbody>
               </table>
             </div>
           </div>

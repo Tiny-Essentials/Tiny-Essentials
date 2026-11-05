@@ -150,15 +150,37 @@ class TinyFetchLoader extends TinyMediaLoader {
   }
 
   /**
-   * Downloads the file and parses the payload.
+   * Downloads the file, consulting the shared cache first.
    * @protected
    * @returns {Promise<void>} Resolves once the payload is ready.
    */
   async _startLoad() {
+    const cached = this._acquireFromCache();
+    if (cached) {
+      this.emit('cachehit', cached);
+      this.#blob = cached.blob;
+      await this.#parse(cached.blob);
+      return;
+    }
+
     const blob = await this._downloadStream(this.src);
     this.#blob = blob;
     this._setResourceSize(blob.size);
 
+    if (this.cache) {
+      this._cacheBlob(blob);
+    }
+
+    await this.#parse(blob);
+  }
+
+  /**
+   * Converts the raw blob into the format requested by `responseType`.
+   * @param {Blob} blob - The downloaded or cached payload.
+   * @returns {Promise<void>} Resolves once `data` is populated.
+   * @throws {SyntaxError} If `responseType` is `'json'` and the body is not valid JSON.
+   */
+  async #parse(blob) {
     if (this.#responseType === 'arraybuffer') {
       this.#data = await blob.arrayBuffer();
     } else if (this.#responseType === 'text') {
