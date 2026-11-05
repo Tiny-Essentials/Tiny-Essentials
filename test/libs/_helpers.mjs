@@ -143,6 +143,21 @@ export class TestRunner {
   }
 
   /**
+   * Asserts that a promise rejects.
+   * @param {() => Promise<unknown>} fn - The function expected to reject.
+   * @param {string} [message] - Optional description.
+   * @returns {Promise<boolean>}
+   */
+  async throwsAsync(fn, message = 'Expected function to reject') {
+    try {
+      await fn();
+      return this.ok(false, message);
+    } catch {
+      return this.ok(true, message);
+    }
+  }
+
+  /**
    * Prints a summary and returns the amount of failures.
    * @returns {number}
    */

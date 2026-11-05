@@ -248,6 +248,12 @@ import TinyMediaLoader from './libs/html/loader/TinyMediaLoader.mjs';
 import TinyImageLoader from './libs/html/loader/formats/TinyImageLoader.mjs';
 import TinyFetchLoader from './libs/html/loader/formats/TinyFetchLoader.mjs';
 import TinyMediaCache from './libs/html/loader/utils/TinyMediaCache.mjs';
+import {
+  getYouTubeThumbnailUrl,
+  fetchYouTubeOEmbed,
+  extractYouTubeVideoId,
+  assertYouTubeOEmbedResponse,
+} from './basics/media/youtube.mjs';
 // import TinyHtmlElems from './libs/TinyHtml/index.mjs';
 
 export {
@@ -324,6 +330,10 @@ export {
   ColorSafeStringify,
   TinyPromiseQueue,
   TinyLevelUp,
+  getYouTubeThumbnailUrl,
+  fetchYouTubeOEmbed,
+  extractYouTubeVideoId,
+  assertYouTubeOEmbedResponse,
   createPluginIdChecker,
   verifyPluginSignature,
   signPluginIdentity,

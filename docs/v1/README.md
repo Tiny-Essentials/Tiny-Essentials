@@ -22,6 +22,7 @@ Here, you can navigate through different sections of the project. Below are the 
 - 📺 **[FullScreen](./basics/fullScreen.md)** — A complete fullscreen API manager with detection, event handling, and cross-browser compatibility.
 - 🧱 **[Collision](./basics/collision.md)** — Full-featured rectangle collision detection system with directional analysis, depth calculation, and center offset metrics.
 - 🎵 **[MediaContent](./basics/mediaContent.md)** — A comprehensive media processing module for downloading audio, extracting rich ID3 metadata, and managing image blobs for album art.
+- 🎬 **[YouTube](./basics/youtube.md)** — Extract video ids from any YouTube URL, build thumbnail URLs for every quality, and fetch/validate the official oEmbed metadata.
 - 📦 **[BrowserDetector](./basics/browserDetector.md)** — A multi-layered JavaScript utility for identifying the user's web browser and rendering engine.
 - 🔐 **[Crypto](./basics/crypto.md)** — A lightweight utility for generating cryptographic hashes (e.g., SHA-256) using the Web Crypto API.
 - 🔁 **[PromiseUtils](./basics/promiseUtils.md)** — Promise helpers such as `waitForTrue` and `createSingletonTask` for polling and single-flight async tasks.

@@ -44,6 +44,7 @@ import testPushRouter from './libs/TinyPushRouter.mjs';
 import testMediaLoader from './libs/TinyMediaLoader.mjs';
 import testMediaBinary from './libs/TinyMediaBinary.mjs';
 import testMediaCache from './libs/TinyMediaCache.mjs';
+import testYoutube from './libs/youtube.mjs';
 
 new TinyPkgExportValidator('../package.json', '../')
   .execCommandTester(
@@ -92,6 +93,7 @@ new TinyPkgExportValidator('../package.json', '../')
       mediaLoader: testMediaLoader,
       mediaBinary: testMediaBinary,
       mediaCache: testMediaCache,
+      youtube: testYoutube,
     },
     process.argv,
   )

@@ -98,8 +98,18 @@ import {
   isBrowserAgent,
 } from './browserDetector.mjs';
 import { jsonFilter, jsonFilterRecursive, jsonFilterByKeys } from './jsonFilter.mjs';
+import {
+  getYouTubeThumbnailUrl,
+  fetchYouTubeOEmbed,
+  extractYouTubeVideoId,
+  assertYouTubeOEmbedResponse,
+} from './media/youtube.mjs';
 
 export {
+  getYouTubeThumbnailUrl,
+  fetchYouTubeOEmbed,
+  extractYouTubeVideoId,
+  assertYouTubeOEmbedResponse,
   isAnyClassInstance,
   isClass,
   isClassInstance,

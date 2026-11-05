@@ -33,6 +33,7 @@
     "test:mjs:utils": "node test/index.mjs utils",
     "test:mjs:inventory": "node test/index.mjs inventory",
     "test:mjs:media": "node test/index.mjs media",
+    "test:mjs:youtube": "node test/index.mjs youtube",
     "test:mjs:router": "node test/index.mjs router",
     "test:mjs:ipfshasher": "node test/index.mjs ipfsHasher",
     "test:mjs:browsermonitor": "node test/index.mjs browserMonitor",
@@ -288,6 +289,11 @@
       "types": "./dist/v1/basics/jsonFilter.d.mts",
       "require": "./dist/v1/basics/jsonFilter.cjs",
       "import": "./dist/v1/basics/jsonFilter.mjs"
+    },
+    "./basics/media/youtube": {
+      "types": "./dist/v1/basics/media/youtube.d.mts",
+      "require": "./dist/v1/basics/media/youtube.cjs",
+      "import": "./dist/v1/basics/media/youtube.mjs"
     },
     "./fileManager": {
       "types": "./dist/v1/fileManager/index.d.mts",

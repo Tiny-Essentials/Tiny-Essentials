@@ -64,6 +64,7 @@ Direct access to smaller utilities:
 * `basics/promiseUtils`
 * `basics/browserDetector`
 * `basics/jsonFilter`
+* `basics/media/youtube`
 
 Direct access to file utilities:
 

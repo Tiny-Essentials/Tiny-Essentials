@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Utils | Test Suite</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <header>
+        <div class="badge">QA Environment</div>
+        <h1>YouTube Utils <span class="subtitle">Test Suite</span></h1>
+        <p>
+          Exercises <code>extractYouTubeVideoId</code>, <code>getYouTubeThumbnailUrl</code>,
+          <code>fetchYouTubeOEmbed</code> and <code>assertYouTubeOEmbedResponse</code>.
+        </p>
+      </header>
+
+      <main>
+        <section class="control-panel">
+          <div class="input-wrapper">
+            <label for="video-input">Video id or URL</label>
+            <textarea
+              id="video-input"
+              placeholder="dQw4w9WgXcQ or https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+              spellcheck="false"
+            ></textarea>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="quality-select">Thumbnail quality</label>
+              <select id="quality-select">
+                <option value="default">default</option>
+                <option value="mqdefault">mqdefault</option>
+                <option value="hqdefault" selected>hqdefault</option>
+                <option value="sddefault">sddefault</option>
+                <option value="maxresdefault">maxresdefault</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="example-select">Load example</label>
+              <select id="example-select">
+                <option value="" disabled selected>Select an example…</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="button-group">
+            <button id="btn-extract" class="btn-primary">Extract ID</button>
+            <button id="btn-thumbnail" class="btn-primary">Build Thumbnail URL</button>
+            <button id="btn-oembed" class="btn-primary">Fetch oEmbed</button>
+            <button id="btn-validate" class="btn-secondary">Validate Payload</button>
+            <button id="btn-clear" class="btn-ghost">Clear</button>
+          </div>
+        </section>
+
+        <section class="output-panel">
+          <div class="panel-header">
+            <span>Visual Console</span>
+            <div class="status-indicator" id="status-dot"></div>
+          </div>
+          <div class="console-content">
+            <pre id="console-output">Ready for execution...</pre>
+          </div>
+        </section>
+
+        <section class="output-panel" id="preview-panel" hidden>
+          <div class="panel-header">
+            <span>Thumbnail Preview</span>
+          </div>
+          <div class="preview-content">
+            <img id="thumbnail-preview" alt="YouTube thumbnail preview" />
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="ui-test.js"></script>
+  </body>
+</html>
