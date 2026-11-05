@@ -139,6 +139,17 @@ class TinyFetchLoader extends TinyMediaLoader {
   }
 
   /**
+   * Returns a `fetch`-compatible function backed by this loader.
+   * @returns {TinyFetch} A function with the same signature as `fetch`.
+   */
+  exportFetch() {
+    const self = this;
+    return async function tinyFetch(input, init) {
+      return self._fetch(input, init);
+    };
+  }
+
+  /**
    * Downloads the file and parses the payload.
    * @protected
    * @returns {Promise<void>} Resolves once the payload is ready.

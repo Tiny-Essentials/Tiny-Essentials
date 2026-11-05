@@ -353,6 +353,9 @@ class TinyMediaLoader extends TypedEmitter {
     if (typeof mirror !== 'boolean') {
       throw new TypeError('The "mirror" option must be a boolean.');
     }
+    if (typeof autoReload !== 'boolean') {
+      throw new TypeError('The "autoReload" option must be a boolean.');
+    }
 
     super();
     const expectedTag = /** @type {typeof TinyMediaLoader} */ (this.constructor).tagName;
@@ -361,7 +364,7 @@ class TinyMediaLoader extends TypedEmitter {
     }
     this.#src = src ?? element?.getAttribute('src') ?? '';
     this.#timeout = timeout;
-    this.#autoReload = Boolean(autoReload);
+    this.#autoReload = autoReload;
     this.#originalSrc = originalSrc;
 
     if (
