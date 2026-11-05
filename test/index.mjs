@@ -41,6 +41,9 @@ import testFs from './libs/fs.mjs';
 import testNotificationAdapter from './libs/TinyNotificationAdapter.mjs';
 import testPushPayload from './libs/TinyPushPayload.mjs';
 import testPushRouter from './libs/TinyPushRouter.mjs';
+import testMediaLoader from './libs/TinyMediaLoader.mjs';
+import testMediaBinary from './libs/TinyMediaBinary.mjs';
+import testMediaCache from './libs/TinyMediaCache.mjs';
 
 new TinyPkgExportValidator('../package.json', '../')
   .execCommandTester(
@@ -86,6 +89,9 @@ new TinyPkgExportValidator('../package.json', '../')
       notificationAdapter: testNotificationAdapter,
       pushPayload: testPushPayload,
       pushRouter: testPushRouter,
+      mediaLoader: testMediaLoader,
+      mediaBinary: testMediaBinary,
+      mediaCache: testMediaCache,
     },
     process.argv,
   )
