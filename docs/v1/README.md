@@ -119,6 +119,13 @@ Here, you can navigate through different sections of the project. Below are the 
 - 📻 **[TinyRadioFm](./libs/media/TinyRadioFm.md)** — It is designed to handle complex playback sequences, including music and voice playlists, scheduled timeline mutations, and custom content injections, all while maintaining absolute reproducibility through a mathematical seed.
 - ⏯️ **[TinyMediaPlayer](./libs/media/TinyMediaPlayer.md)** — A universal media player architecture utilizing an adapter pattern to orchestrate multiple platform APIs, featuring robust playlist management, playback controls, and weighted random selection.
 
+#### 2.9.1. **`libs/html/loader`**
+
+- 📦 **[TinyMediaLoader](./libs/html/loader/TinyMediaLoader.md)** — The abstract base class behind every media loader, with a full state machine, streaming progress, shared cache, download mirroring and a typed event surface.
+- 🖼️ **[TinyImageLoader](./libs/html/loader/TinyImageLoader.md)** — Image loader with intrinsic size helpers, streaming and a complete animation engine for `GIF`, `APNG`, `WebP` and `AVIF`.
+- 📥 **[TinyFetchLoader](./libs/html/loader/TinyFetchLoader.md)** — Generic file loader that reuses the media pipeline to download `blob`, `arraybuffer`, `text` or `json` payloads.
+- 🗄️ **[TinyMediaCache](./libs/html/loader/TinyMediaCache.md)** — Shared, reference-counted blob cache with TTL, byte budgets and parent/child links.
+
 ### 2.10. **`libs/tools`**
 
 - 🛠️ **[TinyDebugger](./libs/tools/TinyDebugger.md)** — A lightweight, event-driven debugging utility designed to wrap standard `console` methods. It provides enhanced features such as custom prefixes, color support, and the ability to emit events whenever a log occurs, making it perfect for complex applications where you might want to redirect logs to an external service or a UI component.
@@ -208,6 +215,7 @@ Here, you can navigate through different sections of the project. Below are the 
 #### 4.1. **`webTemplates/bootstrap/`**
 
 - 🖼️ **[BootstrapDialogs](./webTemplates/bootstrap/5.3/html/BootstrapDialogs.md)** — An asynchronous JavaScript utility designed to replace native browser dialogs with customizable Bootstrap 5 Modals.
+- 🎨 **[DeepStrap](./webTemplates/bootstrap/5.3/DeepStrap.md)** — A token-driven Bootstrap 5.3 theme with light/dark palettes, CSS custom properties and optional plugins (ghost buttons, contrast buttons, cube icon, sphere pulse and background grid).
 
 #### 4.2. **`webTemplates/vite/`**
 

@@ -228,6 +228,9 @@ To ensure a valid custom message object, you must provide all the following keys
 | `itemValid` | Message for a successful check. |
 | `itemInvalid` | Message for a failed check. |
 | `itemMissing` | Message showing the missing path. |
+| `itemSkipped` | Message for a `null` target (excluded subpath). |
+| `itemPattern` | Message for a successful wildcard match. |
+| `itemInvalidTarget` | Message for an invalid target, with the reason code. |
 | `successHeader` | Final message on total success. |
 | `failureHeader` | Final message on failure. |
 | `errorLoad` | Error if `package.json` isn't loaded. |
@@ -271,8 +274,60 @@ FAILURE: 1 export(s) are missing or invalid.
 ## ⚠️ Error Handling
 
 The validator provides specific feedback for common issues:
+
 1. **`errorLoad`**: Attempted to validate before calling `.start()`.
 2. **`noExports`**: The `package.json` exists, but the `"exports"` field is missing.
 3. **`errorNotFound`**: The file at `packageJsonPath` does not exist.
 4. **`errorParse`**: The `package.json` file contains syntax errors.
 5. **`errorUnexpected`**: Any other error (e.g., permission issues).
+
+---
+
+## 🧭 Node.js `exports` rules
+
+Starting with version 1.29.2 the validator follows the [official Node.js documentation](https://nodejs.org/api/packages.html#package-entry-points) for the `exports` field.
+
+### Wildcard targets
+
+A target that contains `*` is expanded against the file system. The validation succeeds when at least one file matches the pattern:
+
+```json
+{
+  "exports": {
+    "./css/*.css": "./dist/v1/css/*.css"
+  }
+}
+```
+
+### `null` targets
+
+A `null` target excludes a subpath from a broader pattern. It is reported as `itemSkipped` and never fails the validation:
+
+```json
+{
+  "exports": {
+    "./internal/*": null
+  }
+}
+```
+
+### Fallback arrays
+
+An array is treated as an ordered list of fallbacks. Every entry is validated, and an empty array is reported as `EMPTY_ARRAY`.
+
+### Rejected targets
+
+| Reason | Description |
+| :--- | :--- |
+| `EMPTY_TARGET` | The target is an empty string. |
+| `INVALID_SEGMENT` | The target contains `\`, `.` or `..` segments. |
+| `INVALID_CHARACTER` | The target contains `?` or `#`. |
+| `URL_SCHEME_NOT_ALLOWED` | The target looks like a URL (`node:fs`, `https://…`). |
+| `TARGET_NOT_RELATIVE` | The target does not start with `./`. |
+| `INVALID_PATTERN` | The target contains `**`. |
+| `PATTERN_NO_MATCH` | The wildcard pattern matched no file. |
+| `DIRECTORY_NOT_FOUND` | The directory that holds the pattern does not exist. |
+| `NESTED_SUBPATH_KEY` | A subpath key was declared inside another subpath. |
+| `INVALID_SUBPATH_KEY` | A key starts with `.` but is not `.` or `./…`. |
+| `INVALID_CONDITION` | A condition key contains `,`, `/` or `\`. |
+| `EMPTY_KEY` | A key is an empty string. |

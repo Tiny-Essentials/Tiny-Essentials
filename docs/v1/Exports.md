@@ -21,6 +21,8 @@ These are pre-built stylesheets that can be directly imported:
 import "tiny-essentials/css/TinyNotify.min.css";
 ```
 
+> 💡 The whole `css/` folder is exposed through the `./css/*.css` wildcard, so any new stylesheet shipped in `dist/v1/css` is importable without a `package.json` change.
+
 ---
 
 ## 🏠 Root Entrypoints
@@ -228,6 +230,22 @@ Each library can be imported separately:
   * `libs/media/TinyMediaPlayer/docs/SoundCloudWidget`
   * `libs/media/TinyRadioFm`
 
+* **Media Loaders 🎞️**
+
+  * `libs/html/loader/TinyMediaLoader`
+  * `libs/html/loader/formats/TinyImageLoader`
+  * `libs/html/loader/formats/TinyFetchLoader`
+  * `libs/html/loader/utils/TinyMediaCache`
+  * `libs/html/loader/utils/TinyMediaProgress`
+  * `libs/html/loader/utils/TinyMediaMirror`
+  * `libs/html/loader/utils/TinyBufferReader`
+  * `libs/html/loader/utils/TinyIsoBox`
+  * `libs/html/loader/probe/TinyImageProbe`
+  * `libs/html/loader/beta/formats/TinyContentLoader` (BETA)
+  * `libs/html/loader/beta/formats/TinyAudioLoader` (BETA)
+  * `libs/html/loader/beta/formats/TinyVideoLoader` (BETA)
+  * `libs/html/loader/beta/probe/TinyMediaProbe` (BETA)
+
 * **HTML Helpers 🧩**
 
   * `libs/html/TinyHtml`
@@ -310,8 +328,20 @@ Each library can be imported separately:
 ### Bootstrap 5.3 🅱️
 
 * `webTemplates/bootstrap/5.3/html/BootstrapDialogs`
-* `webTemplates/bootstrap/5.3/scss/input/Placeholder-Colors-Fix.scss`
-* `webTemplates/bootstrap/5.3/scss/spacing/Spacing-Plus.scss`
+* `webTemplates/bootstrap/5.3/scss/*` (wildcard)
+
+> 💡 The whole `scss/` folder is exposed through the `./webTemplates/bootstrap/5.3/scss/*` wildcard, so every partial is importable without a `package.json` change.
+
+**Theme (DeepStrap)**
+
+* `webTemplates/bootstrap/5.3/scss/themes/deepstrap/theme`
+* `webTemplates/bootstrap/5.3/scss/background/background-grid`
+* `webTemplates/bootstrap/5.3/scss/components/buttons/buttons-ghost`
+* `webTemplates/bootstrap/5.3/scss/components/buttons/buttons-contrast`
+* `webTemplates/bootstrap/5.3/scss/components/icon/cube-icon`
+* `webTemplates/bootstrap/5.3/scss/components/icon/sphere-pulse`
+* `webTemplates/bootstrap/5.3/scss/input/placeholder-colors-fix`
+* `webTemplates/bootstrap/5.3/scss/spacing/spacing-plus`
 
 ### Vite 7.3 ⚡
 
