@@ -140,6 +140,10 @@ addModule(1, './src/v1/build/TinyOPFSFileSystem.mjs', 'TinyOPFSFileSystem', true
 addModule(1, './src/v1/build/TinyStorageBucketFileSystem.mjs', 'TinyStorageBucketFileSystem', true);
 addModule(1, './src/v1/build/TinyNotificationAdapter.mjs', 'TinyNotificationAdapter', true);
 addModule(1, './src/v1/build/TinyPushManager.mjs', 'TinyPushManager', true);
+addModule(1, './src/v1/build/TinyFetchLoader.mjs', 'TinyFetchLoader', true);
+addModule(1, './src/v1/build/TinyImageLoader.mjs', 'TinyImageLoader', true);
+addModule(1, './src/v1/build/TinyMediaCache.mjs', 'TinyMediaCache', true);
+addModule(1, './src/v1/build/TinyMediaLoader.mjs', 'TinyMediaLoader', true);
 
 /**
  * Recursively scans the source directory for LICENSE files and copies them to the dist directory.
