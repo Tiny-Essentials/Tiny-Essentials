@@ -185,7 +185,11 @@ const testMediaBinary = async () => {
   p.throws(() => new TinyImageProbe('', 0), 'Rejects an invalid maxBytes');
   const emptyProbe = new TinyImageProbe();
   p.throws(() => emptyProbe.push('nope'), 'push() validates the chunk');
-  p.equal(emptyProbe.push(new Uint8Array([0, 1, 2])), null, 'Returns null while the header is short');
+  p.equal(
+    emptyProbe.push(new Uint8Array([0, 1, 2])),
+    null,
+    'Returns null while the header is short',
+  );
   emptyProbe.close();
   p.equal(emptyProbe.push(pngHeader(1, 1)), null, 'Stays closed after close()');
   p.equal(emptyProbe.finalize(), null, 'finalize() is null for a static image');

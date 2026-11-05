@@ -1,3 +1,3 @@
-import TinyMediaLoader from "../libs/html/loader/TinyMediaLoader.mjs";
+import TinyMediaLoader from '../libs/html/loader/TinyMediaLoader.mjs';
 
 export { TinyMediaLoader };

@@ -1,3 +1,3 @@
-import TinyImageLoader from "../libs/html/loader/formats/TinyImageLoader.mjs";
+import TinyImageLoader from '../libs/html/loader/formats/TinyImageLoader.mjs';
 
 export { TinyImageLoader };
