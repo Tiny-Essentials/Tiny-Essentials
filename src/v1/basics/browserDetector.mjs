@@ -29,7 +29,25 @@ const doc = typeof document !== 'undefined' ? document : null;
  * @property {boolean} isBlink - True if the Blink engine is detected.
  */
 
-const VALID_BROWSERS = ['chrome', 'firefox', 'ie', 'edge', 'safari', 'opera', 'yandex', 'other'];
+/**
+ * Canonical list of every browser key produced by the detector.
+ * Declared as a readonly array so iteration never widens to `string`.
+ * @type {readonly BrowserDetected[]}
+ */
+const BROWSER_KEYS = Object.freeze([
+  'chrome',
+  'firefox',
+  'ie',
+  'edge',
+  'safari',
+  'opera',
+  'yandex',
+  'other',
+]);
+
+/**
+ * @typedef {Record<BrowserDetected, number>} BrowserPingMap
+ */
 
 /**
  * Detects the browser name by parsing the `navigator.userAgent` string.
@@ -156,7 +174,7 @@ export function getDuckTyping() {
  * Aggregates detection results from multiple methods to provide a count of "pings" per browser.
  *
  * @param {BrowserDetected[]} [disable=[]] An array of browser names to exclude from the count.
- * @returns {Object<BrowserDetected, number>} An object where keys are browser names and values are their detection counts.
+ * @returns {BrowserPingMap} An object where keys are browser names and values are their detection counts.
  * @throws {TypeError} If the `disable` argument is not an array or contains invalid browser names.
  */
 export function getBrowserPings(disable = []) {
@@ -166,11 +184,12 @@ export function getBrowserPings(disable = []) {
   }
 
   for (const browser of disable) {
-    if (!VALID_BROWSERS.includes(browser)) {
+    if (!BROWSER_KEYS.includes(browser)) {
       throw new TypeError(`Invalid browser name provided in disable array: ${browser}`);
     }
   }
 
+  /** @type {BrowserPingMap} */
   const browsers = {
     chrome: 0,
     firefox: 0,
@@ -236,9 +255,7 @@ export function browserIs(disable = []) {
   const pings = getBrowserPings(disable);
 
   // Returns the key with the maximum value in the pings object
-  // @ts-ignore
-  return Object.keys(pings).reduce((highest, current) =>
-    // @ts-ignore
+  return BROWSER_KEYS.reduce((highest, current) =>
     pings[current] > pings[highest] ? current : highest,
   );
 }

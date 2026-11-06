@@ -353,12 +353,18 @@ export function getElsCollDetails(rect1, rect2) {
   depth.right = overlapRight;
 
   // Dirs
+
+  /**
+   * @param {Record<Dirs, number>} record - The direction-keyed record to convert.
+   * @returns {[Dirs, number][]} The record entries with keys narrowed to `Dirs`.
+   */
+  const getDirEntries = (record) => /** @type {[Dirs, number][]} */ (Object.entries(record));
+
   /**
    * Detect the direction with the smallest positive overlap (entry point)
    * @type {[Dirs, number][]}
    */
-  // @ts-ignore
-  const entries = Object.entries(depth)
+  const entries = getDirEntries(depth)
     .filter(([, val]) => val > 0)
     .sort((a, b) => a[1] - b[1]);
 
