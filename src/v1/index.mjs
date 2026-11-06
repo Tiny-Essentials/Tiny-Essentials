@@ -73,6 +73,9 @@ import {
   readFileBlob,
   readBase64Blob,
   fetchText,
+  fetchBlob,
+  loadImage,
+  trackFetchProgress,
 } from './basics/html.mjs';
 import TinyDragDropDetector from './libs/html/drag/TinyDragDropDetector.mjs';
 
@@ -340,6 +343,9 @@ export {
   isClass,
   isAnyClassInstance,
   isClassInstance,
+  fetchBlob,
+  loadImage,
+  trackFetchProgress,
   isValidGlob,
   compileGlob,
   compileGlobRegExp,
