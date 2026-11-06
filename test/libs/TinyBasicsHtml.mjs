@@ -178,10 +178,17 @@ const testBasicsHtml = async () => {
     return new Response('binary', { headers: { 'content-type': 'application/octet-stream' } });
   };
 
-  t.deepEqual(await fetchJson('https://example.com/a.json'), { hello: 'world' }, 'fetchJson parses');
+  t.deepEqual(
+    await fetchJson('https://example.com/a.json'),
+    { hello: 'world' },
+    'fetchJson parses',
+  );
   await t.throwsAsync(() => fetchJson(5), 'fetchJson rejects a non-string url');
   await t.throwsAsync(() => fetchJson('https://example.com/a.json', 5), 'Rejects bad options');
-  await t.throwsAsync(() => fetchJson('https://example.com/a.json', {}, 5), 'Rejects bad onProgress');
+  await t.throwsAsync(
+    () => fetchJson('https://example.com/a.json', {}, 5),
+    'Rejects bad onProgress',
+  );
 
   const text = await fetchText('https://example.com/a.txt');
   t.equal(text, 'plain text', 'fetchText returns the body');

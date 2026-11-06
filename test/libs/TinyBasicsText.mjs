@@ -33,7 +33,11 @@ const testBasicsText = async () => {
     match.toUpperCase(),
   );
   t.equal(replaced, 'Hello @A and @B', 'Replaces every match asynchronously');
-  t.equal(await asyncReplace('abc', /x/g, async () => 'y'), 'abc', 'Keeps the string when nothing matches');
+  t.equal(
+    await asyncReplace('abc', /x/g, async () => 'y'),
+    'abc',
+    'Keeps the string when nothing matches',
+  );
   await t.throwsAsync(() => asyncReplace(5, /x/g, async () => ''), 'Rejects a non-string input');
   await t.throwsAsync(() => asyncReplace('a', 'x', async () => ''), 'Rejects a non-RegExp');
   await t.throwsAsync(() => asyncReplace('a', /a/g, 'nope'), 'Rejects a non-function callback');
@@ -46,7 +50,11 @@ const testBasicsText = async () => {
   t.equal(toTitleCase('HELLO'), 'Hello', 'toTitleCase lowercases the rest');
   t.throws(() => toTitleCase(5), 'toTitleCase validates the input');
 
-  t.equal(toTitleCaseLowerFirst('hello world'), 'hello World', 'toTitleCaseLowerFirst lowercases the first letter');
+  t.equal(
+    toTitleCaseLowerFirst('hello world'),
+    'hello World',
+    'toTitleCaseLowerFirst lowercases the first letter',
+  );
   t.throws(() => toTitleCaseLowerFirst(5), 'toTitleCaseLowerFirst validates the input');
 
   // -------------------------------------------------------------------

@@ -78,7 +78,11 @@ const testBasicsData = async () => {
 
   t.equal(isAnyClassInstance(new Map()), true, 'isAnyClassInstance accepts native instances');
   t.equal(isAnyClassInstance({}), false, 'isAnyClassInstance rejects plain objects');
-  t.equal(isAnyClassInstance(Object.create(null)), false, 'isAnyClassInstance rejects null prototypes');
+  t.equal(
+    isAnyClassInstance(Object.create(null)),
+    false,
+    'isAnyClassInstance rejects null prototypes',
+  );
 
   // -------------------------------------------------------------------
   // jsonFilter
@@ -121,11 +125,7 @@ const testBasicsData = async () => {
   section('jsonFilter - jsonFilterByKeys', '🔑');
   const data = { a: 1, b: 2, c: 3 };
   t.deepEqual(jsonFilterByKeys(data, ['a', 'c']), { a: 1, c: 3 }, 'Keeps the listed keys');
-  t.deepEqual(
-    jsonFilterByKeys(data, [['a', 1]]),
-    { a: 1 },
-    'Supports [key, value] tuples',
-  );
+  t.deepEqual(jsonFilterByKeys(data, [['a', 1]]), { a: 1 }, 'Supports [key, value] tuples');
   t.deepEqual(
     jsonFilterByKeys(data, [['a', (v) => v === 1]]),
     { a: 1 },

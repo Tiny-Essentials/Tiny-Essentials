@@ -29,7 +29,11 @@ const testBasicsArray = async () => {
   const source = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   const shuffled = shuffleArray([...source]);
   t.equal(shuffled.length, source.length, 'Keeps the array length');
-  t.deepEqual([...shuffled].sort((a, b) => a - b), source, 'Keeps every element');
+  t.deepEqual(
+    [...shuffled].sort((a, b) => a - b),
+    source,
+    'Keeps every element',
+  );
   t.equal(shuffleArray([]).length, 0, 'Handles empty arrays');
   t.throws(() => shuffleArray('nope'), 'Rejects non-array input');
 

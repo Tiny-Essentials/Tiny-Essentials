@@ -111,14 +111,8 @@ const testBasicsMediaContent = async () => {
   // -------------------------------------------------------------------
   section('mediaContent - validation', '✅');
   t.equal(valMediaContentMetadata({}), undefined, 'Accepts an empty metadata object');
-  t.throws(
-    () => valMediaContentMetadata({ title: 5 }),
-    'Rejects a non-string title',
-  );
-  t.throws(
-    () => valMediaContentMetadata({ genre: 'nope' }),
-    'Rejects a non-array genre',
-  );
+  t.throws(() => valMediaContentMetadata({ title: 5 }), 'Rejects a non-string title');
+  t.throws(() => valMediaContentMetadata({ genre: 'nope' }), 'Rejects a non-array genre');
   t.throws(
     () => valMediaContentMetadata({ picture: [{ format: 'image/png' }] }),
     'Rejects an invalid picture entry',
@@ -141,10 +135,7 @@ const testBasicsMediaContent = async () => {
   // parseMediaMetadata
   // -------------------------------------------------------------------
   section('mediaContent - parseMediaMetadata', '📼');
-  await t.throwsAsync(
-    () => parseMediaMetadata(5),
-    'Rejects an invalid source',
-  );
+  await t.throwsAsync(() => parseMediaMetadata(5), 'Rejects an invalid source');
   await t.throwsAsync(
     () => parseMediaMetadata('https://example.com/a.mp3', null),
     'Rejects invalid default metadata',
@@ -183,7 +174,10 @@ const testBasicsMediaContent = async () => {
   t.equal(track.artist, 'Unknown Artist', 'Uses the unknown artist fallback');
   t.equal(track.album, 'Default Album', 'Merges the default metadata');
   t.equal(track.duration, 10000, 'Reads the media duration in milliseconds');
-  t.ok(progress.some((event) => event.stage === 'COMPLETE'), 'Emits the COMPLETE stage');
+  t.ok(
+    progress.some((event) => event.stage === 'COMPLETE'),
+    'Emits the COMPLETE stage',
+  );
 
   console.log(`\n${color('gray', 'basics/mediaContent test-suite finished.')}`);
 
