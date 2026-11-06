@@ -134,7 +134,6 @@ class TinyHtmlTemplate extends TinyHtml {
    * @param {...string|string[]} tags
    * @returns {this}
    */
-  // @ts-ignore
   addClass(...tags) {
     for (const tag of tags.flat()) {
       if (typeof tag !== 'string')
@@ -150,7 +149,6 @@ class TinyHtmlTemplate extends TinyHtml {
    * @param {...string|string[]} tags
    * @returns {this}
    */
-  // @ts-ignore
   removeClass(...tags) {
     for (const tag of tags.flat()) {
       if (typeof tag !== 'string')
@@ -164,14 +162,17 @@ class TinyHtmlTemplate extends TinyHtml {
   /**
    * Toggles the presence of a given CSS class on the element.
    * @param {string} tag - The class name to toggle.
-   * @returns {this}
+   * @param {boolean} [force] - When `true`, adds the class; when `false`, removes it.
+   * @returns {boolean} `true` if the class is present after toggling.
    */
-  // @ts-ignore
-  toggleClass(tag) {
+  toggleClass(tag, force) {
     if (typeof tag !== 'string')
       throw new TypeError(`Class name must be a string. Got: ${typeof tag}`);
-    if (this.#classes.has(tag)) return this.removeClass(tag);
-    else return this.addClass(tag);
+    const shouldAdd = typeof force === 'boolean' ? force : !this.#classes.has(tag);
+    if (shouldAdd) this.#classes.add(tag);
+    else this.#classes.delete(tag);
+    this.#setClassString();
+    return shouldAdd;
   }
 
   /**
