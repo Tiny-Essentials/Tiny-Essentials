@@ -45,6 +45,14 @@ import testMediaLoader from './libs/TinyMediaLoader.mjs';
 import testMediaBinary from './libs/TinyMediaBinary.mjs';
 import testMediaCache from './libs/TinyMediaCache.mjs';
 import testYoutube from './libs/youtube.mjs';
+import testBasicsArray from './libs/TinyBasicsArray.mjs';
+import testBasicsBrowser from './libs/TinyBasicsBrowser.mjs';
+import testBasicsClock from './libs/TinyBasicsClock.mjs';
+import testBasicsData from './libs/TinyBasicsData.mjs';
+import testBasicsHtml from './libs/TinyBasicsHtml.mjs';
+import testBasicsMediaContent from './libs/TinyBasicsMediaContent.mjs';
+import testBasicsPromise from './libs/TinyBasicsPromise.mjs';
+import testBasicsText from './libs/TinyBasicsText.mjs';
 
 new TinyPkgExportValidator('../package.json', '../')
   .execCommandTester(
@@ -94,6 +102,14 @@ new TinyPkgExportValidator('../package.json', '../')
       mediaBinary: testMediaBinary,
       mediaCache: testMediaCache,
       youtube: testYoutube,
+      basicsArray: testBasicsArray,
+      basicsBrowser: testBasicsBrowser,
+      basicsClock: testBasicsClock,
+      basicsData: testBasicsData,
+      basicsHtml: testBasicsHtml,
+      basicsMediaContent: testBasicsMediaContent,
+      basicsPromise: testBasicsPromise,
+      basicsText: testBasicsText,
     },
     process.argv,
   )
