@@ -15,6 +15,9 @@ import {
   readFileBlob,
   readBase64Blob,
   fetchText,
+  fetchBlob,
+  loadImage,
+  trackFetchProgress,
 } from './html.mjs';
 import {
   extendObjType,
@@ -163,6 +166,9 @@ export {
   genFibonacciSeq,
   fetchJson,
   fetchText,
+  fetchBlob,
+  loadImage,
+  trackFetchProgress,
   readJsonBlob,
   readFileBlob,
   readBase64Blob,
