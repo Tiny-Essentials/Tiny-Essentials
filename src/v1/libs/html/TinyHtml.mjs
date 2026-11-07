@@ -6789,11 +6789,11 @@ class TinyHtml {
    * @template {TinyEventTarget|TinyEventTarget[]} T
    * @param {T} el - The target element.
    * @param {string|string[]} events - The event type.
-   * @param {EventListenerOrEventListenerObject|null} handler - The function originally bound to the event.
+   * @param {EventListenerOrEventListenerObject|null} [handler] - The function originally bound to the event.
    * @param {boolean|EventListenerOptions} [options] - Optional listener options.
    * @returns {T}
    */
-  static off(el, events, handler, options) {
+  static off(el, events, handler = null, options) {
     if (
       typeof events !== 'string' &&
       (!Array.isArray(events) || !events.every((event) => typeof event === 'string'))
@@ -6818,7 +6818,7 @@ class TinyHtml {
    * Removes a specific event listener from an element.
    *
    * @param {string|string[]} events - The event type.
-   * @param {EventListenerOrEventListenerObject|null} handler - The function originally bound to the event.
+   * @param {EventListenerOrEventListenerObject|null} [handler] - The function originally bound to the event.
    * @param {boolean|EventListenerOptions} [options] - Optional listener options.
    * @returns {this}
    */
