@@ -465,7 +465,7 @@ class TinyHtml {
    * @returns {Record<string,string>}
    */
   static parseStyle(styleText) {
-    /** @type {Record<string,string>}} */
+    /** @type {Record<string,string>} */
     const styles = {};
     styleText.split(';').forEach((rule) => {
       const [prop, value] = rule.split(':').map((s) => s && s.trim());
@@ -837,7 +837,7 @@ class TinyHtml {
    * Supports both elements and plain text.
    *
    * @param {string} htmlString - The HTML string to convert.
-   * @returns {TinyHtml<Element>} - A single HTMLElement or TextNode.
+   * @returns {TinyHtml<Element[]>} A TinyHtml instance wrapping the parsed nodes.
    */
   static createFromHTML(htmlString) {
     const template = document.createElement('template');
@@ -1642,6 +1642,7 @@ class TinyHtml {
    *
    * @param {TinyElement|Text|(TinyElement|Text)[]} elems - A single element or an array of elements (DOM or TinyHtml).
    * Returns the array of TinyHtml instances corresponding to the input elements.
+   * @returns {TinyHtml<TinyElement|Text>[]} The array of TinyHtml instances.
    */
   static toTinyElm(elems) {
     /** @param {(TinyElement|Text)[]} item */
@@ -1922,7 +1923,7 @@ class TinyHtml {
 
   /**
    * Returns a shallow copy of the internal data.
-   * @type {ElementDataStore}
+   * @returns {ElementDataStore} A shallow copy of the internal data store.
    */
   get _data() {
     return { ...this.#data };
@@ -2411,7 +2412,10 @@ class TinyHtml {
   /**
    * Normalize and validate nodes before DOM insertion.
    * Converts TinyNode-like structures or strings into DOM-compatible nodes.
-   * @type {(where: string, ...nodes: (AppendCheckerValues|Record<string, AppendCheckerValues>)[]) => (Node | string)[]}
+   *
+   * @param {string} where - The method name or context calling this.
+   * @param {...(AppendCheckerValues|Record<string, AppendCheckerValues>)} nodes - Nodes to normalize.
+   * @returns {(Node|string)[]} A flat list of validated nodes and strings.
    */
   static _appendChecker(where, ...nodes) {
     /** @type {(string | Node)[]} */
@@ -4275,7 +4279,7 @@ class TinyHtml {
    * Get a registered inverse values.
    *
    * @param {string} name - The detector name.
-   * @returns {string | null} The value if found, otherwise undefined.
+   * @returns {string | null} The value if found, otherwise `null`.
    */
   static getStyleEffectInverse(name) {
     if (typeof name !== 'string') throw new TypeError('The "name" parameter must be a string.');
@@ -4287,7 +4291,7 @@ class TinyHtml {
    *
    * @param {string} name - The detector name.
    * @param {string} value - The inverse value.
-   * @throws {TypeError} If fn is not a string.
+   * @throws {TypeError} If `value` is not a string.
    */
   static setStyleEffectInverse(name, value) {
     if (typeof name !== 'string') throw new TypeError('The "name" parameter must be a string.');
@@ -6138,14 +6142,9 @@ class TinyHtml {
 
         for (; i < max; i++) {
           const option = options[i];
-          /** @type {HTMLSelectElement|null} */
-          // @ts-ignore
-          const parentNode = option.parentNode;
-          if (
-            (option.selected || i === index) &&
-            !option.disabled &&
-            (!parentNode || !parentNode.disabled || parentNode.tagName !== 'OPTGROUP')
-          ) {
+          const parent = option.parentElement;
+          const inDisabledGroup = parent instanceof HTMLOptGroupElement && parent.disabled;
+          if ((option.selected || i === index) && !option.disabled && !inDisabledGroup) {
             const val = TinyHtml._valHooks.option.get(option);
             if (isSingle) return val;
             values.push(val);
@@ -6345,8 +6344,8 @@ class TinyHtml {
    * If a custom value hook exists, it will be used first.
    *
    * @param {TinyInputElement} el - Target element.
-   * @param {GetValueTypes} type - The type of value to retrieve ("string", "date", or "number").
    * @param {string} where - The context/method name using this validation.
+   * @param {GetValueTypes} type - The type of value to retrieve ("string", "date", or "number").
    * @returns {any} The raw value retrieved from the element or hook.
    */
   static _val(el, where, type) {
