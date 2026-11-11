@@ -745,7 +745,7 @@ class TinyPluginCore extends TinyDebugger {
    * @returns {string} The event name.
    */
   static get pluginsDestroyEventName() {
-    return TinyPluginCore.pluginsDestroyEventName;
+    return TinyPluginCore.#pluginsDestroyEventName;
   }
 
   /**
@@ -755,7 +755,7 @@ class TinyPluginCore extends TinyDebugger {
    */
   static set pluginsDestroyEventName(value) {
     if (typeof value !== 'string') throw new TypeError('pluginsDestroyEventName must be a string.');
-    TinyPluginCore.pluginsDestroyEventName = value;
+    TinyPluginCore.#pluginsDestroyEventName = value;
   }
 
   /** @type {Map<string, TinyPlugin<this, TinyPluginLayer, string, string, any[]>>} A map of registered plugins. */
