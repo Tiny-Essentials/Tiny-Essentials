@@ -21,7 +21,27 @@ const checkDestroy = createCheckDestroyed('TinyWebWorker');
  */
 
 /**
+ * Event map for {@link TinyWebWorker}.
+ *
+ * Besides the lifecycle events listed below, every message posted by the worker
+ * is re-emitted using its own `type` as the event name, receiving the
+ * `{ data, event }` payload.
+ *
+ * @typedef {{
+ *   'ww:Started': () => void,
+ *   'ww:Error': (payload: { error: ErrorEvent }) => void,
+ *   'ww:Terminated': () => void,
+ * }} TinyWebWorkerEvents
+ */
+
+/**
+ * A typed event emitter for {@link TinyWebWorker}.
+ * @typedef {import('../../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyWebWorkerEvents>} TinyWebWorkerEmitter
+ */
+
+/**
  * Manages Web Worker initialization, lifecycle, and strictly typed messaging.
+ * @implements {TinyWebWorkerEmitter}
  */
 class TinyWebWorker extends TinyPluginCore {
   /**

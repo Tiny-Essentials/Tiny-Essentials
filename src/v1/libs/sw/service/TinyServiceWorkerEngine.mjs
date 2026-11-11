@@ -488,6 +488,54 @@ const getResType = (code) => {
  */
 
 /**
+ * Event map for {@link TinyServiceWorkerEngine}.
+ *
+ * Every key is an event name emitted by the engine and the value is the
+ * signature of the listener. This is the shape expected by
+ * `ICustomEventEmitter<TinyServiceWorkerEngineEvents>`.
+ *
+ * @typedef {Object} TinyServiceWorkerEngineEvents
+ * @property {(payload: { event: ExtendableEvent, error: Error }) => void} installError - Emitted when the install phase fails.
+ * @property {(payload: { event: ExtendableEvent, error: Error }) => void} activateError - Emitted when the activate phase fails.
+ * @property {(payload: { event: ExtendableEvent, tag: string, error: any }) => void} installListenerError - Emitted when an install listener throws.
+ * @property {(payload: { event: ExtendableEvent, tag: string, error: any }) => void} activateListenerError - Emitted when an activate listener throws.
+ * @property {(payload: { event: ExtendableEvent }) => void} beforeActivated - Emitted before the activate phase runs.
+ * @property {(payload: { event: ExtendableEvent }) => void} afterActivated - Emitted after the activate phase completes.
+ * @property {(payload: { query: ClientQueryOptions }) => void} beforeClaim - Emitted before clients are claimed.
+ * @property {(payload: { query: ClientQueryOptions, clients: readonly Client[] }) => void} afterClaim - Emitted after clients are claimed.
+ * @property {(fetchObj: FetchObj) => void} beforeFetchPlugin - Emitted before a fetch plugin runs.
+ * @property {(fetchObj: FetchObj) => void} afterFetchPlugin - Emitted after a fetch plugin runs.
+ * @property {(payload: any) => void} beforeMessage - Emitted before a message listener runs.
+ * @property {(payload: any) => void} afterMessage - Emitted after a message listener runs.
+ * @property {(payload: any) => void} messageError - Emitted when a message listener throws.
+ * @property {(payload: { event: ExtendableEvent }) => void} beforeSkipWaiting - Emitted before skipWaiting is requested.
+ * @property {(payload: { event: ExtendableEvent }) => void} afterSkipWaiting - Emitted after skipWaiting is requested.
+ * @property {(payload: { event: ExtendableEvent, error: Error }) => void} skipWaitingError - Emitted when skipWaiting fails.
+ * @property {(payload: { event: ExtendableEvent, tag: string }) => void} beforeSync - Emitted before a sync handler runs.
+ * @property {(payload: { event: ExtendableEvent, tag: string }) => void} afterSync - Emitted after a sync handler runs.
+ * @property {(payload: { event: ExtendableEvent, tag: string, error: any }) => void} syncError - Emitted when a sync handler throws.
+ * @property {(payload: { event: ExtendableEvent }) => void} beforeUpdated - Emitted before the update check starts.
+ * @property {(payload: { event: ExtendableEvent }) => void} afterUpdated - Emitted after the update check completes.
+ * @property {(payload: { event: ExtendableEvent, error: Error }) => void} updateError - Emitted when the update check fails.
+ * @property {(payload: any) => void} fetchError - Emitted when a fetch response is an error.
+ * @property {(payload: { error: any, fetchObj: FetchObj }) => void} fetchGlobalError - Emitted when a global fetch listener throws.
+ * @property {(fetchObj: FetchObj) => void} fetchPluginError - Emitted when a fetch plugin throws.
+ * @property {(payload: { event: FetchEvent, request: Request, url: URL }) => void} fetchRequested - Emitted for every intercepted fetch.
+ * @property {(payload: { event: any, action: string|null, data: Record<string, any> }) => void} notificationclick - Emitted when a notification is clicked.
+ * @property {(payload: { event: any, data?: any }) => void} notificationclose - Emitted when a notification is closed.
+ * @property {(context: any) => void} push - Emitted for every push message.
+ * @property {(payload: { event: ExtendableEvent, error: Error }) => void} pushError - Emitted when a push handler fails.
+ * @property {(payload: { event: Event }) => void} pushsubscriptionchange - Emitted when the push subscription rotates.
+ * @property {(payload: { event: ExtendableEvent }) => void} waitingForActivation - Emitted when the install strategy is `manual`.
+ * @property {(payload: { event: ExtendableEvent }) => void} waitingForClaim - Emitted when the activate strategy is `manual`.
+ */
+
+/**
+ * A typed event emitter for {@link TinyServiceWorkerEngine}.
+ * @typedef {import('../../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyServiceWorkerEngineEvents>} TinyServiceWorkerEngineEmitter
+ */
+
+/**
  * A mock class to simulate NotificationEvent for messaging purposes.
  * @extends Event
  */
@@ -541,6 +589,7 @@ class MockNotificationEvent extends Event {
 
 /**
  * Manages the lifecycle and execution of modules based on the provided configuration.
+ * @implements {TinyServiceWorkerEngineEmitter}
  */
 class TinyServiceWorkerEngine extends TinyPluginCore {
   static #PUSH_TYPE = PUSH_TYPE;

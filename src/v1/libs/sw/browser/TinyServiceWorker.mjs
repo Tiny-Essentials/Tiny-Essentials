@@ -95,9 +95,34 @@ const postMessage = (message, transfer) => {
  */
 
 /**
+ * Event map for {@link TinyServiceWorker}.
+ *
+ * Every key is an event name emitted by the manager and the value is the
+ * signature of the listener. This is the shape expected by
+ * `ICustomEventEmitter<TinyServiceWorkerEvents>`.
+ *
+ * @typedef {{
+ *   'sw:NoSwControllerWarn': () => void,
+ *   'sw:DisplayModeChanged': (payload: { displayMode: 'twa' | 'standalone' | 'browser' }) => void,
+ *   'sw:BeforeInstallPrompt': (payload: { event: Event }) => void,
+ *   'sw:AppInstalled': () => void,
+ *   'sw:NotificationPermissionChanged': (payload: { permission: NotificationPermission }) => void,
+ *   'sw:VersionUpdateAvailable': () => void,
+ *   'sw:NewVersionReady': (payload: { event: Event }) => void,
+ *   'sw:RegistrationFailed': (payload: { event: Event }) => void,
+ * }} TinyServiceWorkerEvents
+ */
+
+/**
+ * A typed event emitter for {@link TinyServiceWorker}.
+ * @typedef {import('../../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyServiceWorkerEvents>} TinyServiceWorkerEmitter
+ */
+
+/**
  * @template {string} IdWorker
  * @template {string | URL} SwUrl
  * Manages Service Worker registration, versioning, and messaging.
+ * @implements {TinyServiceWorkerEmitter}
  */
 class TinyServiceWorker extends TinyPluginCore {
   static postMessage = postMessage;

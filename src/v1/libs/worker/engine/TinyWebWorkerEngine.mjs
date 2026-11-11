@@ -69,7 +69,26 @@ const READY_EVENT_TYPE = 'ww:EngineReady';
  */
 
 /**
+ * Event map for {@link TinyWebWorkerEngine}.
+ *
+ * Every key is an event name emitted by the engine and the value is the
+ * signature of the listener. This is the shape expected by
+ * `ICustomEventEmitter<TinyWebWorkerEngineEvents>`.
+ *
+ * @typedef {Object} TinyWebWorkerEngineEvents
+ * @property {(msg: MessageObj) => void} beforeMessage - Emitted before a message listener runs.
+ * @property {(msg: MessageObj) => void} afterMessage - Emitted after a message listener runs.
+ * @property {(payload: { type: string, error: any, data: MessageObj }) => void} messageError - Emitted when a message listener throws.
+ */
+
+/**
+ * A typed event emitter for {@link TinyWebWorkerEngine}.
+ * @typedef {import('../../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyWebWorkerEngineEvents>} TinyWebWorkerEngineEmitter
+ */
+
+/**
  * Manages the lifecycle and execution of modules inside a Dedicated Web Worker.
+ * @implements {TinyWebWorkerEngineEmitter}
  */
 class TinyWebWorkerEngine extends TinyPluginCore {
   /**
