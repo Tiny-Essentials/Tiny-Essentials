@@ -78,6 +78,17 @@ const engine = new TinyServiceWorkerEngine({
       codes: new Map(), // You can add custom status code handlers here
     },
   },
+  push: {
+    enabled: true,
+    vapidPublicKey: '',
+    subscribeEndpoint: '',
+    defaultIcon: '/icons/notification-192.png',
+    defaultBadge: '/icons/badge-72.png',
+    defaultUrl: '/',
+  },
+  sync: {
+    enabled: true,
+  },
   messaging: {
     enabled: true,
   },
@@ -89,6 +100,8 @@ engine.init();
 
 **Why `init()`?**
 The constructor sets up the internal state, but the `.init()` method actually attaches the listeners to the `self` (Service Worker) global scope. Without it, the engine remains idle.
+
+> ⚠️ `init()` throws an `Error` when called twice. It also reads `config.fetch.enabled`, `config.push.enabled`, `config.sync.enabled` and `config.messaging.enabled` **once**, at call time: disabling a channel before `init()` means its `addEventListener` is never registered, and re-enabling it later has no effect until the worker restarts.
 
 ---
 
@@ -122,9 +135,9 @@ When you intercept a request, the engine provides a `result` object as the **sec
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
-| `code` | `number` | The HTTP status code associated with the fetch result. This can be used to trigger the Router. |
-| `needValidation` | `boolean` | **The Router Trigger.** If `true`, the engine checks the `code` against the Router configuration. If the code is an error (like 404), the engine will serve the configured error page. |
-| `continueCheck` | `boolean` | **The Flow Controller.** If set to `false`, the engine immediately stops searching for other matching plugins and proceeds with the standard network request. |
+| `code` | `number` | The HTTP status code associated with the fetch result. Defaults to `404`. This can be used to trigger the Router. |
+| `needValidation` | `boolean` | **The Router Trigger.** If `true`, the engine checks the `code` against the Router configuration. If the code is an error (like 404), the engine will serve the configured error page. Defaults to `true` for same-origin requests. |
+| `continueCheck` | `boolean` | **The Flow Controller.** If set to `false`, the engine immediately stops searching for other matching plugins and proceeds with the standard network request. Defaults to `true`. |
 | `customPath` | `string` (optional) | Overrides the path resolved by the Router for this specific request. |
 | `customMsg` | `string` (optional) | Overrides the message sent to the Router for this specific request. |
 | `customResponse` | `Response` (optional) | **The Direct Reply.** If set to a `Response` instance, the engine returns it immediately, bypassing the Router and the network. |
@@ -221,6 +234,19 @@ engine.addFetchGlobalListener('analytics', async ({ url }) => {
   // This does not stop the request; it just "watches" it.
 });
 ```
+
+**8. Bailing Out Before Interception (`fetchRequested`)**
+
+Before any listener runs, the engine emits `fetchRequested` with `{ event, request, url, result }`, where `result` starts as `{ canStart: true }`. Setting `canStart = false` leaves the request completely untouched: no `respondWith`, no router, no plugin and no global listener.
+
+```javascript
+engine.on('fetchRequested', ({ url, result }) => {
+  // Let dev-server / tooling traffic reach the network natively.
+  if (url.pathname.startsWith('/__internal')) result.canStart = false;
+});
+```
+
+This is the only hook that runs before the engine commits to handling a request, so it is the right place to skip third-party or tooling traffic.
 
 ---
 
@@ -334,7 +360,7 @@ engine.removeRouterCode(404);
 
 ### Global Messages and SPA Mode
 
-The engine keeps a `globalMsgCode` object that stores the default paths and messages for `200`, `404`, and `500`, plus the `spaPath` (default: `/index.html`).
+The engine keeps a `globalMsgCode` object that stores the default paths and messages for `200`, `404` and `500`, the `unknown` fallback entry, plus the `spaPath` (default: `/index.html`). Every entry is `{ path, msg, logMsg }`; only `200` may use `path: null` (no file is fetched).
 
 ```javascript
 // Read the current global messages (deep clone)
@@ -343,9 +369,14 @@ const messages = engine.globalMsgCode;
 // Patch the global messages (shallow merge, then deep clone)
 engine.updateGlobalMsgCode({ 404: { path: '/errors/not-found.html' } });
 
+// Replace the whole table (must be complete, otherwise it throws)
+engine.globalMsgCode = { ...messages, spaPath: '/app.html' };
+
 // Toggle SPA mode at runtime
 engine.spaMode = true;
 ```
+
+Both accessors validate their input: unknown keys, empty strings and a missing `path` (except on `200`) throw a `TypeError`.
 
 ---
 
@@ -354,15 +385,53 @@ engine.spaMode = true;
 The engine provides built-in support for the Web Push API and user interaction with browser notifications.
 
 ### 📡 Push Events
-When a push event is received from the server, the engine automates the following workflow:
-1.  **Data Parsing:** It attempts to parse the payload as JSON. If parsing fails, it falls back to a text format.
-2.  **Internal Event:** It emits a `push` event, allowing plugins to react to the incoming data.
-3.  **Client Broadcast:** It automatically broadcasts a `sw:PushReceived` message to all open browser tabs/clients via `postMessage`. This allows your website's main thread to react to the push event in real-time.
+When a push event is received from the server, the engine runs the following workflow:
+1.  **Parsing:** The payload is read **once** through [`TinyPushPayload.fromEvent()`](./shared/TinyPushPayload.md), which tolerates empty bodies, non-JSON bodies and malformed JSON (falling back to `{ type: 'unknown' }`).
+2.  **Expiration:** Messages whose `expiresAt` is in the past are discarded and never reach a handler.
+3.  **Routing:** The normalized message is dispatched to the `pushRouter` (see below). If no route claims it **and** the message carries a `notification` descriptor, the engine shows the notification automatically.
+4.  **Client Broadcast:** A `sw:PushReceived` message is always broadcast to every open client, carrying `{ ...message, notificationShown, error }` so the main thread can react in real time.
+
+### 🧭 Push Routing (`pushRouter`)
+
+The engine owns a [`TinyPushRouter`](./TinyPushRouter.md) instance, exposed through the `pushRouter` property. Routes are matched against `message.type`:
+
+```javascript
+import TinyPushRouter from 'tiny-essentials/libs/sw/service/TinyPushRouter';
+
+const router = new TinyPushRouter()
+  .use((message) => message.data?.tenant !== 'blocked') // guard: return false to drop the message
+  .on('chat:message', async (message, ctx) => {
+    await ctx.engine.showNotification('New message', message.notification.body);
+    ctx.notificationShown = true;
+  })
+  .onMatch(/^billing:/, async (message) => {
+    // matches every type that starts with "billing:"
+  })
+  .otherwise(() => {
+    // no route matched and the message has no notification descriptor
+  })
+  .catch((error) => console.error('push failed', error));
+
+engine.pushRouter = router;
+```
+
+The `push` event is emitted with a context object (`{ event, message, engine, handled, notificationShown }`) before routing, so it can be used for cross-cutting concerns.
+
+### 🏷️ `PUSH_TYPE`
+
+The accepted `message.type` discriminators are exposed as a frozen enum, both on the engine and on the router:
+
+```javascript
+TinyServiceWorkerEngine.PUSH_TYPE;
+// { NOTIFICATION: 'notification', DATA: 'data', SYNC: 'sync', COMMAND: 'command', UNKNOWN: 'unknown' }
+```
 
 ### 🖱️ Notification Interaction
 The engine listens for `notificationclick` events. When a user interacts with a notification:
-1.  **Event Emission:** The engine emits a `notificationclick` event for internal handling.
-2.  **Automatic Cleanup:** The engine automatically calls `event.notification.close()` to dismiss the notification from the user's screen.
+1.  **Event Emission:** The engine emits `notificationclick` with `{ event, action, data }`.
+2.  **Target Resolution:** The target URL is `data.actions[action]` when an action button was clicked, otherwise `data.url`.
+3.  **Focus or Open:** An existing client on that URL is focused; otherwise a new window is opened.
+4.  **Automatic Cleanup:** The notification is closed in every branch.
 
 ### 🔕 Notification Close
 When a notification is dismissed by the user (either by clicking the close button or by the system), the engine emits a `notificationclose` event. The same event is emitted when the browser forwards a `sw:NotificationClosed` message to the Service Worker.
@@ -428,14 +497,25 @@ While the **Messaging System** is fire-and-forget, the **API System** implements
 
 The handler receives an `ApiHandlerOptions` object and its **return value** (or the resolved value of the returned Promise) is automatically sent back to the caller.
 
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `data` | `any` | The payload sent by the browser. |
+| `clientId` | `string` | The ID of the client that sent the message. |
+| `correlationId` | `string` | The request ID used to match the response. |
+| `reply` | `Function` | Replies to the message source. |
+| `replyTo` | `Function` | Sends a message to a specific `Client`. |
+| `replyToAll` | `Function` | Broadcasts a message to every client. |
+| `replyTemplate` | `Function` | Formats a message into the `MessagingData` shape. |
+| `replyApi` | `Function` | Calls back into the browser and awaits a response. |
+
 ```javascript
-engine.onApi('GET_CACHED_USER', async ({ data, clientId, replyApi }) => {
+engine.onApi('GET_CACHED_USER', async ({ data, clientId, correlationId, replyApi }) => {
   // 'data' is the payload sent by the browser
   // 'clientId' identifies the tab that made the call
   // 'replyApi' lets you call back into the browser and await a response
   const token = await replyApi('REQUEST_USER_TOKEN', { scope: 'profile' }, 5000);
 
-  return { id: data.id, name: 'Yasmin', token };
+  return { id: data.id, name: 'Yasmin', token, correlationId };
 });
 ```
 
@@ -570,7 +650,39 @@ These static methods are exposed on the class itself and can be used without ins
 | `TinyServiceWorkerEngine.isSameOrigin(data)` | Returns `true` if the given `Request` or `URL` shares the Service Worker's origin. |
 | `TinyServiceWorkerEngine.replyTemplate(type, payload)` | Formats a message into the standard `MessagingData` shape. Throws if `type` starts with `sw:`. |
 | `TinyServiceWorkerEngine.replyTo(client, type, payload)` | Sends a message to a single `Client`. |
-| `TinyServiceWorkerEngine.replyToAll({ type, data, options })` | Broadcasts a message to all matching clients. |
+| `TinyServiceWorkerEngine.replyToAll({ type, data, options })` | Broadcasts a message to all matching clients. Resolves once every `postMessage` was queued. |
+| `TinyServiceWorkerEngine.PUSH_TYPE` | Frozen enum of push discriminators: `NOTIFICATION`, `DATA`, `SYNC`, `COMMAND`, `UNKNOWN`. |
+
+## 🔔 Events Reference
+
+All events are emitted through the `TinyPluginCore` event emitter and can be observed with `engine.on(name, listener)`.
+
+| Event | Payload | When |
+| :--- | :--- | :--- |
+| `fetchRequested` | `{ event, request, url, result }` | Before a fetch is intercepted. Set `result.canStart = false` to skip. |
+| `beforeFetchPlugin` / `afterFetchPlugin` | `FetchObj` | Around each matching fetch plugin. |
+| `fetchPluginError` | `FetchObj` | A fetch plugin threw. |
+| `fetchGlobalError` | `{ error, fetchObj }` | A global fetch listener threw. |
+| `fetchError` | `{ event, request, error, url, resType }` | An error response is being built. |
+| `beforeMessage` / `afterMessage` | `{ event, type, data }` | Around each message listener. |
+| `messageError` | `{ event, type, error, data }` | A message listener threw. |
+| `beforeActivated` / `afterActivated` | `{ event }` | Around the `activate` phase. |
+| `installError` / `activateError` | `{ event, error }` | A lifecycle phase failed. |
+| `installListenerError` / `activateListenerError` | `{ event, tag, error }` | A lifecycle listener threw. |
+| `beforeSkipWaiting` / `afterSkipWaiting` | `{ event }` | Around `skipWaiting()`. |
+| `skipWaitingError` | `{ event, error }` | `skipWaiting()` failed. |
+| `beforeClaim` / `afterClaim` | `{ query, clients? }` | Around `clients.claim()`. |
+| `waitingForActivation` | `{ event }` | Install strategy is `'manual'`. |
+| `waitingForClaim` | `{ event }` | Activate strategy is `'manual'`. |
+| `beforeSync` / `afterSync` | `{ event, tag }` | Around a sync handler. |
+| `syncError` | `{ event, tag, error }` | A sync handler threw. |
+| `beforeUpdated` / `afterUpdated` | `{ event }` | Around a `sw:PrepareUpdate` update check. |
+| `updateError` | `{ event, error }` | The update check failed. |
+| `push` | `TinyPushContext` | A push message was received, before routing. |
+| `pushError` | `{ event, error }` | A push handler failed. |
+| `notificationclick` | `{ event, action, data }` | A notification (or one of its actions) was clicked. |
+| `notificationclose` | `{ event, data? }` | A notification was closed. |
+| `pushsubscriptionchange` | `{ event }` | The push subscription rotated. |
 
 ### Reserved Event Types
 
@@ -698,14 +810,15 @@ To make navigation easier, the API is divided into functional modules: **Fetch M
 | `spaMode` | Gets/sets SPA mode at runtime. | `boolean` | `boolean` |
 | `config` | Gets a deep clone of the config / applies a partial update. | `Partial<PartialServiceWorkerSettings>` | `ServiceWorkerSettings` |
 | `globalMsgCode` | Gets/sets the global message map. | `Object` | `Object` |
-| `showNotification` | Displays a native notification to the user. | `title (string)`, `body (string)`, `options (Object)` | `Promise<void>` |
+| `pushRouter` | Gets/sets the active `TinyPushRouter`. Throws a `TypeError` when set to anything else. | `TinyPushRouter` | `TinyPushRouter` |
+| `showNotification` | Displays a native notification to the user. Throws when `push.enabled` is `false`. | `title (string)`, `body (string)`, `options (Object)` | `Promise<void>` |
 
 ### ♻️ 7. Lifecycle Management
 
 | Method / Property | Purpose | Arguments | Returns |
 | :--- | :--- | :--- | :--- |
 | `lifecycle` | Gets a deep clone / merges a partial lifecycle config. | `Partial<LifecycleOptions>` | `LifecycleOptions` |
-| `skipWaiting` | Promotes the waiting worker to active. | `event? (ExtendableEvent)` | `Promise<boolean>` |
+| `skipWaiting` | Promotes the waiting worker to active. Throws a `TypeError` when `event` is not an `ExtendableEvent`. | `event (ExtendableEvent)` | `Promise<boolean>` |
 | `claimClients` | Makes the active worker control the open clients. | `query? (ClientQueryOptions)` | `Promise<readonly Client[]>` |
 | `reloadClients` | Navigates every controlled client to a URL. | `url? (string)` | `Promise<number>` |
 | **Install Listeners** | | | |
