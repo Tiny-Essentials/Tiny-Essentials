@@ -52,6 +52,25 @@ event emitter (`on`, `emit`, `removeAllListeners`).
 
 ### 1. Create the worker file
 
+The worker must post `{ type: 'ww:EngineReady' }` once it is able to receive
+messages — `init()` never resolves otherwise. The easiest way is to use
+[`TinyWebWorkerEngine`](../engine/TinyWebWorkerEngine.md), which does it for you:
+
+```javascript
+// my.worker.js
+import TinyWebWorkerEngine from 'tiny-essentials/libs/worker/engine/TinyWebWorkerEngine';
+
+const engine = new TinyWebWorkerEngine();
+
+engine.addMessageListener('greet', ({ data }) => {
+  engine.emit('greeted', { message: `Hello, ${data.name}!` });
+});
+
+engine.init(); // posts { type: 'ww:EngineReady' }
+```
+
+Or wire the protocol by hand:
+
 ```javascript
 // my.worker.js
 self.postMessage({ type: 'ww:EngineReady' });
@@ -59,7 +78,7 @@ self.postMessage({ type: 'ww:EngineReady' });
 self.addEventListener('message', (event) => {
   const { type, data } = event.data;
   if (type === 'greet') {
-    self.postMessage({ type: 'greeted', data: `Hello, ${data.name}!` });
+    self.postMessage({ type: 'greeted', data: { message: `Hello, ${data.name}!` } });
   }
 });
 ```
@@ -213,12 +232,17 @@ worker.offApi('user:getTheme');
 
 #### `terminate(): void`
 
-Immediately terminates the worker and removes all listeners. The instance can
-technically be re-initialized afterwards, but a new worker will be created.
+Immediately terminates the worker, detaches the internal `message`/`error`
+handlers and emits `ww:Terminated`. It is a no-op once the instance has been
+destroyed.
 
 ```javascript
 worker.terminate();
 ```
+
+After `terminate()` the internal worker reference is `null`, so `init()` can be
+called again to spin up a brand new worker. Pending `emitApi()` promises are
+**not** rejected by `terminate()`; they only settle on their own timeout.
 
 ---
 

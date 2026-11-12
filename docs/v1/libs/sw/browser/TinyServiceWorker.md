@@ -168,14 +168,15 @@ These events are emitted by the `TinyServiceWorker` class to inform your applica
 | `sw:BeforeInstallPrompt` | `{ event: BeforeInstallPromptEvent }` | Fired when the browser is ready to show the installation prompt. |
 | `sw:AppInstalled` | `void` | Fired when the PWA is successfully installed on the device. |
 | `sw:VersionUpdateAvailable` | `void` | Fired when a version mismatch is detected in `localStorage`. |
-| `sw:PrepareUpdate` | `void` | Fired to signal the Service Worker to begin downloading new assets. |
 | `sw:NewVersionReady` | `{ event: Event }` | Fired when the new Service Worker successfully takes control of the page. |
 | `sw:NoSwControllerWarn` | `void` | Fired when a message is attempted but no active Service Worker controller exists. |
 | `sw:NotificationPermissionChanged` | `{ permission: NotificationPermission }` | Fired after `requestNotificationPermission()` resolves with the user's decision. |
-| `sw:RegistrationFailed` | `Error` | Fired when registration fails while a `waitForReady()` call is pending. |
-| `sw:PushReceived` | `{ data: any, event: MessageEvent }` | Fired when a push event is received. If in 'browser' mode and `autoNotifyPush` is enabled, a native browser notification is automatically displayed. |
 | `sw:PushReceived` | `{ data: any, event: MessageEvent }` | Internal message type intercepted by the manager. **Not** re-emitted through `addEventListener`; it is dispatched through the `pushEvents` emitter instead. See [Push Events](#-push-events-topic-based). |
 | `{CUSTOM EVENT}` | `{ event: Event, data: Record<string, any> }` | Fired when a message from `sw.js` is sent. |
+
+> **`sw:PrepareUpdate` is not an event.** It is a message the manager *sends* to the Service Worker when a version mismatch is detected. Listen for `sw:VersionUpdateAvailable` instead.
+>
+> **`sw:RegistrationFailed` is declared in the event map but never emitted.** It is only subscribed to internally by `waitForReady()`, so that promise currently never rejects through this path. Guard against a rejected `register()` instead.
 
 ### 📨 Custom Worker Messages
 When your Service Worker sends a message using `postMessage`, the class intercepts it and re-emits it as a standard event.
@@ -300,22 +301,10 @@ swManager.destroy();
 | `registerSync(tag)` | `Promise<void>` | Registers a sync tag to trigger the 'sync' event in the Service Worker. |
 | `destroy()` | `void` | Performs full cleanup of all resources. |
 
-### Static Methods
-
-| Method | Return | Description |
-| :--- | :--- | :--- |
-| `TinyServiceWorker.waitForReady()` | `Promise<ServiceWorkerRegistration>` | Resolves with the active registration once the Service Worker is ready. |
-| `TinyServiceWorker.postMessage(message, transfer?)` | `void` | Sends a raw message to the active Service Worker controller. |
-
-```javascript
-// Wait for the worker before sending a message
-await TinyServiceWorker.waitForReady();
-
-// Send a raw message with an optional transferable list
-TinyServiceWorker.postMessage({ type: 'PING' }, []);
-```
-
 ### Properties (Getters)
+
+`isReady`, `isFailed`, `isDestroyed` and `pushEvents` never throw. Every other getter calls `checkDestroy()` and throws once the instance has been destroyed.
+
 * `isReady`: `boolean` - Returns `true` if registration was successful.
 * `isFailed`: `boolean` - Returns `true` if registration encountered an error.
 * `isDestroyed`: `boolean` - Returns `true` if the instance has been destroyed.
@@ -326,7 +315,7 @@ TinyServiceWorker.postMessage({ type: 'PING' }, []);
 * `version`: `string` - The current application version.
 * `registration`: `ServiceWorkerRegistration` - The current registration object.
 * `eventListeners`: `EventListener[]` - An array of all registered event listeners.
-* `autoNotifyPush`: `boolean` - Indicates if the browser should automatically show a notification when a push is received in browser mode.
+* `autoNotifyPush`: `boolean` - Getter **and setter**. When `true` (default) the manager renders a fallback notification for pushes received in `browser` display mode. The setter throws a `TypeError` for non-booleans.
 * `eventBlacklist`: `string[]` - A copy of every blacklisted event name.
 * `pushEvents`: `EventEmitter` - Emitter that dispatches push events, keyed by topic. See [Push Events](#-push-events-topic-based).
 
@@ -335,8 +324,16 @@ TinyServiceWorker.postMessage({ type: 'PING' }, []);
 | Method | Return | Description |
 | :--- | :--- | :--- |
 | `TinyServiceWorker.waitForReady()` | `Promise<ServiceWorkerRegistration>` | Resolves with the active registration once the Service Worker is ready. |
-| `TinyServiceWorker.postMessage(message, transfer?)` | `void` | Sends a raw message to the active Service Worker controller. |
+| `TinyServiceWorker.postMessage(message, transfer?)` | `void` | Sends a raw message to the active Service Worker controller. Throws if no controller exists. |
 | `TinyServiceWorker.PUSH_TYPE` | `Object` | Read-only map of push type constants, re-exported for convenience. |
+
+```javascript
+// Wait for the worker before sending a message
+await TinyServiceWorker.waitForReady();
+
+// Send a raw message with an optional transferable list
+TinyServiceWorker.postMessage({ type: 'PING' }, []);
+```
 
 ---
 

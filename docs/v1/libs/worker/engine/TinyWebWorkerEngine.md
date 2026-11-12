@@ -41,6 +41,7 @@ Initializes the engine instance.
 *   **Parameters:**
     *   `lgConfig` `{Object}`: Configuration object.
     *   `lgConfig.debugMode` `{boolean}`: Enables detailed internal logging.
+    *   `lgConfig.useLogColors` `{boolean}`: Enables ANSI colors in the logs.
     *   `lgConfig.logger` `{Console}`: Custom logger (defaults to `console`).
 
 #### `init()`
@@ -55,18 +56,32 @@ Registers a handler for requests coming **from the Main Thread**.
     *   `callback` `{ApiHandlerCallback}`: The function to execute. It can be synchronous or return a `Promise`.
 *   **Throws:** `TypeError` if the callback is not a function.
 
+> The handler receives `{ data, correlationId }` and nothing else — there are no `reply`/`replyTo` helpers on this side. Its return value (or resolved value) is posted back automatically as `ww:ApiResponse`.
+
+#### `offApi(type)`
+Removes a previously registered API handler.
+*   **Returns:** `boolean` — `true` if a handler was removed.
+
 #### `addMessageListener(type, callback)`
 Registers a listener for simple, unidirectional messages.
 *   **Parameters:**
     *   `type` `{string}`: The message type.
     *   `callback` `{MessageCallback}`: The function to execute when the message arrives.
+*   **Throws:** `TypeError` if the callback is not a function.
+
+#### `removeMessageListener(type)`
+Removes a message listener.
+*   **Returns:** `boolean` — `true` if a listener was removed.
 
 #### `emit(type, data)`
 Sends a unidirectional message to the Main Thread.
 *   **Parameters:**
     *   `type` `{string}`: The identifier. **Cannot start with `ww:`**.
     *   `data` `{Object|undefined}`: The payload. Must be a non-null object.
-*   **Throws:** `TypeError` if the type is reserved or data is invalid.
+*   **Returns:** `boolean` — always `true` once the message is dispatched.
+*   **Throws:** `TypeError` if `type` is not a string, if `data` is not a non-null object, or if `type` starts with the reserved `ww:` prefix.
+
+> Only the **first** extra argument is used as `data`; the rest are ignored.
 
 #### `emitApi(type, data, timeout)`
 Sends a request to the Main Thread and returns a `Promise` that resolves when the reply arrives.
@@ -75,7 +90,10 @@ Sends a request to the Main Thread and returns a `Promise` that resolves when th
     *   `data` `{Object|undefined}`: The request payload.
     *   `timeout` `{number}`: Max wait time in ms (default `10000`).
 *   **Returns:** `Promise<any>`
-*   **Throws:** `Error` if the timeout is reached.
+*   **Throws:** `Error` with the message `API timeout: <type>` if the timeout is reached.
+
+#### `started` (getter)
+`true` once `init()` has run.
 
 ---
 
@@ -111,20 +129,66 @@ engine.emit('STATUS_UPDATE', { status: 'Worker is running smoothly' });
 ```
 
 ### 📡 Example 2: Using the Engine in the Main Thread
-(Conceptual logic for the Main Thread side)
+
+The main thread never imports `TinyWebWorkerEngine` — it uses the [`TinyWebWorker`](../browser/TinyWebWorker.md) counterpart, which speaks the same protocol.
 
 ```javascript
+import TinyWebWorker from 'tiny-essentials/libs/worker/browser/TinyWebWorker';
+
+const worker = new TinyWebWorker({ id: 'app', workerUrl: new URL('./worker.js', import.meta.url) });
+await worker.init();
+
 // When the worker sends a simple message
-worker.addEventListener('message', (event) => {
-  if (event.data.type === 'STATUS_UPDATE') {
-    console.log('Worker status:', event.data.data.status);
-  }
+worker.on('STATUS_UPDATE', ({ data }) => {
+  console.log('Worker status:', data.status);
 });
 
 // When the worker makes an API call to the main thread
-engine.onApi('GET_USER_DATA', async ({ data }) => {
+worker.onApi('GET_USER_DATA', async ({ data }) => {
   return { id: data.userId, name: 'Yasmin', role: 'Developer' };
 });
+```
+
+---
+
+## 📡 Events
+
+Subscribe with `engine.on(eventName, handler)`.
+
+| Event | Payload | Fired when |
+| :--- | :--- | :--- |
+| `beforeMessage` | `MessageObj` | Before a registered message listener runs. |
+| `afterMessage` | `MessageObj` | After a message listener runs (or when no listener is registered). |
+| `messageError` | `{ type, error, data }` | A message listener threw. |
+
+`MessageObj` is `{ type, event, data }`.
+
+---
+
+## 📨 Message Protocol
+
+### Worker ➡️ Main
+
+```javascript
+// Readiness signal (sent automatically by init())
+{ type: 'ww:EngineReady' }
+
+// API response
+{ type: 'ww:ApiResponse', correlationId: 'uuid', data: { /* ... */ } }
+{ type: 'ww:ApiResponse', correlationId: 'uuid', error: 'Something failed' }
+
+// Fire-and-forget event
+{ type: 'MY_EVENT', data: { /* ... */ } }
+```
+
+### Main ➡️ Worker
+
+```javascript
+// Fire-and-forget event
+{ type: 'my:event', data: { /* ... */ } }
+
+// API request
+{ type: 'my:api', data: { /* ... */ }, correlationId: 'uuid', isApi: true }
 ```
 
 ---
@@ -135,3 +199,4 @@ engine.onApi('GET_USER_DATA', async ({ data }) => {
 2.  **Error Handling in API:** When writing an `onApi` handler, always wrap your logic in `try/catch` or return a rejected `Promise`. The engine will automatically catch these and send the error back to the main thread.
 3.  **Data Integrity:** Always pass objects as `data`. Avoid passing primitives (like just a string) if you plan to expand the data structure later.
 4.  **Timeout Management:** When calling `emitApi`, always be prepared to handle a potential timeout error in your `.catch()` block.
+5.  **Call `init()` exactly once:** a second call throws. The engine also posts `ww:EngineReady` automatically at the end of `init()`, so never send it yourself.
