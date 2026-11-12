@@ -1642,7 +1642,7 @@ class TinyHtml {
    *
    * @param {TinyElement|Text|(TinyElement|Text)[]} elems - A single element or an array of elements (DOM or TinyHtml).
    * Returns the array of TinyHtml instances corresponding to the input elements.
-   * @returns {TinyHtml<TinyElement|Text>[]} The array of TinyHtml instances.
+   * @returns {TinyHtmlAny[]} The array of TinyHtml instances.
    */
   static toTinyElm(elems) {
     /** @param {(TinyElement|Text)[]} item */

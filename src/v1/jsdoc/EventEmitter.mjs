@@ -33,7 +33,7 @@ import { EventEmitter } from 'events';
  *
  * @template {Record<string | symbol, (...args: any[]) => any>} Events
  * @template {abstract new (...args: any[]) => any} T
- * @typedef {new (
+ * @typedef {Omit<T, 'prototype'> & (new (
  *   ...args: ConstructorParameters<T>
- * ) => ICustomEventEmitter<Events> & InstanceType<T>} ITypedEventEmitter
+ * ) => ICustomEventEmitter<Events> & InstanceType<T>)} ITypedEventEmitter
  */
