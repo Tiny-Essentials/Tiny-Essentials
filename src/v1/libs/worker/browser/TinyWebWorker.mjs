@@ -37,7 +37,7 @@ const checkDestroy = createCheckDestroyed('TinyWebWorker');
 /**
  * @type {import('../../../jsdoc/EventEmitter.mjs').ITypedEventEmitter<TinyWebWorkerEvents, typeof TinyPluginCore>}
  */
-const TypedPluginCore = TinyPluginCore
+const TypedPluginCore = TinyPluginCore;
 
 /**
  * Manages Web Worker initialization, lifecycle, and strictly typed messaging.

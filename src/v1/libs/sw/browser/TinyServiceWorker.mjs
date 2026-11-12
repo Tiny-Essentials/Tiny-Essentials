@@ -116,7 +116,7 @@ const postMessage = (message, transfer) => {
 /**
  * @type {import('../../../jsdoc/EventEmitter.mjs').ITypedEventEmitter<TinyServiceWorkerEvents, typeof TinyPluginCore>}
  */
-const TypedPluginCore = TinyPluginCore
+const TypedPluginCore = TinyPluginCore;
 
 /**
  * @template {string} IdWorker

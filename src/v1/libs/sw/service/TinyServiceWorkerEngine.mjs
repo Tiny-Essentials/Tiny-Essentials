@@ -316,6 +316,26 @@ const PHASE_ORDER_KEY = Object.freeze({
  */
 
 /**
+ * The result of the `fetchRequested` guard, combining the base start values
+ * with any extra property injected by a listener.
+ *
+ * A listener can set `canStart` to `false` to abort the whole fetch
+ * interception, and may attach arbitrary data that later listeners can read.
+ *
+ * @typedef {FetchStartCheckerValues & { [id:string]:any}} FetchStartCheckerResult
+ */
+
+/**
+ * The base values produced by the `fetchRequested` guard before any listener runs.
+ *
+ * This is the seed object handed to every `fetchRequested` listener. A listener
+ * may mutate it in place to change how the current request is intercepted.
+ *
+ * @typedef {Object} FetchStartCheckerValues
+ * @property {boolean} canStart - Whether the engine is allowed to call `respondWith` for this request. When a listener sets it to `false`, the fetch event is left completely untouched and the browser handles the request natively.
+ */
+
+/**
  * The enriched result from a fetch checker, combining base values with additional data.
  * @typedef {FetchCheckerValues & { [id:string]:any}} FetchCheckerResult
  */
@@ -471,19 +491,19 @@ const getResType = (code) => {
 
 /**
  * A function used to install a plugin into the engine.
- * @template {TinyPluginLayer} Layer
- * @template {string} IdString
- * @template {string} VersionString
- * @template {any[]} Options
+ * @template {TinyPluginLayer} Layer - The plugin layer the installer targets.
+ * @template {string} IdString - The literal type of the plugin identifier.
+ * @template {string} VersionString - The literal type of the plugin version.
+ * @template {any[]} Options - The tuple of extra arguments accepted by the installer.
  * @typedef {import('../../plugin/TinyPlugin.mjs').TinyPluginInstaller<TinyServiceWorkerEngine, Layer, IdString, VersionString, Options>} SwPluginInstaller
  */
 
 /**
  * Represents a plugin instance designed to be integrated into a TinyServiceWorkerEngine.
- * @template {TinyPluginLayer} Layer
- * @template {string} IdString
- * @template {string} VersionString
- * @template {any[]} Options
+ * @template {TinyPluginLayer} Layer - The plugin layer the instance belongs to.
+ * @template {string} IdString - The literal type of the plugin identifier.
+ * @template {string} VersionString - The literal type of the plugin version.
+ * @template {any[]} Options - The tuple of extra arguments accepted by the plugin.
  * @typedef {TinyPlugin<TinyServiceWorkerEngine, Layer, IdString, VersionString, Options>} TinyServiceWorkerPlugin
  */
 
@@ -520,7 +540,7 @@ const getResType = (code) => {
  * @property {(payload: any) => void} fetchError - Emitted when a fetch response is an error.
  * @property {(payload: { error: any, fetchObj: FetchObj }) => void} fetchGlobalError - Emitted when a global fetch listener throws.
  * @property {(fetchObj: FetchObj) => void} fetchPluginError - Emitted when a fetch plugin throws.
- * @property {(payload: { event: FetchEvent, request: Request, url: URL }) => void} fetchRequested - Emitted for every intercepted fetch.
+ * @property {(payload: { event: FetchEvent, request: Request, url: URL, result: FetchStartCheckerResult }) => void} fetchRequested - Emitted for every intercepted fetch.
  * @property {(payload: { event: any, action: string|null, data: Record<string, any> }) => void} notificationclick - Emitted when a notification is clicked.
  * @property {(payload: { event: any, data?: any }) => void} notificationclose - Emitted when a notification is closed.
  * @property {(context: any) => void} push - Emitted for every push message.
@@ -575,7 +595,7 @@ class MockNotificationEvent extends Event {
   /**
    * Mocking waitUntil to satisfy the ExtendableEvent/NotificationEvent interface.
    * @param {Promise<any>} promise - The promise to keep the event alive.
-   * @returns {void}
+   * @returns {void} Nothing. The promise is forwarded to the wrapped event.
    */
   waitUntil(promise) {
     return this.#event.waitUntil(promise);
@@ -585,7 +605,7 @@ class MockNotificationEvent extends Event {
 /**
  * @type {import('../../../jsdoc/EventEmitter.mjs').ITypedEventEmitter<TinyServiceWorkerEngineEvents, typeof TinyPluginCore>}
  */
-const TypedPluginCore = TinyPluginCore
+const TypedPluginCore = TinyPluginCore;
 
 /**
  * Manages the lifecycle and execution of modules based on the provided configuration.
@@ -660,7 +680,8 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * @param {Client} targetSource - The target client to receive the message.
    * @param {string} type - The type identifier for the reply message.
    * @param {MessagePayload} [payload] - The payload to be sent in the reply.
-   * @returns {void}
+   * @param {boolean} [strict=false] - Whether to enforce the reserved event name rules.
+   * @returns {void} Nothing. The message is delivered as a side effect.
    * @throws {TypeError} If targetSource is invalid or type is not a string.
    */
   static #replyTo(targetSource, type, payload, strict = false) {
@@ -683,7 +704,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * @param {Client} targetSource - The target client to receive the message.
    * @param {string} type - The type identifier for the reply message.
    * @param {MessagePayload} [payload] - The payload to be sent in the reply.
-   * @returns {void}
+   * @returns {void} Nothing. The message is delivered as a side effect.
    * @throws {TypeError} If targetSource is invalid or type is not a string.
    */
   static replyTo(targetSource, type, payload) {
@@ -1212,7 +1233,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
 
     /**
      * Helper to validate existence and type.
-     * @template {Record<any, any>} T
+     * @template {Record<any, any>} T - The shape of the object being inspected.
      * @param {T} obj - The object containing the property.
      * @param {string} key - The property name.
      * @param {string} type - The expected typeof result.
@@ -1425,7 +1446,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * Validates that a listener identifier is a non-empty string.
    * @param {unknown} type - The value to validate.
    * @param {string} context - The method name used in the error message.
-   * @returns {void}
+   * @returns {void} Nothing. The method only throws when the value is invalid.
    * @throws {TypeError} If type is not a non-empty string.
    */
   static #assertListenerType(type, context) {
@@ -1438,7 +1459,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * Validates that a listener callback is a function.
    * @param {unknown} callback - The value to validate.
    * @param {string} context - The method name used in the error message.
-   * @returns {void}
+   * @returns {void} Nothing. The method only throws when the value is invalid.
    * @throws {TypeError} If callback is not a function.
    */
   static #assertListenerCallback(callback, context) {
@@ -1498,7 +1519,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
 
   /**
    * Clears all registered fetch RegExp listeners.
-   * @returns {void}
+   * @returns {void} Nothing. The internal registry is emptied in place.
    */
   clearFetchRegExps() {
     return this.#fetchRegExp.clear();
@@ -1555,7 +1576,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
 
   /**
    * Clears all registered fetch URL listeners.
-   * @returns {void}
+   * @returns {void} Nothing. The internal registry is emptied in place.
    */
   clearFetchUrls() {
     return this.#fetchUrls.clear();
@@ -1612,7 +1633,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
 
   /**
    * Clears all global fetch tracking listeners.
-   * @returns {void}
+   * @returns {void} Nothing. The internal registry is emptied in place.
    */
   clearFetchGlobals() {
     return this.#fetchGlobal.clear();
@@ -1669,7 +1690,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
 
   /**
    * Clears all registered message listeners.
-   * @returns {void}
+   * @returns {void} Nothing. The internal registry is emptied in place.
    */
   clearMessageListeners() {
     return this.#messages.clear();
@@ -1687,7 +1708,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * Adds an event name to the blacklist. Blacklisted events are ignored when
    * they arrive from the browser.
    * @param {string} type - The event name to ignore.
-   * @returns {void}
+   * @returns {void} Nothing. The name is stored in the internal blacklist.
    * @throws {TypeError} If the type is not a non-empty string.
    */
   addToEventBlacklist(type) {
@@ -1719,7 +1740,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
 
   /**
    * Removes every event name from the blacklist.
-   * @returns {void}
+   * @returns {void} Nothing. The blacklist is emptied in place.
    */
   clearEventBlacklist() {
     this.#eventBlacklist.clear();
@@ -1822,7 +1843,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * @param {unknown} item - The value to validate.
    * @param {string} context - Dotted path of the entry, used in the error messages.
    * @param {boolean} nullablePath - `true` when `path` is allowed to be `null`.
-   * @returns {void}
+   * @returns {void} Nothing. The method only throws when the entry is invalid.
    * @throws {TypeError} If `item` is not a valid {@link GlobalMsgCodeItem}.
    */
   static #validateGlobalMsgCodeItem(item, context, nullablePath) {
@@ -1925,7 +1946,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * {@link LifecycleOptions} object and a partial patch.
    *
    * @param {unknown} lifecycle - The value to validate.
-   * @returns {void}
+   * @returns {void} Nothing. The method only throws when the value is invalid.
    * @throws {TypeError} If `lifecycle` is not a non-null object, if it contains an
    *   unknown key, or if one of its values is not an accepted strategy.
    */
@@ -2192,7 +2213,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
 
   /**
    * Clears all sync listeners.
-   * @returns {void}
+   * @returns {void} Nothing. The internal registry is emptied in place.
    */
   clearSyncListeners() {
     return this.#syncListeners.clear();
@@ -2210,7 +2231,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * Adds an install listener.
    * @param {string} tag - The identifier for the install listener.
    * @param {LifecycleCallback} callback - The callback to execute.
-   * @returns {void}
+   * @returns {void} Nothing. The listener is stored under the given tag.
    * @throws {TypeError} If tag is not a non-empty string or callback is not a function.
    */
   addInstallListener(tag, callback) {
@@ -2254,7 +2275,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
 
   /**
    * Clears all registered install listeners.
-   * @returns {void}
+   * @returns {void} Nothing. The internal registry is emptied in place.
    */
   clearInstallListeners() {
     return this.#installListeners.clear();
@@ -2272,7 +2293,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * Adds an activate listener.
    * @param {string} tag - The identifier for the activate listener.
    * @param {LifecycleCallback} callback - The callback to execute.
-   * @returns {void}
+   * @returns {void} Nothing. The listener is stored under the given tag.
    * @throws {TypeError} If tag is not a non-empty string or callback is not a function.
    */
   addActivateListener(tag, callback) {
@@ -2316,7 +2337,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
 
   /**
    * Clears all registered activate listeners.
-   * @returns {void}
+   * @returns {void} Nothing. The internal registry is emptied in place.
    */
   clearActivateListeners() {
     return this.#activateListeners.clear();
@@ -2337,7 +2358,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * Registers a handler for API calls coming from the browser.
    * @param {string} type - The identifier for the call.
    * @param {ApiHandlerCallback} callback - Function that processes the request and returns a payload.
-   * @returns {void}
+   * @returns {void} Nothing. The handler is stored under the given type.
    * @throws {TypeError} If type is not a non-empty string or callback is not a function.
    */
   onApi(type, callback) {
@@ -2404,7 +2425,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * event so the browser does not show its own generic notification.
    *
    * @param {PushEvent} event - The native push event.
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} Resolves once the push message is handled and every client is notified.
    */
   async #handlePush(event) {
     const pushCfg = this.#config.push;
@@ -2454,7 +2475,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * Handles a `notificationclick` event, including action buttons.
    *
    * @param {NotificationEvent} event - The native notification click event.
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} Resolves once the target client is focused or a new window is opened.
    */
   async #handleNotificationClick(event) {
     const action = event.action || null;
@@ -2490,7 +2511,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * Without this handler the user stops receiving pushes silently.
    *
    * @param {Event} event - The native event.
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} Resolves once every client has been notified of the rotation.
    */
   async #handleSubscriptionChange(event) {
     this.emit('pushsubscriptionchange', { event });
@@ -2503,7 +2524,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * @param {string} title - The notification title.
    * @param {string} body - The message body.
    * @param {NotificationOptions} [options] - Additional options from the Notification API.
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} Resolves once the browser has queued the notification.
    */
   async showNotification(title, body, options = {}) {
     const pushCfg = this.#config.push;
@@ -2574,7 +2595,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * Resolves the `install` phase according to the configured strategy.
    *
    * @param {ExtendableEvent} event - The native install event.
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} Resolves once the install strategy has been applied.
    * @throws {TypeError} If the configured install strategy is not recognized.
    */
   async #resolveInstall(event) {
@@ -2602,7 +2623,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
    * Resolves the `activate` phase according to the configured strategy.
    *
    * @param {ExtendableEvent} event - The native activate event.
-   * @returns {Promise<void>}
+   * @returns {Promise<void>} Resolves once the activate strategy has been applied.
    * @throws {TypeError} If the configured activate strategy is not recognized.
    */
   async #resolveActivate(event) {
@@ -2628,7 +2649,7 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
 
   /**
    * Initializes the Service Worker event listeners.
-   * @returns {void}
+   * @returns {void} Nothing. Listeners are attached to the global scope as a side effect.
    * @throws {Error} If the engine has already been started.
    */
   init() {
@@ -2716,7 +2737,12 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
         /** @type {Request} */
         const request = event.request;
         const url = new URL(request.url);
-        this.emit('fetchRequested', { event, request, url });
+
+        /** @type {FetchStartCheckerResult} */
+        const result = { canStart: true };
+
+        this.emit('fetchRequested', { event, request, url, result });
+        if (!result.canStart) return;
 
         // Handles navigation requests based on the router configuration.
         const routerCfg = fetchCfg.router;
