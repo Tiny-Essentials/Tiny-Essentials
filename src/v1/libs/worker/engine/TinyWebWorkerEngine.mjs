@@ -82,15 +82,14 @@ const READY_EVENT_TYPE = 'ww:EngineReady';
  */
 
 /**
- * A typed event emitter for {@link TinyWebWorkerEngine}.
- * @typedef {import('../../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyWebWorkerEngineEvents>} TinyWebWorkerEngineEmitter
+ * @type {import('../../../jsdoc/EventEmitter.mjs').ITypedEventEmitter<TinyWebWorkerEngineEvents, typeof TinyPluginCore>}
  */
+const TypedPluginCore = TinyPluginCore;
 
 /**
  * Manages the lifecycle and execution of modules inside a Dedicated Web Worker.
- * @implements {TinyWebWorkerEngineEmitter}
  */
-class TinyWebWorkerEngine extends TinyPluginCore {
+class TinyWebWorkerEngine extends TypedPluginCore {
   /**
    * Validates if an event type is a reserved name for the internal lifecycle.
    * @param {string} type - The name of the event to validate.

@@ -114,17 +114,16 @@ const postMessage = (message, transfer) => {
  */
 
 /**
- * A typed event emitter for {@link TinyServiceWorker}.
- * @typedef {import('../../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyServiceWorkerEvents>} TinyServiceWorkerEmitter
+ * @type {import('../../../jsdoc/EventEmitter.mjs').ITypedEventEmitter<TinyServiceWorkerEvents, typeof TinyPluginCore>}
  */
+const TypedPluginCore = TinyPluginCore
 
 /**
  * @template {string} IdWorker
  * @template {string | URL} SwUrl
  * Manages Service Worker registration, versioning, and messaging.
- * @implements {TinyServiceWorkerEmitter}
  */
-class TinyServiceWorker extends TinyPluginCore {
+class TinyServiceWorker extends TypedPluginCore {
   static postMessage = postMessage;
   static #PUSH_TYPE = PUSH_TYPE;
   static get PUSH_TYPE() {

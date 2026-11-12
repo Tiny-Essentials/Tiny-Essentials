@@ -531,11 +531,6 @@ const getResType = (code) => {
  */
 
 /**
- * A typed event emitter for {@link TinyServiceWorkerEngine}.
- * @typedef {import('../../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyServiceWorkerEngineEvents>} TinyServiceWorkerEngineEmitter
- */
-
-/**
  * A mock class to simulate NotificationEvent for messaging purposes.
  * @extends Event
  */
@@ -588,10 +583,14 @@ class MockNotificationEvent extends Event {
 }
 
 /**
- * Manages the lifecycle and execution of modules based on the provided configuration.
- * @implements {TinyServiceWorkerEngineEmitter}
+ * @type {import('../../../jsdoc/EventEmitter.mjs').ITypedEventEmitter<TinyServiceWorkerEngineEvents, typeof TinyPluginCore>}
  */
-class TinyServiceWorkerEngine extends TinyPluginCore {
+const TypedPluginCore = TinyPluginCore
+
+/**
+ * Manages the lifecycle and execution of modules based on the provided configuration.
+ */
+class TinyServiceWorkerEngine extends TypedPluginCore {
   static #PUSH_TYPE = PUSH_TYPE;
   static get PUSH_TYPE() {
     return TinyServiceWorkerEngine.#PUSH_TYPE;

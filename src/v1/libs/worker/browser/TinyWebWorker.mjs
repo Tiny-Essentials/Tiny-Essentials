@@ -35,15 +35,14 @@ const checkDestroy = createCheckDestroyed('TinyWebWorker');
  */
 
 /**
- * A typed event emitter for {@link TinyWebWorker}.
- * @typedef {import('../../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<TinyWebWorkerEvents>} TinyWebWorkerEmitter
+ * @type {import('../../../jsdoc/EventEmitter.mjs').ITypedEventEmitter<TinyWebWorkerEvents, typeof TinyPluginCore>}
  */
+const TypedPluginCore = TinyPluginCore
 
 /**
  * Manages Web Worker initialization, lifecycle, and strictly typed messaging.
- * @implements {TinyWebWorkerEmitter}
  */
-class TinyWebWorker extends TinyPluginCore {
+class TinyWebWorker extends TypedPluginCore {
   /**
    * Validates if an event type is a reserved name for the internal lifecycle.
    * @param {string} type - The name of the event to validate.
