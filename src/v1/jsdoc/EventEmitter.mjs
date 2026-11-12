@@ -17,3 +17,23 @@ import { EventEmitter } from 'events';
  *   listenerCount<K extends keyof MyEvents>(event: K, listener?: MyEvents[K]): number;
  * }} ICustomEventEmitter
  */
+
+/**
+ * A constructor whose instances are `T` with the event API narrowed to `Events`.
+ *
+ * The constructor parameter list is projected from `T` through
+ * `ConstructorParameters`, so `super(...)` inside a subclass keeps full type
+ * checking. Using `...args: any[]` here would silently widen every `super()`
+ * call to `any`.
+ *
+ * The instance type is an intersection instead of `Omit<InstanceType<T>, ...>`
+ * because `Omit` strips the private fields, which are nominal in TypeScript and
+ * would break assignability back to `T` (and therefore every
+ * `@template {SomeClass} T` constraint downstream).
+ *
+ * @template {Record<string | symbol, (...args: any[]) => any>} Events
+ * @template {abstract new (...args: any[]) => any} T
+ * @typedef {new (
+ *   ...args: ConstructorParameters<T>
+ * ) => ICustomEventEmitter<Events> & InstanceType<T>} ITypedEventEmitter
+ */
