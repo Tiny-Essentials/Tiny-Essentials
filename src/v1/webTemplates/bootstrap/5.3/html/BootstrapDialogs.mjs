@@ -28,6 +28,8 @@
  * @property {CustomElementConfig} [cancelBtnConfig] - Customization for the cancel button.
  * @property {CustomElementConfig} [contentConfig] - Customization for the modal content container.
  * @property {CustomElementConfig} [dialogConfig] - Customization for the modal dialog wrapper.
+ * @property {boolean} [closeOnEnter=true] - Whether pressing Enter confirms the dialog.
+ * @property {boolean} [closeOnEscape=true] - Whether pressing Escape cancels the dialog.
  */
 
 /**
@@ -47,6 +49,8 @@ class BootstrapDialogs {
   static _activeResolve = null;
   /** @type {'alert'|'confirm'|'prompt'|null} */
   static _activeType = null;
+  /** @type {((event: KeyboardEvent) => void)|null} */
+  static _activeKeydownHandler = null;
 
   /** @type {ModalClass|null} */
   static #Modal = null;
@@ -316,6 +320,13 @@ class BootstrapDialogs {
         }
       }
     }
+
+    for (const key of ['closeOnEnter', 'closeOnEscape']) {
+      const value = /** @type {Record<string, unknown>} */ (options)[key];
+      if (value !== undefined && typeof value !== 'boolean') {
+        throw new TypeError(`The property "${key}" must be a boolean.`);
+      }
+    }
   }
 
   /**
@@ -559,6 +570,11 @@ class BootstrapDialogs {
    * @returns {void}
    */
   static _cleanup() {
+    if (this._activeKeydownHandler) {
+      document.removeEventListener('keydown', this._activeKeydownHandler, true);
+      this._activeKeydownHandler = null;
+    }
+
     if (this._activeResolve) {
       /** @type {any} */
       let cancelValue;
@@ -606,6 +622,9 @@ class BootstrapDialogs {
     this._validateOptions(options);
     this._cleanup();
 
+    const closeOnEnter = options.closeOnEnter !== false;
+    const closeOnEscape = options.closeOnEscape !== false;
+
     return new Promise((resolve) => {
       this._activeResolve = resolve;
       this._activeType = type;
@@ -628,30 +647,70 @@ class BootstrapDialogs {
         throw new Error('Critical Error: Confirm button not found in modal template.');
       }
 
-      this._activeInstance = new BootstrapDialogs.Modal(modalElement);
+      this._activeInstance = new BootstrapDialogs.Modal(modalElement, {
+        keyboard: closeOnEscape,
+      });
+
       /** @type {boolean} */
       let isConfirmed = false;
 
       /**
        * Handles the confirmation action.
+       * @returns {void}
        */
       const handleConfirm = () => {
+        if (isConfirmed) return;
         isConfirmed = true;
+
         /** @type {any} */
         let value;
-        if (type === 'prompt')
+        if (type === 'prompt') {
           value = inputField instanceof HTMLInputElement ? inputField.value : null;
-        else if (type === 'confirm') value = true;
-        else value = true;
+        } else {
+          value = true;
+        }
 
         this._activeInstance?.hide();
         resolve(value);
       };
 
+      /**
+       * Handles the keyboard shortcuts for confirming and cancelling the dialog.
+       * @param {KeyboardEvent} event - The keyboard event dispatched on the document.
+       * @returns {void}
+       */
+      const handleKeydown = (event) => {
+        if (event.key === 'Enter') {
+          if (!closeOnEnter || event.isComposing || event.repeat) return;
+
+          const target = event.target;
+          if (target instanceof HTMLElement) {
+            if (target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+            if (target.tagName === 'BUTTON') return;
+          }
+
+          event.preventDefault();
+          handleConfirm();
+          return;
+        }
+
+        if (event.key === 'Escape' && !closeOnEscape) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      };
+
       confirmBtn.addEventListener('click', handleConfirm);
+      document.addEventListener('keydown', handleKeydown, true);
+      this._activeKeydownHandler = handleKeydown;
 
       // Handle cancel/close
       modalElement.addEventListener('hidden.bs.modal', () => {
+        document.removeEventListener('keydown', handleKeydown, true);
+        if (this._activeKeydownHandler === handleKeydown) {
+          this._activeKeydownHandler = null;
+        }
+
         if (this._activeResolve === resolve) {
           if (!isConfirmed) {
             /** @type {any} */
@@ -669,6 +728,7 @@ class BootstrapDialogs {
       });
 
       this._activeInstance.show();
+
       if (type === 'prompt' && inputField) {
         modalElement.addEventListener('shown.bs.modal', () => {
           if (!(inputField instanceof HTMLInputElement)) return;
