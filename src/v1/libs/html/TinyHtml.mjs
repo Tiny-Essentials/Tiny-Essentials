@@ -292,26 +292,34 @@ const __elemCollision = {
  */
 
 /**
+ * Describes the box sides of an element, split into horizontal and vertical
+ * totals plus each individual side in pixels.
+ *
  * @typedef {Object} HtmlElBoxSides
  * @property {number} x - Total horizontal size (left + right)
  * @property {number} y - Total vertical size (top + bottom)
- * @property {number} left
- * @property {number} right
- * @property {number} top
- * @property {number} bottom
+ * @property {number} left - The left side size in pixels.
+ * @property {number} right - The right side size in pixels.
+ * @property {number} top - The top side size in pixels.
+ * @property {number} bottom - The bottom side size in pixels.
  */
 
 /**
- * @typedef {string | number | Date | boolean | null} SetValueBase - Primitive types accepted as input values.
+ * Primitive types accepted as input values by the value setters.
+ *
+ * @typedef {string | number | Date | boolean | null} SetValueBase
  */
 
 /**
- * @typedef {'string' | 'date' | 'number'} GetValueTypes
  * Types of value extractors supported by TinyHtml._valTypes.
+ *
+ * @typedef {'string' | 'date' | 'number'} GetValueTypes
  */
 
 /**
- * @typedef {SetValueBase|SetValueBase[]} SetValueList - A single value or an array of values to be assigned to the input element.
+ * A single value or an array of values to be assigned to the input element.
+ *
+ * @typedef {SetValueBase|SetValueBase[]} SetValueList
  */
 
 /**
@@ -551,6 +559,13 @@ class TinyHtml {
         })
       : undefined;
 
+  /**
+   * Shared `TinyElementObserver` instance that watches the document for
+   * `style` and `class` attribute changes and re-dispatches them as
+   * `tinyhtml.stylechanged` and `tinyhtml.classchanged` events.
+   *
+   * @returns {TinyElementObserver<HTMLElement>|undefined} The shared observer, or `undefined` when no DOM is available.
+   */
   static get tinyObserver() {
     return TinyHtml.#tinyObserver;
   }
@@ -667,8 +682,10 @@ class TinyHtml {
     const result = [];
 
     /**
-     * @param {Node} el
-     * @returns {*}
+     * Recursively converts a DOM node into its JSON-like representation.
+     *
+     * @param {Node} el - The node to convert.
+     * @returns {*} The parsed representation, or `null` when the node is ignored.
      */
     const parseElement = (el) => {
       if (el instanceof Comment) return null;
@@ -707,8 +724,10 @@ class TinyHtml {
    */
   static jsonToNodes(jsonArray) {
     /**
-     * @param {HtmlParsed|string} nodeData
-     * @returns {HTMLElement|Text}
+     * Recursively creates DOM nodes from a JSON-like HTML structure.
+     *
+     * @param {HtmlParsed|string} nodeData - The node data to convert.
+     * @returns {HTMLElement|Text} The created DOM node.
      */
     const createElement = (nodeData) => {
       if (typeof nodeData === 'string') {
@@ -809,10 +828,10 @@ class TinyHtml {
   }
 
   /**
-   * @deprecated Use the {@link createFromHTML} instead.
-   *
    * Creates an HTMLElement or TextNode from an HTML string.
    * Supports both elements and plain text.
+   *
+   * @deprecated Use the {@link createFromHTML} instead.
    *
    * @param {string} htmlString - The HTML string to convert.
    * @returns {TinyHtml<Element>} - A single HTMLElement or TextNode.
@@ -6136,8 +6155,10 @@ class TinyHtml {
   static _valHooks = {
     option: {
       /**
-       * @param {HTMLOptionElement} elem
-       * @returns {string|null}
+       * Reads the value of an `<option>` element.
+       *
+       * @param {HTMLOptionElement} elem - The option element to read from.
+       * @returns {string|null} The option's `value` attribute, falling back to its text content.
        */
       get: (elem) => {
         const val = elem.getAttribute('value');
@@ -6147,8 +6168,10 @@ class TinyHtml {
 
     select: {
       /**
-       * @param {HTMLSelectElement} elem
-       * @returns {(string | null)[] | string | null}
+       * Reads the selected value(s) of a `<select>` element.
+       *
+       * @param {HTMLSelectElement} elem - The select element to read from.
+       * @returns {(string | null)[] | string | null} The selected value(s).
        */
       get: (elem) => {
         const options = elem.options;
@@ -6175,8 +6198,11 @@ class TinyHtml {
       },
 
       /**
-       * @param {HTMLSelectElement} elem
-       * @param {string[]|string} value
+       * Applies the given value(s) to a `<select>` element.
+       *
+       * @param {HTMLSelectElement} elem - The select element to update.
+       * @param {string[]|string} value - The value or values to select.
+       * @returns {string[]} The values that were applied.
        */
       set: (elem, value) => {
         const options = elem.options;
@@ -6201,15 +6227,20 @@ class TinyHtml {
 
     radio: {
       /**
-       * @param {HTMLInputElement} elem
-       * @returns {string}
+       * Reads the state of a radio input.
+       *
+       * @param {HTMLInputElement} elem - The radio input to read from.
+       * @returns {string} `'on'` when checked, otherwise `'off'`.
        */
       get(elem) {
         return elem.checked ? 'on' : 'off';
       },
       /**
-       * @param {HTMLInputElement} elem
-       * @param {string[]} value
+       * Applies the given value to a radio input.
+       *
+       * @param {HTMLInputElement} elem - The radio input to update.
+       * @param {string[]} value - The value to apply.
+       * @returns {boolean|void} The applied value when it is a boolean.
        */
       set(elem, value) {
         if (typeof value === 'boolean') {
@@ -6229,15 +6260,20 @@ class TinyHtml {
 
     checkbox: {
       /**
-       * @param {HTMLInputElement} elem
-       * @returns {string}
+       * Reads the state of a checkbox input.
+       *
+       * @param {HTMLInputElement} elem - The checkbox input to read from.
+       * @returns {string} `'on'` when checked, otherwise `'off'`.
        */
       get(elem) {
         return elem.checked ? 'on' : 'off';
       },
       /**
-       * @param {HTMLInputElement} elem
-       * @param {boolean} value
+       * Applies the given value to a checkbox input.
+       *
+       * @param {HTMLInputElement} elem - The checkbox input to update.
+       * @param {boolean} value - The checked state to apply.
+       * @returns {boolean|void} The applied value when it is a boolean.
        */
       set(elem, value) {
         if (typeof value === 'boolean') {
@@ -6261,8 +6297,11 @@ class TinyHtml {
   static setVal(el, value) {
     TinyHtml._preInputElems(el, 'setVal').forEach((elem) => {
       /**
-       * @param {SetValueBase[]} array
-       * @param {(v: SetValueBase, i: number) => SetValueBase} callback
+       * Maps over an array, returning a new array with the callback results.
+       *
+       * @param {SetValueBase[]} array - The array to map over.
+       * @param {(v: SetValueBase, i: number) => SetValueBase} callback - The mapping function.
+       * @returns {SetValueBase[]} The mapped array.
        */
       const mapArray = (array, callback) => {
         const result = [];
