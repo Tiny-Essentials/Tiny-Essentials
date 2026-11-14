@@ -1136,8 +1136,15 @@ Advanced filtering engine used internally by many other methods.
 
 ### 🔍 Static Filter Utilities
 
-#### `TinyHtml.filter(...)`
-Filters elements based on a selector (with optional negation).
+#### `TinyHtml.filter(elems, qualifier, not?)`
+Reduces a set of elements to the ones matching `qualifier`. This is the `TinyHtml` replica of
+jQuery's `filter()`: the qualifier may be a CSS selector, a DOM element, a list of elements or a
+predicate function (`(index, element) => boolean`). Pass `not = true` to invert the match.
+
+```js
+TinyHtml.filter(document.querySelectorAll('li'), '.active');
+TinyHtml.filter(items, (i, el) => el.dataset.keep === '1');
+```
 
 #### `TinyHtml.filterOnly(...)`
 Same as `.filter()`, but calls `winnow()` directly without the `not` flag.
@@ -1157,6 +1164,12 @@ Finds the nearest ancestor matching a selector, optionally stopping at a context
 ---
 
 ### 📦 Instance Filter Methods
+
+#### `.filter(qualifier)`
+Returns the current elements that match the qualifier (selector, element, element list or predicate).
+
+#### `.filterOnly(selector)`
+Instance version of `TinyHtml.filterOnly()`.
 
 #### `.not(selector)`
 Returns all current elements excluding the ones that match.
