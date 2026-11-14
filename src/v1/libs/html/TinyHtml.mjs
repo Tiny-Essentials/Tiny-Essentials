@@ -1698,6 +1698,9 @@ class TinyHtml {
    */
   static winnow(elems, qualifier, where, not = false) {
     if (typeof not !== 'boolean') throw new TypeError('The "not" must be a boolean.');
+    if (qualifier instanceof TinyHtml)
+      qualifier = /** @type {Element[]} */ (qualifier._getElements(where));
+
     if (typeof qualifier === 'function') {
       return TinyHtml._preElems(elems, where).filter(
         (el, i) => !!qualifier.call(el, i, el) !== not,
@@ -1726,18 +1729,25 @@ class TinyHtml {
   }
 
   /**
-   * Filters a set of elements by a CSS selector.
+   * Reduces the set of elements to the ones matching the given qualifier.
    *
-   * @param {TinyElement|TinyElement[]} elems
-   * @param {string} selector
-   * @param {boolean} not
-   * @returns {Element[]}
+   * @param {TinyElement|TinyElement[]} elems - The elements to filter.
+   * @param {WinnowRequest} qualifier - A selector, element, element list or predicate.
+   * @param {boolean} [not=false] - Inverts the match when `true`.
+   * @returns {Element[]} The elements that matched the qualifier.
    */
-  static filter(elems, selector, not = false) {
-    if (not) selector = `:not(${selector})`;
-    return TinyHtml._preElems(elems, 'filter').filter(
-      (el) => el.nodeType === 1 && el.matches(selector),
-    );
+  static filter(elems, qualifier, not = false) {
+    return TinyHtml.winnow(elems, qualifier, 'filter', not);
+  }
+
+  /**
+   * Reduces the set of elements to the ones matching the given qualifier.
+   *
+   * @param {WinnowRequest} qualifier - A selector, element, element list or predicate.
+   * @returns {Element[]} The elements that matched the qualifier.
+   */
+  filter(qualifier) {
+    return TinyHtml.filter(this, qualifier);
   }
 
   /**
@@ -1749,6 +1759,16 @@ class TinyHtml {
    */
   static filterOnly(elems, selector) {
     return TinyHtml.winnow(elems, selector, 'filterOnly', false);
+  }
+
+  /**
+   * Returns only the elements matching the given selector or function.
+   *
+   * @param {WinnowRequest} selector
+   * @returns {Element[]}
+   */
+  filterOnly(selector) {
+    return TinyHtml.filterOnly(this, selector);
   }
 
   /**
