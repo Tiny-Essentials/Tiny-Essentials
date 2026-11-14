@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BootstrapDialogs - Test Environment</title>
+    <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <div class="container-xxl py-4">
+      <header class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+        <div>
+          <h1 class="h3 mb-1">
+            <span class="text-primary">BootstrapDialogs</span>
+            <span class="text-body-secondary fw-normal">Test Environment</span>
+          </h1>
+          <p class="text-body-secondary mb-0 small">
+            Drop-in replacement for <code>alert()</code>, <code>confirm()</code> and
+            <code>prompt()</code> built on Bootstrap 5 modals.
+          </p>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-reset">
+            Reset config
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-clear-log">
+            Clear log
+          </button>
+        </div>
+      </header>
+
+      <div class="row g-3">
+        <!-- ============================== ALERT ============================== -->
+        <div class="col-12 col-lg-6">
+          <section class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+              <i class="bi">💬</i>
+              <span class="fw-semibold">alert()</span>
+              <code class="ms-auto small text-body-secondary">Promise<void></code>
+            </div>
+            <div class="card-body d-flex flex-column gap-2">
+              <p class="small text-body-secondary mb-1">
+                Simple message with a single confirmation button.
+              </p>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-sm btn-primary" id="alert-default">
+                  Default
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="alert-custom">
+                  Custom labels
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="alert-styled">
+                  Custom styles
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="alert-long">
+                  Long content
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================= CONFIRM ============================= -->
+        <div class="col-12 col-lg-6">
+          <section class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+              <i class="bi">❓</i>
+              <span class="fw-semibold">confirm()</span>
+              <code class="ms-auto small text-body-secondary">Promise<boolean></code>
+            </div>
+            <div class="card-body d-flex flex-column gap-2">
+              <p class="small text-body-secondary mb-1">
+                Resolves <code>true</code> on confirm and <code>false</code> on cancel, close or
+                <kbd>Esc</kbd>.
+              </p>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-sm btn-primary" id="confirm-default">
+                  Default
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="confirm-danger">
+                  Destructive action
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="confirm-escape">
+                  Esc disabled
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================== PROMPT ============================= -->
+        <div class="col-12 col-lg-6">
+          <section class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+              <i class="bi">⌨️</i>
+              <span class="fw-semibold">prompt()</span>
+              <code class="ms-auto small text-body-secondary">Promise<string | null></code>
+            </div>
+            <div class="card-body d-flex flex-column gap-2">
+              <p class="small text-body-secondary mb-1">
+                Resolves the input value, or <code>null</code> when cancelled.
+              </p>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-sm btn-primary" id="prompt-default">
+                  Default
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="prompt-filled">
+                  With default value
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="prompt-enter">
+                  Enter disabled
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================= LOADING ============================= -->
+        <div class="col-12 col-lg-6">
+          <section class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+              <i class="bi">⏳</i>
+              <span class="fw-semibold">showLoading()</span>
+              <code class="ms-auto small text-body-secondary">void</code>
+            </div>
+            <div class="card-body d-flex flex-column gap-2">
+              <p class="small text-body-secondary mb-1">
+                Non-dismissible overlay. Calling it again updates the current message.
+              </p>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-sm btn-primary" id="loading-sequence">
+                  Run sequence
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="loading-styled">
+                  Custom style
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" id="loading-hide">
+                  hideLoading()
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================== EDGE =============================== -->
+        <div class="col-12 col-lg-6">
+          <section class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+              <i class="bi">🧪</i>
+              <span class="fw-semibold">Edge cases</span>
+            </div>
+            <div class="card-body d-flex flex-column gap-2">
+              <p class="small text-body-secondary mb-1">
+                Nested calls, HTML injection and body cleanup.
+              </p>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="edge-html">
+                  HTML is escaped
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="edge-race">
+                  Overlapping dialogs
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="edge-chain">
+                  Chained flow
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================== CONFIG ============================= -->
+        <div class="col-12 col-lg-6">
+          <section class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+              <i class="bi">🎨</i>
+              <span class="fw-semibold">Global config</span>
+            </div>
+            <div class="card-body d-flex flex-column gap-2">
+              <p class="small text-body-secondary mb-1">
+                Mutates <code>BootstrapDialogs.defaultConfig</code> for every dialog.
+              </p>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="config-rounded">
+                  Rounded + warning
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="config-reset">
+                  Restore defaults
+                </button>
+              </div>
+              <pre class="config-preview mb-0" id="config-preview"></pre>
+            </div>
+          </section>
+        </div>
+
+        <!-- =============================== LOG =============================== -->
+        <div class="col-12">
+          <section class="card">
+            <div class="card-header d-flex align-items-center gap-2">
+              <i class="bi">📋</i>
+              <span class="fw-semibold">Result log</span>
+              <span class="badge text-bg-secondary ms-auto" id="log-count">0</span>
+            </div>
+            <div class="card-body p-0">
+              <div id="log" class="log">
+                <p class="text-body-secondary small m-3 mb-3">
+                  Interact with the buttons above to see the resolved values.
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

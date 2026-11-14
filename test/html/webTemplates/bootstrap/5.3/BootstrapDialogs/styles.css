@@ -1,0 +1,83 @@
+/* --- Layout ------------------------------------------------------------ */
+
+body {
+  min-height: 100vh;
+  background-image: radial-gradient(circle at 15% 0%, rgba(13, 110, 253, 0.12), transparent 45%),
+    radial-gradient(circle at 85% 0%, rgba(214, 51, 132, 0.1), transparent 45%);
+  background-repeat: no-repeat;
+}
+
+.card {
+  --bs-card-border-color: var(--bs-border-color);
+}
+
+.card-header {
+  font-size: 0.95rem;
+}
+
+code {
+  font-size: 0.85em;
+}
+
+/* --- Result log ------------------------------------------------------- */
+
+.log {
+  max-height: 22rem;
+  overflow-y: auto;
+  font-family: var(--bs-font-monospace);
+  font-size: 0.82rem;
+}
+
+.log-entry {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.75rem;
+  padding: 0.4rem 1rem;
+  border-bottom: 1px solid var(--bs-border-color-translucent);
+}
+
+.log-entry:last-child {
+  border-bottom: 0;
+}
+
+.log-entry time {
+  color: var(--bs-secondary-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.log-entry pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--bs-body-color);
+}
+
+.log-entry .log-label {
+  color: var(--bs-primary-text-emphasis);
+}
+
+.log-entry .log-value-true {
+  color: var(--bs-success);
+}
+
+.log-entry .log-value-false {
+  color: var(--bs-danger);
+}
+
+.log-entry .log-value-null {
+  color: var(--bs-warning);
+}
+
+/* --- Config preview --------------------------------------------------- */
+
+.config-preview {
+  max-height: 8rem;
+  overflow: auto;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius-sm);
+  background: var(--bs-tertiary-bg);
+  color: var(--bs-secondary-color);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
