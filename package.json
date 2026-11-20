@@ -6,11 +6,11 @@
     "tiny-essentials-fork": "./TinyFork.mjs"
   },
   "scripts": {
+    "dev": "node test/dev-server.mjs",
     "test": "npm run test:mjs && npm run test:cjs && npm run test:js && npm run check-exports",
     "test:js": "node -r @babel/register test/index.js",
     "test:cjs": "node test/index.cjs",
     "test:mjs": "node test/index.mjs",
-    "test:mjs:web": "node test/express.mjs",
     "test:mjs:crypto": "node test/index.mjs crypto",
     "test:mjs:promisequeue": "node test/index.mjs promiseQueue",
     "test:mjs:objtype": "node test/index.mjs objType",
@@ -1189,7 +1189,6 @@
     "buffer": "^6.0.3",
     "canvas": "^3.2.3",
     "esbuild": "^0.28.1",
-    "express": "^5.1.0",
     "file-type": "^22.0.2",
     "jquery": "^3.7.1",
     "lodash": "^4.17.21",

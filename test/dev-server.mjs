@@ -1,14 +1,13 @@
-import express from 'express';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
+import http from 'node:http';
+import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
 import * as sass from 'sass';
 import { build } from 'esbuild';
 
 import { arraySortPositions } from '../src/v1/index.mjs';
 
-const app = express();
 const port = 3145;
 
 // Resolve __dirname (since we are using ES Modules)
@@ -62,7 +61,6 @@ const MIME_TYPES = {
   // === DOCUMENTS / OFFICE ===
   '.pdf': 'application/pdf',
   '.json': 'application/json',
-  '.pdf': 'application/pdf',
   '.doc': 'application/msword',
   '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   '.xls': 'application/vnd.ms-excel',
@@ -96,6 +94,443 @@ function getContentTypeNative(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   return MIME_TYPES[ext] || 'application/octet-stream';
 }
+
+/* -------------------------------------------------------------------------- *
+ * Minimal HTTP framework (Express replacement)
+ *
+ * Only the small subset of the Express API used by this dev server is
+ * implemented, on top of the native `node:http` module:
+ *
+ *   app.use([mount], handler)   app.get(matcher, ...handlers)
+ *   app.listen(port, host, cb)
+ *   req.path  req.query  req.params
+ *   res.status()  res.type()  res.send()  res.json()  res.sendFile()
+ *   expressStatic(root, options)
+ * -------------------------------------------------------------------------- */
+
+/**
+ * Sends a raw body, mimicking `res.send()` from Express.
+ * @param {http.ServerResponse} res
+ * @param {*} body
+ */
+function sendBody(res, body) {
+  if (body !== null && typeof body === 'object' && !Buffer.isBuffer(body)) {
+    return sendJson(res, body);
+  }
+
+  /** @type {Buffer} */
+  let payload;
+  if (body === undefined || body === null) payload = Buffer.alloc(0);
+  else if (Buffer.isBuffer(body)) payload = body;
+  else payload = Buffer.from(String(body), 'utf8');
+
+  if (!res.hasHeader('Content-Type')) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  }
+  res.setHeader('Content-Length', String(payload.length));
+  res.end(payload);
+}
+
+/**
+ * @param {http.ServerResponse} res
+ * @param {*} body
+ */
+function sendJson(res, body) {
+  const payload = JSON.stringify(body);
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Length', String(Buffer.byteLength(payload)));
+  res.end(payload);
+}
+
+/**
+ * Streams a file to the client, honoring `Range` and `HEAD` requests.
+ *
+ * @param {http.IncomingMessage} req
+ * @param {http.ServerResponse} res
+ * @param {string} filePath
+ * @param {fs.Stats} stats
+ * @param {{ etag?: boolean, lastModified?: boolean, cacheControl?: boolean, setHeaders?: (res: http.ServerResponse, filePath: string, stats: fs.Stats) => void }} [options]
+ */
+function sendFile(req, res, filePath, stats, options = {}) {
+  const { etag = true, lastModified = true, cacheControl = true, setHeaders } = options;
+
+  if (typeof setHeaders === 'function') setHeaders(res, filePath, stats);
+
+  const size = stats.size;
+
+  if (lastModified) res.setHeader('Last-Modified', stats.mtime.toUTCString());
+
+  /** @type {string|undefined} */
+  let etagValue;
+  if (etag) {
+    etagValue = `W/"${size.toString(16)}-${Math.floor(stats.mtimeMs).toString(16)}"`;
+    res.setHeader('ETag', etagValue);
+  }
+
+  if (cacheControl && !res.hasHeader('Cache-Control')) {
+    res.setHeader('Cache-Control', 'public, max-age=0');
+  }
+
+  res.setHeader('Accept-Ranges', 'bytes');
+
+  if (etagValue && req.headers['if-none-match'] === etagValue) {
+    res.statusCode = 304;
+    return res.end();
+  }
+
+  let start = 0;
+  let end = size - 1;
+  let status = 200;
+
+  const rangeHeader = req.headers.range;
+  if (rangeHeader && rangeHeader.startsWith('bytes=')) {
+    const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader.split(',')[0].trim());
+    if (match) {
+      const [, rawStart, rawEnd] = match;
+
+      if (rawStart === '') {
+        const suffix = parseInt(rawEnd, 10);
+        if (!Number.isNaN(suffix)) {
+          start = Math.max(0, size - suffix);
+          end = size - 1;
+        }
+      } else {
+        start = parseInt(rawStart, 10);
+        end = rawEnd === '' ? size - 1 : Math.min(parseInt(rawEnd, 10), size - 1);
+      }
+
+      if (Number.isNaN(start) || Number.isNaN(end) || start > end || start >= size) {
+        res.statusCode = 416;
+        res.setHeader('Content-Range', `bytes */${size}`);
+        return res.end();
+      }
+
+      status = 206;
+    }
+  }
+
+  if (status === 206) res.statusCode = 206;
+  if (!res.hasHeader('Content-Type')) {
+    res.setHeader('Content-Type', getContentTypeNative(filePath));
+  }
+  res.setHeader('Content-Length', String(end - start + 1));
+  if (status === 206) res.setHeader('Content-Range', `bytes ${start}-${end}/${size}`);
+
+  if (req.method === 'HEAD') return res.end();
+
+  const stream = fs.createReadStream(filePath, { start, end });
+  stream.on('error', () => {
+    if (!res.writableEnded) res.end();
+  });
+  res.on('close', () => stream.destroy());
+  stream.pipe(res);
+}
+
+/**
+ * Adds the Express-like helpers to the native response object.
+ * @param {http.IncomingMessage} req
+ * @param {http.ServerResponse} res
+ */
+function attachResponseHelpers(req, res) {
+  res.status = (code) => {
+    res.statusCode = code;
+    return res;
+  };
+
+  res.type = (type) => {
+    res.setHeader('Content-Type', type);
+    return res;
+  };
+
+  res.send = (body) => {
+    sendBody(res, body);
+    return res;
+  };
+
+  res.json = (body) => {
+    sendJson(res, body);
+    return res;
+  };
+  res.sendFile = (filePath) => {
+    fs.promises
+      .stat(filePath)
+      .then((stats) => sendFile(req, res, filePath, stats, { etag: false }))
+      .catch(() => {
+        if (!res.writableEnded) res.end();
+      });
+  };
+}
+
+/**
+ * Matches a route matcher (string or RegExp) against a pathname.
+ * @param {string|RegExp} matcher
+ * @param {string} pathname
+ * @returns {string[]|null} The decoded params, or `null` when it does not match.
+ */
+function matchRoute(matcher, pathname) {
+  if (matcher instanceof RegExp) {
+    const match = matcher.exec(pathname);
+    if (!match) return null;
+    return match.slice(1).map((value) => {
+      if (value === undefined) return value;
+      try {
+        return decodeURIComponent(value);
+      } catch {
+        return value;
+      }
+    });
+  }
+
+  if (typeof matcher === 'string') {
+    return matcher === pathname ? [] : null;
+  }
+
+  return null;
+}
+
+/**
+ * Runs a list of route handlers in sequence.
+ * @param {Function[]} handlers
+ * @param {http.IncomingMessage} req
+ * @param {http.ServerResponse} res
+ * @param {(err?: unknown) => void} next
+ */
+function runHandlers(handlers, req, res, next) {
+  let index = 0;
+
+  const step = (err) => {
+    if (err) return next(err);
+
+    const handler = handlers[index++];
+    if (!handler) return next();
+
+    try {
+      const result = handler(req, res, step);
+      if (result && typeof result.catch === 'function') result.catch(step);
+    } catch (error) {
+      step(error);
+    }
+  };
+
+  step();
+}
+
+/**
+ * Creates a tiny Express-compatible application.
+ */
+function createApp() {
+  /** @type {Array<object>} */
+  const stack = [];
+
+  /**
+   * @param {http.IncomingMessage} req
+   * @param {http.ServerResponse} res
+   */
+  const requestHandler = (req, res) => {
+    let url;
+    try {
+      url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    } catch {
+      res.statusCode = 400;
+      return res.end('Bad Request');
+    }
+
+    req.path = url.pathname;
+    req.query = Object.fromEntries(url.searchParams);
+    req.params = [];
+    req.originalUrl = req.url;
+
+    attachResponseHelpers(req, res);
+
+    let index = 0;
+
+    /** @param {unknown} err */
+    const fail = (err) => {
+      if (res.writableEnded) return;
+      if (res.headersSent) return res.end();
+
+      const error = /** @type {any} */ (err);
+      res.statusCode = (error && error.status) || 500;
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.end(error && error.stack ? error.stack : String(err));
+    };
+
+    /** @param {unknown} [err] */
+    const dispatch = (err) => {
+      if (res.writableEnded) return;
+
+      while (index < stack.length) {
+        const layer = /** @type {any} */ (stack[index++]);
+
+        if (layer.kind === 'use') {
+          const isErrorHandler = !layer.handler.isStatic && layer.handler.length === 4;
+
+          if (err) {
+            if (!isErrorHandler) continue;
+            try {
+              return layer.handler(err, req, res, dispatch);
+            } catch (error) {
+              return fail(error);
+            }
+          }
+
+          if (isErrorHandler) continue;
+
+          if (layer.mount !== '/') {
+            if (req.path !== layer.mount && !req.path.startsWith(layer.mount + '/')) continue;
+          }
+
+          const subPath =
+            layer.mount === '/' ? req.path : req.path.slice(layer.mount.length) || '/';
+
+          try {
+            const result = layer.handler(req, res, dispatch, subPath);
+            if (result && typeof result.catch === 'function') result.catch(dispatch);
+          } catch (error) {
+            return dispatch(error);
+          }
+          return;
+        }
+
+        // Route layer
+        if (err) continue;
+        if (layer.method !== req.method && !(layer.method === 'GET' && req.method === 'HEAD')) {
+          continue;
+        }
+
+        const params = matchRoute(layer.matcher, req.path);
+        if (!params) continue;
+
+        req.params = params;
+        return runHandlers(layer.handlers, req, res, dispatch);
+      }
+
+      if (err) return fail(err);
+
+      res.statusCode = 404;
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.end('Not Found');
+    };
+
+    dispatch();
+  };
+
+  const app = {
+    /**
+     * @param {...any} args
+     */
+    use(...args) {
+      let mount = '/';
+      let handlers = args;
+
+      if (typeof args[0] === 'string') {
+        mount = args[0];
+        handlers = args.slice(1);
+      }
+
+      for (const handler of handlers.flat()) {
+        stack.push({ kind: 'use', mount, handler });
+      }
+
+      return app;
+    },
+
+    /**
+     * @param {string|RegExp} matcher
+     * @param {...Function} handlers
+     */
+    get(matcher, ...handlers) {
+      stack.push({ kind: 'route', method: 'GET', matcher, handlers: handlers.flat() });
+      return app;
+    },
+
+    /**
+     * @param {number} listenPort
+     * @param {string} host
+     * @param {() => void} callback
+     */
+    listen(listenPort, host, callback) {
+      return http.createServer(requestHandler).listen(listenPort, host, callback);
+    },
+  };
+
+  return app;
+}
+
+/**
+ * Serves the files of a directory, mimicking `express.static()`.
+ *
+ * @param {string} root
+ * @param {{ index?: string, etag?: boolean, lastModified?: boolean, cacheControl?: boolean, setHeaders?: (res: http.ServerResponse, filePath: string, stats: fs.Stats) => void }} [options]
+ */
+function expressStatic(root, options = {}) {
+  const { index = 'index.html', ...sendOptions } = options;
+  const rootPath = path.resolve(root);
+
+  /**
+   * @type {((req: http.IncomingMessage, res: http.ServerResponse, next: Function, subPath?: string) => Promise<void>) & { isStatic?: boolean }}
+   */
+  const staticMiddleware = async (req, res, next, subPath) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+
+    const rawPath = typeof subPath === 'string' ? subPath : req.path;
+
+    /** @type {string} */
+    let decoded;
+    try {
+      decoded = decodeURIComponent(rawPath);
+    } catch {
+      return next();
+    }
+
+    if (decoded.includes('\0')) return next();
+
+    const filePath = path.resolve(rootPath, '.' + path.posix.normalize('/' + decoded));
+    if (filePath !== rootPath && !filePath.startsWith(rootPath + path.sep)) return next();
+
+    /** @type {fs.Stats} */
+    let stats;
+    try {
+      stats = await fs.promises.stat(filePath);
+    } catch {
+      return next();
+    }
+
+    if (stats.isDirectory()) {
+      if (!decoded.endsWith('/')) {
+        const queryIndex = req.url.indexOf('?');
+        const search = queryIndex === -1 ? '' : req.url.slice(queryIndex);
+        res.statusCode = 301;
+        res.setHeader('Location', decoded + '/' + search);
+        return res.end();
+      }
+
+      const indexPath = path.join(filePath, index);
+      try {
+        const indexStats = await fs.promises.stat(indexPath);
+        if (!indexStats.isFile()) return next();
+        return sendFile(req, res, indexPath, indexStats, sendOptions);
+      } catch {
+        return next();
+      }
+    }
+
+    if (!stats.isFile()) return next();
+
+    return sendFile(req, res, filePath, stats, sendOptions);
+  };
+
+  // Marks the middleware so the router never mistakes it for an error handler.
+  staticMiddleware.isStatic = true;
+
+  return staticMiddleware;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Application
+ * -------------------------------------------------------------------------- */
+
+const app = createApp();
 
 // Define the public directory
 const publicDir = path.join(__dirname, './html');
@@ -176,7 +611,7 @@ function disableCache(res) {
 }
 
 /**
- * @typedef {(filePath: string, fileName: string, req: import('express').Request, res: import('express').Response, next?: import('express').NextFunction) => void} ReadFileUrl
+ * @typedef {(filePath: string, fileName: string, req: http.IncomingMessage, res: http.ServerResponse, next?: Function) => void} ReadFileUrl
  */
 
 /**
@@ -184,7 +619,6 @@ function disableCache(res) {
  * @param {string[]} formats
  * @param {string} folder
  * @param {ReadFileUrl} [response]
- * @returns {import('express').Application}
  */
 const readFileUrl =
   (
@@ -391,7 +825,7 @@ function resolveRenderTarget(urlPath) {
 
 /**
  * Renders `.scss` and `.md` files on the fly, no matter which folder they
- * live in. Must be registered before `express.static` so the raw file never
+ * live in. Must be registered before the static handler so the raw file never
  * reaches the browser.
  */
 app.use((req, res, next) => {
@@ -408,10 +842,9 @@ app.use((req, res, next) => {
 });
 
 app.use(
-  express.static(publicDir, {
+  expressStatic(publicDir, {
     etag: false,
     lastModified: false,
-    maxAge: 0,
     cacheControl: false,
     setHeaders: (res) => {
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -437,7 +870,11 @@ for (const src of sources) {
 }
 
 // Install external modules
-/** @type {(modNames: string[], globalNames: string[], globalResults: string[]) => import('express').Application} */
+/**
+ * @param {string[]} modNames
+ * @param {string[]} globalNames
+ * @param {string[]} globalResults
+ */
 const installNodeModules = (modNames, globalNames, globalResults) => async (req, res, next) => {
   try {
     const jsList = [];
@@ -607,7 +1044,7 @@ app.get('/__slow', async (req, res) => {
     return res.end();
   }
 
-  // The stream and slow loop continue only if it is a real GET
+  // The stream and slow loop continue only if it's a real GET
   const stream = fs.createReadStream(filePath, { start, end, highWaterMark: chunkSize });
   let closed = false;
   const cleanup = () => {
@@ -695,10 +1132,10 @@ app.get(
 );
 
 // Middleware to serve static files
-app.use(express.static(publicDir));
-app.use(express.static(imgDir));
-app.use(express.static(errorsDir));
-app.use('/node_modules', express.static(path.join(__dirname, '../node_modules')));
+app.use(expressStatic(publicDir));
+app.use(expressStatic(imgDir));
+app.use(expressStatic(errorsDir));
+app.use('/node_modules', expressStatic(path.join(__dirname, '../node_modules')));
 
 /**
  * Middleware to serve index.html if the requested path is a directory.
