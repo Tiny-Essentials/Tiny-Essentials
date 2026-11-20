@@ -17,6 +17,9 @@ CheckExports.mjs
 tsconfig.json
 .agents
 
+.github
+.vscode
+
 # Logs
 logs
 *.log
