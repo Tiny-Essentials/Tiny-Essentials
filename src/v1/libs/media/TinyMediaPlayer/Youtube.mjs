@@ -252,6 +252,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    * Creates a YouTube iframe element.
    * This element can be used as the `defaultContainer` for the adapter.
    *
+   * @deprecated Use {@link YoutubeMediaAdapter.createContainer} instead.
    * @param {IframeContainerOptions} options - Configuration for the iframe creation.
    * @returns {HTMLIFrameElement} The created iframe element.
    * @throws {TypeError} If the `videoId` is not a valid string.
