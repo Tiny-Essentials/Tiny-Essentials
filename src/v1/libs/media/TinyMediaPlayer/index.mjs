@@ -33,22 +33,27 @@ const checkDestroy = createCheckDestroyed('BaseMediaAdapter');
 /**
  * Event map for {@link BaseMediaAdapter}.
  *
- * Adapters bridge third-party players, so the event map is kept open
- * (`Record<string, ...>`) to allow forwarding arbitrary player events while
- * still providing autocomplete for the well-known ones.
+ * Adapters bridge third-party players, so the map enumerates every event that
+ * the built-in adapters (YouTube, SoundCloud, HTML5 audio/video and the mock)
+ * may emit. Keeping the map closed (instead of intersecting it with
+ * `Record<string, ...>`) is what allows `ICustomEventEmitter` to type-check the
+ * event names and their listener signatures.
  *
- * @typedef {{
- *   destroyed: () => void,
- *   volumeChange: (volume: number) => void,
- *   seek: (time: number) => void,
- *   play: () => void,
- *   pause: () => void,
- *   ended: () => void,
- *   timeupdate: (data: ContentTimeData) => void,
- *   onReady: () => void,
- *   error: (error: any) => void,
- *   onStateChange: (event: any) => void,
- * } & Record<string, (...args: any[]) => void>} BaseMediaAdapterEvents
+ * @typedef {Object} BaseMediaAdapterEvents
+ * @property {() => void} destroyed - Emitted when the adapter is destroyed.
+ * @property {(volume: number) => void} volumeChange - Emitted when the volume changes (0.0 to 1.0).
+ * @property {(time: number) => void} seek - Emitted when a seek happens (in milliseconds).
+ * @property {() => void} play - Emitted when playback starts or resumes.
+ * @property {() => void} pause - Emitted when playback is paused.
+ * @property {() => void} ended - Emitted when playback reaches the end.
+ * @property {(data: ContentTimeData) => void} timeupdate - Emitted periodically with the current time data.
+ * @property {() => void} onReady - Emitted when the underlying player is ready.
+ * @property {(error: any) => void} error - Emitted when the underlying player reports an error.
+ * @property {(event: any) => void} onStateChange - Emitted when the player state changes.
+ * @property {(event: any) => void} onPlaybackQualityChange - Emitted when the playback quality changes.
+ * @property {(event: any) => void} onPlaybackRateChange - Emitted when the playback rate changes.
+ * @property {(event: any) => void} onApiChange - Emitted when the player API module changes.
+ * @property {(event: any) => void} onAutoplayBlocked - Emitted when autoplay is blocked by the browser.
  */
 
 /** @type {new () => import('../../../jsdoc/EventEmitter.mjs').ICustomEventEmitter<BaseMediaAdapterEvents>} */

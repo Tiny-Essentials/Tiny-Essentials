@@ -654,7 +654,7 @@ class SoundCloudMediaAdapter extends BaseMediaAdapter {
       ...SoundCloudMediaAdapter.Events,
     })) {
       /** @type {HandlerFunc} */
-      const handler = (...args) => this.emit(eventName, ...args);
+      const handler = (...args) => this.emit(/** @type {any} */ (eventName), ...args);
       this.#masterEmitter.on(eventName, handler);
       this.#eventHandlers.push({ eventName, handler });
     }

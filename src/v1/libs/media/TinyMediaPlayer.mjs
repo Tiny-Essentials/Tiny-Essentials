@@ -50,9 +50,44 @@ const checkDestroy = createCheckDestroyed('TinyMediaPlayer');
  */
 
 /**
+ * Event map for {@link TinyMediaPlayer}.
+ *
+ * The player re-emits every event forwarded from the active adapter (for
+ * example `timeupdate`, `ended`, `error`, `onReady`, ...) in addition to the
+ * player-specific events listed below.
+ *
+ * @typedef {Object} TinyMediaPlayerEvents
+ * @property {(playlist: MediaContent[]) => void} playlistUpdate - Emitted when the playlist changes.
+ * @property {(index: number) => void} trackChange - Emitted when the current track index changes.
+ * @property {(mode: LoopModeType) => void} loopModeChange - Emitted when the loop mode changes.
+ * @property {(isRandom: boolean) => void} randomModeChange - Emitted when the random mode changes.
+ * @property {(volume: number) => void} volumeChange - Emitted when the volume changes (0.0 to 1.0).
+ * @property {(isMuted: boolean) => void} muteChange - Emitted when the mute state changes.
+ * @property {(index: number) => void} play - Emitted when playback starts.
+ * @property {(index: number) => void} pause - Emitted when playback is paused.
+ * @property {(index: number) => void} stop - Emitted when playback is stopped.
+ * @property {(time: number) => void} seek - Emitted when the timeline is jumped (in milliseconds).
+ * @property {(value: boolean) => void} repeatCurrentOnPrevChange - Emitted when the "repeat on prev" setting changes.
+ * @property {(value: boolean) => void} smoothPlayPauseVolumeChange - Emitted when the smooth play/pause volume setting changes.
+ * @property {(value: boolean) => void} smoothStopVolumeChange - Emitted when the smooth stop volume setting changes.
+ * @property {(value: number) => void} fadeVolumeSpeedChange - Emitted when the fade volume speed changes.
+ * @property {(value: number) => void} prevClickTimeoutDurationChange - Emitted when the "repeat on prev" timeout changes.
+ * @property {() => void} destroyed - Emitted when the player is destroyed.
+ * @property {(data: ContentTimeData) => void} timeupdate - Re-emitted from the active adapter.
+ * @property {() => void} ended - Re-emitted from the active adapter.
+ * @property {(error: any) => void} error - Re-emitted from the active adapter.
+ * @property {() => void} onReady - Re-emitted from the active adapter.
+ */
+
+/**
+ * @type {import('../../jsdoc/EventEmitter.mjs').ITypedEventEmitter<TinyMediaPlayerEvents, typeof TinyDebugger>}
+ */
+const TypedTinyDebugger = TinyDebugger;
+
+/**
  * A universal media player manager capable of orchestrating multiple API adapters.
  */
-class TinyMediaPlayer extends TinyDebugger {
+class TinyMediaPlayer extends TypedTinyDebugger {
   static BaseMediaAdapter = BaseMediaAdapter;
 
   /**
@@ -798,7 +833,7 @@ class TinyMediaPlayer extends TinyDebugger {
     if (!data) return;
     this.#adapterEventNames.forEach((eventName) => {
       const handler = data.get(eventName);
-      if (handler) adapter.off(eventName, handler);
+      if (handler) adapter.off(/** @type {any} */ (eventName), handler);
     });
     data.clear();
     this.#adapterHandlers.delete(adapter);
@@ -1020,11 +1055,11 @@ class TinyMediaPlayer extends TinyDebugger {
       if (!this.#destroyed) {
         if (eventName !== 'timeupdate')
           this.log('debug', `Adapter event triggered: ${eventName}`, ...args);
-        this.emit(eventName, ...args);
+        this.emit(/** @type {any} */ (eventName), ...args);
       }
     };
 
-    adapter.on(eventName, handler);
+    adapter.on(/** @type {any} */ (eventName), handler);
     handlersMap.set(eventName, handler); // Mandatory synchronization with the WeakMap
   }
 
@@ -1039,7 +1074,7 @@ class TinyMediaPlayer extends TinyDebugger {
 
     const handler = handlersMap.get(eventName);
     if (handler) {
-      adapter.off(eventName, handler);
+      adapter.off(/** @type {any} */ (eventName), handler);
       handlersMap.delete(eventName); // Mandatory synchronization with the WeakMap
     }
   }
