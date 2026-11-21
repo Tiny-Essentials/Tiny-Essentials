@@ -54,6 +54,8 @@
  * @property {string|null} [hl=null] - The language of the player interface.
  * @property {boolean} [fs=true] - Whether to allow the player to enter fullscreen mode.
  * @property {boolean} [ivLoadPolicy=true] - The policy for showing video annotations (1 to show, 3 to hide).
+ * @property {string|null} [origin=null] - The origin of the page hosting the player. Defaults to `window.location.origin`.
+ *   This is required so the YouTube player can target the parent window with `postMessage` in production.
  */
 
 import { EventEmitter } from 'events';
@@ -240,6 +242,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
       rel = true,
       fs = true,
       hl = null,
+      origin = null,
     } = options;
 
     if (typeof videoId !== 'string' || videoId.trim() === '') {
@@ -248,8 +251,40 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
 
     const iframe = document.createElement('iframe');
 
-    // enablejsapi=1 is required to allow control via the YouTube API
-    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay ? 1 : 0}&rel=${rel ? 1 : 0}&iv_load_policy=${ivLoadPolicy ? 1 : 3}&loop=${loop ? 1 : 0}&playsinline=${playsinline ? 1 : 0}&fs=${fs ? 1 : 0}${typeof playlist === 'string' || Array.isArray(playlist) ? `&playlist=${!Array.isArray(playlist) ? playlist : playlist.join(',')}` : ''}${typeof ccLangPref === 'string' ? `&cc_lang_pref=${ccLangPref}` : ''}${typeof end === 'string' || typeof end === 'number' ? `&end=${end}` : ''}${typeof start === 'string' || typeof start === 'number' ? `&start=${start}` : ''}&cc_load_policy=${ccLoadPolicy ? 1 : 0}${typeof list === 'string' ? `&list=${list}` : ''}${typeof listType === 'string' ? `&listType=${listType}` : ''}${typeof widgetReferrer === 'string' ? `&widget_referrer=${widgetReferrer}` : ''}${typeof color === 'string' ? `&color=${color}` : ''}${typeof hl === 'string' ? `&hl=${hl}` : ''}&controls=${controls ? 1 : 0}&disablekb=${disableKb ? 1 : 0}&enablejsapi=1`;
+    // enablejsapi=1 is required to allow control via the YouTube API.
+    // The `origin` parameter is mandatory in production: without it the embedded
+    // player cannot validate the parent window and every postMessage call is
+    // rejected with "The target origin provided ('https://www.youtube.com') does
+    // not match the recipient window's origin".
+    const params = new URLSearchParams({
+      autoplay: autoplay ? '1' : '0',
+      rel: rel ? '1' : '0',
+      iv_load_policy: ivLoadPolicy ? '1' : '3',
+      loop: loop ? '1' : '0',
+      playsinline: playsinline ? '1' : '0',
+      fs: fs ? '1' : '0',
+      cc_load_policy: ccLoadPolicy ? '1' : '0',
+      controls: controls ? '1' : '0',
+      disablekb: disableKb ? '1' : '0',
+      enablejsapi: '1',
+    });
+
+    if (typeof playlist === 'string' || Array.isArray(playlist)) {
+      params.set('playlist', Array.isArray(playlist) ? playlist.join(',') : playlist);
+    }
+    if (typeof ccLangPref === 'string') params.set('cc_lang_pref', ccLangPref);
+    if (typeof end === 'string' || typeof end === 'number') params.set('end', String(end));
+    if (typeof start === 'string' || typeof start === 'number') params.set('start', String(start));
+    if (typeof list === 'string') params.set('list', list);
+    if (typeof listType === 'string') params.set('listType', listType);
+    if (typeof widgetReferrer === 'string') params.set('widget_referrer', widgetReferrer);
+    if (typeof color === 'string') params.set('color', color);
+    if (typeof hl === 'string') params.set('hl', hl);
+
+    const resolvedOrigin = origin ?? (typeof window !== 'undefined' ? window.location.origin : null);
+    if (resolvedOrigin) params.set('origin', resolvedOrigin);
+
+    iframe.src = `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 
     iframe.style.width = `${width}px`;
     iframe.style.height = `${height}px`;
@@ -583,9 +618,18 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
 
     return new Promise((resolve) => {
       const Player = getYtPlayer();
+      /** @type {Record<string, string|number>} */
+      const playerVars = { playsinline: 1 };
+      // The `origin` player var is what the embedded player uses as the
+      // `postMessage` target. Without it the handshake is rejected in
+      // production ("target origin ... does not match the recipient
+      // window's origin") and `onReady` never fires.
+      if (typeof window !== 'undefined' && window.location?.origin) {
+        playerVars.origin = window.location.origin;
+      }
       this.#player = new Player(this.#container, {
         videoId: videoId,
-        playerVars: { playsinline: 1 },
+        playerVars,
         events: playerEvents,
       });
 
