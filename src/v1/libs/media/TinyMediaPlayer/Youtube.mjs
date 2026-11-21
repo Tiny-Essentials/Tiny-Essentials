@@ -10,7 +10,7 @@
  * @typedef {import('./docs/YouTubePlayer.mjs').YTSphericalProperties} YTSphericalProperties
  * @typedef {import('./docs/YouTubePlayer.mjs').YouTubePlayerEventBase} YouTubePlayerEventBase
  * @typedef {import('./docs/YouTubePlayer.mjs').YTPlayerOptionsEvents} YTPlayerOptionsEvents
- * @typedef {import('./docs/YouTubePlayer.mjs').YTPlayerOptionsEvents} YTPlayerOptions
+ * @typedef {import('./docs/YouTubePlayer.mjs').YTPlayerOptions} YTPlayerOptions
  * @typedef {import('./docs/YouTubePlayer.mjs').EventNames} EventNames
  * @typedef {import('./docs/YouTubePlayer.mjs').YTPlaylistOptions} YTPlaylistOptions
  * @typedef {import('./docs/YouTubePlayer.mjs').VideoByUrlOptions} VideoByUrlOptions
@@ -56,6 +56,13 @@
  * @property {boolean} [ivLoadPolicy=true] - The policy for showing video annotations (1 to show, 3 to hide).
  * @property {string|null} [origin=null] - The origin of the page hosting the player. Defaults to `window.location.origin`.
  *   This is required so the YouTube player can target the parent window with `postMessage` in production.
+ */
+
+/**
+ * @typedef {Object} ContainerOptions
+ * @property {boolean} [hidden=true] - If true, the `hidden` class is added to the container and it is appended to the document body.
+ * @property {string|null} [id=null] - An optional id to assign to the container element.
+ * @property {string|null} [className=null] - An optional class name to assign to the container element.
  */
 
 import { EventEmitter } from 'events';
@@ -179,20 +186,28 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   static allowInstanceSharing = false;
 
   /**
-   * The default HTML element where the YouTube iframe will be injected.
-   * @type {HTMLIFrameElement|null}
+   * The default HTML element where the YouTube player will be injected.
+   * It can be an `<iframe>` or any regular element (e.g. a `<div>`), since the
+   * YouTube IFrame API is able to replace the target element with its own iframe.
+   * @type {HTMLElement|null}
    */
   static #defaultContainer = null;
 
   /**
+   * Default options merged into every `YT.Player` instance created by this adapter.
+   * @type {YTPlayerOptions}
+   */
+  static #playerOptions = {};
+
+  /**
    * Registry to reuse players and master emitters per container.
-   * @type {WeakMap<HTMLIFrameElement, {player: YouTubePlayer, masterEmitter: EventEmitter, refCount: number}>}
+   * @type {WeakMap<HTMLElement, {player: YouTubePlayer, masterEmitter: EventEmitter, refCount: number}>}
    */
   static #registry = new WeakMap();
 
   /**
    * Gets the globally configured default container for YouTube players.
-   * @returns {HTMLIFrameElement|null}
+   * @returns {HTMLElement|null}
    */
   static get defaultContainer() {
     return this.#defaultContainer;
@@ -200,14 +215,37 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
 
   /**
    * Sets the globally configured default container for YouTube players.
-   * @param {HTMLIFrameElement|null} element - The element to be used as the default container.
-   * @throws {TypeError} If the provided element is not an instance of HTMLIFrameElement.
+   * @param {HTMLElement|null} element - The element to be used as the default container.
+   * @throws {TypeError} If the provided element is not an instance of HTMLElement.
    */
   static set defaultContainer(element) {
-    if (element !== null && !(element instanceof HTMLIFrameElement)) {
-      throw new TypeError('The defaultContainer must be an instance of HTMLIFrameElement.');
+    if (element !== null && !(element instanceof HTMLElement)) {
+      throw new TypeError('The defaultContainer must be an instance of HTMLElement.');
     }
     this.#defaultContainer = element;
+  }
+
+  /**
+   * Gets the default options used to initialize every `YT.Player` instance.
+   * The returned object is a shallow copy, so mutating it will not affect the adapter.
+   * @returns {YTPlayerOptions}
+   */
+  static get playerOptions() {
+    return { ...this.#playerOptions };
+  }
+
+  /**
+   * Sets the default options used to initialize every `YT.Player` instance.
+   * These values are merged with (and can be overridden by) the options provided
+   * internally by the adapter, such as `videoId`, `playerVars` and `events`.
+   * @param {YTPlayerOptions} options - The options to be used as defaults.
+   * @throws {TypeError} If the provided options are not a plain object.
+   */
+  static set playerOptions(options) {
+    if (options === null || typeof options !== 'object' || Array.isArray(options)) {
+      throw new TypeError('The playerOptions must be an object.');
+    }
+    this.#playerOptions = { ...options };
   }
 
   /**
@@ -291,17 +329,50 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     iframe.setAttribute('frameborder', '0');
     iframe.setAttribute('allow', 'autoplay; encrypted-media');
 
+    iframe.style.pointerEvents = 'none';
+    iframe.style.backgroundColor = '#000';
+
     if (hidden) {
+      iframe.style.position = 'fixed';
       iframe.style.opacity = '0';
       iframe.style.pointerEvents = 'none';
-      // Absolute positioning outside the viewport to prevent layout shifting
-      iframe.style.position = 'absolute';
-      iframe.style.top = '-9999px';
-      iframe.style.left = '-9999px';
       document.body.appendChild(iframe);
     }
 
     return iframe;
+  }
+
+  /**
+   * Creates a plain `<div>` element to be used as the player container.
+   *
+   * Unlike {@link YoutubeMediaAdapter.createIframeContainer}, this does not create
+   * an `<iframe>` up front. The YouTube IFrame API is able to replace the target
+   * element with its own iframe, so any regular element (e.g. a `<div>`) works as
+   * a container. This is the recommended approach when you want the API to fully
+   * manage the underlying iframe.
+   *
+   * @param {ContainerOptions} [options] - Configuration for the container creation.
+   * @returns {HTMLDivElement} The created container element.
+   */
+  static createContainer(options = {}) {
+    const { hidden = true, id = null, className = null } = options;
+
+    const container = document.createElement('div');
+
+    if (typeof id === 'string') container.id = id;
+    if (typeof className === 'string') container.className = className;
+
+    container.style.pointerEvents = 'none';
+    container.style.backgroundColor = '#000';
+
+    if (hidden) {
+      container.style.position = 'fixed';
+      container.style.opacity = '0';
+      container.style.pointerEvents = 'none';
+      document.body.appendChild(container);
+    }
+
+    return container;
   }
 
   /**
@@ -328,7 +399,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
   /** @type {YouTubePlayer|null} */
   #player = null;
 
-  /** @type {HTMLIFrameElement} */
+  /** @type {HTMLElement} */
   #container;
 
   #isReady = false;
@@ -395,9 +466,9 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
    */
   constructor() {
     const container = YoutubeMediaAdapter.#defaultContainer;
-    if (!(container instanceof HTMLIFrameElement)) {
+    if (!(container instanceof HTMLElement)) {
       throw new TypeError(
-        'The YoutubeMediaAdapter.defaultContainer must be an instance of HTMLIFrameElement.',
+        'The YoutubeMediaAdapter.defaultContainer must be an instance of HTMLElement.',
       );
     }
 
@@ -627,9 +698,16 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
       if (typeof window !== 'undefined' && window.location?.origin) {
         playerVars.origin = window.location.origin;
       }
+
+      // Merge the user-provided defaults with the values required by the
+      // adapter. The adapter-controlled values (videoId, playerVars, events)
+      // always win so the player keeps working as expected.
+      const { playerVars: customPlayerVars, ...customOptions } =
+        YoutubeMediaAdapter.#playerOptions;
       this.#player = new Player(this.#container, {
+        ...customOptions,
         videoId: videoId,
-        playerVars,
+        playerVars: { ...customPlayerVars, ...playerVars },
         events: playerEvents,
       });
 
