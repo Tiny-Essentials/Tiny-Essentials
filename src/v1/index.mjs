@@ -246,7 +246,7 @@ import {
   TinyTableDb,
 } from './libs/storage/TinySetMapDatabase.mjs';
 import TinyPushManager from './libs/sw/browser/TinyPushManager.mjs';
-import { TinyNotificationAdapter } from './build/TinyNotificationAdapter.mjs';
+import TinyNotificationAdapter from './libs/sw/browser/TinyNotificationAdapter.mjs';
 import TinyMediaLoader from './libs/html/loader/TinyMediaLoader.mjs';
 import TinyImageLoader from './libs/html/loader/formats/TinyImageLoader.mjs';
 import TinyFetchLoader from './libs/html/loader/formats/TinyFetchLoader.mjs';
