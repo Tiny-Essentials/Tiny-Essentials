@@ -932,23 +932,29 @@ const engine = new TinyServiceWorkerEngine({
   messaging: { enabled: true },
 });
 
+/** @type {string[]} */
+let bypassPatterns;
+
 if (isDev) {
   // A previous (cached) run may have left files behind. They are dropped so the
   // browser can not answer a request with a build that no longer exists.
   engine.on('beforeActivated', ({ event }) => {
     event.waitUntil(caches.delete(CACHE_NAME));
   });
-  engine.installPlugin(GlobBypassPlugin, {
-    patterns: [...BYPASS, ...CACHE_PATTERNS],
-  });
+  bypassPatterns = [...BYPASS, ...CACHE_PATTERNS];
 } else {
   // Static assets are cached on the fly.
   engine.installPlugin(RegisterGlobCachePlugin, {
     cacheName: CACHE_NAME,
     patterns: CACHE_PATTERNS,
-    exclude: [...BYPASS, '**/node_modules/**'],
+    exclude: BYPASS,
   });
+  bypassPatterns = BYPASS;
 }
+
+engine.installPlugin(GlobBypassPlugin, {
+  patterns: bypassPatterns,
+});
 
 engine.on('fetchRequested', ({ request, url, result }) => {
   if (!TinyServiceWorkerEngine.isSameOrigin(request)) {
