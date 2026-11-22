@@ -640,6 +640,36 @@ await engine.reloadClients('/'); // Or navigate them all to a specific URL
 
 ---
 
+## 🧩 Feature 8: The Plugin System
+
+The engine core only knows how to *route* requests. Everything that actually *answers* a request is a **plugin**. A plugin is a class that receives the engine instance and an options object, and registers its own listeners.
+
+### 🛠️ Registering a Plugin (`installPlugin`)
+
+```javascript
+engine.installPlugin(RegisterGlobCachePlugin, {
+  cacheName: 'static-assets-v1',
+  patterns: ['**/*.{js,css,html,ico,jpg,png,svg}'],
+});
+```
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `plugin` | `Function` | The plugin class. |
+| `options` | `Object` (optional) | Passed straight to the plugin constructor. |
+
+> ⚠️ `installPlugin()` must be called **before** `init()`. The plugin registers its listeners during construction, so a plugin installed after `init()` will never see the events it was written for.
+
+### 🖨️ Reading the Engine Logs (`toConsole`)
+
+```javascript
+export const logger = tinySw.toConsole();
+```
+
+Returns the logger instance the engine is using internally, so your own `console.log` calls share the same prefix, colors and `debugMode` gate as the engine's.
+
+---
+
 ## 🧰 Static Utilities
 
 These static methods are exposed on the class itself and can be used without instantiating the engine.
@@ -812,6 +842,8 @@ To make navigation easier, the API is divided into functional modules: **Fetch M
 | `globalMsgCode` | Gets/sets the global message map. | `Object` | `Object` |
 | `pushRouter` | Gets/sets the active `TinyPushRouter`. Throws a `TypeError` when set to anything else. | `TinyPushRouter` | `TinyPushRouter` |
 | `showNotification` | Displays a native notification to the user. Throws when `push.enabled` is `false`. | `title (string)`, `body (string)`, `options (Object)` | `Promise<void>` |
+| `installPlugin` | Installs a plugin before `init()`. | `plugin (Function)`, `options (Object)` | `void` |
+| `toConsole` | Returns the logger instance used by the engine. | None | `Object` |
 
 ### ♻️ 7. Lifecycle Management
 
@@ -835,6 +867,188 @@ To make navigation easier, the API is divided into functional modules: **Fetch M
 | `hasActivateListener` | Checks if an `activate` listener exists. | `tag (string)` | `boolean` |
 | `clearActivateListeners` | Wipes all `activate` listeners. | None | `void` |
 | `activateListenerSize` | Returns the count of `activate` listeners. | None | `number` |
+
+---
+
+## 📚 Complete Examples
+
+### 1. Vanilla JavaScript (SPA Shell + Runtime Cache)
+
+The most common setup: a static site where **every navigation** is answered with the SPA shell, and **every static asset** is cached on the fly.
+
+```javascript
+/*
+ * Service worker entry point.
+ *
+ * `TinyServiceWorkerEngine` intercepts every **navigation** request and answers
+ * it with the SPA shell (`/index.html`), so `TinyRouter` can resolve the route
+ * on the client. This is what makes `/example` and
+ * `/example2` work as deep links: the static HTML files are only used by
+ * crawlers and social networks, a real browser always gets the app.
+ *
+ * @module service-worker
+ */
+
+import TinyServiceWorkerEngine from 'tiny-essentials/libs/sw/service/TinyServiceWorkerEngine';
+import RegisterGlobCachePlugin from 'tiny-essentials/libs/sw/service/plugins/GlobCachePlugin';
+import GlobBypassPlugin from 'tiny-essentials/libs/sw/service/plugins/GlobBypassPlugin';
+
+import isDev from '../dev.mjs';
+
+/** Cache bucket used by the runtime cache plugin. */
+const CACHE_NAME = 'example-v1';
+
+/**
+ * Static assets.
+ *
+ * Media files are intentionally **not** listed. The Cache API refuses to store
+ * a `206 Partial Content` response, and `<audio>`/`<video>` rely on range
+ * requests, so caching them made `cache.put()` reject on every seek and kept
+ * the whole file in memory for nothing.
+ */
+const CACHE_PATTERNS = [
+  '**/*.{js,css,woff,woff2,ttf,eot,png,jpg,jpeg,gif,svg,webp,avif,mp3,mp4,wav,ogg,opus}',
+];
+
+/**
+ * Paths that must always be answered by the network.
+ *
+ * `/service-worker.js` is the worker itself, and `/index.html` is the document
+ * the SPA fallback fetches. Letting the router answer them would either loop or
+ * replace the shell with the 404 page.
+ */
+const BYPASS = ['/service-worker.js', '/index.html'];
+
+const engine = new TinyServiceWorkerEngine({
+  // Every navigation is answered with the SPA shell. The router resolves the
+  // real page on the client.
+  spaMode: true,
+  fetch: {
+    enabled: true,
+    router: { enabled: true },
+  },
+  push: { enabled: false },
+  sync: { enabled: false },
+  messaging: { enabled: true },
+});
+
+if (isDev) {
+  // A previous (cached) run may have left files behind. They are dropped so the
+  // browser can not answer a request with a build that no longer exists.
+  engine.on('beforeActivated', ({ event }) => {
+    event.waitUntil(caches.delete(CACHE_NAME));
+  });
+  engine.installPlugin(GlobBypassPlugin, {
+    patterns: [...BYPASS, ...CACHE_PATTERNS],
+  });
+} else {
+  // Static assets are cached on the fly.
+  engine.installPlugin(RegisterGlobCachePlugin, {
+    cacheName: CACHE_NAME,
+    patterns: CACHE_PATTERNS,
+    exclude: [...BYPASS, '**/node_modules/**'],
+  });
+}
+
+engine.on('fetchRequested', ({ request, url, result }) => {
+  if (!TinyServiceWorkerEngine.isSameOrigin(request)) {
+    result.canStart = false;
+    return;
+  }
+
+  if (TinyServiceWorkerEngine.isNavigate(request)) return;
+
+  result.canStart = false;
+});
+
+/**
+ * The engine starts every request with `code: 404` and expects a plugin to
+ * promote it. A navigation must be promoted to `200`, otherwise the shell is
+ * served with a 404 status and the browser refuses to render it.
+ *
+ * Every other request that reaches this point is a static asset, which must skip
+ * the router completely, otherwise the app would receive the HTML shell where it
+ * expects a script, a stylesheet or an image.
+ */
+engine.addFetchGlobalListener('spa-navigation-only', (fetchObj, result) => {
+  if (TinyServiceWorkerEngine.isNavigate(fetchObj.request)) {
+    result.code = 200;
+  } else {
+    result.needValidation = false;
+  }
+});
+
+engine.init();
+
+export default engine;
+```
+
+**Two decisions worth highlighting:**
+
+1. **`fetchRequested` is a whitelist, not a blacklist.** The handler calls `result.canStart = false` by default and only lets navigations through. This is the opposite of the usual "block what I know is bad" approach, and it is what keeps the worker from silently swallowing API calls.
+2. **`code = 200` is mandatory for navigations.** The engine starts every request at `404` (see the `FetchCheckerResult` reference). Forgetting the promotion is the single most common cause of "my SPA shell renders as a 404 page".
+
+---
+
+### 2. React + Vite (Route-Aware Caching)
+
+The same engine, now with Vite's hashed artifacts and an explicit list of application routes.
+
+```javascript
+import TinyServiceWorkerEngine from 'tiny-essentials/libs/sw/service/TinyServiceWorkerEngine';
+import RegisterGlobCachePlugin from 'tiny-essentials/libs/sw/service/plugins/GlobCachePlugin';
+import ViteFileDetectorPlugin from 'tiny-essentials/libs/sw/service/plugins/ViteFileDetector';
+import GlobBypassPlugin from 'tiny-essentials/libs/sw/service/plugins/GlobBypassPlugin';
+
+/** @type {ServiceWorkerGlobalScope} */
+// @ts-ignore
+export const sw = self;
+
+/** @type {Partial<import('tiny-essentials/libs/sw/service/TinyServiceWorkerEngine').PartialServiceWorkerSettings>} */
+const MY_CONFIG = { fetch: { router: { enabled: true } } };
+export const tinySw = new TinyServiceWorkerEngine(MY_CONFIG, {
+  debugMode: import.meta.env.DEV,
+  useLogColors: true,
+});
+
+export const logger = tinySw.toConsole();
+
+// Worker files
+const workerFiles = ['**/sw.js', '**/worker.js', '**/sw.js?*', '**/worker.js?*'];
+
+// Install plugins
+tinySw.installPlugin(ViteFileDetectorPlugin);
+tinySw.installPlugin(RegisterGlobCachePlugin, {
+  patterns: ['**/*.{js,css,html,ico,jpg,png,svg}'],
+  exclude: [...workerFiles, '**/node_modules/**'],
+  cacheName: 'static-assets-v1',
+});
+
+tinySw.installPlugin(GlobBypassPlugin, {
+  patterns: workerFiles,
+});
+
+[
+  // Static routes matching
+  '/',
+  '/notifications',
+  '/settings',
+  '/search',
+  // Dynamic route pattern: /<any.hostname.com>/images/<id> or /<any.hostname.com>/profiles/<id>
+  // This regex matches a domain-like string in the first segment
+  '/:host/images/:id',
+  '/:host/profiles/:id',
+].forEach((path) =>
+  tinySw.addFetchUrlListener(path, (f, r) => {
+    r.code = 200;
+  }),
+);
+```
+
+**Two decisions worth highlighting:**
+
+1. **`ViteFileDetectorPlugin` must be installed first.** It teaches the engine to recognise Vite's hashed filenames (`index-a1b2c3d4.js`), so a hard refresh on a deep link is never mistaken for a route.
+2. **The route list is explicit.** Unlike the vanilla example, this worker only promotes the paths it knows about. A typo in a route name fails loudly (the router answers with the 404 page) instead of silently rendering the shell.
 
 ---
 
