@@ -79,8 +79,11 @@ const GlobCachePlugin = (instance, options) => {
         const cachedResponse = await cache.match(request);
 
         if (cachedResponse) {
-          // Inject the cached response into the result object
+          // Inject the cached response into the result object and stop the chain,
+          // so the request goes straight to the cached file.
           result.customResponse = cachedResponse;
+          result.continueCheck = false;
+          result.needValidation = false;
           return;
         }
 
@@ -96,6 +99,8 @@ const GlobCachePlugin = (instance, options) => {
 
         instance.log('info', `File detected: ${fetchObj.url.toString()}`);
         result.customResponse = networkResponse;
+        result.continueCheck = false;
+        result.needValidation = false;
       } catch (error) {
         // If caching fails, we don't break the flow,
         // we just let the engine proceed to the next plugin or router.

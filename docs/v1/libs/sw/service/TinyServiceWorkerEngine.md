@@ -137,12 +137,12 @@ When you intercept a request, the engine provides a `result` object as the **sec
 | :--- | :--- | :--- |
 | `code` | `number` | The HTTP status code associated with the fetch result. Defaults to `404`. This can be used to trigger the Router. |
 | `needValidation` | `boolean` | **The Router Trigger.** If `true`, the engine checks the `code` against the Router configuration. If the code is an error (like 404), the engine will serve the configured error page. Defaults to `true` for same-origin requests. |
-| `continueCheck` | `boolean` | **The Flow Controller.** If set to `false`, the engine immediately stops searching for other matching plugins and proceeds with the standard network request. Defaults to `true`. |
+| `continueCheck` | `boolean` | **The Flow Controller.** If set to `false`, the engine immediately stops searching for other matching plugins. If a `customResponse` was set, it is returned; otherwise the request goes to the network. Defaults to `true`. |
 | `customPath` | `string` (optional) | Overrides the path resolved by the Router for this specific request. |
 | `customMsg` | `string` (optional) | Overrides the message sent to the Router for this specific request. |
 | `customResponse` | `Response` (optional) | **The Direct Reply.** If set to a `Response` instance, the engine returns it immediately, bypassing the Router and the network. |
 
-> ⚠️ **Important — Priority Order:** The engine evaluates `continueCheck` **before** `customResponse`. If you set `continueCheck = false`, the engine performs the network request and **ignores** any `customResponse` you may have set. To return a custom response, set **only** `customResponse` and leave `continueCheck` as `true` (its default).
+> ⚠️ **Important — Priority Order:** The engine evaluates `customResponse` **before** `continueCheck`. If a `Response` is assigned to `customResponse`, it is returned immediately, even when `continueCheck` is `false`. Setting `continueCheck = false` without a `customResponse` sends the request straight to the network.
 
 #### 🛠️ Practical Implementation Examples
 

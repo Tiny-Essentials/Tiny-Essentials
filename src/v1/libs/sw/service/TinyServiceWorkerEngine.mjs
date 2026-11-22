@@ -310,7 +310,7 @@ const PHASE_ORDER_KEY = Object.freeze({
  * @typedef {Object} FetchCheckerValues
  * @property {number} code - The HTTP status code associated with the fetch result.
  * @property {boolean} needValidation - Whether the router must build a response for the current request.
- * @property {boolean} continueCheck - Whether the next registered fetch listener is still allowed to run.
+ * @property {boolean} continueCheck - Whether the next registered fetch listener is still allowed to run. When `false`, the chain stops and the request goes straight to the network, unless a `customResponse` was provided.
  * @property {string} [customPath] - Overrides the path served by the router for this request.
  * @property {string} [customMsg] - Overrides the message attached to the generated response.
  */
@@ -2773,8 +2773,6 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
               if (fetchRes !== null) return fetchRes;
             }
 
-            if (!fetchResult.continueCheck) return fetch(request);
-
             if (
               typeof fetchResult.customPath !== 'undefined' &&
               typeof fetchResult.customPath !== 'string'
@@ -2833,7 +2831,10 @@ class TinyServiceWorkerEngine extends TypedPluginCore {
               return fetchResult.customResponse;
             }
 
-            // 3. Otherwise, proceed with the standard router logic
+            // 3. A plugin stopped the chain without providing a response.
+            if (!fetchResult.continueCheck) return fetch(request);
+
+            // 4. Otherwise, proceed with the standard router logic
             if (fetchResult.needValidation) {
               const fetchRes = buildReply(
                 fetchResult.code,

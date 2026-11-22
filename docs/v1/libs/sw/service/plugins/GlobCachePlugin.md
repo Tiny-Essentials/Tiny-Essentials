@@ -16,6 +16,7 @@ The `GlobCachePlugin` intercepts network requests that match your specified patt
 *   🛡️ **Exclusion Rules**: Easily prevent specific files (like `sw.js` or API calls) from being cached.
 *   🌐 **Origin Control**: Option to restrict caching strictly to the same origin to improve security.
 *   ⚡ **Automated Caching**: Automatically handles `cache.put()` for successful `GET` requests (Status 200).
+*   🚦 **Short-Circuiting**: When a file matches, the plugin sets `continueCheck = false` so the request skips every remaining plugin and goes straight to the cached/network response.
 *   🛠️ **Non-Blocking**: If a caching error occurs, the plugin logs the error but allows the engine to continue operating to prevent site breakage.
 
 ---
@@ -79,6 +80,7 @@ To ensure the stability of your application, please keep the following technical
 2.  **Status Requirement**: Only responses with a `status === 200` are stored in the cache.
 3.  **Response Cloning**: The plugin uses `.clone()` when saving to the cache. This is necessary because a response body can only be read once.
 4.  **Error Handling**: If `caches.open` or `cache.match` fails, an error is logged to the console: `[GlobCachePlugin] Error during cache operation...`. The request will then proceed to the network normally.
+5.  **Short-Circuiting**: When a request matches the patterns (and is not excluded), the plugin sets `continueCheck = false` and `needValidation = false` alongside `customResponse`. The engine returns the cached/network response immediately, so no other plugin or router rule runs for that request.
 
 ---
 
