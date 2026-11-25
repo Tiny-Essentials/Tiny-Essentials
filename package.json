@@ -86,6 +86,16 @@
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run build"
   },
+  "funding": [
+    {
+      "type": "kofi",
+      "url": "https://ko-fi.com/jasmindreasond"
+    },
+    {
+      "type": "patreon",
+      "url": "https://patreon.com/JasminDreasond"
+    }
+  ],
   "main": "./dist/v1/index.cjs",
   "module": "./dist/v1/index.mjs",
   "types": "./dist/v1/index.d.mts",
