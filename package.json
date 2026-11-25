@@ -204,6 +204,11 @@
       "require": "./dist/v1/regexp/Username/index.cjs",
       "import": "./dist/v1/regexp/Username/index.mjs"
     },
+    "./regexp/Username/templates": {
+      "types": "./dist/v1/regexp/Username/templates/index.d.mts",
+      "require": "./dist/v1/regexp/Username/templates/index.cjs",
+      "import": "./dist/v1/regexp/Username/templates/index.mjs"
+    },
     "./regexp/Username/templates/MatrixProtocol": {
       "types": "./dist/v1/regexp/Username/templates/MatrixProtocol.d.mts",
       "require": "./dist/v1/regexp/Username/templates/MatrixProtocol.cjs",
