@@ -320,7 +320,8 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
     if (typeof color === 'string') params.set('color', color);
     if (typeof hl === 'string') params.set('hl', hl);
 
-    const resolvedOrigin = origin ?? (typeof window !== 'undefined' ? window.location.origin : null);
+    const resolvedOrigin =
+      origin ?? (typeof window !== 'undefined' ? window.location.origin : null);
     if (resolvedOrigin) params.set('origin', resolvedOrigin);
 
     iframe.src = `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
@@ -703,8 +704,7 @@ class YoutubeMediaAdapter extends BaseMediaAdapter {
       // Merge the user-provided defaults with the values required by the
       // adapter. The adapter-controlled values (videoId, playerVars, events)
       // always win so the player keeps working as expected.
-      const { playerVars: customPlayerVars, ...customOptions } =
-        YoutubeMediaAdapter.#playerOptions;
+      const { playerVars: customPlayerVars, ...customOptions } = YoutubeMediaAdapter.#playerOptions;
       this.#player = new Player(this.#container, {
         ...customOptions,
         videoId: videoId,

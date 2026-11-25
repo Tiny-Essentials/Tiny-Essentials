@@ -151,7 +151,8 @@ class DialogPlayground {
     document.getElementById('alert-long')?.addEventListener('click', async () => {
       const message = Array.from(
         { length: 12 },
-        (_, index) => `Line ${index + 1}: the body should scroll instead of overflowing the viewport.`,
+        (_, index) =>
+          `Line ${index + 1}: the body should scroll instead of overflowing the viewport.`,
       ).join('\n');
 
       await BootstrapDialogs.alert(message, { title: 'Long content' });
