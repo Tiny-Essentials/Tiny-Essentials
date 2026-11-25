@@ -1,6 +1,6 @@
 # 🚀 BootstrapDialogs Documentation
 
-`BootstrapDialogs` is a asynchronous JavaScript utility designed to replace native browser dialogs (`alert`, `confirm`, `prompt`) with beautiful, customizable **Bootstrap 5 Modals**. 
+`BootstrapDialogs` is an asynchronous JavaScript utility designed to replace native browser dialogs (`alert`, `confirm`, `prompt`) with beautiful, customizable **Bootstrap 5 Modals**. 
 
 It provides a non-blocking, Promise-based workflow and features a robust configuration system to ensure your UI remains consistent and visually appealing.
 

@@ -1,6 +1,6 @@
 # 🧠 Fuzzy Logic Engine Documentation
 
-Welcome to the official documentation for the **Fuzzy Logic Engine**! 🚀 This robust, type-safe JavaScript module provides a implementation of a Mamdani Inference System, allowing you to model logic using trapezoidal membership functions.
+Welcome to the official documentation for the **Fuzzy Logic Engine**! 🚀 This robust, type-safe JavaScript module provides an implementation of a Mamdani Inference System, allowing you to model logic using trapezoidal membership functions.
 
 ---
 

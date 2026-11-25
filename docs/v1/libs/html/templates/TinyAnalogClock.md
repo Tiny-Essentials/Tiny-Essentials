@@ -55,7 +55,7 @@ You can pass an options object to the **constructor**. All properties are option
 | `hourHandColor` | `string` | `'#000'` | Color of the hour hand. |
 | `minuteHandColor` | `string` | `'#444'` | Color of the minute hand. |
 | `secondHandColor` | `string` | `'#d81c1c'` | Color of the second hand. |
-| `skinUrl` | `string|null` | `null` | URL of an image to use as background. |
+| `skinUrl` | `string \| null` | `null` | URL of an image to use as background. |
 | `showNumbers` | `boolean` | `true` | Show/Hide numbers on the face. |
 | `showSeconds` | `boolean` | `true` | Show/Hide the second hand. |
 | `padding` | `number` | `45` | Padding in pixels between the clock edge and the tick marks. |

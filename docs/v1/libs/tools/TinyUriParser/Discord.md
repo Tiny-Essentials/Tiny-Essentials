@@ -347,28 +347,17 @@ parser.parse('https://cdn.discordapp.com/icons/123/abc.png?size=128');
 
 ---
 
-## ⚠️ Known Issues
+## ⚠️ Notes
 
-### 🐛 Syntax errors (blocking)
+### 🧪 Parser order
 
-The following lines are **missing an opening parenthesis** before the template
-literal. They will throw a `SyntaxError` at parse time:
+`DiscordProtocolParsers` is ordered from the most specific parser to the most
+permissive one. Always spread the array as-is (or keep the relative order when
+filtering it), otherwise a permissive parser such as `invite` can swallow input
+that belongs to a more specific one.
 
-```js
-// ❌ Broken
-throw new TypeError`Parser at index ${index} must be an array.`);
+### 🧹 Validation
 
-// ✅ Fixed
-throw new TypeError(`Parser at index ${index} must be an array.`);
-```
-
-This pattern repeats in **`TinyUriParser`** (3 occurrences) and
-**`Discord`** (18 occurrences). Also check:
-
-```js
-// ❌ Broken
-return { regex: new RegExp`^${pattern}$`), names };
-
-// ✅ Fixed
-return { regex: new RegExp(`^${pattern}$`), names };
-```
+Every parser validates its own output and throws `TypeError` (wrong shape) or
+`SyntaxError` (wrong grammar). `parser.parse()` never returns a partially
+populated object.

@@ -1,6 +1,6 @@
 # 📦 TinyInventoryTrader
 
-`TinyInventoryTrader` is a helper class designed to manage item transfers between two [`TinyInventory`](./TinyInventory.mjs) instances.
+`TinyInventoryTrader` is a helper class designed to manage item transfers between two [`TinyInventory`](./TinyInventory.md) instances.
 It ensures safe and configurable trading with support for strict validation, slot targeting, and batch operations.
 
 ---

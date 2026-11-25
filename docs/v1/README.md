@@ -69,7 +69,7 @@ Here, you can navigate through different sections of the project. Below are the 
 ### 2.6. **`libs/text`**
 
 - 📋 **[TinyClipboard](./libs/text/TinyClipboard.md)** — A clipboard management utility with support for modern APIs, legacy fallbacks, and custom copy handlers for text and blobs, plus flexible read operations and clipboard item filtering.
-- ✍️ **[TinyTextRangeEditor](./libs/text/TinyTextRangeEditor.md)** — An flexible text range manipulation utility for `input` and `textarea` elements. Supports selection, cursor control, tag insertion, attribute handling, inline editing, formatting, and advanced wrap/toggle logic with optional spacing auto-completion.
+- ✍️ **[TinyTextRangeEditor](./libs/text/TinyTextRangeEditor.md)** — A flexible text range manipulation utility for `input` and `textarea` elements. Supports selection, cursor control, tag insertion, attribute handling, inline editing, formatting, and advanced wrap/toggle logic with optional spacing auto-completion.
 - ✨ **[TinyTextarea](./libs/text/TinyTextarea.md)** — A minimal auto-expanding `<textarea>` manager with configurable row limits, extra height padding, and real-time resize/input event hooks.
 - 🌐 **[TinyI18](./libs/text/TinyI18.md)** — A flexible i18n manager supporting local and file modes, regex-based keys, function-based entries, string interpolation, and safe helper functions for advanced rendering.
 - 📝 **[TinyTextDiffer](./libs/text/TinyTextDiffer.md)** — A granular text comparison utility using the LCS algorithm to detect additions, deletions, and unchanged segments between multiple history versions, returning a clean, parseable diff structure.
@@ -149,6 +149,7 @@ Here, you can navigate through different sections of the project. Below are the 
 #### 2.10.2. **`libs/tools/TinyUriParser`**
 
 - 🧩 **[MatrixProtocol](./libs/tools/TinyUriParser/MatrixProtocol.md)** — Matrix protocol URI parsing support for `TinyUriParser`.
+- 🦋 **[BlueSky](./libs/tools/TinyUriParser/BlueSky.md)** — BlueSky (AT Protocol) URI parsing support for `TinyUriParser`: handles, DIDs, AT URIs, `bsky.app` permalinks, and hashtags.
 - 🎮 **[Discord](./libs/tools/TinyUriParser/Discord.md)** — Discord URI parsing support for `TinyUriParser`.
 
 ### 2.11. **`libs/fs`**
@@ -211,6 +212,7 @@ Here, you can navigate through different sections of the project. Below are the 
 - 🛠️ **[Base](./regexp/Username/Base.md)** — A robust, highly configurable utility to generate regular expressions for validating, finding, and extracting usernames.
 - 🎮 **[Discord](./regexp/Username/Discord.md)** — A declarative catalog of 35 regular-expression templates that describe Discord's markup, mentions, links, and CDN assets.
 - 🧩 **[MatrixProtocol](./regexp/Username/MatrixProtocol.md)** — A battle-tested collection of Regular Expression templates for parsing Matrix identifiers: users, rooms, events, and groups.
+- 🦋 **[BlueSky](./regexp/Username/BlueSky.md)** — A frozen catalog of Regular Expression templates for BlueSky / AT Protocol identifiers: handles, DIDs, AT URIs, and hashtags.
 
 ### 4. **`webTemplates/`**
 
@@ -246,6 +248,8 @@ Here, you can navigate through different sections of the project. Below are the 
 ## 📚 Tip Directories
 
 ### 1. **`libs/`** - 🧱 **[TinyHtml](./libs/html/TinyHtmlTips.md)** — Usage examples and practical tips.
+
+### 2. **`info/`** - 🧠 **[RegExp](./info/RegExp.md)** — When to reuse a `RegExp` object and when re-instantiating it prevents critical bugs.
 
 ---
 

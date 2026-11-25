@@ -243,10 +243,10 @@ Converts a raw translation entry into a final string for display.
 
 **Parameters:**
 
-| Name     | Type                                                              | Description                                                               |                       |
-| -------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------ | --------------------- |
-| `value`  | `string` | `HelperCallback`                        | `{ $fn: string; args?: any }` | Raw translation entry |
-| `params` | `Dict`   | Optional parameters for interpolation |                                                               |
+| Name     | Type                                                  | Description                           |
+| -------- | ----------------------------------------------------- | ------------------------------------- |
+| `value`  | `string \| HelperCallback \| { $fn: string; args?: any }` | Raw translation entry.            |
+| `params` | `Dict`                                                | Optional parameters for interpolation. |
 
 **Returns:** `string` – Materialized result
 
@@ -458,9 +458,9 @@ Sets the currently selected locale. In file mode, loads from disk.
 
 **Parameters:**
 
-| Name     | Type | Description |                                             |
-| -------- | ------------------------------------------- | ------------------------------------------------ |
-| `locale` | `LocaleCode | null` | Locale code, or `null` to keep only default |
+| Name     | Type                 | Description                                 |
+| -------- | -------------------- | ------------------------------------------- |
+| `locale` | `LocaleCode \| null` | Locale code, or `null` to keep only default |
 
 **Returns:** `Promise<void>`
 

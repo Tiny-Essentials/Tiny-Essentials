@@ -54,10 +54,11 @@ Every option is validated. The constructor throws a `TypeError` when `options` i
 
 ### Static
 
-| Member                                           | Description                                                                                                                                                     |
-| :----------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TinyUserActivationDetector.hasUserActivation()` | Returns `true` when the browser reports a previous activation (`navigator.userActivation.hasBeenActive`). Always `false` when the API is unavailable.           |
-| `TinyUserActivationDetector.pollInterval`        | Getter/setter for the polling interval in milliseconds (default `100`). The setter throws `TypeError` for non-finite values and `RangeError` for values `<= 0`. |
+| Member                                           | Description                                                                                                                                                                                                                                                              |
+| :----------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TinyUserActivationDetector.hasUserActivation()` | Returns `true` when the browser reports a previous activation (`navigator.userActivation.hasBeenActive`). Always `false` when the API is unavailable.                                                                                                                    |
+| `TinyUserActivationDetector.isUnlocked()`        | Returns `true` when a queued callback can run without waiting for an activation. It is the negation of `hasUserActivation()`, except that a missing `navigator` (server-side rendering) is treated as already unlocked.                                                  |
+| `TinyUserActivationDetector.pollInterval`        | Getter/setter for the polling interval in milliseconds (default `100`). The setter throws `TypeError` for non-finite values and `RangeError` for values `<= 0`.                                                                                                          |
 
 ```javascript
 TinyUserActivationDetector.pollInterval = 250; // check every 250ms
