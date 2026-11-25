@@ -144,6 +144,7 @@ addModule(1, './src/v1/build/TinyFetchLoader.mjs', 'TinyFetchLoader', true);
 addModule(1, './src/v1/build/TinyImageLoader.mjs', 'TinyImageLoader', true);
 addModule(1, './src/v1/build/TinyMediaCache.mjs', 'TinyMediaCache', true);
 addModule(1, './src/v1/build/TinyMediaLoader.mjs', 'TinyMediaLoader', true);
+addModule(1, './src/v1/build/TinyUserActivationDetector.mjs', 'TinyUserActivationDetector', true);
 
 /**
  * Recursively scans the source directory for LICENSE files and copies them to the dist directory.

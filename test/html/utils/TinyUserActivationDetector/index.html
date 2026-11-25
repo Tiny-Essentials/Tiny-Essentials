@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TinyUserActivationDetector | Test Environment</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>TinyUserActivationDetector <span class="badge">QA Tester</span></h1>
+      <p class="subtitle">
+        Queues callbacks until the browser reports a user activation
+        (<code>navigator.userActivation.hasBeenActive</code>).
+      </p>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Status</h2>
+        <dl class="status-grid">
+          <dt>navigator.userActivation</dt>
+          <dd id="status-supported">?</dd>
+
+          <dt>hasBeenActive</dt>
+          <dd id="status-active">?</dd>
+
+          <dt>detector.unlocked</dt>
+          <dd id="status-unlocked">?</dd>
+
+          <dt>detector.size</dt>
+          <dd id="status-size">0</dd>
+
+          <dt>detector.autoKey</dt>
+          <dd id="status-autokey">0</dd>
+
+          <dt>detector.existsTime</dt>
+          <dd id="status-timer">false</dd>
+        </dl>
+      </section>
+
+      <section class="card">
+        <h2>Queue a callback</h2>
+        <div class="row">
+          <input id="key-input" type="text" placeholder="optional key" />
+          <button id="btn-queue">whenReady()</button>
+          <button id="btn-queue-auto">whenReady() without key</button>
+        </div>
+        <div class="row">
+          <input id="cancel-input" type="text" placeholder="key to cancel" />
+          <button id="btn-cancel">cancel(key)</button>
+        </div>
+        <div class="row">
+          <button id="btn-unlock">unlock()</button>
+          <button id="btn-clear">clear()</button>
+          <button id="btn-reset">reset()</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Media playback (real world case)</h2>
+        <p class="help">
+          Browsers block <code>audio.play()</code> until the visitor interacts with the page.
+        </p>
+        <div class="row">
+          <button id="btn-play">Play audio when ready</button>
+        </div>
+        <audio id="audio" controls loop src=""></audio>
+      </section>
+
+      <section class="card">
+        <h2>Log</h2>
+        <div class="row">
+          <button id="btn-clear-log" class="ghost">Clear log</button>
+        </div>
+        <pre id="log"></pre>
+      </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

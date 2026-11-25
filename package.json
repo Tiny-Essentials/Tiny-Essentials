@@ -65,6 +65,7 @@
     "test:mjs:medialoader": "node test/index.mjs mediaLoader",
     "test:mjs:mediabinary": "node test/index.mjs mediaBinary",
     "test:mjs:mediacache": "node test/index.mjs mediaCache",
+    "test:mjs:useractivation": "node test/index.mjs userActivation",
     "prettier": "npm run prettier:src && npm run prettier:build && npm run prettier:builder && npm run prettier:test && npm run prettier:rollup.config && npm run prettier:webpack.config && npm run prettier:tiny_fork && npm run prettier:check_exports",
     "prettier:src": "prettier --write ./src/*",
     "prettier:build": "prettier --write ./build/*",
@@ -532,6 +533,11 @@
       "types": "./dist/v1/libs/utils/TinyPromiseQueue.d.mts",
       "require": "./dist/v1/libs/utils/TinyPromiseQueue.cjs",
       "import": "./dist/v1/libs/utils/TinyPromiseQueue.mjs"
+    },
+    "./libs/utils/TinyUserActivationDetector": {
+      "types": "./dist/v1/libs/utils/TinyUserActivationDetector.d.mts",
+      "require": "./dist/v1/libs/utils/TinyUserActivationDetector.cjs",
+      "import": "./dist/v1/libs/utils/TinyUserActivationDetector.mjs"
     },
     "./libs/tools/TinyHtmlTagRegexBuilder": {
       "types": "./dist/v1/libs/tools/TinyHtmlTagRegexBuilder.d.mts",

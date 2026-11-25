@@ -41,6 +41,7 @@ Here, you can navigate through different sections of the project. Below are the 
 - 🍮 **[UltraRandomMsgGen](./libs/utils/UltraRandomMsgGen.md)** — A whimsical random message generator using grammar templates, word sets, emojis, and chaotic modes to craft playful text outputs.
 - 🧩 **[TinyCloner](./libs/utils/TinyCloner.md)** — A highly modular, plugin-based deep cloning engine with strict validation, global/instance control, and isolation mode.
 - 🚦 **[TinyThrottledApi](./libs/utils/TinyThrottledApi.md)** — A professional-grade utility for concurrency control and rate throttling of asynchronous API calls.
+- 🖱️ **[TinyUserActivationDetector](./libs/utils/TinyUserActivationDetector.md)** — Queues callbacks until the browser reports a user activation, so media playback, fullscreen and clipboard calls are not silently rejected before the first interaction.
 
 ### 2.3. **`libs/game`**
 

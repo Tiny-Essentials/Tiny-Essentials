@@ -53,6 +53,7 @@ import testBasicsHtml from './libs/TinyBasicsHtml.mjs';
 import testBasicsMediaContent from './libs/TinyBasicsMediaContent.mjs';
 import testBasicsPromise from './libs/TinyBasicsPromise.mjs';
 import testBasicsText from './libs/TinyBasicsText.mjs';
+import testUserActivation from './libs/TinyUserActivationDetector.mjs';
 
 new TinyPkgExportValidator('../package.json', '../')
   .execCommandTester(
@@ -110,6 +111,7 @@ new TinyPkgExportValidator('../package.json', '../')
       basicsMediaContent: testBasicsMediaContent,
       basicsPromise: testBasicsPromise,
       basicsText: testBasicsText,
+      userActivation: testUserActivation,
     },
     process.argv,
   )

@@ -9,16 +9,16 @@ You can `import` (ESM) or `require` (CommonJS) each module individually.
 
 These are pre-built stylesheets that can be directly imported:
 
-* `css/aiMarker.min.css` → `dist/v1/css/aiMarker.min.css`
-* `css/TinyCookieConsent.min.css` → `dist/v1/css/TinyCookieConsent.min.css`
-* `css/TinyDraggerExample.min.css` → `dist/v1/css/TinyDraggerExample.min.css`
-* `css/TinyNotify.min.css` → `dist/v1/css/TinyNotify.min.css`
-* `css/TinyLoadingScreen.min.css` → `dist/v1/css/TinyLoadingScreen.min.css`
+- `css/aiMarker.min.css` → `dist/v1/css/aiMarker.min.css`
+- `css/TinyCookieConsent.min.css` → `dist/v1/css/TinyCookieConsent.min.css`
+- `css/TinyDraggerExample.min.css` → `dist/v1/css/TinyDraggerExample.min.css`
+- `css/TinyNotify.min.css` → `dist/v1/css/TinyNotify.min.css`
+- `css/TinyLoadingScreen.min.css` → `dist/v1/css/TinyLoadingScreen.min.css`
 
 ✅ Usage example:
 
 ```js
-import "tiny-essentials/css/TinyNotify.min.css";
+import 'tiny-essentials/css/TinyNotify.min.css';
 ```
 
 > 💡 The whole `css/` folder is exposed through the `./css/*.css` wildcard, so any new stylesheet shipped in `dist/v1/css` is importable without a `package.json` change.
@@ -27,20 +27,20 @@ import "tiny-essentials/css/TinyNotify.min.css";
 
 ## 🏠 Root Entrypoints
 
-* `.` → main entry
+- `.` → main entry
 
-  * `"require"` → `dist/v1/index.cjs`
-  * `"import"` → `dist/v1/index.mjs`
+  - `"require"` → `dist/v1/index.cjs`
+  - `"import"` → `dist/v1/index.mjs`
 
-* `basics` → general utility functions
+- `basics` → general utility functions
 
-  * `"require"` → `dist/v1/basics/index.cjs`
-  * `"import"` → `dist/v1/basics/index.mjs`
+  - `"require"` → `dist/v1/basics/index.cjs`
+  - `"import"` → `dist/v1/basics/index.mjs`
 
-* `fileManager` → file utilities
+- `fileManager` → file utilities
 
-  * `"require"` → `dist/v1/fileManager/index.cjs`
-  * `"import"` → `dist/v1/fileManager/index.mjs`
+  - `"require"` → `dist/v1/fileManager/index.cjs`
+  - `"import"` → `dist/v1/fileManager/index.mjs`
 
 ---
 
@@ -48,51 +48,51 @@ import "tiny-essentials/css/TinyNotify.min.css";
 
 Direct access to smaller utilities:
 
-* `basics/crypto`
-* `basics/mediaContent`
-* `basics/array`
-* `basics/clock`
-* `basics/collision`
-* `basics/fullScreen`
-* `basics/html`
-* `basics/deprecated/html`
-* `basics/objChecker`
-* `basics/objFilter`
-* `basics/extendObjType/Buffer`
-* `basics/simpleMath`
-* `basics/text`
-* `basics/promiseUtils`
-* `basics/browserDetector`
-* `basics/jsonFilter`
-* `basics/media/youtube`
+- `basics/crypto`
+- `basics/mediaContent`
+- `basics/array`
+- `basics/clock`
+- `basics/collision`
+- `basics/fullScreen`
+- `basics/html`
+- `basics/deprecated/html`
+- `basics/objChecker`
+- `basics/objFilter`
+- `basics/extendObjType/Buffer`
+- `basics/simpleMath`
+- `basics/text`
+- `basics/promiseUtils`
+- `basics/browserDetector`
+- `basics/jsonFilter`
+- `basics/media/youtube`
 
 Direct access to file utilities:
 
-* `fileManager/async`
-* `fileManager/normal`
+- `fileManager/async`
+- `fileManager/normal`
 
 ---
 
 ## 🧩 Regexp
 
-* `regexp`
-* `regexp/SegmentExtractor`
-* `regexp/UrlDetector`
-* `regexp/Ipv4`
-* `regexp/Ipv6`
-* `regexp/Email`
-* `regexp/Glob`
-* `regexp/Username`
-* `regexp/Username/templates/MatrixProtocol`
-* `regexp/Username/templates/BlueSky`
-* `regexp/Username/templates/Discord`
-* `regexp/Username/templates/deprecated/Discord`
+- `regexp`
+- `regexp/SegmentExtractor`
+- `regexp/UrlDetector`
+- `regexp/Ipv4`
+- `regexp/Ipv6`
+- `regexp/Email`
+- `regexp/Glob`
+- `regexp/Username`
+- `regexp/Username/templates/MatrixProtocol`
+- `regexp/Username/templates/BlueSky`
+- `regexp/Username/templates/Discord`
+- `regexp/Username/templates/deprecated/Discord`
 
 ---
 
 ## 📖 JSDoc
 
-* `jsdoc/EventEmitter`
+- `jsdoc/EventEmitter`
 
 ---
 
@@ -100,227 +100,228 @@ Direct access to file utilities:
 
 Each library can be imported separately:
 
-* **General Tools 🛠**
+- **General Tools 🛠**
 
-  * **Utils & Tools**
-    * `libs/utils/tools`
-    * `libs/utils/UltraRandomMsgGen`
-    * `libs/utils/TinyCloner`
-    * `libs/utils/TinyPromiseQueue`
-    * `libs/utils/TinyThrottledApi`
-    * `libs/tools/TinyDebugger`
-    * `libs/tools/TinyBrowserMonitor`
-    * `libs/tools/TinyClassManager`
-    * `libs/tools/TinyClassManager/TinyPluginInliner`
-    * `libs/tools/TinyPkgExportValidator`
-    * `libs/tools/TinyHtmlTagRegexBuilder`
-    * `libs/tools/TinyPasswordValidator`
-    * `libs/tools/TinyUriParser`
-    * `libs/tools/TinyUriParser/MatrixProtocol`
-    * `libs/tools/TinyUriParser/Discord`
-    * `libs/tools/TinyUriParser/BlueSky`
-    * `libs/router/TinyRouter`
+  - **Utils & Tools**
+    - `libs/utils/tools`
+    - `libs/utils/UltraRandomMsgGen`
+    - `libs/utils/TinyCloner`
+    - `libs/utils/TinyPromiseQueue`
+    - `libs/utils/TinyThrottledApi`
+    - `libs/utils/TinyUserActivationDetector`
+    - `libs/tools/TinyDebugger`
+    - `libs/tools/TinyBrowserMonitor`
+    - `libs/tools/TinyClassManager`
+    - `libs/tools/TinyClassManager/TinyPluginInliner`
+    - `libs/tools/TinyPkgExportValidator`
+    - `libs/tools/TinyHtmlTagRegexBuilder`
+    - `libs/tools/TinyPasswordValidator`
+    - `libs/tools/TinyUriParser`
+    - `libs/tools/TinyUriParser/MatrixProtocol`
+    - `libs/tools/TinyUriParser/Discord`
+    - `libs/tools/TinyUriParser/BlueSky`
+    - `libs/router/TinyRouter`
 
-  * **Plugin**
-    * `libs/plugin/TinyVersion`
-    * `libs/plugin/TinyPlugin`
+  - **Plugin**
+    - `libs/plugin/TinyVersion`
+    - `libs/plugin/TinyPlugin`
 
-  * **Color**
-    * `libs/color/ColorSafeStringify`
-    * `libs/color/TinyColorValidator`
-    * `libs/color/TinyColorConverter`
+  - **Color**
+    - `libs/color/ColorSafeStringify`
+    - `libs/color/TinyColorValidator`
+    - `libs/color/TinyColorConverter`
 
-  * **Math**
-    * `libs/math/TinyTimeout`
-    * `libs/math/TinySimpleDice`
-    * `libs/math/TinyRateLimiter`
-    * `libs/math/TinyAdvancedRaffle`
-    * `libs/math/TinyMamdaniInferenceSystem`
+  - **Math**
+    - `libs/math/TinyTimeout`
+    - `libs/math/TinySimpleDice`
+    - `libs/math/TinyRateLimiter`
+    - `libs/math/TinyAdvancedRaffle`
+    - `libs/math/TinyMamdaniInferenceSystem`
 
-  * **Text**
-    * `libs/text/TinyTextRangeEditor`
-    * `libs/text/TinyTextarea`
-    * `libs/text/TinyI18`
-    * `libs/text/TinyI18/Browser`
-    * `libs/text/TinyI18/Browser-NON-DOM`
-    * `libs/text/TinyClipboard`
-    * `libs/text/TinyTextDiffer`
+  - **Text**
+    - `libs/text/TinyTextRangeEditor`
+    - `libs/text/TinyTextarea`
+    - `libs/text/TinyI18`
+    - `libs/text/TinyI18/Browser`
+    - `libs/text/TinyI18/Browser-NON-DOM`
+    - `libs/text/TinyClipboard`
+    - `libs/text/TinyTextDiffer`
 
-  * **Array**
-    * `libs/array/TinyArrayPaginator`
-    * `libs/array/TinyArrayComparator`
+  - **Array**
+    - `libs/array/TinyArrayPaginator`
+    - `libs/array/TinyArrayComparator`
 
-  * **HTML & UI Helpers**
-    * `libs/html/upload/TinyUploadClicker`
-    * `libs/html/notification/TinyToastNotify`
-    * `libs/html/notification/TinyNotifyCenter`
-    * `libs/html/notification/TinyNotifications`
-    * `libs/html/events/TinyNewWinEvents`
-    * `libs/html/events/TinyIframeEvents`
-    * `libs/html/scroll/TinySmartScroller`
-    * `libs/html/scroll/TinyAfterScrollWatcher`
-    * `libs/html/templates/TinyLoadingScreen`
-    * `libs/html/templates/TinyCookieConsent`
-    * `libs/html/templates/TinyAnalogClock`
-    * `libs/html/drag/TinyDragger`
-    * `libs/html/drag/TinyDragDropDetector`
-    * `libs/html/TinyElementObserver`
-    * `libs/html/TinyDomReadyManager`
+  - **HTML & UI Helpers**
+    - `libs/html/upload/TinyUploadClicker`
+    - `libs/html/notification/TinyToastNotify`
+    - `libs/html/notification/TinyNotifyCenter`
+    - `libs/html/notification/TinyNotifications`
+    - `libs/html/events/TinyNewWinEvents`
+    - `libs/html/events/TinyIframeEvents`
+    - `libs/html/scroll/TinySmartScroller`
+    - `libs/html/scroll/TinyAfterScrollWatcher`
+    - `libs/html/templates/TinyLoadingScreen`
+    - `libs/html/templates/TinyCookieConsent`
+    - `libs/html/templates/TinyAnalogClock`
+    - `libs/html/drag/TinyDragger`
+    - `libs/html/drag/TinyDragDropDetector`
+    - `libs/html/TinyElementObserver`
+    - `libs/html/TinyDomReadyManager`
 
-  * **Game**
-    * `libs/game/TinyNeedBar`
-    * `libs/game/TinyInventoryTrader`
-    * `libs/game/TinyInventory`
-    * `libs/game/TinyLevelUp`
-    * `libs/game/TinyGamepad`
-    * `libs/game/TinyDayNightCycle`
+  - **Game**
+    - `libs/game/TinyNeedBar`
+    - `libs/game/TinyInventoryTrader`
+    - `libs/game/TinyInventory`
+    - `libs/game/TinyLevelUp`
+    - `libs/game/TinyGamepad`
+    - `libs/game/TinyDayNightCycle`
 
-  * **Storage**
-    * `libs/storage/TinyLocalStorage`
-    * `libs/storage/TinyMapCache`
-    * `libs/storage/TinySetMapDatabase`
+  - **Storage**
+    - `libs/storage/TinyLocalStorage`
+    - `libs/storage/TinyMapCache`
+    - `libs/storage/TinySetMapDatabase`
 
-  * **File System (FS)**
-    * `libs/fs/TinyFSCore`
-    * `libs/fs/path`
-    * `libs/fs/constants`
-    * `libs/fs/encoding`
-    * `libs/fs/error`
-    * `libs/fs/handle`
-    * `libs/fs/stats`
-    * `libs/fs/plugins/OPFS`
-    * `libs/fs/plugins/OPFS/StorageBucket`
+  - **File System (FS)**
+    - `libs/fs/TinyFSCore`
+    - `libs/fs/path`
+    - `libs/fs/constants`
+    - `libs/fs/encoding`
+    - `libs/fs/error`
+    - `libs/fs/handle`
+    - `libs/fs/stats`
+    - `libs/fs/plugins/OPFS`
+    - `libs/fs/plugins/OPFS/StorageBucket`
 
-  * **Service Worker**
-    * `libs/sw/service/TinyServiceWorkerEngine`
-    * `libs/sw/service/TinyPushRouter`
-    * `libs/sw/service/plugins/GlobCachePlugin`
-    * `libs/sw/service/plugins/TabManager`
-    * `libs/sw/service/plugins/Ping`
-    * `libs/sw/service/plugins/ViteFileDetector`
-    * `libs/sw/service/plugins/GlobBypassPlugin`
-    * `libs/sw/service/shared/TinyPushPayload`
-    * `libs/sw/browser/TinyServiceWorker`
-    * `libs/sw/browser/TinyPushManager`
-    * `libs/sw/browser/TinyNotificationAdapter`
-    * `libs/sw/browser/plugins/TabManager`
+  - **Service Worker**
+    - `libs/sw/service/TinyServiceWorkerEngine`
+    - `libs/sw/service/TinyPushRouter`
+    - `libs/sw/service/plugins/GlobCachePlugin`
+    - `libs/sw/service/plugins/TabManager`
+    - `libs/sw/service/plugins/Ping`
+    - `libs/sw/service/plugins/ViteFileDetector`
+    - `libs/sw/service/plugins/GlobBypassPlugin`
+    - `libs/sw/service/shared/TinyPushPayload`
+    - `libs/sw/browser/TinyServiceWorker`
+    - `libs/sw/browser/TinyPushManager`
+    - `libs/sw/browser/TinyNotificationAdapter`
+    - `libs/sw/browser/plugins/TabManager`
 
-  * **Web Worker**
-    * `libs/worker/engine/TinyWebWorkerEngine`
-    * `libs/worker/browser/TinyWebWorker`
+  - **Web Worker**
+    - `libs/worker/engine/TinyWebWorkerEngine`
+    - `libs/worker/browser/TinyWebWorker`
 
-  * **HTTP Response Registry**
-    * `libs/tools/TinyHttpResponseRegistry`
-    * `libs/tools/TinyHttpResponseRegistry/Browser`
-    * `libs/tools/TinyHttpResponseRegistry/Browser-NON-DOM`
-    * `libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes`
-    * `libs/tools/TinyHttpResponseRegistry/RequestCodes`
-    * `libs/tools/TinyHttpResponseRegistry/EmptyRequestCodes`
-    * `libs/tools/TinyHttpResponseRegistry/JsDoc`
+  - **HTTP Response Registry**
+    - `libs/tools/TinyHttpResponseRegistry`
+    - `libs/tools/TinyHttpResponseRegistry/Browser`
+    - `libs/tools/TinyHttpResponseRegistry/Browser-NON-DOM`
+    - `libs/tools/TinyHttpResponseRegistry/MozillaRequestCodes`
+    - `libs/tools/TinyHttpResponseRegistry/RequestCodes`
+    - `libs/tools/TinyHttpResponseRegistry/EmptyRequestCodes`
+    - `libs/tools/TinyHttpResponseRegistry/JsDoc`
 
-* **Media 🎬**
+- **Media 🎬**
 
-  * `libs/media/TinyMediaPlayer`
-  * `libs/media/TinyMediaPlayer/Base`
-  * `libs/media/TinyMediaPlayer/Youtube`
-  * `libs/media/TinyMediaPlayer/SoundCloud`
-  * `libs/media/TinyMediaPlayer/HtmlAudio`
-  * `libs/media/TinyMediaPlayer/HtmlVideo`
-  * `libs/media/TinyMediaPlayer/Mock`
-  * `libs/media/TinyMediaPlayer/docs/YouTubePlayer`
-  * `libs/media/TinyMediaPlayer/docs/SoundCloudWidget`
-  * `libs/media/TinyRadioFm`
+  - `libs/media/TinyMediaPlayer`
+  - `libs/media/TinyMediaPlayer/Base`
+  - `libs/media/TinyMediaPlayer/Youtube`
+  - `libs/media/TinyMediaPlayer/SoundCloud`
+  - `libs/media/TinyMediaPlayer/HtmlAudio`
+  - `libs/media/TinyMediaPlayer/HtmlVideo`
+  - `libs/media/TinyMediaPlayer/Mock`
+  - `libs/media/TinyMediaPlayer/docs/YouTubePlayer`
+  - `libs/media/TinyMediaPlayer/docs/SoundCloudWidget`
+  - `libs/media/TinyRadioFm`
 
-* **Media Loaders 🎞️**
+- **Media Loaders 🎞️**
 
-  * `libs/html/loader/TinyMediaLoader`
-  * `libs/html/loader/formats/TinyImageLoader`
-  * `libs/html/loader/formats/TinyFetchLoader`
-  * `libs/html/loader/utils/TinyMediaCache`
-  * `libs/html/loader/utils/TinyMediaProgress`
-  * `libs/html/loader/utils/TinyMediaMirror`
-  * `libs/html/loader/utils/TinyBufferReader`
-  * `libs/html/loader/utils/TinyIsoBox`
-  * `libs/html/loader/probe/TinyImageProbe`
-  * `libs/html/loader/beta/formats/TinyContentLoader` (BETA)
-  * `libs/html/loader/beta/formats/TinyAudioLoader` (BETA)
-  * `libs/html/loader/beta/formats/TinyVideoLoader` (BETA)
-  * `libs/html/loader/beta/probe/TinyMediaProbe` (BETA)
+  - `libs/html/loader/TinyMediaLoader`
+  - `libs/html/loader/formats/TinyImageLoader`
+  - `libs/html/loader/formats/TinyFetchLoader`
+  - `libs/html/loader/utils/TinyMediaCache`
+  - `libs/html/loader/utils/TinyMediaProgress`
+  - `libs/html/loader/utils/TinyMediaMirror`
+  - `libs/html/loader/utils/TinyBufferReader`
+  - `libs/html/loader/utils/TinyIsoBox`
+  - `libs/html/loader/probe/TinyImageProbe`
+  - `libs/html/loader/beta/formats/TinyContentLoader` (BETA)
+  - `libs/html/loader/beta/formats/TinyAudioLoader` (BETA)
+  - `libs/html/loader/beta/formats/TinyVideoLoader` (BETA)
+  - `libs/html/loader/beta/probe/TinyMediaProbe` (BETA)
 
-* **HTML Helpers 🧩**
+- **HTML Helpers 🧩**
 
-  * `libs/html/TinyHtml`
-  * `libs/html/TinyHtmlElems` (BETA)
+  - `libs/html/TinyHtml`
+  - `libs/html/TinyHtmlElems` (BETA)
 
-  * **General Elements (BETA)**
+  - **General Elements (BETA)**
 
-    * `libs/html/TinyHtmlElems/Anchor`
-    * `libs/html/TinyHtmlElems/Button`
-    * `libs/html/TinyHtmlElems/Canvas`
-    * `libs/html/TinyHtmlElems/Datalist`
-    * `libs/html/TinyHtmlElems/Form`
-    * `libs/html/TinyHtmlElems/Embed`
-    * `libs/html/TinyHtmlElems/Icon`
-    * `libs/html/TinyHtmlElems/Iframe`
-    * `libs/html/TinyHtmlElems/Image`
-    * `libs/html/TinyHtmlElems/Link`
-    * `libs/html/TinyHtmlElems/Script`
-    * `libs/html/TinyHtmlElems/Select`
-    * `libs/html/TinyHtmlElems/Style`
-    * `libs/html/TinyHtmlElems/Template`
-    * `libs/html/TinyHtmlElems/Textarea`
+    - `libs/html/TinyHtmlElems/Anchor`
+    - `libs/html/TinyHtmlElems/Button`
+    - `libs/html/TinyHtmlElems/Canvas`
+    - `libs/html/TinyHtmlElems/Datalist`
+    - `libs/html/TinyHtmlElems/Form`
+    - `libs/html/TinyHtmlElems/Embed`
+    - `libs/html/TinyHtmlElems/Icon`
+    - `libs/html/TinyHtmlElems/Iframe`
+    - `libs/html/TinyHtmlElems/Image`
+    - `libs/html/TinyHtmlElems/Link`
+    - `libs/html/TinyHtmlElems/Script`
+    - `libs/html/TinyHtmlElems/Select`
+    - `libs/html/TinyHtmlElems/Style`
+    - `libs/html/TinyHtmlElems/Template`
+    - `libs/html/TinyHtmlElems/Textarea`
 
-  * **Media Elements (BETA)** 🎬
+  - **Media Elements (BETA)** 🎬
 
-    * `libs/html/TinyHtmlElems/Media`
-    * `libs/html/TinyHtmlElems/Media/Audio`
-    * `libs/html/TinyHtmlElems/Media/Object`
-    * `libs/html/TinyHtmlElems/Media/Source`
-    * `libs/html/TinyHtmlElems/Media/Video`
+    - `libs/html/TinyHtmlElems/Media`
+    - `libs/html/TinyHtmlElems/Media/Audio`
+    - `libs/html/TinyHtmlElems/Media/Object`
+    - `libs/html/TinyHtmlElems/Media/Source`
+    - `libs/html/TinyHtmlElems/Media/Video`
 
-  * **Input Elements (BETA)** ⌨️
+  - **Input Elements (BETA)** ⌨️
 
-    * `libs/html/TinyHtmlElems/Input`
+    - `libs/html/TinyHtmlElems/Input`
 
-    * **Button Inputs (BETA)**
+    - **Button Inputs (BETA)**
 
-      * `libs/html/TinyHtmlElems/Input/Button`
-      * `libs/html/TinyHtmlElems/Input/Reset`
-      * `libs/html/TinyHtmlElems/Input/Submit`
+      - `libs/html/TinyHtmlElems/Input/Button`
+      - `libs/html/TinyHtmlElems/Input/Reset`
+      - `libs/html/TinyHtmlElems/Input/Submit`
 
-    * **Check Inputs (BETA)**
+    - **Check Inputs (BETA)**
 
-      * `libs/html/TinyHtmlElems/Input/Checkbox`
-      * `libs/html/TinyHtmlElems/Input/Radio`
+      - `libs/html/TinyHtmlElems/Input/Checkbox`
+      - `libs/html/TinyHtmlElems/Input/Radio`
 
-    * **Color & File Inputs (BETA)**
+    - **Color & File Inputs (BETA)**
 
-      * `libs/html/TinyHtmlElems/Input/Color`
-      * `libs/html/TinyHtmlElems/Input/File`
-      * `libs/html/TinyHtmlElems/Input/Hidden`
-      * `libs/html/TinyHtmlElems/Input/Image`
+      - `libs/html/TinyHtmlElems/Input/Color`
+      - `libs/html/TinyHtmlElems/Input/File`
+      - `libs/html/TinyHtmlElems/Input/Hidden`
+      - `libs/html/TinyHtmlElems/Input/Image`
 
-    * **Date & Time Inputs (BETA)** 🕒
+    - **Date & Time Inputs (BETA)** 🕒
 
-      * `libs/html/TinyHtmlElems/Input/Date`
-      * `libs/html/TinyHtmlElems/Input/DateTime`
-      * `libs/html/TinyHtmlElems/Input/Month`
-      * `libs/html/TinyHtmlElems/Input/Time`
-      * `libs/html/TinyHtmlElems/Input/Week`
+      - `libs/html/TinyHtmlElems/Input/Date`
+      - `libs/html/TinyHtmlElems/Input/DateTime`
+      - `libs/html/TinyHtmlElems/Input/Month`
+      - `libs/html/TinyHtmlElems/Input/Time`
+      - `libs/html/TinyHtmlElems/Input/Week`
 
-    * **Number Inputs (BETA)** 🔢
+    - **Number Inputs (BETA)** 🔢
 
-      * `libs/html/TinyHtmlElems/Input/Number`
-      * `libs/html/TinyHtmlElems/Input/Range`
+      - `libs/html/TinyHtmlElems/Input/Number`
+      - `libs/html/TinyHtmlElems/Input/Range`
 
-    * **Text Inputs (BETA)** ✏️
+    - **Text Inputs (BETA)** ✏️
 
-      * `libs/html/TinyHtmlElems/Input/Email`
-      * `libs/html/TinyHtmlElems/Input/Password`
-      * `libs/html/TinyHtmlElems/Input/Search`
-      * `libs/html/TinyHtmlElems/Input/Tel`
-      * `libs/html/TinyHtmlElems/Input/Text`
-      * `libs/html/TinyHtmlElems/Input/Url`
+      - `libs/html/TinyHtmlElems/Input/Email`
+      - `libs/html/TinyHtmlElems/Input/Password`
+      - `libs/html/TinyHtmlElems/Input/Search`
+      - `libs/html/TinyHtmlElems/Input/Tel`
+      - `libs/html/TinyHtmlElems/Input/Text`
+      - `libs/html/TinyHtmlElems/Input/Url`
 
 ---
 
@@ -328,42 +329,42 @@ Each library can be imported separately:
 
 ### Bootstrap 5.3 🅱️
 
-* `webTemplates/bootstrap/5.3/html/BootstrapDialogs`
-* `webTemplates/bootstrap/5.3/scss/*` (wildcard)
+- `webTemplates/bootstrap/5.3/html/BootstrapDialogs`
+- `webTemplates/bootstrap/5.3/scss/*` (wildcard)
 
 > 💡 The whole `scss/` folder is exposed through the `./webTemplates/bootstrap/5.3/scss/*` wildcard, so every partial is importable without a `package.json` change.
 
 **Theme (DeepStrap)**
 
-* `webTemplates/bootstrap/5.3/scss/themes/deepstrap/theme`
-* `webTemplates/bootstrap/5.3/scss/background/background-grid`
-* `webTemplates/bootstrap/5.3/scss/components/buttons/buttons-ghost`
-* `webTemplates/bootstrap/5.3/scss/components/buttons/buttons-contrast`
-* `webTemplates/bootstrap/5.3/scss/components/icon/cube-icon`
-* `webTemplates/bootstrap/5.3/scss/components/icon/sphere-pulse`
-* `webTemplates/bootstrap/5.3/scss/input/placeholder-colors-fix`
-* `webTemplates/bootstrap/5.3/scss/spacing/spacing-plus`
+- `webTemplates/bootstrap/5.3/scss/themes/deepstrap/theme`
+- `webTemplates/bootstrap/5.3/scss/background/background-grid`
+- `webTemplates/bootstrap/5.3/scss/components/buttons/buttons-ghost`
+- `webTemplates/bootstrap/5.3/scss/components/buttons/buttons-contrast`
+- `webTemplates/bootstrap/5.3/scss/components/icon/cube-icon`
+- `webTemplates/bootstrap/5.3/scss/components/icon/sphere-pulse`
+- `webTemplates/bootstrap/5.3/scss/input/placeholder-colors-fix`
+- `webTemplates/bootstrap/5.3/scss/spacing/spacing-plus`
 
 ### Vite 7.3 ⚡
 
-* `webTemplates/vite/7.3/plugins/TinyVitePwaPlugin`
-* `webTemplates/vite/7.3/plugins/githubUtils`
+- `webTemplates/vite/7.3/plugins/TinyVitePwaPlugin`
+- `webTemplates/vite/7.3/plugins/githubUtils`
 
 ### Media Validator 🎞️
 
-* `webTemplates/media/MediaValidator/v1/Node`
-* `webTemplates/media/MediaValidator/v1/Browser`
+- `webTemplates/media/MediaValidator/v1/Node`
+- `webTemplates/media/MediaValidator/v1/Browser`
 
 ### Multiformats 14.0 🧬
 
-* `webTemplates/multiformats/14.0/IPFSHasher`
+- `webTemplates/multiformats/14.0/IPFSHasher`
 
 ### ag-psd 31.0 🖼️
 
-* `webTemplates/ag-psd/31.0/ProcessSolidFilters`
-* `webTemplates/ag-psd/31.0/ProcessSolidFilters/Template`
-* `webTemplates/ag-psd/31.0/ProcessSolidFilters/Browser`
-* `webTemplates/ag-psd/31.0/ProcessSolidFilters/FileInput`
+- `webTemplates/ag-psd/31.0/ProcessSolidFilters`
+- `webTemplates/ag-psd/31.0/ProcessSolidFilters/Template`
+- `webTemplates/ag-psd/31.0/ProcessSolidFilters/Browser`
+- `webTemplates/ag-psd/31.0/ProcessSolidFilters/FileInput`
 
 ---
 
@@ -372,11 +373,11 @@ Each library can be imported separately:
 **ESM (modern projects)**
 
 ```js
-import TinyTextarea from "tiny-essentials/libs/text/TinyTextarea";
+import TinyTextarea from 'tiny-essentials/libs/text/TinyTextarea';
 ```
 
 **CommonJS (Node.js)**
 
 ```js
-const { shuffleArray } = require("tiny-essentials/basics/array");
+const { shuffleArray } = require('tiny-essentials/basics/array');
 ```
