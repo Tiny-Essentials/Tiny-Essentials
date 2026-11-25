@@ -99,6 +99,20 @@ class TinyUserActivationDetector extends TinyDebugger {
   }
 
   /**
+   * Checks whether the queued callbacks can run without waiting for an activation.
+   *
+   * It is the negation of {@link TinyUserActivationDetector.hasUserActivation}
+   * for every browser, but it also treats a missing `navigator` (server side
+   * rendering) as already unlocked, so a callback registered on the server never
+   * stays stuck in the queue.
+   *
+   * @returns {boolean} `true` when the callbacks must run immediately, `false` when they must wait for a user activation.
+   */
+  static isUnlocked() {
+    return typeof navigator === 'undefined' || TinyUserActivationDetector.hasUserActivation();
+  }
+
+  /**
    * @param {ActivationOptions} [options={}] - Configuration options for the user activation.
    * @throws {TypeError} If `options` is not a plain object.
    * @throws {TypeError} If `options.debugMode` is not a boolean.
@@ -131,14 +145,14 @@ class TinyUserActivationDetector extends TinyDebugger {
   }
 
   /**
-   * Whether the browser already allows audio playback.
+   * Whether the document was already activated by the visitor.
    *
    * A document without `navigator` (server side rendering) is treated as
-   * unlocked, so every callback runs immediately.
+   * activated, so every callback runs immediately.
    *
    * @type {boolean}
    */
-  #unlocked = typeof navigator === 'undefined' || TinyUserActivationDetector.hasUserActivation();
+  #unlocked = TinyUserActivationDetector.isUnlocked();
 
   /**
    * Playbacks waiting for the user activation, indexed by their unique key.
@@ -180,7 +194,7 @@ class TinyUserActivationDetector extends TinyDebugger {
   }
 
   /**
-   * Whether the browser already allows audio playback.
+   * Whether the document was already activated by the visitor.
    *
    * @returns {boolean}
    */
@@ -213,8 +227,8 @@ class TinyUserActivationDetector extends TinyDebugger {
   /**
    * Schedules the next user activation check.
    *
-   * Does nothing when the timer is already scheduled or when the audio is
-   * already unlocked.
+   * Does nothing when the timer is already scheduled or when the document is
+   * already activated.
    *
    * @returns {void}
    */
@@ -258,7 +272,7 @@ class TinyUserActivationDetector extends TinyDebugger {
   }
 
   /**
-   * Marks the audio as unlocked and runs everything that was waiting for it.
+   * Marks the document as activated and runs everything that was waiting for it.
    *
    * Calling it more than once has no effect.
    *
@@ -273,13 +287,13 @@ class TinyUserActivationDetector extends TinyDebugger {
   }
 
   /**
-   * Runs the callback as soon as the audio is allowed to play.
+   * Runs the callback as soon as the document is activated.
    *
    * A `key` makes the request unique: a new callback with a key that is still
    * waiting replaces the previous one, so scrolling around before the first
-   * interaction does not queue the same playback twice.
+   * interaction does not queue the same request twice.
    *
-   * @param {PendingPlayback} callback - Playback to start.
+   * @param {PendingPlayback} callback - Callback to run once the document is activated.
    * @param {string} [key] - Unique key of the request. When omitted, an automatic key is generated.
    * @returns {string} The key of the request, or an empty string when the callback ran immediately.
    * @throws {TypeError} If `callback` is not a function.
