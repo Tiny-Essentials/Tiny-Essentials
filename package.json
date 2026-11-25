@@ -1206,7 +1206,7 @@
     "canvas": "^3.2.3",
     "esbuild": "^0.28.1",
     "file-type": "^22.0.2",
-    "jquery": "^3.7.1",
+    "jquery": "^4.1.0",
     "lodash": "^4.17.21",
     "marked": "^18.0.5",
     "multiformats": "^14.0.5",
