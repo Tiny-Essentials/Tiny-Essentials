@@ -83,6 +83,7 @@ Direct access to file utilities:
 - `regexp/Email`
 - `regexp/Glob`
 - `regexp/Username`
+- `regexp/Username/templates`
 - `regexp/Username/templates/MatrixProtocol`
 - `regexp/Username/templates/BlueSky`
 - `regexp/Username/templates/Discord`
