@@ -64,7 +64,56 @@ const testUserActivation = async () => {
   );
 
   // -------------------------------------------------------------------
-  // Construction & initial state
+  // pollInterval accessors
+  // -------------------------------------------------------------------
+  section('TinyUserActivationDetector - pollInterval', '⏱️');
+  const defaultInterval = TinyUserActivationDetector.pollInterval;
+  t.equal(defaultInterval, 100, 'Exposes the default polling interval');
+
+  TinyUserActivationDetector.pollInterval = 250;
+  t.equal(TinyUserActivationDetector.pollInterval, 250, 'Accepts a new polling interval');
+  t.throws(() => (TinyUserActivationDetector.pollInterval = 0), 'Rejects a zero polling interval');
+  t.throws(
+    () => (TinyUserActivationDetector.pollInterval = -10),
+    'Rejects a negative polling interval',
+  );
+  t.throws(
+    () => (TinyUserActivationDetector.pollInterval = '100'),
+    'Rejects a non-numeric polling interval',
+  );
+  t.throws(
+    () => (TinyUserActivationDetector.pollInterval = NaN),
+    'Rejects a non-finite polling interval',
+  );
+  t.equal(
+    TinyUserActivationDetector.pollInterval,
+    250,
+    'Keeps the previous value after a rejected assignment',
+  );
+  TinyUserActivationDetector.pollInterval = defaultInterval;
+
+  // -------------------------------------------------------------------
+  // Constructor validation
+  // -------------------------------------------------------------------
+  section('TinyUserActivationDetector - constructor validation', '🛡️');
+  t.throws(() => new TinyUserActivationDetector(null), 'Rejects a null options object');
+  t.throws(() => new TinyUserActivationDetector('nope'), 'Rejects a non-object options value');
+  t.throws(() => new TinyUserActivationDetector([]), 'Rejects an array of options');
+  t.throws(
+    () => new TinyUserActivationDetector({ debugMode: 'yes' }),
+    'Rejects a non-boolean debugMode',
+  );
+  t.throws(
+    () => new TinyUserActivationDetector({ useLogColors: 1 }),
+    'Rejects a non-boolean useLogColors',
+  );
+  t.throws(
+    () => new TinyUserActivationDetector({ logger: 'console' }),
+    'Rejects a non-object logger',
+  );
+
+  // -------------------------------------------------------------------
+  // Initial state
   // -------------------------------------------------------------------
   section('TinyUserActivationDetector - initial state', '🧱');
   installNavigator(false);
@@ -91,11 +140,14 @@ const testUserActivation = async () => {
   t.equal(detector.size, 2, 'Generates an automatic key when none is given');
   t.equal(detector.autoKey, 1, 'Counts the generated automatic keys');
 
-  t.equal(detector.whenReady('nope'), '', 'Ignores callbacks that are not functions');
-  t.equal(detector.size, 2, 'Does not queue invalid callbacks');
+  t.throws(() => detector.whenReady('nope'), 'Rejects callbacks that are not functions');
+  t.throws(() => detector.whenReady(() => {}, 42), 'Rejects a non-string key');
+  t.throws(() => detector.whenReady(() => {}, ''), 'Rejects an empty key');
+  t.equal(detector.size, 2, 'Does not queue invalid requests');
 
   detector.cancel('first');
   t.equal(detector.size, 1, 'cancel() discards a single request');
+  t.throws(() => detector.cancel(42), 'cancel() rejects a non-string key');
 
   detector.clear();
   t.equal(detector.size, 0, 'clear() empties the queue');
@@ -108,28 +160,71 @@ const testUserActivation = async () => {
   section('TinyUserActivationDetector - unlock', '🔓');
   const order = [];
   detector.whenReady(() => order.push(1), 'one');
-  detector.whenReady(() => {
-    throw new Error('boom');
-  }, 'broken');
+  detector.whenReady(() => order.push(2), 'two');
   detector.whenReady(() => order.push(3), 'three');
   t.equal(detector.size, 3, 'Queues every request while locked');
 
   detector.unlock();
   t.equal(detector.unlocked, true, 'unlock() flips the unlocked flag');
   t.equal(detector.size, 0, 'unlock() flushes the queue');
-  t.deepEqual(order, [1, 3], 'Runs the callbacks in order and survives a throwing one');
+  t.deepEqual(order, [1, 2, 3], 'Runs the callbacks in order');
   t.equal(detector.existsTime, false, 'Stops polling after the unlock');
 
   detector.unlock();
   t.equal(detector.unlocked, true, 'unlock() is idempotent');
 
   // -------------------------------------------------------------------
+  // Errors are never swallowed
+  // -------------------------------------------------------------------
+  section('TinyUserActivationDetector - error propagation', '💥');
+  installNavigator(false);
+  const thrower = new TinyUserActivationDetector();
+  const ran = [];
+  thrower.whenReady(() => ran.push('before'), 'a');
+  thrower.whenReady(() => {
+    throw new Error('boom');
+  }, 'b');
+  thrower.whenReady(() => ran.push('after'), 'c');
+
+  let single;
+  try {
+    thrower.unlock();
+  } catch (err) {
+    single = err;
+  }
+  t.equal(single?.message, 'boom', 'Rethrows the error of a failing callback');
+  t.deepEqual(ran, ['before', 'after'], 'Still runs the remaining callbacks');
+  t.equal(thrower.size, 0, 'Empties the queue even when a callback throws');
+
+  installNavigator(false);
+  const multi = new TinyUserActivationDetector();
+  multi.whenReady(() => {
+    throw new Error('one');
+  }, 'a');
+  multi.whenReady(() => {
+    throw new Error('two');
+  }, 'b');
+
+  let aggregate;
+  try {
+    multi.unlock();
+  } catch (err) {
+    aggregate = err;
+  }
+  t.equal(
+    aggregate instanceof AggregateError,
+    true,
+    'Wraps multiple failures in an AggregateError',
+  );
+  t.equal(aggregate?.errors.length, 2, 'Keeps every failure in the AggregateError');
+
+  // -------------------------------------------------------------------
   // Requests after the unlock
   // -------------------------------------------------------------------
   section('TinyUserActivationDetector - after unlock', '⚡');
-  let ran = 0;
-  const afterKey = detector.whenReady(() => ran++);
-  t.equal(ran, 1, 'Runs the callback immediately when already unlocked');
+  let immediate = 0;
+  const afterKey = detector.whenReady(() => immediate++);
+  t.equal(immediate, 1, 'Runs the callback immediately when already unlocked');
   t.equal(afterKey, '', 'Returns an empty key for immediate callbacks');
   t.equal(detector.size, 0, 'Does not queue anything when already unlocked');
 

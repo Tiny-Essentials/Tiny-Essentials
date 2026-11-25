@@ -49,8 +49,41 @@ import TinyDebugger from '../tools/TinyDebugger.mjs';
  * detector.whenReady(() => player.start(), 'main-action');
  */
 class TinyUserActivationDetector extends TinyDebugger {
-  /** How often the user activation is checked, in milliseconds. */
+  /**
+   * How often the user activation is checked, in milliseconds.
+   *
+   * @type {number}
+   */
   static #POLL_INTERVAL = 100;
+
+  /**
+   * How often the user activation is checked, in milliseconds.
+   *
+   * @returns {number} The current polling interval.
+   */
+  static get pollInterval() {
+    return TinyUserActivationDetector.#POLL_INTERVAL;
+  }
+
+  /**
+   * Updates how often the user activation is checked.
+   *
+   * The new value is only used by the next scheduled check, so a running
+   * instance picks it up on the following tick.
+   *
+   * @param {number} value - The new polling interval, in milliseconds.
+   * @throws {TypeError} If the value is not a finite number.
+   * @throws {RangeError} If the value is not greater than zero.
+   */
+  static set pollInterval(value) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      throw new TypeError('pollInterval must be a finite number.');
+    }
+    if (value <= 0) {
+      throw new RangeError('pollInterval must be greater than zero.');
+    }
+    TinyUserActivationDetector.#POLL_INTERVAL = value;
+  }
 
   /**
    * Checks whether the document already received a user gesture.
@@ -67,13 +100,33 @@ class TinyUserActivationDetector extends TinyDebugger {
 
   /**
    * @param {ActivationOptions} [options={}] - Configuration options for the user activation.
+   * @throws {TypeError} If `options` is not a plain object.
+   * @throws {TypeError} If `options.debugMode` is not a boolean.
+   * @throws {TypeError} If `options.useLogColors` is not a boolean.
+   * @throws {TypeError} If `options.logger` is not a Console-compatible object.
    */
   constructor(options = {}) {
+    if (options === null || typeof options !== 'object' || Array.isArray(options)) {
+      throw new TypeError('options must be a plain object.');
+    }
+
+    const { debugMode = false, useLogColors = false, logger = console } = options;
+
+    if (typeof debugMode !== 'boolean') {
+      throw new TypeError('options.debugMode must be a boolean.');
+    }
+    if (typeof useLogColors !== 'boolean') {
+      throw new TypeError('options.useLogColors must be a boolean.');
+    }
+    if (logger === null || typeof logger !== 'object') {
+      throw new TypeError('options.logger must be a Console-compatible object.');
+    }
+
     super({
       id: '[_main_class_TinyUserActivationDetector_reset_]',
-      logger: options.logger ?? console,
-      debugMode: options.debugMode ?? false,
-      useLogColors: options.useLogColors ?? false,
+      logger,
+      debugMode,
+      useLogColors,
     });
   }
 
@@ -178,21 +231,29 @@ class TinyUserActivationDetector extends TinyDebugger {
   /**
    * Runs every pending callback and empties the queue.
    *
-   * A callback that throws does not interrupt the remaining ones: the error is
-   * forwarded to the logger and the loop continues.
+   * Every callback is executed even when a previous one throws. When the loop
+   * finishes, the collected errors are thrown so they are never swallowed.
    *
    * @returns {void}
+   * @throws {*} The error thrown by the only failing callback.
+   * @throws {AggregateError} When more than one callback throws.
    */
   flush() {
     const pending = this.#queue;
     this.#queue = new Map();
+    const errors = [];
 
     for (const callback of pending.values()) {
       try {
         callback();
       } catch (err) {
-        this.log('error', 'Flush Error', err);
+        errors.push(err);
       }
+    }
+
+    if (errors.length === 1) throw errors[0];
+    if (errors.length > 1) {
+      throw new AggregateError(errors, `${errors.length} pending callbacks failed.`);
     }
   }
 
@@ -220,13 +281,23 @@ class TinyUserActivationDetector extends TinyDebugger {
    *
    * @param {PendingPlayback} callback - Playback to start.
    * @param {string} [key] - Unique key of the request. When omitted, an automatic key is generated.
-   * @returns {string} The key of the request, or an empty string when the callback ran immediately or is not a function.
+   * @returns {string} The key of the request, or an empty string when the callback ran immediately.
+   * @throws {TypeError} If `callback` is not a function.
+   * @throws {TypeError} If `key` is provided and is not a non-empty string.
    *
    * @example
    * detector.whenReady(() => audio.play(), 'chapter-1');
    */
   whenReady(callback, key) {
-    if (typeof callback !== 'function') return '';
+    if (typeof callback !== 'function') {
+      throw new TypeError('callback must be a function.');
+    }
+    if (key !== undefined && typeof key !== 'string') {
+      throw new TypeError('key must be a string when provided.');
+    }
+    if (key === '') {
+      throw new TypeError('key cannot be an empty string.');
+    }
 
     // The visitor may have interacted with the page before this request (or
     // before this module was even imported). The activation is sticky, so a
@@ -249,8 +320,13 @@ class TinyUserActivationDetector extends TinyDebugger {
    *
    * @param {string} key - Key returned by {@link TinyUserActivationDetector#whenReady}.
    * @returns {void}
+   * @throws {TypeError} If `key` is not a string.
    */
   cancel(key) {
+    if (typeof key !== 'string') {
+      throw new TypeError('key must be a string.');
+    }
+
     this.#queue.delete(key);
   }
 

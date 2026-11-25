@@ -43,6 +43,9 @@
 
           <dt>detector.existsTime</dt>
           <dd id="status-timer">false</dd>
+
+          <dt>pollInterval</dt>
+          <dd id="status-interval">100</dd>
         </dl>
       </section>
 
@@ -58,6 +61,7 @@
           <button id="btn-cancel">cancel(key)</button>
         </div>
         <div class="row">
+          <input id="interval-input" type="number" min="1" value="100" />
           <button id="btn-unlock">unlock()</button>
           <button id="btn-clear">clear()</button>
           <button id="btn-reset">reset()</button>
@@ -72,7 +76,12 @@
         <div class="row">
           <button id="btn-play">Play audio when ready</button>
         </div>
-        <audio id="audio" controls loop src="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3"></audio>
+        <audio
+          id="audio"
+          controls
+          loop
+          src="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3"
+        ></audio>
       </section>
 
       <section class="card">

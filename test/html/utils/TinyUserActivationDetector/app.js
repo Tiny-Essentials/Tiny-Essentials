@@ -34,6 +34,22 @@ const render = () => {
   $('status-size').textContent = String(detector.size);
   $('status-autokey').textContent = String(detector.autoKey);
   $('status-timer').textContent = String(detector.existsTime);
+  $('status-interval').textContent = String(TinyUserActivationDetector.pollInterval);
+};
+
+/**
+ * Runs a UI action and reports the thrown error instead of failing silently.
+ * @param {string} label - The action label used in the log.
+ * @param {() => void} action - The action to run.
+ * @returns {void}
+ */
+const attempt = (label, action) => {
+  try {
+    action();
+  } catch (err) {
+    log(`${label} threw ${err.constructor.name}: ${err.message}`, 'warn');
+  }
+  render();
 };
 
 // The activation is sticky, so a single interaction is enough for the whole
@@ -44,62 +60,77 @@ render();
 $('btn-queue').addEventListener('click', () => {
   const input = $('key-input');
   const key = input.value.trim() || undefined;
-  const result = detector.whenReady(() => {
-    log(`callback executed (key: ${key ?? 'auto'})`, 'ok');
-    render();
-  }, key);
-  log(`queued with key "${result || '(ran immediately)'}"`);
+  attempt('whenReady()', () => {
+    const result = detector.whenReady(() => {
+      log(`callback executed (key: ${key ?? 'auto'})`, 'ok');
+      render();
+    }, key);
+    log(`queued with key "${result || '(ran immediately)'}"`);
+  });
   input.value = '';
-  render();
 });
 
 $('btn-queue-auto').addEventListener('click', () => {
-  const result = detector.whenReady(() => {
-    log('anonymous callback executed', 'ok');
-    render();
+  attempt('whenReady()', () => {
+    const result = detector.whenReady(() => {
+      log('anonymous callback executed', 'ok');
+      render();
+    });
+    log(`queued with automatic key "${result || '(ran immediately)'}"`);
   });
-  log(`queued with automatic key "${result || '(ran immediately)'}"`);
-  render();
 });
 
 $('btn-cancel').addEventListener('click', () => {
   const key = $('cancel-input').value.trim();
-  detector.cancel(key);
-  log(`cancel("${key}")`);
+  attempt('cancel()', () => {
+    detector.cancel(key);
+    log(`cancel("${key}")`);
+  });
   $('cancel-input').value = '';
-  render();
 });
 
 $('btn-unlock').addEventListener('click', () => {
-  detector.unlock();
-  log('unlock() called', 'warn');
-  render();
+  attempt('unlock()', () => {
+    detector.unlock();
+    log('unlock() called', 'warn');
+  });
 });
 
 $('btn-clear').addEventListener('click', () => {
-  detector.clear();
-  log('clear() called', 'warn');
-  render();
+  attempt('clear()', () => {
+    detector.clear();
+    log('clear() called', 'warn');
+  });
 });
 
 $('btn-reset').addEventListener('click', () => {
-  detector.reset();
-  log('reset() called', 'warn');
-  render();
+  attempt('reset()', () => {
+    detector.reset();
+    log('reset() called', 'warn');
+  });
 });
 
 $('btn-clear-log').addEventListener('click', () => (logEl.innerHTML = ''));
 
 $('btn-play').addEventListener('click', () => {
   const audio = $('audio');
-  detector.whenReady(() => {
-    audio
-      .play()
-      .then(() => log('audio started', 'ok'))
-      .catch((err) => log(`audio error: ${err.message}`, 'warn'));
+  attempt('whenReady()', () => {
+    detector.whenReady(() => {
+      audio
+        .play()
+        .then(() => log('audio started', 'ok'))
+        .catch((err) => log(`audio error: ${err.message}`, 'warn'));
+    });
+    log('audio playback queued until the user activation');
   });
-  log('audio playback queued until the user activation');
-  render();
+});
+
+$('interval-input').addEventListener('change', (event) => {
+  const value = Number(event.target.value);
+  attempt('pollInterval =', () => {
+    TinyUserActivationDetector.pollInterval = value;
+    log(`pollInterval set to ${TinyUserActivationDetector.pollInterval}ms`, 'ok');
+  });
 });
 
 log('TinyUserActivationDetector ready. Interact with the page to unlock the queue.');

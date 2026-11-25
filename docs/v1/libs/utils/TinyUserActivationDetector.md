@@ -46,26 +46,33 @@ new TinyUserActivationDetector(options);
 | `useLogColors` | `boolean`          | `false`   | Enables ANSI colors in the debug logs.                   |
 | `logger`       | `Partial<Console>` | `console` | A custom logger that implements the `Console` interface. |
 
+Every option is validated. The constructor throws a `TypeError` when `options` is not a plain object, when `debugMode`/`useLogColors` are not booleans, or when `logger` is not a `Console`-compatible object.
+
 ---
 
 ## 📖 API Reference
 
 ### Static
 
-| Member                                           | Description                                                                                                                                           |
-| :----------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TinyUserActivationDetector.hasUserActivation()` | Returns `true` when the browser reports a previous activation (`navigator.userActivation.hasBeenActive`). Always `false` when the API is unavailable. |
+| Member                                           | Description                                                                                                                                                     |
+| :----------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TinyUserActivationDetector.hasUserActivation()` | Returns `true` when the browser reports a previous activation (`navigator.userActivation.hasBeenActive`). Always `false` when the API is unavailable.           |
+| `TinyUserActivationDetector.pollInterval`        | Getter/setter for the polling interval in milliseconds (default `100`). The setter throws `TypeError` for non-finite values and `RangeError` for values `<= 0`. |
+
+```javascript
+TinyUserActivationDetector.pollInterval = 250; // check every 250ms
+```
 
 ### Methods
 
-| Method                      | Description                                                                                                                                             |
-| :-------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `whenReady(callback, key?)` | Runs `callback` as soon as the page is activated. Returns the request key, or an empty string when the callback ran immediately (or is not a function). |
-| `cancel(key)`               | Discards a single pending request.                                                                                                                      |
-| `unlock()`                  | Marks the page as unlocked and flushes the queue. Calling it more than once has no effect.                                                              |
-| `flush()`                   | Runs every pending callback and empties the queue. A callback that throws does not interrupt the remaining ones.                                        |
-| `clear()`                   | Discards every pending request and stops watching the activation.                                                                                       |
-| `reset()`                   | Restores the instance to its initial state (the `unlocked` state is intentionally preserved).                                                           |
+| Method                      | Description                                                                                                                                                                                                               |
+| :-------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `whenReady(callback, key?)` | Runs `callback` as soon as the page is activated. Returns the request key, or an empty string when the callback ran immediately. Throws `TypeError` when `callback` is not a function or `key` is not a non-empty string. |
+| `cancel(key)`               | Discards a single pending request. Throws `TypeError` when `key` is not a string.                                                                                                                                         |
+| `unlock()`                  | Marks the page as unlocked and flushes the queue. Calling it more than once has no effect.                                                                                                                                |
+| `flush()`                   | Runs every pending callback and empties the queue. Every callback runs even if a previous one throws; the errors are rethrown at the end (`AggregateError` when there is more than one).                                  |
+| `clear()`                   | Discards every pending request and stops watching the activation.                                                                                                                                                         |
+| `reset()`                   | Restores the instance to its initial state (the `unlocked` state is intentionally preserved).                                                                                                                             |
 
 ### Getters
 
