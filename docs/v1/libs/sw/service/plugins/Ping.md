@@ -2,6 +2,13 @@
 
 A lightweight utility to verify that the `TinyServiceWorkerEngine` is communicating correctly.
 
+## 📑 Table of Contents
+
+- [🚀 Quick Usage](#-quick-usage)
+- [✅ Expected Result](#-expected-result)
+
+---
+
 ### 🚀 Quick Usage
 
 1.  **Register the plugin:**

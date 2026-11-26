@@ -1,5 +1,53 @@
 # 🖼️ Html
 
+## 📑 Table of Contents
+
+- [📖 `readBase64Blob(file: File, isDataUrl?: boolean | string): Promise<string>`](#-readbase64blobfile-file-isdataurl-boolean--string-promisestring)
+  - [📥 Parameters](#-parameters)
+  - [📤 Returns](#-returns)
+  - [⚠️ Throws](#-throws)
+  - [🧪 Example](#-example)
+- [📖 `readFileBlob(file: File, method: 'readAsArrayBuffer' | 'readAsDataURL' | 'readAsText' | 'readAsBinaryString'): Promise<any>`](#-readfileblobfile-file-method-readasarraybuffer--readasdataurl--readastext--readasbinarystring-promiseany)
+  - [📥 Parameters](#-parameters)
+  - [📤 Returns](#-returns)
+  - [⚠️ Throws](#-throws)
+  - [🧪 Example](#-example)
+- [📖 `readJsonBlob(file: File): Promise<any>`](#-readjsonblobfile-file-promiseany)
+  - [📥 Parameters](#-parameters)
+  - [📤 Returns](#-returns)
+  - [⚠️ Throws](#-throws)
+  - [🧪 Example](#-example)
+- [💾 `saveJsonFile(filename: string, data: any, spaces: number = 2): void`](#-savejsonfilefilename-string-data-any-spaces-number--2-void)
+  - [📥 Parameters](#-parameters)
+  - [📤 Returns](#-returns)
+  - [📂 Behavior](#-behavior)
+  - [🧪 Example](#-example)
+  - [`trackFetchProgress(response, onProgress, returnResponse?)`](#trackfetchprogressresponse-onprogress-returnresponse)
+  - [`fetchJson(url, options?, onProgress?)`](#fetchjsonurl-options-onprogress)
+  - [`fetchBlob(url, allowedMimeTypes?, options?, onProgress?)`](#fetchbloburl-allowedmimetypes-options-onprogress)
+  - [`fetchText(url, allowedMimeTypes?, options?, onProgress?)`](#fetchtexturl-allowedmimetypes-options-onprogress)
+  - [📤 Returns (for all helpers)](#-returns-for-all-helpers)
+  - [⚠️ Throws](#-throws)
+  - [🧠 Tip](#-tip)
+  - [🧪 Example](#-example)
+- [📦 `HtmlElBoxSides` Type](#-htmlelboxsides-type)
+- [📄 `installWindowHiddenScript`](#-installwindowhiddenscript)
+  - [🧠 Features](#-features)
+  - [🧪 Usage](#-usage)
+  - [⚙️ Options](#-options)
+  - [🔄 Return Value](#-return-value)
+  - [🚦 Events Supported](#-events-supported)
+  - [🔍 Initial Trigger](#-initial-trigger)
+  - [🧯 Uninstalling](#-uninstalling)
+  - [🎨 CSS Example](#-css-example)
+- [📖 `loadImage(options): Promise<object>`](#-loadimageoptions-promiseobject)
+  - [✨ Features](#-features)
+  - [📥 Parameters](#-parameters)
+  - [📤 Returns](#-returns)
+  - [🧪 Example](#-example)
+
+---
+
 ### 📖 `readBase64Blob(file: File, isDataUrl?: boolean | string): Promise<string>`
 
 Reads a file and returns its Base64 content using the FileReader API, with optional formatting as a full Data URL.

@@ -2,6 +2,21 @@
 
 This document serves as a guide for professional developers on when it is efficient and safe to reuse a `RegExp` object in JavaScript, and when doing so can lead to critical bugs.
 
+## 📑 Table of Contents
+
+- [1. When to Reuse a RegExp](#1-when-to-reuse-a-regexp)
+  - [A. Static Patterns (Single Source of Truth)](#a-static-patterns-single-source-of-truth)
+  - [B. Performance Optimization (Pre-compilation)](#b-performance-optimization-pre-compilation)
+  - [Example: Efficient Reuse](#example-efficient-reuse)
+- [2. When NEVER to Reuse a RegExp](#2-when-never-to-reuse-a-regexp)
+  - [A. The `lastIndex` Trap (Stateful Regex)](#a-the-lastindex-trap-stateful-regex)
+  - [Example: The `lastIndex` Bug](#example-the-lastindex-bug)
+  - [B. Dynamic Patterns](#b-dynamic-patterns)
+  - [Example: Dynamic Pattern](#example-dynamic-pattern)
+- [Summary Table](#summary-table)
+
+---
+
 ## 1. When to Reuse a RegExp
 
 Reusing a `RegExp` object (storing it in a `const` outside of a function or loop) is a best practice in several scenarios.

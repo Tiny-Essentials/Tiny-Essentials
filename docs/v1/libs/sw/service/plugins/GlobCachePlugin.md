@@ -2,6 +2,19 @@
 
 Welcome to the official documentation for the **GlobCachePlugin**. This plugin is designed for the `TinyServiceWorkerEngine` ecosystem. It provides an easy and efficient way to manage runtime caching by using **glob patterns** (like `**/*.js`) instead of writing complex Regular Expressions manually.
 
+## 📑 Table of Contents
+
+- [📝 Overview](#-overview)
+- [✨ Key Features](#-key-features)
+- [📦 Configuration (Options)](#-configuration-options)
+- [🚀 Daily Usage Guide](#-daily-usage-guide)
+  - [1. Basic Implementation](#1-basic-implementation)
+  - [2. Advanced Filtering Example](#2-advanced-filtering-example)
+- [⚠️ Technical Constraints & Logic](#-technical-constraints--logic)
+- [🛠 Troubleshooting](#-troubleshooting)
+
+---
+
 ## 📝 Overview
 
 The `GlobCachePlugin` intercepts network requests that match your specified patterns. It checks if a valid response is already stored in the `CacheStorage`.

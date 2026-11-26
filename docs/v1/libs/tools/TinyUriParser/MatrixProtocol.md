@@ -6,6 +6,17 @@ This module is a specialized tool designed to identify, parse, and reconstruct v
 
 ---
 
+## 📑 Table of Contents
+
+- [🌟 Overview](#-overview)
+- [🛠 Supported URI Formats](#-supported-uri-formats)
+- [💎 Core Data Structures](#-core-data-structures)
+  - [1. `MXCData` 📦](#1-mxcdata-)
+  - [2. `MatrixSchemeData` 🗺️](#2-matrixschemedata-)
+  - [3. `MatrixWebData` 🌐](#3-matrixwebdata-)
+
+---
+
 ## 🌟 Overview
 
 The primary goal of this module is to take a raw string (a URI) and convert it into a **strongly typed JavaScript object**. This object can then be used to extract specific information, such as a server domain, a user ID, or a room ID, without needing to manually write complex Regular Expressions every time.

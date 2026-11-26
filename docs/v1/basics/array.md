@@ -4,6 +4,21 @@ A minimal and handy module offering a couple of focused utilities for working wi
 
 ---
 
+## 📑 Table of Contents
+
+- [`shuffleArray(items: any[]): any[]`](#shufflearrayitems-any-any)
+  - [🚀 Usage](#-usage)
+- [📦 `arraySortPositions`](#-arraysortpositions)
+  - [📌 Function Signature](#-function-signature)
+  - [🧠 Parameters](#-parameters)
+  - [🎯 Returns](#-returns)
+  - [💡 Examples](#-examples)
+  - [🛠️ Use Case](#-use-case)
+- [🔁 `multiplyArrayBlocks(phases, counts)`](#-multiplyarrayblocksphases-counts)
+- [🔀 `diffArrayList(oldItems, newItems)`](#-diffarraylistolditems-newitems)
+
+---
+
 ## `shuffleArray(items: any[]): any[]`
 
 🔄 A tiny utility for shuffling arrays using the good old Fisher–Yates algorithm. Simple, efficient, and perfectly random (as far as JavaScript's `Math.random()` allows, anyway).

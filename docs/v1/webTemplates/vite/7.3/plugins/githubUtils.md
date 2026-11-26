@@ -2,6 +2,16 @@
 
 This project provides a lightweight **Vite plugin** designed specifically for developers deploying **Single Page Applications (SPAs)** to **GitHub Pages**.
 
+## 📑 Table of Contents
+
+- [📋 Overview](#-overview)
+- [🛠️ Installation & Setup](#-installation--setup)
+  - [1. Register the Plugin in Vite ⚙️](#1-register-the-plugin-in-vite-)
+- [🚀 Daily Workflow](#-daily-workflow)
+- [⚠️ Troubleshooting](#-troubleshooting)
+
+---
+
 ## 📋 Overview
 
 When using client-side routing (like `react-router` or `vue-router`) on GitHub Pages, a common issue occurs: if a user refreshes the page on a sub-route (e.g., `your-site.com/about`), GitHub Pages will look for a file at `/about/index.html`. Since that file doesn't exist in a standard SPA build, the user sees a **404 Error**.

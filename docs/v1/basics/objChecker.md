@@ -1,5 +1,16 @@
 # 🧠 objChecker.mjs
 
+## 📑 Table of Contents
+
+- [📘 Object & Type Utilities](#-object--type-utilities)
+  - [🧮 `countObj(obj)`](#-countobjobj)
+  - [🧼 `isValidObj(value)`](#-isvalidobjvalue)
+  - [🧼 `isJsonObject(value)`](#-isjsonobjectvalue)
+  - [🛠️ `isClass(target)`](#-isclasstarget)
+  - [🛠️ `isClassInstance(value)` and `isAnyClassInstance(value)`](#-isclassinstancevalue-and-isanyclassinstancevalue)
+
+---
+
 ## 📘 Object & Type Utilities
 
 This document introduces utility functions designed to help you safely and efficiently work with JavaScript objects and types. These helpers are particularly useful when dealing with dynamic values — especially in situations where data might be coming from APIs, user input, or JSON files.

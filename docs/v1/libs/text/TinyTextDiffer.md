@@ -6,6 +6,21 @@ It uses the **Longest Common Subsequence (LCS)** algorithm to ensure that change
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Features](#-features)
+- [🚀 Installation & Setup](#-installation--setup)
+- [📚 API Reference](#-api-reference)
+  - [🏗️ Constructor](#-constructor)
+  - [🛠️ Methods](#-methods)
+  - [📊 Data Types](#-data-types)
+- [💡 Usage Example](#-usage-example)
+- [⚙️ Technical Details](#-technical-details)
+  - [The Algorithm](#the-algorithm)
+- [🛡️ Error Handling](#-error-handling)
+
+---
+
 ## ✨ Features
 
 * 📜 **Version History**: Store and manage multiple versions of a string.

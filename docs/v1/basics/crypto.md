@@ -2,6 +2,19 @@
 
 Welcome to the **Crypto Utils** documentation! This module provides a simple way to generate cryptographic hashes using the built-in Web Crypto API. It is designed to be lightweight and easy to integrate into any modern JavaScript project. 🚀
 
+## 📑 Table of Contents
+
+- [📖 Overview](#-overview)
+- [🚀 Getting Started](#-getting-started)
+  - [Installation](#installation)
+- [🛠 API Reference](#-api-reference)
+  - [`hashText(text, algorithm)` 🔑](#hashtexttext-algorithm-)
+- [💻 Practical Examples](#-practical-examples)
+  - [1. Basic Usage (SHA-256) ✅](#1-basic-usage-sha-256-)
+- [💡 Developer Tips for Daily Use](#-developer-tips-for-daily-use)
+
+---
+
 ## 📖 Overview
 
 The primary purpose of this library is to take a string of text and convert it into a unique "fingerprint" (a hexadecimal hash) using a specified cryptographic algorithm (like SHA-256).

@@ -2,6 +2,25 @@
 
 A collection of simple math utilities that make basic calculations a breeze.
 
+## 📑 Table of Contents
+
+- [Overview](#overview)
+- [Functions](#functions)
+  - [🔢 `ruleOfThree(val1, val2, val3, inverse)`](#-ruleofthreeval1-val2-val3-inverse)
+  - [💯 `getSimplePerc(price, percentage)`](#-getsimplepercprice-percentage)
+  - [📊 `getPercentage(part, total)`](#-getpercentagepart-total)
+  - [🎂 `getAge(timeData, now)`](#-getagetimedata-now)
+  - [📦 `formatBytes(bytes, decimals, maxUnit)`](#-formatbytesbytes-decimals-maxunit)
+  - [Parameters:](#parameters)
+  - [Returns:](#returns)
+  - [Example Usage:](#example-usage)
+  - [Notes:](#notes)
+  - [🔢 `genFibonacciSeq()` — Custom Fibonacci Sequence Generator](#-genfibonacciseq--custom-fibonacci-sequence-generator)
+  - [📊 `compareMarketcap`](#-comparemarketcap)
+  - [📈 `calculateMarketcap(originalMarketCap, circulatingSupply)`](#-calculatemarketcaporiginalmarketcap-circulatingsupply)
+
+---
+
 ## Overview
 
 `simpleMath.mjs` offers a set of essential mathematical functions, from the classic Rule of Three (direct and inverse proportions) to calculating percentages and even determining age based on a birthdate. It's an easy-to-use module for anyone who needs to perform fundamental calculations in JavaScript.

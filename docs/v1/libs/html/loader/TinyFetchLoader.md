@@ -6,6 +6,20 @@ Because it reuses the whole media pipeline, it inherits progress tracking, cachi
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Highlights](#-highlights)
+- [🚀 Quick start](#-quick-start)
+- [⚙️ Options](#-options)
+- [🧩 Properties](#-properties)
+- [🛠️ Methods](#-methods)
+  - [`clone(overrides = {})`](#cloneoverrides--)
+  - [`exportFetch()`](#exportfetch)
+- [📦 Response types](#-response-types)
+- [🧪 Example: downloading a JSON file with progress](#-example-downloading-a-json-file-with-progress)
+
+---
+
 ## ✨ Highlights
 
 * **Any payload type** — `blob`, `arraybuffer`, `text` or `json`.

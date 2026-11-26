@@ -9,6 +9,20 @@ intelligence lives in the engine (`regexp/Username`); this file only declares
 
 ---
 
+## 📑 Table of Contents
+
+- [📌 What is this file?](#-what-is-this-file)
+- [📚 Template Catalog](#-template-catalog)
+  - [`handle`](#handle)
+  - [`did`](#did)
+  - [`atUri`](#aturi)
+  - [`hashtag`](#hashtag)
+- [🚀 Quick Start](#-quick-start)
+- [🧪 Testing Cheatsheet](#-testing-cheatsheet)
+- [📖 References](#-references)
+
+---
+
 ## 📌 What is this file?
 
 `BlueSky` is a **data-only module**. It exports a single frozen object:

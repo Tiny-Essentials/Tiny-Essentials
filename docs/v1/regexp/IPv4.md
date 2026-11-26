@@ -2,6 +2,20 @@
 
 A lightweight, high-performance JavaScript module designed to validate and extract IPv4 addresses. This library is ideal for form validation, log parsing, and network security filtering.
 
+## 📑 Table of Contents
+
+- [🚀 Overview](#-overview)
+- [🛠️ API Reference](#-api-reference)
+  - [`isValidIPv4(s)`](#isvalidipv4s)
+  - [`extractIPsV4(text)`](#extractipsv4text)
+  - [`ipv4Regex()`](#ipv4regex)
+  - [`findIPv4Regex()`](#findipv4regex)
+- [💡 Practical Use Cases](#-practical-use-cases)
+  - [1. 📝 Frontend: Form Validation](#1--frontend-form-validation)
+  - [2. 🔍 Backend/DevOps: Log Analysis](#2--backenddevops-log-analysis)
+
+---
+
 ## 🚀 Overview
 
 This project provides tools to handle IPv4 addresses using highly optimized Regular Expressions. It distinguishes between **exact validation** (checking if a string is strictly an IP) and **extraction** (finding IPs within a large block of text).

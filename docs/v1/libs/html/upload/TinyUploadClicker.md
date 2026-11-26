@@ -4,6 +4,20 @@ A tiny but good JavaScript utility that lets you bind any clickable element (but
 
 ---
 
+## 📑 Table of Contents
+
+- [🚀 Features](#-features)
+- [✨ Example](#-example)
+- [🧱 Constructor](#-constructor)
+  - [`new TinyUploadClicker(options)`](#new-tinyuploadclickeroptions)
+- [🧩 `UploaderConfig` Type](#-uploaderconfig-type)
+- [🔧 Methods](#-methods)
+  - [`destroy(): void`](#destroy-void)
+- [🛡️ Runtime Validations](#-runtime-validations)
+- [🛠️ Internal Design](#-internal-design)
+
+---
+
 ## 🚀 Features
 
 * 🎯 **Use any HTML element** as a file input trigger

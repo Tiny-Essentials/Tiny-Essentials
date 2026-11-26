@@ -8,6 +8,62 @@ With easy-to-use methods and configurable settings, TinyDayNightCycle provides y
 
 ---
 
+## 📑 Table of Contents
+
+- [📄 Type Definitions](#-type-definitions)
+  - [`SelectedWeather`](#selectedweather)
+  - [`WeatherCallback`](#weathercallback)
+  - [`WeatherCfgs`](#weathercfgs)
+  - [`WeatherCfg`](#weathercfg)
+  - [`WeatherData`](#weatherdata)
+  - [`MoonData`](#moondata)
+  - [`MoonRaw`](#moonraw)
+- [⚙️ TinyDayNightCycle Class](#-tinydaynightcycle-class)
+- [🌞 Properties, Getters, Setters & Constructor](#-properties-getters-setters--constructor)
+  - [🗂️ Private Fields](#-private-fields)
+  - [⚙️ Getters](#-getters)
+  - [⚙️ Setters](#-setters)
+  - [⚙️ Constructor](#-constructor)
+- [🌱 SEASON SYSTEM](#-season-system)
+  - [`addSeason(name, values)`](#addseasonname-values)
+  - [`removeSeason(name)`](#removeseasonname)
+  - [`hasSeason(name)`](#hasseasonname)
+  - [`getSeason(name)`](#getseasonname)
+- [⏰ TIME SYSTEM](#-time-system)
+  - [`setTime({hour = 0, minute = 0, second = 0})`](#settimehour--0-minute--0-second--0)
+  - [`addTime({hours = 0, minutes = 0, seconds = 0})`](#addtimehours--0-minutes--0-seconds--0)
+  - [`getTime(settings)`](#gettimesettings)
+  - [`isDay()`](#isday)
+  - [Time Until Day/Night Methods](#time-until-daynight-methods)
+  - [`timeUntil(targetHour, unit)`](#timeuntiltargethour-unit)
+  - [`setTo(phase)`](#settophase)
+- [📅 DAY/MONTH/YEAR SYSTEM](#-daymonthyear-system)
+  - [`nextDay(amount = 1)`](#nextdayamount--1)
+  - [`prevDay(amount = 1)`](#prevdayamount--1)
+  - [`updateSeason()`](#updateseason)
+- [🌦️ WEATHER SYSTEM](#-weather-system)
+  - [`setWeatherConfig(config)`](#setweatherconfigconfig)
+  - [`setWeatherDuration(minMinutes, maxMinutes)`](#setweatherdurationminminutes-maxminutes)
+  - [`updateWeatherTimer(minutesPassed)`](#updateweathertimerminutespassed)
+  - [`forceWeather({ where = 'main', type, duration = null })`](#forceweather-where--main-type-duration--null-)
+  - [`chooseNewWeather({ customWeather, where = 'main' } = {})`](#choosenewweather-customweather-where--main---)
+  - [`_randomInRange(min, max)`](#_randominrangemin-max)
+- [🌙 MOON SYSTEM](#-moon-system)
+  - [`addMoon(name, cycleLength, phaseNames, startingPhase = 0)`](#addmoonname-cyclelength-phasenames-startingphase--0)
+  - [`removeMoon(name)`](#removemoonname)
+  - [`advanceMoons(days = 1)`](#advancemoonsdays--1)
+  - [`rewindMoons(days = 1)`](#rewindmoonsdays--1)
+  - [`advanceMoon(moonIndex, days = 1)`](#advancemoonmoonindex-days--1)
+  - [`rewindMoon(moonIndex, days = 1)`](#rewindmoonmoonindex-days--1)
+  - [`moonExists(index)`](#moonexistsindex)
+  - [`getMoon(index)`](#getmoonindex)
+- [⏳ Day, Hour & Minute Sizes](#-day-hour--minute-sizes)
+- [⚠️ INTERNAL UTILITIES](#-internal-utilities)
+  - [`_checkDestroyed()`](#_checkdestroyed)
+  - [`destroy()`](#destroy)
+
+---
+
 ### 📄 Type Definitions
 
 ---

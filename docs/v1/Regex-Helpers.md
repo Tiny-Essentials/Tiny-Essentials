@@ -8,6 +8,16 @@ It’s especially useful when **migrating from jQuery to TinyHtml**, making your
 
 ---
 
+## 📑 Table of Contents
+
+- [⚡ Basic Function Replacements](#-basic-function-replacements)
+- [🛠️ Migrating from jQuery to TinyHtml](#-migrating-from-jquery-to-tinyhtml)
+  - [📥 Match jQuery with arguments](#-match-jquery-with-arguments)
+  - [📦 Match jQuery without arguments](#-match-jquery-without-arguments)
+  - [🔎 Match jQuery queries](#-match-jquery-queries)
+
+---
+
 ## ⚡ Basic Function Replacements
 
 Simplify and streamline JavaScript function transformations.

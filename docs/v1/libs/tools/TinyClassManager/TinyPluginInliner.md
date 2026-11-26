@@ -8,6 +8,20 @@ When using `TinyClassManager`, you compose classes using a mixin pattern via the
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Key Features](#-key-features)
+- [⚙️ Configuration](#-configuration)
+- [🚀 How to Use](#-how-to-use)
+  - [1. Develop your Plugins](#1-develop-your-plugins)
+  - [2. Create your Entry Point](#2-create-your-entry-point)
+  - [3. Run the Inliner](#3-run-the-inliner)
+- [🔄 Before vs. After](#-before-vs-after)
+  - [📝 Before (Development)](#-before-development)
+  - [📦 After (Production Bundle)](#-after-production-bundle)
+
+---
+
 ## ✨ Key Features
 
 * **📦 Automatic Inlining:** It scans your entry file for `.insert(PluginName)` calls and replaces them with the actual source code of the plugin.

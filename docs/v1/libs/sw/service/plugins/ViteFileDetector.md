@@ -2,6 +2,20 @@
 
 A specialized plugin for the `TinyServiceWorkerEngine` designed to identify and bypass Vite-specific network requests. This ensures that during development, Vite's internal processes (like Hot Module Replacement) are not interrupted by the Service Worker.
 
+## 📑 Table of Contents
+
+- [📝 Overview](#-overview)
+- [🛠 Configuration](#-configuration)
+  - [`ViteFileDetectorOptions`](#vitefiledetectoroptions)
+  - [Validation](#validation)
+  - [🗃️ Persistent Cache](#-persistent-cache)
+- [🚀 Daily Usage](#-daily-usage)
+  - [1. Installation](#1-installation)
+  - [2. Typical Workflow](#2-typical-workflow)
+- [⚠️ Important Notes](#-important-notes)
+
+---
+
 ## 📝 Overview
 
 When developing with **Vite**, the development server uses specific URL patterns to handle module loading and Hot Module Replacement (HMR). If a Service Worker attempts to intercept and validate these requests, it can break the development experience.

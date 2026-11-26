@@ -6,6 +6,39 @@ Here, you can navigate through different sections of the project. Below are the 
 
 ---
 
+## 📑 Table of Contents
+
+- [📚 Main Directories](#-main-directories)
+  - [1. `basics/`](#1-basics-this-folder-contains-the-core-scripts-we-have-worked-on-so-far-each-file-is-a-module-focused-on-specific-functionality)
+  - [2. `libs/`](#2-libs)
+    - [2.1. `libs/storage`](#21-libsstorage)
+    - [2.2. `libs/utils`](#22-libsutils)
+    - [2.3. `libs/game`](#23-libsgame)
+    - [2.4. `libs/color`](#24-libscolor)
+    - [2.5. `libs/math`](#25-libsmath)
+    - [2.6. `libs/text`](#26-libstext)
+    - [2.7. `libs/html`](#27-libshtml)
+    - [2.8. `libs/array`](#28-libsarray)
+    - [2.9. `libs/media`](#29-libsmedia)
+    - [2.10. `libs/tools`](#210-libstools)
+    - [2.11. `libs/fs`](#211-libsfs)
+    - [2.12. `libs/plugin`](#212-libsplugin)
+    - [2.13. `libs/router`](#213-libsrouter)
+    - [2.14. `libs/sw`](#214-libssw)
+    - [2.15. `libs/worker`](#215-libsworker)
+  - [3. `regexp/`](#3-regexp)
+  - [4. `webTemplates/`](#4-webtemplates)
+  - [5. `fileManager/`](#5-filemanager)
+- [📚 Tip Directories](#-tip-directories)
+- [🔌 Want to Extend These Libraries?](#-want-to-extend-these-libraries)
+- [🚀 Usage](#-usage)
+- [🍴 TinyFork CLI](#-tinyfork-cli)
+- [📖 More Regex Goodies](#-more-regex-goodies)
+- [📑 Contributing](#-contributing)
+- [💘 Want to Know How I Use AI in My Projects?](#-want-to-know-how-i-use-ai-in-my-projects)
+
+---
+
 ## 📚 Main Directories
 
 ### 1. **`basics/`** This folder contains the core scripts we have worked on so far. Each file is a module focused on specific functionality.

@@ -5,6 +5,23 @@ It allows tracking of values that decrease over time, with configurable decay fa
 
 ---
 
+## 📑 Table of Contents
+
+- [📦 Types](#-types)
+  - [`TickResult` 🔄](#tickresult-)
+  - [`BarFactor` ⚡](#barfactor-)
+  - [`SerializedData` 💾](#serializeddata-)
+- [🏗️ Class: `TinyNeedBar`](#-class-tinyneedbar)
+  - [Overview](#overview)
+  - [Constructor](#constructor)
+  - [Getters](#getters)
+  - [Setters](#setters)
+  - [Methods](#methods)
+  - [✅ Example Usage](#-example-usage)
+  - [🎨 Notes](#-notes)
+
+---
+
 ## 📦 Types
 
 ### `TickResult` 🔄

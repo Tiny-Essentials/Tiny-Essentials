@@ -2,6 +2,20 @@
 
 A versatile time utility module for JavaScript that helps you calculate and format time durations with style. Whether you're building countdowns, timers, or just need a nice "HH\:MM\:SS" string, this module has your back!
 
+## 📑 Table of Contents
+
+- [✨ Features](#-features)
+- [🧠 API Overview](#-api-overview)
+  - [🔹 `getUserTimeFormat()`](#-getusertimeformat)
+  - [🔹 `getTimeDuration(timeData, durationType = 'asSeconds', now = null)`](#-gettimedurationtimedata-durationtype--asseconds-now--null)
+  - [🔹 `formatCustomTimer(totalSeconds, level = 'seconds', format = '{time}')`](#-formatcustomtimertotalseconds-level--seconds-format--time)
+  - [🔹 `formatTimer(seconds)`](#-formattimerseconds)
+  - [🔹 `formatDayTimer(seconds)`](#-formatdaytimerseconds)
+  - [🔹 `breakdownDuration(totalMs, level = 'milliseconds')`](#-breakdowndurationtotalms-level--milliseconds)
+- [🧪 Examples](#-examples)
+
+---
+
 ## ✨ Features
 
 - 🔢 Calculate time differences in various units

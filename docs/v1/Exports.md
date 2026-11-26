@@ -5,6 +5,24 @@ You can `import` (ESM) or `require` (CommonJS) each module individually.
 
 ---
 
+## 📑 Table of Contents
+
+- [🎨 CSS Assets](#-css-assets)
+- [🏠 Root Entrypoints](#-root-entrypoints)
+- [🔧 Basics Modules](#-basics-modules)
+- [🧩 Regexp](#-regexp)
+- [📖 JSDoc](#-jsdoc)
+- [📚 Libs Modules](#-libs-modules)
+- [🎨 Web Templates](#-web-templates)
+  - [Bootstrap 5.3 🅱️](#bootstrap-53-)
+  - [Vite 7.3 ⚡](#vite-73-)
+  - [Media Validator 🎞️](#media-validator-)
+  - [Multiformats 14.0 🧬](#multiformats-140-)
+  - [ag-psd 31.0 🖼️](#ag-psd-310-)
+- [✅ Import Examples](#-import-examples)
+
+---
+
 ## 🎨 CSS Assets
 
 These are pre-built stylesheets that can be directly imported:

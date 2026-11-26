@@ -1,5 +1,12 @@
 # 🔁 Promise Utils
 
+## 📑 Table of Contents
+
+- [🔁 `waitForTrue(getValue, checkInterval = 100)`](#-waitfortruegetvalue-checkinterval--100)
+- [🔒 `createSingletonTask(baseFunction, autoReset = true)`](#-createsingletontaskbasefunction-autoreset--true)
+
+---
+
 ### 🔁 `waitForTrue(getValue, checkInterval = 100)`
 
 Waits until a provided function returns `true`, polling periodically.

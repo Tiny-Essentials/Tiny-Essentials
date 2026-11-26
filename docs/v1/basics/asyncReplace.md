@@ -1,5 +1,16 @@
 # 🔄 AsyncReplace
 
+## 📑 Table of Contents
+
+- [`asyncReplace(str, regex, asyncFn)` 🔄](#asyncreplacestr-regex-asyncfn-)
+  - [Parameters:](#parameters)
+  - [Returns:](#returns)
+  - [Example:](#example)
+  - [Description:](#description)
+  - [Notes:](#notes)
+
+---
+
 ## `asyncReplace(str, regex, asyncFn)` 🔄
 
 Asynchronously replaces matches in a string using a regular expression and an async function.

@@ -2,6 +2,22 @@
 
 A lightweight, highly optimized JavaScript utility class designed to compare two arrays and efficiently detect which items were **added**, **deleted**, or **edited**.
 
+## 📑 Table of Contents
+
+- [✨ Features](#-features)
+- [🚀 Quick Start](#-quick-start)
+  - [1. Import the Class](#1-import-the-class)
+  - [2. Prepare Your Arrays](#2-prepare-your-arrays)
+  - [3. Initialize and Compare](#3-initialize-and-compare)
+- [🛠️ API Reference](#-api-reference)
+  - [`constructor(oldArray, options)`](#constructoroldarray-options)
+  - [`compare(newArray)`](#comparenewarray)
+  - [Properties (Getters/Setters)](#properties-getterssetters)
+  - [`static generateHash(item)`](#static-generatehashitem)
+- [💡 Best Practices](#-best-practices)
+
+---
+
 ## ✨ Features
 
 - **Smart Identity Tracking:** Uses an `idKey` to distinguish between a new item and an edited version of an existing item.

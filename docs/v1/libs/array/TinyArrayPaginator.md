@@ -5,6 +5,20 @@ It allows you to filter data using **objects**, **functions**, or **regular expr
 
 ---
 
+## 📑 Table of Contents
+
+- [🔍 GetFilter — Predicate Function](#-getfilter--predicate-function)
+- [🛠 Class: `TinyArrayPaginator`](#-class-tinyarraypaginator)
+  - [✨ Features](#-features)
+  - [🏗 Constructor](#-constructor)
+  - [📥 `.data` (Getter)](#-data-getter)
+  - [📤 `.data` (Setter)](#-data-setter)
+  - [📏 `.size`](#-size)
+  - [📄 `.get({ page, perPage, filter })`](#-get-page-perpage-filter-)
+  - [📌 Example Usage](#-example-usage)
+
+---
+
 ## 🔍 GetFilter — Predicate Function
 
 A predicate function used to determine whether an item should be included in the filtered results.

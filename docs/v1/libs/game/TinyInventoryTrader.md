@@ -5,6 +5,18 @@ It ensures safe and configurable trading with support for strict validation, slo
 
 ---
 
+## 📑 Table of Contents
+
+- [🔖 Typedefs](#-typedefs)
+  - [`TransferItemCfg`](#transferitemcfg)
+- [🏗️ Class: `TinyInventoryTrader`](#-class-tinyinventorytrader)
+  - [🔑 Private Fields](#-private-fields)
+  - [📥 Constructor](#-constructor)
+  - [📌 Properties](#-properties)
+  - [🔧 Methods](#-methods)
+
+---
+
 ## 🔖 Typedefs
 
 ### `TransferItemCfg`
