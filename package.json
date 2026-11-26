@@ -95,6 +95,10 @@
     {
       "type": "patreon",
       "url": "https://patreon.com/JasminDreasond"
+    },
+    {
+      "type": "stripe",
+      "url": "https://donate.stripe.com/bIYeYL3U08a3gsE7st"
     }
   ],
   "main": "./dist/v1/index.cjs",
