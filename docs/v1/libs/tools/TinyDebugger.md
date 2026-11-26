@@ -5,10 +5,10 @@
 ## 📑 Table of Contents
 
 - [🚀 Quick Start](#-quick-start)
-- [⚙️ Configuration](#-configuration)
+- [⚙️ Configuration](#️-configuration)
 - [✨ Key Features](#-key-features)
   - [🎨 Custom Colors](#-custom-colors)
-  - [🏷️ Custom Prefixes](#-custom-prefixes)
+  - [🏷️ Custom Prefixes](#️-custom-prefixes)
   - [📡 Event Emission](#-event-emission)
 - [🧩 Instance Properties](#-instance-properties)
 - [📖 API Reference](#-api-reference)
@@ -20,7 +20,7 @@
   - [`logTable(tabularData, properties)`](#logtabletabulardata-properties)
   - [`logClear()`](#logclear)
   - [`logGroupEnd()`](#loggroupend)
-- [🛠️ Advanced Customization](#-advanced-customization)
+- [🛠️ Advanced Customization](#️-advanced-customization)
   - [Default Colors](#default-colors)
   - [Default Prefixes](#default-prefixes)
   - [Example: Adding a Custom Color](#example-adding-a-custom-color)
@@ -28,9 +28,9 @@
   - [How to read it](#how-to-read-it)
   - [Example](#example)
 - [📡 Events](#-events)
-- [🖥️ Console Facade](#-console-facade)
+- [🖥️ Console Facade](#️-console-facade)
   - [Supported methods](#supported-methods)
-- [⚠️ Error Handling](#-error-handling)
+- [⚠️ Error Handling](#️-error-handling)
 
 ---
 

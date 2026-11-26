@@ -30,7 +30,7 @@ user account, per workspace, per document, or per test.
    - [Inherited Members](#inherited-members)
 7. [Compatibility Matrix](#-compatibility-matrix)
 8. [Error Codes](#-error-codes)
-9. [Known Divergences and Gotchas](#-known-divergences-and-gotchas)
+9. [Known Divergences and Gotchas](#️-known-divergences-and-gotchas)
 10. [Cheatsheet](#-cheatsheet)
 
 ---

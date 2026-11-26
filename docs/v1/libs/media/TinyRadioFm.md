@@ -9,9 +9,9 @@
 ## 📑 Table of Contents
 
 - [✨ Key Features](#-key-features)
-- [⚙️ Configuration](#-configuration)
-- [🛠️ Core API Reference](#-core-api-reference)
-  - [🏗️ Static Methods](#-static-methods)
+- [⚙️ Configuration](#️-configuration)
+- [🛠️ Core API Reference](#️-core-api-reference)
+  - [🏗️ Static Methods](#️-static-methods)
   - [📋 Properties (Getters & Setters)](#-properties-getters--setters)
   - [📥 Content Management](#-content-management)
   - [📅 Task & Config Management](#-task--config-management)

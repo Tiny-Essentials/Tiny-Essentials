@@ -12,7 +12,7 @@ Whether you are building a progressive web app (PWA) that needs to react to offl
 - [📦 Getting Started](#-getting-started)
   - [Installation & Import](#installation--import)
   - [Initialization](#initialization)
-- [🛠️ Core Features](#-core-features)
+- [🛠️ Core Features](#️-core-features)
   - [1. Real-time Connectivity Tracking](#1-real-time-connectivity-tracking)
   - [2. Network Quality Metrics](#2-network-quality-metrics)
   - [3. Battery & Device Monitoring](#3-battery--device-monitoring)
@@ -21,7 +21,7 @@ Whether you are building a progressive web app (PWA) that needs to react to offl
   - [📡 Method 1: The Event-Driven Approach (Recommended)](#-method-1-the-event-driven-approach-recommended)
   - [📸 Method 2: Snapshot Access & Helpers](#-method-2-snapshot-access--helpers)
 - [🧹 Cleanup & Memory Management](#-cleanup--memory-management)
-- [⚠️ Important Notes](#-important-notes)
+- [⚠️ Important Notes](#️-important-notes)
 
 ---
 

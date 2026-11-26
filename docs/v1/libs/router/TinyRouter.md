@@ -7,14 +7,14 @@
 2. [Key Features](#-key-features)
 3. [Getting Started](#-getting-started)
 4. [API Reference](#-api-reference)
-    - [Properties (Getters & Setters)](#-properties-getters--setters)
-    - [Constructor](#-constructor)
-    - [Route Management](#-route-management)
+    - [Properties (Getters & Setters)](#️-properties-getters--setters)
+    - [Constructor](#️-constructor)
+    - [Route Management](#️-route-management)
     - [Navigation](#-navigation)
     - [History Management](#-history-management)
-    - [Lifecycle Management](#-lifecycle-management)
-5. [Advanced Configuration](#-advanced-configuration)
-6. [Error Handling](#-error-handling)
+    - [Lifecycle Management](#️-lifecycle-management)
+5. [Advanced Configuration](#️-advanced-configuration)
+6. [Error Handling](#️-error-handling)
 
 ---
 

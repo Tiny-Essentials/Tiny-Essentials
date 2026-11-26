@@ -5,18 +5,18 @@ A robust, highly configurable JavaScript utility designed to generate regular ex
 ## 📑 Table of Contents
 
 - [🚀 Key Features](#-key-features)
-- [⚙️ Configuration Guide](#-configuration-guide)
+- [⚙️ Configuration Guide](#️-configuration-guide)
   - [`UsernameRegexOptions` Properties](#usernameregexoptions-properties)
 - [📖 API Reference](#-api-reference)
   - [1. `isValidUsername(string, options)`](#1-isvalidusernamestring-options)
   - [2. `extractUsernames(text, options)`](#2-extractusernamestext-options)
   - [3. `findUsernameRegex(options)`](#3-findusernameregexoptions)
   - [4. `usernameRegex(options)`](#4-usernameregexoptions)
-- [🛠️ Real-World Workflow Examples](#-real-world-workflow-examples)
+- [🛠️ Real-World Workflow Examples](#️-real-world-workflow-examples)
   - [Scenario A: Social Media Style (The "@" Prefix)](#scenario-a-social-media-style-the--prefix)
   - [Scenario B: Matrix/Identity Style (Domain required)](#scenario-b-matrixidentity-style-domain-required)
   - [Scenario C: Multi-Format Parsing (Complex)](#scenario-c-multi-format-parsing-complex)
-- [⚠️ Error Handling](#-error-handling)
+- [⚠️ Error Handling](#️-error-handling)
 
 ---
 

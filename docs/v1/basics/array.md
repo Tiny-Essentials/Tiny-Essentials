@@ -13,7 +13,7 @@ A minimal and handy module offering a couple of focused utilities for working wi
   - [🧠 Parameters](#-parameters)
   - [🎯 Returns](#-returns)
   - [💡 Examples](#-examples)
-  - [🛠️ Use Case](#-use-case)
+  - [🛠️ Use Case](#️-use-case)
 - [🔁 `multiplyArrayBlocks(phases, counts)`](#-multiplyarrayblocksphases-counts)
 - [🔀 `diffArrayList(oldItems, newItems)`](#-diffarraylistolditems-newitems)
 

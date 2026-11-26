@@ -7,8 +7,8 @@
 ## 📑 Table of Contents
 
 - [🏠 Properties](#-properties)
-- [🛠️ Methods](#-methods)
-  - [🏃‍♀️ `isRunning()`](#-isrunning)
+- [🛠️ Methods](#️-methods)
+  - [🏃‍♀️ `isRunning()`](#️-isrunning)
   - [🔍 `getIndexById(id)`](#-getindexbyidid)
   - [📋 `getQueuedIds()`](#-getqueuedids)
   - [🔄 `reorderQueue(fromIndex, toIndex)`](#-reorderqueuefromindex-toindex)

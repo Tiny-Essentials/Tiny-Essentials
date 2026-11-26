@@ -10,7 +10,7 @@ Browsers only allow a few APIs to start without a previous interaction — media
 
 - [🧠 How it works](#-how-it-works)
 - [🚀 Getting Started](#-getting-started)
-- [🏗️ Constructor](#-constructor)
+- [🏗️ Constructor](#️-constructor)
 - [📖 API Reference](#-api-reference)
   - [Static](#static)
   - [Methods](#methods)
@@ -19,7 +19,7 @@ Browsers only allow a few APIs to start without a previous interaction — media
   - [Deduplicating requests with a key](#deduplicating-requests-with-a-key)
   - [Cancelling a request](#cancelling-a-request)
   - [Server-side rendering](#server-side-rendering)
-- [⚠️ Best Practices](#-best-practices)
+- [⚠️ Best Practices](#️-best-practices)
 
 ---
 

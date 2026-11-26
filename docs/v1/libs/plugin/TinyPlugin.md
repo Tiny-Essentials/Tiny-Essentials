@@ -4,11 +4,11 @@ This section provides a detailed technical breakdown of all classes, functions, 
 
 ## 📑 Table of Contents
 
-- [🏛️ CORE CLASSES](#-core-classes)
+- [🏛️ CORE CLASSES](#️-core-classes)
   - [`TinyPluginCore`](#tinyplugincore)
   - [`TinyPlugin`](#tinyplugin)
   - [`TinyPluginLayer`](#tinypluginlayer)
-- [🛠️ EXPORTED UTILITY FUNCTIONS](#-exported-utility-functions)
+- [🛠️ EXPORTED UTILITY FUNCTIONS](#️-exported-utility-functions)
   - [`signPluginIdentity`](#signpluginidentity)
   - [`createPluginIdChecker`](#createpluginidchecker)
   - [`verifyPluginSignature`](#verifypluginsignature)
@@ -18,10 +18,10 @@ This section provides a detailed technical breakdown of all classes, functions, 
   - [`PluginAccessControl`](#pluginaccesscontrol)
   - [`BwList`](#bwlist)
 - [🎯 SYSTEM OVERVIEW](#-system-overview)
-- [🛡️ THE GOLDEN RULES (CRITICAL CONSTRAINTS)](#-the-golden-rules-critical-constraints)
+- [🛡️ THE GOLDEN RULES (CRITICAL CONSTRAINTS)](#️-the-golden-rules-critical-constraints)
   - [🚫 RULE 01: NO MUTATION (Architectural Integrity)](#-rule-01-no-mutation-architectural-integrity)
-  - [🛡️ RULE 02: THE EXTENSION PATTERN (@extended)](#-rule-02-the-extension-pattern-extended)
-  - [🛡️ RULE 03: MANDATORY RUNTIME VALIDATION](#-rule-03-mandatory-runtime-validation)
+  - [🛡️ RULE 02: THE EXTENSION PATTERN (@extended)](#️-rule-02-the-extension-pattern-extended)
+  - [🛡️ RULE 03: MANDATORY RUNTIME VALIDATION](#️-rule-03-mandatory-runtime-validation)
 - [🚀 WORKFLOW & IMPLEMENTATION GUIDE](#-workflow--implementation-guide)
   - [1. HOST SETUP (The Engine)](#1-host-setup-the-engine)
   - [2. PLUGIN CREATION (The Guest)](#2-plugin-creation-the-guest)
@@ -30,7 +30,7 @@ This section provides a detailed technical breakdown of all classes, functions, 
   - [1. OPERATION MODES (Identity Control)](#1-operation-modes-identity-control)
   - [2. THE DOUBLE-SIDED SECURITY MODEL](#2-the-double-sided-security-model)
   - [3. CRYPTOGRAPHIC VERIFICATION (High-Security Mode)](#3-cryptographic-verification-high-security-mode)
-  - [⚠️ DEVELOPER WARNING (AI & HUMAN)](#-developer-warning-ai--human)
+  - [⚠️ DEVELOPER WARNING (AI & HUMAN)](#️-developer-warning-ai--human)
 - [🤖 AI AGENT INSTRUCTIONS (PROMPT)](#-ai-agent-instructions-prompt)
 
 ---

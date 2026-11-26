@@ -5,10 +5,10 @@ This project provides a lightweight **Vite plugin** designed specifically for de
 ## 📑 Table of Contents
 
 - [📋 Overview](#-overview)
-- [🛠️ Installation & Setup](#-installation--setup)
-  - [⚙️ 1. Register the Plugin in Vite](#-1-register-the-plugin-in-vite)
+- [🛠️ Installation & Setup](#️-installation--setup)
+  - [⚙️ 1. Register the Plugin in Vite](#️-1-register-the-plugin-in-vite)
 - [🚀 Daily Workflow](#-daily-workflow)
-- [⚠️ Troubleshooting](#-troubleshooting)
+- [⚠️ Troubleshooting](#️-troubleshooting)
 
 ---
 

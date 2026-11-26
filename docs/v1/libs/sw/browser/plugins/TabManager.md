@@ -8,18 +8,18 @@ Whether you are building a complex PWA (Progressive Web App) or a multi-window d
 
 ## 📑 Table of Contents
 
-- [🏗️ Architecture Overview](#-architecture-overview)
+- [🏗️ Architecture Overview](#️-architecture-overview)
   - [🔄 The Workflow](#-the-workflow)
-- [🛠️ Installation & Setup](#-installation--setup)
+- [🛠️ Installation & Setup](#️-installation--setup)
 - [📖 API Reference](#-api-reference)
   - [🔍 Monitoring Tabs](#-monitoring-tabs)
-  - [🕹️ Controlling Tabs](#-controlling-tabs)
+  - [🕹️ Controlling Tabs](#️-controlling-tabs)
 - [🧠 Advanced Features](#-advanced-features)
   - [💾 Data Persistence (IndexedDB)](#-data-persistence-indexeddb)
   - [📦 Custom Data Synchronization](#-custom-data-synchronization)
   - [🔒 Security & Permissions](#-security--permissions)
 - [🚀 Practical Example: The "Dashboard Controller"](#-practical-example-the-dashboard-controller)
-- [⚠️ Summary Cheat Sheet](#-summary-cheat-sheet)
+- [⚠️ Summary Cheat Sheet](#️-summary-cheat-sheet)
 - [💡 Pro-Tips for Daily Use](#-pro-tips-for-daily-use)
 
 ---

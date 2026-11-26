@@ -22,7 +22,7 @@ A lightweight but powerful text range utility class for `<input>` and `<textarea
   - [`getValue()` → `string`](#getvalue--string)
   - [`setValue(value: string)` → `this`](#setvaluevalue-string--this)
   - [`getSelectedText()` → `string`](#getselectedtext--string)
-- [✍️ Text Manipulation](#-text-manipulation)
+- [✍️ Text Manipulation](#️-text-manipulation)
   - [`insertText(text, options?)` → `this`](#inserttexttext-options--this)
   - [`deleteSelection()` → `this`](#deleteselection--this)
   - [`transformSelection(fn)` → `this`](#transformselectionfn--this)

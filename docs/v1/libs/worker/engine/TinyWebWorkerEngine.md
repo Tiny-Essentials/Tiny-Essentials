@@ -17,9 +17,9 @@ Welcome to the official documentation for the **TinyWebWorkerEngine**. This engi
   - [📡 Example 2: Using the Engine in the Main Thread](#-example-2-using-the-engine-in-the-main-thread)
 - [📡 Events](#-events)
 - [📨 Message Protocol](#-message-protocol)
-  - [Worker ➡️ Main](#worker--main)
-  - [Main ➡️ Worker](#main--worker)
-- [⚠️ Safety & Best Practices](#-safety--best-practices)
+  - [Worker ➡️ Main](#worker-️-main)
+  - [Main ➡️ Worker](#main-️-worker)
+- [⚠️ Safety & Best Practices](#️-safety--best-practices)
 
 ---
 

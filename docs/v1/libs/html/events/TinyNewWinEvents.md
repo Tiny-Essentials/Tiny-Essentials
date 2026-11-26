@@ -26,7 +26,7 @@ Ideal for secure, bidirectional messaging with route-based logic.
 - [📦 Internals (for advanced use)](#-internals-for-advanced-use)
 - [📄 Type Definitions](#-type-definitions)
   - [`@callback handler`](#callback-handler)
-- [🛡️ Safety and Validation](#-safety-and-validation)
+- [🛡️ Safety and Validation](#️-safety-and-validation)
 
 ---
 

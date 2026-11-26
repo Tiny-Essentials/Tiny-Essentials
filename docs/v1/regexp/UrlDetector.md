@@ -4,10 +4,10 @@ A robust and highly customizable JavaScript utility for building, validating, an
 
 ## 📋 Table of Contents
 1. [Overview](#-overview)
-2. [Configuration (`UrlRegexOptions`)](#-configuration-urlregexoptions)
+2. [Configuration (`UrlRegexOptions`)](#️-configuration-urlregexoptions)
 3. [API Reference](#-api-reference)
 4. [Practical Examples](#-practical-examples)
-5. [Error Handling](#-error-handling)
+5. [Error Handling](#️-error-handling)
 
 ---
 

@@ -8,9 +8,9 @@
 
 - [✨ Highlights](#-highlights)
 - [🚀 Quick start](#-quick-start)
-- [⚙️ Options](#-options)
+- [⚙️ Options](#️-options)
 - [🧩 Properties](#-properties)
-- [🛠️ Methods](#-methods)
+- [🛠️ Methods](#️-methods)
   - [`set(url, blob, pinned?, metadata?, parent?)`](#seturl-blob-pinned-metadata-parent)
   - [`get(url)` / `has(url)`](#geturl--hasurl)
   - [`peek(url)`](#peekurl)

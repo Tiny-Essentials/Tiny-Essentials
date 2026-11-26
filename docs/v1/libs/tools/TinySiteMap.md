@@ -5,8 +5,8 @@
 ## 📑 Table of Contents
 
 - [🚀 Overview](#-overview)
-  - [🛡️ Security First (The "Why")](#-security-first-the-why)
-- [🛠️ Getting Started](#-getting-started)
+  - [🛡️ Security First (The "Why")](#️-security-first-the-why)
+- [🛠️ Getting Started](#️-getting-started)
   - [1. Installation & Import](#1-installation--import)
   - [2. Basic Configuration](#2-basic-configuration)
 - [📝 Managing Entries](#-managing-entries)
@@ -18,7 +18,7 @@
   - [2. Namespace Strategies (The Easy Way)](#2-namespace-strategies-the-easy-way)
 - [📤 Generating the Output](#-generating-the-output)
   - [🎨 Adding Styles (XSL)](#-adding-styles-xsl)
-- [⚠️ Error Handling](#-error-handling)
+- [⚠️ Error Handling](#️-error-handling)
 
 ---
 

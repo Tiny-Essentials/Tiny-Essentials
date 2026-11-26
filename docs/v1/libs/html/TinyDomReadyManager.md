@@ -8,7 +8,7 @@ Supports **prioritized callbacks**, **filters**, and now even **DOM-only fast ex
 ## 📑 Table of Contents
 
 - [🧠 Type Definitions](#-type-definitions)
-  - [🛠️ `Fn`](#-fn)
+  - [🛠️ `Fn`](#️-fn)
   - [🔍 `FnFilter`](#-fnfilter)
   - [🧩 `Handler`](#-handler)
 - [🚀 Class: `TinyDomReadyManager`](#-class-tinydomreadymanager)

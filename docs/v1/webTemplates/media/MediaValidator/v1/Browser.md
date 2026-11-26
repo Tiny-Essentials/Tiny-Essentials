@@ -13,10 +13,10 @@ When building modern web applications, users often upload files. A common securi
   - [1. `validateMagicNumbers`](#1-validatemagicnumbers)
   - [2. `validateImage`](#2-validateimage)
   - [3. `validateAudioVideo`](#3-validateaudiovideo)
-- [🛠️ Daily Workflow: How to use it](#-daily-workflow-how-to-use-it)
+- [🛠️ Daily Workflow: How to use it](#️-daily-workflow-how-to-use-it)
   - [Step-by-Step Implementation Guide](#step-by-step-implementation-guide)
   - [💻 Code Example](#-code-example)
-- [⚠️ Security Notes](#-security-notes)
+- [⚠️ Security Notes](#️-security-notes)
 
 ---
 

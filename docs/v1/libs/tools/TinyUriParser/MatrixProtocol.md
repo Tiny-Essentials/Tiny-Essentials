@@ -12,7 +12,7 @@ This module is a specialized tool designed to identify, parse, and reconstruct v
 - [🛠 Supported URI Formats](#-supported-uri-formats)
 - [💎 Core Data Structures](#-core-data-structures)
   - [📦 1. `MXCData`](#-1-mxcdata)
-  - [🗺️ 2. `MatrixSchemeData`](#-2-matrixschemedata)
+  - [🗺️ 2. `MatrixSchemeData`](#️-2-matrixschemedata)
   - [🌐 3. `MatrixWebData`](#-3-matrixwebdata)
 
 ---

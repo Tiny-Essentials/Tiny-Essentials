@@ -10,9 +10,9 @@ Because it reuses the whole media pipeline, it inherits progress tracking, cachi
 
 - [✨ Highlights](#-highlights)
 - [🚀 Quick start](#-quick-start)
-- [⚙️ Options](#-options)
+- [⚙️ Options](#️-options)
 - [🧩 Properties](#-properties)
-- [🛠️ Methods](#-methods)
+- [🛠️ Methods](#️-methods)
   - [`clone(overrides = {})`](#cloneoverrides--)
   - [`exportFetch()`](#exportfetch)
 - [📦 Response types](#-response-types)

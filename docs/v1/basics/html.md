@@ -34,7 +34,7 @@
 - [📄 `installWindowHiddenScript`](#-installwindowhiddenscript)
   - [🧠 Features](#-features)
   - [🧪 Usage](#-usage)
-  - [⚙️ Options](#-options)
+  - [⚙️ Options](#️-options)
   - [🔄 Return Value](#-return-value)
   - [🚦 Events Supported](#-events-supported)
   - [🔍 Initial Trigger](#-initial-trigger)

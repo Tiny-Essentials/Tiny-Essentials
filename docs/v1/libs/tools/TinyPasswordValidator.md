@@ -8,13 +8,13 @@ A lightweight, robust, and highly customizable JavaScript utility for validating
 - [🚀 Getting Started](#-getting-started)
   - [1. Installation](#1-installation)
   - [2. Basic Usage (Default Rules)](#2-basic-usage-default-rules)
-- [⚙️ Configuration & Customization](#-configuration--customization)
-  - [🛠️ Customizing Rules](#-customizing-rules)
+- [⚙️ Configuration & Customization](#️-configuration--customization)
+  - [🛠️ Customizing Rules](#️-customizing-rules)
   - [🧩 Adding Custom Validators](#-adding-custom-validators)
 - [🔍 Understanding the Output](#-understanding-the-output)
   - [🔢 Error Code Reference](#-error-code-reference)
 - [🔐 Security & Hashing](#-security--hashing)
-- [🛠️ Advanced Management](#-advanced-management)
+- [🛠️ Advanced Management](#️-advanced-management)
 
 ---
 

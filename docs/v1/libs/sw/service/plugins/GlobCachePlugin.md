@@ -10,7 +10,7 @@ Welcome to the official documentation for the **GlobCachePlugin**. This plugin i
 - [🚀 Daily Usage Guide](#-daily-usage-guide)
   - [1. Basic Implementation](#1-basic-implementation)
   - [2. Advanced Filtering Example](#2-advanced-filtering-example)
-- [⚠️ Technical Constraints & Logic](#-technical-constraints--logic)
+- [⚠️ Technical Constraints & Logic](#️-technical-constraints--logic)
 - [🛠 Troubleshooting](#-troubleshooting)
 
 ---

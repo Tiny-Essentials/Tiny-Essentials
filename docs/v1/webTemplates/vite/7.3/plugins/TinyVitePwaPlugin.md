@@ -5,8 +5,8 @@ Welcome to the official guide for **`tiny-vite-pwa`**! This plugin is designed t
 ## 📋 Table of Contents
 1. [Overview](#-overview)
 2. [Key Features](#-key-features)
-3. [Configuration Guide](#-configuration-guide)
-4. [Step-by-Step Implementation](#-step-by-step-implementation)
+3. [Configuration Guide](#️-configuration-guide)
+4. [Step-by-Step Implementation](#️-step-by-step-implementation)
 5. [Developer Experience (Dev vs. Prod)](#-developer-experience-dev-vs-prod)
 6. [TypeScript Integration](#-typescript-integration)
 

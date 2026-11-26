@@ -13,10 +13,10 @@ A robust, immutable, and internationalized registry for managing HTTP status cod
   - [`has(id)`](#hasid)
   - [`getAll()`](#getall)
 - [💡 Practical Examples](#-practical-examples)
-  - [🛠️ 1. Basic Usage](#-1-basic-usage)
+  - [🛠️ 1. Basic Usage](#️-1-basic-usage)
   - [🌍 2. Adding Custom Responses & Localization](#-2-adding-custom-responses--localization)
-  - [⚠️ 3. Error Handling](#-3-error-handling)
-- [🛠️ Daily Workflow Integration](#-daily-workflow-integration)
+  - [⚠️ 3. Error Handling](#️-3-error-handling)
+- [🛠️ Daily Workflow Integration](#️-daily-workflow-integration)
 
 ---
 

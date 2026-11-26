@@ -7,15 +7,15 @@ It provides a non-blocking, Promise-based workflow and features a robust configu
 ## 📑 Table of Contents
 
 - [✨ Key Features](#-key-features)
-- [🛠️ Setup](#-setup)
+- [🛠️ Setup](#️-setup)
 - [🔄 Global Replacement (Monkey Patching)](#-global-replacement-monkey-patching)
-- [⚙️ Configuration](#-configuration)
+- [⚙️ Configuration](#️-configuration)
   - [1. Global Defaults](#1-global-defaults)
   - [2. Data Types (JSDoc Reference)](#2-data-types-jsdoc-reference)
 - [🚀 API Reference](#-api-reference)
   - [📢 `alert(message, options)`](#-alertmessage-options)
   - [❓ `confirm(message, options)`](#-confirmmessage-options)
-  - [⌨️ `prompt(message, defaultValue, options)`](#-promptmessage-defaultvalue-options)
+  - [⌨️ `prompt(message, defaultValue, options)`](#️-promptmessage-defaultvalue-options)
   - [⏳ `showLoading(message, config)`](#-showloadingmessage-config)
   - [✅ `hideLoading()`](#-hideloading)
 - [💡 Usage Example](#-usage-example)

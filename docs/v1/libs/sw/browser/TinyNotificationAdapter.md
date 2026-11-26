@@ -10,12 +10,12 @@
 - [🎯 Why This Exists](#-why-this-exists)
 - [📦 Installation & Import](#-installation--import)
 - [🧠 Core Concepts](#-core-concepts)
-- [🗺️ API Reference](#-api-reference)
+- [🗺️ API Reference](#️-api-reference)
   - [Typedefs](#typedefs)
   - [`TinyNotificationAdapter.PUSH_TYPE`](#tinynotificationadapterpush_type)
   - [`toBrowser()`](#tobrowser)
   - [`toServiceWorker()`](#toserviceworker)
-- [⚠️ Gotchas & Edge Cases](#-gotchas--edge-cases)
+- [⚠️ Gotchas & Edge Cases](#️-gotchas--edge-cases)
 - [🧪 Testing in the Console](#-testing-in-the-console)
 
 ---

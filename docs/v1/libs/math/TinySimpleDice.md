@@ -7,7 +7,7 @@ You can configure the dice to **allow zero**, set a **maximum value**, and even 
 
 ## 📑 Table of Contents
 
-- [⚙️ Class: `TinySimpleDice`](#-class-tinysimpledice)
+- [⚙️ Class: `TinySimpleDice`](#️-class-tinysimpledice)
   - [Properties](#properties)
   - [Constructor](#constructor)
   - [Getters & Setters](#getters--setters)

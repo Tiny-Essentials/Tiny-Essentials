@@ -4,7 +4,7 @@ A multi-layered JavaScript utility for identifying the user's web browser and re
 
 ## 📋 Table of Contents
 1. [Data Types](#-data-types)
-2. [Core Functions](#-core-functions)
+2. [Core Functions](#️-core-functions)
    - [isBrowser](#1-isbrowser)
    - [isBrowserAgent](#2-isbrowseragent)
    - [getBrowserCssPrefix](#3-getbrowsercssprefix)

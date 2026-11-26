@@ -60,7 +60,7 @@ It supports visual proxies, jail boundaries, collision detection, vibration feed
   - [`setMirrorEnabled(useMirror: boolean): void`](#setmirrorenabledusemirror-boolean-void)
 - [🔁 Events](#-events)
   - [Example:](#example)
-- [🛡️ Error Handling](#-error-handling)
+- [🛡️ Error Handling](#️-error-handling)
 - [✅ Example](#-example)
 - [🧼 Clean-Up](#-clean-up)
 - [🧪 Testing & Styling](#-testing--styling)

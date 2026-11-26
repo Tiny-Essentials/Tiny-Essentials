@@ -5,7 +5,7 @@
 ## 📋 Table of Contents
 1. [Core Concepts](#-core-concepts)
 2. [Getting Started](#-getting-started)
-3. [API Reference](#-api-reference)
+3. [API Reference](#️-api-reference)
     * [Constructor](#constructorconcurrencylimit-api-timeoutinstance)
     * [Methods](#methods)
     * [Getters](#getters)

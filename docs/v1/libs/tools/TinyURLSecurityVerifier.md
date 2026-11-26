@@ -6,9 +6,9 @@ Welcome to the official documentation for **TinyURLSecurityVerifier**. This libr
 1. [Overview](#-overview)
 2. [Core Concepts](#-core-concepts)
 3. [🚀 Quick Start](#-quick-start)
-4. [⚙️ Configuration](#-configuration)
-5. [🛡️ Security Layers](#-security-layers)
-6. [🛠️ API Reference](#-api-reference)
+4. [⚙️ Configuration](#️-configuration)
+5. [🛡️ Security Layers](#️-security-layers)
+6. [🛠️ API Reference](#️-api-reference)
 7. [📚 Real-World Use Cases](#-real-world-use-cases)
 
 ---

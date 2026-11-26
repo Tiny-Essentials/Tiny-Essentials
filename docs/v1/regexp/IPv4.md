@@ -5,7 +5,7 @@ A lightweight, high-performance JavaScript module designed to validate and extra
 ## 📑 Table of Contents
 
 - [🚀 Overview](#-overview)
-- [🛠️ API Reference](#-api-reference)
+- [🛠️ API Reference](#️-api-reference)
   - [`isValidIPv4(s)`](#isvalidipv4s)
   - [`extractIPsV4(text)`](#extractipsv4text)
   - [`ipv4Regex()`](#ipv4regex)

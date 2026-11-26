@@ -21,7 +21,7 @@
    - [Invites](#7--invites)
    - [Message Links](#8--message-links)
    - [CDN Assets](#9--cdn-assets)
-6. [Notes](#-notes)
+6. [Notes](#️-notes)
 
 ---
 

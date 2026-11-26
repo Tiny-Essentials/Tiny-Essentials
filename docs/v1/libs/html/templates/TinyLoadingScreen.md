@@ -8,12 +8,12 @@ It allows you to display a customizable overlay with a spinner and message while
 
 ## 📑 Table of Contents
 
-- [🏗️ Constructor](#-constructor)
+- [🏗️ Constructor](#️-constructor)
 - [🔑 Properties](#-properties)
-- [⚙️ Options](#-options)
-- [🛠️ Methods](#-methods)
+- [⚙️ Options](#️-options)
+- [🛠️ Methods](#️-methods)
   - [✅ `start(message?: string | HTMLElement) → boolean`](#-startmessage-string--htmlelement--boolean)
-  - [✏️ `update(message?: string | HTMLElement) → boolean`](#-updatemessage-string--htmlelement--boolean)
+  - [✏️ `update(message?: string | HTMLElement) → boolean`](#️-updatemessage-string--htmlelement--boolean)
   - [❌ `stop() → boolean`](#-stop--boolean)
   - [🔒 Internal / Private Methods](#-internal--private-methods)
 - [🟢⚪🔴 Status States](#-status-states)
@@ -24,7 +24,7 @@ It allows you to display a customizable overlay with a spinner and message while
   - [Custom Container](#custom-container)
   - [With onChange Callback](#with-onchange-callback)
   - [⏳ Custom Animations](#-custom-animations)
-  - [🖌️ Allow HTML Messages](#-allow-html-messages)
+  - [🖌️ Allow HTML Messages](#️-allow-html-messages)
   - [📝 Notes](#-notes)
 
 ---

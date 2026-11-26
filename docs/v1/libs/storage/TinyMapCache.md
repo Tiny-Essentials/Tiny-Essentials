@@ -5,11 +5,11 @@
 ## 📑 Table of Contents
 
 - [🌟 Key Features](#-key-features)
-- [🛠️ Getting Started](#-getting-started)
+- [🛠️ Getting Started](#️-getting-started)
   - [Installation](#installation)
   - [Basic Initialization](#basic-initialization)
 - [📖 API Reference](#-api-reference)
-  - [⚙️ Configuration & Properties](#-configuration--properties)
+  - [⚙️ Configuration & Properties](#️-configuration--properties)
   - [🚀 Methods](#-methods)
 - [🔔 Event Listeners](#-event-listeners)
 - [💡 Practical Implementation Examples](#-practical-implementation-examples)
@@ -18,7 +18,7 @@
   - [3. Advanced: Cascaded Purging](#3-advanced-cascaded-purging)
   - [4. Iterating Over the Cache](#4-iterating-over-the-cache)
   - [5. Map Compatibility Cheat Sheet](#5-map-compatibility-cheat-sheet)
-- [⚠️ Important Technical Notes](#-important-technical-notes)
+- [⚠️ Important Technical Notes](#️-important-technical-notes)
 
 ---
 

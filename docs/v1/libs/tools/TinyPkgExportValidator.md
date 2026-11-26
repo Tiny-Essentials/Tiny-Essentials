@@ -24,7 +24,7 @@ When developing Node.js packages, it is easy to misspell a path or forget to inc
 - [📊 Console Output](#-console-output)
   - [✅ Successful Validation](#-successful-validation)
   - [❌ Failed Validation](#-failed-validation)
-- [⚠️ Error Handling](#-error-handling)
+- [⚠️ Error Handling](#️-error-handling)
 - [🧭 Node.js `exports` rules](#-nodejs-exports-rules)
   - [Wildcard targets](#wildcard-targets)
   - [`null` targets](#null-targets)

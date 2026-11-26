@@ -6,8 +6,8 @@ Welcome to the official documentation for `TinyHtmlTagRegexBuilder`. This utilit
 
 - [📝 Overview](#-overview)
 - [🚀 Getting Started](#-getting-started)
-- [⚙️ Configuration Guide](#-configuration-guide)
-- [🛠️ Usage Modes](#-usage-modes)
+- [⚙️ Configuration Guide](#️-configuration-guide)
+- [🛠️ Usage Modes](#️-usage-modes)
   - [🎯 Mode 1: The "Precision Sniper" (Specific Attributes)](#-mode-1-the-precision-sniper-specific-attributes)
   - [📦 Mode 2: The "Grab Everything" (All Attributes)](#-mode-2-the-grab-everything-all-attributes)
 - [🧪 Practical Examples](#-practical-examples)
@@ -18,7 +18,7 @@ Welcome to the official documentation for `TinyHtmlTagRegexBuilder`. This utilit
   - [`toRegExp(flag = 'g')`](#toregexpflag--g)
   - [`parse(htmlString)`](#parsehtmlstring)
   - [`toString()`](#tostring)
-- [⚠️ Error Handling](#-error-handling)
+- [⚠️ Error Handling](#️-error-handling)
 
 ---
 

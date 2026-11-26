@@ -7,21 +7,21 @@
 ## 📑 Table of Contents
 
 - [🧩 Core Architecture: The Adapter Pattern](#-core-architecture-the-adapter-pattern)
-  - [🛠️ `BaseMediaAdapter` (Abstract Class)](#-basemediaadapter-abstract-class)
+  - [🛠️ `BaseMediaAdapter` (Abstract Class)](#️-basemediaadapter-abstract-class)
   - [🚀 Implementation Guide](#-implementation-guide)
 - [📊 Data Types](#-data-types)
   - [`ContentTimeData`](#contenttimedata)
   - [`SearchResult`](#searchresult)
 - [🚀 `TinyMediaPlayer` Class](#-tinymediaplayer-class)
-  - [⚙️ Configuration (Constructor Options)](#-configuration-constructor-options)
-  - [🏗️ Static Members](#-static-members)
+  - [⚙️ Configuration (Constructor Options)](#️-configuration-constructor-options)
+  - [🏗️ Static Members](#️-static-members)
   - [📊 Instance Properties (Getters & Setters)](#-instance-properties-getters--setters)
   - [🕹️ Methods](#-methods)
 - [📡 Emitted Events](#-emitted-events)
   - [🎶 Playback Events](#-playback-events)
   - [🔄 State & Configuration Events](#-state--configuration-events)
   - [💀 Lifecycle Events](#-lifecycle-events)
-- [⚠️ Error Handling](#-error-handling)
+- [⚠️ Error Handling](#️-error-handling)
 
 ---
 

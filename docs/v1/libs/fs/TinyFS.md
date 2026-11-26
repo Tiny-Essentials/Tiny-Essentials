@@ -29,12 +29,12 @@ live?"*
    - [Static Members](#static-members)
    - [File Operations](#-file-operations)
    - [Directory Operations](#-directory-operations)
-   - [Metadata Operations](#-metadata-operations)
-   - [Path Operations](#-path-operations)
+   - [Metadata Operations](#️-metadata-operations)
+   - [Path Operations](#️-path-operations)
    - [Handles](#-handles)
-7. [Building a Backend](#-building-a-backend)
+7. [Building a Backend](#️-building-a-backend)
 8. [Error Codes](#-error-codes)
-9. [Known Divergences and Gotchas](#-known-divergences-and-gotchas)
+9. [Known Divergences and Gotchas](#️-known-divergences-and-gotchas)
 10. [Cheatsheet](#-cheatsheet)
 
 ---

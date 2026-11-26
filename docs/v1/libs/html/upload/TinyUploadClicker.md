@@ -13,8 +13,8 @@ A tiny but good JavaScript utility that lets you bind any clickable element (but
 - [🧩 `UploaderConfig` Type](#-uploaderconfig-type)
 - [🔧 Methods](#-methods)
   - [`destroy(): void`](#destroy-void)
-- [🛡️ Runtime Validations](#-runtime-validations)
-- [🛠️ Internal Design](#-internal-design)
+- [🛡️ Runtime Validations](#️-runtime-validations)
+- [🛠️ Internal Design](#️-internal-design)
 
 ---
 

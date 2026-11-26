@@ -6,14 +6,14 @@ A multi-layered validation toolkit designed to ensure file integrity and prevent
 
 - [📋 Overview](#-overview)
 - [📦 Dependencies](#-dependencies)
-- [🛠️ API Reference](#-api-reference)
+- [🛠️ API Reference](#️-api-reference)
   - [🔍 1. Layer 1: `validateMagicNumbers`](#-1-layer-1-validatemagicnumbers)
-  - [🖼️ 2. Layer 2 (Images): `validateImage`](#-2-layer-2-images-validateimage)
+  - [🖼️ 2. Layer 2 (Images): `validateImage`](#️-2-layer-2-images-validateimage)
   - [🎵 3. Layer 2 (Audio/Video): `validateAudioVideo`](#-3-layer-2-audiovideo-validateaudiovideo)
 - [🚀 Implementation Guide: Daily Workflow](#-implementation-guide-daily-workflow)
-  - [🛠️ Step-by-Step Integration](#-step-by-step-integration)
+  - [🛠️ Step-by-Step Integration](#️-step-by-step-integration)
   - [💻 Code Example](#-code-example)
-- [⚠️ Security Notes](#-security-notes)
+- [⚠️ Security Notes](#️-security-notes)
 
 ---
 

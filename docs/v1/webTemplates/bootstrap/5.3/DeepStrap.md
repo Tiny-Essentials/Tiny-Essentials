@@ -8,8 +8,8 @@
 
 - [✨ Highlights](#-highlights)
 - [🚀 Quick start](#-quick-start)
-- [🗂️ Structure](#-structure)
-- [🎛️ Customizing tokens](#-customizing-tokens)
+- [🗂️ Structure](#️-structure)
+- [🎛️ Customizing tokens](#️-customizing-tokens)
 - [🧩 Plugins](#-plugins)
   - [Ghost buttons](#ghost-buttons)
   - [Contrast buttons](#contrast-buttons)

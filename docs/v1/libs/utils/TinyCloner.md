@@ -12,15 +12,15 @@ Welcome to the **TinyCloner** official documentation! 🚀
 - [🚀 Getting Started](#-getting-started)
   - [1. Basic Cloning (The Quick Way)](#1-basic-cloning-the-quick-way)
   - [2. Shallow Cloning](#2-shallow-cloning)
-- [🏗️ Advanced Usage: The Instance Pattern](#-advanced-usage-the-instance-pattern)
-  - [🛡️ Using `isolationMode`](#-using-isolationmode)
-- [🛠️ Extending the Cloner (Custom Plugins)](#-extending-the-cloner-custom-plugins)
+- [🏗️ Advanced Usage: The Instance Pattern](#️-advanced-usage-the-instance-pattern)
+  - [🛡️ Using `isolationMode`](#️-using-isolationmode)
+- [🛠️ Extending the Cloner (Custom Plugins)](#️-extending-the-cloner-custom-plugins)
   - [📝 The Plugin Interface](#-the-plugin-interface)
   - [💡 Example: Adding a `Date` Plugin](#-example-adding-a-date-plugin)
 - [📖 API Reference](#-api-reference)
   - [🌍 Static Methods (Global Management)](#-static-methods-global-management)
   - [👤 Instance Methods (Local Management)](#-instance-methods-local-management)
-- [⚠️ Best Practices](#-best-practices)
+- [⚠️ Best Practices](#️-best-practices)
 
 ---
 

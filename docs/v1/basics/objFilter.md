@@ -8,7 +8,7 @@ Type detection, extension, and analysis made easy — simple and extensible type
 - [Features](#features)
 - [Usage](#usage)
   - [🔍 `checkObj(obj)`](#-checkobjobj)
-  - [🏷️ `objTypeName(val)`](#-objtypenameval)
+  - [🏷️ `objTypeName(val)`](#️-objtypenameval)
   - [✅ `isObjType(obj, type)`](#-isobjtypeobj-type)
   - [➕ `extendObjType(ni, [index])`](#-extendobjtypeni-index)
   - [🔁 `reorderObjTypeOrder(newOrder)`](#-reorderobjtypeorderneworder)

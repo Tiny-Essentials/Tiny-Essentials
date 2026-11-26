@@ -6,8 +6,8 @@
   - [🧮 `countObj(obj)`](#-countobjobj)
   - [🧼 `isValidObj(value)`](#-isvalidobjvalue)
   - [🧼 `isJsonObject(value)`](#-isjsonobjectvalue)
-  - [🛠️ `isClass(target)`](#-isclasstarget)
-  - [🛠️ `isClassInstance(value)` and `isAnyClassInstance(value)`](#-isclassinstancevalue-and-isanyclassinstancevalue)
+  - [🛠️ `isClass(target)`](#️-isclasstarget)
+  - [🛠️ `isClassInstance(value)` and `isAnyClassInstance(value)`](#️-isclassinstancevalue-and-isanyclassinstancevalue)
 
 ---
 

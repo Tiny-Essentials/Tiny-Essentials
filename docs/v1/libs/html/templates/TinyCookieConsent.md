@@ -9,12 +9,12 @@ It displays a consent bar, lets users manage categories, and stores preferences 
 
 - [✨ Features](#-features)
 - [📦 Typedefs](#-typedefs)
-  - [🗂️ `Category`](#-category)
-  - [⚙️ `Config`](#-config)
-- [🏗️ Class: `TinyCookieConsent`](#-class-tinycookieconsent)
+  - [🗂️ `Category`](#️-category)
+  - [⚙️ `Config`](#️-config)
+- [🏗️ Class: `TinyCookieConsent`](#️-class-tinycookieconsent)
   - [🔑 Constructor](#-constructor)
   - [📖 Properties](#-properties)
-  - [🛠️ Methods](#-methods)
+  - [🛠️ Methods](#️-methods)
 - [🧩 Example Usage](#-example-usage)
 
 ---

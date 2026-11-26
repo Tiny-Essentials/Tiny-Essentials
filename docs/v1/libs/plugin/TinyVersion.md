@@ -9,9 +9,9 @@
 4. [API Reference](#-api-reference)
     - [Constructor](#-constructor)
     - [Properties (Getters)](#-properties-getters)
-    - [Methods](#-methods)
+    - [Methods](#️-methods)
 5. [Practical Examples](#-practical-examples)
-6. [Error Handling](#-error-handling)
+6. [Error Handling](#️-error-handling)
 
 ---
 

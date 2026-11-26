@@ -8,11 +8,11 @@ A specialized plugin for the `TinyServiceWorkerEngine` designed to identify and 
 - [🛠 Configuration](#-configuration)
   - [`ViteFileDetectorOptions`](#vitefiledetectoroptions)
   - [Validation](#validation)
-  - [🗃️ Persistent Cache](#-persistent-cache)
+  - [🗃️ Persistent Cache](#️-persistent-cache)
 - [🚀 Daily Usage](#-daily-usage)
   - [1. Installation](#1-installation)
   - [2. Typical Workflow](#2-typical-workflow)
-- [⚠️ Important Notes](#-important-notes)
+- [⚠️ Important Notes](#️-important-notes)
 
 ---
 

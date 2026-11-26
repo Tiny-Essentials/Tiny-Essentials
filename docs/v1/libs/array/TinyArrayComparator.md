@@ -9,7 +9,7 @@ A lightweight, highly optimized JavaScript utility class designed to compare two
   - [1. Import the Class](#1-import-the-class)
   - [2. Prepare Your Arrays](#2-prepare-your-arrays)
   - [3. Initialize and Compare](#3-initialize-and-compare)
-- [🛠️ API Reference](#-api-reference)
+- [🛠️ API Reference](#️-api-reference)
   - [`constructor(oldArray, options)`](#constructoroldarray-options)
   - [`compare(newArray)`](#comparenewarray)
   - [Properties (Getters/Setters)](#properties-getterssetters)

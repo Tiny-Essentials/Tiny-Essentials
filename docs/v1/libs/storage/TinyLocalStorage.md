@@ -13,7 +13,7 @@ Tiny wrapper for `localStorage` with full support for complex structures like `M
   - [📡 Behavior](#-behavior)
 - [🔁 `updateStorageVersion(version: number, onUpgrade: (oldVersion: number, newVersion: number) => void)`](#-updatestorageversionversion-number-onupgrade-oldversion-number-newversion-number--void)
   - [🔧 Parameters](#-parameters)
-  - [⚠️ Throws](#-throws)
+  - [⚠️ Throws](#️-throws)
 - [🔑 `getDbKey(): string | null`](#-getdbkey-string--null)
   - [🔙 Returns](#-returns)
 - [🧮 `getVersion(): number`](#-getversion-number)

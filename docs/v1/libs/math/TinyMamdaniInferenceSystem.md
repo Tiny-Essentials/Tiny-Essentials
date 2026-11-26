@@ -6,10 +6,10 @@ Welcome to the official documentation for the **Fuzzy Logic Engine**! 🚀 This 
 
 ## 📑 Table of Contents
 
-- [🛠️ Core Utilities](#-core-utilities)
+- [🛠️ Core Utilities](#️-core-utilities)
   - [📐 `trapezoid(value, a, b, c, d, optimize = false)`](#-trapezoidvalue-a-b-c-d-optimize--false)
   - [🎯 `defuzzifyCentroid(fuzzyOutput, outputSets, step = 0.5)`](#-defuzzifycentroidfuzzyoutput-outputsets-step--05)
-- [🏗️ Classes](#-classes)
+- [🏗️ Classes](#️-classes)
   - [🟦 `FuzzySet`](#-fuzzyset)
   - [🧠 `MamdaniInferenceSystem`](#-mamdaniinferencesystem)
 

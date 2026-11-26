@@ -15,8 +15,8 @@ A lightweight JavaScript utility for validating and extracting IPv6 addresses us
 - [💡 Practical Examples](#-practical-examples)
   - [1. Validating User Input](#1-validating-user-input)
   - [2. Parsing Log Files](#2-parsing-log-files)
-- [⚠️ Error Handling](#-error-handling)
-- [⚙️ Technical Implementation Details](#-technical-implementation-details)
+- [⚠️ Error Handling](#️-error-handling)
+- [⚙️ Technical Implementation Details](#️-technical-implementation-details)
 
 ---
 

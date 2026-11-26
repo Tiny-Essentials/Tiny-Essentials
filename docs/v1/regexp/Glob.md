@@ -18,7 +18,7 @@ Whether you are building a file explorer, a routing system, or a search filter, 
   - [Scenario A: Filtering Files in a Directory](#scenario-a-filtering-files-in-a-directory)
   - [Scenario B: Validating User Input](#scenario-b-validating-user-input)
   - [Scenario C: Converting Regex back to Human-Readable GLOB](#scenario-c-converting-regex-back-to-human-readable-glob)
-- [⚠️ Error Handling Guide](#-error-handling-guide)
+- [⚠️ Error Handling Guide](#️-error-handling-guide)
 
 ---
 

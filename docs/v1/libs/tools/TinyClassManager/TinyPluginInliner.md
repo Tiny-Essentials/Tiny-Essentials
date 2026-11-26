@@ -11,7 +11,7 @@ When using `TinyClassManager`, you compose classes using a mixin pattern via the
 ## 📑 Table of Contents
 
 - [✨ Key Features](#-key-features)
-- [⚙️ Configuration](#-configuration)
+- [⚙️ Configuration](#️-configuration)
 - [🚀 How to Use](#-how-to-use)
   - [1. Develop your Plugins](#1-develop-your-plugins)
   - [2. Create your Entry Point](#2-create-your-entry-point)

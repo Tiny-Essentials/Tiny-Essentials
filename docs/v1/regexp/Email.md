@@ -5,16 +5,16 @@ A robust, highly configurable JavaScript utility for validating email addresses 
 ## 📑 Table of Contents
 
 - [🌟 Overview](#-overview)
-- [⚙️ The Configuration Object (`EmailRegexOptions`)](#-the-configuration-object-emailregexoptions)
-- [🛠️ Core Functions](#-core-functions)
+- [⚙️ The Configuration Object (`EmailRegexOptions`)](#️-the-configuration-object-emailregexoptions)
+- [🛠️ Core Functions](#️-core-functions)
   - [1. `isValidEmail(s, options)`](#1-isvalidemails-options)
   - [2. `extractEmails(text, options)`](#2-extractemailstext-options)
 - [🚀 Practical Daily Scenarios](#-practical-daily-scenarios)
   - [🔍 Scenario A: Simple Validation](#-scenario-a-simple-validation)
   - [🏢 Scenario B: Corporate/Internal Restriction](#-scenario-b-corporateinternal-restriction)
-  - [🛡️ Scenario C: Preventing "Bad" Usernames & Domains](#-scenario-c-preventing-bad-usernames--domains)
+  - [🛡️ Scenario C: Preventing "Bad" Usernames & Domains](#️-scenario-c-preventing-bad-usernames--domains)
   - [📑 Scenario D: Extracting Emails from a Log File](#-scenario-d-extracting-emails-from-a-log-file)
-- [⚠️ Error Handling & Safety](#-error-handling--safety)
+- [⚠️ Error Handling & Safety](#️-error-handling--safety)
 
 ---
 

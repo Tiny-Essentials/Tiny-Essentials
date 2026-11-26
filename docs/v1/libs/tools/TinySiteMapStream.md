@@ -9,17 +9,17 @@ Instead of building a massive XML string in your computer's memory (which can ca
 ## 📑 Table of Contents
 
 - [🚀 Core Concepts](#-core-concepts)
-  - [🛠️ What is a Transform Stream?](#-what-is-a-transform-stream)
+  - [🛠️ What is a Transform Stream?](#️-what-is-a-transform-stream)
   - [🧬 Configuration Inheritance](#-configuration-inheritance)
-- [⚙️ Configuration Options](#-configuration-options)
-  - [⚠️ Error Handling Levels](#-error-handling-levels)
-- [🛠️ Implementation Guide (Step-by-Step)](#-implementation-guide-step-by-step)
+- [⚙️ Configuration Options](#️-configuration-options)
+  - [⚠️ Error Handling Levels](#️-error-handling-levels)
+- [🛠️ Implementation Guide (Step-by-Step)](#️-implementation-guide-step-by-step)
   - [1. Setup the Main Instance](#1-setup-the-main-instance)
   - [2. Initialize the Stream](#2-initialize-the-stream)
   - [3. The Data Pipeline (The "Daily Workflow")](#3-the-data-pipeline-the-daily-workflow)
 - [📝 Developer Cheat Sheet](#-developer-cheat-sheet)
   - [💡 Pro-Tips for Daily Use](#-pro-tips-for-daily-use)
-  - [🛠️ Summary of Internal Logic](#-summary-of-internal-logic)
+  - [🛠️ Summary of Internal Logic](#️-summary-of-internal-logic)
 
 ---
 

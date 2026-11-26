@@ -12,11 +12,11 @@
 2. [Installation](#-installation)
 3. [Core Concepts](#-core-concepts)
 4. [Parsers](#-parsers)
-   - [Handle](#-handle)
+   - [Handle](#️-handle)
    - [DID](#-did)
    - [AT URI](#-at-uri)
    - [Web URL](#-web-url)
-   - [Hashtag](#-hashtag)
+   - [Hashtag](#️⃣-hashtag)
 5. [Combined registry](#-combined-registry)
 
 ---

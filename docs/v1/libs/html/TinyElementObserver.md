@@ -12,7 +12,7 @@ It leverages the native `MutationObserver` API, providing a higher-level abstrac
 - [🔹 Constructor](#-constructor)
 - [🔹 Properties](#-properties)
 - [🔹 Methods](#-methods)
-  - [🎛️ Detector Management](#-detector-management)
+  - [🎛️ Detector Management](#️-detector-management)
   - [📡 Observation Control](#-observation-control)
 - [🔹 Example Usage](#-example-usage)
 

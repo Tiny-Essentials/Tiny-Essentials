@@ -6,12 +6,12 @@ The **TabManager Plugin** is a robust synchronization system designed for Progre
 
 ## 📑 Table of Contents
 
-- [🏗️ Architecture Overview](#-architecture-overview)
-- [🛠️ Getting Started](#-getting-started)
+- [🏗️ Architecture Overview](#️-architecture-overview)
+- [🛠️ Getting Started](#️-getting-started)
   - [1. Installation (Service Worker)](#1-installation-service-worker)
   - [2. Initialization (Main Thread)](#2-initialization-main-thread)
-- [⚙️ Technical Deep-Dive (For Developers)](#-technical-deep-dive-for-developers)
-  - [🛡️ Permission System](#-permission-system)
+- [⚙️ Technical Deep-Dive (For Developers)](#️-technical-deep-dive-for-developers)
+  - [🛡️ Permission System](#️-permission-system)
   - [🔄 Ghost Tab Reconciliation](#-ghost-tab-reconciliation)
   - [📦 Persistence Layer](#-persistence-layer)
   - [🚦 Concurrency Management](#-concurrency-management)

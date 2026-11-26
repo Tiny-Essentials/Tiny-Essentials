@@ -47,12 +47,12 @@ With **import/export in JSON format**, **group-based filtering**, and **exclusio
   - [🚫 Exclusions & Groups](#-exclusions--groups)
 - [🎲 Draw Core](#-draw-core)
   - [🔄 Frequency Management](#-frequency-management)
-  - [⚖️ Weight Computation](#-weight-computation)
+  - [⚖️ Weight Computation](#️-weight-computation)
   - [🎯 Drawing Items](#-drawing-items)
   - [📦 Save & Load (JSON)](#-save--load-json)
   - [🪞 `clone()`](#-clone)
   - [🎲 RNG: Seedable (mulberry32)](#-rng-seedable-mulberry32)
-- [🗑️ `destroy()`](#-destroy)
+- [🗑️ `destroy()`](#️-destroy)
 
 ---
 
