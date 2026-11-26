@@ -19,11 +19,11 @@
 
 To use this library effectively, you must understand the two problems it solves:
 
-### 1. Concurrency Control 🚦
+### 🚦 1. Concurrency Control
 If you try to fetch 1,000 items from a database simultaneously, your application might crash or the server might block your IP. 
 **The Solution:** `TinyThrottledApi` limits the number of active requests. If the limit is 5, and you request 10, only 5 will run immediately; the other 5 will wait in a queue until a slot opens up.
 
-### 2. Rate Throttling ⏱️
+### ⏱️ 2. Rate Throttling
 Even if you only run 5 requests at a time, sending them too quickly in "bursts" can trigger security filters.
 **The Solution:** By integrating `TinyTimeout`, the API can introduce a dynamic delay between requests. This spreads the load over a longer period, making your traffic pattern look more natural and less aggressive.
 
@@ -128,7 +128,7 @@ The `TinyThrottledApi` extends `EventEmitter` and emits the following events:
 
 ## 💡 Practical Examples
 
-### Example 1: Simple Concurrency (The "Batch" Pattern) 🚀
+### 🚀 Example 1: Simple Concurrency (The "Batch" Pattern)
 Use this when you have a large array of IDs and want to fetch data from a real API without overwhelming the client or the server. We use `JSONPlaceholder` (a free fake API) for this example.
 
 ```javascript
@@ -171,7 +171,7 @@ async function runBatch() {
 runBatch();
 ```
 
-### Example 2: Advanced Throttling (The "Polite" Pattern) ⏱️
+### ⏱️ Example 2: Advanced Throttling (The "Polite" Pattern)
 Use this when the API you are calling has strict rate limits (e.g., "no more than 5 requests per second"). By using `TinyTimeout`, we ensure our requests are spaced out gracefully.
 
 ```javascript

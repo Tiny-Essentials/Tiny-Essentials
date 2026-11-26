@@ -8,9 +8,9 @@ Welcome to the **Crypto Utils** documentation! This module provides a simple way
 - [🚀 Getting Started](#-getting-started)
   - [Installation](#installation)
 - [🛠 API Reference](#-api-reference)
-  - [`hashText(text, algorithm)` 🔑](#hashtexttext-algorithm-)
+  - [🔑 `hashText(text, algorithm)`](#-hashtexttext-algorithm)
 - [💻 Practical Examples](#-practical-examples)
-  - [1. Basic Usage (SHA-256) ✅](#1-basic-usage-sha-256-)
+  - [✅ 1. Basic Usage (SHA-256)](#-1-basic-usage-sha-256)
 - [💡 Developer Tips for Daily Use](#-developer-tips-for-daily-use)
 
 ---
@@ -33,7 +33,7 @@ import { hashText } from 'tiny-essentials/basics/crypto';
 
 ## 🛠 API Reference
 
-### `hashText(text, algorithm)` 🔑
+### 🔑 `hashText(text, algorithm)`
 
 Asynchronously generates a cryptographic hash of the provided text and returns the result as a hexadecimal string.
 
@@ -68,7 +68,7 @@ To ensure type safety, use the following definition for the algorithm parameter:
 
 ## 💻 Practical Examples
 
-### 1. Basic Usage (SHA-256) ✅
+### ✅ 1. Basic Usage (SHA-256)
 This is the most common way to use the function. SHA-256 is widely used for data integrity checks.
 
 ```javascript

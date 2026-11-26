@@ -1,42 +1,42 @@
-# TinyI18 Documentation 📚✨
+# 📚✨ TinyI18 Documentation
 
 ## 📑 Table of Contents
 
-- [Class: `TinyI18` 🏷️](#class-tinyi18-)
-  - [Static Methods ⚡](#static-methods-)
-  - [Properties 🛠️](#properties-)
-- [Internal Utilities & Resolution 🔧](#internal-utilities--resolution-)
-  - [`#deepClone(value)` 🌀](#deepclonevalue-)
-  - [`#resolveOrder(forceLocale)` 🔄](#resolveorderforcelocale-)
-  - [`#resolveExact(order, key)` 🎯](#resolveexactorder-key-)
-  - [`#resolveByPattern(order, key)` 🔍](#resolvebypatternorder-key-)
-  - [`#materialize(value, params)` 🏗️](#materializevalue-params-)
-  - [`#interpolate(template, params)` ✏️](#interpolatetemplate-params-)
-  - [`#dotGet(obj, path)` 📌](#dotgetobj-path-)
-  - [`#helpersReadonly()` 🛡️](#helpersreadonly-)
-- [Internal Locale Ingestion 🌐](#internal-locale-ingestion-)
-  - [`#ingestLocale(locale, raw)` 📥](#ingestlocalelocale-raw-)
-  - [`#unloadLocale(locale)` ❌](#unloadlocalelocale-)
-- [File Mode Loading 📂](#file-mode-loading-)
-  - [`#loadLocaleFromFile(locale)` 📄](#loadlocalefromfilelocale-)
-  - [`#safeRegExp(src)` 🧵](#saferegexpsrc-)
-  - [`#coerceFileValue(v)` ⚙️](#coercefilevaluev-)
-- [Constructor & External API 🏗️](#constructor--external-api-)
-  - [`constructor(options)` ⚙️](#constructoroptions-)
-  - [`clearRegexCache()` 🧹](#clearregexcache-)
-  - [`registerHelper(name, fn)` 🛠️](#registerhelpername-fn-)
-  - [`unregisterHelper(name)` ❌](#unregisterhelpername-)
-  - [`loadLocaleLocal(locale, data)` 📦](#loadlocalelocallocale-data-)
-  - [`setLocale(locale)` 🌐](#setlocalelocale-)
-  - [`t(key, params, options)` 🎯](#tkey-params-options-)
-  - [`p(key, options)` 🔍](#pkey-options-)
-  - [`resetToDefaultOnly()` 🏠](#resettodefaultonly-)
-  - [`getStatsForLocale(locale)` 📊](#getstatsforlocalelocale-)
-  - [`destroy()` 🗑️](#destroy-)
+- [🏷️ Class: `TinyI18`](#-class-tinyi18)
+  - [⚡ Static Methods](#-static-methods)
+  - [🛠️ Properties](#-properties)
+- [🔧 Internal Utilities & Resolution](#-internal-utilities--resolution)
+  - [🌀 `#deepClone(value)`](#-deepclonevalue)
+  - [🔄`#resolveOrder(forceLocale)`](#-resolveorderforcelocale)
+  - [🎯 `#resolveExact(order, key)`](#-resolveexactorder-key)
+  - [🔍 `#resolveByPattern(order, key)`](#-resolvebypatternorder-key)
+  - [🏗️ `#materialize(value, params)`](#-materializevalue-params)
+  - [✏️ `#interpolate(template, params)`](#-interpolatetemplate-params)
+  - [📌 `#dotGet(obj, path)`](#-dotgetobj-path)
+  - [🛡️ `#helpersReadonly()`](#-helpersreadonly)
+- [🌐 Internal Locale Ingestion](#-internal-locale-ingestion)
+  - [📥 `#ingestLocale(locale, raw)`](#-ingestlocalelocale-raw)
+  - [❌ `#unloadLocale(locale)`](#-unloadlocalelocale)
+- [📂 File Mode Loading](#-file-mode-loading)
+  - [📄 `#loadLocaleFromFile(locale)`](#-loadlocalefromfilelocale)
+  - [🧵 `#safeRegExp(src)`](#-saferegexpsrc)
+  - [⚙️ `#coerceFileValue(v)`](#-coercefilevaluev)
+- [🏗️ Constructor & External API](#-constructor--external-api)
+  - [⚙️ `constructor(options)`](#-constructoroptions)
+  - [🧹 `clearRegexCache()`](#-clearregexcache)
+  - [🛠️ `registerHelper(name, fn)`](#-registerhelpername-fn)
+  - [❌ `unregisterHelper(name)`](#-unregisterhelpername)
+  - [📦 `loadLocaleLocal(locale, data)`](#-loadlocalelocallocale-data)
+  - [🌐 `setLocale(locale)`](#-setlocalelocale)
+  - [🎯 `t(key, params, options)`](#-tkey-params-options)
+  - [🔍 `p(key, options)`](#-pkey-options)
+  - [🏠 `resetToDefaultOnly()`](#-resettodefaultonly)
+  - [📊 `getStatsForLocale(locale)`](#-getstatsforlocalelocale)
+  - [🗑️ `destroy()`](#-destroy)
 
 ---
 
-## Class: `TinyI18` 🏷️
+## 🏷️ Class: `TinyI18`
 
 Professional and flexible i18n manager with dual mode (local/file), regex-based keys, and function-based entries for advanced rendering.
 
@@ -49,9 +49,9 @@ Professional and flexible i18n manager with dual mode (local/file), regex-based 
 
 ---
 
-### Static Methods ⚡
+### ⚡ Static Methods
 
-#### `mergeLocaleFiles({ files, output, spaces = 0 })` 🔗
+#### 🔗 `mergeLocaleFiles({ files, output, spaces = 0 })`
 
 Merges multiple JSON locale files into a single file for TinyI18 usage (file mode only).
 
@@ -80,9 +80,9 @@ await TinyI18.mergeLocaleFiles({
 
 ---
 
-### Properties 🛠️
+### 🛠️ Properties
 
-#### `destroyed` 🔹
+#### 🔹 `destroyed`
 
 Indicates whether the instance has been destroyed.
 
@@ -90,7 +90,7 @@ Indicates whether the instance has been destroyed.
 
 ---
 
-#### `currentLocale` 🔹
+#### 🔹 `currentLocale`
 
 The currently selected locale, or `null` if only the default locale is active.
 
@@ -98,7 +98,7 @@ The currently selected locale, or `null` if only the default locale is active.
 
 ---
 
-#### `defaultLocale` 🔹
+#### 🔹 `defaultLocale`
 
 The default locale code chosen at construction. Always kept in memory as a fallback.
 
@@ -106,7 +106,7 @@ The default locale code chosen at construction. Always kept in memory as a fallb
 
 ---
 
-#### `mode` 🔹
+#### 🔹 `mode`
 
 The current operating mode of this instance:
 
@@ -118,7 +118,7 @@ The current operating mode of this instance:
 
 ---
 
-#### `strict` 🔹
+#### 🔹 `strict`
 
 Whether strict mode is enabled.
 
@@ -130,7 +130,7 @@ Whether strict mode is enabled.
 
 ---
 
-#### `acceptNullResults` 🔹
+#### 🔹 `acceptNullResults`
 
 Whether null results are accepted when a translation is missing.
 
@@ -138,7 +138,7 @@ Whether null results are accepted when a translation is missing.
 
 ---
 
-#### `basePath` 🔹
+#### 🔹 `basePath`
 
 Base directory path used in `"file"` mode to locate locale JSON files.
 
@@ -150,7 +150,7 @@ Base directory path used in `"file"` mode to locate locale JSON files.
 
 ---
 
-#### `stats` 📊
+#### 📊 `stats`
 
 Returns basic stats for debugging/memory insights.
 
@@ -167,7 +167,7 @@ console.log(i18.stats);
 
 ---
 
-#### `stringTables` 🔹
+#### 🔹 `stringTables`
 
 Deep-cloned view of string tables (Map → Object). Preserves strings, `$fn` objects, and functions.
 
@@ -175,7 +175,7 @@ Deep-cloned view of string tables (Map → Object). Preserves strings, `$fn` obj
 
 ---
 
-#### `patternTables` 🔹
+#### 🔹 `patternTables`
 
 Deep-cloned view of regex pattern tables (Map → Object). Recreates `RegExp` objects to avoid mutation.
 
@@ -183,7 +183,7 @@ Deep-cloned view of regex pattern tables (Map → Object). Recreates `RegExp` ob
 
 ---
 
-#### `helpers` 🔹
+#### 🔹 `helpers`
 
 Deep-cloned view of registered helper functions (Map → Object). Functions are referenced (cannot deep-clone functions).
 
@@ -191,7 +191,7 @@ Deep-cloned view of registered helper functions (Map → Object). Functions are 
 
 ---
 
-#### `regexCache` 🔹
+#### 🔹 `regexCache`
 
 Deep-cloned view of compiled regex cache (Map → Object). Recreates `RegExp` objects to avoid mutation.
 
@@ -203,9 +203,9 @@ Deep-cloned view of compiled regex cache (Map → Object). Recreates `RegExp` ob
 
 ---
 
-## Internal Utilities & Resolution 🔧
+## 🔧 Internal Utilities & Resolution
 
-### `#deepClone(value)` 🌀
+### 🌀 `#deepClone(value)`
 
 Deep clones a value for internal use.
 
@@ -223,7 +223,7 @@ Deep clones a value for internal use.
 
 ---
 
-### `#resolveOrder(forceLocale)` 🔄
+### 🔄 `#resolveOrder(forceLocale)`
 
 Determines the resolution order of locales for key lookup.
 
@@ -237,7 +237,7 @@ Determines the resolution order of locales for key lookup.
 
 ---
 
-### `#resolveExact(order, key)` 🎯
+### 🎯 `#resolveExact(order, key)`
 
 Resolves a key exactly in the provided locale order.
 
@@ -252,7 +252,7 @@ Resolves a key exactly in the provided locale order.
 
 ---
 
-### `#resolveByPattern(order, key)` 🔍
+### 🔍 `#resolveByPattern(order, key)`
 
 Resolves a key by matching regex patterns in locale tables.
 
@@ -267,7 +267,7 @@ Resolves a key by matching regex patterns in locale tables.
 
 ---
 
-### `#materialize(value, params)` 🏗️
+### 🏗️ `#materialize(value, params)`
 
 Converts a raw translation entry into a final string for display.
 
@@ -288,7 +288,7 @@ Converts a raw translation entry into a final string for display.
 
 ---
 
-### `#interpolate(template, params)` ✏️
+### ✏️ `#interpolate(template, params)`
 
 Interpolates `{named}` placeholders in a string using given parameters.
 
@@ -303,7 +303,7 @@ Interpolates `{named}` placeholders in a string using given parameters.
 
 ---
 
-### `#dotGet(obj, path)` 📌
+### 📌 `#dotGet(obj, path)`
 
 Safely retrieves a nested property using dot notation.
 
@@ -318,7 +318,7 @@ Safely retrieves a nested property using dot notation.
 
 ---
 
-### `#helpersReadonly()` 🛡️
+### 🛡️ `#helpersReadonly()`
 
 Provides a read-only facade for safely accessing registered helpers.
 
@@ -329,9 +329,9 @@ Provides a read-only facade for safely accessing registered helpers.
 
 ---
 
-## Internal Locale Ingestion 🌐
+## 🌐 Internal Locale Ingestion
 
-### `#ingestLocale(locale, raw)` 📥
+### 📥 `#ingestLocale(locale, raw)`
 
 Flattens and registers raw locale data into internal string & pattern tables.
 
@@ -344,7 +344,7 @@ Flattens and registers raw locale data into internal string & pattern tables.
 
 ---
 
-### `#unloadLocale(locale)` ❌
+### ❌ `#unloadLocale(locale)`
 
 Removes a previously loaded locale from memory (except default).
 
@@ -356,9 +356,9 @@ Removes a previously loaded locale from memory (except default).
 
 ---
 
-## File Mode Loading 📂
+## 📂 File Mode Loading
 
-### `#loadLocaleFromFile(locale)` 📄
+### 📄 `#loadLocaleFromFile(locale)`
 
 Loads a locale JSON file and flattens it into internal maps (file mode only).
 
@@ -378,7 +378,7 @@ Loads a locale JSON file and flattens it into internal maps (file mode only).
 
 ---
 
-### `#safeRegExp(src)` 🧵
+### 🧵 `#safeRegExp(src)`
 
 Returns a cached `RegExp` from source, compiling if needed.
 Strict mode → throws on invalid regex; otherwise returns a never-matching regex.
@@ -393,7 +393,7 @@ Strict mode → throws on invalid regex; otherwise returns a never-matching rege
 
 ---
 
-### `#coerceFileValue(v)` ⚙️
+### ⚙️ `#coerceFileValue(v)`
 
 Normalizes a JSON value from file mode into internal representation.
 
@@ -410,9 +410,9 @@ Normalizes a JSON value from file mode into internal representation.
 
 ---
 
-## Constructor & External API 🏗️
+## 🏗️ Constructor & External API
 
-### `constructor(options)` ⚙️
+### ⚙️ `constructor(options)`
 
 Creates a new TinyI18 instance for managing localized strings and patterns.
 
@@ -434,7 +434,7 @@ Creates a new TinyI18 instance for managing localized strings and patterns.
 
 ---
 
-### `clearRegexCache()` 🧹
+### 🧹 `clearRegexCache()`
 
 Clears the internal regex cache.
 
@@ -445,7 +445,7 @@ Clears the internal regex cache.
 
 ---
 
-### `registerHelper(name, fn)` 🛠️
+### 🛠️ `registerHelper(name, fn)`
 
 Registers a helper function for function-based entries or `$fn` references.
 
@@ -458,7 +458,7 @@ Registers a helper function for function-based entries or `$fn` references.
 
 ---
 
-### `unregisterHelper(name)` ❌
+### ❌ `unregisterHelper(name)`
 
 Removes a previously registered helper function.
 
@@ -472,7 +472,7 @@ Removes a previously registered helper function.
 
 ---
 
-### `loadLocaleLocal(locale, data)` 📦
+### 📦 `loadLocaleLocal(locale, data)`
 
 Loads or updates a locale data in-memory (local mode only).
 
@@ -485,7 +485,7 @@ Loads or updates a locale data in-memory (local mode only).
 
 ---
 
-### `setLocale(locale)` 🌐
+### 🌐 `setLocale(locale)`
 
 Sets the currently selected locale. In file mode, loads from disk.
 
@@ -502,7 +502,7 @@ Sets the currently selected locale. In file mode, loads from disk.
 
 ---
 
-### `t(key, params, options)` 🎯
+### 🎯 `t(key, params, options)`
 
 Resolves a translation by **exact key**.
 
@@ -522,7 +522,7 @@ Resolves a translation by **exact key**.
 
 ---
 
-### `p(key, options)` 🔍
+### 🔍 `p(key, options)`
 
 Resolves a translation by **regex pattern match**.
 
@@ -541,7 +541,7 @@ Resolves a translation by **regex pattern match**.
 
 ---
 
-### `resetToDefaultOnly()` 🏠
+### 🏠 `resetToDefaultOnly()`
 
 Clears all loaded locales except the default.
 
@@ -550,7 +550,7 @@ Clears all loaded locales except the default.
 
 ---
 
-### `getStatsForLocale(locale)` 📊
+### 📊 `getStatsForLocale(locale)`
 
 Returns statistics for a specific locale.
 
@@ -566,7 +566,7 @@ Returns statistics for a specific locale.
 
 ---
 
-### `destroy()` 🗑️
+### 🗑️ `destroy()`
 
 Destroys the TinyI18 instance, clearing all internal maps and references to free up memory. Once destroyed, the instance cannot be reused.
 

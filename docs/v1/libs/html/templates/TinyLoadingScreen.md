@@ -1,4 +1,4 @@
-# TinyLoadingScreen 📦✨
+# 📦✨ TinyLoadingScreen
 
 A lightweight, fully-configurable **loading overlay component** that can be appended to any HTML element.
 
@@ -8,28 +8,28 @@ It allows you to display a customizable overlay with a spinner and message while
 
 ## 📑 Table of Contents
 
-- [Constructor 🏗️](#constructor-)
-- [Properties 🔑](#properties-)
-- [Options ⚙️](#options-)
-- [Methods 🛠️](#methods-)
-  - [`start(message?: string | HTMLElement) → boolean` ✅](#startmessage-string--htmlelement--boolean-)
-  - [`update(message?: string | HTMLElement) → boolean` ✏️](#updatemessage-string--htmlelement--boolean-)
-  - [`stop() → boolean` ❌](#stop--boolean-)
-  - [Internal / Private Methods 🔒](#internal--private-methods-)
-- [Status States 🟢⚪🔴](#status-states-)
-- [Callbacks 🔔](#callbacks-)
+- [🏗️ Constructor](#-constructor)
+- [🔑 Properties](#-properties)
+- [⚙️ Options](#-options)
+- [🛠️ Methods](#-methods)
+  - [✅ `start(message?: string | HTMLElement) → boolean`](#-startmessage-string--htmlelement--boolean)
+  - [✏️ `update(message?: string | HTMLElement) → boolean`](#-updatemessage-string--htmlelement--boolean)
+  - [❌ `stop() → boolean`](#-stop--boolean)
+  - [🔒 Internal / Private Methods](#-internal--private-methods)
+- [🟢⚪🔴 Status States](#-status-states)
+- [🔔 Callbacks](#-callbacks)
   - [`onChange: (status: LoadingStatus) => void`](#onchange-status-loadingstatus--void)
-- [Usage Examples 💡](#usage-examples-)
+- [💡 Usage Examples](#-usage-examples)
   - [Basic Example](#basic-example)
   - [Custom Container](#custom-container)
   - [With onChange Callback](#with-onchange-callback)
-  - [Custom Animations ⏳](#custom-animations-)
-  - [Allow HTML Messages 🖌️](#allow-html-messages-)
-  - [Notes 📝](#notes-)
+  - [⏳ Custom Animations](#-custom-animations)
+  - [🖌️ Allow HTML Messages](#-allow-html-messages)
+  - [📝 Notes](#-notes)
 
 ---
 
-## Constructor 🏗️
+## 🏗️ Constructor
 
 ```ts
 new TinyLoadingScreen(container?: HTMLElement)
@@ -40,7 +40,7 @@ new TinyLoadingScreen(container?: HTMLElement)
 
 ---
 
-## Properties 🔑
+## 🔑 Properties
 
 | Property         | Type                                      | Description                                                    |
 | ---------------- | ----------------------------------------- | -------------------------------------------------------------- |
@@ -56,7 +56,7 @@ new TinyLoadingScreen(container?: HTMLElement)
 
 ---
 
-## Options ⚙️
+## ⚙️ Options
 
 You can configure the loading screen using the `options` property:
 
@@ -72,9 +72,9 @@ loader.options = {
 
 ---
 
-## Methods 🛠️
+## 🛠️ Methods
 
-### `start(message?: string | HTMLElement) → boolean` ✅
+### ✅ `start(message?: string | HTMLElement) → boolean`
 
 * Starts the loading screen, or updates the message if already active.
 * `message` — The message to display. Defaults to `defaultMessage`.
@@ -83,7 +83,7 @@ loader.options = {
 
 ---
 
-### `update(message?: string | HTMLElement) → boolean` ✏️
+### ✏️ `update(message?: string | HTMLElement) → boolean`
 
 * Updates the loading screen message.
 * Returns `true` if the message was updated, `false` if overlay is not active.
@@ -91,14 +91,14 @@ loader.options = {
 
 ---
 
-### `stop() → boolean` ❌
+### ❌ `stop() → boolean`
 
 * Stops and removes the loading screen.
 * Returns `true` if overlay was removed, `false` if overlay was not active.
 
 ---
 
-### Internal / Private Methods 🔒
+### 🔒 Internal / Private Methods
 
 | Method                    | Description                                                                                           |
 | ------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -110,7 +110,7 @@ loader.options = {
 
 ---
 
-## Status States 🟢⚪🔴
+## 🟢⚪🔴 Status States
 
 The loading screen has four states:
 
@@ -125,7 +125,7 @@ The loading screen has four states:
 
 ---
 
-## Callbacks 🔔
+## 🔔 Callbacks
 
 ### `onChange: (status: LoadingStatus) => void`
 
@@ -139,7 +139,7 @@ loader.onChange = (status) => {
 
 ---
 
-## Usage Examples 💡
+## 💡 Usage Examples
 
 ### Basic Example
 
@@ -180,7 +180,7 @@ loader.onChange = (status) => {
 
 ---
 
-### Custom Animations ⏳
+### ⏳ Custom Animations
 
 ```js
 loader.options = {
@@ -192,7 +192,7 @@ loader.options = {
 
 ---
 
-### Allow HTML Messages 🖌️
+### 🖌️ Allow HTML Messages
 
 ```js
 loader.allowHtmlText = true;
@@ -201,7 +201,7 @@ loader.start('<b>Loading <i>data</i>...</b>');
 
 ---
 
-### Notes 📝
+### 📝 Notes
 
 * Fade durations can be `null` to disable animations.
 * HTML messages require `allowHtmlText = true`.

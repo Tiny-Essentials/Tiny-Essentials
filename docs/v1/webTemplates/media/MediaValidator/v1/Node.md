@@ -7,9 +7,9 @@ A multi-layered validation toolkit designed to ensure file integrity and prevent
 - [📋 Overview](#-overview)
 - [📦 Dependencies](#-dependencies)
 - [🛠️ API Reference](#-api-reference)
-  - [1. Layer 1: `validateMagicNumbers` 🔍](#1-layer-1-validatemagicnumbers-)
-  - [2. Layer 2 (Images): `validateImage` 🖼️](#2-layer-2-images-validateimage-)
-  - [3. Layer 2 (Audio/Video): `validateAudioVideo` 🎵](#3-layer-2-audiovideo-validateaudiovideo-)
+  - [🔍 1. Layer 1: `validateMagicNumbers`](#-1-layer-1-validatemagicnumbers)
+  - [🖼️ 2. Layer 2 (Images): `validateImage`](#-2-layer-2-images-validateimage)
+  - [🎵 3. Layer 2 (Audio/Video): `validateAudioVideo`](#-3-layer-2-audiovideo-validateaudiovideo)
 - [🚀 Implementation Guide: Daily Workflow](#-implementation-guide-daily-workflow)
   - [🛠️ Step-by-Step Integration](#-step-by-step-integration)
   - [💻 Code Example](#-code-example)
@@ -44,7 +44,7 @@ npm install file-type sharp music-metadata
 
 ## 🛠️ API Reference
 
-### 1. Layer 1: `validateMagicNumbers` 🔍
+### 🔍 1. Layer 1: `validateMagicNumbers`
 
 This is your first line of defense. It is extremely fast because it only reads the beginning of the file.
 
@@ -61,7 +61,7 @@ This is your first line of defense. It is extremely fast because it only reads t
 
 ---
 
-### 2. Layer 2 (Images): `validateImage` 🖼️
+### 🖼️ 2. Layer 2 (Images): `validateImage`
 
 Once the magic numbers are confirmed, use this to inspect the image's internal structure.
 
@@ -76,7 +76,7 @@ Once the magic numbers are confirmed, use this to inspect the image's internal s
 
 ---
 
-### 3. Layer 2 (Audio/Video): `validateAudioVideo` 🎵
+### 🎵 3. Layer 2 (Audio/Video): `validateAudioVideo`
 
 For media files, we need to ensure the container (like MP3 or MP4) is actually intact.
 

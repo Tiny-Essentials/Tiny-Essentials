@@ -6,7 +6,7 @@ This project provides a lightweight **Vite plugin** designed specifically for de
 
 - [📋 Overview](#-overview)
 - [🛠️ Installation & Setup](#-installation--setup)
-  - [1. Register the Plugin in Vite ⚙️](#1-register-the-plugin-in-vite-)
+  - [⚙️ 1. Register the Plugin in Vite](#-1-register-the-plugin-in-vite)
 - [🚀 Daily Workflow](#-daily-workflow)
 - [⚠️ Troubleshooting](#-troubleshooting)
 
@@ -24,7 +24,7 @@ This plugin solves that by automatically creating a `404.html` file that is an e
 
 Follow these steps to integrate the plugin into your Vite project.
 
-### 1. Register the Plugin in Vite ⚙️
+### ⚙️ 1. Register the Plugin in Vite
 Open your `vite.config.js` file and import the function you just created. Add it to the `plugins` array.
 
 ```javascript

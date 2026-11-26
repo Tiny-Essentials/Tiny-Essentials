@@ -10,10 +10,10 @@ A robust, highly configurable JavaScript utility for validating email addresses 
   - [1. `isValidEmail(s, options)`](#1-isvalidemails-options)
   - [2. `extractEmails(text, options)`](#2-extractemailstext-options)
 - [🚀 Practical Daily Scenarios](#-practical-daily-scenarios)
-  - [Scenario A: Simple Validation 🔍](#scenario-a-simple-validation-)
-  - [Scenario B: Corporate/Internal Restriction 🏢](#scenario-b-corporateinternal-restriction-)
-  - [Scenario C: Preventing "Bad" Usernames & Domains 🛡️](#scenario-c-preventing-bad-usernames--domains-)
-  - [Scenario D: Extracting Emails from a Log File 📑](#scenario-d-extracting-emails-from-a-log-file-)
+  - [🔍 Scenario A: Simple Validation](#-scenario-a-simple-validation)
+  - [🏢 Scenario B: Corporate/Internal Restriction](#-scenario-b-corporateinternal-restriction)
+  - [🛡️ Scenario C: Preventing "Bad" Usernames & Domains](#-scenario-c-preventing-bad-usernames--domains)
+  - [📑 Scenario D: Extracting Emails from a Log File](#-scenario-d-extracting-emails-from-a-log-file)
 - [⚠️ Error Handling & Safety](#-error-handling--safety)
 
 ---
@@ -62,7 +62,7 @@ The "brain" of this toolkit is the `options` object. Instead of writing complex 
 
 Here is how you would use these tools in different professional programming scenarios.
 
-### Scenario A: Simple Validation 🔍
+### 🔍 Scenario A: Simple Validation
 *Goal: Just check if the email follows standard formatting.*
 
 ```javascript
@@ -77,7 +77,7 @@ if (isValidEmail(email)) {
 }
 ```
 
-### Scenario B: Corporate/Internal Restriction 🏢
+### 🏢 Scenario B: Corporate/Internal Restriction
 *Goal: Only allow users from your company domain (`@company.com`).*
 
 ```javascript
@@ -94,7 +94,7 @@ console.log(isValidEmail(userEmail, companyOnlyOptions)); // true
 console.log(isValidEmail(guestEmail, companyOnlyOptions)); // false
 ```
 
-### Scenario C: Preventing "Bad" Usernames & Domains 🛡️
+### 🛡️ Scenario C: Preventing "Bad" Usernames & Domains
 *Goal: Block specific disposable email providers and restricted usernames.*
 
 ```javascript
@@ -110,7 +110,7 @@ console.log(isValidEmail("user@spam.org", securityOptions));      // false (Doma
 console.log(isValidEmail("valid.user@example.com", securityOptions)); // true
 ```
 
-### Scenario D: Extracting Emails from a Log File 📑
+### 📑 Scenario D: Extracting Emails from a Log File
 *Goal: Pull all valid emails from a messy text block.*
 
 ```javascript

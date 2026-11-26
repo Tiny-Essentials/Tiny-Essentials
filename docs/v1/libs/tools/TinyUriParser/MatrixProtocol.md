@@ -11,9 +11,9 @@ This module is a specialized tool designed to identify, parse, and reconstruct v
 - [🌟 Overview](#-overview)
 - [🛠 Supported URI Formats](#-supported-uri-formats)
 - [💎 Core Data Structures](#-core-data-structures)
-  - [1. `MXCData` 📦](#1-mxcdata-)
-  - [2. `MatrixSchemeData` 🗺️](#2-matrixschemedata-)
-  - [3. `MatrixWebData` 🌐](#3-matrixwebdata-)
+  - [📦 1. `MXCData`](#-1-mxcdata)
+  - [🗺️ 2. `MatrixSchemeData`](#-2-matrixschemedata)
+  - [🌐 3. `MatrixWebData`](#-3-matrixwebdata)
 
 ---
 
@@ -42,13 +42,13 @@ The module identifies and handles four distinct types of Matrix identifiers:
 
 When you parse a URI, the module returns a specific object structure. Understanding these "shapes" is crucial for your logic.
 
-### 1. `MXCData` 📦
+### 📦 1. `MXCData`
 Used when parsing `mxc://` links.
 - `dataType`: Always `'mxc'`.
 - `server`: The domain (e.g., `'matrix.org'`).
 - `dataId`: The unique content identifier.
 
-### 2. `MatrixSchemeData` 🗺️
+### 🗺️ 2. `MatrixSchemeData`
 The most complex and versatile structure.
 - `dataType`: Always `'matrix_scheme'`.
 - `type`: The resource type (`'roomId'`, `'room'`, `'user'`, or `'event'`).
@@ -58,7 +58,7 @@ The most complex and versatile structure.
 - `params`: A dictionary of query parameters (e.g., `{ via: 'server.com' }`).
 - `eventId`: Present only if the type is `'event'`.
 
-### 3. `MatrixWebData` 🌐
+### 🌐 3. `MatrixWebData`
 Used when parsing full browser URLs.
 - `dataType`: Always `'matrix_web_url'`.
 - `decodedFragment`: The part of the URL after the `#`.

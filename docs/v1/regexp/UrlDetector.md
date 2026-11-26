@@ -63,7 +63,7 @@ When using any function in this module, you can pass an optional `options` objec
 
 ## 🛠 Practical Examples
 
-### 1. Simple Validation ✅
+### ✅ 1. Simple Validation
 Checking if a standard URL is valid.
 
 ```javascript
@@ -75,7 +75,7 @@ const isValid = isValidUrl(url);
 console.log(isValid); // true
 ```
 
-### 2. Strict Subdomain Requirement 🔒
+### 🔒 2. Strict Subdomain Requirement
 Ensuring a URL *must* start with `api.`.
 
 ```javascript
@@ -90,7 +90,7 @@ console.log(isValidUrl("https://api.example.com", options)); // true
 console.log(isValidUrl("https://example.com", options));     // false
 ```
 
-### 3. Extracting Links from Text 📥
+### 📥 3. Extracting Links from Text
 Finding all links inside a paragraph.
 
 ```javascript

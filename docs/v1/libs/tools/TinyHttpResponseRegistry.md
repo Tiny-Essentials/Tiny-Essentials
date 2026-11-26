@@ -13,9 +13,9 @@ A robust, immutable, and internationalized registry for managing HTTP status cod
   - [`has(id)`](#hasid)
   - [`getAll()`](#getall)
 - [💡 Practical Examples](#-practical-examples)
-  - [1. Basic Usage 🛠️](#1-basic-usage-)
-  - [2. Adding Custom Responses & Localization 🌍](#2-adding-custom-responses--localization-)
-  - [3. Error Handling ⚠️](#3-error-handling-)
+  - [🛠️ 1. Basic Usage](#-1-basic-usage)
+  - [🌍 2. Adding Custom Responses & Localization](#-2-adding-custom-responses--localization)
+  - [⚠️ 3. Error Handling](#-3-error-handling)
 - [🛠️ Daily Workflow Integration](#-daily-workflow-integration)
 
 ---
@@ -76,7 +76,7 @@ Returns every registered response in the current instance.
 
 ## 💡 Practical Examples
 
-### 1. Basic Usage 🛠️
+### 🛠️ 1. Basic Usage
 Standard setup and retrieval of a default code.
 
 ```javascript
@@ -92,7 +92,7 @@ const error404 = registry.get(404);
 console.log(error404.name); // "Not Found"
 ```
 
-### 2. Adding Custom Responses & Localization 🌍
+### 🌍 2. Adding Custom Responses & Localization
 How to add your own codes and support multiple languages.
 
 ```javascript
@@ -117,7 +117,7 @@ console.log(registry.get(501, {}, 'en').name); // "Not Implemented"
 console.log(registry.get(501, {}, 'pt').name); // "Não Implementado"
 ```
 
-### 3. Error Handling ⚠️
+### ⚠️ 3. Error Handling
 The registry is designed to fail loudly if you make a mistake, which is better than failing silently in production.
 
 ```javascript

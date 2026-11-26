@@ -10,10 +10,10 @@ Welcome to **TinyClassManager**! This is a lightweight, linear mixin manager des
 - [📐 API Overview](#-api-overview)
   - [`TinyClassManager<T>`](#tinyclassmanagert)
 - [📖 Detailed Usage Guide & Step-by-Step Example](#-detailed-usage-guide--step-by-step-example)
-  - [Step 1: Establish the Core Base 🧱](#step-1-establish-the-core-base-)
-  - [Step 2: Create an Independent Module 🏷️](#step-2-create-an-independent-module-)
-  - [Step 3: Create a Dependent Module 🛡️](#step-3-create-a-dependent-module-)
-  - [Step 4: Chain and Build Your Custom Class 🏗️](#step-4-chain-and-build-your-custom-class-)
+  - [🧱 Step 1: Establish the Core Base](#-step-1-establish-the-core-base)
+  - [🏷️ Step 2: Create an Independent Module](#-step-2-create-an-independent-module)
+  - [🛡️ Step 3: Create a Dependent Module](#-step-3-create-a-dependent-module)
+  - [🏗️ Step 4: Chain and Build Your Custom Class](#-step-4-chain-and-build-your-custom-class)
 - [💡 How to Mimic This Pattern](#-how-to-mimic-this-pattern)
 
 ---
@@ -51,7 +51,7 @@ Welcome to **TinyClassManager**! This is a lightweight, linear mixin manager des
 
 Let's break down exactly how to design, extend, and instantiate a class structure using `TinyClassManager`. You can mirror this step-by-step blueprint for your own features!
 
-### Step 1: Establish the Core Base 🧱
+### 🧱 Step 1: Establish the Core Base
 
 Every structure needs a solid foundation. The core class is the absolute minimum requirement and contains properties that every subsequent plugin might rely on.
 
@@ -71,7 +71,7 @@ class EntityCore {
 
 ```
 
-### Step 2: Create an Independent Module 🏷️
+### 🏷️ Step 2: Create an Independent Module
 
 Now, let's create our first module. A plugin is a function that receives the base class and returns an extended version of it. We use static properties (`_tinyDepName` and `_tinyDeps`) to tell the manager what this plugin is and what it needs. This module doesn't depend on anything else, so its dependencies array is empty.
 
@@ -107,7 +107,7 @@ const applyHealth = (Base) =>
 
 ```
 
-### Step 3: Create a Dependent Module 🛡️
+### 🛡️ Step 3: Create a Dependent Module
 
 Here is where the magic happens! The `Armor` module strictly requires the `Health` module to be loaded first because it relies on overriding the `takeDamage` logic. We enforce this relationship inside the `static _tinyDeps` array.
 
@@ -145,7 +145,7 @@ const applyArmor = (Base) =>
 
 ```
 
-### Step 4: Chain and Build Your Custom Class 🏗️
+### 🏗️ Step 4: Chain and Build Your Custom Class
 
 Finally, use the manager to safely piece your modules together. Remember that `TinyClassManager` uses an explosive state pattern: once you run `.insert()` or `.build()`, that specific instance is closed, forcing you to use the new returned chain instance.
 

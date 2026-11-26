@@ -18,11 +18,11 @@
   - [🔍 Timeline & Querying](#-timeline--querying)
   - [💾 Persistence & Lifecycle](#-persistence--lifecycle)
 - [📊 Data Models (Summary)](#-data-models-summary)
-  - [`RadioEvent` 📡](#radioevent-)
-  - [`ScheduledTask` 📝](#scheduledtask-)
-  - [`CustomPosition` 📍](#customposition-)
-  - [`ScheduledMovePayload` 🚚](#scheduledmovepayload-)
-  - [`CycleBlock` 🔄](#cycleblock-)
+  - [📡 `RadioEvent`](#-radioevent)
+  - [📝 `ScheduledTask`](#-scheduledtask)
+  - [📍 `CustomPosition`](#-customposition)
+  - [🚚 `ScheduledMovePayload`](#-scheduledmovepayload)
+  - [🔄 `CycleBlock`](#-cycleblock)
 
 ---
 
@@ -177,7 +177,7 @@ Performs a complete cleanup. It wipes all lists, clears the cache, removes all l
 
 ## 📊 Data Models (Summary)
 
-### `RadioEvent` 📡
+### 📡 `RadioEvent`
 The standardized object returned when querying the timeline.
 * `id`, `title`, `artist`, `url`, `duration`
 * `absoluteStart`, `absoluteEnd`
@@ -185,25 +185,25 @@ The standardized object returned when querying the timeline.
 * `progress` (0 to 1)
 * `isCustom` (boolean)
 
-### `ScheduledTask` 📝
+### 📝 `ScheduledTask`
 An instruction to change the radio state.
 * `timestamp`: Execution time.
 * `action`: `'add' | 'remove' | 'move'`.
 * `type`: `'music' | 'voice'`.
 * `payload`: Action-specific data (`MediaContent`, `string`, or `ScheduledMovePayload`).
 
-### `CustomPosition` 📍
+### 📍 `CustomPosition`
 Represents content injected at a specific absolute timestamp.
 * `content`: The `MediaContent` object.
 * `intendedTimestamp`: The target absolute timestamp.
 * `originalTimestamp`: The timestamp preserved for intelligent repositioning.
 
-### `ScheduledMovePayload` 🚚
+### 🚚 `ScheduledMovePayload`
 Data required to relocate an existing item within a playlist.
 * `id`: Content ID to move.
 * `newIndex`: The target index in the playlist.
 
-### `CycleBlock` 🔄
+### 🔄 `CycleBlock`
 A structural block representing a single full iteration of the radio sequence.
 * `items`: Items belonging to this cycle.
 * `duration`: Total duration of the cycle block in ms.

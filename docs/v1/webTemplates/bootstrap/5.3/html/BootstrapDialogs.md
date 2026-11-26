@@ -84,14 +84,14 @@ BootstrapDialogs.defaultConfig = {
 
 ### 2. Data Types (JSDoc Reference)
 
-#### `CustomElementConfig` 🎨
+#### 🎨 `CustomElementConfig`
 Used to customize specific parts of the modal.
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `className` | `string \| string[]` | CSS classes to add to the element. |
 | `styles` | `Object<string, string>` | CSS properties and values (e.g., `{ 'color': 'red' }`). |
 
-#### `ModalOptions` 📋
+#### 📋 `ModalOptions`
 Configuration options for customization of the modal structure.
 | Property | Type | Default | Description |
 | :--- | :--- | :--- | :--- |

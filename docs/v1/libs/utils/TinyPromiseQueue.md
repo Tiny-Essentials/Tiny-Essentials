@@ -1,4 +1,4 @@
-# `TinyPromiseQueue` Documentation 🎉
+# 🎉 `TinyPromiseQueue` Documentation
 
 `TinyPromiseQueue` is a queue system designed to manage and execute asynchronous tasks in a sequential, one-at-a-time order. Tasks are executed in the order they are added to the queue, with support for optional delays ⏳, task cancellation ❌, and task reordering 🔄.
 
@@ -6,22 +6,22 @@
 
 ## 📑 Table of Contents
 
-- [Properties 🏠](#properties-)
-- [Methods 🛠️](#methods-)
-  - [`isRunning()` 🏃‍♀️](#isrunning-)
-  - [`getIndexById(id)` 🔍](#getindexbyidid-)
-  - [`getQueuedIds()` 📋](#getqueuedids-)
-  - [`reorderQueue(fromIndex, toIndex)` 🔄](#reorderqueuefromindex-toindex-)
-  - [`enqueue(task, delay, id)` ⏳](#enqueuetask-delay-id-)
-  - [`enqueuePoint(task, id)` 🪢](#enqueuepointtask-id-)
-  - [`cancelTask(id)` ❌](#canceltaskid-)
-- [Usage Example 💻](#usage-example-)
-  - [Explanation 🧩:](#explanation-)
-- [Conclusion 🎯](#conclusion-)
+- [🏠 Properties](#-properties)
+- [🛠️ Methods](#-methods)
+  - [🏃‍♀️ `isRunning()`](#-isrunning)
+  - [🔍 `getIndexById(id)`](#-getindexbyidid)
+  - [📋 `getQueuedIds()`](#-getqueuedids)
+  - [🔄 `reorderQueue(fromIndex, toIndex)`](#-reorderqueuefromindex-toindex)
+  - [⏳ `enqueue(task, delay, id)`](#-enqueuetask-delay-id)
+  - [🪢 `enqueuePoint(task, id)`](#-enqueuepointtask-id)
+  - [❌ `cancelTask(id)`](#-canceltaskid)
+- [💻 Usage Example](#-usage-example)
+  - [🧩 Explanation](#-explanation)
+- [🎯 Conclusion](#-conclusion)
 
 ---
 
-## Properties 🏠
+## 🏠 Properties
 
 - **`#queue`**: The internal queue array that holds all the tasks.
 - **`#running`**: A flag indicating whether the queue is currently processing a task.
@@ -30,9 +30,9 @@
 
 ---
 
-## Methods 🛠️
+## 🛠️ Methods
 
-### `isRunning()` 🏃‍♀️
+### 🏃‍♀️ `isRunning()`
 
 Returns whether the queue is currently processing a task.
 
@@ -41,7 +41,7 @@ Returns whether the queue is currently processing a task.
 
 ---
 
-### `getIndexById(id)` 🔍
+### 🔍 `getIndexById(id)`
 
 Returns the index of a task in the queue by its ID.
 
@@ -53,7 +53,7 @@ Returns the index of a task in the queue by its ID.
 
 ---
 
-### `getQueuedIds()` 📋
+### 📋 `getQueuedIds()`
 
 Returns a list of IDs for all tasks currently in the queue.
 
@@ -62,7 +62,7 @@ Returns a list of IDs for all tasks currently in the queue.
 
 ---
 
-### `reorderQueue(fromIndex, toIndex)` 🔄
+### 🔄 `reorderQueue(fromIndex, toIndex)`
 
 Reorders a task in the queue from one index to another.
 
@@ -75,7 +75,7 @@ Reorders a task in the queue from one index to another.
 
 ---
 
-### `enqueue(task, delay, id)` ⏳
+### ⏳ `enqueue(task, delay, id)`
 
 Adds a new async task to the queue and ensures it runs in order after previous tasks. Optionally, a delay can be added before the task is executed.
 
@@ -92,7 +92,7 @@ If the task is canceled before execution, it will be rejected with the message:
 
 ---
 
-### `enqueuePoint(task, id)` 🪢
+### 🪢 `enqueuePoint(task, id)`
 
 Adds an async task to a parallel group in the queue. All tasks added with `enqueuePoint` before the next `enqueue` will be executed **simultaneously**, but only after all previous tasks in the queue have completed.
 
@@ -110,7 +110,7 @@ If a task is canceled before execution, it will be rejected with the message:
 
 ---
 
-### `cancelTask(id)` ❌
+### ❌ `cancelTask(id)`
 
 Cancels a scheduled delay and removes the task from the queue. Adds the ID to a blacklist so the task is skipped if already being processed.
 
@@ -122,7 +122,7 @@ Cancels a scheduled delay and removes the task from the queue. Adds the ID to a 
 
 ---
 
-## Usage Example 💻
+## 💻 Usage Example
 
 ```js
 import { TinyPromiseQueue } from 'tiny-essentials/libs/utils/TinyPromiseQueue';
@@ -225,7 +225,7 @@ await new Promise((resolve) => {
 });
 ```
 
-### Explanation 🧩:
+### 🧩 Explanation
 1. **Task Creation**: Tasks are created with a name and an optional duration (in ms). The task logs its start and finish times 🕰️.
 2. **Task Execution**: Tasks are enqueued one at a time, ensuring they run in the order they were added 🔁.
 3. **Cancellation**: After 50ms, taskB is canceled, demonstrating the ability to remove a task from the queue ❌.
@@ -233,6 +233,6 @@ await new Promise((resolve) => {
 
 ---
 
-## Conclusion 🎯
+## 🎯 Conclusion
 
 `TinyPromiseQueue` provides a simple and effective way to manage a sequence of asynchronous tasks. With its support for delays ⏳, task cancellation ❌, and reordering 🔄, it allows for efficient control over task execution in JavaScript.

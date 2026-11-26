@@ -11,8 +11,8 @@ Welcome to the official documentation for `TinyHtmlTagRegexBuilder`. This utilit
   - [🎯 Mode 1: The "Precision Sniper" (Specific Attributes)](#-mode-1-the-precision-sniper-specific-attributes)
   - [📦 Mode 2: The "Grab Everything" (All Attributes)](#-mode-2-the-grab-everything-all-attributes)
 - [🧪 Practical Examples](#-practical-examples)
-  - [Example 1: Extracting Links (`<a>` tags) 🔗](#example-1-extracting-links-a-tags-)
-  - [Example 2: Extracting All Attributes and Multi-line Content 📄](#example-2-extracting-all-attributes-and-multi-line-content-)
+  - [🔗 Example 1: Extracting Links (`<a>` tags)](#-example-1-extracting-links-a-tags)
+  - [📄 Example 2: Extracting All Attributes and Multi-line Content](#-example-2-extracting-all-attributes-and-multi-line-content)
 - [📖 API Reference](#-api-reference)
   - [`constructor(config)`](#constructorconfig)
   - [`toRegExp(flag = 'g')`](#toregexpflag--g)
@@ -76,7 +76,7 @@ This is the most important part of the tool. You must choose one of two "modes" 
 
 Here are two real-world scenarios to help you implement this in your projects.
 
-### Example 1: Extracting Links (`<a>` tags) 🔗
+### 🔗 Example 1: Extracting Links (`<a>` tags)
 In this example, we only care about the `href` attribute.
 
 ```javascript
@@ -99,7 +99,7 @@ Output:
 */
 ```
 
-### Example 2: Extracting All Attributes and Multi-line Content 📄
+### 📄 Example 2: Extracting All Attributes and Multi-line Content
 In this example, we want everything inside a `div`, including newlines, and we want all attributes.
 
 ```javascript

@@ -8,9 +8,9 @@ It allows tracking of values that decrease over time, with configurable decay fa
 ## 📑 Table of Contents
 
 - [📦 Types](#-types)
-  - [`TickResult` 🔄](#tickresult-)
-  - [`BarFactor` ⚡](#barfactor-)
-  - [`SerializedData` 💾](#serializeddata-)
+  - [🔄 `TickResult`](#-tickresult)
+  - [⚡ `BarFactor`](#-barfactor)
+  - [💾 `SerializedData`](#-serializeddata)
 - [🏗️ Class: `TinyNeedBar`](#-class-tinyneedbar)
   - [Overview](#overview)
   - [Constructor](#constructor)
@@ -24,7 +24,7 @@ It allows tracking of values that decrease over time, with configurable decay fa
 
 ## 📦 Types
 
-### `TickResult` 🔄
+### 🔄 `TickResult`
 
 Represents the result of one tick of decay.
 
@@ -39,7 +39,7 @@ Represents the result of one tick of decay.
 
 ---
 
-### `BarFactor` ⚡
+### ⚡ `BarFactor`
 
 Represents a decay factor applied to the need bar.
 
@@ -50,7 +50,7 @@ Represents a decay factor applied to the need bar.
 
 ---
 
-### `SerializedData` 💾
+### 💾 `SerializedData`
 
 Represents the serialized state of a `TinyNeedBar` instance.
 Can be used to export/import or clone bars.
@@ -118,7 +118,7 @@ const bar = new TinyNeedBar(100, 2, 1.5);
 
 ### Methods
 
-#### `getFactor(key: string): BarFactor` 🔑
+#### 🔑 `getFactor(key: string): BarFactor`
 
 Get a specific factor by key.
 Throws an error if the factor does not exist.
@@ -129,7 +129,7 @@ bar.getFactor("main");
 
 ---
 
-#### `hasFactor(key: string): boolean` ✅
+#### ✅ `hasFactor(key: string): boolean`
 
 Check if a factor exists by key.
 
@@ -139,7 +139,7 @@ bar.hasFactor("main"); // true or false
 
 ---
 
-#### `setFactor(key: string, amount: number, multiplier = 1)` ⚡
+#### ⚡ `setFactor(key: string, amount: number, multiplier = 1)`
 
 Add or update a decay factor.
 
@@ -149,7 +149,7 @@ bar.setFactor("hunger", 2, 1.2);
 
 ---
 
-#### `removeFactor(key: string) : boolean` ❌
+#### ❌ `removeFactor(key: string) : boolean`
 
 Remove a factor by key.
 
@@ -159,7 +159,7 @@ bar.removeFactor("hunger");
 
 ---
 
-#### `tick(): TickResult` ⏱️
+#### ⏱️ `tick(): TickResult`
 
 Execute one tick of decay using all active factors.
 
@@ -169,7 +169,7 @@ console.log(result.remainingValue);
 ```
 ---
 
-#### `tickWithTempFactor(tempFactor): TickResult` ⏱️
+#### ⏱️ `tickWithTempFactor(tempFactor): TickResult`
 
 Executes one tick using a **temporary factor** applied only for this tick, in addition to the regular factors.
 
@@ -177,7 +177,7 @@ Executes one tick using a **temporary factor** applied only for this tick, in ad
 
 ---
 
-#### `tickSingleFactor(factor): TickResult` ⏱️
+#### ⏱️ `tickSingleFactor(factor): TickResult`
 
 Executes one tick using **only the specified factor**, ignoring all other factors.
 
@@ -185,7 +185,7 @@ Executes one tick using **only the specified factor**, ignoring all other factor
 
 ---
 
-#### `toJSON(): SerializedData` 💾
+#### 💾 `toJSON(): SerializedData`
 
 Serialize the current state to a JSON-compatible object.
 
@@ -195,7 +195,7 @@ const data = bar.toJSON();
 
 ---
 
-#### `static fromJSON(data: SerializedData): TinyNeedBar` 📤
+#### 📤 `static fromJSON(data: SerializedData): TinyNeedBar`
 
 Restore a `TinyNeedBar` from serialized data.
 
@@ -205,7 +205,7 @@ const newBar = TinyNeedBar.fromJSON(data);
 
 ---
 
-#### `clone(): TinyNeedBar` 🧬
+#### 🧬 `clone(): TinyNeedBar`
 
 Deep clone the bar.
 
@@ -215,7 +215,7 @@ const cloned = bar.clone();
 
 ---
 
-#### `clearFactors()` 🧹
+#### 🧹 `clearFactors()`
 
 Remove all factors.
 

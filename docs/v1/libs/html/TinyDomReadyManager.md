@@ -8,15 +8,15 @@ Supports **prioritized callbacks**, **filters**, and now even **DOM-only fast ex
 ## 📑 Table of Contents
 
 - [🧠 Type Definitions](#-type-definitions)
-  - [`Fn` 🛠️](#fn-)
-  - [`FnFilter` 🔍](#fnfilter-)
-  - [`Handler` 🧩](#handler-)
+  - [🛠️ `Fn`](#-fn)
+  - [🔍 `FnFilter`](#-fnfilter)
+  - [🧩 `Handler`](#-handler)
 - [🚀 Class: `TinyDomReadyManager`](#-class-tinydomreadymanager)
-  - [`init()` 🕓](#init-)
-  - [`addPromise(promise)` ⏳](#addpromisepromise-)
-  - [`onReady(fn, options?)` ✅](#onreadyfn-options-)
-  - [`isReady()` 📡](#isready-)
-  - [`isDomReady()` 🧱](#isdomready-)
+  - [🕓 `init()`](#-init)
+  - [⏳ `addPromise(promise)`](#-addpromisepromise)
+  - [✅ `onReady(fn, options?)`](#-onreadyfn-options)
+  - [📡 `isReady()`](#-isready)
+  - [🧱 `isDomReady()`](#-isdomready)
 - [🧪 Readiness Phases](#-readiness-phases)
 - [💡 Example Usage](#-example-usage)
   - [Basic Usage](#basic-usage)
@@ -29,7 +29,7 @@ Supports **prioritized callbacks**, **filters**, and now even **DOM-only fast ex
 
 ## 🧠 Type Definitions
 
-### `Fn` 🛠️
+### 🛠️ `Fn`
 
 ```ts
 type Fn = () => void;
@@ -39,7 +39,7 @@ A basic function to be executed once the system is ready.
 
 ---
 
-### `FnFilter` 🔍
+### 🔍 `FnFilter`
 
 ```ts
 type FnFilter = () => boolean;
@@ -50,7 +50,7 @@ Returns `true` to allow execution, or `false` to skip.
 
 ---
 
-### `Handler` 🧩
+### 🧩 `Handler`
 
 ```ts
 interface Handler {
@@ -68,7 +68,7 @@ Describes a registered handler and how it should be treated during readiness flo
 
 ## 🚀 Class: `TinyDomReadyManager`
 
-### `init()` 🕓
+### 🕓 `init()`
 
 ```ts
 init(): void
@@ -81,7 +81,7 @@ If the DOM is already ready, it triggers immediately.
 
 ---
 
-### `addPromise(promise)` ⏳
+### ⏳ `addPromise(promise)`
 
 ```ts
 addPromise(promise: Promise<any>): void
@@ -94,7 +94,7 @@ This allows tasks like `fetch()` or image preloading to block late-stage handler
 
 ---
 
-### `onReady(fn, options?)` ✅
+### ✅ `onReady(fn, options?)`
 
 ```ts
 onReady(fn: Fn, options?: {
@@ -118,7 +118,7 @@ Registers a function to run at the right moment:
 
 ---
 
-### `isReady()` 📡
+### 📡 `isReady()`
 
 ```ts
 isReady(): boolean
@@ -128,7 +128,7 @@ Returns `true` only after both the DOM is ready **and** all added promises have 
 
 ---
 
-### `isDomReady()` 🧱
+### 🧱 `isDomReady()`
 
 ```ts
 isDomReady(): boolean

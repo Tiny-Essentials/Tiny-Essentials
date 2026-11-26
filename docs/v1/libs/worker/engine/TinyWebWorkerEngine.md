@@ -8,8 +8,8 @@ Welcome to the official documentation for the **TinyWebWorkerEngine**. This engi
 
 - [📖 Overview](#-overview)
 - [🛠 Core Concepts](#-core-concepts)
-  - [1. Unidirectional Messages (Fire and Forget) 📢](#1-unidirectional-messages-fire-and-forget-)
-  - [2. The API Pattern (Request-Response) 🔄](#2-the-api-pattern-request-response-)
+  - [📢 1. Unidirectional Messages (Fire and Forget)](#-1-unidirectional-messages-fire-and-forget)
+  - [🔄 2. The API Pattern (Request-Response)](#-2-the-api-pattern-request-response)
 - [🚀 API Reference](#-api-reference)
   - [🛠 Class: `TinyWebWorkerEngine`](#-class-tinywebworkerengine)
 - [📝 Practical Examples](#-practical-examples)
@@ -39,12 +39,12 @@ In a standard Web Worker environment, `postMessage` is "fire and forget." This m
 
 To use this engine effectively, you must understand the two primary communication patterns it supports.
 
-### 1. Unidirectional Messages (Fire and Forget) 📢
+### 📢 1. Unidirectional Messages (Fire and Forget)
 This is used when you want to send information without expecting a reply.
 *   **From Worker to Main:** Use `engine.emit('type', data)`.
 *   **From Main to Worker:** Use `engine.addMessageListener('type', callback)`.
 
-### 2. The API Pattern (Request-Response) 🔄
+### 🔄 2. The API Pattern (Request-Response)
 This is used when the Worker needs to ask the Main Thread for something (like a database value or a UI state) and **must wait** for the answer.
 *   **The Mechanism:** The engine generates a unique `correlationId` (using `crypto.randomUUID()`). This ID travels with the request and returns with the response, allowing the engine to resolve the correct `Promise`.
 *   **Timeout Protection:** Every API request has a default timeout (10,000ms) to prevent the Worker from waiting indefinitely if the Main Thread fails to respond.

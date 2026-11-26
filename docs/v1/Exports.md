@@ -14,11 +14,11 @@ You can `import` (ESM) or `require` (CommonJS) each module individually.
 - [📖 JSDoc](#-jsdoc)
 - [📚 Libs Modules](#-libs-modules)
 - [🎨 Web Templates](#-web-templates)
-  - [Bootstrap 5.3 🅱️](#bootstrap-53-)
-  - [Vite 7.3 ⚡](#vite-73-)
-  - [Media Validator 🎞️](#media-validator-)
-  - [Multiformats 14.0 🧬](#multiformats-140-)
-  - [ag-psd 31.0 🖼️](#ag-psd-310-)
+  - [🅱️ Bootstrap 5.3](#-bootstrap-53)
+  - [⚡ Vite 7.3](#-vite-73)
+  - [🎞️ Media Validator](#-media-validator)
+  - [🧬 Multiformats 14.0](#-multiformats-140)
+  - [🖼️ ag-psd 31.0](#-ag-psd-310)
 - [✅ Import Examples](#-import-examples)
 
 ---
@@ -346,7 +346,7 @@ Each library can be imported separately:
 
 ## 🎨 Web Templates
 
-### Bootstrap 5.3 🅱️
+### 🅱️ Bootstrap 5.3
 
 - `webTemplates/bootstrap/5.3/html/BootstrapDialogs`
 - `webTemplates/bootstrap/5.3/scss/*` (wildcard)
@@ -364,21 +364,21 @@ Each library can be imported separately:
 - `webTemplates/bootstrap/5.3/scss/input/placeholder-colors-fix`
 - `webTemplates/bootstrap/5.3/scss/spacing/spacing-plus`
 
-### Vite 7.3 ⚡
+### ⚡ Vite 7.3
 
 - `webTemplates/vite/7.3/plugins/TinyVitePwaPlugin`
 - `webTemplates/vite/7.3/plugins/githubUtils`
 
-### Media Validator 🎞️
+### 🎞️ Media Validator
 
 - `webTemplates/media/MediaValidator/v1/Node`
 - `webTemplates/media/MediaValidator/v1/Browser`
 
-### Multiformats 14.0 🧬
+### 🧬 Multiformats 14.0
 
 - `webTemplates/multiformats/14.0/IPFSHasher`
 
-### ag-psd 31.0 🖼️
+### 🖼️ ag-psd 31.0
 
 - `webTemplates/ag-psd/31.0/ProcessSolidFilters`
 - `webTemplates/ag-psd/31.0/ProcessSolidFilters/Template`
