@@ -6,6 +6,32 @@
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Highlights](#-highlights)
+- [🚀 Quick start](#-quick-start)
+- [⚙️ Options](#-options)
+- [🧩 Properties](#-properties)
+  - [State](#state)
+  - [Source & element](#source--element)
+  - [Network](#network)
+  - [Metrics](#metrics)
+- [🛠️ Methods](#-methods)
+  - [`load()`](#load)
+  - [`reload()`](#reload)
+  - [`abort()`](#abort)
+  - [`mount(container)`](#mountcontainer)
+  - [`destroy()`](#destroy)
+  - [`isCached(src = this.src)`](#iscachedsrc--thissrc)
+  - [`peekCache(src = this.src)`](#peekcachesrc--thissrc)
+- [📡 Events](#-events)
+- [🧬 Metadata](#-metadata)
+- [📤 Request body](#-request-body)
+- [🪞 Mirror registry](#-mirror-registry)
+- [🧩 Extending](#-extending)
+
+---
+
 ## ✨ Highlights
 
 * **Full state machine** — `idle` → `loading` → `loaded` / `error` → `destroyed`.

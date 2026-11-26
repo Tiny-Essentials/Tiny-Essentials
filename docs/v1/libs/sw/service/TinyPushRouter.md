@@ -9,13 +9,12 @@
 ## 📑 Table of Contents
 
 - [✨ Why TinyPushRouter?](#-why-tinypushrouter)
-- [📦 Installation](#-installation)
 - [🚀 Quick Start](#-quick-start)
 - [🧠 Core Concepts](#-core-concepts)
 - [📖 API Reference](#-api-reference)
 - [🍳 Day-to-Day Recipes](#-day-to-day-recipes)
 - [✅ Best Practices](#-best-practices)
-- [⚠️ Gotchas](#️-gotchas)
+- [⚠️ Gotchas](#-gotchas)
 
 ---
 

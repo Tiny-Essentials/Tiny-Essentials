@@ -4,6 +4,23 @@ Welcome to the documentation for the media content module! This module is the he
 
 ---
 
+## 📑 Table of Contents
+
+- [📦 Data Structures & Types](#-data-structures--types)
+  - [🎼 Core Metadata Types](#-core-metadata-types)
+  - [🖼️ Image & Picture Types](#-image--picture-types)
+  - [🚦 Progress & Error Types](#-progress--error-types)
+- [❌ Custom Errors](#-custom-errors)
+  - [`MediaLoadingError`](#medialoadingerror)
+- [🛠️ Utility Functions](#-utility-functions)
+  - [Factory & Validation](#factory--validation)
+  - [Data & Memory Management](#data--memory-management)
+- [🚀 Main Operations](#-main-operations)
+  - [`extractMediaId3Tags`](#extractmediaid3tags)
+  - [`parseMediaMetadata`](#parsemediametadata)
+
+---
+
 ## 📦 Data Structures & Types
 
 These definitions ensure type safety and provide a clear blueprint for how media information is structured throughout the application.

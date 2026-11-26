@@ -4,6 +4,41 @@ A lightweight notification system designed to display timed messages inside a co
 
 ---
 
+## 📑 Table of Contents
+
+- [🔧 Features](#-features)
+- [⚙️ Customization Setters](#-customization-setters)
+- [🧩 Types](#-types)
+  - [🔁 `CloseToastFunc`](#-closetoastfunc)
+  - [💬 `NotifyData`](#-notifydata)
+- [🔧 Constructor: `new TinyToastNotify(...)`](#-constructor-new-tinytoastnotify)
+  - [📝 Parameters](#-parameters)
+  - [🧠 Behavior](#-behavior)
+- [📦 Method: `getContainer()`](#-method-getcontainer)
+  - [🔁 Returns](#-returns)
+  - [⚠️ Throws](#-throws)
+- [⚙️ Position and Timing Getters & Setters](#-position-and-timing-getters--setters)
+  - [🔝 `getY()`](#-gety)
+  - [🔄 `setY(value)`](#-setyvalue)
+  - [↔️ `getX()`](#-getx)
+  - [🔀 `setX(value)`](#-setxvalue)
+  - [⏲️ `getBaseDuration()`](#-getbaseduration)
+  - [⏳ `setBaseDuration(value)`](#-setbasedurationvalue)
+  - [➕ `getExtraPerChar()`](#-getextraperchar)
+  - [✏️ `setExtraPerChar(value)`](#-setextrapercharvalue)
+  - [🌙 `getFadeOutDuration()`](#-getfadeoutduration)
+  - [🎞️ `setFadeOutDuration(value)`](#-setfadeoutdurationvalue)
+- [🚀 `show(data)`](#-showdata)
+  - [📝 Parameters](#-parameters)
+  - [🛠️ Behavior](#-behavior)
+  - [⚠️ Errors](#-errors)
+- [🔥 `destroy()`](#-destroy)
+  - [Syntax](#syntax)
+  - [Behavior](#behavior)
+- [🎨 CSS Files Location](#-css-files-location)
+
+---
+
 ## 🔧 Features
 
 * 📍 **Positioning**:

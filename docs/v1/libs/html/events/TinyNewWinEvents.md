@@ -5,6 +5,31 @@ Ideal for secure, bidirectional messaging with route-based logic.
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Features](#-features)
+- [🚀 Usage](#-usage)
+  - [In the main window:](#in-the-main-window)
+  - [In the popup window:](#in-the-popup-window)
+- [🧠 API Reference](#-api-reference)
+  - [`new TinyNewWinEvents(config?)`](#new-tinynewwineventsconfig)
+  - [`winEmit(route, payload)`](#winemitroute-payload)
+  - [`on(route, handler)`](#onroute-handler)
+  - [`off(route, handler)`](#offroute-handler)
+  - [`onClose(callback)`](#onclosecallback)
+  - [`offClose(callback)`](#offclosecallback)
+  - [`close()`](#close)
+  - [`getWin()`](#getwin)
+  - [`isConnected()`](#isconnected)
+  - [`isDestroyed()`](#isdestroyed)
+  - [`destroy()`](#destroy)
+- [📦 Internals (for advanced use)](#-internals-for-advanced-use)
+- [📄 Type Definitions](#-type-definitions)
+  - [`@callback handler`](#callback-handler)
+- [🛡️ Safety and Validation](#-safety-and-validation)
+
+---
+
 ## ✨ Features
 
 * 🔁 Bidirectional communication (`main window` ⇄ `popup`)

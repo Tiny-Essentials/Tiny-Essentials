@@ -4,6 +4,20 @@ Welcome to **TinyClassManager**! This is a lightweight, linear mixin manager des
 
 ---
 
+## 📑 Table of Contents
+
+- [🚀 Key Features](#-key-features)
+- [📐 API Overview](#-api-overview)
+  - [`TinyClassManager<T>`](#tinyclassmanagert)
+- [📖 Detailed Usage Guide & Step-by-Step Example](#-detailed-usage-guide--step-by-step-example)
+  - [Step 1: Establish the Core Base 🧱](#step-1-establish-the-core-base-)
+  - [Step 2: Create an Independent Module 🏷️](#step-2-create-an-independent-module-)
+  - [Step 3: Create a Dependent Module 🛡️](#step-3-create-a-dependent-module-)
+  - [Step 4: Chain and Build Your Custom Class 🏗️](#step-4-chain-and-build-your-custom-class-)
+- [💡 How to Mimic This Pattern](#-how-to-mimic-this-pattern)
+
+---
+
 ## 🚀 Key Features
 
 * **🔒 Immutable Chain State:** Each `.insert()` call consumes the previous manager, preventing unwanted side effects or weird mutations.

@@ -2,6 +2,21 @@
 
 Type detection, extension, and analysis made easy — simple and extensible type validation in pure JavaScript.
 
+## 📑 Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Usage](#usage)
+  - [🔍 `checkObj(obj)`](#-checkobjobj)
+  - [🏷️ `objTypeName(val)`](#-objtypenameval)
+  - [✅ `isObjType(obj, type)`](#-isobjtypeobj-type)
+  - [➕ `extendObjType(ni, [index])`](#-extendobjtypeni-index)
+  - [🔁 `reorderObjTypeOrder(newOrder)`](#-reorderobjtypeorderneworder)
+- [Supported Types](#supported-types)
+- [API Reference](#api-reference)
+
+---
+
 ## Overview
 
 `objFilter.mjs` is a utility module that provides a structured and extensible way to validate, infer, and analyze types in JavaScript. It is designed to work in both Node.js and browser environments, making it ideal for libraries that require consistent, predictable, and highly customizable type-checking logic.

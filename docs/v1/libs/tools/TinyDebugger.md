@@ -2,6 +2,38 @@
 
 `TinyDebugger` is a lightweight, event-driven debugging utility designed to wrap standard `console` methods. It provides enhanced features such as custom prefixes, color support, and the ability to emit events whenever a log occurs, making it perfect for complex applications where you might want to redirect logs to an external service or a UI component.
 
+## 📑 Table of Contents
+
+- [🚀 Quick Start](#-quick-start)
+- [⚙️ Configuration](#-configuration)
+- [✨ Key Features](#-key-features)
+  - [🎨 Custom Colors](#-custom-colors)
+  - [🏷️ Custom Prefixes](#-custom-prefixes)
+  - [📡 Event Emission](#-event-emission)
+- [🧩 Instance Properties](#-instance-properties)
+- [📖 API Reference](#-api-reference)
+  - [`log(logType, message, ...args)`](#loglogtype-message-args)
+  - [`logLabel(logType, label)`](#loglabellogtype-label)
+  - [`logTimeLabel(label, ...args)`](#logtimelabellabel-args)
+  - [`logAssert(condition, ...args)`](#logassertcondition-args)
+  - [`logDir(item, options)`](#logdiritem-options)
+  - [`logTable(tabularData, properties)`](#logtabletabulardata-properties)
+  - [`logClear()`](#logclear)
+  - [`logGroupEnd()`](#loggroupend)
+- [🛠️ Advanced Customization](#-advanced-customization)
+  - [Default Colors](#default-colors)
+  - [Default Prefixes](#default-prefixes)
+  - [Example: Adding a Custom Color](#example-adding-a-custom-color)
+- [🎨 Color Convention](#-color-convention)
+  - [How to read it](#how-to-read-it)
+  - [Example](#example)
+- [📡 Events](#-events)
+- [🖥️ Console Facade](#-console-facade)
+  - [Supported methods](#supported-methods)
+- [⚠️ Error Handling](#-error-handling)
+
+---
+
 ## 🚀 Quick Start
 
 To use `TinyDebugger`, import it into your project and initialize it with a configuration object.

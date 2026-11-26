@@ -1,5 +1,41 @@
 # TinyI18 Documentation 📚✨
 
+## 📑 Table of Contents
+
+- [Class: `TinyI18` 🏷️](#class-tinyi18-)
+  - [Static Methods ⚡](#static-methods-)
+  - [Properties 🛠️](#properties-)
+- [Internal Utilities & Resolution 🔧](#internal-utilities--resolution-)
+  - [`#deepClone(value)` 🌀](#deepclonevalue-)
+  - [`#resolveOrder(forceLocale)` 🔄](#resolveorderforcelocale-)
+  - [`#resolveExact(order, key)` 🎯](#resolveexactorder-key-)
+  - [`#resolveByPattern(order, key)` 🔍](#resolvebypatternorder-key-)
+  - [`#materialize(value, params)` 🏗️](#materializevalue-params-)
+  - [`#interpolate(template, params)` ✏️](#interpolatetemplate-params-)
+  - [`#dotGet(obj, path)` 📌](#dotgetobj-path-)
+  - [`#helpersReadonly()` 🛡️](#helpersreadonly-)
+- [Internal Locale Ingestion 🌐](#internal-locale-ingestion-)
+  - [`#ingestLocale(locale, raw)` 📥](#ingestlocalelocale-raw-)
+  - [`#unloadLocale(locale)` ❌](#unloadlocalelocale-)
+- [File Mode Loading 📂](#file-mode-loading-)
+  - [`#loadLocaleFromFile(locale)` 📄](#loadlocalefromfilelocale-)
+  - [`#safeRegExp(src)` 🧵](#saferegexpsrc-)
+  - [`#coerceFileValue(v)` ⚙️](#coercefilevaluev-)
+- [Constructor & External API 🏗️](#constructor--external-api-)
+  - [`constructor(options)` ⚙️](#constructoroptions-)
+  - [`clearRegexCache()` 🧹](#clearregexcache-)
+  - [`registerHelper(name, fn)` 🛠️](#registerhelpername-fn-)
+  - [`unregisterHelper(name)` ❌](#unregisterhelpername-)
+  - [`loadLocaleLocal(locale, data)` 📦](#loadlocalelocallocale-data-)
+  - [`setLocale(locale)` 🌐](#setlocalelocale-)
+  - [`t(key, params, options)` 🎯](#tkey-params-options-)
+  - [`p(key, options)` 🔍](#pkey-options-)
+  - [`resetToDefaultOnly()` 🏠](#resettodefaultonly-)
+  - [`getStatsForLocale(locale)` 📊](#getstatsforlocalelocale-)
+  - [`destroy()` 🗑️](#destroy-)
+
+---
+
 ## Class: `TinyI18` 🏷️
 
 Professional and flexible i18n manager with dual mode (local/file), regex-based keys, and function-based entries for advanced rendering.

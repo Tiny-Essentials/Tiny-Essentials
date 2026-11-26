@@ -4,6 +4,62 @@ Tiny wrapper for `localStorage` with full support for complex structures like `M
 
 ---
 
+## 📑 Table of Contents
+
+- [🚀 Quick Start](#-quick-start)
+- [🧠 Features](#-features)
+- [🏁 `constructor(dbName?: string)`](#-constructordbname-string)
+  - [🔧 Parameters](#-parameters)
+  - [📡 Behavior](#-behavior)
+- [🔁 `updateStorageVersion(version: number, onUpgrade: (oldVersion: number, newVersion: number) => void)`](#-updatestorageversionversion-number-onupgrade-oldversion-number-newversion-number--void)
+  - [🔧 Parameters](#-parameters)
+  - [⚠️ Throws](#-throws)
+- [🔑 `getDbKey(): string | null`](#-getdbkey-string--null)
+  - [🔙 Returns](#-returns)
+- [🧮 `getVersion(): number`](#-getversion-number)
+  - [🔙 Returns](#-returns)
+- [📦 Storage Methods](#-storage-methods)
+  - [`setJson(key, data)`](#setjsonkey-data)
+  - [`getJson(key, fallback?)`](#getjsonkey-fallback)
+  - [`setItem(key, rawString)`](#setitemkey-rawstring)
+  - [`getItem(key)`](#getitemkey)
+  - [`setString(key, string)`](#setstringkey-string)
+  - [`getString(key)`](#getstringkey)
+  - [`setNumber(key, number)`](#setnumberkey-number)
+  - [`getNumber(key)`](#getnumberkey)
+  - [`setBool(key, boolean)`](#setboolkey-boolean)
+  - [`getBool(key)`](#getboolkey)
+  - [`setDate(key, date)`](#setdatekey-date)
+  - [`getDate(key)`](#getdatekey)
+  - [`setRegExp(key, pattern)`](#setregexpkey-pattern)
+  - [`getRegExp(key)`](#getregexpkey)
+  - [`setBigInt(key, value)`](#setbigintkey-value)
+  - [`getBigInt(key)`](#getbigintkey)
+  - [`setSymbol(key, value)`](#setsymbolkey-value)
+  - [`getSymbol(key)`](#getsymbolkey)
+  - [`getValue(key)`](#getvaluekey)
+- [❌ Deletion Methods](#-deletion-methods)
+  - [`removeItem(key)`](#removeitemkey)
+  - [`clearLocalStorage()`](#clearlocalstorage)
+- [🌐 Storage Configuration](#-storage-configuration)
+  - [`setLocalStorage(storage)`](#setlocalstoragestorage)
+  - [`localStorageExists()`](#localstorageexists)
+- [🧩 Custom Type Registration](#-custom-type-registration)
+  - [`registerJsonType(type, encodeFn, decodeFn, freezeType?)`](#registerjsontypetype-encodefn-decodefn-freezetype)
+  - [`deleteJsonType(type)`](#deletejsontypetype)
+  - [`hasJsonType(type)`](#hasjsontypetype)
+- [🔥 Events](#-events)
+  - [Built-in Events](#built-in-events)
+- [🧹 Destroying](#-destroying)
+  - [`destroy()`](#destroy)
+- [🧪 Type Definition](#-type-definition)
+- [🔐 Internal Helpers](#-internal-helpers)
+  - [`encodeSpecialJson(value)`](#encodespecialjsonvalue)
+  - [`decodeSpecialJson(value)`](#decodespecialjsonvalue)
+- [🧪 Example: Map, Set, Date, RegExp](#-example-map-set-date-regexp)
+
+---
+
 ## 🚀 Quick Start
 
 ```js

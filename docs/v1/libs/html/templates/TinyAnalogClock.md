@@ -2,6 +2,24 @@
 
 **TinyAnalogClock** is a dependency-free JavaScript class for rendering fully customizable analog clocks. It supports dynamic resizing, custom skins (background images), flexible coloring, advanced geometry tuning, and rigorous input validation.
 
+## 📑 Table of Contents
+
+- [✨ Features](#-features)
+- [🚀 Getting Started](#-getting-started)
+  - [1. Import the Class](#1-import-the-class)
+  - [2. Basic Usage](#2-basic-usage)
+- [⚙️ Configuration](#-configuration)
+- [🛠️ API Reference](#-api-reference)
+  - [Properties & Setters](#properties--setters)
+  - [Methods](#methods)
+- [🎨 Advanced Examples](#-advanced-examples)
+  - [Example 1: Dark Mode Clock](#example-1-dark-mode-clock)
+  - [Example 2: Minimalist Modern](#example-2-minimalist-modern)
+  - [Example 3: Chunky & Colorful](#example-3-chunky--colorful)
+  - [⚠️ Error Handling](#-error-handling)
+
+---
+
 ## ✨ Features
 
 * **Zero Dependencies:** Pure JavaScript (ESM).

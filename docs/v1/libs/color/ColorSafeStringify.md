@@ -4,6 +4,27 @@ Color Safe Stringify is a lightweight JavaScript class for transforming boring J
 
 ---
 
+## 📑 Table of Contents
+
+- [🚀 Features](#-features)
+- [📦 Installation](#-installation)
+- [🧪 Usage Example](#-usage-example)
+- [🎨 Built-in Presets](#-built-in-presets)
+- [🧁 Create Your Own Preset](#-create-your-own-preset)
+- [🔧 API](#-api)
+  - [`new ColorSafeStringify([defaultColors])`](#new-colorsafestringifydefaultcolors)
+  - [`.colorize(jsonString, [customColors])`](#colorizejsonstring-customcolors)
+  - [`.getColors()`](#getcolors)
+  - [`.updateColors(partialColors)`](#updatecolorspartialcolors)
+  - [`.resetColors()`](#resetcolors)
+  - [`.loadColorPreset(name)`](#loadcolorpresetname)
+  - [`.saveColorPreset(name, colors)`](#savecolorpresetname-colors)
+  - [`.getAvailablePresets()`](#getavailablepresets)
+- [🤖 Best Practices](#-best-practices)
+- [🧚 Why?](#-why)
+
+---
+
 ## 🚀 Features
 
 - 🎯 **Syntax-aware highlighting**: Keys, strings, numbers, booleans, nulls, functions, URLs, and special values each get their own color.

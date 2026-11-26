@@ -19,6 +19,43 @@ With **import/export in JSON format**, **group-based filtering**, and **exclusio
 
 ---
 
+## 📑 Table of Contents
+
+- [🎯 Type Definitions & Core Concepts](#-type-definitions--core-concepts)
+  - [📊 Normalization Modes](#-normalization-modes)
+  - [🎲 RNG Generator](#-rng-generator)
+  - [⏳ Temporary Weight Modifier](#-temporary-weight-modifier)
+  - [📦 Item Data Template](#-item-data-template)
+  - [💾 Exported Raffle State](#-exported-raffle-state)
+  - [🏷 Specialized Item Types](#-specialized-item-types)
+  - [🗃 Metadata Container](#-metadata-container)
+  - [🛠 Weight Calculation Context](#-weight-calculation-context)
+  - [⚖ Weight Map](#-weight-map)
+  - [🎯 Pity System](#-pity-system)
+  - [🧮 Weight Modifier Callback](#-weight-modifier-callback)
+  - [🎟 Draw Result](#-draw-result)
+  - [📡 Event Handler](#-event-handler)
+- [🎰 Core Properties, Getters & Setters](#-core-properties-getters--setters)
+  - [🔒 Private Fields](#-private-fields)
+  - [📤 Public Getters](#-public-getters)
+  - [📝 Public Setters](#-public-setters)
+  - [🏗 Constructor](#-constructor)
+- [🎯 Item Management & Rules](#-item-management--rules)
+  - [📦 Item Management](#-item-management)
+  - [🛠 Modifiers & Rules](#-modifiers--rules)
+  - [🍀 Pity System](#-pity-system)
+  - [🚫 Exclusions & Groups](#-exclusions--groups)
+- [🎲 Draw Core](#-draw-core)
+  - [🔄 Frequency Management](#-frequency-management)
+  - [⚖️ Weight Computation](#-weight-computation)
+  - [🎯 Drawing Items](#-drawing-items)
+  - [📦 Save & Load (JSON)](#-save--load-json)
+  - [🪞 `clone()`](#-clone)
+  - [🎲 RNG: Seedable (mulberry32)](#-rng-seedable-mulberry32)
+- [🗑️ `destroy()`](#-destroy)
+
+---
+
 ## 🎯 Type Definitions & Core Concepts
 
 This section defines the **core data structures**, **callbacks**, and **types** used by the `TinyAdvancedRaffle` system.

@@ -5,6 +5,28 @@ Supports **prioritized callbacks**, **filters**, and now even **DOM-only fast ex
 
 ---
 
+## 📑 Table of Contents
+
+- [🧠 Type Definitions](#-type-definitions)
+  - [`Fn` 🛠️](#fn-)
+  - [`FnFilter` 🔍](#fnfilter-)
+  - [`Handler` 🧩](#handler-)
+- [🚀 Class: `TinyDomReadyManager`](#-class-tinydomreadymanager)
+  - [`init()` 🕓](#init-)
+  - [`addPromise(promise)` ⏳](#addpromisepromise-)
+  - [`onReady(fn, options?)` ✅](#onreadyfn-options-)
+  - [`isReady()` 📡](#isready-)
+  - [`isDomReady()` 🧱](#isdomready-)
+- [🧪 Readiness Phases](#-readiness-phases)
+- [💡 Example Usage](#-example-usage)
+  - [Basic Usage](#basic-usage)
+  - [DOM-Only Handler (Faster)](#dom-only-handler-faster)
+  - [Conditional + Prioritized](#conditional--prioritized)
+  - [Mixing Both Types](#mixing-both-types)
+- [📌 Notes](#-notes)
+
+---
+
 ## 🧠 Type Definitions
 
 ### `Fn` 🛠️

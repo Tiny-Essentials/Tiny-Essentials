@@ -6,6 +6,22 @@ If you are building a custom router or a URL parser, this tool is your best frie
 
 ---
 
+## 📑 Table of Contents
+
+- [📖 Overview](#-overview)
+  - [🌟 Key Features](#-key-features)
+- [🚀 Quick Start](#-quick-start)
+- [⚙️ API Reference](#-api-reference)
+  - [`makeSegmentExtractor(searchValue, replaceValue, errorConfig)`](#makesegmentextractorsearchvalue-replacevalue-errorconfig)
+  - [`segmentExtractorV1(pathPattern)`](#segmentextractorv1pathpattern)
+- [🛠️ Advanced: Creating Custom Extractors](#-advanced-creating-custom-extractors)
+- [📊 Data Structures](#-data-structures)
+  - [`SegExResult` (The Object returned by the extractor)](#segexresult-the-object-returned-by-the-extractor)
+  - [`SegExData` (The Object returned by `.exec()`)](#segexdata-the-object-returned-by-exec)
+- [💡 Pro-Tips for Developers](#-pro-tips-for-developers)
+
+---
+
 ## 📖 Overview
 
 The core logic relies on a **Factory Pattern**. Instead of creating a regex manually every time, you use `makeSegmentExtractor` to define *how* a dynamic segment looks (e.g., is it prefixed with a colon `:` or wrapped in curly braces `{}`?). Once defined, you can generate multiple "extractors" for different route patterns.

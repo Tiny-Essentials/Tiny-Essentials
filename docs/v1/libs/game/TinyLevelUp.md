@@ -4,6 +4,32 @@ A lightweight XP-based leveling system for managing user experience and levels. 
 
 ---
 
+## 📑 Table of Contents
+
+- [📐 Type Definitions](#-type-definitions)
+  - [✍️ `UserEditor`](#-usereditor)
+- [🏗️ Class: `TinyLevelUp`](#-class-tinylevelup)
+  - [🆕 Constructor](#-constructor)
+- [🧰 Methods](#-methods)
+  - [➕ `createUser()`](#-createuser)
+  - [🔎 `validateUser(user)`](#-validateuseruser)
+  - [✅ `isValidUser(user)`](#-isvaliduseruser)
+  - [🎁 `getGiveExpBase()`](#-getgiveexpbase)
+  - [🧮 `getExpLevelBase()`](#-getexplevelbase)
+  - [⚖️ `expValidator(user)`](#-expvalidatoruser)
+  - [📊 `getTotalExp(user)`](#-gettotalexpuser)
+  - [🎲 `expGenerator(multi = 1)`](#-expgeneratormulti--1)
+  - [⏩ `progress(user)`](#-progressuser)
+  - [📈 `getProgress(user)`](#-getprogressuser)
+  - [✍️ `set(user, value)`](#-setuser-value)
+  - [⬆️ `give(user, extraExp?, type?, multi?)`](#-giveuser-extraexp-type-multi)
+  - [⬇️ `remove(user, extraExp?, type?, multi?)`](#-removeuser-extraexp-type-multi)
+  - [🔍 `getMissingExp(user)`](#-getmissingexpuser)
+- [🌟 Example Usage](#-example-usage)
+- [💬 Notes](#-notes)
+
+---
+
 ## 📐 Type Definitions
 
 ### ✍️ `UserEditor`

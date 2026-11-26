@@ -4,6 +4,40 @@ A powerful and playful message generator with grammar support, emoji magic ✨, 
 
 ---
 
+## 📑 Table of Contents
+
+- [📦 `RandomMsgModes`](#-randommsgmodes)
+- [🎨 `EmojiPlacement`](#-emojiplacement)
+- [🧰 `MsgGenConfig`](#-msggenconfig)
+  - [Basic Settings](#basic-settings)
+  - [Word and Emoji Pools](#word-and-emoji-pools)
+  - [Generation Mode](#generation-mode)
+- [📖 Grammar Mode (for `natural`)](#-grammar-mode-for-natural)
+- [🔁 Repetition & Emojis](#-repetition--emojis)
+- [📑 Paragraph Support (Optional)](#-paragraph-support-optional)
+- [🧾 Line Generation](#-line-generation)
+- [🏗️ Constructor](#-constructor)
+  - [Arguments:](#arguments)
+  - [Behavior:](#behavior)
+- [⚙️ `configure(newConfig)`](#-configurenewconfig)
+- [📝 Grammar Templates & Word Lists Management](#-grammar-templates--word-lists-management)
+  - [Template Methods](#template-methods)
+  - [Noun Methods](#noun-methods)
+  - [Verb Methods](#verb-methods)
+  - [Adjective Methods](#adjective-methods)
+- [🗣️ Word Set Management](#-word-set-management)
+- [😄 Emoji Set Management](#-emoji-set-management)
+- [🎲 Internal Helpers (Private Methods)](#-internal-helpers-private-methods)
+  - [`_getRandomItem(array)`](#_getrandomitemarray)
+  - [`_generateChunk()`](#_generatechunk)
+  - [`_generateNaturalSentence()`](#_generatenaturalsentence)
+  - [`_generateLine(targetLength, seenWords)`](#_generatelinetargetlength-seenwords)
+  - [`_generateParagraphLines(totalLength)`](#_generateparagraphlinestotallength)
+- [🎉 Main Method](#-main-method)
+  - [`generate()`](#generate)
+
+---
+
 ## 📦 `RandomMsgModes`
 
 Defines how messages are composed:

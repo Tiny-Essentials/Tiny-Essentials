@@ -3,8 +3,8 @@
 Welcome to the official documentation for **TinyURLSecurityVerifier**. This library is a specialized tool designed to protect your applications from malicious URL-based attacks, such as Cross-Site Scripting (XSS), phishing, and credential theft.
 
 ## 📝 Table of Contents
-1. [Overview](#overview)
-2. [Core Concepts](#core-concepts)
+1. [Overview](#-overview)
+2. [Core Concepts](#-core-concepts)
 3. [🚀 Quick Start](#-quick-start)
 4. [⚙️ Configuration](#-configuration)
 5. [🛡️ Security Layers](#-security-layers)

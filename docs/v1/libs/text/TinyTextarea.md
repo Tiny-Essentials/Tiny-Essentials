@@ -4,6 +4,22 @@ A lightweight JavaScript utility for automatically resizing `<textarea>` element
 
 ---
 
+## 📑 Table of Contents
+
+- [📦 Features](#-features)
+- [🚀 Usage](#-usage)
+- [🔧 Constructor](#-constructor)
+  - [Parameters](#parameters)
+- [📚 API](#-api)
+  - [`.getData() → { height, rows }`](#getdata---height-rows-)
+  - [`.refresh()`](#refresh)
+  - [`.destroy()`](#destroy)
+  - [🔍 Getters](#-getters)
+- [📤 Event Payload: `OnInputInfo`](#-event-payload-oninputinfo)
+- [🧪 Beta Notice](#-beta-notice)
+
+---
+
 ## 📦 Features
 
 * 🔁 **Auto-resizing**: Grows or shrinks with the content

@@ -4,6 +4,25 @@ Welcome to the official documentation for the **TinyWebWorkerEngine**. This engi
 
 ---
 
+## 📑 Table of Contents
+
+- [📖 Overview](#-overview)
+- [🛠 Core Concepts](#-core-concepts)
+  - [1. Unidirectional Messages (Fire and Forget) 📢](#1-unidirectional-messages-fire-and-forget-)
+  - [2. The API Pattern (Request-Response) 🔄](#2-the-api-pattern-request-response-)
+- [🚀 API Reference](#-api-reference)
+  - [🛠 Class: `TinyWebWorkerEngine`](#-class-tinywebworkerengine)
+- [📝 Practical Examples](#-practical-examples)
+  - [🏗 Example 1: Setting up the Worker](#-example-1-setting-up-the-worker)
+  - [📡 Example 2: Using the Engine in the Main Thread](#-example-2-using-the-engine-in-the-main-thread)
+- [📡 Events](#-events)
+- [📨 Message Protocol](#-message-protocol)
+  - [Worker ➡️ Main](#worker--main)
+  - [Main ➡️ Worker](#main--worker)
+- [⚠️ Safety & Best Practices](#-safety--best-practices)
+
+---
+
 ## 📖 Overview
 
 In a standard Web Worker environment, `postMessage` is "fire and forget." This makes it difficult to know when a specific request has been processed or to handle errors returned from the other side. 

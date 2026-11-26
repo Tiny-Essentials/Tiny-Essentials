@@ -5,6 +5,20 @@ It displays a consent bar, lets users manage categories, and stores preferences 
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Features](#-features)
+- [📦 Typedefs](#-typedefs)
+  - [🗂️ `Category`](#-category)
+  - [⚙️ `Config`](#-config)
+- [🏗️ Class: `TinyCookieConsent`](#-class-tinycookieconsent)
+  - [🔑 Constructor](#-constructor)
+  - [📖 Properties](#-properties)
+  - [🛠️ Methods](#-methods)
+- [🧩 Example Usage](#-example-usage)
+
+---
+
 ## ✨ Features
 
 * 📊 Displays a **consent bar** with customizable text and buttons

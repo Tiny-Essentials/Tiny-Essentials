@@ -4,6 +4,23 @@
 
 ---
 
+## 📑 Table of Contents
+
+- [Properties 🏠](#properties-)
+- [Methods 🛠️](#methods-)
+  - [`isRunning()` 🏃‍♀️](#isrunning-)
+  - [`getIndexById(id)` 🔍](#getindexbyidid-)
+  - [`getQueuedIds()` 📋](#getqueuedids-)
+  - [`reorderQueue(fromIndex, toIndex)` 🔄](#reorderqueuefromindex-toindex-)
+  - [`enqueue(task, delay, id)` ⏳](#enqueuetask-delay-id-)
+  - [`enqueuePoint(task, id)` 🪢](#enqueuepointtask-id-)
+  - [`cancelTask(id)` ❌](#canceltaskid-)
+- [Usage Example 💻](#usage-example-)
+  - [Explanation 🧩:](#explanation-)
+- [Conclusion 🎯](#conclusion-)
+
+---
+
 ## Properties 🏠
 
 - **`#queue`**: The internal queue array that holds all the tasks.

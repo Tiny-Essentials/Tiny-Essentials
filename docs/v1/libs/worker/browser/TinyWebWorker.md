@@ -9,11 +9,9 @@ request/response (RPC) layer, lifecycle management, and a plugin system.
 
 1. [Overview](#-overview)
 2. [Features](#-features)
-3. [Installation](#-installation)
 4. [Quick Start](#-quick-start)
 5. [Core Concepts](#-core-concepts)
 6. [API Reference](#-api-reference)
-7. [The Worker Side](#-the-worker-side)
 8. [Message Protocol](#-message-protocol)
 9. [Error Handling](#-error-handling)
 10. [Best Practices](#-best-practices)

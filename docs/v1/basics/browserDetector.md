@@ -3,15 +3,15 @@
 A multi-layered JavaScript utility for identifying the user's web browser and rendering engine.
 
 ## 📋 Table of Contents
-1. [Data Types](#📋-data-types)
-2. [Core Functions](#🛠️-core-functions)
+1. [Data Types](#-data-types)
+2. [Core Functions](#-core-functions)
    - [isBrowser](#1-isbrowser)
-   - [isBrowserAgent](#3-isbrowseragent)
-   - [getBrowserCssPrefix](#4-getbrowsercssprefix)
-   - [getDuckTyping](#5-getducktyping)
-3. [Advanced Detection](#🎯-advanced-detection)
-   - [getBrowserPings](#6-getbrowserpings)
-   - [browserIs](#7-browseris)
+   - [isBrowserAgent](#2-isbrowseragent)
+   - [getBrowserCssPrefix](#3-getbrowsercssprefix)
+   - [getDuckTyping](#4-getducktyping)
+3. [Advanced Detection](#-advanced-detection)
+   - [getBrowserPings](#5-getbrowserpingsdisable--)
+   - [browserIs](#6-browserisdisable--)
 
 ---
 

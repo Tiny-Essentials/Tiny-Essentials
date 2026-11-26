@@ -1,5 +1,30 @@
 # 🛎️ TinyNotifyCenter
 
+## 📑 Table of Contents
+
+- [Overview](#overview)
+- [🔔 NotifyData Type](#-notifydata-type)
+- [✨ Features](#-features)
+- [🏗️ Static Methods](#-static-methods)
+  - [`static getTemplate() : string`](#static-gettemplate--string)
+  - [`static insertTemplate(where = 'afterbegin') : void`](#static-inserttemplatewhere--afterbegin--void)
+  - [Example Usage](#example-usage)
+  - [Visual Structure Preview](#visual-structure-preview)
+- [🛠️ Instance Methods & Constructor](#-instance-methods--constructor)
+  - [`constructor(options = {})`](#constructoroptions--)
+  - [⚙️ Configuration Methods](#-configuration-methods)
+  - [📋 Notification Item Accessors](#-notification-item-accessors)
+  - [✅ Notification State Management](#-notification-state-management)
+  - [🔔 Notification Center Visibility Controls](#-notification-center-visibility-controls)
+  - [🔢 Count Management](#-count-management)
+  - [➕ `add(message, mode = 'text')`](#-addmessage-mode--text)
+- [🔥 `destroy()`](#-destroy)
+  - [Syntax](#syntax)
+  - [Behavior](#behavior)
+- [🎨 CSS Files Location](#-css-files-location)
+
+---
+
 ## Overview
 
 `TinyNotifyCenter` is a notification center component designed to display interactive alerts in the UI.

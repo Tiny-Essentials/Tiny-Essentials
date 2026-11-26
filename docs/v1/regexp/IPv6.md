@@ -2,6 +2,24 @@
 
 A lightweight JavaScript utility for validating and extracting IPv6 addresses using optimized Regular Expressions.
 
+## 📑 Table of Contents
+
+- [📖 Overview](#-overview)
+- [🚀 Getting Started](#-getting-started)
+  - [Installation](#installation)
+- [🛠 API Reference](#-api-reference)
+  - [`isValidIPv6(s)`](#isvalidipv6s)
+  - [`extractIPsV6(text)`](#extractipsv6text)
+  - [`ipv6Regex()`](#ipv6regex)
+  - [`findIPv6Regex()`](#findipv6regex)
+- [💡 Practical Examples](#-practical-examples)
+  - [1. Validating User Input](#1-validating-user-input)
+  - [2. Parsing Log Files](#2-parsing-log-files)
+- [⚠️ Error Handling](#-error-handling)
+- [⚙️ Technical Implementation Details](#-technical-implementation-details)
+
+---
+
 ## 📖 Overview
 
 This library provides essential tools for developers working with networking data. It allows you to:

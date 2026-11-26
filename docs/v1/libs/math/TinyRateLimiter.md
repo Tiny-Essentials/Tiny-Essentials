@@ -4,6 +4,46 @@ The `TinyRateLimiter` is a flexible and lightweight JavaScript class designed to
 
 ---
 
+## 📑 Table of Contents
+
+- [📦 Constructor](#-constructor)
+  - [🔧 Options](#-options)
+- [📋 Methods](#-methods)
+  - [🚀 `hit(userId: string): void`](#-hituserid-string-void)
+  - [❌ `isRateLimited(userId: string): boolean`](#-isratelimiteduserid-string-boolean)
+  - [🧾 `isGroupId(id: string): boolean`](#-isgroupidid-string-boolean)
+  - [🛠️ `setData(userId: string, timestamps: number[]): void`](#-setdatauserid-string-timestamps-number-void)
+  - [📥 `getData(userId: string): number[]`](#-getdatauserid-string-number)
+  - [🧠 `getMaxHits(): number`](#-getmaxhits-number)
+  - [⏳ `getInterval(): number`](#-getinterval-number)
+  - [👀 `getLastHit(userId: string): number|null`](#-getlasthituserid-string-numbernull)
+  - [⌛ `getTimeSinceLastHit(userId: string): number|null`](#-gettimesincelasthituserid-string-numbernull)
+  - [📊 `getAverageHitSpacing(userId: string): number|null`](#-getaveragehitspacinguserid-string-numbernull)
+  - [🔗 `getGroupId(userId: string): string`](#-getgroupiduserid-string-string)
+  - [📦 `assignToGroup(userId: string, groupId: string): void`](#-assigntogroupuserid-string-groupid-string-void)
+  - [💡 `getGroupTTL(groupId: string): number|undefined`](#-getgroupttlgroupid-string-numberundefined)
+  - [🕰️ `setGroupTTL(groupId: string, ttl: number): void`](#-setgroupttlgroupid-string-ttl-number-void)
+  - [📊 `getMetrics(groupId: string): { totalHits, lastHit, timeSinceLastHit, averageHitSpacing }`](#-getmetricsgroupid-string--totalhits-lasthit-timesincelasthit-averagehitspacing-)
+  - [🧼 `destroy(): void`](#-destroy-void)
+  - [🧠 `setOnMemoryExceeded(callback: () => void): void`](#-setonmemoryexceededcallback---void-void)
+  - [🧽 `clearOnMemoryExceeded(): void`](#-clearonmemoryexceeded-void)
+  - [🕓 `setOnGroupExpired(callback: (groupId: string) => void): void`](#-setongroupexpiredcallback-groupid-string--void-void)
+  - [🔕 `clearOnGroupExpired(): void`](#-clearongroupexpired-void)
+  - [❌ `deleteGroupTTL(groupId: string): void`](#-deletegroupttlgroupid-string-void)
+  - [♻️ `resetGroup(groupId: string): void`](#-resetgroupgroupid-string-void)
+  - [👤 `resetUserGroup(userId: string): void`](#-resetusergroupuserid-string-void)
+  - [🔍 `hasData(userId: string): boolean`](#-hasdatauserid-string-boolean)
+  - [👥 `getUsersInGroup(groupId: string): string[]`](#-getusersingroupgroupid-string-string)
+  - [💤 `getMaxIdle(): number`](#-getmaxidle-number)
+  - [💤 `setMaxIdle(ms: number): void`](#-setmaxidlems-number-void)
+  - [📈 `getTotalHits(groupId: string): number`](#-gettotalhitsgroupid-string-number)
+- [🧽 Automatic Cleanup](#-automatic-cleanup)
+- [💥 Errors](#-errors)
+- [🧪 Example Usage](#-example-usage)
+- [🌈 Summary](#-summary)
+
+---
+
 ## 📦 Constructor
 
 ```js

@@ -4,6 +4,35 @@
 
 When developing Node.js packages, it is easy to misspell a path or forget to include a file in your repository. This tool automates the validation process, preventing "Module not found" errors for your end-users. 🚀
 
+## 📑 Table of Contents
+
+- [✨ Key Features](#-key-features)
+- [🔍 How it Works](#-how-it-works)
+- [🚀 Quick Start](#-quick-start)
+  - [Example Implementation](#example-implementation)
+  - [Advanced Usage (Customization)](#advanced-usage-customization)
+- [🛠 API Reference](#-api-reference)
+  - [`new TinyPkgExportValidator(packageJsonPath, rootDir, options)`](#new-tinypkgexportvalidatorpackagejsonpath-rootdir-options)
+  - [`async start()`](#async-start)
+  - [`async validate()`](#async-validate)
+  - [`async execCommandTester(actions)`](#async-execcommandtesteractions)
+  - [`get results()`](#get-results)
+- [🚀 CLI Testing (Developer Mode)](#-cli-testing-developer-mode)
+  - [Example Setup](#example-setup)
+  - [Usage via Terminal](#usage-via-terminal)
+- [📝 Customizing Messages (Templates)](#-customizing-messages-templates)
+- [📊 Console Output](#-console-output)
+  - [✅ Successful Validation](#-successful-validation)
+  - [❌ Failed Validation](#-failed-validation)
+- [⚠️ Error Handling](#-error-handling)
+- [🧭 Node.js `exports` rules](#-nodejs-exports-rules)
+  - [Wildcard targets](#wildcard-targets)
+  - [`null` targets](#null-targets)
+  - [Fallback arrays](#fallback-arrays)
+  - [Rejected targets](#rejected-targets)
+
+---
+
 ## ✨ Key Features
 
 * **🔍 Automatic Traversal:** Recursively checks all nested paths in the `exports` object.

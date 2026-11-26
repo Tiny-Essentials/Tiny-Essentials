@@ -4,6 +4,22 @@ A lightweight JavaScript utility to manage fullscreen behavior easily with cross
 
 ---
 
+## 📑 Table of Contents
+
+- [🧠 Features](#-features)
+- [🚀 Functions](#-functions)
+  - [🔍 `documentIsFullScreen()`](#-documentisfullscreen)
+  - [🔍 `isScreenFilled()`](#-isscreenfilled)
+  - [🔍 `isFullScreenMode()`](#-isfullscreenmode)
+  - [🖥️ `requestFullScreen(ops?)`](#-requestfullscreenops)
+  - [🖥️ `exitFullScreen()`](#-exitfullscreen)
+  - [🔔 `onFullScreenChange(listener, ops?)`](#-onfullscreenchangelistener-ops)
+  - [🔕 `offFullScreenChange(listener, ops?)`](#-offfullscreenchangelistener-ops)
+- [📜 Fullscreen Events Supported](#-fullscreen-events-supported)
+- [💡 Example Usage](#-example-usage)
+
+---
+
 ## 🧠 Features
 
 * ✅ Check if fullscreen is active

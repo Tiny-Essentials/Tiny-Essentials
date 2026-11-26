@@ -3,15 +3,15 @@
 `TinyVersion` is a lightweight, precise JavaScript utility designed to parse and compare **Semantic Versioning (SemVer)** strings. It provides strict validation to ensure your versioning logic remains error-free.
 
 ## 📖 Table of Contents
-1. [Overview](#overview)
-2. [Installation & Setup](#installation--setup)
-3. [Core Concepts](#core-concepts)
-4. [API Reference](#api-reference)
-    - [Constructor](#constructor)
-    - [Properties (Getters)](#properties-getters)
-    - [Methods](#methods)
-5. [Practical Examples](#practical-examples)
-6. [Error Handling](#error-handling)
+1. [Overview](#-overview)
+2. [Installation & Setup](#-installation--setup)
+3. [Core Concepts](#-core-concepts)
+4. [API Reference](#-api-reference)
+    - [Constructor](#-constructor)
+    - [Properties (Getters)](#-properties-getters)
+    - [Methods](#-methods)
+5. [Practical Examples](#-practical-examples)
+6. [Error Handling](#-error-handling)
 
 ---
 

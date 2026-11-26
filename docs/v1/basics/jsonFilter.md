@@ -3,9 +3,9 @@
 A collection of powerful, high-precision JavaScript utilities designed to filter objects based on keys, values, or complex nested conditions.
 
 ## 📋 Table of Contents
-1. [`jsonFilter`](#jsonfilter) — Shallow filtering.
-2. [`jsonFilterRecursive`](#jsonfilterrecursive) — Deep/Recursive filtering.
-3. [`jsonFilterByKeys`](#jsonfilterbykeys) — Selective key/value extraction.
+1. [`jsonFilter`](#-jsonfilter) — Shallow filtering.
+2. [`jsonFilterRecursive`](#-jsonfilterrecursive) — Deep/Recursive filtering.
+3. [`jsonFilterByKeys`](#-jsonfilterbykeys) — Selective key/value extraction.
 
 ---
 

@@ -4,6 +4,22 @@ Welcome to the **TinyUriParser** documentation! 🚀
 
 This project provides a lightweight, highly extensible engine designed to transform complex URI strings (like those used in the Matrix protocol) into structured JavaScript objects, and then reconstruct those objects back into their original URI strings.
 
+## 📑 Table of Contents
+
+- [📖 Overview](#-overview)
+- [🏗️ The Building Block: `ParserPair`](#-the-building-block-parserpair)
+  - [🛠️ How to create a Pair](#-how-to-create-a-pair)
+- [🚀 Getting Started](#-getting-started)
+  - [1. Define your Parsing Logic](#1-define-your-parsing-logic)
+  - [2. Initialize the Engine](#2-initialize-the-engine)
+  - [3. Parsing a URI (String ➡️ Object)](#3-parsing-a-uri-string--object)
+  - [4. Reconstructing a URI (Object ➡️ String)](#4-reconstructing-a-uri-object--string)
+  - [5. Resource Cleanup](#5-resource-cleanup)
+- [⚠️ Error Handling](#-error-handling)
+- [📊 Technical Specifications](#-technical-specifications)
+
+---
+
 ## 📖 Overview
 
 In modern messaging protocols, URIs are often used to identify users or rooms (e.g., `@user:example.com`). Manually parsing these using Regex every time can lead to repetitive and error-prone code. 

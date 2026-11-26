@@ -18,8 +18,8 @@ import {
 1. [Data Types](#-data-types)
 2. [extractYouTubeVideoId](#-extractyoutubevideoid)
 3. [getYouTubeThumbnailUrl](#-getyoutubethumbnailurl)
-4. [fetchYouTubeOEmbed](#-fetchyoutuboeembed)
-5. [assertYouTubeOEmbedResponse](#-assertyoutuboeembedresponse)
+4. [fetchYouTubeOEmbed](#-fetchyoutubeoembed)
+5. [assertYouTubeOEmbedResponse](#-assertyoutubeoembedresponse)
 6. [Error Reference](#-error-reference)
 
 ---

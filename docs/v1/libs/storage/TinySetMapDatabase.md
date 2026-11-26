@@ -12,7 +12,7 @@
 2. [📦 Requirements](#-requirements)
 3. [🚀 Quick Start](#-quick-start)
 4. [🧠 Core Concepts](#-core-concepts)
-5. [🏗️ API Reference](#️-api-reference)
+5. [🏗️ API Reference](#-api-reference)
    - [`TinySetMapDatabase`](#tinysetmapdatabase)
    - [`TinySetDb`](#tinysetdb)
    - [`TinyMapDb](#tinymapdb)
@@ -20,7 +20,7 @@
 6. [🧩 Migrations](#-migrations)
 7. [✅ Validators](#-validators)
 8. [🍳 Recipes](#-recipes)
-9. [🛠️ Service Worker Notes](#️-service-worker-notes)
+9. [🛠️ Service Worker Notes](#-service-worker-notes)
 10. [🐛 Error Reference](#-error-reference)
 11. [❓ FAQ](#-faq)
 

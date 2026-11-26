@@ -3,12 +3,12 @@
 Welcome to the official guide for **`tiny-vite-pwa`**! This plugin is designed to make Progressive Web App integration seamless within a Vite-based project. It handles the "heavy lifting" of PWA requirements so you can focus on building your application.
 
 ## 📋 Table of Contents
-1. [Overview](#overview)
-2. [Key Features](#key-features)
-3. [Configuration Guide](#configuration-guide)
-4. [Step-by-Step Implementation](#step-by-step-implementation)
-5. [Developer Experience (Dev vs. Prod)](#developer-experience-dev-vs-prod)
-6. [TypeScript Integration](#typescript-integration)
+1. [Overview](#-overview)
+2. [Key Features](#-key-features)
+3. [Configuration Guide](#-configuration-guide)
+4. [Step-by-Step Implementation](#-step-by-step-implementation)
+5. [Developer Experience (Dev vs. Prod)](#-developer-experience-dev-vs-prod)
+6. [TypeScript Integration](#-typescript-integration)
 
 ---
 

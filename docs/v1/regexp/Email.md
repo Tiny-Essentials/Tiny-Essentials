@@ -2,6 +2,22 @@
 
 A robust, highly configurable JavaScript utility for validating email addresses and extracting them from text using customizable Regular Expressions and strict filtering rules.
 
+## 📑 Table of Contents
+
+- [🌟 Overview](#-overview)
+- [⚙️ The Configuration Object (`EmailRegexOptions`)](#-the-configuration-object-emailregexoptions)
+- [🛠️ Core Functions](#-core-functions)
+  - [1. `isValidEmail(s, options)`](#1-isvalidemails-options)
+  - [2. `extractEmails(text, options)`](#2-extractemailstext-options)
+- [🚀 Practical Daily Scenarios](#-practical-daily-scenarios)
+  - [Scenario A: Simple Validation 🔍](#scenario-a-simple-validation-)
+  - [Scenario B: Corporate/Internal Restriction 🏢](#scenario-b-corporateinternal-restriction-)
+  - [Scenario C: Preventing "Bad" Usernames & Domains 🛡️](#scenario-c-preventing-bad-usernames--domains-)
+  - [Scenario D: Extracting Emails from a Log File 📑](#scenario-d-extracting-emails-from-a-log-file-)
+- [⚠️ Error Handling & Safety](#-error-handling--safety)
+
+---
+
 ## 🌟 Overview
 
 This toolkit is designed for developers who need more than just basic email validation. It allows you to define exactly what a "valid" email looks like for your specific application—whether you want to restrict users to a specific company domain, block certain usernames, or use custom logic.

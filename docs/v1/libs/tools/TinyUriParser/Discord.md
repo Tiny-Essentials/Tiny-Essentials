@@ -11,7 +11,7 @@
 2. [Installation](#-installation)
 3. [Core Concepts](#-core-concepts)
 4. [TinyUriParser API](#-tinyuriparser-api)
-5. [Discord Module](#-discord-module-discordmjs)
+5. [Discord Module](#-discord-module)
    - [Mentions](#1--mentions)
    - [Game Profiles](#2--game-profiles)
    - [Guild Navigation](#3--guild-navigation)
@@ -21,7 +21,7 @@
    - [Invites](#7--invites)
    - [Message Links](#8--message-links)
    - [CDN Assets](#9--cdn-assets)
-6. [Known Issues](#-known-issues)
+6. [Notes](#-notes)
 
 ---
 

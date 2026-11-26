@@ -18,7 +18,6 @@
 - [Choosing Between v0 and v1](#-choosing-between-v0-and-v1)
 - [Error Handling](#-error-handling)
 - [Known Limitations](#-known-limitations)
-- [Project Structure](#-project-structure)
 - [FAQ](#-faq)
 
 ---

@@ -4,6 +4,22 @@ A lightweight JavaScript utility for detecting drag-and-drop file operations on 
 
 ---
 
+## 📑 Table of Contents
+
+- [📦 Features](#-features)
+- [🔧 Usage Example](#-usage-example)
+- [🔗 API Reference](#-api-reference)
+  - [Class: `TinyDragDropDetector`](#class-tinydragdropdetector)
+  - [Constructor](#constructor)
+  - [Instance Methods](#instance-methods)
+- [🏗️ Event Callbacks](#-event-callbacks)
+- [🛠️ DragAndDropOptions](#-draganddropoptions)
+- [⚠️ Warnings](#-warnings)
+- [🗑️ Cleanup](#-cleanup)
+- [🎨 CSS Example](#-css-example)
+
+---
+
 ## 📦 Features
 
 * Simple and lightweight.

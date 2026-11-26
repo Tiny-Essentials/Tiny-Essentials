@@ -3,16 +3,15 @@
 `TinyThrottledApi` is a professional-grade utility designed to manage asynchronous operations. It acts as a "gatekeeper" for your API calls, ensuring you do not overwhelm a server by sending too many requests at once (**Concurrency Control**) and helping you stay within rate limits (**Rate Throttling**).
 
 ## 📋 Table of Contents
-1. [Core Concepts](#core-concepts)
-2. [Getting Started](#getting-started)
-3. [API Reference](#api-reference)
+1. [Core Concepts](#-core-concepts)
+2. [Getting Started](#-getting-started)
+3. [API Reference](#-api-reference)
     * [Constructor](#constructorconcurrencylimit-api-timeoutinstance)
     * [Methods](#methods)
     * [Getters](#getters)
     * [Setters](#setters)
     * [Events](#events)
-4. [Practical Examples](#practical-examples)
-5. [Monitoring & Debugging](#monitoring--debugging)
+4. [Practical Examples](#-practical-examples)
 
 ---
 

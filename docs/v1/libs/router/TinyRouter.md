@@ -3,18 +3,18 @@
 `TinyRouter` is a lightweight, framework-agnostic JavaScript router designed for managing client-side navigation. It allows developers to map URL paths to specific functions, handle dynamic parameters, and manage browser history seamlessly.
 
 ## 📋 Table of Contents
-1. [Overview](#overview)
-2. [Key Features](#key-features)
-3. [Getting Started](#getting-started)
-4. [API Reference](#api-reference)
-    - [Properties (Getters & Setters)](#properties-getters--setters)
-    - [Constructor](#constructor)
-    - [Route Management](#route-management)
-    - [Navigation](#navigation)
-    - [History Management](#history-management)
-    - [Lifecycle Management](#lifecycle-management)
-5. [Advanced Configuration](#advanced-configuration)
-6. [Error Handling](#error-handling)
+1. [Overview](#-overview)
+2. [Key Features](#-key-features)
+3. [Getting Started](#-getting-started)
+4. [API Reference](#-api-reference)
+    - [Properties (Getters & Setters)](#-properties-getters--setters)
+    - [Constructor](#-constructor)
+    - [Route Management](#-route-management)
+    - [Navigation](#-navigation)
+    - [History Management](#-history-management)
+    - [Lifecycle Management](#-lifecycle-management)
+5. [Advanced Configuration](#-advanced-configuration)
+6. [Error Handling](#-error-handling)
 
 ---
 

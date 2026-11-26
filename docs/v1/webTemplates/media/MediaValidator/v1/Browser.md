@@ -6,6 +6,20 @@ When building modern web applications, users often upload files. A common securi
 
 ---
 
+## 📑 Table of Contents
+
+- [🚀 Core Concept: The Two-Layer Defense](#-core-concept-the-two-layer-defense)
+- [📖 API Reference](#-api-reference)
+  - [1. `validateMagicNumbers`](#1-validatemagicnumbers)
+  - [2. `validateImage`](#2-validateimage)
+  - [3. `validateAudioVideo`](#3-validateaudiovideo)
+- [🛠️ Daily Workflow: How to use it](#-daily-workflow-how-to-use-it)
+  - [Step-by-Step Implementation Guide](#step-by-step-implementation-guide)
+  - [💻 Code Example](#-code-example)
+- [⚠️ Security Notes](#-security-notes)
+
+---
+
 ## 🚀 Core Concept: The Two-Layer Defense
 
 MediaShield operates on a "Defense in Depth" principle. We don't just trust the file extension; we verify the actual data.

@@ -4,6 +4,26 @@
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Features](#-features)
+- [🚀 Usage](#-usage)
+- [🔧 Constructor](#-constructor)
+- [📘 Methods](#-methods)
+  - [🧠 `set(id, callback, value, limit?)`](#-setid-callback-value-limit)
+  - [🧩 `waitForTrue(getValue, checkInterval?)`](#-waitfortruegetvalue-checkinterval)
+  - [🛠️ `setCooldownWatcherTime(value)`](#-setcooldownwatchertimevalue)
+  - [⚙️ `setAllowAutoConfigChange(value)`](#-setallowautoconfigchangevalue)
+  - [❓ `getCooldownWatcherTime()`](#-getcooldownwatchertime)
+  - [❓ `getAllowAutoConfigChange()`](#-getallowautoconfigchange)
+  - [🔥 `destroy()`](#-destroy)
+  - [✅ `isDestroyed()`](#-isdestroyed)
+- [🧼 Best Practices](#-best-practices)
+- [🧪 Example](#-example)
+- [🧠 Why use TinyTimeout?](#-why-use-tinytimeout)
+
+---
+
 ## ✨ Features
 
 * ⏱️ **Dynamic Timeout Scaling** based on trigger frequency

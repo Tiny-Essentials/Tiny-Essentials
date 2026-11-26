@@ -2,6 +2,24 @@
 
 A robust, immutable, and internationalized registry for managing HTTP status codes. This module ensures that your application's HTTP response data (names, summaries, and descriptions) remains consistent, validated, and ready for multi-language support.
 
+## 📑 Table of Contents
+
+- [🌟 Overview](#-overview)
+- [🚀 Key Features](#-key-features)
+- [📖 API Reference](#-api-reference)
+  - [`constructor(initialResponses)`](#constructorinitialresponses)
+  - [`addResponse(id, response, locale)`](#addresponseid-response-locale)
+  - [`get(id, params, locale)`](#getid-params-locale)
+  - [`has(id)`](#hasid)
+  - [`getAll()`](#getall)
+- [💡 Practical Examples](#-practical-examples)
+  - [1. Basic Usage 🛠️](#1-basic-usage-)
+  - [2. Adding Custom Responses & Localization 🌍](#2-adding-custom-responses--localization-)
+  - [3. Error Handling ⚠️](#3-error-handling-)
+- [🛠️ Daily Workflow Integration](#-daily-workflow-integration)
+
+---
+
 ## 🌟 Overview
 
 In large-scale applications, managing HTTP error messages manually can lead to bugs (e.g., typos in "Not Found") and difficulty when translating the app into other languages. 

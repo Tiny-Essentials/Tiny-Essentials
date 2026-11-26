@@ -2,6 +2,36 @@
 
 A lightweight utility class for clipboard interactions with support for modern Clipboard API, custom overrides, and legacy fallback methods like `execCommand`.
 
+## 📑 Table of Contents
+
+- [🚀 Features](#-features)
+- [🏗️ Class: `TinyClipboard`](#-class-tinyclipboard)
+  - [🔧 Constructor](#-constructor)
+- [✍️ Copy Methods](#-copy-methods)
+  - [📄 `copyText(text: string): Promise<void>`](#-copytexttext-string-promisevoid)
+  - [🧩 `copyBlob(blob: Blob): Promise<void>`](#-copyblobblob-blob-promisevoid)
+- [🧠 Override Methods](#-override-methods)
+  - [🛠️ `setCopyText(callback: (text: string) => Promise<void>)`](#-setcopytextcallback-text-string--promisevoid)
+  - [🛠️ `setCopyBlob(callback: (blob: Blob) => Promise<void>)`](#-setcopyblobcallback-blob-blob--promisevoid)
+- [📥 Read Methods](#-read-methods)
+  - [🧾 `readText(index?: number = 0): Promise<string|null>`](#-readtextindex-number--0-promisestringnull)
+  - [🖼️ `readCustom(mimeFormat?: string, fixValue?: boolean, index?: number): Promise<Blob|null>`](#-readcustommimeformat-string-fixvalue-boolean-index-number-promiseblobnull)
+  - [📚 `readAllTexts(): Promise<string[]>`](#-readalltexts-promisestring)
+  - [🧳 `readAllCustom(mimeFormat?: string, fixValue?: boolean): Promise<Blob[]>`](#-readallcustommimeformat-string-fixvalue-boolean-promiseblob)
+  - [🔎 `readAllData(type?: 'text' | 'custom', mimeFormat?: string): Promise<Array<string | Blob>>`](#-readalldatatype-text--custom-mimeformat-string-promisearraystring--blob)
+  - [🔢 `readIndex(index: number): Promise<ClipboardItem|null>`](#-readindexindex-number-promiseclipboarditemnull)
+  - [🗃️ `readAll(): Promise<ClipboardItem[]>`](#-readall-promiseclipboarditem)
+- [🧪 Internal (Private) Helpers](#-internal-private-helpers)
+- [✅ Getters](#-getters)
+  - [📎 `isExecCommandAvailable(): boolean`](#-isexeccommandavailable-boolean)
+  - [📎 `isNavigatorClipboardAvailable(): boolean`](#-isnavigatorclipboardavailable-boolean)
+  - [🧪 `getCopyTextFunc(): ((text: string) => Promise<void>) | null`](#-getcopytextfunc-text-string--promisevoid--null)
+  - [🧪 `getCopyBlobFunc(): ((blob: Blob) => Promise<void>) | null`](#-getcopyblobfunc-blob-blob--promisevoid--null)
+- [🧠 Usage Example](#-usage-example)
+- [🔒 Notes](#-notes)
+
+---
+
 ## 🚀 Features
 
 * ✅ Supports copying and reading **plain text**

@@ -4,6 +4,32 @@ This module provides a complete and flexible system for detecting collisions bet
 
 ---
 
+## 📑 Table of Contents
+
+- [📐 Type Definitions](#-type-definitions)
+  - [`Dirs`](#dirs)
+  - [`CollDirs`](#colldirs)
+  - [`NegCollDirs`](#negcolldirs)
+  - [`CollData`](#colldata)
+  - [`CollCenter`](#collcenter)
+  - [`ObjRect`](#objrect)
+- [🔍 Collision Checks](#-collision-checks)
+  - [Loose Collision (Partial Overlap Only)](#loose-collision-partial-overlap-only)
+  - [Perfect Collision (Touch or Overlap)](#perfect-collision-touch-or-overlap)
+  - [Collision Direction (Single Side Detection)](#collision-direction-single-side-detection)
+- [🔬 Overlap & Direction](#-overlap--direction)
+  - [`getElsCollOverlap(rect1, rect2)`](#getelscolloverlaprect1-rect2)
+  - [`getElsCollOverlapPos({ overlapLeft, overlapRight, overlapTop, overlapBottom })`](#getelscolloverlappos-overlapleft-overlapright-overlaptop-overlapbottom-)
+- [🎯 Center Detection](#-center-detection)
+  - [`getRectCenter(rect)`](#getrectcenterrect)
+  - [`getElsRelativeCenterOffset(rect1, rect2)`](#getelsrelativecenteroffsetrect1-rect2)
+- [🧠 Direction & Depth](#-direction--depth)
+  - [`getElsCollDirDepth(rect1, rect2)`](#getelscolldirdepthrect1-rect2)
+  - [`getElsCollDetails(rect1, rect2)`](#getelscolldetailsrect1-rect2)
+- [🧪 Example Use](#-example-use)
+
+---
+
 ## 📐 Type Definitions
 
 ### `Dirs`

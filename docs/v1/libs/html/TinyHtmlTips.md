@@ -5,6 +5,19 @@ This allows you to mimic the style of jQuery, native browser functions, or even 
 
 ---
 
+## 📑 Table of Contents
+
+- [🎭 Mimic jQuery Style](#-mimic-jquery-style)
+- [💎 Super jQuery-like Style](#-super-jquery-like-style)
+- [🌐 Mimic Native Browser Querying](#-mimic-native-browser-querying)
+- [🛠️ Extra: Element Creation Shortcut](#-extra-element-creation-shortcut)
+- [⚙️ Controlling Whitespace in Class Names](#-controlling-whitespace-in-class-names)
+- [🚀 Why Aliases?](#-why-aliases)
+- [🛠️ Example: shortcuts.js](#-example-shortcutsjs)
+- [🚀 Usage in Your Project](#-usage-in-your-project)
+
+---
+
 ## 🎭 Mimic jQuery Style
 
 If you’re a fan of jQuery’s `$` syntax, you can directly alias TinyHtml methods:

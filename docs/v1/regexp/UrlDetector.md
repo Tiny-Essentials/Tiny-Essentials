@@ -3,11 +3,11 @@
 A robust and highly customizable JavaScript utility for building, validating, and extracting URLs using precise Regular Expressions. This module is designed for developers who need strict control over what constitutes a "valid" URL in their specific application context. 🚀
 
 ## 📋 Table of Contents
-1. [Overview](#overview)
-2. [Configuration (`UrlRegexOptions`)](#configuration-urlregexoptions)
-3. [API Reference](#api-reference)
-4. [Practical Examples](#practical-examples)
-5. [Error Handling](#error-handling)
+1. [Overview](#-overview)
+2. [Configuration (`UrlRegexOptions`)](#-configuration-urlregexoptions)
+3. [API Reference](#-api-reference)
+4. [Practical Examples](#-practical-examples)
+5. [Error Handling](#-error-handling)
 
 ---
 

@@ -2,6 +2,31 @@
 
 A simple utility for transforming text into title case formats.
 
+## 📑 Table of Contents
+
+- [Overview](#overview)
+- [Functions](#functions)
+  - [📝 `toTitleCase(str)`](#-totitlecasestr)
+  - [📝 `toTitleCaseLowerFirst(str)`](#-totitlecaselowerfirststr)
+- [🎯 `addAiMarkerShortcut({ key = 'a', className = 'detect-made-by-ai' })`](#-addaimarkershortcut-key--a-classname--detect-made-by-ai-)
+  - [🔤 Syntax](#-syntax)
+  - [🧾 Parameters](#-parameters)
+  - [⚙️ Behavior](#-behavior)
+  - [❗ Error Handling](#-error-handling)
+  - [🧪 Example](#-example)
+  - [🎨 CSS Integration Example](#-css-integration-example)
+  - [💡 Tip](#-tip)
+  - [📂 CSS Templates](#-css-templates)
+- [🎯 `safeTextTrim(text, limit, safeCutZone = 0.6)`](#-safetexttrimtext-limit-safecutzone--06)
+  - [🔤 Syntax](#-syntax)
+  - [🧾 Parameters](#-parameters)
+  - [⚙️ Behavior](#-behavior)
+  - [❗ Error Handling](#-error-handling)
+  - [🧪 Example](#-example)
+- [🔎 `diffObjList(oldStrings, newStrings)`](#-diffobjlistoldstrings-newstrings)
+
+---
+
 ## Overview
 
 `text.mjs` provides two functions to help format strings into different types of title case. These functions are useful for formatting titles, headings, or any text that needs consistent capitalization. You can choose between capitalizing the first letter of each word or leaving the first letter of the string in lowercase.

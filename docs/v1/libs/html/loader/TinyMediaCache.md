@@ -4,6 +4,28 @@
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Highlights](#-highlights)
+- [🚀 Quick start](#-quick-start)
+- [⚙️ Options](#-options)
+- [🧩 Properties](#-properties)
+- [🛠️ Methods](#-methods)
+  - [`set(url, blob, pinned?, metadata?, parent?)`](#seturl-blob-pinned-metadata-parent)
+  - [`get(url)` / `has(url)`](#geturl--hasurl)
+  - [`peek(url)`](#peekurl)
+  - [`acquire(url)` / `release(url)`](#acquireurl--releaseurl)
+  - [`delete(url)`](#deleteurl)
+  - [`children(url)`](#childrenurl)
+  - [`entries()`](#entries)
+  - [`pin(url, value?)`](#pinurl-value)
+  - [`prune()` / `clear()` / `destroy()`](#prune--clear--destroy)
+- [🧠 Strategies](#-strategies)
+- [📊 Statistics](#-statistics)
+- [🔗 Parent / child links](#-parent--child-links)
+
+---
+
 ## ✨ Highlights
 
 * **Shared registry** — the same URL is downloaded once, no matter how many loaders ask for it.

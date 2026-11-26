@@ -4,6 +4,48 @@ A lightweight but powerful text range utility class for `<input>` and `<textarea
 
 ---
 
+## 📑 Table of Contents
+
+- [🛠 Constructor](#-constructor)
+  - [Parameters:](#parameters)
+- [🔧 Core Methods](#-core-methods)
+  - [`getOpenTag()` → `string`](#getopentag--string)
+  - [`getCloseTag()` → `string`](#getclosetag--string)
+  - [`setOpenTag(tag: string)`](#setopentagtag-string)
+  - [`setCloseTag(tag: string)`](#setclosetagtag-string)
+- [🎯 Selection & Focus](#-selection--focus)
+  - [`focus()` → `this`](#focus--this)
+  - [`ensureFocus()` → `this`](#ensurefocus--this)
+  - [`getSelectionRange()` → `{ start: number, end: number }`](#getselectionrange---start-number-end-number-)
+  - [`setSelectionRange(start, end, preserveScroll = true)` → `this`](#setselectionrangestart-end-preservescroll--true--this)
+- [📜 Value Access](#-value-access)
+  - [`getValue()` → `string`](#getvalue--string)
+  - [`setValue(value: string)` → `this`](#setvaluevalue-string--this)
+  - [`getSelectedText()` → `string`](#getselectedtext--string)
+- [✍️ Text Manipulation](#-text-manipulation)
+  - [`insertText(text, options?)` → `this`](#inserttexttext-options--this)
+  - [`deleteSelection()` → `this`](#deleteselection--this)
+  - [`transformSelection(fn)` → `this`](#transformselectionfn--this)
+  - [`surroundSelection(prefix, suffix)` → `this`](#surroundselectionprefix-suffix--this)
+- [🪄 Tag Operations](#-tag-operations)
+  - [`wrapWithTag(tagName, attributes?)` → `this`](#wrapwithtagtagname-attributes--this)
+  - [`insertTag(tagName, content?, attributes?)` → `this`](#inserttagtagname-content-attributes--this)
+  - [`insertSelfClosingTag(tagName, attributes?)` → `this`](#insertselfclosingtagtagname-attributes--this)
+  - [`toggleTag(tagName, attributes?)` → `this`](#toggletagtagname-attributes--this)
+  - [`toggleCode(codeName)` → `this`](#togglecodecodename--this)
+- [🧠 Utility](#-utility)
+  - [`moveCaret(offset: number)` → `this`](#movecaretoffset-number--this)
+  - [`selectAll()` → `this`](#selectall--this)
+  - [`expandSelection(before, after)` → `this`](#expandselectionbefore-after--this)
+  - [`replaceAll(regex, replacerFn)` → `this`](#replaceallregex-replacerfn--this)
+  - [`replaceInSelection(regex, replacerFn)`](#replaceinselectionregex-replacerfn)
+- [🧩 Internal Attribute Helper](#-internal-attribute-helper)
+  - [`_insertAttr(attributes)` → `string`](#_insertattrattributes--string)
+- [🧪 Example Use](#-example-use)
+- [📝 Notes](#-notes)
+
+---
+
 ## 🛠 Constructor
 
 ```js

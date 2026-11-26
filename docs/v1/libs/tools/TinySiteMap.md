@@ -2,6 +2,26 @@
 
 `TinySiteMap` is a robust, secure, and lightweight JavaScript service designed to manage and generate XML sitemaps or sitemap indexes. It is built to handle the complexities of XML namespaces, URL resolution, and security validation automatically.
 
+## 📑 Table of Contents
+
+- [🚀 Overview](#-overview)
+  - [🛡️ Security First (The "Why")](#-security-first-the-why)
+- [🛠️ Getting Started](#-getting-started)
+  - [1. Installation & Import](#1-installation--import)
+  - [2. Basic Configuration](#2-basic-configuration)
+- [📝 Managing Entries](#-managing-entries)
+  - [Adding a Standard URL Entry](#adding-a-standard-url-entry)
+  - [Adding Custom XML Tags](#adding-custom-xml-tags)
+  - [CRUD Operations (Create, Read, Update, Delete)](#crud-operations-create-read-update-delete)
+- [🧬 Advanced: Namespaces & Strategies](#-advanced-namespaces--strategies)
+  - [1. Manual Namespaces](#1-manual-namespaces)
+  - [2. Namespace Strategies (The Easy Way)](#2-namespace-strategies-the-easy-way)
+- [📤 Generating the Output](#-generating-the-output)
+  - [🎨 Adding Styles (XSL)](#-adding-styles-xsl)
+- [⚠️ Error Handling](#-error-handling)
+
+---
+
 ## 🚀 Overview
 
 When building websites, sitemaps are essential for SEO (Search Engine Optimization). They tell search engines which pages are available for crawling. `TinySiteMap` automates the creation of these files while ensuring they are valid and safe from common web vulnerabilities.

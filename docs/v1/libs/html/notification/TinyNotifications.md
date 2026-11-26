@@ -4,6 +4,28 @@
 
 ---
 
+## 📑 Table of Contents
+
+- [🚀 Features](#-features)
+- [🏗️ Constructor](#-constructor)
+  - [Parameters](#parameters)
+  - [Throws](#throws)
+- [🧠 Methods](#-methods)
+  - [🔐 `requestPerm()`](#-requestperm)
+  - [⚙️ `isCompatible()`](#-iscompatible)
+  - [📤 `send(title, config?)`](#-sendtitle-config)
+- [📥 Getters & Setters](#-getters--setters)
+  - [📌 `wasPermissionRequested()`](#-waspermissionrequested)
+  - [🟢 `isAllowed()`](#-isallowed)
+  - [🔊 `getAudio()` / `setAudio(value)`](#-getaudio--setaudiovalue)
+  - [📏 `getBodyLimit()` / `setBodyLimit(value)`](#-getbodylimit--setbodylimitvalue)
+  - [🖼️ `getDefaultAvatar()` / `setDefaultAvatar(value)`](#-getdefaultavatar--setdefaultavatarvalue)
+  - [🖱️ `getDefaultOnClick()` / `setDefaultOnClick(value)`](#-getdefaultonclick--setdefaultonclickvalue)
+- [📦 Example](#-example)
+- [🧪 Safety Notes](#-safety-notes)
+
+---
+
 ## 🚀 Features
 
 * ✅ Request and manage user permission for notifications

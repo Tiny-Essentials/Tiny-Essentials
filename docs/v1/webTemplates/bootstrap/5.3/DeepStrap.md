@@ -4,6 +4,25 @@
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Highlights](#-highlights)
+- [🚀 Quick start](#-quick-start)
+- [🗂️ Structure](#-structure)
+- [🎛️ Customizing tokens](#-customizing-tokens)
+- [🧩 Plugins](#-plugins)
+  - [Ghost buttons](#ghost-buttons)
+  - [Contrast buttons](#contrast-buttons)
+  - [Cube icon](#cube-icon)
+  - [Sphere pulse](#sphere-pulse)
+  - [Background grid](#background-grid)
+- [🔤 Typography helpers](#-typography-helpers)
+- [📏 Spacing helpers](#-spacing-helpers)
+- [🎨 Placeholder fix](#-placeholder-fix)
+- [🧪 Playground](#-playground)
+
+---
+
 ## ✨ Highlights
 
 * **Token first** — colors, spacing, radii, shadows and typography live in overridable Sass maps.

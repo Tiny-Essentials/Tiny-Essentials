@@ -5,6 +5,25 @@ Perfect for optimizing logic that should only run **after** the user has finishe
 
 ---
 
+## 📑 Table of Contents
+
+- [🚀 Features](#-features)
+- [📦 Import](#-import)
+- [🧪 Example](#-example)
+- [🧠 Class: `TinyAfterScrollWatcher`](#-class-tinyafterscrollwatcher)
+  - [🔧 Constructor](#-constructor)
+  - [⏲️ Property: `inactivityTime`](#-property-inactivitytime)
+  - [🧩 Method: `doAfterScroll(fn)`](#-method-doafterscrollfn)
+  - [🛑 Method: `onStop(fn)`](#-method-onstopfn)
+  - [🔁 Method: `offStop(fn)`](#-method-offstopfn)
+  - [🧷 Method: `onScroll(fn)`](#-method-onscrollfn)
+  - [🗑️ Method: `offScroll(fn)`](#-method-offscrollfn)
+  - [💣 Method: `destroy()`](#-method-destroy)
+- [🧾 Typedefs](#-typedefs)
+- [📝 Notes](#-notes)
+
+---
+
 ## 🚀 Features
 
 * ✅ Works on any scrollable element or the window

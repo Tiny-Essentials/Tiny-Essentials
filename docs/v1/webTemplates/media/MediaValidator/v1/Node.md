@@ -2,6 +2,21 @@
 
 A multi-layered validation toolkit designed to ensure file integrity and prevent security exploits such as **MIME-spoofing** (where a malicious file is disguised with a fake extension).
 
+## 📑 Table of Contents
+
+- [📋 Overview](#-overview)
+- [📦 Dependencies](#-dependencies)
+- [🛠️ API Reference](#-api-reference)
+  - [1. Layer 1: `validateMagicNumbers` 🔍](#1-layer-1-validatemagicnumbers-)
+  - [2. Layer 2 (Images): `validateImage` 🖼️](#2-layer-2-images-validateimage-)
+  - [3. Layer 2 (Audio/Video): `validateAudioVideo` 🎵](#3-layer-2-audiovideo-validateaudiovideo-)
+- [🚀 Implementation Guide: Daily Workflow](#-implementation-guide-daily-workflow)
+  - [🛠️ Step-by-Step Integration](#-step-by-step-integration)
+  - [💻 Code Example](#-code-example)
+- [⚠️ Security Notes](#-security-notes)
+
+---
+
 ## 📋 Overview
 
 When handling file uploads, simply checking a file extension (like `.jpg`) is not enough. An attacker can rename a malicious script to `image.jpg`. This project implements a two-layer defense strategy:

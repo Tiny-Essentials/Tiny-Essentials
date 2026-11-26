@@ -7,17 +7,17 @@ Instead of dealing with the verbose and often confusing native Service Worker AP
 ---
 
 ## 📋 Table of Contents
-1. [Overview](#overview)
-2. [Getting Started](#getting-started)
-3. [Core Features](#core-features)
-    - [Registration & Automatic Versioning](#registration--automatic-versioning)
-    - [Bidirectional Messaging](#bidirectional-messaging)
-    - [PWA Lifecycle & Installation](#pwa-lifecycle--installation)
-4. [Event Reference](#event-reference)
-    - [Internal Lifecycle Events](#internal-lifecycle-events)
-    - [Custom Worker Messages](#custom-worker-messages)
-5. [Memory Management](#memory-management)
-6. [API Reference](#api-reference)
+1. [Overview](#-overview)
+2. [Getting Started](#-getting-started)
+3. [Core Features](#-core-features)
+    - [Registration & Automatic Versioning](#-registration--automatic-versioning)
+    - [Bidirectional Messaging](#-bidirectional-messaging)
+    - [PWA Lifecycle & Installation](#-pwa-lifecycle--installation)
+4. [Event Reference](#-event-reference)
+    - [Internal Lifecycle Events](#-internal-lifecycle-events)
+    - [Custom Worker Messages](#-custom-worker-messages)
+5. [Memory Management](#-memory-management)
+6. [API Reference](#-api-reference)
 
 ---
 

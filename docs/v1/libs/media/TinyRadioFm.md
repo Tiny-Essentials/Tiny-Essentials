@@ -6,6 +6,26 @@
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Key Features](#-key-features)
+- [⚙️ Configuration](#-configuration)
+- [🛠️ Core API Reference](#-core-api-reference)
+  - [🏗️ Static Methods](#-static-methods)
+  - [📋 Properties (Getters & Setters)](#-properties-getters--setters)
+  - [📥 Content Management](#-content-management)
+  - [📅 Task & Config Management](#-task--config-management)
+  - [🔍 Timeline & Querying](#-timeline--querying)
+  - [💾 Persistence & Lifecycle](#-persistence--lifecycle)
+- [📊 Data Models (Summary)](#-data-models-summary)
+  - [`RadioEvent` 📡](#radioevent-)
+  - [`ScheduledTask` 📝](#scheduledtask-)
+  - [`CustomPosition` 📍](#customposition-)
+  - [`ScheduledMovePayload` 🚚](#scheduledmovepayload-)
+  - [`CycleBlock` 🔄](#cycleblock-)
+
+---
+
 ## ✨ Key Features
 
 * **🎯 Deterministic Playback:** Uses a `Mulberry32` PRNG to ensure that the same seed always produces the exact same radio sequence.

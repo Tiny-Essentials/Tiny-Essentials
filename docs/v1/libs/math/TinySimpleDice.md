@@ -5,6 +5,20 @@ You can configure the dice to **allow zero**, set a **maximum value**, and even 
 
 ---
 
+## 📑 Table of Contents
+
+- [⚙️ Class: `TinySimpleDice`](#-class-tinysimpledice)
+  - [Properties](#properties)
+  - [Constructor](#constructor)
+  - [Getters & Setters](#getters--setters)
+  - [Methods](#methods)
+- [📝 Examples](#-examples)
+- [🎯 Features](#-features)
+- [🧠 **How the Modifier Engine Works (High-Level Overview)**](#-how-the-modifier-engine-works-high-level-overview)
+- [💡 Notes](#-notes)
+
+---
+
 ## ⚙️ Class: `TinySimpleDice`
 
 ### Properties

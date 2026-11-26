@@ -4,6 +4,50 @@ A powerful and flexible utility toolkit for managing files and directories in No
 
 ---
 
+## 📑 Table of Contents
+
+- [📦 JSON Operations](#-json-operations)
+  - [`readJsonFile(filePath: string): any`](#readjsonfilefilepath-string-any)
+  - [`writeJsonFile(filePath: string, data: any, spaces: number = 2): void`](#writejsonfilefilepath-string-data-any-spaces-number--2-void)
+- [📂 Directory Management](#-directory-management)
+  - [`ensureDirectory(dirPath: string): void`](#ensuredirectorydirpath-string-void)
+  - [`clearDirectory(dirPath: string): void`](#cleardirectorydirpath-string-void)
+- [🧪 File Checks](#-file-checks)
+  - [`fileExists(filePath: string): boolean`](#fileexistsfilepath-string-boolean)
+  - [`dirExists(dirPath: string): boolean`](#direxistsdirpath-string-boolean)
+  - [`isDirEmpty(dirPath: string): boolean`](#isdiremptydirpath-string-boolean)
+- [📄 File Operations](#-file-operations)
+  - [`ensureCopyFile(src: string, dest: string): void`](#ensurecopyfilesrc-string-dest-string-void)
+  - [`tryDeleteFile(filePath: string): boolean`](#trydeletefilefilepath-string-boolean)
+- [📝 Text Operations](#-text-operations)
+  - [`writeTextFile(filePath: string, content: string, ops?: fs.WriteFileOptions): void`](#writetextfilefilepath-string-content-string-ops-fswritefileoptions-void)
+- [🧾 Directory Listings](#-directory-listings)
+  - [`listFiles(dirPath: string, recursive?: boolean): string[]`](#listfilesdirpath-string-recursive-boolean-string)
+  - [`listDirs(dirPath: string, recursive?: boolean): string[]`](#listdirsdirpath-string-recursive-boolean-string)
+- [📏 File Info](#-file-info)
+  - [`fileSize(filePath: string): number`](#filesizefilepath-string-number)
+  - [`dirSize(dirPath: string): number`](#dirsizedirpath-string-number)
+- [💾 Backup Utilities](#-backup-utilities)
+  - [`backupFile(filePath: string, ext: string = 'bak'): void`](#backupfilefilepath-string-ext-string--bak-void)
+  - [`getLatestBackupPath(filePath: string, ext: string = 'bak'): void`](#getlatestbackuppathfilepath-string-ext-string--bak-void)
+  - [`restoreLatestBackup(filePath: string, ext: string = 'bak'): void`](#restorelatestbackupfilepath-string-ext-string--bak-void)
+- [🔄 Rename Utilities](#-rename-utilities)
+  - [`renameFileBatch(dirPath, renameFn, extensions?)`](#renamefilebatchdirpath-renamefn-extensions)
+  - [`renameFileRegex(dirPath, pattern, replacement, extensions?)`](#renamefileregexdirpath-pattern-replacement-extensions)
+  - [`renameFileAddPrefixSuffix(dirPath, { prefix, suffix }, extensions?)`](#renamefileaddprefixsuffixdirpath--prefix-suffix--extensions)
+  - [`renameFileNormalizeCase(dirPath, mode, extensions?, normalizeExt: boolean = false)`](#renamefilenormalizecasedirpath-mode-extensions-normalizeext-boolean--false)
+  - [`renameFilePadNumbers(dirPath, totalDigits, extensions?)`](#renamefilepadnumbersdirpath-totaldigits-extensions)
+- [🔡 `renameFileNormalizeCase(dirPath, mode = 'lower', extensions = [])`](#-renamefilenormalizecasedirpath-mode--lower-extensions--)
+  - [📥 Parameters:](#-parameters)
+  - [🎯 Example:](#-example)
+- [🔢 `renameFilePadNumbers(dirPath, totalDigits = 3, extensions = [])`](#-renamefilepadnumbersdirpath-totaldigits--3-extensions--)
+  - [📥 Parameters:](#-parameters)
+  - [🎯 Example:](#-example)
+  - [🧠 Notes:](#-notes)
+- [📦 More Example Use](#-more-example-use)
+
+---
+
 ## 📦 JSON Operations
 
 ### `readJsonFile(filePath: string): any`

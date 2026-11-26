@@ -2,6 +2,26 @@
 
 Welcome to the official documentation for `TinyHtmlTagRegexBuilder`. This utility is designed to make parsing specific HTML tags using Regular Expressions much more structured, predictable, and easy to manage in your daily development workflow.
 
+## 📑 Table of Contents
+
+- [📝 Overview](#-overview)
+- [🚀 Getting Started](#-getting-started)
+- [⚙️ Configuration Guide](#-configuration-guide)
+- [🛠️ Usage Modes](#-usage-modes)
+  - [🎯 Mode 1: The "Precision Sniper" (Specific Attributes)](#-mode-1-the-precision-sniper-specific-attributes)
+  - [📦 Mode 2: The "Grab Everything" (All Attributes)](#-mode-2-the-grab-everything-all-attributes)
+- [🧪 Practical Examples](#-practical-examples)
+  - [Example 1: Extracting Links (`<a>` tags) 🔗](#example-1-extracting-links-a-tags-)
+  - [Example 2: Extracting All Attributes and Multi-line Content 📄](#example-2-extracting-all-attributes-and-multi-line-content-)
+- [📖 API Reference](#-api-reference)
+  - [`constructor(config)`](#constructorconfig)
+  - [`toRegExp(flag = 'g')`](#toregexpflag--g)
+  - [`parse(htmlString)`](#parsehtmlstring)
+  - [`toString()`](#tostring)
+- [⚠️ Error Handling](#-error-handling)
+
+---
+
 ## 📝 Overview
 
 Parsing HTML with Regular Expressions can be complex and error-prone. The `TinyHtmlTagRegexBuilder` solves this by providing a high-level configuration interface to build specialized Regex patterns. 

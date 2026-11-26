@@ -138,7 +138,7 @@ document.querySelector('#notify-me').addEventListener('click', async () => {
 
 ---
 
-## 🧩 The two files you must not forgetZ
+## 🧩 The two files you must not forget
 
 `TinyPushManager.requestPermission()` is a thin, testable wrapper. Keep the
 browser call isolated so it can be mocked:

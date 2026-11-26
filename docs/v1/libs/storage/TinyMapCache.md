@@ -2,6 +2,26 @@
 
 `TinyMapCache` is a lightweight, event-driven, in-memory cache manager designed for JavaScript environments. It is optimized for preventing duplicate requests and managing temporary data with automatic expiration.
 
+## 📑 Table of Contents
+
+- [🌟 Key Features](#-key-features)
+- [🛠️ Getting Started](#-getting-started)
+  - [Installation](#installation)
+  - [Basic Initialization](#basic-initialization)
+- [📖 API Reference](#-api-reference)
+  - [⚙️ Configuration & Properties](#-configuration--properties)
+  - [🚀 Methods](#-methods)
+- [🔔 Event Listeners](#-event-listeners)
+- [💡 Practical Implementation Examples](#-practical-implementation-examples)
+  - [1. Basic Usage with TTL](#1-basic-usage-with-ttl)
+  - [2. Using Events for Monitoring](#2-using-events-for-monitoring)
+  - [3. Advanced: Cascaded Purging](#3-advanced-cascaded-purging)
+  - [4. Iterating Over the Cache](#4-iterating-over-the-cache)
+  - [5. Map Compatibility Cheat Sheet](#5-map-compatibility-cheat-sheet)
+- [⚠️ Important Technical Notes](#-important-technical-notes)
+
+---
+
 ## 🌟 Key Features
 
 *   🚀 **High Performance:** Uses an in-memory `Map` for near-instantaneous data retrieval.

@@ -4,6 +4,25 @@
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Highlights](#-highlights)
+- [🚀 Quick start](#-quick-start)
+- [⚙️ Options](#-options)
+  - [Animation modes](#animation-modes)
+  - [⚠️ Compatibility status (`controlled` mode)](#-compatibility-status-controlled-mode)
+- [🧩 Properties](#-properties)
+- [🛠️ Methods](#-methods)
+  - [`freeze(frameIndex = null)`](#freezeframeindex--null)
+  - [`unfreeze()`](#unfreeze)
+  - [`play()`](#play)
+  - [`pause()`](#pause)
+  - [`playbackRate` (setter)](#playbackrate-setter)
+  - [`animationScript` (setter)](#animationscript-setter)
+- [📡 Events](#-events)
+
+---
+
 ## ✨ Highlights
 
 * **Everything from `TinyMediaLoader`** — cache, progress, mirror, timeout, events.

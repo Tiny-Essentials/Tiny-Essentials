@@ -21,7 +21,7 @@
    - [`TinyPushPayload.PUSH_TYPE`](#-tinypushpayloadpush_type)
    - [`from(raw)`](#-fromraw)
    - [`fromEvent(event)`](#-fromeventevent)
-   - [`isExpired(message, now)`](#-isExpiredmessage-now)
+   - [`isExpired(message, now)`](#-isexpiredmessage-now)
    - [`toNotification(message, defaults)`](#-tonotificationmessage-defaults)
 6. [Type definitions](#-type-definitions)
 8. [Error handling](#-error-handling)

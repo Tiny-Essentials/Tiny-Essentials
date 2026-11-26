@@ -6,6 +6,22 @@ Whether you are building a file explorer, a routing system, or a search filter, 
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Core Features](#-core-features)
+- [🛠 API Reference](#-api-reference)
+  - [1. `compileGlob`](#1-compileglob)
+  - [2. `compileGlobRegExp`](#2-compileglobregexp)
+  - [3. `decompileGlob`](#3-decompileglob)
+  - [4. `isValidGlob`](#4-isvalidglob)
+- [💡 Daily Workflow Examples](#-daily-workflow-examples)
+  - [Scenario A: Filtering Files in a Directory](#scenario-a-filtering-files-in-a-directory)
+  - [Scenario B: Validating User Input](#scenario-b-validating-user-input)
+  - [Scenario C: Converting Regex back to Human-Readable GLOB](#scenario-c-converting-regex-back-to-human-readable-glob)
+- [⚠️ Error Handling Guide](#-error-handling-guide)
+
+---
+
 ## ✨ Core Features
 
 GlobMaster supports the most essential GLOB syntax used in modern development:

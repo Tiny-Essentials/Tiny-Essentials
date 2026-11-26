@@ -4,6 +4,49 @@ A JavaScript class for **color conversion and manipulation** between Hex, RGB(A)
 
 ---
 
+## 📑 Table of Contents
+
+- [📦 Features](#-features)
+- [🧱 Types](#-types)
+  - [`RgbColor`](#rgbcolor)
+  - [`RgbaColor`](#rgbacolor)
+  - [`HslColor`](#hslcolor)
+  - [`HslaColor`](#hslacolor)
+  - [`HexColor`](#hexcolor)
+  - [`ColorTypes`](#colortypes)
+- [🧪 Result Object Types](#-result-object-types)
+  - [`RgbResult`](#rgbresult)
+  - [`RgbaResult`](#rgbaresult)
+  - [`HexResult`](#hexresult)
+  - [`HslResult`](#hslresult)
+- [🎲 Random Color](#-random-color)
+  - [`TinyColorConverter.randomColor()`](#tinycolorconverterrandomcolor)
+- [🌈 Rainbow Gradient Generator](#-rainbow-gradient-generator)
+  - [`TinyColorConverter.rcaRgb(len = 24, pastel = false)`](#tinycolorconverterrcargblen--24-pastel--false)
+  - [`TinyColorConverter.rcaHex(len = 24, pastel = false)`](#tinycolorconverterrcahexlen--24-pastel--false)
+  - [`TinyColorConverter.rcaHsl(len = 24, pastel = false)`](#tinycolorconverterrcahsllen--24-pastel--false)
+- [🛠️ Color Conversion Methods](#-color-conversion-methods)
+  - [Hex <=> Int](#hex--int)
+  - [Hex <=> RGBA](#hex--rgba)
+  - [Hex <=> HSL(A)](#hex--hsla)
+  - [HSL <=> RGB(A)](#hsl--rgba)
+  - [Int <=> RGBA](#int--rgba)
+- [🔄 Parsing & String Formats](#-parsing--string-formats)
+- [🧪 Instance API](#-instance-api)
+  - [`.setColor(input: ColorTypes)`](#setcolorinput-colortypes)
+  - [`.getOriginal(): ColorTypes`](#getoriginal-colortypes)
+  - [`.toRgbaArray(): RgbaColor`](#torgbaarray-rgbacolor)
+  - [`.toHex(): HexColor`](#tohex-hexcolor)
+  - [`.toInt(): number`](#toint-number)
+  - [`.toRgbString(): string`](#torgbstring-string)
+  - [`.toRgbaString(): string`](#torgbastring-string)
+  - [`.toHslString(): string`](#tohslstring-string)
+  - [`.toHslaString(): string`](#tohslastring-string)
+  - [`.toHslaArray(): HslaColor`](#tohslaarray-hslacolor)
+- [🔒 Internal State (Private)](#-internal-state-private)
+
+---
+
 ## 📦 Features
 
 * Convert between Hex, RGB, RGBA, HSL, HSLA, and integers

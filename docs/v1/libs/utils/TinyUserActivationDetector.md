@@ -6,6 +6,23 @@ Browsers only allow a few APIs to start without a previous interaction — media
 
 ---
 
+## 📑 Table of Contents
+
+- [🧠 How it works](#-how-it-works)
+- [🚀 Getting Started](#-getting-started)
+- [🏗️ Constructor](#-constructor)
+- [📖 API Reference](#-api-reference)
+  - [Static](#static)
+  - [Methods](#methods)
+  - [Getters](#getters)
+- [💡 Practical Examples](#-practical-examples)
+  - [Deduplicating requests with a key](#deduplicating-requests-with-a-key)
+  - [Cancelling a request](#cancelling-a-request)
+  - [Server-side rendering](#server-side-rendering)
+- [⚠️ Best Practices](#-best-practices)
+
+---
+
 ## 🧠 How it works
 
 The activation is read from `navigator.userActivation.hasBeenActive` instead of the gesture events because it is **sticky**: a single interaction is enough for the whole session, and an interaction that happens _before_ the first request is not lost.

@@ -6,6 +6,26 @@ This module abstracts the complexity of cross-origin communication by establishi
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Features](#-features)
+- [🚀 Usage](#-usage)
+  - [In the parent:](#in-the-parent)
+  - [In the iframe:](#in-the-iframe)
+- [🧠 API Reference](#-api-reference)
+  - [`new TinyIframeEvents(config?)`](#new-tinyiframeeventsconfig)
+  - [`onReady(handler)`](#onreadyhandler)
+  - [`winEmit(eventName, payload)`](#winemiteventname-payload)
+  - [`on(eventName, handler)`](#oneventname-handler)
+  - [`destroy()`](#destroy)
+  - [`isDestroyed()`](#isdestroyed)
+- [🔒 Security Notes](#-security-notes)
+- [📚 Internals (for advanced users)](#-internals-for-advanced-users)
+- [📄 Type Definitions](#-type-definitions)
+  - [`@callback handler`](#callback-handler)
+
+---
+
 ## ✨ Features
 
 - 🔁 **Bidirectional communication** (`iframe` ⇄ `parent`) via a private `MessagePort`.
