@@ -98,7 +98,7 @@
     },
     {
       "type": "stripe",
-      "url": "https://donate.stripe.com/bIYeYL3U08a3gsE7st"
+      "url": "https://donate.stripe.com/00w3cvc1Lgh6bhwfG3cfK05"
     }
   ],
   "main": "./dist/v1/index.cjs",

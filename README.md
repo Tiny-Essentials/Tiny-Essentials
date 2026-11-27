@@ -6,7 +6,7 @@
     <a href="https://www.npmjs.com/package/tiny-essentials"><img src="https://img.shields.io/npm/dt/tiny-essentials.svg?maxAge=3600" alt="NPM downloads" /></a>
 </p>
 <p>
-    <a href="https://donate.stripe.com/bIYeYL3U08a3gsE7st"><img src="https://img.shields.io/badge/donate-stripe-635BFF.svg?logo=stripe&logoColor=white" alt="Stripe" /></a>
+    <a href="https://donate.stripe.com/00w3cvc1Lgh6bhwfG3cfK05"><img src="https://img.shields.io/badge/donate-stripe-635BFF.svg?logo=stripe&logoColor=white" alt="Stripe" /></a>
     <a href="https://www.patreon.com/JasminDreasond"><img src="https://img.shields.io/badge/donate-patreon-F96854.svg?logo=patreon" alt="Patreon" /></a>
     <a href="https://ko-fi.com/jasmindreasond"><img src="https://img.shields.io/badge/donate-ko%20fi-29ABE0.svg?logo=ko-fi" alt="Ko-Fi" /></a>
     <a href="https://chain.so/address/BTC/bc1qnk7upe44xrsll2tjhy5msg32zpnqxvyysyje2g"><img src="https://img.shields.io/badge/donate-bitcoin-F7931A.svg?logo=bitcoin" alt="Bitcoin" /></a>
