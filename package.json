@@ -85,7 +85,8 @@
     "build-dist": "npm run build",
     "build:css": "node build/sass.mjs && node build/scss.mjs",
     "clean": "rm -rf dist",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "install:webTemplates": "node build/installWebTemplates.mjs"
   },
   "funding": [
     {
