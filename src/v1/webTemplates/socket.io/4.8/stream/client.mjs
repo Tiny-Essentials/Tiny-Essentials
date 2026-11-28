@@ -12,7 +12,6 @@
  * @property {number} [size] - Payload size in bytes.
  */
 
-
 /**
  *  A single chunk of a chunked payload.
  * @typedef {Object} SocketStreamChunk
@@ -21,13 +20,20 @@
  * @property {string} data - Slice of the serialized payload.
  */
 
-/** 
- * Last event of a chunked payload. 
+/**
+ * Last event of a chunked payload.
  * @typedef {Object} SocketStreamEnd
  * @property {string} id - Transfer id.
  */
 
-class TinySocketIOStream {
+/**
+ * @typedef {Object} EventNames
+ * @property {string} streamStart
+ * @property {string} streamChunk
+ * @property {string} streamEnd
+ */
+
+class TinySocketIOStreamClient {
   /** @type {Socket} */
   #socket;
 
@@ -41,31 +47,52 @@ class TinySocketIOStream {
    */
   #streams = new Map();
 
-  /** 
+  /** @type {EventNames} */
+  #eventNames;
+
+  /** @returns {EventNames} */
+  get eventNames() {
+    return { ...this.#eventNames };
+  }
+
+  /**
    * Reassembles the chunked payloads sent by the server.
    *
    * The chunks are concatenated as plain strings and only parsed once the
    * whole payload arrived, so a huge message never blocks the tab while it
    * is still being received.
    * @param {Socket} socket - The Socket IO Instance.
+   * @param {Partial<EventNames>} eventNames - The socket event names.
    */
-  constructor(socket) {
+  constructor(socket, eventNames) {
     this.#socket = socket;
 
-    this.#socket.on('stream-start', (result) => {
+    const {
+      streamStart = 'stream-start',
+      streamChunk = 'stream-chunk',
+      streamEnd = 'stream-end',
+    } = eventNames;
+
+    this.#eventNames = {
+      streamStart,
+      streamChunk,
+      streamEnd,
+    };
+
+    this.#socket.on(streamStart, (result) => {
       const { id, event, total } = /** @type {SocketStreamStart} */ (result);
       if (typeof id !== 'string' || typeof event !== 'string') return;
       this.#streams.set(id, { event, total: Number(total) || 0, parts: [] });
     });
 
-    this.#socket.on('stream-chunk', (result) => {
+    this.#socket.on(streamChunk, (result) => {
       const { id, index, data } = /** @type {SocketStreamChunk} */ (result);
       const stream = this.#streams.get(id);
       if (!stream) return;
       stream.parts[Number(index)] = data;
     });
 
-    this.#socket.on('stream-end', (result) => {
+    this.#socket.on(streamEnd, (result) => {
       const { id } = /** @type {SocketStreamEnd} */ (result);
       const stream = this.#streams.get(id);
       if (!stream) return;
@@ -87,4 +114,4 @@ class TinySocketIOStream {
   }
 }
 
-export default TinySocketIOStream;
+export default TinySocketIOStreamClient;
