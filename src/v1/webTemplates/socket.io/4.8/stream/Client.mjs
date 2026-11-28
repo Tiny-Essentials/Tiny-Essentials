@@ -1,4 +1,5 @@
 import { Socket } from 'socket.io-client';
+import TinyDebugger from '../../../../libs/tools/TinyDebugger.mjs';
 
 /**
  * Names of the socket events used by the chunked stream protocol.
@@ -45,6 +46,14 @@ import { Socket } from 'socket.io-client';
  */
 
 /**
+ * Configuration options for initializing the debugger.
+ * @typedef {Object} TinyDebuggerOptions
+ * @property {boolean} [debugMode=false] - Whether to enable internal debug logging.
+ * @property {boolean} [useLogColors=false] - Whether to enable log color support.
+ * @property {Partial<Console>} [logger=console] - A custom logger object (must implement console methods).
+ */
+
+/**
  * Asserts that a value is a non-empty string.
  *
  * @param {unknown} value - Value under test.
@@ -77,13 +86,13 @@ function assertPlainObject(value, name) {
 /**
  * Merges the caller overrides with the default event names.
  *
- * @param {Partial<EventNames>} eventNames - Overrides for the default event names.
+ * @param {Partial<EventNames>} socketNames - Overrides for the default event names.
  * @returns {EventNames} A complete, frozen-by-copy set of event names.
- * @throws {TypeError} When `eventNames` is not a plain object.
+ * @throws {TypeError} When `socketNames` is not a plain object.
  * @throws {TypeError} When any provided entry is not a non-empty string.
  */
-function resolveEventNames(eventNames) {
-  const source = assertPlainObject(eventNames, 'eventNames');
+function resolveEventNames(socketNames) {
+  const source = assertPlainObject(socketNames, 'socketNames');
 
   /** @type {EventNames} */
   const resolved = {
@@ -95,7 +104,7 @@ function resolveEventNames(eventNames) {
   for (const key of /** @type {(keyof EventNames)[]} */ (Object.keys(resolved))) {
     const value = source[key];
     if (value === undefined) continue;
-    resolved[key] = assertNonEmptyString(value, `eventNames.${key}`);
+    resolved[key] = assertNonEmptyString(value, `socketNames.${key}`);
   }
 
   return resolved;
@@ -183,12 +192,12 @@ function assertStreamEnd(payload) {
  * // Later, when the component unmounts:
  * client.destroy();
  */
-class TinySocketIOStreamClient {
+class TinySocketIOStreamClient extends TinyDebugger {
   /** @type {Socket} */
   #socket;
 
   /** @type {EventNames} */
-  #eventNames;
+  #socketNames;
 
   /**
    * Payloads that are still being received.
@@ -216,7 +225,7 @@ class TinySocketIOStreamClient {
       const { id, event, total } = assertStreamStart(payload);
       this.#streams.set(id, { event, total, parts: [] });
     } catch (error) {
-      console.error('[socket-io] [stream] Discarded an invalid "stream-start" event.', error);
+      this.log('error', '[stream] Discarded an invalid "stream-start" event.', error);
     }
   };
 
@@ -235,7 +244,7 @@ class TinySocketIOStreamClient {
       if (!stream) return;
       stream.parts[index] = data;
     } catch (error) {
-      console.error('[socket-io] [stream] Discarded an invalid "stream-chunk" event.', error);
+      this.log('error', '[stream] Discarded an invalid "stream-chunk" event.', error);
     }
   };
 
@@ -255,7 +264,7 @@ class TinySocketIOStreamClient {
       if (!stream) return;
       this.#streams.delete(id);
     } catch (error) {
-      console.error('[socket-io] [stream] Discarded an invalid "stream-end" event.', error);
+      this.log('error', '[stream] Discarded an invalid "stream-end" event.', error);
       return;
     }
 
@@ -263,7 +272,7 @@ class TinySocketIOStreamClient {
     try {
       data = JSON.parse(stream.parts.join(''));
     } catch (error) {
-      console.error('[socket-io] [stream] Failed to parse payload', error);
+      this.log('error', '[stream] Failed to parse payload', error);
       return;
     }
 
@@ -276,20 +285,28 @@ class TinySocketIOStreamClient {
    * Creates a client bound to a single Socket.IO connection.
    *
    * @param {Socket} socket - Socket.IO instance whose events will be observed.
-   * @param {Partial<EventNames>} [eventNames] - Overrides for the default event names.
+   * @param {Partial<EventNames>} [socketNames] - Overrides for the default event names.
+   * @param {TinyDebuggerOptions} [options]
    * @throws {TypeError} When `socket` does not implement `on`, `off` and `listeners`.
-   * @throws {TypeError} When `eventNames` is not a plain object.
-   * @throws {TypeError} When any `eventNames` entry is not a non-empty string.
+   * @throws {TypeError} When `socketNames` is not a plain object.
+   * @throws {TypeError} When any `socketNames` entry is not a non-empty string.
    */
-  constructor(socket, eventNames = {}) {
+  constructor(socket, socketNames = {}, options = {}) {
+    super({
+      id: '[_main_class_TinySocketIOStreamClient_reset_]',
+      logger: options.logger ?? console,
+      debugMode: options.debugMode ?? false,
+      useLogColors: options.useLogColors ?? false,
+    });
+
     if (!(socket instanceof Socket))
       throw new TypeError("The 'socket' argument must be an instance of Socket.IO.");
     this.#socket = socket;
-    this.#eventNames = resolveEventNames(eventNames);
+    this.#socketNames = resolveEventNames(socketNames);
 
-    this.#socket.on(this.#eventNames.streamStart, this.#handleStreamStart);
-    this.#socket.on(this.#eventNames.streamChunk, this.#handleStreamChunk);
-    this.#socket.on(this.#eventNames.streamEnd, this.#handleStreamEnd);
+    this.#socket.on(this.#socketNames.streamStart, this.#handleStreamStart);
+    this.#socket.on(this.#socketNames.streamChunk, this.#handleStreamChunk);
+    this.#socket.on(this.#socketNames.streamEnd, this.#handleStreamEnd);
   }
 
   /**
@@ -297,8 +314,8 @@ class TinySocketIOStreamClient {
    *
    * @returns {EventNames} A defensive copy, safe to mutate.
    */
-  get eventNames() {
-    return { ...this.#eventNames };
+  get socketNames() {
+    return { ...this.#socketNames };
   }
 
   /**
@@ -331,9 +348,9 @@ class TinySocketIOStreamClient {
     if (this.#destroyed) return;
     this.#destroyed = true;
 
-    this.#socket.off(this.#eventNames.streamStart, this.#handleStreamStart);
-    this.#socket.off(this.#eventNames.streamChunk, this.#handleStreamChunk);
-    this.#socket.off(this.#eventNames.streamEnd, this.#handleStreamEnd);
+    this.#socket.off(this.#socketNames.streamStart, this.#handleStreamStart);
+    this.#socket.off(this.#socketNames.streamChunk, this.#handleStreamChunk);
+    this.#socket.off(this.#socketNames.streamEnd, this.#handleStreamEnd);
 
     this.#streams.clear();
   }
