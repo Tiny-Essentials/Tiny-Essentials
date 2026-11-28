@@ -18,11 +18,15 @@
  *   --include-min-js      Also compare `*.min.js` files (ignored by default).
  *   --concurrency <n>     How many files are hashed in parallel. Default: 8.
  *   --context <n>         Bytes shown around the first difference. Default: 24.
+ *   --context-lines <n>   Lines of context in the text diff. Default: 3.
  *   --no-diff             Do not inspect the file contents, only the hashes.
  *   --json                Print the report as JSON.
  *   --quiet               Only print the summary and the problems.
  *   --no-color            Disable ANSI colors.
  *   --help                Show this message.
+ *
+ * Text files are reported as a line based diff. Only files that really look
+ * binary (they contain NUL bytes) fall back to the hexadecimal preview.
  *
  * Exit codes:
  *   0 - Every file is identical.
@@ -45,6 +49,18 @@ const ROOT_DIR = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 
 /** Size of the chunks used while scanning files. */
 const CHUNK_SIZE = 64 * 1024;
+
+/** Amount of bytes inspected when deciding whether a file is binary. */
+const SNIFF_SIZE = 8000;
+
+/** Files bigger than this are never loaded in memory for a text diff. */
+const MAX_TEXT_SIZE = 5 * 1024 * 1024;
+
+/** Maximum amount of characters rendered per line of the diff. */
+const MAX_DIFF_LINE_LENGTH = 240;
+
+/** Maximum amount of cells of the LCS table before falling back to a block diff. */
+const MAX_LCS_CELLS = 4_000_000;
 
 /**
  * Directory names that are always skipped, no matter where they appear.
@@ -93,6 +109,7 @@ const COLORS = {
  * @property {boolean} includeMinJs - Compare `*.min.js` files too.
  * @property {number} concurrency - Amount of files hashed in parallel.
  * @property {number} context - Bytes shown around the first difference.
+ * @property {number} contextLines - Lines of context in the text diff.
  * @property {boolean} diff - Inspect the file contents to locate the difference.
  * @property {boolean} json - Print the report as JSON.
  * @property {boolean} quiet - Only print the summary and the problems.
@@ -107,6 +124,25 @@ const COLORS = {
  */
 
 /**
+ * A single line of the diff.
+ *
+ * @typedef {Object} DiffLine
+ * @property {'equal' | 'add' | 'del'} type - Kind of the line.
+ * @property {string} text - Line content (already truncated).
+ * @property {number} oldLine - 1-based line number on the build side (0 when added).
+ * @property {number} newLine - 1-based line number on the reference side (0 when removed).
+ */
+
+/**
+ * @typedef {Object} Hunk
+ * @property {number} oldStart - First line of the hunk on the build side.
+ * @property {number} oldCount - Amount of build lines in the hunk.
+ * @property {number} newStart - First line of the hunk on the reference side.
+ * @property {number} newCount - Amount of reference lines in the hunk.
+ * @property {DiffLine[]} lines - Lines of the hunk.
+ */
+
+/**
  * @typedef {Object} SideDetail
  * @property {number} line - 1-based line number of the first difference.
  * @property {number} column - 1-based column of the first difference.
@@ -115,11 +151,23 @@ const COLORS = {
  */
 
 /**
- * @typedef {Object} DifferenceDetail
+ * @typedef {Object} TextDifference
+ * @property {'text'} kind - Discriminator.
+ * @property {Hunk[]} hunks - Hunks of the line diff.
+ * @property {number} added - Amount of added lines.
+ * @property {number} removed - Amount of removed lines.
+ */
+
+/**
+ * @typedef {Object} BinaryDifference
+ * @property {'binary'} kind - Discriminator.
  * @property {number} offset - Byte offset of the first difference.
+ * @property {string} reason - Why the file was treated as binary.
  * @property {SideDetail} dist - Details of the verified file.
  * @property {SideDetail} reference - Details of the reference file.
  */
+
+/** @typedef {TextDifference | BinaryDifference} DifferenceDetail */
 
 /**
  * @typedef {Object} FileResult
@@ -227,6 +275,17 @@ function truncate(value, max = 160) {
 }
 
 /**
+ * Replaces control characters so a binary line can be printed safely.
+ *
+ * @param {string} value
+ * @returns {string}
+ */
+function sanitize(value) {
+  // eslint-disable-next-line no-control-regex
+  return value.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '·');
+}
+
+/**
  * @param {string} message
  * @returns {never}
  */
@@ -250,6 +309,7 @@ function parseArgs(argv) {
     includeMinJs: false,
     concurrency: 8,
     context: 24,
+    contextLines: 3,
     diff: true,
     json: false,
     quiet: false,
@@ -298,6 +358,9 @@ function parseArgs(argv) {
       case '--context':
         options.context = Number(readValue('--context'));
         break;
+      case '--context-lines':
+        options.contextLines = Number(readValue('--context-lines'));
+        break;
       case '--no-diff':
         options.diff = false;
         break;
@@ -334,6 +397,10 @@ function parseArgs(argv) {
     usageError('--context must be zero or a positive number.');
   }
 
+  if (!Number.isFinite(options.contextLines) || options.contextLines < 0) {
+    usageError('--context-lines must be zero or a positive number.');
+  }
+
   options.reference = positional[0];
   options.ignore = options.ignore.map((pattern) => pattern.replace(/\\/g, '/'));
 
@@ -354,18 +421,22 @@ Usage: node build/verifyHash.mjs <referenceDir> [options]
 Compares the hash of every file inside the build folder with a reference copy
 of the same folder and reports which files are different and where.
 
+Text files are reported as a line based diff. Only files that really look
+binary (they contain NUL bytes) fall back to a hexadecimal preview.
+
 Options:
-  --dist <dir>         Folder that will be verified. Default: dist
-  --algorithm <name>   Hash algorithm. Default: sha256
-  --ignore <glob>      Skip paths matching the glob (repeatable)
-  --include-min-js     Also compare *.min.js files (ignored by default)
-  --concurrency <n>    Files hashed in parallel. Default: 8
-  --context <n>        Bytes shown around the first difference. Default: 24
-  --no-diff           Only compare the hashes, do not inspect the contents
-  --json               Print the report as JSON
-  --quiet              Only print the summary and the problems
-  --no-color           Disable ANSI colors
-  --help               Show this message
+  --dist <dir>          Folder that will be verified. Default: dist
+  --algorithm <name>    Hash algorithm. Default: sha256
+  --ignore <glob>       Skip paths matching the glob (repeatable)
+  --include-min-js      Also compare *.min.js files (ignored by default)
+  --concurrency <n>     Files hashed in parallel. Default: 8
+  --context <n>         Bytes shown around the first binary difference. Default: 24
+  --context-lines <n>   Lines of context in the text diff. Default: 3
+  --no-diff             Only compare the hashes, do not inspect the contents
+  --json                Print the report as JSON
+  --quiet               Only print the summary and the problems
+  --no-color            Disable ANSI colors
+  --help                Show this message
 
 Directories named "build" and the "*.min.js" files are always ignored on both
 sides. Use --include-min-js to compare the minified bundles too.
@@ -441,6 +512,247 @@ function hashFile(absolutePath, algorithm) {
 }
 
 /**
+ * Reads the first bytes of a file, used to sniff its content.
+ *
+ * @param {string} absolutePath
+ * @param {number} [size=SNIFF_SIZE]
+ * @returns {Promise<Buffer>}
+ */
+async function readHead(absolutePath, size = SNIFF_SIZE) {
+  const handle = await fs.open(absolutePath, 'r');
+
+  try {
+    const buffer = Buffer.alloc(size);
+    const { bytesRead } = await handle.read(buffer, 0, size, 0);
+    return buffer.subarray(0, bytesRead);
+  } finally {
+    await handle.close();
+  }
+}
+
+/**
+ * A file is considered binary when a NUL byte shows up in its first bytes,
+ * which is the same heuristic used by git and friends.
+ *
+ * @param {Buffer} buffer
+ * @returns {boolean}
+ */
+function isBinaryBuffer(buffer) {
+  return buffer.includes(0);
+}
+
+/**
+ * Splits a text into lines, dropping the trailing empty entry caused by the
+ * final newline and normalizing CRLF.
+ *
+ * @param {string} text
+ * @returns {string[]}
+ */
+function splitLines(text) {
+  if (text === '') return [];
+
+  const lines = text.split('\n');
+
+  if (lines[lines.length - 1] === '') lines.pop();
+
+  return lines.map((line) => (line.endsWith('\r') ? line.slice(0, -1) : line));
+}
+
+/**
+ * Classic LCS based diff. Returns the edit script that turns `oldLines` into
+ * `newLines`.
+ *
+ * @param {string[]} oldLines
+ * @param {string[]} newLines
+ * @returns {{ type: 'equal' | 'add' | 'del', text: string }[]}
+ */
+function lcsDiff(oldLines, newLines) {
+  const rows = oldLines.length;
+  const columns = newLines.length;
+
+  if (rows === 0) return newLines.map((text) => ({ type: 'add', text }));
+  if (columns === 0) return oldLines.map((text) => ({ type: 'del', text }));
+
+  const width = columns + 1;
+  const table = new Uint32Array((rows + 1) * width);
+
+  for (let row = rows - 1; row >= 0; row--) {
+    for (let column = columns - 1; column >= 0; column--) {
+      table[row * width + column] =
+        oldLines[row] === newLines[column]
+          ? table[(row + 1) * width + (column + 1)] + 1
+          : Math.max(table[(row + 1) * width + column], table[row * width + (column + 1)]);
+    }
+  }
+
+  /** @type {{ type: 'equal' | 'add' | 'del', text: string }[]} */
+  const ops = [];
+  let row = 0;
+  let column = 0;
+
+  while (row < rows && column < columns) {
+    if (oldLines[row] === newLines[column]) {
+      ops.push({ type: 'equal', text: oldLines[row] });
+      row += 1;
+      column += 1;
+    } else if (table[(row + 1) * width + column] >= table[row * width + (column + 1)]) {
+      ops.push({ type: 'del', text: oldLines[row] });
+      row += 1;
+    } else {
+      ops.push({ type: 'add', text: newLines[column] });
+      column += 1;
+    }
+  }
+
+  while (row < rows) ops.push({ type: 'del', text: oldLines[row++] });
+  while (column < columns) ops.push({ type: 'add', text: newLines[column++] });
+
+  return ops;
+}
+
+/**
+ * Builds the edit script of two files, trimming the common prefix/suffix first
+ * so the LCS table stays small on big files.
+ *
+ * @param {string[]} oldLines
+ * @param {string[]} newLines
+ * @returns {{ type: 'equal' | 'add' | 'del', text: string }[]}
+ */
+function computeLineDiff(oldLines, newLines) {
+  let start = 0;
+  while (
+    start < oldLines.length &&
+    start < newLines.length &&
+    oldLines[start] === newLines[start]
+  ) {
+    start += 1;
+  }
+
+  let oldEnd = oldLines.length;
+  let newEnd = newLines.length;
+
+  while (oldEnd > start && newEnd > start && oldLines[oldEnd - 1] === newLines[newEnd - 1]) {
+    oldEnd -= 1;
+    newEnd -= 1;
+  }
+
+  /** @type {{ type: 'equal' | 'add' | 'del', text: string }[]} */
+  const ops = [];
+
+  for (let index = 0; index < start; index++) {
+    ops.push({ type: 'equal', text: oldLines[index] });
+  }
+
+  const middleOld = oldLines.slice(start, oldEnd);
+  const middleNew = newLines.slice(start, newEnd);
+
+  if (middleOld.length * middleNew.length > MAX_LCS_CELLS) {
+    // Too big to run the LCS: report the whole block as replaced.
+    for (const text of middleOld) ops.push({ type: 'del', text });
+    for (const text of middleNew) ops.push({ type: 'add', text });
+  } else {
+    ops.push(...lcsDiff(middleOld, middleNew));
+  }
+
+  for (let index = oldEnd; index < oldLines.length; index++) {
+    ops.push({ type: 'equal', text: oldLines[index] });
+  }
+
+  return ops;
+}
+
+/**
+ * Groups the edit script into hunks, keeping `context` lines around each change.
+ *
+ * @param {{ type: 'equal' | 'add' | 'del', text: string }[]} ops
+ * @param {number} context - Amount of context lines.
+ * @returns {Hunk[]}
+ */
+function buildHunks(ops, context) {
+  let oldLine = 0;
+  let newLine = 0;
+
+  /** @type {DiffLine[]} */
+  const annotated = ops.map((op) => {
+    /** @type {DiffLine} */
+    const entry = {
+      type: op.type,
+      text: truncate(op.text, MAX_DIFF_LINE_LENGTH),
+      oldLine: op.type === 'add' ? 0 : ++oldLine,
+      newLine: op.type === 'del' ? 0 : ++newLine,
+    };
+
+    return entry;
+  });
+
+  const keep = new Array(annotated.length).fill(false);
+
+  annotated.forEach((entry, index) => {
+    if (entry.type === 'equal') return;
+
+    const from = Math.max(0, index - context);
+    const to = Math.min(annotated.length - 1, index + context);
+
+    for (let cursor = from; cursor <= to; cursor++) keep[cursor] = true;
+  });
+
+  /** @type {Hunk[]} */
+  const hunks = [];
+  /** @type {DiffLine[] | null} */
+  let current = null;
+
+  annotated.forEach((entry, index) => {
+    if (!keep[index]) {
+      current = null;
+      return;
+    }
+
+    if (!current) {
+      current = [];
+      hunks.push({ oldStart: 0, oldCount: 0, newStart: 0, newCount: 0, lines: current });
+    }
+
+    current.push(entry);
+  });
+
+  for (const hunk of hunks) {
+    const oldLines = hunk.lines.filter((line) => line.type !== 'add');
+    const newLines = hunk.lines.filter((line) => line.type !== 'del');
+
+    hunk.oldCount = oldLines.length;
+    hunk.newCount = newLines.length;
+    hunk.oldStart = oldLines.length > 0 ? oldLines[0].oldLine : 0;
+    hunk.newStart = newLines.length > 0 ? newLines[0].newLine : 0;
+  }
+
+  return hunks;
+}
+
+/**
+ * Builds the line based diff of two text files.
+ *
+ * @param {string} distPath
+ * @param {string} referencePath
+ * @param {number} contextLines
+ * @returns {Promise<TextDifference>}
+ */
+async function describeTextDifference(distPath, referencePath, contextLines) {
+  const [distText, referenceText] = await Promise.all([
+    fs.readFile(distPath, 'utf8'),
+    fs.readFile(referencePath, 'utf8'),
+  ]);
+
+  const ops = computeLineDiff(splitLines(distText), splitLines(referenceText));
+
+  return {
+    kind: 'text',
+    hunks: buildHunks(ops, contextLines),
+    added: ops.filter((op) => op.type === 'add').length,
+    removed: ops.filter((op) => op.type === 'del').length,
+  };
+}
+
+/**
  * Finds the offset of the first byte that differs between two files.
  *
  * @param {string} firstPath
@@ -483,7 +795,7 @@ async function findFirstDifference(firstPath, secondPath) {
  * @param {string} absolutePath
  * @param {number} offset
  * @param {number} length
- * @returns {Promise<Buffer>}
+ * @returns {Promise<Buffer>
  */
 async function readWindow(absolutePath, offset, length) {
   if (length <= 0) return Buffer.alloc(0);
@@ -564,14 +876,15 @@ async function readLine(handle, start) {
 }
 
 /**
- * Builds the human readable description of a difference.
+ * Builds the hexadecimal description used for binary files.
  *
  * @param {string} distPath
  * @param {string} referencePath
  * @param {number} context - Amount of bytes shown before/after the difference.
- * @returns {Promise<DifferenceDetail | null>}
+ * @param {string} reason - Why the file was treated as binary.
+ * @returns {Promise<BinaryDifference | null>}
  */
-async function describeDifference(distPath, referencePath, context) {
+async function describeBinaryDifference(distPath, referencePath, context, reason) {
   const offset = await findFirstDifference(distPath, referencePath);
 
   if (offset === -1) return null;
@@ -587,7 +900,9 @@ async function describeDifference(distPath, referencePath, context) {
   ]);
 
   return {
+    kind: 'binary',
     offset,
+    reason,
     dist: {
       line: distLocation.line,
       column: distLocation.column,
@@ -601,6 +916,77 @@ async function describeDifference(distPath, referencePath, context) {
       lineText: referenceLocation.text,
     },
   };
+}
+
+/**
+ * Decides how the difference should be described: a line based diff for text
+ * files, a hexadecimal preview for real binaries.
+ *
+ * @param {FileEntry} distFile
+ * @param {FileEntry} referenceFile
+ * @param {Options} options
+ * @returns {Promise<DifferenceDetail | null>}
+ */
+async function describeDifference(distFile, referenceFile, options) {
+  const [distHead, referenceHead] = await Promise.all([
+    readHead(distFile.absolute),
+    readHead(referenceFile.absolute),
+  ]);
+
+  if (isBinaryBuffer(distHead) || isBinaryBuffer(referenceHead)) {
+    return describeBinaryDifference(
+      distFile.absolute,
+      referenceFile.absolute,
+      options.context,
+      'binary content',
+    );
+  }
+
+  const tooBig = distFile.size > MAX_TEXT_SIZE || referenceFile.size > MAX_TEXT_SIZE;
+
+  if (tooBig) {
+    return describeBinaryDifference(
+      distFile.absolute,
+      referenceFile.absolute,
+      options.context,
+      `file larger than ${formatBytes(MAX_TEXT_SIZE)}`,
+    );
+  }
+
+  return describeTextDifference(distFile.absolute, referenceFile.absolute, options.contextLines);
+}
+
+/**
+ * Renders the hunks of a text diff.
+ *
+ * @param {Hunk[]} hunks
+ * @param {(color: keyof typeof COLORS, value: string) => string} paint
+ * @returns {string[]}
+ */
+function renderHunks(hunks, paint) {
+  /** @type {string[]} */
+  const output = [];
+
+  for (const hunk of hunks) {
+    output.push(
+      paint(
+        'cyan',
+        `    @@ -${hunk.oldStart},${hunk.oldCount} +${hunk.newStart},${hunk.newCount} @@`,
+      ),
+    );
+
+    for (const line of hunk.lines) {
+      if (line.type === 'equal') {
+        output.push(paint('dim', `       ${String(line.oldLine).padStart(5)} | ${line.text}`));
+      } else if (line.type === 'del') {
+        output.push(paint('red', `     - ${String(line.oldLine).padStart(5)} | ${line.text}`));
+      } else {
+        output.push(paint('green', `     + ${String(line.newLine).padStart(5)} | ${line.text}`));
+      }
+    }
+  }
+
+  return output;
 }
 
 /**
@@ -693,9 +1079,7 @@ async function main(options) {
       });
     }
 
-    const detail = options.diff
-      ? await describeDifference(distFile.absolute, referenceFile.absolute, options.context)
-      : undefined;
+    const detail = options.diff ? await describeDifference(distFile, referenceFile, options) : null;
 
     return /** @type {FileResult} */ ({
       relative,
@@ -773,8 +1157,20 @@ async function main(options) {
       )} (reference)`,
     );
 
-    if (result.detail) {
-      const { offset, dist, reference } = result.detail;
+    if (result.detail?.kind === 'text') {
+      const { hunks, added, removed } = result.detail;
+
+      console.log(
+        `    diff:  ${paint('green', `+${added}`)} ${paint('red', `-${removed}`)} in ${
+          hunks.length
+        } hunk(s)`,
+      );
+
+      for (const line of renderHunks(hunks, paint)) console.log(line);
+    } else if (result.detail) {
+      const { offset, dist, reference, reason } = result.detail;
+
+      console.log(`    diff:  binary (${reason})`);
       console.log(`    first difference at byte ${paint('bold', String(offset))}`);
       console.log(
         `    build:     line ${dist.line}, column ${dist.column}  ${paint('dim', dist.preview)}`,
@@ -788,10 +1184,10 @@ async function main(options) {
 
       if (dist.lineText !== null && reference.lineText !== null) {
         if (dist.lineText !== reference.lineText) {
-          console.log(`    ${paint('green', '-')} ${dist.lineText}`);
-          console.log(`    ${paint('red', '+')} ${reference.lineText}`);
+          console.log(`    ${paint('green', '-')} ${sanitize(dist.lineText)}`);
+          console.log(`    ${paint('red', '+')} ${sanitize(reference.lineText)}`);
         } else {
-          console.log(`    ${paint('dim', `line: ${dist.lineText}`)}`);
+          console.log(`    ${paint('dim', `line: ${sanitize(dist.lineText)}`)}`);
         }
       }
     }
