@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "@types/bootstrap": "^5.2.11",
+    "bootstrap": "^5.3.8"
+  }
+}

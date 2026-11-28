@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "canvas": "^3.2.3",
+    "ag-psd": "^31.0.2"
+  }
+}

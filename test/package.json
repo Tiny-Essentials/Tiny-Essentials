@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "jquery": "^3.7.1",
+    "marked": "^18.0.5"
+  }
+}
