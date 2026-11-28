@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "checkJs": false
-  },
-  "include": ["src/v1/webTemplates"],
-  "exclude": ["node_modules", "**/node_modules"]
-}

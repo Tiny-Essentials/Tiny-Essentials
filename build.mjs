@@ -7,7 +7,6 @@ import { resolve } from 'path';
  * @property {string} workerTsConfig - Path to the Web Worker TypeScript configuration file.
  * @property {string} swTsConfig - Path to the Service Worker TypeScript configuration file.
  * @property {string} mainTsConfig - Path to the main TypeScript configuration file.
- * @property {string} webTemplatesTsConfig - Path to the webTemplates TypeScript configuration file.
  * @property {string} cssSassCommand - The command to execute the Sass compilation script.
  * @property {string} cssScssCommand - The command to execute the Scss compilation script.
  * @property {string} rollupCommand - The command to run Rollup.
@@ -57,7 +56,6 @@ class BuildManager {
       'swTsConfig',
       'workerTsConfig',
       'mainTsConfig',
-      'webTemplatesTsConfig',
       'cssSassCommand',
       'cssScssCommand',
       'rollupCommand',
@@ -185,11 +183,6 @@ class BuildManager {
       // 2. Compile Main TypeScript files
       this.#runCommand(`npx tsc -p ${this.#config.mainTsConfig}`);
 
-      // 2.1. Compile the self-contained webTemplates projects.
-      // They are type-checked with `checkJs: false` because each one ships its
-      // own `node_modules`, which is not installed in CI.
-      this.#runCommand(`npx tsc -p ${this.#config.webTemplatesTsConfig}`);
-
       // 3. Compile CSS Styles (Sass/Scss)
       this.#compileStyles();
 
@@ -214,7 +207,6 @@ const buildConfig = {
   swTsConfig: resolve('src/v1/libs/sw/service/tsconfig.json'),
   workerTsConfig: resolve('src/v1/libs/worker/engine/tsconfig.json'),
   mainTsConfig: resolve('tsconfig.json'),
-  webTemplatesTsConfig: resolve('tsconfig.webTemplates.json'),
   cssSassCommand: 'node build/sass.mjs',
   cssScssCommand: 'node build/scss.mjs',
   rollupCommand: 'npx rollup -c',
