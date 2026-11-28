@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
 import { mkdirSync, cpSync, rmSync, existsSync } from 'fs';
 import { resolve } from 'path';
+import { removeNodeModules } from './build/cleanNodeModules.mjs';
 
 /**
  * @typedef {Object} BuildConfiguration
@@ -17,6 +18,7 @@ import { resolve } from 'path';
  * @property {string} workerTargetDir - The absolute path of the target Web Worker directory.
  * @property {string} swTempDir - The absolute path of the temporary Service Worker directory to be cleaned.
  * @property {string} workerTempDir - The absolute path of the temporary Web Worker directory to be cleaned.
+ * @property {string} distDir - The absolute path of the build output directory.
  */
 
 /**
@@ -66,6 +68,7 @@ class BuildManager {
       'swTargetDir',
       'swTempDir',
       'workerTempDir',
+      'distDir',
     ];
 
     for (const key of requiredKeys) {
@@ -170,6 +173,23 @@ class BuildManager {
   }
 
   /**
+   * Removes every `node_modules` folder that ended up inside the build output.
+   * They are copied from the web templates and must never be published.
+   */
+  #cleanNodeModules() {
+    const removed = removeNodeModules(this.#config.distDir, {
+      onRemove: (folder) => this.#log(`Removed ${folder}`, 'info'),
+    });
+
+    if (removed.length === 0) {
+      this.#log('No node_modules folder found in the build output.', 'info');
+      return;
+    }
+
+    this.#log(`${removed.length} node_modules folder(s) removed from the build output.`, 'success');
+  }
+
+  /**
    * Orchestrates the entire build pipeline.
    */
   execute() {
@@ -192,6 +212,9 @@ class BuildManager {
 
       // 5. Asset Management
       this.#managePwaAssets();
+
+      // 6. Remove the node_modules folders copied from the web templates
+      this.#cleanNodeModules();
 
       this.#log('Build process completed successfully!', 'success');
     } catch (error) {
@@ -217,6 +240,7 @@ const buildConfig = {
   swTargetDir: resolve('dist/v1/libs/sw/service'),
   swTempDir: resolve('dist-sw'),
   workerTempDir: resolve('dist-worker'),
+  distDir: resolve('dist'),
 };
 
 const builder = new BuildManager(buildConfig);
