@@ -23,6 +23,15 @@
  *   actually installed;
  * - a bare specifier that cannot be resolved at all is looked up inside every
  *   `node_modules` folder that belongs to a `webTemplates` project.
+ *
+ * Two flavours of the hook are exported so the same logic can run on every
+ * supported Node.js version:
+ *
+ * - {@link resolve} is synchronous and is meant to be used with
+ *   `module.registerHooks()` (Node.js >= 22.15 / 23.5);
+ * - {@link resolveAsync} is the `async` counterpart used with the older
+ *   `module.register()` API (Node.js >= 20.6), where `nextResolve()` returns a
+ *   promise.
  */
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
@@ -140,11 +149,26 @@ function resolveFromWebTemplates(specifier) {
 }
 
 /**
- * Node.js ESM resolve hook.
+ * Tries to resolve a bare specifier from a `webTemplates` project.
+ *
+ * @param {string} specifier - The bare specifier to resolve.
+ * @returns {{ url: string, shortCircuit: true } | null}
+ */
+function resolveBareSpecifier(specifier) {
+  if (!isBareSpecifier(specifier)) return null;
+  const url = resolveFromWebTemplates(specifier);
+  return url ? { url, shortCircuit: true } : null;
+}
+
+/**
+ * Node.js ESM resolve hook (synchronous flavour).
  *
  * It first tries the default resolution. Only when it fails does it fall back
  * to the `webTemplates` aware strategies, which keeps the behaviour of every
  * other file in the repository completely untouched.
+ *
+ * Requires `module.registerHooks()`, available on Node.js >= 22.15 / 23.5.
+ * Use {@link resolveAsync} on older releases.
  *
  * @type {import('node:module').ResolveHookSync}
  */
@@ -163,10 +187,38 @@ export function resolve(specifier, context, nextResolve) {
     }
 
     // 2. Bare specifier that only exists inside a `webTemplates` project.
-    if (isBareSpecifier(specifier)) {
-      const url = resolveFromWebTemplates(specifier);
-      if (url) return { url, shortCircuit: true };
+    const resolved = resolveBareSpecifier(specifier);
+    if (resolved) return resolved;
+
+    throw error;
+  }
+}
+
+/**
+ * Node.js ESM resolve hook (asynchronous flavour).
+ *
+ * Same behaviour as {@link resolve}, but compatible with the `module.register()`
+ * loader API (Node.js >= 20.6), where `nextResolve()` returns a promise.
+ *
+ * @type {import('node:module').ResolveHook}
+ */
+export async function resolveAsync(specifier, context, nextResolve) {
+  try {
+    return await nextResolve(specifier, context);
+  } catch (error) {
+    // 1. `dist/v1/webTemplates/**` -> `src/v1/webTemplates/**`
+    const parentURL = toSourceURL(context.parentURL);
+    if (parentURL) {
+      try {
+        return await nextResolve(specifier, { ...context, parentURL });
+      } catch {
+        // Fall through to the package lookup below.
+      }
     }
+
+    // 2. Bare specifier that only exists inside a `webTemplates` project.
+    const resolved = resolveBareSpecifier(specifier);
+    if (resolved) return resolved;
 
     throw error;
   }
